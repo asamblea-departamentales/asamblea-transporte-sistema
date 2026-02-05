@@ -4,6 +4,10 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 
+    //Ruta Health
+    //Route::get('/health', function () {
+     //   return response()->json(['ok' => true, 'from' => 'api.php']);
+    //});
 Route::post('/login', [AuthController::class, 'login'])->middleware('web');Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::get('/user', [AuthController::class, 'user'])->middleware('auth:sanctum');
 
@@ -21,4 +25,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
         Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
     });
+
+    
 });
