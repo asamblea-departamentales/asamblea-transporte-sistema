@@ -35,7 +35,7 @@ class SolicitudTransporteService
             // Registrar en el historial de estados
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, null);
             // Registrar en la bitacora de eventos
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::ENVIAR, $userId, null);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::ENVIAR->value, $userId, null);
 
             return $solicitud;
         });
@@ -87,7 +87,7 @@ class SolicitudTransporteService
             $solicitud->save();
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, null);
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
+            $this->registrarEvento(solicitud: $solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
 
             return $solicitud;
         });
