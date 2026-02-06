@@ -6,7 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 
 // Login (público)
- Route::post('/login', [AuthController::class, 'login']);
+// Route::post('/login', [AuthController::class, 'login']);
 
 // Rutas protegidas con Sanctum
 Route::middleware('auth:sanctum')->group(function () {
@@ -15,19 +15,19 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
 
     // Logout
-    Route::post('/logout', function (Request $request) {
+   // Route::post('/logout', function (Request $request) {
         // Si estás usando tokens de Sanctum
-        if ($request->user()) {
-            $request->user()->tokens()->delete();
-        }
+   //     if ($request->user()) {
+   //         $request->user()->tokens()->delete();
+   //     }
+//
+   //     // Por si hay sesión (no estorba)
+   //     auth()->logout();
 
-        // Por si hay sesión (no estorba)
-        auth()->logout();
-
-        return response()->json([
-            'message' => 'Logout exitoso',
-        ]);
-    });
+    //    return response()->json([
+    //        'message' => 'Logout exitoso',
+    //    ]);
+  //  });
 
     // ✅ RUTAS “COMPATIBILIDAD FRONTEND” (para que no de 404)
     Route::get('/dashboard/summary', function () {

@@ -13,5 +13,5 @@ Route::get('/', function () {
 });
 
 Route::get('/login', function () {
-    return response()->json(['message' => 'Please login via API'], 401);
+    return response()->json(['message' => 'Use POST /login'], 405);
 })->name('login');
