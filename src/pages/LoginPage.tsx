@@ -99,7 +99,7 @@ export default function LoginPage() {
               <div className="pt-4">
                 <div className="h-px w-full bg-slate-200/70" />
                 <p className="mt-4 text-center text-xs text-slate-500">
-                  © 2026 Asamblea Legislativa de El Salvador
+                  © 2026 Asamblea Legislativa de El Salvado
                 </p>
               </div>
             </form>
