@@ -1,4 +1,5 @@
-import { apiFetch } from "./apiFetch";
+// src/services/dashboard.service.ts
+import { api } from "../lib/axios";
 
 export type DashboardSummary = {
   pending: number;
@@ -9,17 +10,17 @@ export type DashboardSummary = {
 
 export type RecentRequest = {
   code: string;
-  date: string;       // backend puede devolver ISO y tú formateas
+  date: string;
   type: string;
-  status: string;     // "Aprobado" | "Pendiente" etc
+  status: string;
 };
 
 export async function getDashboardSummary() {
-  // ✅ endpoint ejemplo
-  return apiFetch<DashboardSummary>("/api/dashboard/summary");
+  const { data } = await api.get<DashboardSummary>("/api/dashboard/summary");
+  return data;
 }
 
 export async function getRecentRequests() {
-  // ✅ endpoint ejemplo
-  return apiFetch<RecentRequest[]>("/api/solicitudes/recientes");
+  const { data } = await api.get<RecentRequest[]>("/api/solicitudes/recientes");
+  return data;
 }

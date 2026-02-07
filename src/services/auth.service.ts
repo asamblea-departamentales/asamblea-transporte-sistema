@@ -1,5 +1,6 @@
 // src/services/auth.service.ts
 import { api } from "../lib/axios";
+
 export type LoginPayload = { email: string; password: string };
 
 export type AuthUser = {
@@ -11,7 +12,7 @@ export type AuthUser = {
 
 export async function loginRequest(payload: LoginPayload): Promise<AuthUser> {
   const { data } = await api.post("/api/auth/login", payload);
-  // data: { message, token, user }
+  // { message, token, user }
   localStorage.setItem("auth_token", data.token);
   return data.user as AuthUser;
 }
