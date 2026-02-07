@@ -47,15 +47,23 @@ export async function getCsrfCookie() {
 
 export async function loginRequest(payload: LoginPayload): Promise<LoginResponse> {
   await getCsrfCookie();
-
-  // ✅ usa la ruta real del backend (elige UNA)
-  await api.post("/login", payload); // o "/api/login" si así está tu Laravel
-
+  
+  // AGREGAR ESTO 👇
+  console.log('🍪 Cookies después de CSRF:', document.cookie);
+  
+  const xsrfFromCookie = document.cookie
+    .split('; ')
+    .find(row => row.startsWith('XSRF-TOKEN='))
+    ?.split('=')[1];
+  
+  console.log('🔑 Token que axios debería usar:', xsrfFromCookie);
+  // 👆 HASTA AQUÍ
+  
+  await api.post("/login", payload);
+  
   const { data: user } = await api.get("/api/user");
-
   authStorage.setAuthFlag(true);
   authStorage.setUser(user);
-
   return { user };
 }
 
