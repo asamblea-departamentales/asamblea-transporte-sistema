@@ -6,10 +6,10 @@ export interface LoginPayload {
 }
 
 export interface LoginResponse {
-  token: string; // Laravel debe devolver esto (o cambia el nombre luego)
-  user?: {
+  user: {
     id: string | number;
     name?: string;
     email?: string;
+    roles?: string[];
   };
 }

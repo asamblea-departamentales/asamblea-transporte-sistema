@@ -1,15 +1,31 @@
-
 // src/auth/auth.storage.ts
-const TOKEN_KEY = "app_token";
+const AUTH_FLAG_KEY = "auth_ok";
+const USER_KEY = "auth_user";
 
-export const tokenStorage = {
-  get(): string | null {
-    return localStorage.getItem(TOKEN_KEY);
+export const authStorage = {
+  getAuthFlag(): boolean {
+    return localStorage.getItem(AUTH_FLAG_KEY) === "1";
   },
-  set(token: string) {
-    localStorage.setItem(TOKEN_KEY, token);
+  setAuthFlag(v: boolean) {
+    localStorage.setItem(AUTH_FLAG_KEY, v ? "1" : "0");
   },
-  clear() {
-    localStorage.removeItem(TOKEN_KEY);
+  clearAuthFlag() {
+    localStorage.removeItem(AUTH_FLAG_KEY);
+  },
+
+  getUser<T = any>(): T | null {
+    const raw = localStorage.getItem(USER_KEY);
+    return raw ? (JSON.parse(raw) as T) : null;
+  },
+  setUser(user: any) {
+    localStorage.setItem(USER_KEY, JSON.stringify(user));
+  },
+  clearUser() {
+    localStorage.removeItem(USER_KEY);
+  },
+
+  clearAll() {
+    this.clearAuthFlag();
+    this.clearUser();
   },
 };
