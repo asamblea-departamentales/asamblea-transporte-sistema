@@ -1,35 +1,39 @@
-import type { LoginPayload, LoginResponse } from "../auth/auth.types";
+import axios from "axios";
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || "http://localhost:8000";
+export const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true,
+  headers: { Accept: "application/json" },
+});
 
-/**
- * ✅ Laravel recomendado:
- * POST  /api/auth/login
- * body: { email, password }
- * resp: { token: "..." }
- */
-export async function loginRequest(payload: LoginPayload): Promise<LoginResponse> {
-  const res = await fetch(`${API_BASE}/api/auth/login`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(payload),
+api.defaults.xsrfCookieName = "XSRF-TOKEN";
+api.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
+
+// 🔥 DEBUG (temporal)
+api.interceptors.request.use((config) => {
+  console.log("[API REQ]", config.method?.toUpperCase(), config.url, {
+    baseURL: config.baseURL,
+    withCredentials: config.withCredentials,
+    xsrfCookieName: config.xsrfCookieName,
+    xsrfHeaderName: config.xsrfHeaderName,
+    headers: config.headers,
   });
+  return config;
+});
 
-  if (!res.ok) {
-    const msg = await safeErrorMessage(res);
-    throw new Error(msg);
+api.interceptors.response.use(
+  (res) => {
+    console.log("[API RES]", res.status, res.config.url);
+    return res;
+  },
+  (err) => {
+    console.log("[API ERR]", err?.response?.status, err?.config?.url, err?.message);
+    throw err;
   }
+);
 
-  return res.json();
-}
-
-async function safeErrorMessage(res: Response) {
-  try {
-    const data = await res.json();
-    if (data?.message) return data.message;
-    if (data?.error) return data.error;
-    return "Credenciales inválidas.";
-  } catch {
-    return "No se pudo iniciar sesión.";
-  }
+export async function loginRequest(payload: any) {
+  await api.get("/sanctum/csrf-cookie");      // ✅ debe verse en consola
+  const res = await api.post("/login", payload);
+  return res.data;
 }

@@ -5,6 +5,8 @@ import DashboardPage from "../pages/DashboardPage";
 import NewRequestPage from "../pages/NewRequestPage";
 import MyRequestsPage from "../pages/MyRequestsPage";
 import TransportStep1Page from "../pages/transport/TransportStep1Page";
+import Paso2 from "../pages/transport/paso-2"; 
+import Paso3 from "../pages/transport/paso-3"; 
 
 export default function App() {
   return (
@@ -24,8 +26,8 @@ export default function App() {
 
           {/* Transporte - Wizard */}
           <Route path="solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
-          <Route path="solicitudes/transporte/paso-2" element={<div />} />
-          <Route path="solicitudes/transporte/paso-3" element={<div />} />
+          <Route path="solicitudes/transporte/paso-2" element={<Paso2/>} />
+          <Route path="solicitudes/transporte/paso-3" element={<Paso3 />} />
 
           {/* Otros módulos (futuros) */}
           <Route path="solicitudes/combustible/paso-1" element={<div />} />
