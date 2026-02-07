@@ -1,3 +1,4 @@
+// src/pages/LoginPage.tsx
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TextField from "../components/ui/TextField";
@@ -23,15 +24,13 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // ✅ loginRequest ya maneja CSRF y retorna el usuario
-      const { user } = await loginRequest({ email, password });
+      // ✅ loginRequest devuelve AuthUser directo
+      const user = await loginRequest({ email, password });
       setUser(user);
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error("Login error:", err);
-      setError(
-        err?.message || "Error al iniciar sesión. Verifica tus credenciales."
-      );
+      setError(err?.message || "Error al iniciar sesión. Verifica tus credenciales.");
     } finally {
       setLoading(false);
     }

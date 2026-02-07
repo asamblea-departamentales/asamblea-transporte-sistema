@@ -1,3 +1,4 @@
+// src/lib/axios.ts
 import axios from "axios";
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -18,7 +19,7 @@ export const api = axios.create({
 api.defaults.xsrfCookieName = "XSRF-TOKEN";
 api.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
-// Debug opcional
+// Debug simple
 if (import.meta.env.DEV) {
   api.interceptors.request.use((config) => {
     console.log("[API]", config.method?.toUpperCase(), `${config.baseURL}${config.url}`);
