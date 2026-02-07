@@ -5,37 +5,41 @@ import DashboardPage from "../pages/DashboardPage";
 import NewRequestPage from "../pages/NewRequestPage";
 import MyRequestsPage from "../pages/MyRequestsPage";
 import TransportStep1Page from "../pages/transport/TransportStep1Page";
-import Paso2 from "../pages/transport/paso-2"; 
-import Paso3 from "../pages/transport/paso-3"; 
+import Paso2 from "../pages/transport/paso-2";
+import Paso3 from "../pages/transport/paso-3";
+import ProtectedRoute from "../auth/ProtectedRoute";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
+        {/* Raíz → Login */}
+        <Route path="/" element={<Navigate to="/login" replace />} />
+
         {/* Público */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Privado (layout) */}
-        <Route path="/" element={<AppLayout />}>
+        {/* Privado */}
+        <Route
+          path="/"
+          element={
+            <ProtectedRoute>
+              <AppLayout />
+            </ProtectedRoute>
+          }
+        >
           <Route index element={<Navigate to="/dashboard" replace />} />
-
-          {/* Menú principal */}
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="nueva-solicitud" element={<NewRequestPage />} />
           <Route path="mis-solicitudes" element={<MyRequestsPage />} />
 
-          {/* Transporte - Wizard */}
           <Route path="solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
-          <Route path="solicitudes/transporte/paso-2" element={<Paso2/>} />
+          <Route path="solicitudes/transporte/paso-2" element={<Paso2 />} />
           <Route path="solicitudes/transporte/paso-3" element={<Paso3 />} />
-
-          {/* Otros módulos (futuros) */}
-          <Route path="solicitudes/combustible/paso-1" element={<div />} />
-          <Route path="solicitudes/mantenimiento/paso-1" element={<div />} />
         </Route>
 
         {/* Catch all */}
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </BrowserRouter>
   );

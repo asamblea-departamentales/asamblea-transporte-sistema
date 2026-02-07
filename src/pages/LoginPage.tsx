@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TextField from "../components/ui/TextField";
 import Button from "../components/ui/Button";
-import { loginRequest, meRequest } from "../services/api";
- // ✅ Importar desde lib/axios
+import { loginRequest, meRequest } from "../lib/axios"; // ✅ Importar desde lib/axios
 import { useAuth } from "../auth/AuthContext";
 import logo from "../assets/asamble.png";
 
