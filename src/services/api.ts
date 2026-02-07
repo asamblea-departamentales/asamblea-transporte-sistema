@@ -11,7 +11,7 @@ if (!BASE_URL) {
 export const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  withXSRFToken: true,
+  withXSRFToken: true, // ✅ fuerza X-XSRF-TOKEN
   headers: {
     Accept: "application/json",
     "X-Requested-With": "XMLHttpRequest",
@@ -21,82 +21,40 @@ export const api = axios.create({
 api.defaults.xsrfCookieName = "XSRF-TOKEN";
 api.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
-// 🔥 INTERCEPTOR para debug
-api.interceptors.request.use((config) => {
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('📤 REQUEST:', config.method?.toUpperCase(), config.url);
-  console.log('🍪 Cookies actuales:', document.cookie);
-  
-  const xsrfFromCookie = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('XSRF-TOKEN='))
-    ?.split('=')[1];
-  
-  console.log('🔑 Token XSRF en cookies:', xsrfFromCookie);
-  console.log('📋 Headers de la petición:', {
-    'X-XSRF-TOKEN': config.headers['X-XSRF-TOKEN'],
-    'Cookie': config.headers['Cookie'],
-    'Accept': config.headers['Accept'],
+// Debug útil (solo ver URL + status)
+if (import.meta.env.DEV) {
+  api.interceptors.request.use((config) => {
+    console.log("[API REQ]", config.method?.toUpperCase(), `${config.baseURL}${config.url}`);
+    return config;
   });
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  
-  return config;
-});
 
-api.interceptors.response.use(
-  (res) => {
-    console.log('✅ RESPONSE:', res.status, res.config.url);
-    console.log('🍪 Cookies después del response:', document.cookie);
-    return res;
-  },
-  (err) => {
-    console.log('❌ ERROR RESPONSE:', {
-      status: err?.response?.status,
-      url: err?.config?.url,
-      message: err?.message,
-      data: err?.response?.data
-    });
-    console.log('🍪 Cookies en el momento del error:', document.cookie);
-    throw err;
-  }
-);
+  api.interceptors.response.use(
+    (res) => {
+      console.log("[API RES]", res.status, res.config.url);
+      return res;
+    },
+    (err) => {
+      console.log("[API ERR]", err?.response?.status, err?.config?.url, err?.message, err?.response?.data);
+      throw err;
+    }
+  );
+}
 
 export async function getCsrfCookie() {
-  console.log('🔐 Obteniendo CSRF cookie...');
   await api.get("/sanctum/csrf-cookie");
-  console.log('✅ CSRF cookie obtenida');
 }
 
 export async function loginRequest(payload: LoginPayload): Promise<LoginResponse> {
-  console.log('🚀 Iniciando loginRequest...');
-  
-  // 1. Obtener CSRF
   await getCsrfCookie();
-  
-  // 2. Esperar un poco para que las cookies se actualicen
-  await new Promise(resolve => setTimeout(resolve, 500));
-  
-  // 3. DEBUG: Ver cookies DESPUÉS de esperar
-  console.log('🍪 Cookies después de esperar 500ms:', document.cookie);
-  
-  const xsrfFromCookie = document.cookie
-    .split('; ')
-    .find(row => row.startsWith('XSRF-TOKEN='))
-    ?.split('=')[1];
-  
-  console.log('🔑 Token que axios DEBERÍA usar:', xsrfFromCookie?.substring(0, 50) + '...');
-  
-  // 4. Login
-  console.log('📨 Enviando POST /login...');
+
+  // ✅ API login (no /login web)
   await api.post("/login", payload);
-  
-  console.log('✅ Login exitoso, obteniendo usuario...');
+
   const { data: user } = await api.get("/api/user");
-  
+
   authStorage.setAuthFlag(true);
   authStorage.setUser(user);
-  
-  console.log('✅ loginRequest completado');
+
   return { user };
 }
 
@@ -109,7 +67,7 @@ export async function meRequest() {
 
 export async function logoutRequest() {
   try {
-    await api.post("/logout");
+    await api.post("/api/logout");
   } finally {
     authStorage.clearAll();
   }

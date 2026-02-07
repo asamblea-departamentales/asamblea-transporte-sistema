@@ -10,7 +10,7 @@ if (!BASE_URL) {
 export const api = axios.create({
   baseURL: BASE_URL,
   withCredentials: true,
-  withXSRFToken: true, // ✅ CLAVE para evitar 419 en cross-site
+  withXSRFToken: true, // ✅ clave para mandar X-XSRF-TOKEN
   headers: {
     Accept: "application/json",
     "X-Requested-With": "XMLHttpRequest",
@@ -22,28 +22,25 @@ api.defaults.xsrfHeaderName = "X-XSRF-TOKEN";
 
 // 🔍 Debug (solo en desarrollo)
 if (isDev) {
-  api.interceptors.request.use(
-    (config) => {
-      console.log(`[API] 📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
-      console.log("[API] 📋 Headers:", config.headers);
-      return config;
-    },
-    (error) => Promise.reject(error)
-  );
+  api.interceptors.request.use((config) => {
+    console.log(`[API] 📤 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+    console.log("[API] 📋 Headers:", config.headers);
+    return config;
+  });
 
   api.interceptors.response.use(
-    (response) => {
-      console.log(`[API] ✅ ${response.status} ${response.config.url}`);
-      return response;
+    (res) => {
+      console.log(`[API] ✅ ${res.status} ${res.config.url}`);
+      return res;
     },
-    (error) => {
+    (err) => {
       console.error("[API] ❌", {
-        status: error.response?.status,
-        url: error.config?.url,
-        data: error.response?.data,
-        message: error.message,
+        status: err.response?.status,
+        url: err.config?.url,
+        data: err.response?.data,
+        message: err.message,
       });
-      return Promise.reject(error);
+      return Promise.reject(err);
     }
   );
 }
@@ -51,7 +48,7 @@ if (isDev) {
 // ✅ Auth (Sanctum)
 export async function loginRequest(payload: { email: string; password: string }) {
   await api.get("/sanctum/csrf-cookie");
-  const res = await api.post("/login", payload); // si tu backend usa /api/login, cámbialo
+  const res = await api.post("/login", payload); // ✅ CAMBIO
   return res.data;
 }
 
@@ -61,6 +58,6 @@ export async function meRequest() {
 }
 
 export async function logoutRequest() {
-  const res = await api.post("/logout"); // si tu backend usa /api/logout, cámbialo
+  const res = await api.post("/api/logout"); // ✅ CAMBIO
   return res.data;
 }
