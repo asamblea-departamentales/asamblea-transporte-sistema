@@ -21,7 +21,7 @@ class ForceCorrectCors
         
         $response = $next($request);
         
-        if ($origin === 'https://8311-2a09-bac5-565f-aa-00-11-1e1.ngrok-free.app') {
+        if ($origin === 'https://load-guarantee-ethics-extract.trycloudflare.com') {
             $response->headers->set('Access-Control-Allow-Origin', $origin);
             $response->headers->set('Access-Control-Allow-Credentials', 'true');
             $response->headers->set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');

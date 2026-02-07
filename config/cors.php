@@ -6,10 +6,12 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://parliament-calibration-letter-legislature.trycloudflare.com',
+        'https://asamblea-transporte-sistema.vercel.app',
     ],
 
-    'allowed_origins_patterns' => [],
+    'allowed_origins_patterns' => [
+        '/^https:\/\/asamblea-transporte-sistema.*\.vercel\.app$/',
+    ],
 
     'allowed_headers' => ['*'],
 
