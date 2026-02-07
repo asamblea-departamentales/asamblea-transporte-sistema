@@ -121,7 +121,7 @@ export default function TransportStep3Page() {
   // - credentials por si usas cookies / Sanctum (el backend lo decidirá)
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
     // 1. Recuperar el token del almacenamiento (ajusta 'token' si usas otro nombre)
-    const token = localStorage.getItem('token'); 
+    const token = localStorage.getItem('auth_token'); 
 
     const res = await fetch(`${API_BASE}/api/transport-requests`, {
       method: "POST",
