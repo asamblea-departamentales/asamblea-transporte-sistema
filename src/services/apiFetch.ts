@@ -148,3 +148,4 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   log(`✅ Datos recibidos:`, data);
   return data as T;
 }
+  

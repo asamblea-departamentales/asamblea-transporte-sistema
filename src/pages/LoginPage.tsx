@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import TextField from "../components/ui/TextField";
 import Button from "../components/ui/Button";
-import { loginRequest, meRequest } from "../lib/axios"; // ✅ Importar desde lib/axios
+import { loginRequest } from "../services/auth.service";
 import { useAuth } from "../auth/AuthContext";
 import logo from "../assets/asamble.png";
 
@@ -23,16 +23,14 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await loginRequest({ email, password });
-      const me = await meRequest();
-      setUser(me);
+      // ✅ loginRequest ya maneja CSRF y retorna el usuario
+      const { user } = await loginRequest({ email, password });
+      setUser(user);
       navigate("/dashboard", { replace: true });
     } catch (err: any) {
       console.error("Login error:", err);
       setError(
-        err?.response?.data?.message || 
-        err?.message || 
-        "Error al iniciar sesión."
+        err?.message || "Error al iniciar sesión. Verifica tus credenciales."
       );
     } finally {
       setLoading(false);
@@ -99,7 +97,7 @@ export default function LoginPage() {
               <div className="pt-4">
                 <div className="h-px w-full bg-slate-200/70" />
                 <p className="mt-4 text-center text-xs text-slate-500">
-                  © 2026 Asamblea Legislativa de El Salvado
+                  © 2026 Asamblea Legislativa de El Salvador
                 </p>
               </div>
             </form>
