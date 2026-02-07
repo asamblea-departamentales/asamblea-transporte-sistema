@@ -120,51 +120,47 @@ export default function TransportStep3Page() {
   // - Mandamos JSON con la estructura del wizard
   // - credentials por si usas cookies / Sanctum (el backend lo decidirá)
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-    // Si todavía NO tienes backend, esto fallará y te mostrará el error bonito.
+    // 1. Recuperar el token del almacenamiento (ajusta 'token' si usas otro nombre)
+    const token = localStorage.getItem('token'); 
+
     const res = await fetch(`${API_BASE}/api/transport-requests`, {
       method: "POST",
-      credentials: "include",
+      // Eliminamos credentials: "include" porque estamos usando Bearer Token manual
       headers: {
         "Content-Type": "application/json",
-        Accept: "application/json",
+        "Accept": "application/json",
+        // ✅ ENVIAR EL TOKEN
+        "Authorization": `Bearer ${token}`, 
+        // ✅ SALTAR ADVERTENCIA DE NGROK
+        "ngrok-skip-browser-warning": "true", 
       },
       body: JSON.stringify({
-        fecha: payload.fecha,
-        hora: payload.hora,
-        pasajeros: payload.pasajeros,
-        encargado: payload.encargado,
-        subencargado: payload.subencargado || null,
+        fecha_salida: payload.fecha, // Asegúrate que el nombre coincida con tu validación en Laravel
+        // Laravel espera 'unidad_solicitante_id', 'motivo_actividad', etc. según tu controlador
+        unidad_solicitante_id: 1, // ⚠️ Ajusta esto para que sea dinámico o un ID real
+        motivo_actividad: "Actividad de transporte", 
         origen: payload.origen,
-        destinos: (payload.destinos || [])
-          .filter((d) => d.address?.trim())
-          .map((d, idx) => ({
-            orden: idx + 1,
-            direccion: d.address.trim(),
-          })),
+        destino: (payload.destinos || [])[0]?.address || "Sin destino",
+        fecha_retorno: payload.fecha,
+        cantidad_personas: parseInt(payload.pasajeros || "1"),
+        prioridad: "media",
+        // Aquí puedes mapear el resto de tus campos...
       }),
     });
 
     let json: any = null;
     try {
       json = await res.json();
-    } catch {
-      // ignore
-    }
+    } catch { /* ignore */ }
 
     if (!res.ok) {
-      // Laravel suele responder { message, errors }
-      const msg =
-        json?.message ||
-        (json?.errors
-          ? Object.values(json.errors).flat().join(" ")
-          : "No se pudo enviar la solicitud.");
+      const msg = json?.message || "No se pudo enviar la solicitud.";
       throw new Error(msg);
     }
 
-    // Esperamos algo como: { ok:true, solicitudId:"ST-2026-001" }
     return {
       ok: true,
-      solicitudId: json?.solicitudId || json?.data?.solicitudId,
+      solicitudId: json?.id || json?.data?.id,
       message: json?.message,
     };
   }
