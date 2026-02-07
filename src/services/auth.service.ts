@@ -1,9 +1,6 @@
-import { apiFetch } from "./apiFetch";
+import { api } from "../lib/axios";
 
-export type LoginPayload = {
-  email: string;
-  password: string;
-};
+export type LoginPayload = { email: string; password: string };
 
 export type AuthUser = {
   id: string | number;
@@ -12,31 +9,24 @@ export type AuthUser = {
   roles: string[];
 };
 
-export type LoginResponse = {
-  user: AuthUser;
-};
+export async function loginRequest(payload: LoginPayload): Promise<AuthUser> {
+  // 1) generar cookie XSRF y sesión
+  await api.get("/sanctum/csrf-cookie");
 
-export async function loginRequest(payload: LoginPayload): Promise<LoginResponse> {
-  await apiFetch("/login", {
-    method: "POST",
-    body: JSON.stringify(payload),
-  });
-  
-  const user = await apiFetch<AuthUser>("/api/user", {
-    method: "GET",
-  });
-  
-  return { user };
+  // 2) login (web route)
+  await api.post("/login", payload);
+
+  // 3) traer usuario autenticado
+  const { data } = await api.get<AuthUser>("/api/user");
+  return data;
 }
 
 export async function meRequest(): Promise<AuthUser> {
-  return apiFetch<AuthUser>("/api/user", {
-    method: "GET",
-  });
+  const { data } = await api.get<AuthUser>("/api/user");
+  return data;
 }
 
 export async function logoutRequest(): Promise<void> {
-  await apiFetch("/logout", {
-    method: "POST",
-  });
+  // tu backend tiene POST /logout (web.php)
+  await api.post("/logout");
 }
