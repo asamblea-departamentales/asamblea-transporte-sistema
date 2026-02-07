@@ -19,10 +19,7 @@ async function parseError(res: Response): Promise<ApiError> {
       const txt = await res.text();
       details = txt;
       if (res.status === 419) {
-        message = "Error CSRF (419). Token inválido o expirado.";
-      }
-      if (res.status === 530) {
-        message = "Servidor no disponible.";
+        message = "CSRF token mismatch.";
       }
     }
   } catch {}
@@ -47,10 +44,11 @@ async function ensureCsrfCookie(): Promise<void> {
   
   const res = await fetch(`${BASE_URL}/sanctum/csrf-cookie`, {
     method: "GET",
-    credentials: "include",
+    credentials: "include", // ✅ Importante para cookies cross-domain
     headers: { 
       Accept: "application/json",
       Referer: window.location.origin,
+      Origin: window.location.origin, // ✅ Agregar Origin
     },
   });
   
@@ -60,10 +58,7 @@ async function ensureCsrfCookie(): Promise<void> {
   }
   
   log("✅ CSRF cookie obtenida");
-  
-  // Esperar un momento para que la cookie se establezca
-  await new Promise(resolve => setTimeout(resolve, 100));
-  
+  await new Promise(resolve => setTimeout(resolve, 200)); // ✅ Mayor espera
   logAllCookies();
 }
 
@@ -86,20 +81,17 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
 
   const headers = new Headers(options.headers || {});
   headers.set("Accept", "application/json");
+  headers.set("Content-Type", "application/json");
   headers.set("Referer", window.location.origin);
+  headers.set("Origin", window.location.origin); // ✅ Agregar Origin
 
-  if (options.body && !headers.has("Content-Type")) {
-    headers.set("Content-Type", "application/json");
-  }
-
-  // ✅ Enviar XSRF como header
   if (needsCsrf) {
     const xsrf = getCookie("XSRF-TOKEN");
     if (xsrf) {
       headers.set("X-XSRF-TOKEN", xsrf);
       log("🔐 X-XSRF-TOKEN agregado:", xsrf.substring(0, 30) + "...");
     } else {
-      log("⚠️ XSRF-TOKEN NO ENCONTRADO en cookies!");
+      log("⚠️ XSRF-TOKEN NO ENCONTRADO!");
       logAllCookies();
     }
   }
@@ -108,7 +100,8 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     log("📨 Enviando request a:", `${BASE_URL}${path}`);
     return fetch(`${BASE_URL}${path}`, {
       ...options,
-      credentials: "include",
+      method,
+      credentials: "include", // ✅ Muy importante
       headers,
     });
   };
@@ -116,22 +109,20 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   let res = await doRequest();
   log(`📬 Respuesta:`, res.status, res.statusText);
 
-  // ✅ Si da 419, refresca CSRF y reintenta 1 vez
+  // ✅ Retry en 419
   if (res.status === 419 && needsCsrf) {
-    log("⚠️ Error 419 detectado, limpiando cookies y reintentando...");
-    
-    // Esperar un poco más
-    await new Promise(resolve => setTimeout(resolve, 200));
+    log("⚠️ Error 419, reintentando con nuevo CSRF...");
+    await new Promise(resolve => setTimeout(resolve, 300));
     await ensureCsrfCookie();
     
     const xsrf = getCookie("XSRF-TOKEN");
     if (xsrf) {
       headers.set("X-XSRF-TOKEN", xsrf);
-      log("🔐 Nuevo X-XSRF-TOKEN:", xsrf.substring(0, 30) + "...");
+      log("🔐 Nuevo XSRF:", xsrf.substring(0, 30) + "...");
     }
     
     res = await doRequest();
-    log(`📬 Reintento - Respuesta:`, res.status, res.statusText);
+    log(`📬 Reintento:`, res.status, res.statusText);
   }
 
   if (!res.ok) {
@@ -140,12 +131,11 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
   }
 
   if (res.status === 204) {
-    log("✅ Respuesta 204 (sin contenido)");
+    log("✅ 204 No Content");
     return undefined as T;
   }
 
   const data = await res.json();
-  log(`✅ Datos recibidos:`, data);
+  log(`✅ Datos:`, data);
   return data as T;
 }
-  
