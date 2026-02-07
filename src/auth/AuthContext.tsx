@@ -1,3 +1,4 @@
+// src/auth/AuthContext.tsx
 import { createContext, useContext, useState, useEffect } from "react";
 import type { ReactNode } from "react";
 import { meRequest, logoutRequest } from "../services/auth.service";
@@ -8,7 +9,7 @@ interface AuthContextType {
   setUser: (user: AuthUser | null) => void;
   logout: () => Promise<void>;
   loading: boolean;
-  isAuthenticated: boolean; // ✅ Agregado
+  isAuthenticated: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -19,12 +20,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function checkAuth() {
+      const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+
       try {
         const userData = await meRequest();
         setUser(userData);
-        console.log("✅ Sesión activa:", userData);
+        console.log("✅ Token válido:", userData);
       } catch (err) {
-        console.log("ℹ️ No hay sesión activa");
+        console.log("ℹ️ Token inválido o vencido, limpiando...");
+        localStorage.removeItem("auth_token");
         setUser(null);
       } finally {
         setLoading(false);
@@ -37,19 +46,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   async function logout() {
     try {
       await logoutRequest();
+    } finally {
       setUser(null);
-      console.log("✅ Sesión cerrada");
-    } catch (err) {
-      console.error("❌ Logout error:", err);
-      setUser(null);
+      console.log("✅ Logout");
     }
   }
 
-  // ✅ Calcular isAuthenticated
-  const isAuthenticated = !!user;
-
   return (
-    <AuthContext.Provider value={{ user, setUser, logout, loading, isAuthenticated }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        setUser,
+        logout,
+        loading,
+        isAuthenticated: !!user,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
@@ -57,8 +69,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error("useAuth debe ser usado dentro de AuthProvider");
-  }
+  if (!context) throw new Error("useAuth debe ser usado dentro de AuthProvider");
   return context;
 }
