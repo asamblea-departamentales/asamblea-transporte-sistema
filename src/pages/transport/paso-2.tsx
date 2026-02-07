@@ -110,7 +110,7 @@ export default function TransportStep2Page() {
     // Para simplicidad, mostramos un mapa centrado en El Salvador
     const lat = 13.7942;
     const lng = -88.8965;
-    const zoom = 9;
+    //const zoom = 9;
 
     return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 1},${lat - 1},${lng + 1},${lat + 1}&layer=mapnik&marker=${lat},${lng}`;
   }, [origen, destinos]);

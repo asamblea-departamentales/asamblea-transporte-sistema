@@ -1,5 +1,6 @@
 // src/services/auth.api.ts
-import api from "../lib/axios";
+import { api } from "../lib/axios";
+
 import axios from "axios";
 
 export type LoginPayload = {

@@ -108,9 +108,7 @@ export default function TransportStep3Page() {
     };
   }, [data.origen, mainDestino, extraDestinos]);
 
-  function saveToStorage(next: WizardData) {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
-  }
+
 
   function handleBack() {
     // no tocamos nada, solo volvemos

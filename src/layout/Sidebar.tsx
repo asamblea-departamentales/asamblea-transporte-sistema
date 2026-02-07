@@ -57,15 +57,15 @@ function NavItem({
 export default function Sidebar({ open, onClose }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logoutLocal } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
   const onNavigateMobile = () => onClose();
 
   const handleLogout = () => {
-    logout();
-    navigate("/login");
-  };
+  logoutLocal();
+  navigate("/login");
+};
 
   const isNewRequestActive =
     location.pathname === "/nueva-solicitud" ||

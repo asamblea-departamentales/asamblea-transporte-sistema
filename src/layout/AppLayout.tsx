@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import Sidebar from "../layout/Sidebar";
-import Topbar from "../layout/Topbar";
+//import Topbar from "../layout/Topbar";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
