@@ -54,12 +54,15 @@ class SolicitudTransporteController extends Controller
         ]);
 
         $solicitud = SolicitudTransporte::create([
-            ...$data,
-            'solicitante_id' => Auth::id(),
-            'estado' => EstadoSolicitudEnum::BORRADOR,
-        ]);
+    ...$data,
+    'solicitante_id' => Auth::id(),
+    'estado' => EstadoSolicitudEnum::BORRADOR,
+    ]);
 
-        return response()->json($solicitud, Response::HTTP_CREATED);
+    $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+    return response()->json($solicitud->fresh()->load(['unidad','solicitante']), 201);
+
     }
 
     /**
