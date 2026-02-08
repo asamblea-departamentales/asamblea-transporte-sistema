@@ -51,6 +51,9 @@ class SolicitudTransporteService
         return DB::transaction(function() use ($solicitud, $jefeId, $comentario){
             $anterior = $solicitud->estado;
 
+            //Guardar comentario siempre
+            $solicitud->comentario_jefe = $comentario;
+
             //Transicion automatica de PENDIENTE a EN_REVISION
             if ($solicitud->estado === EstadoSolicitudEnum::PENDIENTE) {
                 $solicitud->estado = EstadoSolicitudEnum::EN_REVISION;
@@ -87,7 +90,7 @@ class SolicitudTransporteService
             $solicitud->save();
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, null);
-            $this->registrarEvento(solicitud: $solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
 
             return $solicitud;
         });

@@ -20,28 +20,36 @@ class RecentSolicitudes extends BaseWidget
         return $table
             ->query(
                 // Tomamos las últimas 5 solicitudes creadas
-                SolicitudTransporte::query()->latest()->limit(5)
+                SolicitudTransporte::query()
+                    ->with(['unidad']) // ✅ cargar relación usada en la tabla
+                    ->latest()
+                    ->limit(5)
             )
             ->columns([
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Código')
                     ->searchable(),
-                
-                Tables\Columns\TextColumn::make('tipo')
-                    ->label('Tipo de Solicitud'),
 
-                Tables\Columns\TextColumn::make('unidadSolicitante.nombre')
+                // ✅ no existe "tipo" en SolicitudTransporte, así que ponemos fijo
+                Tables\Columns\TextColumn::make('tipo_solicitud')
+                    ->label('Tipo de Solicitud')
+                    ->state('Transporte'),
+
+                // ✅ relación correcta: unidad()
+                Tables\Columns\TextColumn::make('unidad.nombre')
                     ->label('Unidad'),
 
                 Tables\Columns\TextColumn::make('estado')
                     ->badge()
-                    ->color(fn (string $state): string => match ($state) {
+                    ->color(fn ($state): string => match ($state->value ?? $state) {
                         'pendiente' => 'warning',
-                        'aprobado' => 'success',
-                        'rechazado' => 'danger',
+                        'aprobada', 'aprobado' => 'success',
+                        'rechazada', 'rechazado' => 'danger',
+                        'borrador' => 'gray',
                         default => 'gray',
-                    }),
-                
+                    })
+                    ->formatStateUsing(fn ($state) => ucfirst($state->value ?? $state)),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Fecha Creación')
                     ->dateTime('d/m/Y H:i')

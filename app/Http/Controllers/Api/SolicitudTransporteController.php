@@ -79,104 +79,88 @@ class SolicitudTransporteController extends Controller
      */
     public function enviar(SolicitudTransporte $solicitud)
     {
-        $this->authorizeOwner($solicitud);
+     $this->authorizeOwner($solicitud);
 
-        try {
-            $this->service->enviarSolicitud($solicitud, Auth::id());
+     try {
+        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
-            return response()->json([
-                'message' => 'Solicitud enviada correctamente',
-                'data' => $solicitud,
-            ]);
-        } catch (\DomainException $e) {
-            return response()->json(
-                ['message' => $e->getMessage()],
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+        return response()->json([
+            'message' => 'Solicitud enviada correctamente',
+            'data' => $solicitud->fresh()->load(['unidad', 'solicitante']),
+          ]);
+      } catch (\DomainException $e) {
+        return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+      }
     }
+
 
     /**
      * Observación del jefe
      */
     public function observacion(Request $request, SolicitudTransporte $solicitud)
-    {
-        $this->authorizeJefe();
+{
+    $this->authorizeJefe();
 
-        $data = $request->validate([
-            'comentario' => ['required', 'string', 'max:2000'],
+    $data = $request->validate([
+        'comentario' => ['required', 'string', 'max:2000'],
+    ]);
+
+    try {
+        $solicitud = $this->service->observar($solicitud, Auth::id(), $data['comentario']);
+
+        return response()->json([
+            'message' => 'Observación registrada',
+            'data' => $solicitud->fresh()->load(['unidad', 'solicitante']),
         ]);
-
-        try {
-            $this->service->observar(
-                $solicitud,
-                Auth::id(),
-                $data['comentario']
-            );
-
-            return response()->json([
-                'message' => 'Observación registrada',
-                'data' => $solicitud,
-            ]);
-        } catch (\DomainException $e) {
-            return response()->json(
-                ['message' => $e->getMessage()],
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+    } catch (\DomainException $e) {
+        return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+}
+
 
     /**
      * Aprobar solicitud
      */
     public function aprobar(SolicitudTransporte $solicitud)
-    {
-        $this->authorizeJefe();
+{
+    $this->authorizeJefe();
 
-        try {
-            $this->service->aprobar($solicitud, Auth::id());
+    try {
+        $solicitud = $this->service->aprobar($solicitud, Auth::id());
 
-            return response()->json([
-                'message' => 'Solicitud aprobada',
-                'data' => $solicitud,
-            ]);
-        } catch (\DomainException $e) {
-            return response()->json(
-                ['message' => $e->getMessage()],
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+        return response()->json([
+            'message' => 'Solicitud aprobada',
+            'data' => $solicitud->fresh()->load(['unidad', 'solicitante']),
+        ]);
+    } catch (\DomainException $e) {
+        return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+}
+
 
     /**
      * Rechazar solicitud
      */
     public function rechazar(Request $request, SolicitudTransporte $solicitud)
-    {
-        $this->authorizeJefe();
+{
+    $this->authorizeJefe();
 
-        $data = $request->validate([
-            'comentario' => ['required', 'string', 'max:2000'],
+    $data = $request->validate([
+        'comentario' => ['required', 'string', 'max:2000'],
+    ]);
+
+    try {
+        $solicitud = $this->service->rechazar($solicitud, Auth::id(), $data['comentario']);
+
+        return response()->json([
+            'message' => 'Solicitud rechazada',
+            'data' => $solicitud->fresh()->load(['unidad', 'solicitante']),
         ]);
-
-        try {
-            $this->service->rechazar(
-                $solicitud,
-                Auth::id(),
-                $data['comentario']
-            );
-
-            return response()->json([
-                'message' => 'Solicitud rechazada',
-                'data' => $solicitud,
-            ]);
-        } catch (\DomainException $e) {
-            return response()->json(
-                ['message' => $e->getMessage()],
-                Response::HTTP_UNPROCESSABLE_ENTITY
-            );
-        }
+    } catch (\DomainException $e) {
+        return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
+}
+
 
     // =====================================================
     // Helpers de autorización

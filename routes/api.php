@@ -1,60 +1,42 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
+use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 
-// Login (público)
-// Route::post('/login', [AuthController::class, 'login']);
+// ✅ AUTH POR TOKEN (PUBLICO)
+Route::post('/auth/login', [TokenAuthController::class, 'login']);
 
-// Rutas protegidas con Sanctum
+// ✅ TODO lo protegido
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Usuario autenticado
+    // ✅ Usuario autenticado (puedes usar tu AuthController o TokenAuthController)
+    Route::get('/auth/me', [TokenAuthController::class, 'me']);
+    Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
+
+    // si quieres mantener /api/user por compatibilidad:
     Route::get('/user', [AuthController::class, 'user']);
 
-    // Logout
-   // Route::post('/logout', function (Request $request) {
-        // Si estás usando tokens de Sanctum
-   //     if ($request->user()) {
-   //         $request->user()->tokens()->delete();
-   //     }
-//
-   //     // Por si hay sesión (no estorba)
-   //     auth()->logout();
-
-    //    return response()->json([
-    //        'message' => 'Logout exitoso',
-    //    ]);
-  //  });
-
-    // ✅ RUTAS “COMPATIBILIDAD FRONTEND” (para que no de 404)
     Route::get('/dashboard/summary', function () {
-        return response()->json([
-            'total_solicitudes' => 0,
-            'pendientes' => 0,
-            'aprobadas' => 0,
-            'rechazadas' => 0,
-        ]);
+    return response()->json([
+        'pending'     => 0,
+        'in_progress' => 0,
+        'accepted'    => 0,
+        'completed'   => 0,
+    ]);
     });
 
     Route::get('/solicitudes/recientes', function () {
-        return response()->json([
-            'data' => [],
-        ]);
+        return response()->json(['data' => []]);
     });
 
-    // Solicitantes (usuarios) - sus solicitudes
-    Route::apiResource('solicitudes-transporte', SolicitudTransporteController::class);
+Route::apiResource('transport-requests', SolicitudTransporteController::class);
+    Route::post('transport-requests/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
 
-    // Acciones del solicitante
-    Route::post('solicitudes-transporte/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
-
-    // Acciones del jefe (PO)
     Route::middleware('role:jefe')->group(function () {
-        Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
-        Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
-        Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
+        Route::post('transport-requests/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
+        Route::post('transport-requests/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
+        Route::post('transport-requests/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
     });
 });

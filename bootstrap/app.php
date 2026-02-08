@@ -14,7 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         // Esta sola línea hace TODO el trabajo sucio por ti:
         // Carga EnsureFrontendRequestsAreStateful, maneja sesiones y cookies.
-        $middleware->statefulApi();
+        //$middleware->statefulApi();
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,

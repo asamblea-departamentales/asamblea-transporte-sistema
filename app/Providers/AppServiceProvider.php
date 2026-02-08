@@ -3,25 +3,22 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\URL;
 
 class AppServiceProvider extends ServiceProvider
 {
-    /**
-     * Register any application services.
-     */
     public function register(): void
     {
         //
     }
 
-    /**
-     * Bootstrap any application services.
-     */
     public function boot(): void
     {
-        //
-        if (config('app.env') === 'production') {
-    \Illuminate\Support\Facades\URL::forceScheme('https');
-}
+        // Forzar HTTPS si viene de proxy (ngrok, cloudflare, etc)
+        if (request()->server('HTTP_X_FORWARDED_PROTO') === 'https' || 
+            request()->server('HTTP_X_FORWARDED_SSL') === 'on' ||
+            config('app.env') === 'production') {
+            URL::forceScheme('https');
+        }
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Filament\Resources\SolicitudTransporteResource\Pages;
 use App\Filament\Resources\SolicitudTransporteResource\RelationManagers;
 use App\Models\SolicitudTransporte;
@@ -45,9 +46,10 @@ class SolicitudTransporteResource extends Resource
                     ->relationship('unidad', 'nombre')
                     ->disabled(),
 
-                    Forms\Components\TextInput::make('solicitante.name')
+                    Forms\Components\TextInput::make('solicitante.id')
                     ->label('Solicitante')
-                    ->disabled(),
+                    ->disabled()
+                        ->formatStateUsing(fn ($state, SolicitudTransporte $record) => $record->solicitante?->name ?? '-'),
 
                     Forms\Components\Textarea::make('motivo_actividad')
                     ->disabled()
@@ -70,10 +72,28 @@ class SolicitudTransporteResource extends Resource
                     ->disabled(),
 
                     Forms\Components\Select::make('prioridad')
-                    ->disabled(),
+                 ->disabled()
+                 ->options([
+                    PrioridadSolicitudEnum::BAJA->value => 'BAJA',
+                    PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
+                    PrioridadSolicitudEnum::ALTA->value => 'ALTA',
+                  ]),
+
 
                     Forms\Components\Select::make('estado')
-                    ->disabled(),
+    ->disabled()
+    ->options([
+        EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
+        EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
+        EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
+        EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
+        EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
+        EstadoSolicitudEnum::PROGRAMADA->value => 'Programada',
+        EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
+        EstadoSolicitudEnum::COMPLETADA->value => 'Completada',
+        EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
+    ]),
+
                 ])
                 ->columns(2),
 
@@ -117,12 +137,15 @@ class SolicitudTransporteResource extends Resource
                 Tables\Columns\TextColumn::make('prioridad')
                     ->label('Prioridad')
                     ->badge()
-                    ->formatStateUsing(fn (string $state) => strtoupper($state))
-                    ->color(fn (string $state): string => match (strtolower($state)) {
-                        'alta' => 'danger',
-                        'media' => 'warning',
-                        'baja' => 'success',
-                        default => 'gray',
+                    ->formatStateUsing(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                        PrioridadSolicitudEnum::ALTA => 'ALTA',
+                        PrioridadSolicitudEnum::MEDIA => 'MEDIA',
+                        PrioridadSolicitudEnum::BAJA => 'BAJA',
+                    })
+                    ->color(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                        PrioridadSolicitudEnum::ALTA => 'danger',
+                        PrioridadSolicitudEnum::MEDIA => 'warning',
+                        PrioridadSolicitudEnum::BAJA => 'success',
                     }),
 
                 // Estado configurado correctamente con el Enum
@@ -181,9 +204,9 @@ class SolicitudTransporteResource extends Resource
                 
                 Tables\Filters\SelectFilter::make('prioridad')
                     ->options([
-                        'baja' => 'BAJA',
-                        'media' => 'MEDIA',
-                        'alta' => 'ALTA',
+                        PrioridadSolicitudEnum::BAJA->value => 'BAJA',
+                        PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
+                        PrioridadSolicitudEnum::ALTA->value => 'ALTA',
                     ]),
 
                 Tables\Filters\SelectFilter::make('unidad_solicitante_id')
@@ -339,6 +362,14 @@ class SolicitudTransporteResource extends Resource
 
             ->bulkActions([]); //sin acciones masivas por ahora
     }
+
+
+    public static function getEloquentQuery(): Builder
+    {
+    return parent::getEloquentQuery()
+        ->with(['solicitante', 'unidad', 'autorizador']);
+    }   
+
 
     public static function getRelations(): array
     {

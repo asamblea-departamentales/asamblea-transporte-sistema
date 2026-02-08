@@ -181,7 +181,7 @@ return [
     |
     */
 
-'http_only' => env('SESSION_HTTP_ONLY', true),  // ← Quita el "key:"
+    'http_only' => env('SESSION_HTTP_ONLY', true),  // ← Quita el "key:"
     /*
     |--------------------------------------------------------------------------
     | Same-Site Cookies
@@ -197,7 +197,7 @@ return [
     |
     */
 
-        'same_site' => env('SESSION_SAMESITE', env('SESSION_SAME_SITE', 'none')),
+        'same_site' => env('SESSION_SAMESITE', default: env('SESSION_SAME_SITE', 'none')),
     /*
     |--------------------------------------------------------------------------
     | Partitioned Cookies
