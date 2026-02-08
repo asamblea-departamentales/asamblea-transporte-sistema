@@ -72,7 +72,7 @@ class BitacoraEventoResource extends Resource
                     ->label('ID')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('datos_extra')
+                Tables\Columns\TextColumn::make('datos_extras')
                     ->label('Extra')
                     ->limit(40)
                     ->toggleable(isToggledHiddenByDefault: true),

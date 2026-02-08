@@ -62,7 +62,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::OBSERVAR->value,
                         'user_id'      => auth()->id(),
-                        'datos_extra'  => [
+                        'datos_extras'  => [
                             'comentario' => $data['comentario_jefe'],
                         ],
                     ]);
@@ -104,7 +104,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::APROBAR->value,
                         'user_id'      => auth()->id(),
-                        'datos_extra'  => null,
+                        'datos_extras'  => null,
                     ]);
                 })
                 ->visible(fn () =>
@@ -151,7 +151,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::RECHAZAR->value,
                         'user_id'      => auth()->id(),
-                        'datos_extra'  => [
+                        'datos_extras'  => [
                             'comentario' => $data['comentario_jefe'],
                         ],
                     ]);

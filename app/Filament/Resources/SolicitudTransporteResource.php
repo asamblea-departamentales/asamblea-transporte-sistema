@@ -261,7 +261,7 @@ class SolicitudTransporteResource extends Resource
                 'entidad_id'   => $record->id,
                 'accion'       => AccionBitacoraEnum::OBSERVAR->value,
                 'user_id'      => auth()->id(),
-                'datos_extra'  => [
+                'datos_extras'  => [
                     'comentario' => $data['comentario_jefe'],
                 ],
             ]);
@@ -303,7 +303,7 @@ class SolicitudTransporteResource extends Resource
                 'entidad_id'   => $record->id,
                 'accion'       => AccionBitacoraEnum::APROBAR->value,
                 'user_id'      => auth()->id(),
-                'datos_extra'  => null,
+                'datos_extras'  => null,
             ]);
         })
         ->visible(fn (SolicitudTransporte $record) =>
@@ -350,7 +350,7 @@ class SolicitudTransporteResource extends Resource
                 'entidad_id'   => $record->id,
                 'accion'       => AccionBitacoraEnum::RECHAZAR->value,
                 'user_id'      => auth()->id(),
-                'datos_extra'  => [
+                'datos_extras'  => [
                     'comentario' => $data['comentario_jefe'],
                 ],
             ]);

@@ -11,7 +11,7 @@ class BitacoraEvento extends Model
         'entidad_id',
         'accion',
         'user_id',
-        'datos_extra',
+        'datos_extras',
     ];
 
     protected $casts = [
