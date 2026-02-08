@@ -21,8 +21,8 @@ class TokenAuthController extends Controller
 
         $user = $request->user();
 
-        // Opcional: dejar solo un token activo por usuario
-        $user->tokens()->delete();
+        //Solo borra tokens dentro de la misma app (ej: si tienes app móvil y web, no se matan entre sí)
+        $user->tokens()->where('name', 'vercel')->delete();
 
         $token = $user->createToken('vercel')->plainTextToken;
 
