@@ -142,7 +142,7 @@ class SolicitudTransporteService
             'entidad_id' => $solicitud->id,
             'accion' => $accion,
             'user_id' => $userId,
-            'datos_extra' => $extra,
+            'datos_extras' => $extra,
         ]);
     }
 }

@@ -48,7 +48,6 @@ class SolicitudTransportePolicy
      */
     public function update(User $user, SolicitudTransporte $solicitud): bool
     {
-        return $user->id === $solicitud->solicitante_id && 
-               $solicitud->estado === EstadoSolicitudEnum::BORRADOR;
+        return false; // Deshabilitado para evitar confusión, el proceso es: Crear -> Enviar (no hay edición después de enviar)
     }
 }
