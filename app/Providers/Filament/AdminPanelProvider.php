@@ -30,6 +30,7 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
+            ->darkMode(false) // Deshabilitar modo oscuro
             // Configuración del Logo
             ->brandLogo(asset('images/logo-azul-fondo-transparente.png')) 
             ->brandLogoHeight('3rem') // Importante para que no se vea gigante
