@@ -59,7 +59,7 @@ class BitacoraEventoResource extends Resource
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('usuario.name')
+                Tables\Columns\TextColumn::make('solicitante_id')
                     ->label('Usuario')
                     ->searchable()
                     ->sortable(),
