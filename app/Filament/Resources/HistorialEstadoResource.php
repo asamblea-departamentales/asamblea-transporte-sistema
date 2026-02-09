@@ -38,10 +38,14 @@ class HistorialEstadoResource extends Resource
     }
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //Como solo es para ver, no necesitamos formulario
-            ]);
+        return $form->schema([
+        Forms\Components\TextInput::make('entidad_tipo')->disabled(),
+        Forms\Components\TextInput::make('entidad_id')->disabled(),
+        Forms\Components\TextInput::make('estado_anterior')->disabled(),
+        Forms\Components\TextInput::make('estado_nuevo')->disabled(),
+        Forms\Components\Textarea::make('comentario')->disabled(),
+        Forms\Components\DateTimePicker::make('created_at')->disabled(),
+    ]);
     }
 
     public static function table(Table $table): Table
