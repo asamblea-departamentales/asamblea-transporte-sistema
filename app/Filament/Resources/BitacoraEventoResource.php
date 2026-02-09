@@ -39,7 +39,7 @@ class BitacoraEventoResource extends Resource
     {
         return $form->schema([
         Forms\Components\DateTimePicker::make('created_at')->label('Fecha')->disabled(),
-        Forms\Components\TextInput::make('usuario.name')->label('Usuario')->disabled(),
+        Forms\Components\TextInput::make('solicitante_id')->label('Usuario')->disabled(),
         Forms\Components\TextInput::make('accion')->disabled(),
         Forms\Components\TextInput::make('entidad_tipo')->disabled(),
         Forms\Components\TextInput::make('entidad_id')->disabled(),
