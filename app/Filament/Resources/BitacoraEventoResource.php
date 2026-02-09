@@ -105,6 +105,13 @@ class BitacoraEventoResource extends Resource
             ->bulkActions([]);
     }
 
+    //Agregado
+    public static function getEloquentQuery(): Builder
+    {
+      return parent::getEloquentQuery()->with('usuario');
+    }
+
+
     public static function getPages(): array
     {
         return [
