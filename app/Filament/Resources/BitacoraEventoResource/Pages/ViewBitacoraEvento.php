@@ -3,21 +3,14 @@
 namespace App\Filament\Resources\BitacoraEventoResource\Pages;
 
 use App\Filament\Resources\BitacoraEventoResource;
-use Filament\Resources\Pages\Page;
+use Filament\Resources\Pages\ViewRecord;
 
-class ViewBitacoraEvento extends Page
+class ViewBitacoraEvento extends ViewRecord
 {
     protected static string $resource = BitacoraEventoResource::class;
 
- // PO: sin acciones (no editar, no borrar)
     protected function getHeaderActions(): array
     {
         return [];
-    }
-
-    // Extra seguridad: aunque alguien intente forzar, no puede editar ni borrar
-    protected function canCreate(): bool
-    {
-        return false;
     }
 }

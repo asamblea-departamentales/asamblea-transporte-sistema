@@ -37,10 +37,16 @@ class BitacoraEventoResource extends Resource
 
     public static function form(Form $form): Form
     {
-        return $form
-            ->schema([
-                //Como solo es para ver, no necesitamos formulario
-            ]);
+        return $form->schema([
+        Forms\Components\DateTimePicker::make('created_at')->label('Fecha')->disabled(),
+        Forms\Components\TextInput::make('usuario.name')->label('Usuario')->disabled(),
+        Forms\Components\TextInput::make('accion')->disabled(),
+        Forms\Components\TextInput::make('entidad_tipo')->disabled(),
+        Forms\Components\TextInput::make('entidad_id')->disabled(),
+        Forms\Components\Textarea::make('datos_extras')
+         ->formatStateUsing(fn ($state) => is_array($state) ? json_encode($state, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE) : $state)
+        ->disabled(),
+         ]);
     }
 
     public static function table(Table $table): Table
