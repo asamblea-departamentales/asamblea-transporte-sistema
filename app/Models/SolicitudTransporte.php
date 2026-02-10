@@ -26,6 +26,7 @@ class SolicitudTransporte extends Model
         'decidido_por',
         'decidido_en',
         'comentario_jefe',
+        'destino_adicional'
     ];
 
     protected $casts = [
@@ -57,6 +58,12 @@ class SolicitudTransporte extends Model
 
         $solicitud->codigo = "TR-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
     });
+}
+
+// Este método hará la magia al mostrar el dato
+public function getDestinoAdicionalAttribute($value)
+{
+    return $value ?? 'Sin destino adicional';
 }
 
     // Relaciones

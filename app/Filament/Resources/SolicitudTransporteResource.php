@@ -60,7 +60,15 @@ class SolicitudTransporteResource extends Resource
                     ->disabled(),
                     Forms\Components\TextInput::make('destino')
                     ->disabled(),
-                    //=================================================================
+
+                    //Agregado
+                    Forms\Components\TextInput::make('destino_adicional')
+                     ->label('Destino Adicional')
+                     ->disabled() // Lo mantenemos deshabilitado para la vista de revisión
+                     ->placeholder('Opcional')
+                     ->maxLength(255)
+                     // Esta función transforma el valor nulo en el texto que quieres ver
+                     ->formatStateUsing(fn ($state) => $state ?? 'Sin destino adicional'),                    //=================================================================
 
                     Forms\Components\DateTimePicker::make('fecha_salida')
                     ->disabled(),
