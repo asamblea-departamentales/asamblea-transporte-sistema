@@ -6,7 +6,7 @@ return [
         'slug' => 'shield/roles',
         'navigation_sort' => 2,
         'navigation_badge' => true,
-        'navigation_group' => 'Administración', // <--- Cambia esto (debe ser idéntico al de UserResource)       
+        'resource' => \App\Filament\Resources\RoleResource::class, // ← Sin \Shield
         'sub_navigation_position' => null,
         'is_globally_searchable' => false,
         'show_model_path' => true,
