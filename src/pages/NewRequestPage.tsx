@@ -90,7 +90,7 @@ export default function NewRequestPage() {
           "Solicitudes de transporte institucional, asignación de vehículos y seguimiento en tiempo real.",
         href: "/solicitudes/transporte/paso-1",
         accent: "blue",
-        allowedRoles: ["solicitante", "admin", "supervisor"], // ✅ solicitante SI
+        allowedRoles: ["solicitante", "admin", "supervisor", "jefe"], // ✅ solicitante SI
         icon: (
           <svg
             width="28"
@@ -115,7 +115,7 @@ export default function NewRequestPage() {
           "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
         href: "/solicitudes/combustible/nueva",
         accent: "amber",
-        allowedRoles: ["admin", "supervisor"], // ❌ solicitante NO
+        allowedRoles: ["admin", "supervisor", "jefe"], // ❌ solicitante NO
         icon: (
           <svg
             width="28"
@@ -142,7 +142,7 @@ export default function NewRequestPage() {
           "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
         href: "/solicitudes/mantenimiento/nueva",
         accent: "emerald",
-        allowedRoles: ["admin", "supervisor"], // ❌ solicitante NO
+        allowedRoles: ["admin", "supervisor", "jefe"], // ❌ solicitante NO
         icon: (
           <svg
             width="28"
@@ -170,7 +170,6 @@ export default function NewRequestPage() {
 
   // ✅ Filtra por roles: si alguno de los roles del usuario está permitido, se muestra.
   const visibleModules = useMemo(() => {
-    // Si aún no cargó el user (o viene vacío), podés ocultar todo:
     if (!user || userRoles.length === 0) return [];
     return modules.filter((m) =>
       m.allowedRoles.some((r) => userRoles.includes(r))
@@ -242,8 +241,20 @@ export default function NewRequestPage() {
         </div>
       </div>
 
-      {/* Cards Grid */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* Cards Grid (✅ CORREGIDO) */}
+      <div
+        className={[
+          "grid gap-6",
+          // 1 tarjeta => centrada
+          visibleModules.length === 1
+            ? "grid-cols-1 place-items-center"
+            : // 2 tarjetas => 2 columnas
+            visibleModules.length === 2
+            ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-2"
+            : // 3 o más => normal 3
+              "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
+        ].join(" ")}
+      >
         {visibleModules.map((m) => (
           <button
             key={m.key}
@@ -252,6 +263,8 @@ export default function NewRequestPage() {
               "group relative overflow-hidden text-left rounded-3xl border border-slate-200/60 bg-white/90 backdrop-blur-sm p-8 shadow-lg shadow-slate-200/50",
               "transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-300/50",
               "focus:outline-none focus:ring-4 focus:ring-blue-500/20",
+              // ✅ si solo hay 1 tarjeta: ancho bonito
+              visibleModules.length === 1 ? "w-full max-w-xl" : "w-full",
             ].join(" ")}
           >
             {/* Decorative gradient background */}
@@ -270,7 +283,6 @@ export default function NewRequestPage() {
               <div className="flex items-start justify-between">
                 <AccentIcon accent={m.accent} icon={m.icon} />
 
-                {/* Decorative corner element */}
                 <div className="h-12 w-12 rounded-2xl bg-slate-50 ring-1 ring-slate-200/60 opacity-0 transition-all duration-300 group-hover:opacity-100 group-hover:rotate-12" />
               </div>
 
@@ -285,7 +297,6 @@ export default function NewRequestPage() {
               <div className="mt-8 flex items-center justify-between">
                 <ActionLink accent={m.accent} />
 
-                {/* Status indicator */}
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
                   <span className="text-xs font-bold text-slate-500">
@@ -297,8 +308,6 @@ export default function NewRequestPage() {
           </button>
         ))}
       </div>
-
-      
     </div>
   );
 }
