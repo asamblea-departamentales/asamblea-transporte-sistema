@@ -34,7 +34,7 @@ export default function RequestDetailPage() {
     let alive = true;
 
     async function load() {
-      if (!id) return; // TypeScript guard
+      if (!id) return;
       
       setLoading(true);
       setError(null);
@@ -60,20 +60,20 @@ export default function RequestDetailPage() {
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     
-    if (statusLower.includes("aprob") || statusLower.includes("aceptad")) {
+    if (statusLower === "aprobada") {
       return "inline-flex items-center gap-2 rounded-2xl bg-emerald-100 px-4 py-2.5 text-sm font-bold text-emerald-700 ring-2 ring-emerald-200";
     }
-    if (statusLower.includes("pend")) {
+    if (statusLower === "pendiente") {
       return "inline-flex items-center gap-2 rounded-2xl bg-amber-100 px-4 py-2.5 text-sm font-bold text-amber-700 ring-2 ring-amber-200";
     }
-    if (statusLower.includes("progres")) {
+    if (statusLower === "observada") {
       return "inline-flex items-center gap-2 rounded-2xl bg-blue-100 px-4 py-2.5 text-sm font-bold text-blue-700 ring-2 ring-blue-200";
     }
-    if (statusLower.includes("completad") || statusLower.includes("finalizad")) {
-      return "inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 ring-2 ring-slate-200";
-    }
-    if (statusLower.includes("rechazad")) {
+    if (statusLower === "rechazada") {
       return "inline-flex items-center gap-2 rounded-2xl bg-red-100 px-4 py-2.5 text-sm font-bold text-red-700 ring-2 ring-red-200";
+    }
+    if (statusLower === "borrador") {
+      return "inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 ring-2 ring-slate-200";
     }
     return "inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-4 py-2.5 text-sm font-bold text-slate-700 ring-2 ring-slate-200";
   };
@@ -81,36 +81,36 @@ export default function RequestDetailPage() {
   const getStatusIcon = (status: string) => {
     const statusLower = status.toLowerCase();
     
-    if (statusLower.includes("aprob") || statusLower.includes("aceptad")) {
+    if (statusLower === "aprobada") {
       return (
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
       );
     }
-    if (statusLower.includes("pend")) {
+    if (statusLower === "pendiente") {
       return (
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
         </svg>
       );
     }
-    if (statusLower.includes("progres")) {
+    if (statusLower === "observada") {
       return (
         <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
-        </svg>
-      );
-    }
-    if (statusLower.includes("completad") || statusLower.includes("finalizad")) {
-      return (
-        <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
-          <path d="M9 2a1 1 0 000 2h2a1 1 0 100-2H9z" />
-          <path fillRule="evenodd" d="M4 5a2 2 0 012-2 3 3 0 003 3h2a3 3 0 003-3 2 2 0 012 2v11a2 2 0 01-2 2H6a2 2 0 01-2-2V5zm3 4a1 1 0 000 2h.01a1 1 0 100-2H7zm3 0a1 1 0 000 2h3a1 1 0 100-2h-3zm-3 4a1 1 0 100 2h.01a1 1 0 100-2H7zm3 0a1 1 0 100 2h3a1 1 0 100-2h-3z" clipRule="evenodd" />
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
       );
     }
     return null;
+  };
+
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
   };
 
   return (
@@ -131,7 +131,7 @@ export default function RequestDetailPage() {
             Detalle de Solicitud
           </h1>
           <p className="mt-1.5 text-base text-slate-600">
-            Información completa de la solicitud
+            Información completa de la solicitud de transporte
           </p>
         </div>
       </div>
@@ -160,18 +160,20 @@ export default function RequestDetailPage() {
             <div>
               <div className="flex items-center gap-3">
                 <h2 className="text-2xl font-black tracking-tight text-slate-900">
-                  {loading ? "Cargando..." : request?.code}
+                  {loading ? "Cargando..." : request?.codigo}
                 </h2>
                 {!loading && request && (
-                  <span className={getStatusBadge(request.status)}>
-                    {getStatusIcon(request.status)}
-                    {request.status}
+                  <span className={getStatusBadge(request.estado)}>
+                    {getStatusIcon(request.estado)}
+                    {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
                   </span>
                 )}
               </div>
-              <p className="mt-1.5 text-sm text-slate-600">
-                {loading ? "..." : request?.type}
-              </p>
+              {!loading && request?.unidad && (
+                <p className="mt-1.5 text-sm text-slate-600">
+                  {request.unidad.nombre}
+                </p>
+              )}
             </div>
           </div>
         </div>
@@ -193,25 +195,7 @@ export default function RequestDetailPage() {
                     </label>
                     <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
                       <div className="h-2 w-2 rounded-full bg-blue-500" />
-                      <span className="font-bold text-slate-900">{request.code}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-600">
-                      Fecha de Solicitud
-                    </label>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <span className="font-semibold text-slate-900">{request.date}</span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-bold text-slate-600">
-                      Tipo de Solicitud
-                    </label>
-                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                      <span className="font-semibold text-slate-900">{request.type}</span>
+                      <span className="font-bold text-slate-900">{request.codigo}</span>
                     </div>
                   </div>
 
@@ -220,86 +204,149 @@ export default function RequestDetailPage() {
                       Estado
                     </label>
                     <div className="flex">
-                      <span className={getStatusBadge(request.status)}>
-                        {getStatusIcon(request.status)}
-                        {request.status}
+                      <span className={getStatusBadge(request.estado)}>
+                        {getStatusIcon(request.estado)}
+                        {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Unidad Solicitante
+                    </label>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="font-semibold text-slate-900">
+                        {request.unidad?.nombre ?? "—"}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Prioridad
+                    </label>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="font-semibold text-slate-900 capitalize">
+                        {request.prioridad}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Route Info */}
-              {(request.origin || request.destination) && (
-                <div>
-                  <h3 className="mb-4 text-lg font-black text-slate-900">
-                    Información de Ruta
-                  </h3>
-                  <div className="grid gap-6 sm:grid-cols-2">
-                    {request.origin && (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-600">
-                          Origen
-                        </label>
-                        <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                          <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="font-semibold text-slate-900">{request.origin}</span>
-                        </div>
-                      </div>
-                    )}
+              {/* Trip Details */}
+              <div>
+                <h3 className="mb-4 text-lg font-black text-slate-900">
+                  Detalles del Viaje
+                </h3>
+                <div className="grid gap-6 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Origen
+                    </label>
+                    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="font-semibold text-slate-900">{request.origen}</span>
+                    </div>
+                  </div>
 
-                    {request.destination && (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-600">
-                          Destino
-                        </label>
-                        <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                          <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                          </svg>
-                          <span className="font-semibold text-slate-900">{request.destination}</span>
-                        </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Destino
+                    </label>
+                    <div className="flex items-start gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                      </svg>
+                      <span className="font-semibold text-slate-900">{request.destino}</span>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Fecha de Salida
+                    </label>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="font-semibold text-slate-900">
+                        {formatFecha(request.fecha_salida)}
+                      </span>
+                    </div>
+                  </div>
+
+                  {request.fecha_retorno && (
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-slate-600">
+                        Fecha de Retorno
+                      </label>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <span className="font-semibold text-slate-900">
+                          {formatFecha(request.fecha_retorno)}
+                        </span>
                       </div>
-                    )}
+                    </div>
+                  )}
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Cantidad de Personas
+                    </label>
+                    <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                      </svg>
+                      <span className="font-bold text-slate-900">
+                        {request.cantidad_personas} persona{request.cantidad_personas !== 1 ? "s" : ""}
+                      </span>
+                    </div>
                   </div>
                 </div>
-              )}
+              </div>
 
-              {/* Additional Info */}
-              {(request.passengers || request.description) && (
+              {/* Activity Description */}
+              <div>
+                <h3 className="mb-4 text-lg font-black text-slate-900">
+                  Motivo de la Actividad
+                </h3>
+                <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                  <p className="font-medium text-slate-900 leading-relaxed whitespace-pre-wrap">
+                    {request.motivo_actividad}
+                  </p>
+                </div>
+              </div>
+
+              {/* Solicitante Info */}
+              {request.solicitante && (
                 <div>
                   <h3 className="mb-4 text-lg font-black text-slate-900">
-                    Información Adicional
+                    Información del Solicitante
                   </h3>
-                  <div className="space-y-4">
-                    {request.passengers && (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-600">
-                          Número de Pasajeros
-                        </label>
-                        <div className="flex items-center gap-3 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                          <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
-                          </svg>
-                          <span className="font-bold text-slate-900">{request.passengers} pasajero{request.passengers !== 1 ? "s" : ""}</span>
-                        </div>
+                  <div className="grid gap-6 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-slate-600">
+                        Nombre
+                      </label>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <span className="font-semibold text-slate-900">
+                          {request.solicitante.name}
+                        </span>
                       </div>
-                    )}
+                    </div>
 
-                    {request.description && (
-                      <div className="space-y-2">
-                        <label className="block text-sm font-bold text-slate-600">
-                          Descripción
-                        </label>
-                        <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                          <p className="font-medium text-slate-900 leading-relaxed">{request.description}</p>
-                        </div>
+                    <div className="space-y-2">
+                      <label className="block text-sm font-bold text-slate-600">
+                        Correo Electrónico
+                      </label>
+                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                        <span className="font-semibold text-slate-900">
+                          {request.solicitante.email}
+                        </span>
                       </div>
-                    )}
+                    </div>
                   </div>
                 </div>
               )}
@@ -324,21 +371,19 @@ export default function RequestDetailPage() {
                     </div>
                   </div>
 
-                  {request.updated_at && (
-                    <div className="space-y-2">
-                      <label className="block text-sm font-bold text-slate-600">
-                        Última Actualización
-                      </label>
-                      <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                        <span className="font-semibold text-slate-900">
-                          {new Date(request.updated_at).toLocaleString("es-ES", {
-                            dateStyle: "medium",
-                            timeStyle: "short",
-                          })}
-                        </span>
-                      </div>
+                  <div className="space-y-2">
+                    <label className="block text-sm font-bold text-slate-600">
+                      Última Actualización
+                    </label>
+                    <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                      <span className="font-semibold text-slate-900">
+                        {new Date(request.updated_at).toLocaleString("es-ES", {
+                          dateStyle: "medium",
+                          timeStyle: "short",
+                        })}
+                      </span>
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
 

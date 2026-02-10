@@ -17,13 +17,13 @@ function SkeletonRow() {
         <div className="h-4 w-28 rounded-lg bg-slate-200" />
       </td>
       <td className="px-6 py-5">
-        <div className="h-4 w-24 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5">
-        <div className="h-4 w-36 rounded-lg bg-slate-200" />
+        <div className="h-4 w-32 rounded-lg bg-slate-200" />
       </td>
       <td className="px-6 py-5">
         <div className="h-4 w-32 rounded-lg bg-slate-200" />
+      </td>
+      <td className="px-6 py-5">
+        <div className="h-4 w-16 rounded-lg bg-slate-200" />
       </td>
       <td className="px-6 py-5 text-right">
         <div className="ml-auto h-7 w-28 rounded-full bg-slate-200" />
@@ -44,7 +44,6 @@ export default function MyRequestsPage() {
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [typeFilter, setTypeFilter] = useState<string>("all");
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -62,10 +61,7 @@ export default function MyRequestsPage() {
         };
 
         if (statusFilter !== "all") {
-          filters.status = statusFilter as any;
-        }
-        if (typeFilter !== "all") {
-          filters.type = typeFilter;
+          filters.estado = statusFilter as any;
         }
         if (searchTerm.trim()) {
           filters.search = searchTerm.trim();
@@ -88,25 +84,25 @@ export default function MyRequestsPage() {
     return () => {
       alive = false;
     };
-  }, [currentPage, statusFilter, typeFilter, searchTerm]);
+  }, [currentPage, statusFilter, searchTerm]);
 
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     
-    if (statusLower.includes("aprob") || statusLower.includes("aceptad")) {
+    if (statusLower === "aprobada") {
       return "inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200";
     }
-    if (statusLower.includes("pend")) {
+    if (statusLower === "pendiente") {
       return "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-amber-200";
     }
-    if (statusLower.includes("progres")) {
+    if (statusLower === "observada") {
       return "inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-blue-200";
     }
-    if (statusLower.includes("completad") || statusLower.includes("finalizad")) {
-      return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
-    }
-    if (statusLower.includes("rechazad")) {
+    if (statusLower === "rechazada") {
       return "inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 ring-1 ring-red-200";
+    }
+    if (statusLower === "borrador") {
+      return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
     }
     return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
   };
@@ -114,31 +110,39 @@ export default function MyRequestsPage() {
   const getStatusIcon = (status: string) => {
     const statusLower = status.toLowerCase();
     
-    if (statusLower.includes("aprob") || statusLower.includes("aceptad")) {
+    if (statusLower === "aprobada") {
       return (
         <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
         </svg>
       );
     }
-    if (statusLower.includes("pend")) {
+    if (statusLower === "pendiente") {
       return (
         <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
           <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
         </svg>
       );
     }
-    if (statusLower.includes("progres")) {
+    if (statusLower === "observada") {
       return (
         <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-11a1 1 0 10-2 0v3.586L7.707 9.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l3-3a1 1 0 00-1.414-1.414L11 10.586V7z" clipRule="evenodd" />
+          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
         </svg>
       );
     }
     return null;
   };
 
-  const handleViewDetails = (id: string) => {
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleDateString("es-ES", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+  };
+
+  const handleViewDetails = (id: number) => {
     navigate(`/solicitud/${id}`);
   };
 
@@ -207,7 +211,7 @@ export default function MyRequestsPage() {
                   setSearchTerm(e.target.value);
                   setCurrentPage(1);
                 }}
-                placeholder="Buscar por código, tipo o descripción..."
+                placeholder="Buscar por código, motivo o destino..."
                 className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pl-11 font-semibold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
               />
               <svg
@@ -236,41 +240,19 @@ export default function MyRequestsPage() {
               className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
             >
               <option value="all">Todos los estados</option>
+              <option value="borrador">Borrador</option>
               <option value="pendiente">Pendiente</option>
-              <option value="en_progreso">En Progreso</option>
+              <option value="observada">Observada</option>
               <option value="aprobada">Aprobada</option>
-              <option value="aceptada">Aceptada</option>
-              <option value="completada">Completada</option>
               <option value="rechazada">Rechazada</option>
             </select>
           </div>
 
-          {/* Type Filter */}
-          <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
-              Tipo
-            </label>
-            <select
-              value={typeFilter}
-              onChange={(e) => {
-                setTypeFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="all">Todos los tipos</option>
-              <option value="Transporte">Transporte</option>
-              <option value="Logística">Logística</option>
-              <option value="Mensajería">Mensajería</option>
-            </select>
-          </div>
-
           {/* Clear Filters */}
-          <div className="flex items-end">
+          <div className="sm:col-start-3 flex items-end">
             <button
               onClick={() => {
                 setStatusFilter("all");
-                setTypeFilter("all");
                 setSearchTerm("");
                 setCurrentPage(1);
               }}
@@ -292,16 +274,16 @@ export default function MyRequestsPage() {
                   Código
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Fecha
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Tipo
+                  Fecha Salida
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
                   Origen
                 </th>
                 <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
                   Destino
+                </th>
+                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
+                  Personas
                 </th>
                 <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-600">
                   Estado
@@ -333,7 +315,7 @@ export default function MyRequestsPage() {
                       <div>
                         <p className="font-bold text-slate-900">No se encontraron solicitudes</p>
                         <p className="mt-1 text-sm text-slate-500">
-                          {statusFilter !== "all" || typeFilter !== "all" || searchTerm
+                          {statusFilter !== "all" || searchTerm
                             ? "Intenta ajustar los filtros"
                             : "Crea tu primera solicitud para comenzar"}
                         </p>
@@ -359,25 +341,25 @@ export default function MyRequestsPage() {
                     <td className="px-6 py-5">
                       <div className="flex items-center gap-2">
                         <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="font-bold text-slate-900">{request.code}</span>
+                        <span className="font-bold text-slate-900">{request.codigo}</span>
                       </div>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="font-semibold text-slate-700">{request.date}</span>
+                      <span className="font-semibold text-slate-700">{formatFecha(request.fecha_salida)}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="font-bold text-slate-900">{request.type}</span>
+                      <span className="font-medium text-slate-700">{request.origen}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="font-medium text-slate-700">{request.origin ?? "—"}</span>
+                      <span className="font-medium text-slate-700">{request.destino}</span>
                     </td>
                     <td className="px-6 py-5">
-                      <span className="font-medium text-slate-700">{request.destination ?? "—"}</span>
+                      <span className="font-semibold text-slate-900">{request.cantidad_personas}</span>
                     </td>
                     <td className="px-6 py-5 text-right">
-                      <span className={getStatusBadge(request.status)}>
-                        {getStatusIcon(request.status)}
-                        {request.status}
+                      <span className={getStatusBadge(request.estado)}>
+                        {getStatusIcon(request.estado)}
+                        {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
                       </span>
                     </td>
                     <td className="px-6 py-5 text-right">
