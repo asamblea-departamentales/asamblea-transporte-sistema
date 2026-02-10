@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getAllRequests,
+  getRequestById,
   type Request,
   type RequestFilters,
   type RequestsResponse,
@@ -35,12 +36,138 @@ function SkeletonRow() {
   );
 }
 
+function RequestDetailRow({ request }: { request: Request }) {
+  const formatFecha = (fecha: string) => {
+    return new Date(fecha).toLocaleString("es-ES", {
+      dateStyle: "medium",
+      timeStyle: "short",
+    });
+  };
+
+  return (
+    <tr className="bg-slate-50/50">
+      <td colSpan={7} className="px-6 py-6">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <div className="space-y-6">
+            {/* Información General */}
+            <div>
+              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
+                Información General
+              </h4>
+              <div className="grid gap-4 sm:grid-cols-3">
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Código</p>
+                  <p className="mt-1 font-semibold text-slate-900">{request.codigo}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Unidad Solicitante</p>
+                  <p className="mt-1 font-semibold text-slate-900">{request.unidad?.nombre ?? "—"}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Prioridad</p>
+                  <p className="mt-1 font-semibold text-slate-900 capitalize">{request.prioridad}</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Detalles del Viaje */}
+            <div>
+              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
+                Detalles del Viaje
+              </h4>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Origen</p>
+                  <div className="mt-1 flex items-start gap-2">
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p className="font-medium text-slate-900">{request.origen}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Destino</p>
+                  <div className="mt-1 flex items-start gap-2">
+                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    <p className="font-medium text-slate-900">{request.destino}</p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-slate-600">Fecha Salida</p>
+                  <p className="mt-1 font-medium text-slate-900">
+                    {new Date(request.fecha_salida).toLocaleDateString("es-ES", {
+                      day: "2-digit",
+                      month: "2-digit",
+                      year: "numeric",
+                    })}
+                  </p>
+                </div>
+                {request.fecha_retorno && (
+                  <div>
+                    <p className="text-xs font-bold text-slate-600">Fecha Retorno</p>
+                    <p className="mt-1 font-medium text-slate-900">
+                      {new Date(request.fecha_retorno).toLocaleDateString("es-ES", {
+                        day: "2-digit",
+                        month: "2-digit",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Motivo */}
+            <div>
+              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
+                Motivo de la Actividad
+              </h4>
+              <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-medium leading-relaxed text-slate-900">
+                {request.motivo_actividad}
+              </p>
+            </div>
+
+            {/* Footer con fechas del sistema */}
+            <div className="border-t border-slate-200 pt-4">
+              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
+                <div>
+                  <span className="font-bold">Creado:</span>{" "}
+                  <span className="font-medium">{formatFecha(request.created_at)}</span>
+                </div>
+                <div>
+                  <span className="font-bold">Actualizado:</span>{" "}
+                  <span className="font-medium">{formatFecha(request.updated_at)}</span>
+                </div>
+                {request.solicitante && (
+                  <div className="ml-auto">
+                    <span className="font-bold">Solicitante:</span>{" "}
+                    <span className="font-medium">{request.solicitante.name}</span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  );
+}
+
 export default function MyRequestsPage() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<Request[]>([]);
   const [response, setResponse] = useState<RequestsResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Expanded row state
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+  const [expandedRequest, setExpandedRequest] = useState<Request | null>(null);
+  const [loadingDetail, setLoadingDetail] = useState(false);
   
   // Filters
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -86,6 +213,29 @@ export default function MyRequestsPage() {
     };
   }, [currentPage, statusFilter, searchTerm]);
 
+  const handleToggleDetail = async (id: number) => {
+    // Si ya está expandido, colapsar
+    if (expandedId === id) {
+      setExpandedId(null);
+      setExpandedRequest(null);
+      return;
+    }
+
+    // Expandir y cargar detalle
+    setExpandedId(id);
+    setLoadingDetail(true);
+    
+    try {
+      const detail = await getRequestById(id);
+      setExpandedRequest(detail);
+    } catch (e: any) {
+      console.error("Error al cargar detalle:", e);
+      setExpandedRequest(null);
+    } finally {
+      setLoadingDetail(false);
+    }
+  };
+
   const getStatusBadge = (status: string) => {
     const statusLower = status.toLowerCase();
     
@@ -103,6 +253,9 @@ export default function MyRequestsPage() {
     }
     if (statusLower === "borrador") {
       return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
+    }
+    if (statusLower === "programada") {
+      return "inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1.5 text-xs font-bold text-purple-700 ring-1 ring-purple-200";
     }
     return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
   };
@@ -140,10 +293,6 @@ export default function MyRequestsPage() {
       month: "2-digit",
       year: "numeric",
     });
-  };
-
-  const handleViewDetails = (id: number) => {
-    navigate(`/solicitud/${id}`);
   };
 
   const totalPages = response?.total_pages ?? 1;
@@ -245,6 +394,7 @@ export default function MyRequestsPage() {
               <option value="observada">Observada</option>
               <option value="aprobada">Aprobada</option>
               <option value="rechazada">Rechazada</option>
+              <option value="programada">Programada</option>
             </select>
           </div>
 
@@ -294,7 +444,7 @@ export default function MyRequestsPage() {
               </tr>
             </thead>
 
-            <tbody className="divide-y divide-slate-100">
+            <tbody>
               {loading ? (
                 <>
                   <SkeletonRow />
@@ -334,47 +484,81 @@ export default function MyRequestsPage() {
                 </tr>
               ) : (
                 requests.map((request) => (
-                  <tr
-                    key={request.id}
-                    className="transition-colors hover:bg-slate-50/50"
-                  >
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="font-bold text-slate-900">{request.codigo}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-semibold text-slate-700">{formatFecha(request.fecha_salida)}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-medium text-slate-700">{request.origen}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-medium text-slate-700">{request.destino}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-semibold text-slate-900">{request.cantidad_personas}</span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <span className={getStatusBadge(request.estado)}>
-                        {getStatusIcon(request.estado)}
-                        {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
-                      </span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <button
-                        onClick={() => handleViewDetails(request.id)}
-                        className="inline-flex items-center gap-1.5 rounded-xl bg-blue-600 px-3 py-2 text-xs font-bold text-white shadow-sm transition-all hover:bg-blue-700 hover:shadow-md"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                        </svg>
-                        Ver
-                      </button>
-                    </td>
-                  </tr>
+                  <>
+                    <tr
+                      key={request.id}
+                      className={`border-b border-slate-100 transition-colors ${
+                        expandedId === request.id ? "bg-slate-50" : "hover:bg-slate-50/50"
+                      }`}
+                    >
+                      <td className="px-6 py-5">
+                        <div className="flex items-center gap-2">
+                          <div className="h-2 w-2 rounded-full bg-blue-500" />
+                          <span className="font-bold text-slate-900">{request.codigo}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-semibold text-slate-700">{formatFecha(request.fecha_salida)}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-medium text-slate-700">{request.origen}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-medium text-slate-700">{request.destino}</span>
+                      </td>
+                      <td className="px-6 py-5">
+                        <span className="font-semibold text-slate-900">{request.cantidad_personas}</span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <span className={getStatusBadge(request.estado)}>
+                          {getStatusIcon(request.estado)}
+                          {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
+                        </span>
+                      </td>
+                      <td className="px-6 py-5 text-right">
+                        <button
+                          onClick={() => handleToggleDetail(request.id)}
+                          className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-all hover:shadow-md ${
+                            expandedId === request.id
+                              ? "bg-slate-600 text-white hover:bg-slate-700"
+                              : "bg-blue-600 text-white hover:bg-blue-700"
+                          }`}
+                        >
+                          {expandedId === request.id ? (
+                            <>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                              </svg>
+                              Ocultar
+                            </>
+                          ) : (
+                            <>
+                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                              </svg>
+                              Ver
+                            </>
+                          )}
+                        </button>
+                      </td>
+                    </tr>
+                    {/* Detalle expandible */}
+                    {expandedId === request.id && (
+                      loadingDetail ? (
+                        <tr className="bg-slate-50/50">
+                          <td colSpan={7} className="px-6 py-12 text-center">
+                            <div className="flex items-center justify-center gap-3">
+                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
+                              <span className="font-semibold text-slate-600">Cargando detalle...</span>
+                            </div>
+                          </td>
+                        </tr>
+                      ) : expandedRequest ? (
+                        <RequestDetailRow request={expandedRequest} />
+                      ) : null
+                    )}
+                  </>
                 ))
               )}
             </tbody>
