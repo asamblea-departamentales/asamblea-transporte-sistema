@@ -147,23 +147,28 @@ export default function MyRequestsPage() {
                 </tr>
               ) : (
                 items.map((r) => (
-                  <tr key={r.code} className="border-t border-slate-200/70 hover:bg-slate-50/60 transition-colors">
-                    <td className="px-6 py-5">
-                      <div className="flex items-center gap-2">
-                        <span className="h-2 w-2 rounded-full bg-blue-500" />
-                        <span className="font-extrabold text-slate-900">{r.code}</span>
-                      </div>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-semibold text-slate-700">{r.date}</span>
-                    </td>
-                    <td className="px-6 py-5">
-                      <span className="font-extrabold text-slate-900">{r.type}</span>
-                    </td>
-                    <td className="px-6 py-5 text-right">
-                      <StatusPill status={r.status} />
-                    </td>
-                  </tr>
+                  <tr
+  key={r.code}
+  onClick={() => navigate(`/mis-solicitudes/${encodeURIComponent(r.code)}`)}
+  className="border-t border-slate-200/70 hover:bg-slate-50/60 transition-colors cursor-pointer"
+>
+  <td className="px-6 py-5">
+    <div className="flex items-center gap-2">
+      <span className="h-2 w-2 rounded-full bg-blue-500" />
+      <span className="font-extrabold text-slate-900">{r.code}</span>
+    </div>
+  </td>
+  <td className="px-6 py-5">
+    <span className="font-semibold text-slate-700">{r.date}</span>
+  </td>
+  <td className="px-6 py-5">
+    <span className="font-extrabold text-slate-900">{r.type}</span>
+  </td>
+  <td className="px-6 py-5 text-right">
+    <StatusPill status={r.status} />
+  </td>
+</tr>
+
                 ))
               )}
             </tbody>
