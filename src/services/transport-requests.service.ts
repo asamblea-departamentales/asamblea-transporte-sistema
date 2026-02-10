@@ -37,7 +37,7 @@ export async function getMyRequests(): Promise<TransportRequest[]> {
  */
 export async function getRequestByCode(code: string): Promise<TransportRequest> {
   try {
-    const { data } = await api.get(`/api/solicitudes/${encodeURIComponent(code)}`);
+    const { data } = await api.get(`/api/solicitudes/recientes${encodeURIComponent(code)}`);
     // soporta {data:{...}} o {...}
     return (data?.data ?? data) as TransportRequest;
   } catch {
@@ -57,5 +57,5 @@ export async function getRequestByCode(code: string): Promise<TransportRequest> 
  */
 export async function finalizeRequest(code: string): Promise<void> {
   // 👇 Cambia esta ruta cuando tengas el backend listo
-  await api.post(`/api/solicitudes/${encodeURIComponent(code)}/finalizar`);
+  await api.post(`/api/solicitudes/recientes${encodeURIComponent(code)}/finalizar`);
 }
