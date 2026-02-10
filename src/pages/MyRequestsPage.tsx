@@ -2,12 +2,10 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getAllRequests,
-  getRequestById,
   type Request,
-  
 } from "../services/requests.service";
 
-// Componente para ver los detalles (Mantenemos tu diseño original que es bueno)
+// --- COMPONENTE DE DETALLE (Reutilizamos tu diseño) ---
 function RequestDetailRow({ request }: { request: Request }) {
   const formatFecha = (fecha: string) => {
     return new Date(fecha).toLocaleString("es-ES", {
@@ -20,7 +18,6 @@ function RequestDetailRow({ request }: { request: Request }) {
     <tr className="bg-slate-50/50 border-b border-slate-100 animate-fadeIn">
       <td colSpan={4} className="px-0 py-0">
         <div className="border-t border-slate-200 bg-slate-50 p-6 shadow-inner">
-            {/* Aquí reutilizamos tu diseño de tarjeta de detalle */}
             <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
                 <div className="mb-4 border-b border-slate-100 pb-4">
                     <h3 className="text-lg font-bold text-slate-800">Detalle de Solicitud #{request.codigo}</h3>
@@ -54,6 +51,7 @@ function RequestDetailRow({ request }: { request: Request }) {
                         <div className="space-y-2 text-sm">
                             <p><span className="font-semibold text-slate-700">Pasajeros:</span> {request.cantidad_personas}</p>
                             <p><span className="font-semibold text-slate-700">Motivo:</span> {request.motivo_actividad}</p>
+                            {/* Verificamos si existe la unidad antes de mostrarla */}
                             {request.unidad && <p><span className="font-semibold text-slate-700">Unidad:</span> {request.unidad.nombre}</p>}
                         </div>
                     </div>
@@ -69,7 +67,6 @@ function RequestDetailRow({ request }: { request: Request }) {
   );
 }
 
-// Componente de carga minimalista para las filas
 function SkeletonRow() {
   return (
     <tr className="animate-pulse border-b border-slate-50">
@@ -88,13 +85,13 @@ export default function RecentRequestsWidget() {
   
   // Estado para la expansión
   const [expandedId, setExpandedId] = useState<number | null>(null);
+  
+  // SOLUCIÓN: Usamos el objeto directo, no hacemos otra petición
   const [expandedRequest, setExpandedRequest] = useState<Request | null>(null);
-  const [loadingDetail, setLoadingDetail] = useState(false);
 
   useEffect(() => {
     async function load() {
       try {
-        // Asumimos que quieres las ultimas, page 1
         const data = await getAllRequests({ page: 1, per_page: 5 }); 
         setRequests(data.data);
       } catch (e) {
@@ -106,23 +103,20 @@ export default function RecentRequestsWidget() {
     load();
   }, []);
 
-  const handleRowClick = async (id: number) => {
-    if (expandedId === id) {
+  // --- FUNCIÓN CLAVE CORREGIDA ---
+  // Recibe el objeto completo 'req', no solo el ID
+  const handleRowClick = (req: Request) => {
+    // Si ya está abierto, lo cerramos
+    if (expandedId === req.id) {
       setExpandedId(null);
       setExpandedRequest(null);
       return;
     }
 
-    setExpandedId(id);
-    setLoadingDetail(true);
-    try {
-      const detail = await getRequestById(id);
-      setExpandedRequest(detail);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoadingDetail(false);
-    }
+    // Si no está abierto, LO ABRIMOS DIRECTAMENTE
+    // Sin llamar a getRequestById (evitando el error 403)
+    setExpandedId(req.id);
+    setExpandedRequest(req); 
   };
 
   const getStatusStyles = (status: string) => {
@@ -136,7 +130,6 @@ export default function RecentRequestsWidget() {
 
   return (
     <div className="w-full bg-white font-sans">
-      {/* Header idéntico a la imagen */}
       <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
         <div>
           <h2 className="text-xl font-black tracking-tight text-slate-900">Solicitudes Recientes</h2>
@@ -153,7 +146,6 @@ export default function RecentRequestsWidget() {
         </button>
       </div>
 
-      {/* Tabla limpia */}
       <div className="overflow-x-auto">
         <table className="w-full">
           <thead>
@@ -176,57 +168,33 @@ export default function RecentRequestsWidget() {
                 <>
                   <tr 
                     key={req.id} 
-                    onClick={() => handleRowClick(req.id)}
+                    // AQUÍ ESTÁ EL CAMBIO: Pasamos 'req' completo
+                    onClick={() => handleRowClick(req)} 
                     className={`cursor-pointer transition-all hover:bg-slate-50 ${expandedId === req.id ? 'bg-slate-50' : ''}`}
                   >
-                    {/* Columna: Código */}
                     <td className="px-6 py-4">
                         <div className="flex items-center gap-3">
                             <div className="h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
                             <span className="font-bold text-slate-900">{req.codigo}</span>
                         </div>
                     </td>
-
-                    {/* Columna: Fecha */}
                     <td className="px-6 py-4">
                         <span className="text-sm font-medium text-slate-600">
                             {new Date(req.fecha_salida).toISOString().slice(0, 16).replace('T', ' ')}
                         </span>
                     </td>
-
-                    {/* Columna: Tipo (Hardcodeado 'Transporte' para igualar imagen o dinámico si tienes el dato) */}
                     <td className="px-6 py-4">
                         <span className="text-sm font-bold text-slate-900">Transporte</span>
                     </td>
-
-                    {/* Columna: Estado */}
                     <td className="px-6 py-4 text-right">
                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${getStatusStyles(req.estado)}`}>
-                            {req.estado === 'aprobada' && (
-                                <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
-                            )}
-                            {req.estado === 'pendiente' && (
-                                <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
-                            )}
                             {req.estado}
                         </span>
                     </td>
                   </tr>
                   
-                  {/* Fila expandible de detalles */}
-                  {expandedId === req.id && (
-                    loadingDetail ? (
-                        <tr className="bg-slate-50 border-b border-slate-100">
-                            <td colSpan={4} className="py-8 text-center text-slate-500">
-                                <div className="flex justify-center items-center gap-2">
-                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"/>
-                                    <span className="text-sm font-medium">Cargando datos...</span>
-                                </div>
-                            </td>
-                        </tr>
-                    ) : expandedRequest ? (
-                        <RequestDetailRow request={expandedRequest} />
-                    ) : null
+                  {expandedId === req.id && expandedRequest && (
+                    <RequestDetailRow request={expandedRequest} />
                   )}
                 </>
               ))
