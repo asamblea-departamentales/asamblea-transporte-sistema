@@ -7,11 +7,12 @@ export type EstadoSolicitud =
   | "APROBADA"
   | "RECHAZADA"
   | "FINALIZADA"
+  | "PROGRAMADA"
   | string;
 
 export type SolicitudTransporte = {
   id?: number | string;
-  code: string;
+  code?: string;
 
   estado: EstadoSolicitud;
 
@@ -19,7 +20,7 @@ export type SolicitudTransporte = {
   origen?: string;
   destino?: string;
 
-  fecha_salida?: string;
+  fecha_salida?: string; // ISO o YYYY-MM-DD
   fecha_retorno?: string | null;
 
   cantidad_personas?: number;
@@ -52,7 +53,7 @@ export type Paginated<T> = {
   links?: PaginateLinks;
 };
 
-const BASE = "/api/transport-requests"; // ✅ ruta real (por tu POST)
+const BASE = "/api/transport-requests";
 
 function normalizeArray<T>(data: any): T[] {
   if (Array.isArray(data)) return data;
@@ -61,16 +62,8 @@ function normalizeArray<T>(data: any): T[] {
   return [];
 }
 
-// ✅ listado (si backend pagina, esto devuelve solo array)
-export async function getMyRequests(): Promise<SolicitudTransporte[]> {
-  const { data } = await api.get(BASE);
-  return normalizeArray<SolicitudTransporte>(data);
-}
-
-// ✅ listado con paginación real
-export async function getMyRequestsPaginated(page = 1): Promise<Paginated<SolicitudTransporte>> {
+export async function getRequestsPaginated(page = 1): Promise<Paginated<SolicitudTransporte>> {
   const { data } = await api.get(BASE, { params: { page } });
-
   return {
     data: normalizeArray<SolicitudTransporte>(data),
     meta: data?.meta,
@@ -78,14 +71,12 @@ export async function getMyRequestsPaginated(page = 1): Promise<Paginated<Solici
   };
 }
 
-// ✅ detalle por ID (Route Model Binding)
-export async function getSolicitudById(id: string | number): Promise<SolicitudTransporte> {
+export async function getRequestById(id: string | number): Promise<SolicitudTransporte> {
   const { data } = await api.get(`${BASE}/${encodeURIComponent(String(id))}`);
   return (data?.data ?? data) as SolicitudTransporte;
 }
 
-// ✅ finalizar por ID
-export async function finalizarSolicitudById(id: string | number): Promise<SolicitudTransporte> {
+export async function finalizarRequestById(id: string | number): Promise<SolicitudTransporte> {
   const { data } = await api.post(`${BASE}/${encodeURIComponent(String(id))}/finalizar`);
   return (data?.data ?? data) as SolicitudTransporte;
 }
