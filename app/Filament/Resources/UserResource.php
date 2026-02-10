@@ -29,7 +29,7 @@ class UserResource extends Resource
     public static function canAccess(): bool
     {
         $u = auth()->user();
-        return $u?->hasAnyRole(['superadmin', 'ti']) ?? false;
+        return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
     }
     public static function form(Form $form): Form
     {
