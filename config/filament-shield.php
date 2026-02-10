@@ -2,17 +2,17 @@
 
 return [
     'shield_resource' => [
-        'should_register_navigation' => false,
-        'slug' => 'shield/roles',
-        'navigation_sort' => 2,
-        'navigation_badge' => true,
-        'resource' => \App\Filament\Resources\RoleResource::class, // ← Sin \Shield
-        'sub_navigation_position' => null,
-        'is_globally_searchable' => false,
-        'show_model_path' => true,
-        'is_scoped_to_tenant' => true,
-        'cluster' => null,
-    ],
+    'should_register_navigation' => true,
+    'slug' => 'shield/roles',
+    'navigation_sort' => -1, // ← Cambiar a -1 para que use el del Resource
+    'navigation_badge' => true,
+    'navigation_group' => true, // ← Cambiar a true (para que use el del Resource)
+    'is_globally_searchable' => false,
+    'show_model_path' => true,
+    'cluster' => null,
+    
+    'resource' => \App\Filament\Resources\RoleResource::class,
+],
 
     'tenant_model' => null,
 
