@@ -46,22 +46,24 @@ class SolicitudTransporte extends Model
 {
     static::creating(function ($solicitud) {
         $year = now()->year;
-        
-        // Si el solicitante es el usuario que está logueado:
+        // Obtenemos el ID del usuario que está creando la solicitud
         $userId = $solicitud->solicitante_id ?? auth()->id();
         
-        if (!$userId) {
-            // Si por alguna razón no hay ID, esto evitará el error 500
-            \Log::error("Error generando código: No se encontró ID de solicitante");
-            return;
+        // Buscamos el último código físico guardado en la DB para este usuario y año
+        $ultima = static::where('solicitante_id', $userId)
+            ->where('codigo', 'like', "TR-{$year}-%")
+            ->latest('id') // Trae la más reciente por ID
+            ->first();
+
+        if ($ultima) {
+            // Extraemos el número correlativo de los últimos 6 dígitos
+            $ultimoCorrelativo = (int) substr($ultima->codigo, -6);
+            $nuevoNumero = $ultimoCorrelativo + 1;
+        } else {
+            $nuevoNumero = 1;
         }
 
-        $cantidad = static::where('solicitante_id', $userId)
-            ->whereYear('created_at', $year)
-            ->count();
-
-        $numero = $cantidad + 1;
-        $solicitud->codigo = "TR-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
+        $solicitud->codigo = "TR-{$year}-" . str_pad($nuevoNumero, 6, '0', STR_PAD_LEFT);
     });
 }
 
