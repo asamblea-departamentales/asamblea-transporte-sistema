@@ -1,61 +1,67 @@
 // src/services/transport-requests.service.ts
 import { api } from "../lib/axios";
 
-export type TransportRequestStatus = "pendiente" | "aprobada" | "rechazada" | "finalizada" | string;
+export type EstadoSolicitud =
+  | "BORRADOR"
+  | "PENDIENTE"
+  | "APROBADA"
+  | "RECHAZADA"
+  | "FINALIZADA"
+  | string;
 
-export type TransportRequest = {
-  id?: string | number;
+export type SolicitudTransporte = {
+  id?: number | string;
   code: string;
-  date: string;
-  type: string;
-  status: TransportRequestStatus;
 
-  // campos opcionales (según tu backend)
-  origin?: string;
-  encargado?: string;
-  subencargado?: string;
-  pasajeros?: string | number;
-  destinos?: { id?: string; address: string }[];
+  estado: EstadoSolicitud;
+
+  motivo_actividad?: string;
+  origen?: string;
+  destino?: string;
+
+  fecha_salida?: string;  // ISO o "YYYY-MM-DD"
+  fecha_retorno?: string | null;
+
+  cantidad_personas?: number;
+  prioridad?: string;
+
+  unidad?: {
+    id?: number | string;
+    nombre?: string;
+  };
+
+  solicitante?: {
+    id?: number | string;
+    name?: string;
+    email?: string;
+  };
+
+  created_at?: string;
+  updated_at?: string;
 };
 
-function normalizeArrayResponse<T>(data: any): T[] {
+function normalizeArray<T>(data: any): T[] {
   if (Array.isArray(data)) return data;
   if (data && Array.isArray(data.data)) return data.data;
   if (data && Array.isArray(data.items)) return data.items;
   return [];
 }
 
-export async function getMyRequests(): Promise<TransportRequest[]> {
-  const { data } = await api.get("/api/solicitudes/recientes");
-  return normalizeArrayResponse<TransportRequest>(data);
+export async function getMyRequests(): Promise<SolicitudTransporte[]> {
+  // Si ya tienes index real /api/solicitudes, usa eso.
+  // Por tu controller existe: index() => paginate(10)
+  const { data } = await api.get("/api/solicitudes");
+
+  // paginate => { data: [...], links, meta }
+  return normalizeArray<SolicitudTransporte>(data);
 }
 
-/**
- * ✅ Intenta endpoint real de detalle:
- *   GET /api/solicitudes/{code}
- * Si no existe todavía, cae al "plan B": busca en recientes.
- */
-export async function getRequestByCode(code: string): Promise<TransportRequest> {
-  try {
-    const { data } = await api.get(`/api/solicitudes/recientes${encodeURIComponent(code)}`);
-    // soporta {data:{...}} o {...}
-    return (data?.data ?? data) as TransportRequest;
-  } catch {
-    // fallback temporal: buscar en recientes
-    const list = await getMyRequests();
-    const found = list.find((x) => String(x.code).toLowerCase() === String(code).toLowerCase());
-    if (!found) throw new Error("No se encontró la solicitud.");
-    return found;
-  }
+export async function getSolicitudByCode(code: string): Promise<SolicitudTransporte> {
+  const { data } = await api.get(`/api/solicitudes/${encodeURIComponent(code)}`);
+  return (data?.data ?? data) as SolicitudTransporte;
 }
 
-/**
- * 🚧 Finalizar (solo si tu backend existe)
- * Ideal:
- *   POST /api/solicitudes/{code}/finalizar
- * o PATCH /api/solicitudes/{code} { status: "finalizada" }
- */
-export async function finalizeRequest(code: string): Promise<void> {
-  // 👇 Cambia esta ruta cuando tengas el backend listo
-  await api.post(`/api/solicitudes/recientes${encodeURIComponent(code)}/finalizar`);
+export async function finalizarSolicitud(code: string): Promise<SolicitudTransporte> {
+  const { data } = await api.post(`/api/solicitudes/${encodeURIComponent(code)}/finalizar`);
+  return (data?.data ?? data) as SolicitudTransporte;
 }

@@ -9,7 +9,8 @@ import Paso2 from "../pages/transport/paso-2";
 import Paso3 from "../pages/transport/paso-3";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import "leaflet/dist/leaflet.css";
-import RequestDetailPage from "../pages/RequestDetailPage";
+//import RequestDetailPage from "../pages/RequestDetailPage";
+import SolicitudDetailPage from "../pages/SolicitudDetailPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -33,11 +34,12 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="nueva-solicitud" element={<NewRequestPage />} />
           <Route path="mis-solicitudes" element={<MyRequestsPage />} />
+          <Route path="solicitudes/:code" element={<SolicitudDetailPage />} />
 
           <Route path="solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
           <Route path="solicitudes/transporte/paso-2" element={<Paso2 />} />
           <Route path="solicitudes/transporte/paso-3" element={<Paso3 />} />
-          <Route path="/mis-solicitudes/:code" element={<RequestDetailPage />} />
+          
 
         </Route>
 

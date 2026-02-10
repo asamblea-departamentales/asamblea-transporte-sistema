@@ -1,3 +1,4 @@
+// src/pages/SolicitudDetailPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -90,10 +91,7 @@ export default function SolicitudDetailPage() {
     };
   }, [code]);
 
-  const canFinalize = useMemo(() => {
-    const e = kind(item?.estado ?? "");
-    return e === "APROBADA";
-  }, [item]);
+  const canFinalize = useMemo(() => kind(item?.estado ?? "") === "APROBADA", [item]);
 
   async function handleFinalize() {
     if (!item?.code) return;
@@ -108,7 +106,6 @@ export default function SolicitudDetailPage() {
       setFinalizing(true);
       await finalizarSolicitud(item.code);
 
-      // recargar detalle para reflejar estado nuevo
       const refreshed = await getSolicitudByCode(item.code);
       setItem(refreshed);
       setActionOk("Solicitud finalizada correctamente.");
@@ -121,7 +118,6 @@ export default function SolicitudDetailPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      {/* Top */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <button
@@ -172,7 +168,6 @@ export default function SolicitudDetailPage() {
         )}
       </div>
 
-      {/* Alerts */}
       {!loading && error && (
         <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-5 text-sm font-semibold text-red-700">
           {error}
@@ -191,10 +186,8 @@ export default function SolicitudDetailPage() {
         </div>
       )}
 
-      {/* Content */}
       {!loading && item && !error && (
         <>
-          {/* Resumen */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Código" value={item.code} />
             <Field label="Estado" value={kind(item.estado)} />
@@ -202,7 +195,6 @@ export default function SolicitudDetailPage() {
             <Field label="Personas" value={item.cantidad_personas} />
           </div>
 
-          {/* Datos principales */}
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">Información de la actividad</h2>
@@ -220,7 +212,6 @@ export default function SolicitudDetailPage() {
             </div>
           </div>
 
-          {/* Relaciones */}
           <div className="grid gap-4 lg:grid-cols-2">
             <div className="space-y-4">
               <h2 className="text-lg font-black text-slate-900">Solicitante</h2>
@@ -236,7 +227,6 @@ export default function SolicitudDetailPage() {
             </div>
           </div>
 
-          {/* Evidencias (aún no) */}
           <div className="rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
             <p className="text-sm font-black text-slate-900">Evidencias</p>
             <p className="mt-1 text-sm font-semibold text-slate-500">
