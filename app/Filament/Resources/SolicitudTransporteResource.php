@@ -312,9 +312,10 @@ class SolicitudTransporteResource extends Resource
             'user_id'      => auth()->id(),
         ]);
     })
-    ->visible(fn (SolicitudTransporte $record) => 
+    // DENTRO DE Tables\Actions\Action::make('pre_aprobar')
+->visible(fn (SolicitudTransporte $record) => 
     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-    $record->estado === EstadoSolicitudEnum::PRE_APROBADA // <-- Solo después de pre-aprobar
+    in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
 ),
 
     //---------------------------------------------------------------------
