@@ -84,7 +84,7 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
   if (filters?.per_page) params.append("per_page", filters.per_page.toString());
 
   const { data } = await api.get<LaravelPaginatedResponse>(
-    `/api/solicitudes-transporte?${params.toString()}`
+    `/api/transport-requests?${params.toString()}`
   );
 
   // Adaptar respuesta de Laravel al formato que espera el frontend
@@ -98,10 +98,10 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
 }
 
 export async function getRequestById(id: string | number): Promise<Request> {
-  const { data } = await api.get<Request>(`/api/solicitudes-transporte/${id}`);
+  const { data } = await api.get<Request>(`/api/transport-requests/${id}`);
   return data;
 }
 
 export async function deleteRequest(id: string | number): Promise<void> {
-  await api.delete(`/api/solicitudes-transporte/${id}`);
+  await api.delete(`/api/transport-requests/${id}`);
 }
