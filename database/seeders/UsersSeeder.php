@@ -40,6 +40,6 @@ class UsersSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'unidad_solicitante_id' => $unidadId,
         ]);
-        $admin->assignRole('admin');
+        $admin->assignRole('super_admin');
     }
 }

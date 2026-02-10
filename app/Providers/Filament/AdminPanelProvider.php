@@ -2,6 +2,7 @@
 
 namespace App\Providers\Filament;
 
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use Illuminate\Support\Facades\Blade;
 use Filament\View\PanelsRenderHook;
 use Filament\Http\Middleware\Authenticate;
@@ -37,6 +38,7 @@ class AdminPanelProvider extends PanelProvider
             // Configuracion para el icon
             ->favicon(asset('images/logo-blanco-fondo-transparente.png'))
             ->login()
+            ->plugin(FilamentShieldPlugin::make())
             ->colors([
                 'primary' => Color::Blue,
             ])
