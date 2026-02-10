@@ -8,6 +8,7 @@ import TransportStep1Page from "../pages/transport/TransportStep1Page";
 import Paso2 from "../pages/transport/paso-2";
 import Paso3 from "../pages/transport/paso-3";
 import ProtectedRoute from "../auth/ProtectedRoute";
+import "leaflet/dist/leaflet.css";
 
 export default function App() {
   return (

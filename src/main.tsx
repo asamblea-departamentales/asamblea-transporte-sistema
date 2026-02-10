@@ -5,6 +5,7 @@ import "./index.css";
 import App from "./app/app";
 import { AuthProvider } from "./auth/AuthContext";
 import { api } from "./lib/axios";
+import "leaflet/dist/leaflet.css";
 
 if (import.meta.env.DEV) {
   (window as any).api = api;

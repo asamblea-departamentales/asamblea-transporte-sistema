@@ -1,9 +1,13 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 type DestinationPoint = {
   id: string;
   address: string;
+  lat?: number;
+  lng?: number;
 };
 
 type WizardData = {
@@ -16,6 +20,8 @@ type WizardData = {
 
   // Paso 2
   origen?: string;
+  origenLat?: number;
+  origenLng?: number;
   destinos?: DestinationPoint[];
 };
 
@@ -33,14 +39,114 @@ function safeParse(json: string | null): any {
   }
 }
 
+// Función para geocodificar usando Nominatim (OpenStreetMap)
+async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=sv&limit=1`
+    );
+    const data = await response.json();
+    
+    if (data && data.length > 0) {
+      return {
+        lat: parseFloat(data[0].lat),
+        lng: parseFloat(data[0].lon),
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error("Error geocoding:", error);
+    return null;
+  }
+}
+
 export default function TransportStep2Page() {
   const navigate = useNavigate();
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
 
   const [origen, setOrigen] = useState("");
+  const [origenCoords, setOrigenCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinos, setDestinos] = useState<DestinationPoint[]>([
     { id: uid(), address: "" },
   ]);
   const [error, setError] = useState(false);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+
+  // Iconos personalizados para los marcadores
+  const originIcon = L.icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4F46E5" width="32" height="32">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    `),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+  const destinationIcon = L.icon({
+    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#DC2626" width="32" height="32">
+        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
+      </svg>
+    `),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+  // Inicializar mapa
+  useEffect(() => {
+    if (!mapRef.current) {
+      const map = L.map("map").setView([13.7942, -88.8965], 9);
+      
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapRef.current = map;
+
+      // Permitir hacer clic en el mapa para seleccionar ubicaciones
+      map.on("click", async (e) => {
+        const { lat, lng } = e.latlng;
+        
+        // Reverse geocoding para obtener la dirección
+        try {
+          const response = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+          );
+          const data = await response.json();
+          const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+          
+          // Si no hay origen, establecerlo
+          if (!origenCoords) {
+            setOrigen(address);
+            setOrigenCoords({ lat, lng });
+          } else {
+            // Agregar como destino o actualizar el primero vacío
+            const emptyIndex = destinos.findIndex(d => !d.address.trim());
+            if (emptyIndex !== -1) {
+              updateDestination(destinos[emptyIndex].id, address, lat, lng);
+            } else {
+              setDestinos(prev => [...prev, { id: uid(), address, lat, lng }]);
+            }
+          }
+        } catch (error) {
+          console.error("Error reverse geocoding:", error);
+        }
+      });
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, []);
 
   // Cargar desde localStorage
   useEffect(() => {
@@ -48,6 +154,9 @@ export default function TransportStep2Page() {
 
     if (saved.origen) {
       setOrigen(saved.origen);
+      if (saved.origenLat && saved.origenLng) {
+        setOrigenCoords({ lat: saved.origenLat, lng: saved.origenLng });
+      }
     }
 
     if (Array.isArray(saved.destinos) && saved.destinos.length > 0) {
@@ -55,15 +164,105 @@ export default function TransportStep2Page() {
     }
   }, []);
 
+  // Actualizar marcadores y ruta cuando cambien las coordenadas
+  useEffect(() => {
+    if (!mapRef.current) return;
+
+    // Limpiar marcadores anteriores
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    // Limpiar ruta anterior
+    if (routeLayerRef.current) {
+      routeLayerRef.current.remove();
+      routeLayerRef.current = null;
+    }
+
+    const bounds: L.LatLngExpression[] = [];
+
+    // Agregar marcador de origen
+    if (origenCoords) {
+      const marker = L.marker([origenCoords.lat, origenCoords.lng], { icon: originIcon })
+        .addTo(mapRef.current)
+        .bindPopup(`<b>Origen:</b><br>${origen}`);
+      markersRef.current.push(marker);
+      bounds.push([origenCoords.lat, origenCoords.lng]);
+    }
+
+    // Agregar marcadores de destinos
+    destinos.forEach((dest, index) => {
+      if (dest.lat && dest.lng) {
+        const marker = L.marker([dest.lat, dest.lng], { icon: destinationIcon })
+          .addTo(mapRef.current!)
+          .bindPopup(`<b>Destino ${index + 1}:</b><br>${dest.address}`);
+        markersRef.current.push(marker);
+        bounds.push([dest.lat, dest.lng]);
+      }
+    });
+
+    // Dibujar ruta si hay origen y al menos un destino
+    if (origenCoords && destinos.some(d => d.lat && d.lng)) {
+      const routePoints: L.LatLngExpression[] = [
+        [origenCoords.lat, origenCoords.lng],
+        ...destinos
+          .filter(d => d.lat && d.lng)
+          .map(d => [d.lat!, d.lng!] as L.LatLngExpression),
+      ];
+
+      routeLayerRef.current = L.polyline(routePoints, {
+        color: "#4F46E5",
+        weight: 4,
+        opacity: 0.7,
+        dashArray: "10, 10",
+      }).addTo(mapRef.current);
+    }
+
+    // Ajustar vista del mapa para mostrar todos los puntos
+    if (bounds.length > 0) {
+      mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+    }
+  }, [origenCoords, destinos, origen]);
+
+  // Geocodificar cuando el usuario termina de escribir
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (origen.trim() && !origenCoords) {
+        setIsGeocoding(true);
+        const coords = await geocodeAddress(origen);
+        if (coords) {
+          setOrigenCoords(coords);
+        }
+        setIsGeocoding(false);
+      }
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, [origen, origenCoords]);
+
   function addDestination() {
     setDestinos((prev) => [...prev, { id: uid(), address: "" }]);
   }
 
-  function updateDestination(id: string, address: string) {
+  function updateDestination(id: string, address: string, lat?: number, lng?: number) {
     setDestinos((prev) =>
-      prev.map((d) => (d.id === id ? { ...d, address } : d))
+      prev.map((d) => (d.id === id ? { ...d, address, lat, lng } : d))
     );
     setError(false);
+
+    // Geocodificar después de 1 segundo si no hay coordenadas
+    if (!lat || !lng) {
+      setTimeout(async () => {
+        const dest = destinos.find(d => d.id === id);
+        if (dest && dest.address.trim() && (!dest.lat || !dest.lng)) {
+          const coords = await geocodeAddress(address);
+          if (coords) {
+            setDestinos(prev =>
+              prev.map(d => d.id === id ? { ...d, lat: coords.lat, lng: coords.lng } : d)
+            );
+          }
+        }
+      }, 1000);
+    }
   }
 
   function removeDestination(id: string) {
@@ -77,6 +276,8 @@ export default function TransportStep2Page() {
     const next: WizardData = {
       ...current,
       origen: origen.trim(),
+      origenLat: origenCoords?.lat,
+      origenLng: origenCoords?.lng,
       destinos,
     };
     localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
@@ -98,22 +299,6 @@ export default function TransportStep2Page() {
     saveToStorage();
     navigate("/solicitudes/transporte/paso-1");
   }
-
-  // Construir URL del mapa usando OpenStreetMap (no requiere API key)
-  const mapUrl = useMemo(() => {
-    if (!origen.trim()) return null;
-
-    const validDestinos = destinos.filter((d) => d.address.trim());
-    if (validDestinos.length === 0) return null;
-
-    // Usar Nominatim para geocodificar y luego mostrar en OSM
-    // Para simplicidad, mostramos un mapa centrado en El Salvador
-    const lat = 13.7942;
-    const lng = -88.8965;
-    //const zoom = 9;
-
-    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng - 1},${lat - 1},${lng + 1},${lat + 1}&layer=mapnik&marker=${lat},${lng}`;
-  }, [origen, destinos]);
 
   return (
     <div className="min-h-screen bg-background-light px-4 py-8 sm:px-6 lg:px-8">
@@ -229,13 +414,15 @@ export default function TransportStep2Page() {
                       value={origen}
                       onChange={(e) => {
                         setOrigen(e.target.value);
+                        setOrigenCoords(null); // Reset coords para forzar nueva geocodificación
                         setError(false);
                       }}
                       placeholder="Ej: Asamblea Legislativa, San Salvador, El Salvador"
                       className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
                     />
                     <p className="mt-2 text-xs text-slate-500">
-                      Ingrese la dirección completa del punto de partida.
+                      Ingrese la dirección completa o haga clic en el mapa para seleccionar.
+                      {isGeocoding && <span className="ml-2 text-indigo-600">Buscando ubicación...</span>}
                     </p>
                   </div>
                 </section>
@@ -318,7 +505,7 @@ export default function TransportStep2Page() {
                     </button>
 
                     <p className="text-xs text-slate-500">
-                      Puede agregar múltiples destinos para su ruta.
+                      Puede agregar múltiples destinos para su ruta o hacer clic en el mapa.
                     </p>
                   </div>
                 </section>
@@ -375,58 +562,29 @@ export default function TransportStep2Page() {
               <div className="rounded-3xl border border-slate-200 bg-white shadow-sm overflow-hidden">
                 <div className="px-6 py-4 border-b border-slate-200">
                   <h3 className="text-sm font-bold text-slate-900">
-                    Vista previa del mapa
+                    Mapa interactivo
                   </h3>
                   <p className="mt-1 text-xs text-slate-500">
-                    Se muestra la ubicación aproximada de su ruta.
+                    Haga clic en el mapa para seleccionar ubicaciones.
                   </p>
                 </div>
 
-                <div className="h-[500px] bg-slate-50">
-                  {mapUrl ? (
-                    <iframe
-                      title="Mapa de ruta"
-                      className="h-full w-full"
-                      src={mapUrl}
-                      style={{ border: 0 }}
-                    />
-                  ) : (
-                    <div className="h-full w-full grid place-items-center p-6 text-center">
-                      <div className="max-w-xs">
-                        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 ring-1 ring-indigo-100">
-                          <svg
-                            className="h-6 w-6 text-indigo-700"
-                            fill="none"
-                            viewBox="0 0 24 24"
-                            stroke="currentColor"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
-                            />
-                          </svg>
-                        </div>
-                        <p className="text-sm font-semibold text-slate-700">
-                          Complete origen y destino para ver el mapa
-                        </p>
-                        <p className="mt-1 text-xs text-slate-500">
-                          La ruta se mostrará automáticamente al ingresar las ubicaciones.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <div id="map" className="h-[500px] bg-slate-50"></div>
 
                 {/* Info adicional */}
-                {mapUrl && (
-                  <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-                    <p className="text-xs text-slate-600">
-                      <span className="font-semibold">💡 Sugerencia:</span> Escriba direcciones completas como "Asamblea Legislativa, San Salvador" o "Santa Ana, El Salvador" para mejores resultados.
+                <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
+                  <div className="space-y-2 text-xs text-slate-600">
+                    <p>
+                      <span className="font-semibold">🗺️ Cómo usar:</span>
                     </p>
+                    <ul className="ml-4 space-y-1 list-disc">
+                      <li>Escriba direcciones completas en los campos de texto</li>
+                      <li>O haga clic directamente en el mapa para seleccionar ubicaciones</li>
+                      <li>El marcador azul 📍 indica el origen</li>
+                      <li>Los marcadores rojos 📍 indican los destinos</li>
+                    </ul>
                   </div>
-                )}
+                </div>
               </div>
             </div>
           </div>
