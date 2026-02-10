@@ -21,16 +21,16 @@ class UserResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
     protected static ?string $navigationGroup = 'Administración';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
     protected static ?string $navigationLabel = 'Usuarios';
 
     
     //Restricciones de acceso a la gestión de usuarios
-    public static function canAccess(): bool
-    {
-        $u = auth()->user();
-        return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
-    }
+    //public static function canAccess(): bool
+    //{
+    //    $u = auth()->user();
+     //   return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
+ //   }
     public static function form(Form $form): Form
     {
         return $form
