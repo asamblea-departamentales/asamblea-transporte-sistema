@@ -1,5 +1,7 @@
+// src/pages/NewRequestPage.tsx
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../auth/AuthContext";
 
 type ModuleCard = {
   key: "transporte" | "combustible" | "mantenimiento";
@@ -8,6 +10,7 @@ type ModuleCard = {
   href: string;
   accent: "blue" | "amber" | "emerald";
   icon: React.ReactNode;
+  allowedRoles: string[]; // ✅ NUEVO
 };
 
 function AccentIcon({
@@ -25,7 +28,9 @@ function AccentIcon({
       : "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-lg shadow-emerald-500/30";
 
   return (
-    <div className={`inline-flex rounded-2xl p-4 transition-all duration-300 group-hover:scale-110 ${styles}`}>
+    <div
+      className={`inline-flex rounded-2xl p-4 transition-all duration-300 group-hover:scale-110 ${styles}`}
+    >
       <span className="grid h-8 w-8 place-items-center">{icon}</span>
     </div>
   );
@@ -40,16 +45,23 @@ function ActionLink({ accent }: { accent: ModuleCard["accent"] }) {
       : "text-emerald-600 group-hover:text-emerald-700";
 
   return (
-    <span className={`inline-flex items-center gap-2 text-sm font-bold transition-all ${styles}`}>
+    <span
+      className={`inline-flex items-center gap-2 text-sm font-bold transition-all ${styles}`}
+    >
       Iniciar solicitud
-      <svg 
-        width="16" 
-        height="16" 
-        viewBox="0 0 24 24" 
-        fill="none" 
+      <svg
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
         className="transition-transform group-hover:translate-x-1"
       >
-        <path d="M5 12h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
+        <path
+          d="M5 12h12"
+          stroke="currentColor"
+          strokeWidth="2.5"
+          strokeLinecap="round"
+        />
         <path
           d="M13 6l6 6-6 6"
           stroke="currentColor"
@@ -64,6 +76,10 @@ function ActionLink({ accent }: { accent: ModuleCard["accent"] }) {
 
 export default function NewRequestPage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+
+  // Roles del usuario (vienen del backend: roles: string[])
+  const userRoles = user?.roles ?? [];
 
   const modules: ModuleCard[] = useMemo(
     () => [
@@ -74,8 +90,16 @@ export default function NewRequestPage() {
           "Solicitudes de transporte institucional, asignación de vehículos y seguimiento en tiempo real.",
         href: "/solicitudes/transporte/paso-1",
         accent: "blue",
+        allowedRoles: ["solicitante", "admin", "supervisor"], // ✅ solicitante SI
         icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path
               d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 0 1-2 2h-.5a2 2 0 0 1-4 0h-4a2 2 0 0 1-4 0H5a2 2 0 0 1-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z"
               strokeLinejoin="round"
@@ -87,13 +111,25 @@ export default function NewRequestPage() {
       {
         key: "combustible",
         title: "Combustible",
-        description: "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
+        description:
+          "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
         href: "/solicitudes/combustible/nueva",
         accent: "amber",
+        allowedRoles: ["admin", "supervisor"], // ❌ solicitante NO
         icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
             <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
-            <path d="M15 7h2l2 2v10a2 2 0 0 1-2 2h-2" strokeLinejoin="round" />
+            <path
+              d="M15 7h2l2 2v10a2 2 0 0 1-2 2h-2"
+              strokeLinejoin="round"
+            />
             <path d="M9 7h4" strokeLinecap="round" />
             <path d="M9 11h4" strokeLinecap="round" opacity="0.7" />
           </svg>
@@ -102,13 +138,28 @@ export default function NewRequestPage() {
       {
         key: "mantenimiento",
         title: "Mantenimiento",
-        description: "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
+        description:
+          "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
         href: "/solicitudes/mantenimiento/nueva",
         accent: "emerald",
+        allowedRoles: ["admin", "supervisor"], // ❌ solicitante NO
         icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
-            <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round" />
+          <svg
+            width="28"
+            height="28"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+          >
+            <path
+              d="M20 7l-7 7-4-4 7-7 4 4Z"
+              strokeLinejoin="round"
+            />
+            <path
+              d="M3 21l6-2 10-10-4-4L5 15l-2 6Z"
+              strokeLinejoin="round"
+            />
             <path d="M14 6l4 4" strokeLinecap="round" opacity="0.75" />
           </svg>
         ),
@@ -116,6 +167,15 @@ export default function NewRequestPage() {
     ],
     []
   );
+
+  // ✅ Filtra por roles: si alguno de los roles del usuario está permitido, se muestra.
+  const visibleModules = useMemo(() => {
+    // Si aún no cargó el user (o viene vacío), podés ocultar todo:
+    if (!user || userRoles.length === 0) return [];
+    return modules.filter((m) =>
+      m.allowedRoles.some((r) => userRoles.includes(r))
+    );
+  }, [modules, user, userRoles]);
 
   return (
     <div className="space-y-10 pb-8">
@@ -134,8 +194,18 @@ export default function NewRequestPage() {
           onClick={() => navigate("/dashboard")}
           className="group inline-flex items-center gap-2 rounded-2xl bg-slate-100 px-5 py-2.5 font-bold text-slate-700 transition-all hover:bg-slate-200"
         >
-          <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          <svg
+            className="h-4 w-4 transition-transform group-hover:-translate-x-1"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            strokeWidth="2.5"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              d="M10 19l-7-7m0 0l7-7m-7 7h18"
+            />
           </svg>
           Volver al inicio
         </button>
@@ -146,15 +216,27 @@ export default function NewRequestPage() {
         <div className="flex items-start gap-4 p-6">
           <div className="flex-shrink-0">
             <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-blue-100 shadow-sm">
-              <svg className="h-6 w-6 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <svg
+                className="h-6 w-6 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth="2"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
               </svg>
             </div>
           </div>
           <div className="flex-1">
             <h3 className="font-bold text-blue-900">Información importante</h3>
             <p className="mt-1 text-sm font-semibold text-blue-700 leading-relaxed">
-              Cada solicitud requiere aprobación del supervisor correspondiente. Asegúrese de completar todos los datos requeridos para agilizar el proceso.
+              Cada solicitud requiere aprobación del supervisor correspondiente.
+              Asegúrese de completar todos los datos requeridos para agilizar el
+              proceso.
             </p>
           </div>
         </div>
@@ -162,7 +244,7 @@ export default function NewRequestPage() {
 
       {/* Cards Grid */}
       <div className="grid gap-6 lg:grid-cols-3">
-        {modules.map((m) => (
+        {visibleModules.map((m) => (
           <button
             key={m.key}
             onClick={() => navigate(m.href)}
@@ -173,10 +255,16 @@ export default function NewRequestPage() {
             ].join(" ")}
           >
             {/* Decorative gradient background */}
-            <div className={[
-              "absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-20",
-              m.accent === "blue" ? "bg-blue-500" : m.accent === "amber" ? "bg-amber-500" : "bg-emerald-500"
-            ].join(" ")} />
+            <div
+              className={[
+                "absolute -right-8 -top-8 h-32 w-32 rounded-full opacity-0 blur-3xl transition-opacity duration-500 group-hover:opacity-20",
+                m.accent === "blue"
+                  ? "bg-blue-500"
+                  : m.accent === "amber"
+                  ? "bg-amber-500"
+                  : "bg-emerald-500",
+              ].join(" ")}
+            />
 
             <div className="relative">
               <div className="flex items-start justify-between">
@@ -196,11 +284,13 @@ export default function NewRequestPage() {
 
               <div className="mt-8 flex items-center justify-between">
                 <ActionLink accent={m.accent} />
-                
+
                 {/* Status indicator */}
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                  <span className="text-xs font-bold text-slate-500">Disponible</span>
+                  <span className="text-xs font-bold text-slate-500">
+                    Disponible
+                  </span>
                 </div>
               </div>
             </div>
@@ -214,23 +304,46 @@ export default function NewRequestPage() {
           <div className="flex items-start gap-4">
             <div className="flex-shrink-0">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-slate-100 to-slate-50 shadow-sm">
-                <svg className="h-6 w-6 text-slate-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                <svg
+                  className="h-6 w-6 text-slate-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
                 </svg>
               </div>
             </div>
             <div className="flex-1">
-              <h3 className="text-xl font-black text-slate-900">¿Necesitas ayuda?</h3>
+              <h3 className="text-xl font-black text-slate-900">
+                ¿Necesitas ayuda?
+              </h3>
               <p className="mt-1 text-sm font-semibold text-slate-600">
-                Si tienes dudas sobre qué módulo seleccionar o cómo completar una solicitud, contacta al departamento de soporte técnico.
+                Si tienes dudas sobre qué módulo seleccionar o cómo completar una
+                solicitud, contacta al departamento de soporte técnico.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <a
                   href="mailto:soporte@transporte.gob"
                   className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition-all hover:bg-slate-200"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                    />
                   </svg>
                   Enviar correo
                 </a>
@@ -238,8 +351,18 @@ export default function NewRequestPage() {
                   href="tel:+50312345678"
                   className="inline-flex items-center gap-2 rounded-xl bg-slate-100 px-4 py-2 text-sm font-bold text-slate-700 transition-all hover:bg-slate-200"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
+                    />
                   </svg>
                   Llamar
                 </a>
