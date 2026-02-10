@@ -12,6 +12,8 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use PhpParser\Node\Stmt\Label;
+use Spatie\Permission\Models\Role;
 
 class UserResource extends Resource
 {
@@ -73,6 +75,19 @@ class UserResource extends Resource
                         ->dehydrated(fn ($state) => filled($state))
                         ->helperText('Dejar en blanco para mantener la contraseña actual')
                         ->minLength(8),
+
+                    Forms\Components\Select::make('roles')
+                        ->label('Roles')
+                        ->multiple()
+                        ->searchable()
+                        ->preload()
+                        ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name')->toArray())
+                        ->helperText('Seleccioná uno o varios roles.')
+                        ->afterStateHydrated(function ($component, $record) {
+                            if (!$record) return;
+                            $component->state($record->getRoleNames()->toArray());
+                        })
+                        ->dehydrated(false), // no está en users table, lo manejamos en save
                 ])
             ]);
     }
@@ -81,13 +96,52 @@ class UserResource extends Resource
     {
         return $table
             ->columns([
-                //
+                Tables\Columns\TextColumn::make('name')
+                    ->label('Nombre')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('email')
+                    ->label('Correo')
+                    ->searchable()
+                    ->sortable(),
+
+                Tables\Columns\IconColumn::make('activo')
+                    ->label('Activo')
+                    ->boolean()
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('roles.name')
+                    ->label('Roles')
+                    ->badge()
+                    ->separator(',')
+                    ->sortable(),
+
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creado')
+                    ->dateTime('Y-m-d H:i')
+                    ->sortable(),
             ])
             ->filters([
-                //
+                Tables\Filters\TernaryFilter::make('activo')->label('Activo'),
+                Tables\Filters\SelectFilter::make('role')
+                    ->label('Rol')
+                    ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name')->toArray())
+                    ->query(function (Builder $query, array $data) {
+                        if (empty($data['value'])) return $query;
+                        return $query->whereHas('roles', fn ($q) => $q->where('name', $data['value']));
+                    }),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\Action::make('toggleActivo')
+                    ->label(fn (User $record) => $record->activo ? 'Desactivar' : 'Activar')
+                    ->icon('heroicon-o-power')
+                    ->color(fn (User $record) => $record->activo ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->action(function (User $record) {
+                        $record->update(['activo' => !$record->activo]);
+                    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -65,4 +65,10 @@ class User extends Authenticatable implements FilamentUser
         }
         return $this->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
     }
+
+    //Relaciones
+    public function unidadSolicitante()
+    {
+        return $this->belongsTo(UnidadSolicitante::class, 'unidad_solicitante_id');
+    }
 }
