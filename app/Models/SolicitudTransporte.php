@@ -43,22 +43,27 @@ class SolicitudTransporte extends Model
      * Generar código único por usuario automáticamente
      */
     protected static function booted()
-    {
-        static::creating(function ($solicitud) {
-            $year = now()->year;
-            $userId = $solicitud->solicitante_id;
-            
-            // Contar cuántas solicitudes tiene ESTE USUARIO en este año
-            $cantidad = static::where('solicitante_id', $userId)
-                ->whereYear('created_at', $year)
-                ->count();
-            
-            $numero = $cantidad + 1;
-            
-            // Formato: TR-2025-000001 (resetea por usuario)
-            $solicitud->codigo = "TR-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
-        });
-    }
+{
+    static::creating(function ($solicitud) {
+        $year = now()->year;
+        
+        // Si el solicitante es el usuario que está logueado:
+        $userId = $solicitud->solicitante_id ?? auth()->id();
+        
+        if (!$userId) {
+            // Si por alguna razón no hay ID, esto evitará el error 500
+            \Log::error("Error generando código: No se encontró ID de solicitante");
+            return;
+        }
+
+        $cantidad = static::where('solicitante_id', $userId)
+            ->whereYear('created_at', $year)
+            ->count();
+
+        $numero = $cantidad + 1;
+        $solicitud->codigo = "TR-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
+    });
+}
 
     // Relaciones
     public function unidad() { return $this->belongsTo(UnidadSolicitante::class, 'unidad_solicitante_id'); }
