@@ -2,16 +2,16 @@
 
 return [
     'shield_resource' => [
-    'should_register_navigation' => false,
+    'should_register_navigation' => true,
     'slug' => 'shield/roles',
-    'navigation_sort' => -1, // ← Cambiar a -1 para que use el del Resource
+    'navigation_sort' => 2,
     'navigation_badge' => true,
-    'navigation_group' => true, // ← Cambiar a true (para que use el del Resource)
+    'navigation_group' => 'Administración', // ← EXACTAMENTE igual que UserResource
     'is_globally_searchable' => false,
     'show_model_path' => true,
     'cluster' => null,
     
-    'resource' => \App\Filament\Resources\RoleResource::class,
+    // 'resource' => ... ← ELIMINA ESTA LÍNEA
 ],
 
     'tenant_model' => null,

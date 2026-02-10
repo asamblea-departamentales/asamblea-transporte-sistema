@@ -39,20 +39,24 @@ class SolicitudTransporte extends Model
     /**
      * Generar código único automáticamente antes de crear
      */
+     /**
+     * Generar código único por usuario automáticamente
+     */
     protected static function booted()
     {
-        // ✅ Cambiamos a 'creating' (antes de que la DB reciba los datos)
         static::creating(function ($solicitud) {
             $year = now()->year;
+            $userId = $solicitud->solicitante_id;
             
-            // Como el ID aún no existe en 'creating', usamos el máximo actual + 1
-            $ultimoId = static::max('id') ?? 0;
-            $proximoId = $ultimoId + 1;
+            // Contar cuántas solicitudes tiene ESTE USUARIO en este año
+            $cantidad = static::where('solicitante_id', $userId)
+                ->whereYear('created_at', $year)
+                ->count();
             
-            $solicitud->codigo = "TR-{$year}-" . str_pad($proximoId, 6, '0', STR_PAD_LEFT);
+            $numero = $cantidad + 1;
             
-            // ✅ IMPORTANTE: No necesitas save() ni saveQuietly() aquí, 
-            // ya que estamos en el proceso de creación.
+            // Formato: TR-2025-000001 (resetea por usuario)
+            $solicitud->codigo = "TR-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
         });
     }
 
