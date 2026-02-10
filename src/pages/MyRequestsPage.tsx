@@ -1,65 +1,34 @@
-import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import {
-  finalizarSolicitud,
-  getSolicitudByCode,
-  type SolicitudTransporte,
-} from "../services/transport-requests.service";
+// src/pages/MyRequestsPage.tsx
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { getMyRequests, type SolicitudTransporte } from "../services/transport-requests.service";
 
-function kind(estado: string) {
-  const s = (estado || "").toUpperCase();
-  if (s.includes("APROB")) return "APROBADA";
-  if (s.includes("RECHAZ")) return "RECHAZADA";
-  if (s.includes("FINAL")) return "FINALIZADA";
-  if (s.includes("PEND")) return "PENDIENTE";
-  if (s.includes("BORR")) return "BORRADOR";
-  return s || "—";
-}
-
-function StatusPill({ estado }: { estado: string }) {
-  const k = kind(estado);
+function StatusPill({ status }: { status: string }) {
+  const s = status.toUpperCase();
 
   const ui =
-    k === "APROBADA"
-      ? { cls: "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200", dot: "bg-emerald-500" }
-      : k === "RECHAZADA"
-      ? { cls: "bg-rose-50 text-rose-700 ring-1 ring-rose-200", dot: "bg-rose-500" }
-      : k === "FINALIZADA"
-      ? { cls: "bg-slate-900 text-white ring-1 ring-slate-800", dot: "bg-white" }
-      : k === "PENDIENTE"
-      ? { cls: "bg-amber-50 text-amber-700 ring-1 ring-amber-200", dot: "bg-amber-500" }
-      : { cls: "bg-slate-100 text-slate-700 ring-1 ring-slate-200", dot: "bg-slate-500" };
+    s.includes("APROB")
+      ? "bg-emerald-50 text-emerald-700 ring-1 ring-emerald-200"
+      : s.includes("RECHAZ")
+      ? "bg-rose-50 text-rose-700 ring-1 ring-rose-200"
+      : s.includes("FINAL")
+      ? "bg-slate-900 text-white ring-1 ring-slate-800"
+      : s.includes("PEND")
+      ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200"
+      : "bg-slate-100 text-slate-700 ring-1 ring-slate-200";
 
   return (
-    <span className={`inline-flex items-center gap-2 rounded-full px-3 py-1 text-sm font-semibold ${ui.cls}`}>
-      <span className={`h-2 w-2 rounded-full ${ui.dot}`} />
-      {k}
+    <span className={`inline-flex items-center rounded-full px-3 py-1 text-sm font-bold ${ui}`}>
+      {status}
     </span>
   );
 }
 
-function Field({ label, value }: { label: string; value?: any }) {
-  return (
-    <div className="rounded-2xl bg-white/90 ring-1 ring-slate-200/70 p-4">
-      <p className="text-xs font-black uppercase tracking-wider text-slate-500">{label}</p>
-      <p className="mt-1 text-sm font-semibold text-slate-900 whitespace-pre-wrap">
-        {value ?? "—"}
-      </p>
-    </div>
-  );
-}
-
-export default function SolicitudDetailPage() {
-  const { code } = useParams();
+export default function MyRequestsPage() {
   const navigate = useNavigate();
-
   const [loading, setLoading] = useState(true);
-  const [item, setItem] = useState<SolicitudTransporte | null>(null);
+  const [items, setItems] = useState<SolicitudTransporte[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  const [finalizing, setFinalizing] = useState(false);
-  const [actionError, setActionError] = useState<string | null>(null);
-  const [actionOk, setActionOk] = useState<string | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -67,18 +36,12 @@ export default function SolicitudDetailPage() {
     (async () => {
       try {
         setLoading(true);
-        setError(null);
-        setActionError(null);
-        setActionOk(null);
-
-        if (!code) throw new Error("Código inválido.");
-        const data = await getSolicitudByCode(code);
-
+        const data = await getMyRequests();
         if (!alive) return;
-        setItem(data);
+        setItems(data);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.response?.data?.message ?? e?.message ?? "No se pudo cargar el detalle.");
+        setError(e?.message ?? "No se pudieron cargar las solicitudes.");
       } finally {
         if (!alive) return;
         setLoading(false);
@@ -88,163 +51,79 @@ export default function SolicitudDetailPage() {
     return () => {
       alive = false;
     };
-  }, [code]);
-
-  const canFinalize = useMemo(() => {
-    const e = kind(item?.estado ?? "");
-    return e === "APROBADA";
-  }, [item]);
-
-  async function handleFinalize() {
-    if (!item?.code) return;
-
-    setActionError(null);
-    setActionOk(null);
-
-    const ok = window.confirm(`¿Marcar como FINALIZADA la solicitud ${item.code}?`);
-    if (!ok) return;
-
-    try {
-      setFinalizing(true);
-      await finalizarSolicitud(item.code);
-
-      // recargar detalle para reflejar estado nuevo
-      const refreshed = await getSolicitudByCode(item.code);
-      setItem(refreshed);
-      setActionOk("Solicitud finalizada correctamente.");
-    } catch (e: any) {
-      setActionError(e?.response?.data?.message ?? e?.message ?? "No se pudo finalizar.");
-    } finally {
-      setFinalizing(false);
-    }
-  }
+  }, []);
 
   return (
-    <div className="space-y-6 pb-8">
-      {/* Top */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <button
-            onClick={() => navigate("/mis-solicitudes")}
-            className="inline-flex items-center gap-2 text-sm font-extrabold text-blue-600 hover:text-blue-700"
-          >
-            <span className="text-lg leading-none">‹</span> Volver
-          </button>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-3xl font-black text-slate-900">Mis Solicitudes</h1>
 
-          <h1 className="mt-2 text-3xl font-black tracking-tight text-slate-900">
-            {loading ? "Cargando..." : item?.code ?? "Solicitud"}
-          </h1>
-
-          {!loading && item && (
-            <div className="mt-2 flex flex-wrap items-center gap-3">
-              <StatusPill estado={item.estado} />
-              <span className="text-sm font-semibold text-slate-600">Solicitud de Transporte</span>
-            </div>
-          )}
-        </div>
-
-        {!loading && item && (
-          <button
-            onClick={handleFinalize}
-            disabled={!canFinalize || finalizing}
-            title={!canFinalize ? "Solo se puede finalizar cuando está APROBADA." : "Finalizar solicitud"}
-            className={[
-              "inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-extrabold shadow-lg transition-all",
-              canFinalize
-                ? "bg-slate-900 text-white hover:bg-slate-800 active:scale-[0.98]"
-                : "bg-slate-100 text-slate-400 cursor-not-allowed",
-            ].join(" ")}
-          >
-            {finalizing ? (
-              <>
-                <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/40 border-t-white" />
-                Finalizando...
-              </>
-            ) : (
-              <>
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Marcar como finalizada
-              </>
-            )}
-          </button>
-        )}
+        <button
+          onClick={() => navigate("/nueva-solicitud")}
+          className="rounded-2xl bg-blue-600 px-5 py-2.5 text-sm font-extrabold text-white shadow hover:bg-blue-700"
+        >
+          Nueva Solicitud
+        </button>
       </div>
 
-      {/* Alerts */}
+      {/* Error */}
       {!loading && error && (
-        <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-5 text-sm font-semibold text-red-700">
+        <div className="rounded-2xl bg-red-50 p-4 text-sm font-semibold text-red-700 ring-1 ring-red-200">
           {error}
         </div>
       )}
 
-      {!loading && !error && actionError && (
-        <div className="rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-yellow-50 p-5 text-sm font-semibold text-amber-800">
-          {actionError}
-        </div>
-      )}
+      {/* Table */}
+      <div className="overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200">
+        <table className="min-w-full">
+          <thead>
+            <tr className="bg-slate-50 border-b border-slate-200">
+              <th className="px-6 py-4 text-left text-xs font-black uppercase text-slate-600">Código</th>
+              <th className="px-6 py-4 text-left text-xs font-black uppercase text-slate-600">Fecha</th>
+              <th className="px-6 py-4 text-left text-xs font-black uppercase text-slate-600">Tipo</th>
+              <th className="px-6 py-4 text-right text-xs font-black uppercase text-slate-600">Estado</th>
+            </tr>
+          </thead>
 
-      {!loading && !error && actionOk && (
-        <div className="rounded-2xl border border-emerald-200 bg-gradient-to-br from-emerald-50 to-teal-50 p-5 text-sm font-semibold text-emerald-800">
-          {actionOk}
-        </div>
-      )}
-
-      {/* Content */}
-      {!loading && item && !error && (
-        <>
-          {/* Resumen */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <Field label="Código" value={item.code} />
-            <Field label="Estado" value={kind(item.estado)} />
-            <Field label="Prioridad" value={item.prioridad} />
-            <Field label="Personas" value={item.cantidad_personas} />
-          </div>
-
-          {/* Datos principales */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Información de la actividad</h2>
-              <Field label="Motivo / Actividad" value={item.motivo_actividad} />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Fecha salida" value={item.fecha_salida} />
-                <Field label="Fecha retorno" value={item.fecha_retorno ?? "—"} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Ruta</h2>
-              <Field label="Origen" value={item.origen} />
-              <Field label="Destino" value={item.destino} />
-            </div>
-          </div>
-
-          {/* Relaciones */}
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Solicitante</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Nombre" value={item.solicitante?.name} />
-                <Field label="Email" value={item.solicitante?.email} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Unidad solicitante</h2>
-              <Field label="Unidad" value={item.unidad?.nombre} />
-            </div>
-          </div>
-
-          {/* Evidencias (aún no) */}
-          <div className="rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
-            <p className="text-sm font-black text-slate-900">Evidencias</p>
-            <p className="mt-1 text-sm font-semibold text-slate-500">
-              Aún no disponible (pendiente backend para subir imágenes).
-            </p>
-          </div>
-        </>
-      )}
+          <tbody>
+            {loading ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
+                  Cargando solicitudes…
+                </td>
+              </tr>
+            ) : items.length === 0 ? (
+              <tr>
+                <td colSpan={4} className="px-6 py-10 text-center text-slate-500">
+                  No tienes solicitudes registradas
+                </td>
+              </tr>
+            ) : (
+              items.map((r) => (
+                <tr
+                  key={r.code}
+                  onClick={() => navigate(`/mis-solicitudes/${encodeURIComponent(r.code)}`)}
+                  className="cursor-pointer border-t border-slate-200 hover:bg-slate-50 transition"
+                >
+                  <td className="px-6 py-5 font-extrabold text-slate-900">
+                    {r.code}
+                  </td>
+                  <td className="px-6 py-5 font-semibold text-slate-700">
+                    {r.fecha_salida ?? r.created_at ?? "—"}
+                  </td>
+                  <td className="px-6 py-5 font-semibold text-slate-900">
+                    Solicitud de Transporte
+                  </td>
+                  <td className="px-6 py-5 text-right">
+                    <StatusPill status={r.estado} />
+                  </td>
+                </tr>
+              ))
+            )}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }
