@@ -2,7 +2,7 @@
 
 return [
     'shield_resource' => [
-    'should_register_navigation' => true,
+    'should_register_navigation' => false,
     'slug' => 'shield/roles',
     'navigation_sort' => -1, // ← Cambiar a -1 para que use el del Resource
     'navigation_badge' => true,
