@@ -4,38 +4,10 @@ import {
   getAllRequests,
   getRequestById,
   type Request,
-  type RequestFilters,
-  type RequestsResponse,
+  
 } from "../services/requests.service";
 
-function SkeletonRow() {
-  return (
-    <tr className="animate-pulse border-b border-slate-100">
-      <td className="px-6 py-5">
-        <div className="h-4 w-32 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5">
-        <div className="h-4 w-28 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5">
-        <div className="h-4 w-32 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5">
-        <div className="h-4 w-32 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5">
-        <div className="h-4 w-16 rounded-lg bg-slate-200" />
-      </td>
-      <td className="px-6 py-5 text-right">
-        <div className="ml-auto h-7 w-28 rounded-full bg-slate-200" />
-      </td>
-      <td className="px-6 py-5 text-right">
-        <div className="ml-auto h-8 w-20 rounded-lg bg-slate-200" />
-      </td>
-    </tr>
-  );
-}
-
+// Componente para ver los detalles (Mantenemos tu diseño original que es bueno)
 function RequestDetailRow({ request }: { request: Request }) {
   const formatFecha = (fecha: string) => {
     return new Date(fecha).toLocaleString("es-ES", {
@@ -45,560 +17,222 @@ function RequestDetailRow({ request }: { request: Request }) {
   };
 
   return (
-    <tr className="bg-slate-50/50">
-      <td colSpan={7} className="px-6 py-6">
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
-          <div className="space-y-6">
-            {/* Información General */}
-            <div>
-              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
-                Información General
-              </h4>
-              <div className="grid gap-4 sm:grid-cols-3">
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Código</p>
-                  <p className="mt-1 font-semibold text-slate-900">{request.codigo}</p>
+    <tr className="bg-slate-50/50 border-b border-slate-100 animate-fadeIn">
+      <td colSpan={4} className="px-0 py-0">
+        <div className="border-t border-slate-200 bg-slate-50 p-6 shadow-inner">
+            {/* Aquí reutilizamos tu diseño de tarjeta de detalle */}
+            <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+                <div className="mb-4 border-b border-slate-100 pb-4">
+                    <h3 className="text-lg font-bold text-slate-800">Detalle de Solicitud #{request.codigo}</h3>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Unidad Solicitante</p>
-                  <p className="mt-1 font-semibold text-slate-900">{request.unidad?.nombre ?? "—"}</p>
-                </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Prioridad</p>
-                  <p className="mt-1 font-semibold text-slate-900 capitalize">{request.prioridad}</p>
-                </div>
-              </div>
-            </div>
+                
+                <div className="grid gap-6 md:grid-cols-2">
+                    {/* Bloque 1: Ruta */}
+                    <div>
+                        <h4 className="mb-2 text-xs font-black uppercase text-slate-500">Ruta</h4>
+                        <div className="flex flex-col gap-3">
+                            <div className="flex items-start gap-2">
+                                <div className="mt-1 h-2 w-2 rounded-full bg-green-500"/>
+                                <div>
+                                    <span className="block text-xs text-slate-500">Origen</span>
+                                    <span className="font-medium text-slate-900">{request.origen}</span>
+                                </div>
+                            </div>
+                            <div className="flex items-start gap-2">
+                                <div className="mt-1 h-2 w-2 rounded-full bg-red-500"/>
+                                <div>
+                                    <span className="block text-xs text-slate-500">Destino</span>
+                                    <span className="font-medium text-slate-900">{request.destino}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-            {/* Detalles del Viaje */}
-            <div>
-              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
-                Detalles del Viaje
-              </h4>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Origen</p>
-                  <div className="mt-1 flex items-start gap-2">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-green-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p className="font-medium text-slate-900">{request.origen}</p>
-                  </div>
+                    {/* Bloque 2: Info Adicional */}
+                    <div>
+                        <h4 className="mb-2 text-xs font-black uppercase text-slate-500">Datos Generales</h4>
+                        <div className="space-y-2 text-sm">
+                            <p><span className="font-semibold text-slate-700">Pasajeros:</span> {request.cantidad_personas}</p>
+                            <p><span className="font-semibold text-slate-700">Motivo:</span> {request.motivo_actividad}</p>
+                            {request.unidad && <p><span className="font-semibold text-slate-700">Unidad:</span> {request.unidad.nombre}</p>}
+                        </div>
+                    </div>
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Destino</p>
-                  <div className="mt-1 flex items-start gap-2">
-                    <svg className="mt-0.5 h-4 w-4 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
-                    </svg>
-                    <p className="font-medium text-slate-900">{request.destino}</p>
-                  </div>
+                
+                <div className="mt-6 flex justify-end text-xs text-slate-400">
+                    Creado el {formatFecha(request.created_at)}
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-slate-600">Fecha Salida</p>
-                  <p className="mt-1 font-medium text-slate-900">
-                    {new Date(request.fecha_salida).toLocaleDateString("es-ES", {
-                      day: "2-digit",
-                      month: "2-digit",
-                      year: "numeric",
-                    })}
-                  </p>
-                </div>
-                {request.fecha_retorno && (
-                  <div>
-                    <p className="text-xs font-bold text-slate-600">Fecha Retorno</p>
-                    <p className="mt-1 font-medium text-slate-900">
-                      {new Date(request.fecha_retorno).toLocaleDateString("es-ES", {
-                        day: "2-digit",
-                        month: "2-digit",
-                        year: "numeric",
-                      })}
-                    </p>
-                  </div>
-                )}
-              </div>
             </div>
-
-            {/* Motivo */}
-            <div>
-              <h4 className="mb-3 text-sm font-black uppercase tracking-wider text-slate-900">
-                Motivo de la Actividad
-              </h4>
-              <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 font-medium leading-relaxed text-slate-900">
-                {request.motivo_actividad}
-              </p>
-            </div>
-
-            {/* Footer con fechas del sistema */}
-            <div className="border-t border-slate-200 pt-4">
-              <div className="flex flex-wrap items-center gap-4 text-xs text-slate-600">
-                <div>
-                  <span className="font-bold">Creado:</span>{" "}
-                  <span className="font-medium">{formatFecha(request.created_at)}</span>
-                </div>
-                <div>
-                  <span className="font-bold">Actualizado:</span>{" "}
-                  <span className="font-medium">{formatFecha(request.updated_at)}</span>
-                </div>
-                {request.solicitante && (
-                  <div className="ml-auto">
-                    <span className="font-bold">Solicitante:</span>{" "}
-                    <span className="font-medium">{request.solicitante.name}</span>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
         </div>
       </td>
     </tr>
   );
 }
 
-export default function MyRequestsPage() {
+// Componente de carga minimalista para las filas
+function SkeletonRow() {
+  return (
+    <tr className="animate-pulse border-b border-slate-50">
+      <td className="px-6 py-4"><div className="h-4 w-32 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="h-4 w-24 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="ml-auto h-6 w-24 rounded-full bg-slate-100" /></td>
+    </tr>
+  );
+}
+
+export default function RecentRequestsWidget() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState<Request[]>([]);
-  const [response, setResponse] = useState<RequestsResponse | null>(null);
-  const [error, setError] = useState<string | null>(null);
   
-  // Expanded row state
+  // Estado para la expansión
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [expandedRequest, setExpandedRequest] = useState<Request | null>(null);
   const [loadingDetail, setLoadingDetail] = useState(false);
-  
-  // Filters
-  const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState(1);
 
   useEffect(() => {
-    let alive = true;
-
     async function load() {
-      setLoading(true);
-      setError(null);
-
       try {
-        const filters: RequestFilters = {
-          page: currentPage,
-          per_page: 10,
-        };
-
-        if (statusFilter !== "all") {
-          filters.estado = statusFilter as any;
-        }
-        if (searchTerm.trim()) {
-          filters.search = searchTerm.trim();
-        }
-
-        const data = await getAllRequests(filters);
-        if (!alive) return;
-        
-        setResponse(data);
+        // Asumimos que quieres las ultimas, page 1
+        const data = await getAllRequests({ page: 1, per_page: 5 }); 
         setRequests(data.data);
-      } catch (e: any) {
-        if (!alive) return;
-        setError(e?.message ?? "No se pudo cargar las solicitudes.");
+      } catch (e) {
+        console.error("Error cargando solicitudes", e);
       } finally {
-        if (alive) setLoading(false);
+        setLoading(false);
       }
     }
-
     load();
-    return () => {
-      alive = false;
-    };
-  }, [currentPage, statusFilter, searchTerm]);
+  }, []);
 
-  const handleToggleDetail = async (id: number) => {
-    // Si ya está expandido, colapsar
+  const handleRowClick = async (id: number) => {
     if (expandedId === id) {
       setExpandedId(null);
       setExpandedRequest(null);
       return;
     }
 
-    // Expandir y cargar detalle
     setExpandedId(id);
     setLoadingDetail(true);
-    
     try {
       const detail = await getRequestById(id);
       setExpandedRequest(detail);
-    } catch (e: any) {
-      console.error("Error al cargar detalle:", e);
-      setExpandedRequest(null);
+    } catch (e) {
+      console.error(e);
     } finally {
       setLoadingDetail(false);
     }
   };
 
-  const getStatusBadge = (status: string) => {
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === "aprobada") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1.5 text-xs font-bold text-emerald-700 ring-1 ring-emerald-200";
-    }
-    if (statusLower === "pendiente") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-xs font-bold text-amber-700 ring-1 ring-amber-200";
-    }
-    if (statusLower === "observada") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-blue-100 px-3 py-1.5 text-xs font-bold text-blue-700 ring-1 ring-blue-200";
-    }
-    if (statusLower === "rechazada") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-red-100 px-3 py-1.5 text-xs font-bold text-red-700 ring-1 ring-red-200";
-    }
-    if (statusLower === "borrador") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
-    }
-    if (statusLower === "programada") {
-      return "inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1.5 text-xs font-bold text-purple-700 ring-1 ring-purple-200";
-    }
-    return "inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1.5 text-xs font-bold text-slate-700 ring-1 ring-slate-200";
+  const getStatusStyles = (status: string) => {
+    const s = status.toLowerCase();
+    if (s === 'pendiente') return "bg-amber-100 text-amber-700 border-amber-200";
+    if (s === 'aprobada') return "bg-emerald-100 text-emerald-700 border-emerald-200";
+    if (s === 'programada') return "bg-slate-100 text-slate-600 border-slate-200";
+    if (s === 'rechazada') return "bg-red-100 text-red-700 border-red-200";
+    return "bg-gray-100 text-gray-600 border-gray-200";
   };
-
-  const getStatusIcon = (status: string) => {
-    const statusLower = status.toLowerCase();
-    
-    if (statusLower === "aprobada") {
-      return (
-        <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-        </svg>
-      );
-    }
-    if (statusLower === "pendiente") {
-      return (
-        <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" />
-        </svg>
-      );
-    }
-    if (statusLower === "observada") {
-      return (
-        <svg className="h-3.5 w-3.5" fill="currentColor" viewBox="0 0 20 20">
-          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-        </svg>
-      );
-    }
-    return null;
-  };
-
-  const formatFecha = (fecha: string) => {
-    return new Date(fecha).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
-  };
-
-  const totalPages = response?.total_pages ?? 1;
 
   return (
-    <div className="space-y-8 pb-8">
-      {/* Header */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <div className="w-full bg-white font-sans">
+      {/* Header idéntico a la imagen */}
+      <div className="flex items-center justify-between border-b border-slate-100 px-6 py-5">
         <div>
-          <h1 className="text-4xl font-black tracking-tight text-slate-900">
-            Mis Solicitudes
-          </h1>
-          <p className="mt-1.5 text-base text-slate-600">
-            {response?.total ?? 0} solicitud{response?.total !== 1 ? "es" : ""} encontrada{response?.total !== 1 ? "s" : ""}
-          </p>
+          <h2 className="text-xl font-black tracking-tight text-slate-900">Solicitudes Recientes</h2>
+          <p className="mt-1 text-sm text-slate-500">Últimas solicitudes registradas en el sistema</p>
         </div>
-        
-        <button
-          onClick={() => navigate("/nueva-solicitud")}
-          className="group inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-blue-600 to-cyan-600 px-6 py-3 font-bold text-white shadow-lg shadow-blue-500/30 transition-all hover:shadow-xl hover:shadow-blue-500/40 hover:scale-[1.02] active:scale-[0.98]"
+        <button 
+            onClick={() => navigate('/todas-las-solicitudes')}
+            className="flex items-center gap-1 text-sm font-bold text-blue-600 hover:text-blue-700 transition-colors"
         >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-          </svg>
-          Nueva Solicitud
+            Ver todas
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
         </button>
       </div>
 
-      {/* Error */}
-      {error && (
-        <div className="overflow-hidden rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 shadow-sm">
-          <div className="flex items-start gap-3 p-5">
-            <div className="flex-shrink-0">
-              <svg className="h-6 w-6 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-              </svg>
-            </div>
-            <div>
-              <h4 className="font-bold text-red-900">Error al cargar</h4>
-              <p className="mt-1 text-sm font-semibold text-red-700">{error}</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Filters */}
-      <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-lg shadow-slate-200/50">
-        <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-6 py-5">
-          <h3 className="text-lg font-black tracking-tight text-slate-900">
-            Filtros
-          </h3>
-        </div>
-        
-        <div className="grid gap-4 p-6 sm:grid-cols-3">
-          {/* Search */}
-          <div className="sm:col-span-3">
-            <label className="mb-2 block text-sm font-bold text-slate-700">
-              Buscar
-            </label>
-            <div className="relative">
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Buscar por código, motivo o destino..."
-                className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 pl-11 font-semibold text-slate-900 placeholder-slate-400 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-              <svg
-                className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth="2"
-              >
-                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-              </svg>
-            </div>
-          </div>
-
-          {/* Status Filter */}
-          <div>
-            <label className="mb-2 block text-sm font-bold text-slate-700">
-              Estado
-            </label>
-            <select
-              value={statusFilter}
-              onChange={(e) => {
-                setStatusFilter(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-semibold text-slate-900 shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-            >
-              <option value="all">Todos los estados</option>
-              <option value="borrador">Borrador</option>
-              <option value="pendiente">Pendiente</option>
-              <option value="observada">Observada</option>
-              <option value="aprobada">Aprobada</option>
-              <option value="rechazada">Rechazada</option>
-              <option value="programada">Programada</option>
-            </select>
-          </div>
-
-          {/* Clear Filters */}
-          <div className="sm:col-start-3 flex items-end">
-            <button
-              onClick={() => {
-                setStatusFilter("all");
-                setSearchTerm("");
-                setCurrentPage(1);
-              }}
-              className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-400"
-            >
-              Limpiar filtros
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {/* Table */}
-      <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white/90 backdrop-blur-sm shadow-xl shadow-slate-200/50">
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-slate-200 bg-slate-50/80">
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Código
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Fecha Salida
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Origen
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Destino
-                </th>
-                <th className="px-6 py-4 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Personas
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Estado
-                </th>
-                <th className="px-6 py-4 text-right text-xs font-bold uppercase tracking-wider text-slate-600">
-                  Acciones
-                </th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {loading ? (
+      {/* Tabla limpia */}
+      <div className="overflow-x-auto">
+        <table className="w-full">
+          <thead>
+            <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
+              <th className="px-6 py-4">Código</th>
+              <th className="px-6 py-4">Fecha</th>
+              <th className="px-6 py-4">Tipo de Solicitud</th>
+              <th className="px-6 py-4 text-right">Estado</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-50">
+            {loading ? (
+              <>
+                <SkeletonRow />
+                <SkeletonRow />
+                <SkeletonRow />
+              </>
+            ) : (
+              requests.map((req) => (
                 <>
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                  <SkeletonRow />
-                </>
-              ) : requests.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-16 text-center">
-                    <div className="flex flex-col items-center gap-3">
-                      <div className="rounded-full bg-slate-100 p-4">
-                        <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-                        </svg>
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900">No se encontraron solicitudes</p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {statusFilter !== "all" || searchTerm
-                            ? "Intenta ajustar los filtros"
-                            : "Crea tu primera solicitud para comenzar"}
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => navigate("/nueva-solicitud")}
-                        className="mt-2 inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2 text-sm font-bold text-white shadow-md hover:bg-blue-700"
-                      >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-                        </svg>
-                        Nueva Solicitud
-                      </button>
-                    </div>
-                  </td>
-                </tr>
-              ) : (
-                requests.map((request) => (
-                  <>
-                    <tr
-                      key={request.id}
-                      className={`border-b border-slate-100 transition-colors ${
-                        expandedId === request.id ? "bg-slate-50" : "hover:bg-slate-50/50"
-                      }`}
-                    >
-                      <td className="px-6 py-5">
-                        <div className="flex items-center gap-2">
-                          <div className="h-2 w-2 rounded-full bg-blue-500" />
-                          <span className="font-bold text-slate-900">{request.codigo}</span>
+                  <tr 
+                    key={req.id} 
+                    onClick={() => handleRowClick(req.id)}
+                    className={`cursor-pointer transition-all hover:bg-slate-50 ${expandedId === req.id ? 'bg-slate-50' : ''}`}
+                  >
+                    {/* Columna: Código */}
+                    <td className="px-6 py-4">
+                        <div className="flex items-center gap-3">
+                            <div className="h-2.5 w-2.5 rounded-full bg-blue-500 ring-2 ring-blue-100" />
+                            <span className="font-bold text-slate-900">{req.codigo}</span>
                         </div>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="font-semibold text-slate-700">{formatFecha(request.fecha_salida)}</span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="font-medium text-slate-700">{request.origen}</span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="font-medium text-slate-700">{request.destino}</span>
-                      </td>
-                      <td className="px-6 py-5">
-                        <span className="font-semibold text-slate-900">{request.cantidad_personas}</span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <span className={getStatusBadge(request.estado)}>
-                          {getStatusIcon(request.estado)}
-                          {request.estado.charAt(0).toUpperCase() + request.estado.slice(1)}
-                        </span>
-                      </td>
-                      <td className="px-6 py-5 text-right">
-                        <button
-                          onClick={() => handleToggleDetail(request.id)}
-                          className={`inline-flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold shadow-sm transition-all hover:shadow-md ${
-                            expandedId === request.id
-                              ? "bg-slate-600 text-white hover:bg-slate-700"
-                              : "bg-blue-600 text-white hover:bg-blue-700"
-                          }`}
-                        >
-                          {expandedId === request.id ? (
-                            <>
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                              </svg>
-                              Ocultar
-                            </>
-                          ) : (
-                            <>
-                              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                              </svg>
-                              Ver
-                            </>
-                          )}
-                        </button>
-                      </td>
-                    </tr>
-                    {/* Detalle expandible */}
-                    {expandedId === request.id && (
-                      loadingDetail ? (
-                        <tr className="bg-slate-50/50">
-                          <td colSpan={7} className="px-6 py-12 text-center">
-                            <div className="flex items-center justify-center gap-3">
-                              <div className="h-5 w-5 animate-spin rounded-full border-2 border-blue-600 border-t-transparent" />
-                              <span className="font-semibold text-slate-600">Cargando detalle...</span>
-                            </div>
-                          </td>
-                        </tr>
-                      ) : expandedRequest ? (
-                        <RequestDetailRow request={expandedRequest} />
-                      ) : null
-                    )}
-                  </>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
+                    </td>
 
-        {/* Pagination */}
-        {!loading && requests.length > 0 && totalPages > 1 && (
-          <div className="border-t border-slate-200 bg-slate-50/50 px-6 py-4">
-            <div className="flex items-center justify-between">
-              <p className="text-sm font-semibold text-slate-600">
-                Página {currentPage} de {totalPages}
-              </p>
-              
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={() => setCurrentPage(currentPage - 1)}
-                  disabled={currentPage === 1}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-                  </svg>
-                  Anterior
-                </button>
-                
-                <button
-                  onClick={() => setCurrentPage(currentPage + 1)}
-                  disabled={currentPage === totalPages}
-                  className="inline-flex items-center gap-1 rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-white"
-                >
-                  Siguiente
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
+                    {/* Columna: Fecha */}
+                    <td className="px-6 py-4">
+                        <span className="text-sm font-medium text-slate-600">
+                            {new Date(req.fecha_salida).toISOString().slice(0, 16).replace('T', ' ')}
+                        </span>
+                    </td>
+
+                    {/* Columna: Tipo (Hardcodeado 'Transporte' para igualar imagen o dinámico si tienes el dato) */}
+                    <td className="px-6 py-4">
+                        <span className="text-sm font-bold text-slate-900">Transporte</span>
+                    </td>
+
+                    {/* Columna: Estado */}
+                    <td className="px-6 py-4 text-right">
+                        <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${getStatusStyles(req.estado)}`}>
+                            {req.estado === 'aprobada' && (
+                                <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                            )}
+                            {req.estado === 'pendiente' && (
+                                <svg className="mr-1 h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clipRule="evenodd" /></svg>
+                            )}
+                            {req.estado}
+                        </span>
+                    </td>
+                  </tr>
+                  
+                  {/* Fila expandible de detalles */}
+                  {expandedId === req.id && (
+                    loadingDetail ? (
+                        <tr className="bg-slate-50 border-b border-slate-100">
+                            <td colSpan={4} className="py-8 text-center text-slate-500">
+                                <div className="flex justify-center items-center gap-2">
+                                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"/>
+                                    <span className="text-sm font-medium">Cargando datos...</span>
+                                </div>
+                            </td>
+                        </tr>
+                    ) : expandedRequest ? (
+                        <RequestDetailRow request={expandedRequest} />
+                    ) : null
+                  )}
+                </>
+              ))
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
