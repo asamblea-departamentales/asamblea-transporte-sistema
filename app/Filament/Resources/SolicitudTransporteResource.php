@@ -364,8 +364,9 @@ class SolicitudTransporteResource extends Resource
         ]);
     })
     ->visible(fn (SolicitudTransporte $record) =>
-        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-    ),
+    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+    $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+),
 
 
     //---------------------------------------------------------------------
