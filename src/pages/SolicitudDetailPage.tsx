@@ -1,4 +1,3 @@
-// src/pages/SolicitudDetailPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
@@ -15,6 +14,13 @@ function kind(estado: string) {
   if (s.includes("PEND")) return "PENDIENTE";
   if (s.includes("BORR")) return "BORRADOR";
   return s || "—";
+}
+
+function formatDate(value?: string | null) {
+  if (!value) return "—";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return value; // si viene "YYYY-MM-DD"
+  return d.toLocaleDateString("es-SV", { year: "numeric", month: "2-digit", day: "2-digit" });
 }
 
 function StatusPill({ estado }: { estado: string }) {
@@ -73,13 +79,19 @@ export default function SolicitudDetailPage() {
         setActionOk(null);
 
         if (!code) throw new Error("Código inválido.");
-        const data = await getSolicitudByCode(code);
 
+        const data = await getSolicitudByCode(code);
         if (!alive) return;
+
         setItem(data);
       } catch (e: any) {
         if (!alive) return;
-        setError(e?.response?.data?.message ?? e?.message ?? "No se pudo cargar el detalle.");
+        const status = e?.response?.status;
+        if (status === 404) {
+          setError("No se encontró la solicitud (código inválido o no tienes acceso).");
+        } else {
+          setError(e?.response?.data?.message ?? e?.message ?? "No se pudo cargar el detalle.");
+        }
       } finally {
         if (!alive) return;
         setLoading(false);
@@ -91,7 +103,9 @@ export default function SolicitudDetailPage() {
     };
   }, [code]);
 
-  const canFinalize = useMemo(() => kind(item?.estado ?? "") === "APROBADA", [item]);
+  const estadoKind = useMemo(() => kind(item?.estado ?? ""), [item]);
+
+  const canFinalize = useMemo(() => estadoKind === "APROBADA", [estadoKind]);
 
   async function handleFinalize() {
     if (!item?.code) return;
@@ -116,8 +130,16 @@ export default function SolicitudDetailPage() {
     }
   }
 
+  // ✅ fallback por si unidad no trae "nombre"
+  const unidadLabel =
+    (item as any)?.unidad?.nombre ??
+    (item as any)?.unidad?.name ??
+    (item as any)?.unidad?.descripcion ??
+    "—";
+
   return (
     <div className="space-y-6 pb-8">
+      {/* Header */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <button
@@ -134,7 +156,7 @@ export default function SolicitudDetailPage() {
           {!loading && item && (
             <div className="mt-2 flex flex-wrap items-center gap-3">
               <StatusPill estado={item.estado} />
-              <span className="text-sm font-semibold text-slate-600">Solicitud de Transporte</span>
+              <span className="text-sm font-semibold text-slate-600">Detalle de tu solicitud</span>
             </div>
           )}
         </div>
@@ -168,6 +190,7 @@ export default function SolicitudDetailPage() {
         )}
       </div>
 
+      {/* Alerts */}
       {!loading && error && (
         <div className="rounded-2xl border border-red-200 bg-gradient-to-br from-red-50 to-rose-50 p-5 text-sm font-semibold text-red-700">
           {error}
@@ -186,47 +209,60 @@ export default function SolicitudDetailPage() {
         </div>
       )}
 
+      {/* CONTENT (lo que el usuario envió) */}
       {!loading && item && !error && (
         <>
+          {/* Resumen */}
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
             <Field label="Código" value={item.code} />
-            <Field label="Estado" value={kind(item.estado)} />
-            <Field label="Prioridad" value={item.prioridad} />
-            <Field label="Personas" value={item.cantidad_personas} />
+            <Field label="Estado" value={estadoKind} />
+            <Field label="Prioridad" value={item.prioridad ?? "—"} />
+            <Field label="Cantidad de personas" value={item.cantidad_personas ?? "—"} />
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Información de la actividad</h2>
-              <Field label="Motivo / Actividad" value={item.motivo_actividad} />
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Fecha salida" value={item.fecha_salida} />
-                <Field label="Fecha retorno" value={item.fecha_retorno ?? "—"} />
+          {/* Lo que enviaste */}
+          <div className="overflow-hidden rounded-3xl bg-white/90 ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-8 py-6">
+              <h2 className="text-2xl font-black tracking-tight text-slate-900">Datos enviados</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-600">
+                Esta es la información que registraste al crear la solicitud.
+              </p>
+            </div>
+
+            <div className="grid gap-4 p-6 lg:grid-cols-2">
+              <div className="space-y-4">
+                <Field label="Motivo / Actividad" value={item.motivo_actividad} />
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <Field label="Fecha de salida" value={formatDate(item.fecha_salida)} />
+                  <Field label="Fecha de retorno" value={formatDate(item.fecha_retorno ?? null)} />
+                </div>
+                <Field label="Prioridad" value={item.prioridad} />
+              </div>
+
+              <div className="space-y-4">
+                <Field label="Origen" value={item.origen} />
+                <Field label="Destino" value={item.destino} />
+                <Field label="Unidad solicitante" value={unidadLabel} />
               </div>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Ruta</h2>
-              <Field label="Origen" value={item.origen} />
-              <Field label="Destino" value={item.destino} />
+          {/* Solicitante */}
+          <div className="overflow-hidden rounded-3xl bg-white/90 ring-1 ring-slate-200/70 shadow-xl shadow-slate-200/50">
+            <div className="border-b border-slate-200 bg-gradient-to-r from-slate-50 to-white px-8 py-6">
+              <h2 className="text-2xl font-black tracking-tight text-slate-900">Solicitante</h2>
+              <p className="mt-1 text-sm font-semibold text-slate-600">
+                Información del usuario que creó la solicitud.
+              </p>
+            </div>
+
+            <div className="grid gap-4 p-6 sm:grid-cols-2">
+              <Field label="Nombre" value={item.solicitante?.name ?? "—"} />
+              <Field label="Email" value={item.solicitante?.email ?? "—"} />
             </div>
           </div>
 
-          <div className="grid gap-4 lg:grid-cols-2">
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Solicitante</h2>
-              <div className="grid gap-4 sm:grid-cols-2">
-                <Field label="Nombre" value={item.solicitante?.name} />
-                <Field label="Email" value={item.solicitante?.email} />
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <h2 className="text-lg font-black text-slate-900">Unidad solicitante</h2>
-              <Field label="Unidad" value={item.unidad?.nombre} />
-            </div>
-          </div>
-
+          {/* Evidencias (aún no) */}
           <div className="rounded-2xl bg-slate-50 ring-1 ring-slate-200/70 p-4">
             <p className="text-sm font-black text-slate-900">Evidencias</p>
             <p className="mt-1 text-sm font-semibold text-slate-500">
