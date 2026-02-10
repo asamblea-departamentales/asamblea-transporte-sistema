@@ -11,6 +11,7 @@ import ProtectedRoute from "../auth/ProtectedRoute";
 import "leaflet/dist/leaflet.css";
 //import RequestDetailPage from "../pages/RequestDetailPage";
 //import SolicitudDetailPage from "../pages/SolicitudDetailPage";
+import RequestDetailPage from "../pages/RequestDetailPage";
 export default function App() {
   return (
     <BrowserRouter>
@@ -34,6 +35,8 @@ export default function App() {
           <Route path="dashboard" element={<DashboardPage />} />
           <Route path="nueva-solicitud" element={<NewRequestPage />} />
           <Route path="mis-solicitudes" element={<MyRequestsPage />} />
+          
+<Route path="/solicitud/:id" element={<RequestDetailPage />} />
           
 
 
