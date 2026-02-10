@@ -1,12 +1,15 @@
-// src/services/requests.service.ts
-import { api } from "../lib/axios";
+import { api } from "../lib/axios"; // Asegúrate de que esta ruta sea correcta en tu proyecto
 
+// 1. ACTUALIZAMOS LOS TIPOS (Faltaban estados)
 export type RequestStatus = 
   | "borrador"
   | "pendiente" 
   | "observada"
   | "aprobada" 
-  | "rechazada";
+  | "rechazada"
+  | "programada"  // <--- Agregado
+  | "completada"  // <--- Agregado (o 'finalizada', según tu backend)
+  | "finalizada"; // Por si acaso usas este nombre
 
 export type Unidad = {
   id: number;
@@ -38,7 +41,7 @@ export type Request = {
   solicitante?: Solicitante;
 };
 
-// Formato de respuesta de Laravel paginate()
+// ... (Los tipos de PaginatedResponse se mantienen igual) ...
 export type LaravelPaginatedResponse = {
   current_page: number;
   data: Request[];
@@ -46,11 +49,7 @@ export type LaravelPaginatedResponse = {
   from: number;
   last_page: number;
   last_page_url: string;
-  links: Array<{
-    url: string | null;
-    label: string;
-    active: boolean;
-  }>;
+  links: Array<{ url: string | null; label: string; active: boolean }>;
   next_page_url: string | null;
   path: string;
   per_page: number;
@@ -59,7 +58,6 @@ export type LaravelPaginatedResponse = {
   total: number;
 };
 
-// Formato adaptado para el frontend
 export type RequestsResponse = {
   data: Request[];
   total: number;
@@ -75,6 +73,8 @@ export type RequestFilters = {
   per_page?: number;
 };
 
+// --- FUNCIONES API ---
+
 export async function getAllRequests(filters?: RequestFilters): Promise<RequestsResponse> {
   const params = new URLSearchParams();
   
@@ -87,7 +87,6 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
     `/api/transport-requests?${params.toString()}`
   );
 
-  // Adaptar respuesta de Laravel al formato que espera el frontend
   return {
     data: data.data,
     total: data.total,
@@ -104,4 +103,11 @@ export async function getRequestById(id: string | number): Promise<Request> {
 
 export async function deleteRequest(id: string | number): Promise<void> {
   await api.delete(`/api/transport-requests/${id}`);
+}
+
+// 2. NUEVA FUNCIÓN PARA COMPLETAR
+export async function completeRequest(id: number): Promise<Request> {
+  // Usamos POST a la ruta que configuraste en Laravel
+  const { data } = await api.post(`/api/transport-requests/${id}/completar`);
+  return data.data; // Asumiendo que tu backend devuelve { message: "...", data: {...} }
 }

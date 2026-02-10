@@ -2,11 +2,34 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   getAllRequests,
+  completeRequest, // <--- Importamos la nueva función
   type Request,
 } from "../services/requests.service";
 
-// --- COMPONENTE DE DETALLE (Reutilizamos tu diseño) ---
-function RequestDetailRow({ request }: { request: Request }) {
+// --- COMPONENTE DE DETALLE ---
+function RequestDetailRow({ 
+    request, 
+    onComplete 
+}: { 
+    request: Request; 
+    onComplete: (id: number) => Promise<void>; // Recibimos la función del padre
+}) {
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  const handleCompleteClick = async () => {
+    if (!confirm("¿Confirmas que el viaje ha finalizado y se ha completado?")) return;
+    
+    setIsUpdating(true);
+    try {
+        await onComplete(request.id);
+    } catch (error) {
+        console.error(error);
+        alert("Error al completar la solicitud.");
+    } finally {
+        setIsUpdating(false);
+    }
+  };
+
   const formatFecha = (fecha: string) => {
     return new Date(fecha).toLocaleString("es-ES", {
       dateStyle: "medium",
@@ -15,12 +38,41 @@ function RequestDetailRow({ request }: { request: Request }) {
   };
 
   return (
-    <tr className="bg-slate-50/50 border-b border-slate-100 animate-fadeIn">
+    <tr className="bg-slate-50/50 border-b border-slate-100 animate-fadeIn cursor-default">
       <td colSpan={4} className="px-0 py-0">
         <div className="border-t border-slate-200 bg-slate-50 p-6 shadow-inner">
             <div className="mx-auto max-w-4xl rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
-                <div className="mb-4 border-b border-slate-100 pb-4">
+                
+                {/* Cabecera con Botón de Acción */}
+                <div className="mb-4 flex items-center justify-between border-b border-slate-100 pb-4">
                     <h3 className="text-lg font-bold text-slate-800">Detalle de Solicitud #{request.codigo}</h3>
+                    
+                    {/* --- BOTÓN FINALIZAR (Solo aparece si está programada) --- */}
+                    {request.estado === 'programada' && (
+                        <button 
+                            onClick={handleCompleteClick}
+                            disabled={isUpdating}
+                            className={`inline-flex items-center gap-2 rounded-lg px-4 py-2 text-sm font-bold text-white transition-all shadow-md
+                                ${isUpdating 
+                                    ? 'bg-slate-400 cursor-not-allowed' 
+                                    : 'bg-slate-800 hover:bg-black hover:shadow-lg hover:-translate-y-0.5'
+                                }`}
+                        >
+                            {isUpdating ? (
+                                <>
+                                    <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                    Procesando...
+                                </>
+                            ) : (
+                                <>
+                                    <svg className="h-4 w-4 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                    </svg>
+                                    Finalizar Viaje
+                                </>
+                            )}
+                        </button>
+                    )}
                 </div>
                 
                 <div className="grid gap-6 md:grid-cols-2">
@@ -51,7 +103,6 @@ function RequestDetailRow({ request }: { request: Request }) {
                         <div className="space-y-2 text-sm">
                             <p><span className="font-semibold text-slate-700">Pasajeros:</span> {request.cantidad_personas}</p>
                             <p><span className="font-semibold text-slate-700">Motivo:</span> {request.motivo_actividad}</p>
-                            {/* Verificamos si existe la unidad antes de mostrarla */}
                             {request.unidad && <p><span className="font-semibold text-slate-700">Unidad:</span> {request.unidad.nombre}</p>}
                         </div>
                     </div>
@@ -85,8 +136,6 @@ export default function RecentRequestsWidget() {
   
   // Estado para la expansión
   const [expandedId, setExpandedId] = useState<number | null>(null);
-  
-  // SOLUCIÓN: Usamos el objeto directo, no hacemos otra petición
   const [expandedRequest, setExpandedRequest] = useState<Request | null>(null);
 
   useEffect(() => {
@@ -103,27 +152,40 @@ export default function RecentRequestsWidget() {
     load();
   }, []);
 
-  // --- FUNCIÓN CLAVE CORREGIDA ---
-  // Recibe el objeto completo 'req', no solo el ID
   const handleRowClick = (req: Request) => {
-    // Si ya está abierto, lo cerramos
     if (expandedId === req.id) {
       setExpandedId(null);
       setExpandedRequest(null);
       return;
     }
-
-    // Si no está abierto, LO ABRIMOS DIRECTAMENTE
-    // Sin llamar a getRequestById (evitando el error 403)
     setExpandedId(req.id);
     setExpandedRequest(req); 
+  };
+
+  // --- LÓGICA DE ACTUALIZACIÓN ---
+  const handleCompleteRequest = async (id: number) => {
+    // 1. Llamar a la API
+    await completeRequest(id);
+
+    // 2. Actualizar estado LOCALMENTE (sin F5)
+    setRequests(current => 
+        current.map(req => 
+            req.id === id ? { ...req, estado: 'completada' } : req
+        )
+    );
+
+    // 3. Actualizar el detalle abierto
+    if (expandedRequest && expandedRequest.id === id) {
+        setExpandedRequest({ ...expandedRequest, estado: 'completada' });
+    }
   };
 
   const getStatusStyles = (status: string) => {
     const s = status.toLowerCase();
     if (s === 'pendiente') return "bg-amber-100 text-amber-700 border-amber-200";
     if (s === 'aprobada') return "bg-emerald-100 text-emerald-700 border-emerald-200";
-    if (s === 'programada') return "bg-slate-100 text-slate-600 border-slate-200";
+    if (s === 'programada') return "bg-purple-100 text-purple-700 border-purple-200";
+    if (s === 'completada' || s === 'finalizada') return "bg-slate-800 text-white border-slate-600"; // Estilo oscuro
     if (s === 'rechazada') return "bg-red-100 text-red-700 border-red-200";
     return "bg-gray-100 text-gray-600 border-gray-200";
   };
@@ -168,7 +230,6 @@ export default function RecentRequestsWidget() {
                 <>
                   <tr 
                     key={req.id} 
-                    // AQUÍ ESTÁ EL CAMBIO: Pasamos 'req' completo
                     onClick={() => handleRowClick(req)} 
                     className={`cursor-pointer transition-all hover:bg-slate-50 ${expandedId === req.id ? 'bg-slate-50' : ''}`}
                   >
@@ -188,13 +249,22 @@ export default function RecentRequestsWidget() {
                     </td>
                     <td className="px-6 py-4 text-right">
                         <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${getStatusStyles(req.estado)}`}>
+                             {/* Check verde si está completada */}
+                             {(req.estado === 'completada' || req.estado === 'finalizada') && (
+                                <svg className="mr-1 h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                                </svg>
+                            )}
                             {req.estado}
                         </span>
                     </td>
                   </tr>
                   
                   {expandedId === req.id && expandedRequest && (
-                    <RequestDetailRow request={expandedRequest} />
+                    <RequestDetailRow 
+                        request={expandedRequest} 
+                        onComplete={handleCompleteRequest} // <--- Pasamos la función
+                    />
                   )}
                 </>
               ))
