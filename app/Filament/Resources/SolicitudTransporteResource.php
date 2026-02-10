@@ -175,6 +175,7 @@ class SolicitudTransporteResource extends Resource
         EstadoSolicitudEnum::BORRADOR => 'gray',
         EstadoSolicitudEnum::PENDIENTE => 'warning',
         EstadoSolicitudEnum::EN_REVISION => 'info',
+        EstadoSolicitudEnum::PRE_APROBADA => 'warning', //Agregado
         EstadoSolicitudEnum::APROBADA => 'success',
         EstadoSolicitudEnum::RECHAZADA => 'danger',
         EstadoSolicitudEnum::COMPLETADA => 'success',
@@ -277,6 +278,44 @@ class SolicitudTransporteResource extends Resource
         ->visible(fn (SolicitudTransporte $record) =>
             in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
         ),
+
+        //------------------------------------------------------------------
+        Tables\Actions\Action::make('pre_aprobar')
+    ->label('Pre-Aprobar')
+    ->color('warning')
+    ->icon('heroicon-o-clock')
+    ->requiresConfirmation()
+    ->modalHeading('Pre-aprobar Solicitud')
+    ->modalDescription('¿Desea marcar esta solicitud como pre-aprobada? Esto notificará que la revisión inicial es correcta.')
+    ->action(function (SolicitudTransporte $record) {
+        $estadoAnterior = $record->estado;
+
+        // Cambiamos el estado
+        $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
+        $record->save();
+
+        // Registramos en el historial
+        HistorialEstado::create([
+            'entidad_tipo'   => 'solicitud_transporte',
+            'entidad_id'     => $record->id,
+            'estado_anterior'=> $estadoAnterior?->value,
+            'estado_nuevo'   => $record->estado?->value,
+            'user_id'        => auth()->id(),
+            'comentario'     => 'Solicitud pre-aprobada en revisión inicial.',
+        ]);
+
+        // Registramos en bitácora
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id'   => $record->id,
+            'accion'       => 'PRE_APROBAR', // Asegúrate de tener este caso en tu Enum de acciones
+            'user_id'      => auth()->id(),
+        ]);
+    })
+    ->visible(fn (SolicitudTransporte $record) => 
+    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+    $record->estado === EstadoSolicitudEnum::PRE_APROBADA // <-- Solo después de pre-aprobar
+),
 
     //---------------------------------------------------------------------
     // APROBAR
