@@ -281,42 +281,52 @@ class SolicitudTransporteResource extends Resource
     //---------------------------------------------------------------------
     // APROBAR
     Tables\Actions\Action::make('aprobar')
-        ->label('Aprobar')
-        ->color('success')
-        ->icon('heroicon-o-check-circle')
-        ->requiresConfirmation()
-        ->modalHeading('Aprobar Solicitud')
-        ->modalDescription('¿Está seguro de que desea aprobar esta solicitud de transporte?')
-        ->action(function (SolicitudTransporte $record) {
-            $estadoAnterior = $record->estado;
+    ->label('Aprobar')
+    ->color('success')
+    ->icon('heroicon-o-check-circle')
+    ->modalHeading('Aprobar Solicitud')
+    ->modalSubmitActionLabel('Aprobar y Programar')
+    ->form([
+        Forms\Components\Textarea::make('comentario_jefe')
+            ->label('Motivo de la aprobación')
+            ->rows(4)
+            ->required()
+            ->maxLength(2000),
+    ])
+    ->action(function (SolicitudTransporte $record, array $data) {
+        $estadoAnterior = $record->estado;
 
-            $record->estado = EstadoSolicitudEnum::APROBADA;
-            $record->decidido_por = auth()->id();
-            $record->decidido_en = now();
-            $record->save();
+        $record->estado = EstadoSolicitudEnum::PROGRAMADA; // ✅ ahora queda PROGRAMADA
+        $record->comentario_jefe = $data['comentario_jefe']; // ✅ motivo obligatorio
+        $record->decidido_por = auth()->id();
+        $record->decidido_en = now();
+        $record->save();
 
-            // HISTORIAL
-            HistorialEstado::create([
-                'entidad_tipo'   => 'solicitud_transporte',
-                'entidad_id'     => $record->id,
-                'estado_anterior'=> $estadoAnterior?->value,
-                'estado_nuevo'   => $record->estado?->value,
-                'user_id'        => auth()->id(),
-                'comentario'     => null,
-            ]);
+        // HISTORIAL
+        HistorialEstado::create([
+            'entidad_tipo'   => 'solicitud_transporte',
+            'entidad_id'     => $record->id,
+            'estado_anterior'=> $estadoAnterior?->value,
+            'estado_nuevo'   => $record->estado?->value,
+            'user_id'        => auth()->id(),
+            'comentario'     => $data['comentario_jefe'],
+        ]);
 
-            // BITÁCORA
-            BitacoraEvento::create([
-                'entidad_tipo' => 'solicitud_transporte',
-                'entidad_id'   => $record->id,
-                'accion'       => AccionBitacoraEnum::APROBAR->value,
-                'user_id'      => auth()->id(),
-                'datos_extras'  => null,
-            ]);
-        })
-        ->visible(fn (SolicitudTransporte $record) =>
-            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-        ),
+        // BITÁCORA
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id'   => $record->id,
+            'accion'       => AccionBitacoraEnum::APROBAR->value,
+            'user_id'      => auth()->id(),
+            'datos_extra'  => [
+                'comentario' => $data['comentario_jefe'],
+            ],
+        ]);
+    })
+    ->visible(fn (SolicitudTransporte $record) =>
+        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+    ),
+
 
     //---------------------------------------------------------------------
     // RECHAZAR
