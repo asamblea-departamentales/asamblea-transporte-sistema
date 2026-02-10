@@ -13,18 +13,23 @@ class SolicitudTransportePolicy
     /**
      * Determine whether the user can view any models.
      */
-    public function viewAny(User $user): bool
-    {
-        return $user->can('view_any_solicitud::transporte');
+   public function viewAny(User $user): bool
+{
+    // Permitir si tiene el permiso de Shield O si es un usuario autenticado 
+    // (el filtrado de "ver solo lo mío" se hace en el controlador)
+    return $user->can('view_any_solicitud::transporte') || auth()->check();
+}
+
+public function view(User $user, SolicitudTransporte $solicitudTransporte): bool
+{
+    // Opción 1: Tiene permiso administrativo (Shield)
+    if ($user->can('view_solicitud::transporte')) {
+        return true;
     }
 
-    /**
-     * Determine whether the user can view the model.
-     */
-    public function view(User $user, SolicitudTransporte $solicitudTransporte): bool
-    {
-        return $user->can('view_solicitud::transporte');
-    }
+    // Opción 2: Es el dueño de la solicitud
+    return $user->id === $solicitudTransporte->solicitante_id;
+}
 
     /**
      * Determine whether the user can create models.
