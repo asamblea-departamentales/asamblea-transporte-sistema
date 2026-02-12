@@ -1,113 +1,100 @@
-import { api } from "../lib/axios"; // Asegúrate de que esta ruta sea correcta en tu proyecto
+// src/services/requests.service.ts
+import { api } from "../lib/axios";
 
-// 1. ACTUALIZAMOS LOS TIPOS (Faltaban estados)
-export type RequestStatus = 
-  | "borrador"
-  | "pendiente" 
-  | "observada"
-  | "aprobada" 
-  | "rechazada"
-  | "programada"  // <--- Agregado
-  | "completada"  // <--- Agregado (o 'finalizada', según tu backend)
-  | "finalizada"; // Por si acaso usas este nombre
-
-export type Unidad = {
-  id: number;
-  nombre: string;
-};
-
-export type Solicitante = {
-  id: number;
-  name: string;
-  email: string;
-};
+export type EstadoSolicitud =
+  | "BORRADOR"
+  | "PENDIENTE"
+  | "APROBADA"
+  | "RECHAZADA"
+  | "PROGRAMADA"
+  | "EN_EJECUCION"
+  | "COMPLETADA"
+  | "FINALIZADA"
+  | string;
 
 export type Request = {
   id: number;
   codigo: string;
-  unidad_solicitante_id: number;
-  solicitante_id: number;
-  motivo_actividad: string;
-  origen: string;
-  destino: string;
-  fecha_salida: string;
-  fecha_retorno: string | null;
-  cantidad_personas: number;
-  prioridad: string;
-  estado: RequestStatus;
-  created_at: string;
-  updated_at: string;
-  unidad?: Unidad;
-  solicitante?: Solicitante;
+  estado: EstadoSolicitud;
+
+  motivo_actividad?: string;
+  origen?: string;
+  destino?: string;
+
+  fecha_salida?: string;
+  fecha_retorno?: string | null;
+
+  cantidad_personas?: number;
+  prioridad?: string;
+
+  unidad?: { id?: number | string; nombre?: string };
+  solicitante?: { id?: number | string; name?: string; email?: string };
+
+  created_at?: string;
+  updated_at?: string;
 };
 
-// ... (Los tipos de PaginatedResponse se mantienen igual) ...
-export type LaravelPaginatedResponse = {
-  current_page: number;
-  data: Request[];
-  first_page_url: string;
-  from: number;
-  last_page: number;
-  last_page_url: string;
-  links: Array<{ url: string | null; label: string; active: boolean }>;
-  next_page_url: string | null;
-  path: string;
-  per_page: number;
-  prev_page_url: string | null;
-  to: number;
-  total: number;
+export type Paginated<T> = {
+  data: T[];
+  meta?: any;
+  links?: any;
 };
 
-export type RequestsResponse = {
-  data: Request[];
-  total: number;
-  page: number;
-  per_page: number;
-  total_pages: number;
-};
+const BASE = "/transport-requests";
 
-export type RequestFilters = {
-  estado?: RequestStatus;
-  search?: string;
+function normalizeArray<T>(data: any): T[] {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.data)) return data.data;
+  if (data && Array.isArray(data.items)) return data.items;
+  return [];
+}
+
+export async function getAllRequests(params?: {
   page?: number;
   per_page?: number;
-};
-
-// --- FUNCIONES API ---
-
-export async function getAllRequests(filters?: RequestFilters): Promise<RequestsResponse> {
-  const params = new URLSearchParams();
-  
-  if (filters?.estado) params.append("estado", filters.estado);
-  if (filters?.search) params.append("search", filters.search);
-  if (filters?.page) params.append("page", filters.page.toString());
-  if (filters?.per_page) params.append("per_page", filters.per_page.toString());
-
-  const { data } = await api.get<LaravelPaginatedResponse>(
-    `/api/transport-requests?${params.toString()}`
-  );
-
+}): Promise<Paginated<Request>> {
+  const { data } = await api.get(BASE, { params });
   return {
-    data: data.data,
-    total: data.total,
-    page: data.current_page,
-    per_page: data.per_page,
-    total_pages: data.last_page,
+    data: normalizeArray<Request>(data),
+    meta: data?.meta,
+    links: data?.links,
   };
 }
 
-export async function getRequestById(id: string | number): Promise<Request> {
-  const { data } = await api.get<Request>(`/api/transport-requests/${id}`);
-  return data;
+export type FinalizarPayload = {
+  observacion?: string;
+  fecha_retorno?: string | null;
+  // Si tu backend exige más campos, agrégalos aquí:
+  // km_final?: number;
+};
+
+function getAxiosErrorMessage(err: any): string {
+  const msg =
+    err?.response?.data?.message ||
+    err?.response?.data?.error ||
+    (typeof err?.response?.data === "string" ? err.response.data : null) ||
+    err?.message;
+
+  // Si viene con errors (422), intenta mostrar el primer error
+  const errors = err?.response?.data?.errors;
+  if (errors && typeof errors === "object") {
+    const firstKey = Object.keys(errors)[0];
+    const first = firstKey ? errors[firstKey]?.[0] : null;
+    if (first) return String(first);
+  }
+
+  return msg || "Error en la solicitud.";
 }
 
-export async function deleteRequest(id: string | number): Promise<void> {
-  await api.delete(`/api/transport-requests/${id}`);
-}
-
-// 2. NUEVA FUNCIÓN PARA COMPLETAR
-export async function completeRequest(id: number): Promise<Request> {
-  // Usamos POST a la ruta que configuraste en Laravel
-  const { data } = await api.post(`/api/transport-requests/${id}/finalizar`);
-  return data.data; // Asumiendo que tu backend devuelve { message: "...", data: {...} }
+// ✅ Finalizar (POST /transport-requests/{id}/finalizar) con body
+export async function completeRequest(
+  id: number,
+  payload: FinalizarPayload = {}
+): Promise<Request> {
+  try {
+    const { data } = await api.post(`${BASE}/${id}/finalizar`, payload);
+    return (data?.data ?? data) as Request;
+  } catch (err: any) {
+    throw new Error(getAxiosErrorMessage(err));
+  }
 }

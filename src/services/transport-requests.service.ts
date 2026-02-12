@@ -53,7 +53,12 @@ export type Paginated<T> = {
   links?: PaginateLinks;
 };
 
-const BASE = "/api/transport-requests";
+/**
+ * ✅ Si tu axios baseURL ya incluye "/api"
+ * Ej: https://dominio.com/api
+ * entonces aquí NO vuelvas a poner "/api"
+ */
+const BASE = "/transport-requests";
 
 function normalizeArray<T>(data: any): T[] {
   if (Array.isArray(data)) return data;
@@ -62,8 +67,12 @@ function normalizeArray<T>(data: any): T[] {
   return [];
 }
 
-export async function getRequestsPaginated(page = 1): Promise<Paginated<SolicitudTransporte>> {
+/** Listado paginado */
+export async function getRequestsPaginated(
+  page = 1
+): Promise<Paginated<SolicitudTransporte>> {
   const { data } = await api.get(BASE, { params: { page } });
+
   return {
     data: normalizeArray<SolicitudTransporte>(data),
     meta: data?.meta,
@@ -71,12 +80,33 @@ export async function getRequestsPaginated(page = 1): Promise<Paginated<Solicitu
   };
 }
 
-export async function getRequestById(id: string | number): Promise<SolicitudTransporte> {
+/** Detalle por ID */
+export async function getRequestById(
+  id: string | number
+): Promise<SolicitudTransporte> {
   const { data } = await api.get(`${BASE}/${encodeURIComponent(String(id))}`);
   return (data?.data ?? data) as SolicitudTransporte;
 }
 
-export async function finalizarRequestById(id: string | number): Promise<SolicitudTransporte> {
-  const { data } = await api.post(`${BASE}/${encodeURIComponent(String(id))}/finalizar`);
+/**
+ * ✅ Finalizar: tu backend suele validar campos => si no mandas body te da 422.
+ * Ajusta los campos según lo que tu backend pida en Request::validate(...)
+ */
+export type FinalizarPayload = {
+  observacion?: string;
+  fecha_retorno?: string | null; // "YYYY-MM-DD" o ISO
+  // agrega aquí si el backend exige más:
+  // km_final?: number;
+  // combustible_final?: number;
+};
+
+export async function finalizarRequestById(
+  id: string | number,
+  payload: FinalizarPayload = {}
+): Promise<SolicitudTransporte> {
+  const { data } = await api.post(
+    `${BASE}/${encodeURIComponent(String(id))}/finalizar`,
+    payload
+  );
   return (data?.data ?? data) as SolicitudTransporte;
 }
