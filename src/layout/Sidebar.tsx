@@ -38,12 +38,14 @@ function NavItem({
       {({ isActive }) => (
         <>
           <span className="relative z-10 flex items-center gap-2.5">
-            <span className={[
-              "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300",
-              (forceActive ?? false) || isActive 
-                ? "bg-white/20 text-white backdrop-blur-sm" 
-                : "bg-white text-slate-600 shadow-sm"
-            ].join(" ")}>
+            <span
+              className={[
+                "grid h-9 w-9 place-items-center rounded-xl transition-all duration-300",
+                (forceActive ?? false) || isActive
+                  ? "bg-white/20 text-white backdrop-blur-sm"
+                  : "bg-white text-slate-600 shadow-sm",
+              ].join(" ")}
+            >
               {icon}
             </span>
             <span className="text-[15px]">{label}</span>
@@ -62,7 +64,7 @@ export default function Sidebar({ open, onClose }: Props) {
 
   const onNavigateMobile = () => onClose();
 
-  const handleLogout = async () => {  // ✅ Agregar async
+  const handleLogout = async () => {
     await logout();
     navigate("/login");
   };
@@ -82,23 +84,184 @@ export default function Sidebar({ open, onClose }: Props) {
         onClick={onClose}
       />
 
-      {/* Top Navbar - Horizontal */}
-      <header className="fixed top-0 left-0 right-0 z-50 border-b border-slate-200/50 bg-white/80 backdrop-blur-2xl shadow-sm">
-        <div className="mx-auto max-w-[1800px]">
-          <div className="flex h-20 items-center justify-between gap-6 px-6 lg:px-10">
-            
-            {/* Logo & Brand */}
-            <div className="flex items-center gap-5">
-              {/* Mobile Menu Button */}
+      {/* ============================================ */}
+      {/* MOBILE FIRST: Sidebar móvil (por defecto)   */}
+      {/* ============================================ */}
+      <aside
+        className={[
+          // MOBILE: Sidebar lateral izquierdo
+          "fixed left-0 top-0 z-50 h-full w-80 bg-white shadow-2xl",
+          "transition-transform duration-300",
+          open ? "translate-x-0" : "-translate-x-full",
+          // DESKTOP: Ocultar en pantallas grandes
+          "lg:hidden",
+        ].join(" ")}
+      >
+        <div className="flex h-full flex-col">
+          {/* Mobile Header */}
+          <div className="border-b border-slate-200 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 px-6 py-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="rounded-2xl bg-white p-2 shadow-md">
+                  <img
+                    src={logo}
+                    alt="Asamblea Legislativa"
+                    className="h-11 w-auto object-contain"
+                  />
+                </div>
+                <div>
+                  <p className="font-extrabold text-[11px] uppercase tracking-[0.15em] text-blue-600">
+                    Sistema de
+                  </p>
+                  <p className="font-black text-[16px] leading-tight tracking-tight text-slate-900">
+                    Transporte
+                  </p>
+                </div>
+              </div>
               <button
-                onClick={() => onClose()}
-                className="grid h-11 w-11 place-items-center rounded-2xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 shadow-sm transition-all hover:shadow-md lg:hidden"
+                onClick={onClose}
+                className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-md transition-all hover:shadow-lg"
               >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M4 6h16M4 12h16M4 18h16"/>
+                <svg
+                  width="22"
+                  height="22"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                >
+                  <path d="M18 6L6 18M6 6l12 12" />
                 </svg>
               </button>
+            </div>
+          </div>
 
+          {/* Mobile Navigation */}
+          <nav className="flex-1 overflow-y-auto px-5 py-6">
+            <div className="space-y-2">
+              <NavItem
+                to="/dashboard"
+                label="Inicio"
+                onNavigateMobile={onNavigateMobile}
+                icon={
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinejoin="round"
+                  >
+                    <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
+                  </svg>
+                }
+              />
+
+              <NavItem
+                to="/nueva-solicitud"
+                label="Nueva Solicitud"
+                onNavigateMobile={onNavigateMobile}
+                forceActive={isNewRequestActive}
+                icon={
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                  >
+                    <path d="M12 5v14M5 12h14" />
+                  </svg>
+                }
+              />
+
+              <NavItem
+                to="/mis-solicitudes"
+                label="Mis Solicitudes"
+                onNavigateMobile={onNavigateMobile}
+                icon={
+                  <svg
+                    width="18"
+                    height="18"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                  >
+                    <path d="M7 7h10M7 12h10M7 17h10" />
+                  </svg>
+                }
+              />
+            </div>
+          </nav>
+
+          {/* Mobile Footer */}
+          <div className="border-t border-slate-200 bg-slate-50 p-5">
+            <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
+              <div className="h-12 w-12 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-lg shadow-blue-500/30">
+                <div className="flex h-full items-center justify-center font-black text-[18px] text-white">
+                  {user?.name?.charAt(0).toUpperCase() || "U"}
+                </div>
+              </div>
+
+              <div className="min-w-0 flex-1">
+                {user?.name && (
+                  <p className="truncate font-bold text-[14px] text-slate-900">
+                    {user.name}
+                  </p>
+                )}
+                {user?.email && (
+                  <p className="truncate font-semibold text-[12px] text-slate-500">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <button
+              onClick={handleLogout}
+              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-4 font-bold text-[14px] text-red-600 shadow-md transition-all hover:shadow-xl hover:shadow-red-500/20"
+            >
+              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
+                <svg
+                  width="18"
+                  height="18"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.5"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M10 7l-5 5 5 5"
+                  />
+                  <path strokeLinecap="round" d="M5 12h12" />
+                  <path
+                    strokeLinecap="round"
+                    d="M17 21h2a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-2"
+                  />
+                </svg>
+              </span>
+              Cerrar Sesión
+            </button>
+          </div>
+        </div>
+      </aside>
+
+      {/* ============================================ */}
+      {/* DESKTOP: Top Navbar (solo en pantallas lg+) */}
+      {/* ============================================ */}
+      <header className="hidden lg:fixed lg:top-0 lg:left-0 lg:right-0 lg:z-50 lg:block lg:border-b lg:border-slate-200/50 lg:bg-white/80 lg:backdrop-blur-2xl lg:shadow-sm">
+        <div className="mx-auto max-w-[1800px]">
+          <div className="flex h-20 items-center justify-between gap-6 px-6 lg:px-10">
+            {/* Logo & Brand */}
+            <div className="flex items-center gap-5">
               {/* Logo */}
               <div className="flex items-center gap-4">
                 <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-2 shadow-sm">
@@ -108,12 +271,12 @@ export default function Sidebar({ open, onClose }: Props) {
                     className="h-11 w-auto object-contain"
                   />
                 </div>
-                
+
                 <div className="hidden border-l-2 border-slate-200 pl-4 md:block">
                   <p className="font-extrabold text-[11px] uppercase tracking-[0.15em] text-blue-600">
                     Sistema de
                   </p>
-                  <p className="font-black text-[17px] tracking-tight text-slate-900 leading-tight">
+                  <p className="font-black text-[17px] leading-tight tracking-tight text-slate-900">
                     Transporte
                   </p>
                 </div>
@@ -121,15 +284,23 @@ export default function Sidebar({ open, onClose }: Props) {
             </div>
 
             {/* Desktop Navigation */}
-            <nav className="hidden lg:block flex-1">
+            <nav className="flex-1">
               <div className="flex items-center justify-center gap-2">
                 <NavItem
                   to="/dashboard"
                   label="Inicio"
                   onNavigateMobile={onNavigateMobile}
                   icon={
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                      <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z" />
                     </svg>
                   }
                 />
@@ -140,8 +311,16 @@ export default function Sidebar({ open, onClose }: Props) {
                   onNavigateMobile={onNavigateMobile}
                   forceActive={isNewRequestActive}
                   icon={
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                      <path d="M12 5v14M5 12h14"/>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2.5"
+                      strokeLinecap="round"
+                    >
+                      <path d="M12 5v14M5 12h14" />
                     </svg>
                   }
                 />
@@ -151,8 +330,16 @@ export default function Sidebar({ open, onClose }: Props) {
                   label="Mis Solicitudes"
                   onNavigateMobile={onNavigateMobile}
                   icon={
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                      <path d="M7 7h10M7 12h10M7 17h10"/>
+                    <svg
+                      width="18"
+                      height="18"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <path d="M7 7h10M7 12h10M7 17h10" />
                     </svg>
                   }
                 />
@@ -187,17 +374,21 @@ export default function Sidebar({ open, onClose }: Props) {
                 </div>
 
                 {/* Chevron */}
-                <svg 
+                <svg
                   className={[
                     "h-4 w-4 text-slate-400 transition-all duration-300",
-                    showUserMenu ? "rotate-180" : ""
+                    showUserMenu ? "rotate-180" : "",
                   ].join(" ")}
-                  fill="none" 
-                  viewBox="0 0 24 24" 
+                  fill="none"
+                  viewBox="0 0 24 24"
                   stroke="currentColor"
                   strokeWidth="2.5"
                 >
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
                 </svg>
               </button>
 
@@ -240,10 +431,24 @@ export default function Sidebar({ open, onClose }: Props) {
                     className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-3.5 font-bold text-[14px] text-red-600 shadow-sm transition-all hover:shadow-lg hover:shadow-red-500/20"
                   >
                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm transition-all group-hover:shadow-md">
-                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 7l-5 5 5 5"/>
-                        <path strokeLinecap="round" d="M5 12h12"/>
-                        <path strokeLinecap="round" d="M17 21h2a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-2"/>
+                      <svg
+                        width="18"
+                        height="18"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="2.5"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          d="M10 7l-5 5 5 5"
+                        />
+                        <path strokeLinecap="round" d="M5 12h12" />
+                        <path
+                          strokeLinecap="round"
+                          d="M17 21h2a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-2"
+                        />
                       </svg>
                     </span>
                     Cerrar Sesión
@@ -255,124 +460,46 @@ export default function Sidebar({ open, onClose }: Props) {
         </div>
       </header>
 
-      {/* Mobile Sidebar */}
-      <aside
-        className={[
-          "fixed left-0 top-0 z-50 h-full w-80 bg-white shadow-2xl",
-          "transition-transform duration-300 lg:hidden",
-          open ? "translate-x-0" : "-translate-x-full",
-        ].join(" ")}
-      >
-        <div className="flex h-full flex-col">
-          {/* Mobile Header */}
-          <div className="border-b border-slate-200 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 px-6 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="rounded-2xl bg-white p-2 shadow-md">
-                  <img
-                    src={logo}
-                    alt="Asamblea Legislativa"
-                    className="h-11 w-auto object-contain"
-                  />
-                </div>
-                <div>
-                  <p className="font-extrabold text-[11px] uppercase tracking-[0.15em] text-blue-600">
-                    Sistema de
-                  </p>
-                  <p className="font-black text-[16px] tracking-tight text-slate-900 leading-tight">
-                    Transporte
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={onClose}
-                className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-md transition-all hover:shadow-lg"
-              >
-                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                  <path d="M18 6L6 18M6 6l12 12"/>
-                </svg>
-              </button>
-            </div>
+      {/* ============================================ */}
+      {/* MOBILE: Top Bar con botón de menú          */}
+      {/* ============================================ */}
+      <div className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/50 bg-white/90 backdrop-blur-xl shadow-sm lg:hidden">
+        <div className="flex h-16 items-center justify-between px-4">
+          {/* Botón hamburguesa */}
+          <button
+            onClick={onClose}
+            className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 shadow-sm transition-all hover:shadow-md active:scale-95"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Logo centrado */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <img
+              src={logo}
+              alt="Asamblea Legislativa"
+              className="h-9 w-auto object-contain"
+            />
           </div>
 
-          {/* Mobile Navigation */}
-          <nav className="flex-1 overflow-y-auto px-5 py-6">
-            <div className="space-y-2">
-              <NavItem
-                to="/dashboard"
-                label="Inicio"
-                onNavigateMobile={onNavigateMobile}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinejoin="round">
-                    <path d="M4 10.5L12 4l8 6.5V20a1 1 0 0 1-1 1h-5v-6H10v6H5a1 1 0 0 1-1-1v-9.5Z"/>
-                  </svg>
-                }
-              />
-
-              <NavItem
-                to="/nueva-solicitud"
-                label="Nueva Solicitud"
-                onNavigateMobile={onNavigateMobile}
-                forceActive={isNewRequestActive}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-                    <path d="M12 5v14M5 12h14"/>
-                  </svg>
-                }
-              />
-
-              <NavItem
-                to="/mis-solicitudes"
-                label="Mis Solicitudes"
-                onNavigateMobile={onNavigateMobile}
-                icon={
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                    <path d="M7 7h10M7 12h10M7 17h10"/>
-                  </svg>
-                }
-              />
+          {/* Avatar */}
+          <div className="h-10 w-10 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-md shadow-blue-500/20">
+            <div className="flex h-full items-center justify-center font-black text-[14px] text-white">
+              {user?.name?.charAt(0).toUpperCase() || "U"}
             </div>
-          </nav>
-
-          {/* Mobile Footer */}
-          <div className="border-t border-slate-200 bg-slate-50 p-5">
-            <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
-              <div className="h-12 w-12 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-lg shadow-blue-500/30">
-                <div className="flex h-full items-center justify-center font-black text-[18px] text-white">
-                  {user?.name?.charAt(0).toUpperCase() || "U"}
-                </div>
-              </div>
-
-              <div className="min-w-0 flex-1">
-                {user?.name && (
-                  <p className="truncate font-bold text-[14px] text-slate-900">
-                    {user.name}
-                  </p>
-                )}
-                {user?.email && (
-                  <p className="truncate font-semibold text-[12px] text-slate-500">
-                    {user.email}
-                  </p>
-                )}
-              </div>
-            </div>
-
-            <button
-              onClick={handleLogout}
-              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-4 font-bold text-[14px] text-red-600 shadow-md transition-all hover:shadow-xl hover:shadow-red-500/20"
-            >
-              <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M10 7l-5 5 5 5"/>
-                  <path strokeLinecap="round" d="M5 12h12"/>
-                  <path strokeLinecap="round" d="M17 21h2a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1h-2"/>
-                </svg>
-              </span>
-              Cerrar Sesión
-            </button>
           </div>
         </div>
-      </aside>
+      </div>
 
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
