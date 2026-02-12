@@ -31,7 +31,7 @@ function NavItem({
           "group relative flex items-center gap-2.5 rounded-2xl px-5 py-2.5 font-semibold transition-all duration-300",
           (forceActive ?? false) || isActive
             ? "bg-gradient-to-r from-blue-600 via-cyan-600 to-blue-700 text-white shadow-xl shadow-blue-500/30"
-            : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-md",
+            : "text-slate-700 hover:bg-slate-100 hover:text-slate-900 hover:shadow-md active:scale-95",
         ].join(" ")
       }
     >
@@ -62,7 +62,10 @@ export default function Sidebar({ open, onClose }: Props) {
   const { user, logout } = useAuth();
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  const onNavigateMobile = () => onClose();
+  const onNavigateMobile = () => {
+    onClose(); // Cierra el sidebar al navegar
+    setShowUserMenu(false); // Cierra el menú de usuario también
+  };
 
   const handleLogout = async () => {
     await logout();
@@ -75,30 +78,79 @@ export default function Sidebar({ open, onClose }: Props) {
 
   return (
     <>
-      {/* Overlay móvil */}
+      {/* ============================================ */}
+      {/* MOBILE: Overlay oscuro cuando sidebar abierto */}
+      {/* ============================================ */}
       <div
         className={[
-          "fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm transition-all duration-300 lg:hidden",
+          "fixed inset-0 z-40 bg-slate-900/60 backdrop-blur-sm transition-all duration-300",
+          // Solo visible en móvil cuando el sidebar está abierto
+          "lg:hidden",
           open ? "opacity-100" : "pointer-events-none opacity-0",
         ].join(" ")}
         onClick={onClose}
+        aria-hidden="true"
       />
 
       {/* ============================================ */}
-      {/* MOBILE FIRST: Sidebar móvil (por defecto)   */}
+      {/* MOBILE: Barra superior fija                 */}
+      {/* ============================================ */}
+      <div className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/50 bg-white/95 backdrop-blur-xl shadow-sm lg:hidden">
+        <div className="flex h-16 items-center justify-between px-4">
+          {/* Botón hamburguesa - ABRE el sidebar */}
+          <button
+            onClick={() => !open && onClose()} // Llama a onClose que en realidad togglea
+            className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 shadow-sm transition-all hover:shadow-md active:scale-95"
+            aria-label="Abrir menú"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+            >
+              <path d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+
+          {/* Logo centrado */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+            <img
+              src={logo}
+              alt="Asamblea Legislativa"
+              className="h-9 w-auto object-contain"
+            />
+          </div>
+
+          {/* Avatar del usuario */}
+          <div className="h-10 w-10 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-md shadow-blue-500/20">
+            <div className="flex h-full items-center justify-center font-black text-[14px] text-white">
+              {user?.name?.charAt(0).toUpperCase() || "U"}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* ============================================ */}
+      {/* MOBILE: Sidebar lateral deslizable          */}
       {/* ============================================ */}
       <aside
         className={[
-          // MOBILE: Sidebar lateral izquierdo
+          // Posición fija, ocupando toda la altura
           "fixed left-0 top-0 z-50 h-full w-80 bg-white shadow-2xl",
+          // Transición suave de deslizamiento
           "transition-transform duration-300",
+          // Control de visibilidad con transform
           open ? "translate-x-0" : "-translate-x-full",
-          // DESKTOP: Ocultar en pantallas grandes
+          // Ocultar en desktop
           "lg:hidden",
         ].join(" ")}
       >
         <div className="flex h-full flex-col">
-          {/* Mobile Header */}
+          {/* Header del sidebar móvil */}
           <div className="border-b border-slate-200 bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 px-6 py-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
@@ -118,9 +170,12 @@ export default function Sidebar({ open, onClose }: Props) {
                   </p>
                 </div>
               </div>
+              
+              {/* Botón X para cerrar el sidebar */}
               <button
                 onClick={onClose}
-                className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-md transition-all hover:shadow-lg"
+                className="grid h-11 w-11 place-items-center rounded-2xl bg-white text-slate-700 shadow-md transition-all hover:shadow-lg active:scale-95"
+                aria-label="Cerrar menú"
               >
                 <svg
                   width="22"
@@ -137,7 +192,7 @@ export default function Sidebar({ open, onClose }: Props) {
             </div>
           </div>
 
-          {/* Mobile Navigation */}
+          {/* Navegación del sidebar móvil */}
           <nav className="flex-1 overflow-y-auto px-5 py-6">
             <div className="space-y-2">
               <NavItem
@@ -200,10 +255,11 @@ export default function Sidebar({ open, onClose }: Props) {
             </div>
           </nav>
 
-          {/* Mobile Footer */}
+          {/* Footer del sidebar móvil - Usuario y logout */}
           <div className="border-t border-slate-200 bg-slate-50 p-5">
+            {/* Información del usuario */}
             <div className="mb-4 flex items-center gap-3 rounded-2xl bg-white p-4 shadow-md">
-              <div className="h-12 w-12 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-lg shadow-blue-500/30">
+              <div className="h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-lg shadow-blue-500/30">
                 <div className="flex h-full items-center justify-center font-black text-[18px] text-white">
                   {user?.name?.charAt(0).toUpperCase() || "U"}
                 </div>
@@ -223,9 +279,10 @@ export default function Sidebar({ open, onClose }: Props) {
               </div>
             </div>
 
+            {/* Botón de cerrar sesión */}
             <button
               onClick={handleLogout}
-              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-4 font-bold text-[14px] text-red-600 shadow-md transition-all hover:shadow-xl hover:shadow-red-500/20"
+              className="group flex w-full items-center justify-center gap-3 rounded-2xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-4 font-bold text-[14px] text-red-600 shadow-md transition-all hover:shadow-xl hover:shadow-red-500/20 active:scale-95"
             >
               <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm">
                 <svg
@@ -255,14 +312,13 @@ export default function Sidebar({ open, onClose }: Props) {
       </aside>
 
       {/* ============================================ */}
-      {/* DESKTOP: Top Navbar (solo en pantallas lg+) */}
+      {/* DESKTOP: Navbar horizontal superior         */}
       {/* ============================================ */}
       <header className="hidden lg:fixed lg:top-0 lg:left-0 lg:right-0 lg:z-50 lg:block lg:border-b lg:border-slate-200/50 lg:bg-white/80 lg:backdrop-blur-2xl lg:shadow-sm">
         <div className="mx-auto max-w-[1800px]">
           <div className="flex h-20 items-center justify-between gap-6 px-6 lg:px-10">
-            {/* Logo & Brand */}
+            {/* Logo & Brand - Desktop */}
             <div className="flex items-center gap-5">
-              {/* Logo */}
               <div className="flex items-center gap-4">
                 <div className="rounded-2xl bg-gradient-to-br from-blue-50 to-cyan-50 p-2 shadow-sm">
                   <img
@@ -283,13 +339,13 @@ export default function Sidebar({ open, onClose }: Props) {
               </div>
             </div>
 
-            {/* Desktop Navigation */}
+            {/* Navegación Desktop - Centrada */}
             <nav className="flex-1">
               <div className="flex items-center justify-center gap-2">
                 <NavItem
                   to="/dashboard"
                   label="Inicio"
-                  onNavigateMobile={onNavigateMobile}
+                  onNavigateMobile={() => {}} // No hace nada en desktop
                   icon={
                     <svg
                       width="18"
@@ -308,7 +364,7 @@ export default function Sidebar({ open, onClose }: Props) {
                 <NavItem
                   to="/nueva-solicitud"
                   label="Nueva Solicitud"
-                  onNavigateMobile={onNavigateMobile}
+                  onNavigateMobile={() => {}}
                   forceActive={isNewRequestActive}
                   icon={
                     <svg
@@ -328,7 +384,7 @@ export default function Sidebar({ open, onClose }: Props) {
                 <NavItem
                   to="/mis-solicitudes"
                   label="Mis Solicitudes"
-                  onNavigateMobile={onNavigateMobile}
+                  onNavigateMobile={() => {}}
                   icon={
                     <svg
                       width="18"
@@ -346,7 +402,7 @@ export default function Sidebar({ open, onClose }: Props) {
               </div>
             </nav>
 
-            {/* User Profile Menu */}
+            {/* Menú de usuario Desktop */}
             <div className="relative">
               <button
                 onClick={() => setShowUserMenu(!showUserMenu)}
@@ -359,7 +415,7 @@ export default function Sidebar({ open, onClose }: Props) {
                   </div>
                 </div>
 
-                {/* User Info */}
+                {/* Info del usuario - Solo visible en pantallas sm+ */}
                 <div className="hidden min-w-0 text-left sm:block">
                   {user?.name && (
                     <p className="truncate font-bold text-[14px] text-slate-900">
@@ -373,7 +429,7 @@ export default function Sidebar({ open, onClose }: Props) {
                   )}
                 </div>
 
-                {/* Chevron */}
+                {/* Icono chevron */}
                 <svg
                   className={[
                     "h-4 w-4 text-slate-400 transition-all duration-300",
@@ -392,7 +448,7 @@ export default function Sidebar({ open, onClose }: Props) {
                 </svg>
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Dropdown del menú de usuario */}
               <div
                 className={[
                   "absolute right-0 top-full mt-3 w-72 origin-top-right overflow-hidden rounded-2xl border border-slate-200/60 bg-white shadow-2xl shadow-slate-900/10 backdrop-blur-xl transition-all duration-300",
@@ -401,10 +457,10 @@ export default function Sidebar({ open, onClose }: Props) {
                     : "pointer-events-none scale-95 opacity-0",
                 ].join(" ")}
               >
-                {/* User Info Section */}
+                {/* Sección de info del usuario */}
                 <div className="bg-gradient-to-br from-blue-50 via-cyan-50 to-blue-50 p-5">
                   <div className="flex items-center gap-4">
-                    <div className="h-14 w-14 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-xl shadow-blue-500/30">
+                    <div className="h-14 w-14 flex-shrink-0 overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-xl shadow-blue-500/30">
                       <div className="flex h-full items-center justify-center font-black text-[20px] text-white">
                         {user?.name?.charAt(0).toUpperCase() || "U"}
                       </div>
@@ -424,11 +480,14 @@ export default function Sidebar({ open, onClose }: Props) {
                   </div>
                 </div>
 
-                {/* Logout Button */}
+                {/* Botón de cerrar sesión */}
                 <div className="p-3">
                   <button
-                    onClick={handleLogout}
-                    className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-3.5 font-bold text-[14px] text-red-600 shadow-sm transition-all hover:shadow-lg hover:shadow-red-500/20"
+                    onClick={() => {
+                      setShowUserMenu(false);
+                      handleLogout();
+                    }}
+                    className="group flex w-full items-center gap-3 rounded-xl bg-gradient-to-br from-red-50 to-rose-50 px-4 py-3.5 font-bold text-[14px] text-red-600 shadow-sm transition-all hover:shadow-lg hover:shadow-red-500/20 active:scale-95"
                   >
                     <span className="grid h-10 w-10 place-items-center rounded-xl bg-white shadow-sm transition-all group-hover:shadow-md">
                       <svg
@@ -460,53 +519,19 @@ export default function Sidebar({ open, onClose }: Props) {
         </div>
       </header>
 
-      {/* ============================================ */}
-      {/* MOBILE: Top Bar con botón de menú          */}
-      {/* ============================================ */}
-      <div className="fixed top-0 left-0 right-0 z-40 border-b border-slate-200/50 bg-white/90 backdrop-blur-xl shadow-sm lg:hidden">
-        <div className="flex h-16 items-center justify-between px-4">
-          {/* Botón hamburguesa */}
-          <button
-            onClick={onClose}
-            className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-slate-50 to-slate-100 text-slate-700 shadow-sm transition-all hover:shadow-md active:scale-95"
-          >
-            <svg
-              width="20"
-              height="20"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2.5"
-              strokeLinecap="round"
-            >
-              <path d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-
-          {/* Logo centrado */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <img
-              src={logo}
-              alt="Asamblea Legislativa"
-              className="h-9 w-auto object-contain"
-            />
-          </div>
-
-          {/* Avatar */}
-          <div className="h-10 w-10 overflow-hidden rounded-xl bg-gradient-to-br from-blue-500 via-cyan-500 to-blue-600 shadow-md shadow-blue-500/20">
-            <div className="flex h-full items-center justify-center font-black text-[14px] text-white">
-              {user?.name?.charAt(0).toUpperCase() || "U"}
-            </div>
-          </div>
-        </div>
-      </div>
-
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
         
         * {
           font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
           letter-spacing: -0.01em;
+        }
+        
+        /* Mejora para el scroll en móvil */
+        @media (max-width: 1023px) {
+          body {
+            overflow-x: hidden;
+          }
         }
       `}</style>
     </>
