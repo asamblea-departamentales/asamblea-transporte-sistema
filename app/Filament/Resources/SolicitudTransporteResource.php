@@ -121,6 +121,39 @@ class SolicitudTransporteResource extends Resource
                     ->disabled(),
                 ])
                 ->columns(2),
+
+                Forms\Components\Section::make('Historial de estados')
+    ->schema([
+        Forms\Components\Repeater::make('historial_ui')
+            ->label('')
+            ->disabled()
+            ->dehydrated(false)
+            ->default(function (SolicitudTransporte $record) {
+                return HistorialEstado::query()
+                    ->where('entidad_tipo', 'solicitud_transporte')
+                    ->where('entidad_id', $record->id)
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->map(fn ($h) => [
+                        'fecha' => optional($h->created_at)->format('d/m/Y H:i'),
+                        'de'    => $h->estado_anterior,
+                        'a'     => $h->estado_nuevo,
+                        'comentario' => $h->comentario,
+                    ])
+                    ->toArray();
+            })
+            ->schema([
+                Forms\Components\TextInput::make('fecha')->disabled(),
+                Forms\Components\TextInput::make('de')->label('De')->disabled(),
+                Forms\Components\TextInput::make('a')->label('A')->disabled(),
+                Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
+            ])
+            ->columns(3)
+            ->columnSpanFull(),
+    ])
+    ->collapsed(false)
+    ->columnSpanFull(),
+
             ]);
     }
 
