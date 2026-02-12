@@ -108,6 +108,6 @@ export async function deleteRequest(id: string | number): Promise<void> {
 // 2. NUEVA FUNCIÓN PARA COMPLETAR
 export async function completeRequest(id: number): Promise<Request> {
   // Usamos POST a la ruta que configuraste en Laravel
-  const { data } = await api.post(`/api/transport-requests/${id}/completar`);
+  const { data } = await api.post(`/api/transport-requests/${id}/finalizar`);
   return data.data; // Asumiendo que tu backend devuelve { message: "...", data: {...} }
 }
