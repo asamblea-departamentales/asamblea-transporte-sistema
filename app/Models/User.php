@@ -28,6 +28,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
         'unidad_solicitante_id',
         'activo', //Agregado para el campo 'activo'
+        'departamental_id',
+
     ];
 
     /**
@@ -71,4 +73,10 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->belongsTo(UnidadSolicitante::class, 'unidad_solicitante_id');
     }
+
+    public function departamental()
+    {
+        return $this->belongsTo(Departamental::class, 'departamental_id');
+    }
+
 }

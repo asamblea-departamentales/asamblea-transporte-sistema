@@ -1,0 +1,42 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+
+class Motorista extends Model
+{
+    use SoftDeletes;
+
+    protected $table = 'motoristas';
+
+    protected $fillable = [
+        'nombre',
+        'dui',
+        'telefono',
+        'activo',
+    ];
+
+    protected $casts = [
+        'activo' => 'boolean',
+    ];
+
+    public function asignacionesVehiculo(): HasMany
+    {
+        return $this->hasMany(AsignacionVehiculoMotorista::class, 'motorista_id');
+    }
+
+    /**
+     * Vehículo vigente del motorista (si existe).
+     */
+    public function asignacionVigenteVehiculo(): HasOne
+    {
+        return $this->hasOne(AsignacionVehiculoMotorista::class, 'motorista_id')
+            ->where('vigente', true)
+            ->whereNull('hasta')
+            ->latest('desde');
+    }
+}
