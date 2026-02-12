@@ -33,129 +33,138 @@ class SolicitudTransporteResource extends Resource
     }
 
     public static function form(Form $form): Form
-    {
-        return $form
-            ->schema([
-                //Formulario de aprobacion
-                Forms\Components\Section::make('Informacion de la Solicitud')
+{
+    return $form
+        ->schema([
+            // ✅ RESUMEN (siempre visible)
+            Forms\Components\Section::make('Resumen')
                 ->schema([
-                    Forms\Components\TextInput::make('codigo')
-                    ->disabled(),
-                    Forms\Components\Select::make('unidad_solicitante_id')
-                    ->label('Unidad Solicitante')
-                    ->relationship('unidad', 'nombre')
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('codigo_ui')
+                        ->label('Código')
+                        ->content(fn (SolicitudTransporte $record) => $record->codigo ?? '-'),
 
-                    Forms\Components\TextInput::make('solicitante.id')
-                    ->label('Solicitante')
-                    ->disabled()
-                        ->formatStateUsing(fn ($state, SolicitudTransporte $record) => $record->solicitante?->name ?? '-'),
+                    Forms\Components\Placeholder::make('unidad_ui')
+                        ->label('Unidad Solicitante')
+                        ->content(fn (SolicitudTransporte $record) => $record->unidad?->nombre ?? '-'),
 
-                    Forms\Components\Textarea::make('motivo_actividad')
-                    ->disabled()
-                    ->columnSpanFull(),
+                    Forms\Components\Placeholder::make('solicitante_ui')
+                        ->label('Solicitante')
+                        ->content(fn (SolicitudTransporte $record) => $record->solicitante?->name ?? '-'),
 
-                    //Esta parte habria que hacerla en base al mapa del frontend
-                    Forms\Components\TextInput::make('origen')
-                    ->disabled(),
-                    Forms\Components\TextInput::make('destino')
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('salida_ui')
+                        ->label('Salida')
+                        ->content(fn (SolicitudTransporte $record) => optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '-'),
 
-                    //Agregado
-                    Forms\Components\TextInput::make('destino_adicional')
-                     ->label('Destino Adicional')
-                     ->disabled() // Lo mantenemos deshabilitado para la vista de revisión
-                     ->placeholder('Opcional')
-                     ->maxLength(255)
-                     // Esta función transforma el valor nulo en el texto que quieres ver
-                     ->formatStateUsing(fn ($state) => $state ?? 'Sin destino adicional'),                    //=================================================================
+                    Forms\Components\Placeholder::make('retorno_ui')
+                        ->label('Retorno')
+                        ->content(fn (SolicitudTransporte $record) => optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '-'),
 
-                    Forms\Components\DateTimePicker::make('fecha_salida')
-                    ->disabled(),
-                    Forms\Components\DateTimePicker::make('fecha_retorno')
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('cantidad_personas_ui')
+                        ->label('Cantidad de personas')
+                        ->content(fn (SolicitudTransporte $record) => (string) ($record->cantidad_personas ?? '-')),
 
-                    Forms\Components\TextInput::make('cantidad_personas')
-                    ->numeric()
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('prioridad_ui')
+                        ->label('Prioridad')
+                        ->content(fn (SolicitudTransporte $record) => $record->prioridad?->value ? strtoupper($record->prioridad->value) : '-'),
 
-                    Forms\Components\Select::make('prioridad')
-                 ->disabled()
-                 ->options([
-                    PrioridadSolicitudEnum::BAJA->value => 'BAJA',
-                    PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
-                    PrioridadSolicitudEnum::ALTA->value => 'ALTA',
-                  ]),
-
-
-                    Forms\Components\Select::make('estado')
-    ->disabled()
-    ->options([
-        EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
-        EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
-        EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
-        EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
-        EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
-        EstadoSolicitudEnum::PROGRAMADA->value => 'Programada',
-        EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
-        EstadoSolicitudEnum::COMPLETADA->value => 'Completada',
-        EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
-    ]),
-
+                    Forms\Components\Placeholder::make('estado_ui')
+                        ->label('Estado')
+                        ->content(fn (SolicitudTransporte $record) => $record->estado?->value ? strtoupper($record->estado->value) : '-'),
                 ])
-                ->columns(2),
+                ->columns(4)
+                ->compact(),
 
-                Forms\Components\Section::make('Decision / Auditoria')
+            // ✅ RUTA (colapsable)
+            Forms\Components\Section::make('Ruta')
                 ->schema([
-                    Forms\Components\Textarea::make('comentario_jefe')
-                    ->label('Observaciones de Jefatura')
-                    ->disabled()
-                    ->columnSpanFull(),
+                    Forms\Components\Placeholder::make('origen_ui')
+                        ->label('Origen')
+                        ->content(fn (SolicitudTransporte $record) => $record->origen ?? '-'),
 
-                    Forms\Components\TextInput::make('autorizador.name')
-                    ->label('Autorizado por: ')
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('destino_ui')
+                        ->label('Destino')
+                        ->content(fn (SolicitudTransporte $record) => $record->destino ?? '-'),
 
-                    Forms\Components\DateTimePicker::make('decidido_en')
-                    ->label('Fecha de Decisión')
-                    ->disabled(),
+                    Forms\Components\Placeholder::make('destino_adicional_ui')
+                        ->label('Destino Adicional')
+                        ->content(fn (SolicitudTransporte $record) => $record->destino_adicional ?? 'Sin destino adicional'),
                 ])
-                ->columns(2),
+                ->columns(3)
+                ->collapsible()
+                ->collapsed()
+                ->compact(),
 
-                Forms\Components\Section::make('Historial de estados')
-    ->schema([
-        Forms\Components\Repeater::make('historial_ui')
-            ->label('')
-            ->disabled()
-            ->dehydrated(false)
-            ->default(function (SolicitudTransporte $record) {
-                return HistorialEstado::query()
-                    ->where('entidad_tipo', 'solicitud_transporte')
-                    ->where('entidad_id', $record->id)
-                    ->orderByDesc('created_at')
-                    ->get()
-                    ->map(fn ($h) => [
-                        'fecha' => optional($h->created_at)->format('d/m/Y H:i'),
-                        'de'    => $h->estado_anterior,
-                        'a'     => $h->estado_nuevo,
-                        'comentario' => $h->comentario,
-                    ])
-                    ->toArray();
-            })
-            ->schema([
-                Forms\Components\TextInput::make('fecha')->disabled(),
-                Forms\Components\TextInput::make('de')->label('De')->disabled(),
-                Forms\Components\TextInput::make('a')->label('A')->disabled(),
-                Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
-            ])
-            ->columns(3)
-            ->columnSpanFull(),
-    ])
-    ->collapsed(false)
-    ->columnSpanFull(),
+            // ✅ MOTIVO (colapsable)
+            Forms\Components\Section::make('Motivo de la actividad')
+                ->schema([
+                    Forms\Components\Placeholder::make('motivo_ui')
+                        ->label('')
+                        ->content(fn (SolicitudTransporte $record) => $record->motivo_actividad ?? '-'),
+                ])
+                ->collapsible()
+                ->collapsed(false)
+                ->compact(),
 
-            ]);
-    }
+            // ✅ DECISIÓN / AUDITORÍA (colapsable)
+            Forms\Components\Section::make('Decisión / Auditoría')
+                ->schema([
+                    Forms\Components\Placeholder::make('comentario_jefe_ui')
+                        ->label('Observaciones de Jefatura')
+                        ->content(fn (SolicitudTransporte $record) => $record->comentario_jefe ?? '-')
+                        ->columnSpanFull(),
+
+                    Forms\Components\Placeholder::make('autorizador_ui')
+                        ->label('Autorizado por')
+                        ->content(fn (SolicitudTransporte $record) => $record->autorizador?->name ?? '-'),
+
+                    Forms\Components\Placeholder::make('decidido_en_ui')
+                        ->label('Fecha de Decisión')
+                        ->content(fn (SolicitudTransporte $record) => optional($record->decidido_en)?->format('d/m/Y H:i') ?? '-'),
+                ])
+                ->columns(2)
+                ->collapsible()
+                ->collapsed()
+                ->compact(),
+
+            // ✅ HISTORIAL (el jefe lo agradece)
+            Forms\Components\Section::make('Historial de estados')
+                ->schema([
+                    Forms\Components\Repeater::make('historial_ui')
+                        ->label('')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->default(function (SolicitudTransporte $record) {
+                            return HistorialEstado::query()
+                                ->where('entidad_tipo', 'solicitud_transporte')
+                                ->where('entidad_id', $record->id)
+                                ->orderByDesc('created_at')
+                                ->get()
+                                ->map(fn ($h) => [
+                                    'fecha' => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
+                                    'de'    => $h->estado_anterior ?? '-',
+                                    'a'     => $h->estado_nuevo ?? '-',
+                                    'comentario' => $h->comentario ?? null,
+                                ])
+                                ->toArray();
+                        })
+                        ->schema([
+                            Forms\Components\TextInput::make('fecha')->disabled(),
+                            Forms\Components\TextInput::make('de')->label('De')->disabled(),
+                            Forms\Components\TextInput::make('a')->label('A')->disabled(),
+                            Forms\Components\Textarea::make('comentario')
+                                ->rows(2)
+                                ->disabled()
+                                ->columnSpanFull(),
+                        ])
+                        ->columns(3)
+                        ->columnSpanFull(),
+                ])
+                ->collapsible()
+                ->collapsed(false)
+                ->compact(),
+        ]);
+}
+
 
     public static function table(Table $table): Table
     {
