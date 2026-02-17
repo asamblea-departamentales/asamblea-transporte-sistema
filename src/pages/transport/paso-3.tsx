@@ -124,7 +124,7 @@ export default function TransportStep3Page() {
         // ── Paso 1 ──────────────────────────────────
         tipo_vehiculo:         payload.tipoVehiculo,           // ← AÑADIDO
         fecha_salida:          payload.fecha,
-        hora_salida:           payload.hora,
+        hora_salida:  payload.hora || null,
         encargado:             payload.encargado,
         subencargado:          payload.subencargado?.trim() || null,
         cantidad_personas:     parseInt(payload.pasajeros || "1"),
