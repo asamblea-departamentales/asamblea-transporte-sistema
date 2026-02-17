@@ -113,28 +113,40 @@ export default function TransportStep3Page() {
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
   const token = localStorage.getItem("auth_token");
 
-  // 1. Preparar Destinos
-  const listaDestinos = payload.destinos || [];
-  const destinoPrincipal = listaDestinos[0]?.address || "Sin destino especificado";
-  const destinosExtras = listaDestinos.slice(1)
-    .map(d => d.address)
-    .join(" -> ");
+  // 1. LIMPIEZA DE DESTINOS (Aquí estaba el posible fallo)
+  // Primero filtramos del array solo aquellos que tengan texto real
+  const rawDestinos = payload.destinos || [];
+  const destinosValidos = rawDestinos.filter(d => d.address && d.address.trim().length > 0);
+
+  // A. El primer destino válido es el PRINCIPAL
+  const destinoPrincipal = destinosValidos[0]?.address || "Sin destino especificado";
+
+  // B. Todos los demás (del 2º en adelante) son los ADICIONALES
+  // Usamos slice(1) para saltarnos el primero
+  const destinosExtras = destinosValidos.slice(1)
+    .map(d => d.address.trim())
+    .join(" - "); // Usamos guión para separar: "Santa Ana - Ahuachapán"
 
   // 2. Preparar el Motivo + Encargados
   const infoEncargado = `Encargado: ${payload.encargado}` + 
                         (payload.subencargado ? ` / Sub: ${payload.subencargado}` : "");
   const motivoFinal = `Actividad de transporte. ${infoEncargado}`;
 
-  // 3. TRUCO DE LA HORA (CRUCIAL):
-  // El backend valida 'hora_salida', pero guarda en 'fecha_salida'.
-  // Así que enviamos la fecha combinada para que se guarde bien,
-  // y la hora suelta para que pase la validación.
-  
-  const fechaYHoraCombinada = `${payload.fecha} ${payload.hora}:00`; 
-  // Resultado: "2026-02-18 14:30:00"
+  // 3. TRUCO DE LA HORA (Mantener esto igual)
+  const fechaStr = payload.fecha || "";
+  const horaStr = payload.hora || "00:00";
+  // Asegurar formato HH:mm:ss
+  const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
 
-  // Para el retorno, usamos el final del día para evitar error "after_or_equal"
-  const fechaRetornoFinal = `${payload.fecha} 23:59:59`;
+  const fechaYHoraCombinada = `${fechaStr}T${horaFinal}`; 
+  const fechaRetornoFinal = `${fechaStr}T23:59:59`;
+
+  // --- DEBUG EN CONSOLA ---
+  console.log("----- DATOS A ENVIAR -----");
+  console.log("Principal:", destinoPrincipal);
+  console.log("Adicional (Variable):", destinosExtras);
+  console.log("Adicional (A enviar):", destinosExtras.length > 0 ? destinosExtras : null);
+  // ------------------------
 
   const res = await fetch(`${API_BASE}/api/transport-requests`, {
     method: "POST",
@@ -145,24 +157,23 @@ export default function TransportStep3Page() {
       "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify({
-      // ─── FECHAS Y HORAS ───
-      // Esto es lo que se guardará en la base de datos (DateTime):
+      // FECHAS
       fecha_salida: fechaYHoraCombinada, 
-      
-      // Esto es SOLO para que el validador de Laravel te deje pasar:
-      hora_salida: payload.hora,         
-
-      // Esto satisface la validación after_or_equal:
+      hora_salida: horaStr,        
       fecha_retorno: fechaRetornoFinal,  
 
-      // ─── RESTO DE DATOS ───
+      // DESTINOS
       destino_principal: destinoPrincipal,
+      
+      // AQUÍ LA CORRECCIÓN:
+      // Si el string tiene largo, lo enviamos. Si está vacío, enviamos null.
+      destino_adicional: destinosExtras.length > 0 ? destinosExtras : null, 
+
+      // RESTO
       encargado: payload.encargado,
       tipo_vehiculo: payload.tipoVehiculo, 
-
       cantidad_personas: parseInt(payload.pasajeros || "1"),
       origen: payload.origen,
-      destino_adicional: destinosExtras || null, 
       subencargado: payload.subencargado,
       motivo_actividad: motivoFinal,
       
