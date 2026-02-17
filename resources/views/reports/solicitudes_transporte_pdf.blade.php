@@ -44,8 +44,8 @@
         <td>{{ $r->origen }}</td>
         <td>{{ $r->destino }}</td>
         {{-- CORRECCIÓN AQUÍ: Usamos ->value o ->name --}}
-        <td>{{ strtoupper($r->prioridad->value ?? $r->prioridad) }}</td>
-        <td>{{ $r->estado->value ?? $r->estado }}</td>
+        <td>{{ strtoupper($r->prioridad instanceof \App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum ? $r->prioridad->value : $r->prioridad) }}</td>
+        <td>{{ $r->estado instanceof \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum ? $r->estado->value : $r->estado }}</td>
     </tr>
 @endforeach
         </tbody>

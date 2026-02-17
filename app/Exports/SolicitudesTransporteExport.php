@@ -47,30 +47,24 @@ class SolicitudesTransporteExport implements FromCollection, WithHeadings, WithM
 
     //Aqui transformamos cada fila de la DB antes de exportarla
     public function map($row): array
-    {
-        /** @var SolicitudTransporte $row */
-
-        // Convertir el estado a su valor de cadena
-        $estado = $row->estado instanceof EstadoSolicitudEnum ? $row->estado->value : (string) $row->estado;
-
-        return [
-            $row->codigo,
-            $row->unidad?->nombre,
-            $row->solicitante?->name, //El simbolo ?-> maneja el caso nulo
-            $row->motivo_actividad,
-            $row->origen,
-            $row->destino,
-
-            //optional y format aseguran que las fechas salgan limpias en el Excel
-            optional($row->fecha_salida)->format('Y-m-d H:i'),
-            optional($row->fecha_retorno)->format('Y-m-d H:i'),
-            $row->cantidad_personas,
-            $row->prioridad,
-            $estado,
-            $row->autorizador?->name,
-            optional($row->decidido_en)->format('Y-m-d H:i'),
-            $row->comentario_jefe,
-            optional($row->created_at)->format('Y-m-d H:i'),
-        ];
-    }
+{
+    /** @var SolicitudTransporte $row */
+    return [
+        $row->codigo,
+        $row->unidad?->nombre,
+        $row->solicitante?->name,
+        $row->motivo_actividad,
+        $row->origen,
+        $row->destino,
+        optional($row->fecha_salida)->format('Y-m-d H:i'),
+        optional($row->fecha_retorno)->format('Y-m-d H:i'),
+        $row->cantidad_personas,
+        $row->prioridad->value,  // 👈 CAMBIA ESTO
+        $row->estado->value,     // 👈 Y ESTO
+        $row->autorizador?->name,
+        optional($row->decidido_en)->format('Y-m-d H:i'),
+        $row->comentario_jefe,
+        optional($row->created_at)->format('Y-m-d H:i'),
+    ];
+}
 }
