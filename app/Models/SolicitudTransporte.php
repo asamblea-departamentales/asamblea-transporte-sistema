@@ -30,6 +30,7 @@ class SolicitudTransporte extends Model
         'vehiculo_id',
         'motorista_id',
         'tipo_vehiculo_id',
+        'tipo_vehiculo_nombre',
     ];
 
     protected $casts = [
@@ -94,6 +95,6 @@ public function getDestinoAdicionalAttribute($value)
 //Para tipo de vehículo
 public function tipoVehiculo()
 {
-    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
+    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_nombre', 'nombre');
 }
 }

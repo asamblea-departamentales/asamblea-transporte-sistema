@@ -122,17 +122,20 @@ class ViewSolicitudTransporte extends ViewRecord
                     Forms\Components\Section::make('Asignación de Vehículo y Motorista')
             ->schema([
                 Forms\Components\Select::make('vehiculo_id')
-    ->label('Vehículo a Asignar')
-    ->options(function (SolicitudTransporte $record) {
+   ->label('Vehículo a Asignar')
+    ->options(function () {
         return \App\Models\Vehiculo::where('activo', true)
-            // Filtramos vehículos cuyo tipo coincida con el solicitado
-            ->where('tipo_vehiculo_id', $record->tipo_vehiculo_id) 
+            ->with('tipo')
             ->get()
-            ->pluck('placa', 'id');
+            ->mapWithKeys(fn ($v) => [
+                $v->id => "{$v->placa} - {$v->tipo->nombre}"
+            ]);
     })
-    ->helperText(fn ($record) => "Mostrando solo vehículos tipo: " . ($record->tipoVehiculo?->nombre ?? 'N/A'))
-    ->required()
+    // ESTA ES LA CLAVE: El "hint" ayuda al jefe a decidir
+    ->hint(fn ($record) => "Solicitado: " . ($record->tipo_vehiculo_nombre ?? 'No especificado'))
+    ->hintColor('warning')
     ->searchable()
+    ->required()
                     ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
                     ->afterStateUpdated(function ($state, callable $set) {
                         $vehiculo = \App\Models\Vehiculo::find($state);
