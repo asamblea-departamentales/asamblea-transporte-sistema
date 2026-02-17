@@ -9,46 +9,34 @@ import Paso2 from "../pages/transport/paso-2";
 import Paso3 from "../pages/transport/paso-3";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import "leaflet/dist/leaflet.css";
-//import RequestDetailPage from "../pages/RequestDetailPage";
-//import SolicitudDetailPage from "../pages/SolicitudDetailPage";
 
 export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Raíz → Login */}
-        <Route path="/" element={<Navigate to="/login" replace />} />
 
-        {/* Público */}
+        {/* Ruta pública */}
         <Route path="/login" element={<LoginPage />} />
 
-        {/* Privado */}
-        <Route
-          path="/"
-          element={
-            <ProtectedRoute>
-              <AppLayout />
-            </ProtectedRoute>
-          }
-        >
-          <Route index element={<Navigate to="/dashboard" replace />} />
-          <Route path="dashboard" element={<DashboardPage />} />
-          <Route path="nueva-solicitud" element={<NewRequestPage />} />
-          <Route path="mis-solicitudes" element={<MyRequestsPage />} />
-          
+        {/* Rutas protegidas */}
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AppLayout />}>
 
-          
+            <Route path="/" element={<Navigate to="/dashboard" replace />} />
+            <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/nueva-solicitud" element={<NewRequestPage />} />
+            <Route path="/mis-solicitudes" element={<MyRequestsPage />} />
 
+            <Route path="/solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
+            <Route path="/solicitudes/transporte/paso-2" element={<Paso2 />} />
+            <Route path="/solicitudes/transporte/paso-3" element={<Paso3 />} />
 
-          <Route path="solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
-          <Route path="solicitudes/transporte/paso-2" element={<Paso2 />} />
-          <Route path="solicitudes/transporte/paso-3" element={<Paso3 />} />
-          
-
+          </Route>
         </Route>
 
-        {/* Catch all */}
-        <Route path="*" element={<Navigate to="/login" replace />} />
+        {/* Cualquier otra ruta */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+
       </Routes>
     </BrowserRouter>
   );

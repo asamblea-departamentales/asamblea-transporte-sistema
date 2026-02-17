@@ -5,22 +5,18 @@ import Sidebar from "../layout/Sidebar";
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // ✅ CORRECCIÓN: Función toggle en lugar de solo cerrar
-  const toggleSidebar = () => {
-    setSidebarOpen(!sidebarOpen);
-  };
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
-      {/* Sidebar con función toggle */}
-      <Sidebar open={sidebarOpen} onClose={toggleSidebar} />
+      <Sidebar
+        open={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+        onOpen={() => setSidebarOpen(true)}
+      />
 
-      {/* Contenido principal con padding para las barras fijas */}
-      <main className="pt-16 lg:pt-20">
-        {/* pt-16 = 64px para móvil (altura de barra superior) */}
-        {/* pt-20 = 80px para desktop (altura del navbar) */}
-        
-        {/* Contenedor con max-width centrado */}
+      <main
+        className="pt-14 lg:pt-[68px] lg:pb-0"
+        style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom))" }}
+      >
         <div className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6 lg:px-10">
           <Outlet />
         </div>
