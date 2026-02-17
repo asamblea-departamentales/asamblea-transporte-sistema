@@ -98,8 +98,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     ])->setPaper('a4', 'landscape');
 
                     $filename = 'reporte_solicitudes_' . now()->format('Ymd_His') . '.pdf';
-                    return response()->streamDownload(fn () => print($pdf->output()), $filename);
-                }),
+                    return response($pdf->output(), 200)->header('Content-Type', 'application/pdf');                }),
         ];
     }
 
