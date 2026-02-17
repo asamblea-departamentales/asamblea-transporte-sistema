@@ -31,7 +31,7 @@ class UserResource extends Resource
     $u = auth()->user();
     
     // Verifica en Tinker si el nombre es 'super_admin' o 'super-admin'
-    return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
+    return $u?->hasAnyRole(['super_admin', 'ti', 'admin']) ?? false;
 }
     public static function form(Form $form): Form
     {
