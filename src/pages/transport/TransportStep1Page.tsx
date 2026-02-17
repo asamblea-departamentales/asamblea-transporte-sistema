@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Car, BusFront, Truck } from "lucide-react";
 
 type VehiculoId = "sedan" | "microbus" | "camion";
 
@@ -26,70 +27,21 @@ const VEHICULOS: {
     label: "Sedán",
     sub: "Viajes ejecutivos y cortos",
     capacity: "1 – 4 pasajeros",
-    icon: (
-      <svg viewBox="0 0 80 36" fill="none" className="h-full w-full">
-        <path d="M8 24 C8 24 14 13 24 11 L36 10 L44 10 C54 11 68 21 72 24 L72 28 C72 30 70 31 68 31 L12 31 C10 31 8 30 8 28 Z" fill="currentColor" opacity="0.18"/>
-        <path d="M22 24 C22 24 26 14 34 12 L46 12 C54 14 58 22 58 24 Z" fill="currentColor" opacity="0.28"/>
-        <path d="M8 26 L8 22 C8 18 12 17 16 17 L64 17 C68 17 72 19 72 22 L72 26 C72 28 70 29 68 29 L12 29 C10 29 8 28 8 26 Z" fill="currentColor" opacity="0.55"/>
-        <rect x="22" y="13" width="14" height="9" rx="2" fill="white" opacity="0.45"/>
-        <rect x="38" y="13" width="14" height="9" rx="2" fill="white" opacity="0.45"/>
-        <circle cx="22" cy="30" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="22" cy="30" r="2.5" fill="white" opacity="0.6"/>
-        <circle cx="58" cy="30" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="58" cy="30" r="2.5" fill="white" opacity="0.6"/>
-        <rect x="68" y="21" width="6" height="2.5" rx="1" fill="currentColor" opacity="0.35"/>
-        <rect x="6"  y="21" width="5" height="2.5" rx="1" fill="currentColor" opacity="0.25"/>
-      </svg>
-    ),
+    icon: <Car className="h-10 w-10 sm:h-8 sm:w-8" strokeWidth={1.5} />,
   },
   {
     id: "microbus",
     label: "Microbús",
     sub: "Grupos medianos",
     capacity: "5 – 20 pasajeros",
-    icon: (
-      <svg viewBox="0 0 80 36" fill="none" className="h-full w-full">
-        <path d="M4 9 C4 6 6 4 9 4 L71 4 C74 4 76 6 76 9 L76 28 C76 30 74 31 71 31 L9 31 C6 31 4 30 4 28 Z" fill="currentColor" opacity="0.18"/>
-        <rect x="4" y="4" width="72" height="6" rx="2" fill="currentColor" opacity="0.10"/>
-        <rect x="8"  y="10" width="10" height="8" rx="1.5" fill="white" opacity="0.50"/>
-        <rect x="22" y="10" width="10" height="8" rx="1.5" fill="white" opacity="0.50"/>
-        <rect x="36" y="10" width="10" height="8" rx="1.5" fill="white" opacity="0.50"/>
-        <rect x="50" y="10" width="10" height="8" rx="1.5" fill="white" opacity="0.50"/>
-        <rect x="53" y="19" width="12" height="10" rx="1.5" fill="white" opacity="0.22"/>
-        <circle cx="54" cy="24" r="1" fill="currentColor" opacity="0.45"/>
-        <circle cx="18" cy="31" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="18" cy="31" r="2.5" fill="white" opacity="0.6"/>
-        <circle cx="62" cy="31" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="62" cy="31" r="2.5" fill="white" opacity="0.6"/>
-      </svg>
-    ),
+    icon: <BusFront className="h-10 w-10 sm:h-8 sm:w-8" strokeWidth={1.5} />,
   },
   {
     id: "camion",
     label: "Camión",
     sub: "Transporte de carga",
     capacity: "Carga pesada",
-    icon: (
-      <svg viewBox="0 0 90 38" fill="none" className="h-full w-full">
-        <rect x="2" y="8" width="50" height="22" rx="2.5" fill="currentColor" opacity="0.15"/>
-        <rect x="2" y="8" width="50" height="6" fill="currentColor" opacity="0.08"/>
-        <rect x="6"  y="11" width="9" height="7" rx="1.5" fill="white" opacity="0.38"/>
-        <rect x="18" y="11" width="9" height="7" rx="1.5" fill="white" opacity="0.38"/>
-        <rect x="30" y="11" width="9" height="7" rx="1.5" fill="white" opacity="0.38"/>
-        <rect x="52" y="19" width="2" height="9" rx="1" fill="currentColor" opacity="0.25"/>
-        <path d="M54 13 L54 30 C54 31 55 32 56 32 L84 32 C86 32 88 30 88 28 L88 21 C88 13 82 13 78 13 Z" fill="currentColor" opacity="0.48"/>
-        <rect x="55" y="14" width="13" height="8" rx="1.5" fill="white" opacity="0.45"/>
-        <path d="M68 14 L77 14 C82 14 87 18 87 21 L87 23 L68 23 Z" fill="white" opacity="0.30"/>
-        <circle cx="16" cy="32" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="16" cy="32" r="2.5" fill="white" opacity="0.6"/>
-        <circle cx="37" cy="32" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="37" cy="32" r="2.5" fill="white" opacity="0.6"/>
-        <circle cx="70" cy="32" r="5.5" fill="currentColor" opacity="0.85"/>
-        <circle cx="70" cy="32" r="2.5" fill="white" opacity="0.6"/>
-        <circle cx="81" cy="32" r="4" fill="currentColor" opacity="0.85"/>
-        <circle cx="81" cy="32" r="2" fill="white" opacity="0.6"/>
-      </svg>
-    ),
+    icon: <Truck className="h-10 w-10 sm:h-8 sm:w-8" strokeWidth={1.5} />,
   },
 ];
 
