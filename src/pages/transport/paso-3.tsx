@@ -111,88 +111,79 @@ export default function TransportStep3Page() {
   }
 
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-    const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("auth_token");
 
-    // 1. Preparar Destinos
-    // El backend espera 'destino' (string) y 'destino_adicional' (string)
-    const listaDestinos = payload.destinos || [];
-    const destinoPrincipal = listaDestinos[0]?.address || "Sin destino especificado";
-    
-    // Unimos los destinos extras (2, 3, 4...) en una sola cadena de texto
-    const destinosExtras = listaDestinos.slice(1)
-      .map(d => d.address)
-      .join(" -> ");
+  // 1. Preparar Destinos
+  const listaDestinos = payload.destinos || [];
+  // BACKEND: Pide "destino_principal"
+  const destinoPrincipal = listaDestinos[0]?.address || "Sin destino especificado";
+  
+  // BACKEND: Pide "destino_adicional" para los extras
+  const destinosExtras = listaDestinos.slice(1)
+    .map(d => d.address)
+    .join(" -> ");
 
-    // 2. Preparar el Motivo + Encargados
-    // COMO EL BACKEND NO TIENE CAMPO 'ENCARGADO', lo guardamos en el motivo
-    // para no perder el dato.
-    const infoEncargado = `Encargado: ${payload.encargado}` + 
-                          (payload.subencargado ? ` / Sub: ${payload.subencargado}` : "");
-    
-    // Unimos motivo base + info de encargados
-    const motivoFinal = `Actividad de transporte. ${infoEncargado}`;
+  const res = await fetch(`${API_BASE}/api/transport-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      "ngrok-skip-browser-warning": "true",
+    },
+    body: JSON.stringify({
+      // ─── CORRECCIONES BASADAS EN EL ERROR ───
+      
+      // 1. El error pedía "destino_principal"
+      destino_principal: destinoPrincipal,
 
-    // 3. Mapeo exacto para tu Modelo Laravel
-    const dataToSend = {
-      // FECHAS (Separadas para complacer al validador)
+      // 2. El error pedía "encargado" explícitamente
+      encargado: payload.encargado,
+
+      // 3. El error pedía "tipo_vehiculo"
+      tipo_vehiculo: payload.tipoVehiculo, 
+
+      // ─── OTROS CAMPOS NECESARIOS ───
       fecha_salida: payload.fecha,
-      hora_salida: payload.hora, 
-      
-      // Fecha retorno: enviamos la misma que salida para evitar error "after_or_equal"
-      fecha_retorno: payload.fecha, 
+      hora_salida: payload.hora, // Requerido por validación anterior
+      fecha_retorno: payload.fecha, // Para evitar error "after_or_equal"
 
-      // VEHÍCULO
-      // Tu modelo usa 'tipo_vehiculo_nombre'. Enviamos el ID (ej: "sedan")
-      tipo_vehiculo_nombre: payload.tipoVehiculo, 
-
-      // CANTIDAD
       cantidad_personas: parseInt(payload.pasajeros || "1"),
-
-      // RUTA
       origen: payload.origen,
-      destino: destinoPrincipal,
-      destino_adicional: destinosExtras || null, // Guardamos los extras aquí
-
-      // CAMPOS DE CONTROL (Concatenados porque no existen columnas propias)
-      motivo_actividad: motivoFinal,
-
-      // VALORES FIJOS REQUERIDOS
-      unidad_solicitante_id: 1, // Ajustar si tienes el ID real del usuario
-      prioridad: "media",
       
-      // Aseguramos que el estado inicial sea pendiente (si el backend no lo pone por defecto)
-      estado: "pendiente" 
-    };
+      // El backend parece usar "destino_adicional" para info extra de ruta
+      destino_adicional: destinosExtras || null, 
+      
+      // Enviamos el subencargado aquí por si acaso el backend lo acepta,
+      // o si no, lo concatenamos en motivo también para asegurarnos.
+      subencargado: payload.subencargado,
 
-    console.log("Enviando al backend:", dataToSend);
+      motivo_actividad: "Actividad de transporte" + (payload.subencargado ? ` (Sub: ${payload.subencargado})` : ""),
+      
+      unidad_solicitante_id: 1, 
+      prioridad: "media",
+    }),
+  });
 
-    const res = await fetch(`${API_BASE}/api/transport-requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify(dataToSend),
-    });
+  let json: any = null;
+  try { json = await res.json(); } catch { /* ignore */ }
 
-    let json: any = null;
-    try { json = await res.json(); } catch { /* ignore */ }
-
-    if (!res.ok) {
-      const errorDetail = json?.errors 
-        ? Object.values(json.errors).flat().join(", ")
-        : json?.message;
-      throw new Error(errorDetail || "No se pudo enviar la solicitud.");
-    }
-
-    return {
-      ok: true,
-      solicitudId: json?.codigo || json?.data?.codigo || json?.id, // Intentamos leer el código TR-2026...
-      message: json?.message,
-    };
+  if (!res.ok) {
+    // Si falla, mostramos los errores exactos
+    const errorDetail = json?.errors 
+      ? Object.entries(json.errors).map(([k, v]: any) => `${k}: ${v[0]}`).join("\n")
+      : json?.message;
+      
+    throw new Error(errorDetail || "No se pudo enviar la solicitud.");
   }
+
+  return {
+    ok: true,
+    solicitudId: json?.codigo || json?.data?.codigo || json?.id,
+    message: json?.message,
+  };
+}
+
   async function handleSubmit() {
     setErrorMsg(null);
     setSubmitting(true);
