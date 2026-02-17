@@ -113,40 +113,49 @@ export default function TransportStep3Page() {
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
   const token = localStorage.getItem("auth_token");
 
-  // 1. LIMPIEZA DE DESTINOS (Aquí estaba el posible fallo)
-  // Primero filtramos del array solo aquellos que tengan texto real
+  // 1. PROCESAMIENTO DE DESTINOS
   const rawDestinos = payload.destinos || [];
+  // Filtramos destinos vacíos
   const destinosValidos = rawDestinos.filter(d => d.address && d.address.trim().length > 0);
 
-  // A. El primer destino válido es el PRINCIPAL
+  // A. Destino Principal
   const destinoPrincipal = destinosValidos[0]?.address || "Sin destino especificado";
 
-  // B. Todos los demás (del 2º en adelante) son los ADICIONALES
-  // Usamos slice(1) para saltarnos el primero
+  // B. Destinos Adicionales (String unido por guiones)
+  // IMPORTANTE: Si solo hay 1 destino, esto será un string vacío.
   const destinosExtras = destinosValidos.slice(1)
     .map(d => d.address.trim())
-    .join(" - "); // Usamos guión para separar: "Santa Ana - Ahuachapán"
+    .join(" - ");
 
-  // 2. Preparar el Motivo + Encargados
-  const infoEncargado = `Encargado: ${payload.encargado}` + 
-                        (payload.subencargado ? ` / Sub: ${payload.subencargado}` : "");
-  const motivoFinal = `Actividad de transporte. ${infoEncargado}`;
+  // 2. CONSTRUCCIÓN DEL MOTIVO (LA SALVACIÓN)
+  // Como 'encargado' y 'subencargado' NO existen en tu modelo,
+  // y 'destino_adicional' a veces falla en el controlador,
+  // guardamos TODO aquí para no perder datos.
+  
+  let infoExtra = `Encargado: ${payload.encargado}`;
+  
+  if (payload.subencargado) {
+    infoExtra += ` / Sub: ${payload.subencargado}`;
+  }
+  
+  // Agregamos la ruta extra al motivo también, por seguridad
+  if (destinosExtras.length > 0) {
+    infoExtra += ` / Ruta completa: ${destinoPrincipal} -> ${destinosExtras}`;
+  }
 
-  // 3. TRUCO DE LA HORA (Mantener esto igual)
+  const motivoFinal = `Actividad de transporte. ${infoExtra}`;
+
+  // 3. FECHAS Y HORAS (Formato ISO para que Laravel no lo recorte)
   const fechaStr = payload.fecha || "";
   const horaStr = payload.hora || "00:00";
-  // Asegurar formato HH:mm:ss
+  // Aseguramos HH:mm:ss
   const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
-
+  
+  // FORMATO T: YYYY-MM-DDTHH:mm:ss (Compatible con Database datetime)
   const fechaYHoraCombinada = `${fechaStr}T${horaFinal}`; 
   const fechaRetornoFinal = `${fechaStr}T23:59:59`;
 
-  // --- DEBUG EN CONSOLA ---
-  console.log("----- DATOS A ENVIAR -----");
-  console.log("Principal:", destinoPrincipal);
-  console.log("Adicional (Variable):", destinosExtras);
-  console.log("Adicional (A enviar):", destinosExtras.length > 0 ? destinosExtras : null);
-  // ------------------------
+  console.log("Enviando fecha combinada:", fechaYHoraCombinada);
 
   const res = await fetch(`${API_BASE}/api/transport-requests`, {
     method: "POST",
@@ -157,25 +166,36 @@ export default function TransportStep3Page() {
       "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify({
-      // FECHAS
-      fecha_salida: fechaYHoraCombinada, 
-      hora_salida: horaStr,        
-      fecha_retorno: fechaRetornoFinal,  
+      // ─── PARA EL VALIDADOR (Controller) ───
+      hora_salida: horaStr,        // Satisface 'required'
+      encargado: payload.encargado,// Satisface 'required' (aunque el modelo lo ignore luego)
+      tipo_vehiculo: payload.tipoVehiculo, // Satisface 'required'
 
-      // DESTINOS
-      destino_principal: destinoPrincipal,
+      // ─── PARA EL MODELO (Base de Datos) ───
       
-      // AQUÍ LA CORRECCIÓN:
-      // Si el string tiene largo, lo enviamos. Si está vacío, enviamos null.
-      destino_adicional: destinosExtras.length > 0 ? destinosExtras : null, 
+      // 1. Fecha completa (Fecha + Hora)
+      fecha_salida: fechaYHoraCombinada, 
+      fecha_retorno: fechaRetornoFinal,
 
-      // RESTO
-      encargado: payload.encargado,
-      tipo_vehiculo: payload.tipoVehiculo, 
-      cantidad_personas: parseInt(payload.pasajeros || "1"),
+      // 2. Destinos
       origen: payload.origen,
-      subencargado: payload.subencargado,
+      destino: destinoPrincipal, // Mapeado al campo 'destino' del modelo
+      
+      // Si el string tiene texto, lo mandamos. Si no, null.
+      // Al ser null, tu Accessor devolverá "Sin destino adicional".
+      destino_adicional: destinosExtras.length > 0 ? destinosExtras : null,
+
+      // 3. Tipo de Vehículo
+      // Tu modelo tiene 'tipo_vehiculo_nombre'. 
+      // Enviamos el mismo valor que a 'tipo_vehiculo' para asegurar que se guarde.
+      tipo_vehiculo_nombre: payload.tipoVehiculo, 
+
+      // 4. Motivo (Aquí guardamos Encargado y Subencargado)
       motivo_actividad: motivoFinal,
+
+      // 5. Otros
+      cantidad_personas: parseInt(payload.pasajeros || "1"),
+      subencargado: payload.subencargado, // Se ignora en DB, pero se manda por si acaso
       
       unidad_solicitante_id: 1, 
       prioridad: "media",
