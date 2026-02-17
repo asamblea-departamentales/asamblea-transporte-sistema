@@ -11,7 +11,6 @@ use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use App\Filament\Pages\Dashboard;
-use Filament\Pages\Page;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
@@ -31,27 +30,44 @@ class AdminPanelProvider extends PanelProvider
             ->default()
             ->id('admin')
             ->path('admin')
-            ->darkMode(false) // Deshabilitar modo oscuro
-            // Configuración del Logo
+            ->darkMode(false)
+            
+            // Marca y Logo
             ->brandLogo(asset('images/logo-azul-fondo-transparente.png')) 
-            ->brandLogoHeight('3rem') // Importante para que no se vea gigante
-            // Configuracion para el icon
+            ->brandLogoHeight('3rem')
             ->favicon(asset('images/logo-blanco-fondo-transparente.png'))
+            
             ->login()
-            ->plugin(FilamentShieldPlugin::make())
+            
+            // Registro de Plugins (Corregido)
+            ->plugins([
+                 FilamentShieldPlugin::make()
+                 ->gridColumns([ 'default' => 1, 'sm' => 2, 'lg' => 3 ])
+                 ->sectionColumnSpan(1)
+                 ->checkboxListColumns([ 'default' => 1, 'sm' => 2, 'lg' => 4 ])
+                 ->resourceCheckboxListColumns([ 'default' => 1, 'sm' => 2 ]),
+])
+
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
-           ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-                 Dashboard::class,
+
+            // Definición de Grupos de Navegación
+            ->navigationGroups([
+                'Administracion',
+                'Transporte',
             ])
 
+            ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
+            ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
+            ->pages([
+                Dashboard::class,
+            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
+                //Widgets\AccountWidget::class,
             ])
+
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -67,15 +83,14 @@ class AdminPanelProvider extends PanelProvider
                 Authenticate::class,
             ])
 
-            //Para el footer
             ->renderHook(
-            PanelsRenderHook::AUTH_LOGIN_FORM_AFTER, // Lo pone justo abajo del botón "Ingresar"
-            fn () => Blade::render('
-                <div class="text-center text-xs text-gray-500 mt-6">
-                    <p>© {{ date("Y") }} Asamblea Legislativa de El Salvador.</p>
-                    <p>Todos los derechos reservados.</p>
-                </div>
-            '),
-        );
+                PanelsRenderHook::AUTH_LOGIN_FORM_AFTER,
+                fn () => Blade::render('
+                    <div class="text-center text-xs text-gray-500 mt-6">
+                        <p>© {{ date("Y") }} Asamblea Legislativa de El Salvador.</p>
+                        <p>Todos los derechos reservados.</p>
+                    </div>
+                '),
+            );
     }
 }

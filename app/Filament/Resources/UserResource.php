@@ -20,17 +20,19 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
-    protected static ?string $navigationGroup = 'Administración';
+    protected static ?string $navigationGroup = 'Administracion';
     protected static ?int $navigationSort = 1;
     protected static ?string $navigationLabel = 'Usuarios';
 
     
     //Restricciones de acceso a la gestión de usuarios
-    //public static function canAccess(): bool
-    //{
-    //    $u = auth()->user();
-     //   return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
- //   }
+    public static function canViewAny(): bool
+{
+    $u = auth()->user();
+    
+    // Verifica en Tinker si el nombre es 'super_admin' o 'super-admin'
+    return $u?->hasAnyRole(['super_admin', 'ti']) ?? false;
+}
     public static function form(Form $form): Form
     {
         return $form

@@ -26,7 +26,9 @@ class SolicitudTransporte extends Model
         'decidido_por',
         'decidido_en',
         'comentario_jefe',
-        'destino_adicional'
+        'destino_adicional',
+        'vehiculo_id',
+        'motorista_id',
     ];
 
     protected $casts = [
@@ -70,4 +72,22 @@ public function getDestinoAdicionalAttribute($value)
     public function unidad() { return $this->belongsTo(UnidadSolicitante::class, 'unidad_solicitante_id'); }
     public function solicitante() { return $this->belongsTo(User::class, 'solicitante_id'); }
     public function autorizador() { return $this->belongsTo(User::class, 'decidido_por'); }
+
+    public function vehiculo() 
+    { 
+      return $this->belongsTo(Vehiculo::class, 'vehiculo_id'); 
+    }
+
+    public function motorista() 
+    { 
+     return $this->belongsTo(Motorista::class, 'motorista_id'); 
+    }
+
+    //Para los estados
+    public function historiales()
+{
+    return $this->hasMany(HistorialEstado::class, 'entidad_id')
+        ->where('entidad_tipo', 'solicitud_transporte')
+        ->latest();
+}
 }

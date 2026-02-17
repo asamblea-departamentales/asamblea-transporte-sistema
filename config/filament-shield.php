@@ -1,17 +1,17 @@
 <?php
 
 return [
-    'shield_resource' => [
-    'should_register_navigation' => true,
+   'shield_resource' => [
+    'should_register_navigation' => false, // 👈 true
     'slug' => 'shield/roles',
     'navigation_sort' => 2,
     'navigation_badge' => true,
-    'navigation_group' => 'Administración', // ← EXACTAMENTE igual que UserResource
+    'navigation_group' => 'Administracion',
     'is_globally_searchable' => false,
     'show_model_path' => true,
     'cluster' => null,
     
-    // 'resource' => ... ← ELIMINA ESTA LÍNEA
+    'resource' => \App\Filament\Resources\RoleResource::class, // 👈 Debe estar
 ],
 
     'tenant_model' => null,
@@ -80,9 +80,9 @@ return [
     ],
 
     'discovery' => [
-        'discover_all_resources' => false,
-        'discover_all_widgets' => false,
-        'discover_all_pages' => false,
+        'discover_all_resources' => true,
+        'discover_all_widgets' => true,
+        'discover_all_pages' => true,
     ],
 
     'register_role_policy' => [

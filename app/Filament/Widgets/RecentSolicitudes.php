@@ -2,6 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Filament\Resources\SolicitudTransporteResource;
 use App\Models\SolicitudTransporte;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -9,51 +11,80 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class RecentSolicitudes extends BaseWidget
 {
-    // Esto hace que el cuadro ocupe todo el ancho de la pantalla
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     protected static ?int $sort = 2;
-    protected static ?string $heading = 'Solicitudes de Transporte Recientes';
+    protected static ?string $heading = 'Bandeja de Aprobaciones';
+
+    public static function canView(): bool
+    {
+        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
+    }
 
     public function table(Table $table): Table
     {
         return $table
             ->query(
-                // Tomamos las últimas 5 solicitudes creadas
                 SolicitudTransporte::query()
-                    ->with(['unidad']) // ✅ cargar relación usada en la tabla
-                    ->latest()
-                    ->limit(5)
+                    ->with(['unidad', 'solicitante'])
+                    ->whereIn('estado', [
+                        EstadoSolicitudEnum::PENDIENTE,
+                        EstadoSolicitudEnum::EN_REVISION,
+                        EstadoSolicitudEnum::PRE_APROBADA,
+                    ])
+                    ->orderBy('fecha_salida', 'asc')
+                    ->limit(8)
             )
+            // ✅ Hacer toda la fila clickeable hacia el VIEW del Resource
+            ->recordUrl(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record]))
             ->columns([
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Código')
-                    ->searchable(),
+                    ->searchable()
+                    ->sortable()
+                    ->description(fn (SolicitudTransporte $record) => $record->solicitante?->name ?? '-'),
 
-                // ✅ no existe "tipo" en SolicitudTransporte, así que ponemos fijo
                 Tables\Columns\TextColumn::make('tipo_solicitud')
-                    ->label('Tipo de Solicitud')
-                    ->state('Transporte'),
+                    ->label('Tipo')
+                    ->state('Transporte')
+                    ->badge()
+                    ->color('info'),
 
-                // ✅ relación correcta: unidad()
                 Tables\Columns\TextColumn::make('unidad.nombre')
                     ->label('Unidad'),
 
+                Tables\Columns\TextColumn::make('ruta_ui')
+                    ->label('Ruta')
+                    ->state(fn (SolicitudTransporte $record) =>
+                        ($record->origen ?? '-') . ' → ' . ($record->destino ?? '-')
+                    )
+                    ->wrap(),
+
+                Tables\Columns\TextColumn::make('fecha_salida')
+                    ->label('Salida')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
+
                 Tables\Columns\TextColumn::make('estado')
+                    ->label('Estado')
                     ->badge()
                     ->color(fn ($state): string => match ($state->value ?? $state) {
                         'pendiente' => 'warning',
-                        'aprobada', 'aprobado' => 'success',
-                        'rechazada', 'rechazado' => 'danger',
+                        'en_revision' => 'info',
+                        'pre_aprobada' => 'warning',
+                        'programada' => 'success',
+                        'rechazada' => 'danger',
                         'borrador' => 'gray',
                         default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => ucfirst($state->value ?? $state)),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Fecha Creación')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable(),
+            ])
+            ->actions([
+                // ✅ En widgets, usa Action con URL (no ViewAction)
+                Tables\Actions\Action::make('ver')
+                    ->label('Ver')
+                    ->icon('heroicon-o-eye')
+                    ->url(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record])),
             ]);
     }
 }

@@ -105,9 +105,9 @@ class ViewSolicitudTransporte extends ViewRecord
                     in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
                 ),
 
-            // PROGRAMAR (tu "aprobar" real) SOLO cuando está PRE_APROBADA
-            Actions\Action::make('programar')
-                ->label('Programar')
+            // PROGRAMAR ('aprobar') SOLO cuando está PRE_APROBADA
+            Actions\Action::make('aprobar')
+                ->label('Programar y Aprobar')
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
                 ->modalHeading('Programar Solicitud')
@@ -122,7 +122,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
 
-                    $record->estado = EstadoSolicitudEnum::PROGRAMADA;
+                    $record->estado = EstadoSolicitudEnum::APROBADA;
                     $record->comentario_jefe = $data['comentario_jefe'];
                     $record->decidido_por = auth()->id();
                     $record->decidido_en = now();
@@ -142,7 +142,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::APROBAR->value,
                         'user_id'      => auth()->id(),
-                        'datos_extra'  => [
+                        'datos_extras'  => [
                             'comentario' => $data['comentario_jefe'],
                         ],
                     ]);
@@ -195,7 +195,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
                 })
                 ->visible(fn (SolicitudTransporte $record) =>
-                    in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+                    in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)
                 ),
         ];
     }

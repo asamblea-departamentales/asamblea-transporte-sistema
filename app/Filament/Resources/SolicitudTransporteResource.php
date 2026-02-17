@@ -105,13 +105,23 @@ class SolicitudTransporteResource extends Resource
                 ->collapsed(false)
                 ->compact(),
 
-            // ✅ DECISIÓN / AUDITORÍA (colapsable)
+            //  DECISIÓN / AUDITORÍA (colapsable)
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
                     Forms\Components\Placeholder::make('comentario_jefe_ui')
                         ->label('Observaciones de Jefatura')
                         ->content(fn (SolicitudTransporte $record) => $record->comentario_jefe ?? '-')
                         ->columnSpanFull(),
+
+                    Forms\Components\Placeholder::make('vehiculo_ui')
+                        ->label('Vehículo Asignado')
+                        ->content(fn (SolicitudTransporte $record) => $record->vehiculo ? "{$record->vehiculo->placa} - {$record->vehiculo->tipo->nombre}" : '-')
+                        ->columnSpanFull(),
+                        
+                    Forms\Components\Placeholder::make('motorista_ui')
+                        ->label('Motorista Asignado')
+                        ->content(fn (SolicitudTransporte $record) => $record->motorista ? "{$record->motorista->nombre} - {$record->motorista->dui}" : '-')
+                        ->columnSpanFull(),    
 
                     Forms\Components\Placeholder::make('autorizador_ui')
                         ->label('Autorizado por')
@@ -126,7 +136,7 @@ class SolicitudTransporteResource extends Resource
                 ->collapsed()
                 ->compact(),
 
-            // ✅ HISTORIAL (el jefe lo agradece)
+            // ✅ HISTORIAL
             Forms\Components\Section::make('Historial de estados')
                 ->schema([
                     Forms\Components\Repeater::make('historial_ui')
@@ -206,6 +216,7 @@ class SolicitudTransporteResource extends Resource
         EstadoSolicitudEnum::BORRADOR => 'Borrador',
         EstadoSolicitudEnum::PENDIENTE => 'Pendiente',
         EstadoSolicitudEnum::EN_REVISION => 'En revisión',
+        EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada', //Agregado
         EstadoSolicitudEnum::APROBADA => 'Aprobada',
         EstadoSolicitudEnum::RECHAZADA => 'Rechazada',
         EstadoSolicitudEnum::PROGRAMADA => 'Programada',
@@ -220,6 +231,8 @@ class SolicitudTransporteResource extends Resource
         EstadoSolicitudEnum::PRE_APROBADA => 'warning', //Agregado
         EstadoSolicitudEnum::APROBADA => 'success',
         EstadoSolicitudEnum::RECHAZADA => 'danger',
+        EstadoSolicitudEnum::PROGRAMADA => 'info',
+        EstadoSolicitudEnum::EN_EJECUCION => 'primary',
         EstadoSolicitudEnum::COMPLETADA => 'success',
         EstadoSolicitudEnum::CANCELADA => 'gray',
         default => 'primary',
@@ -366,7 +379,7 @@ class SolicitudTransporteResource extends Resource
     ->label('Aprobar')
     ->color('success')
     ->icon('heroicon-o-check-circle')
-    ->modalHeading('Aprobar Solicitud')
+    ->modalHeading('Aprobar y Asignar Vehiculo')
     ->modalSubmitActionLabel('Aprobar y Programar')
     ->form([
         Forms\Components\Textarea::make('comentario_jefe')
@@ -374,14 +387,56 @@ class SolicitudTransporteResource extends Resource
             ->rows(4)
             ->required()
             ->maxLength(2000),
-    ])
+
+        Forms\Components\Section::make('Asignación de Vehículo y Motorista')
+            ->schema([
+                Forms\Components\Select::make('vehiculo_id')
+                    ->label('Vehículo')
+                    ->options(function () {
+                        return \App\Models\Vehiculo::where('activo', true)
+                            ->with('tipo')
+                            ->get()
+                            ->mapWithKeys(fn ($v) => [
+                                $v->id => "{$v->placa} - {$v->tipo->nombre} ({$v->capacidad_personas} personas)"
+                            ]);
+                    })
+                    ->searchable()
+                    ->required()
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        // Auto-seleccionar motorista asignado al vehículo
+                        $vehiculo = \App\Models\Vehiculo::find($state);
+                        $asignacion = $vehiculo?->asignacionVigenteMotorista;
+                        if ($asignacion) {
+                            $set('motorista_id', $asignacion->motorista_id);
+                        }
+                    })
+                    ->helperText('Selecciona el vehículo a asignar'),
+                
+                Forms\Components\Select::make('motorista_id')
+                    ->label('Motorista')
+                    ->options(function () {
+                        return \App\Models\Motorista::where('activo', true)
+                            ->get()
+                            ->mapWithKeys(fn ($m) => [
+                                $m->id => "{$m->nombre} - {$m->dui}"
+                            ]);
+                    })
+                    ->searchable()
+                    ->required()
+                    ->helperText('Motorista asignado (se auto-completa según el vehículo)'),
+            ])
+            ->columns(2),
+    ])    
     ->action(function (SolicitudTransporte $record, array $data) {
         $estadoAnterior = $record->estado;
 
-        $record->estado = EstadoSolicitudEnum::PROGRAMADA; // ✅ ahora queda PROGRAMADA
-        $record->comentario_jefe = $data['comentario_jefe']; // ✅ motivo obligatorio
+        $record->estado = EstadoSolicitudEnum::PROGRAMADA; //  ahora queda PROGRAMADA
+        $record->comentario_jefe = $data['comentario_jefe']; //  motivo obligatorio
         $record->decidido_por = auth()->id();
         $record->decidido_en = now();
+        $record->vehiculo_id = $data['vehiculo_id']; // asignación de vehículo
+        $record->motorista_id = $data['motorista_id']; // asignación de
         $record->save();
 
         // HISTORIAL
@@ -402,6 +457,8 @@ class SolicitudTransporteResource extends Resource
             'user_id'      => auth()->id(),
             'datos_extra'  => [
                 'comentario' => $data['comentario_jefe'],
+                'vehiculo_id' => $data['vehiculo_id'],
+                'motorista_id' => $data['motorista_id'],
             ],
         ]);
     })
@@ -457,7 +514,7 @@ class SolicitudTransporteResource extends Resource
             ]);
         })
         ->visible(fn (SolicitudTransporte $record) =>
-            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)
         ),
 ])
 
