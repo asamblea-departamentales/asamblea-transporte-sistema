@@ -29,6 +29,7 @@ class SolicitudTransporte extends Model
         'destino_adicional',
         'vehiculo_id',
         'motorista_id',
+        'tipo_vehiculo_id',
     ];
 
     protected $casts = [
@@ -89,5 +90,10 @@ public function getDestinoAdicionalAttribute($value)
     return $this->hasMany(HistorialEstado::class, 'entidad_id')
         ->where('entidad_tipo', 'solicitud_transporte')
         ->latest();
+}
+//Para tipo de vehículo
+public function tipoVehiculo()
+{
+    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
 }
 }

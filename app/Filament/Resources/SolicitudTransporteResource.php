@@ -208,6 +208,11 @@ class SolicitudTransporteResource extends Resource
                         PrioridadSolicitudEnum::BAJA => 'success',
                     }),
 
+                    Tables\Columns\TextColumn::make('tipoVehiculo.nombre')
+                    ->label('Tipo de Vehículo')
+                    ->badge()
+                    ->color('gray'),
+
                 // Estado configurado correctamente con el Enum
                 Tables\Columns\TextColumn::make('estado')
     ->label('Estado')
