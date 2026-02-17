@@ -182,13 +182,14 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     ->dateTime('d/m/Y H:i')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('prioridad')
-                    ->badge()
-                    ->color(fn ($state) => match ($state->value ?? $state) {
-                        'ALTA' => 'danger',
-                        'MEDIA' => 'warning',
-                        'BAJA' => 'success',
-                        default => 'gray',
-                    }),
+    ->badge()
+    ->formatStateUsing(fn ($state) => strtoupper($state->value ?? $state)) // Evita el error de $s
+    ->color(fn ($state) => match ($state->value ?? $state) {
+        'alta' => 'danger',
+        'media' => 'warning',
+        'baja' => 'success',
+        default => 'gray',
+    }),
                 Tables\Columns\TextColumn::make('estado')
                     ->badge(),
             ])

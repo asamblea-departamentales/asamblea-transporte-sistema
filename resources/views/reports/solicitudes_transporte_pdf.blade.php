@@ -36,17 +36,18 @@
         </thead>
         <tbody>
         @foreach($rows as $r)
-            <tr>
-                <td>{{ $r->codigo }}</td>
-                <td>{{ $r->unidad?->nombre }}</td>
-                <td>{{ $r->solicitante?->name }}</td>
-                <td>{{ optional($r->fecha_salida)->format('d/m/Y H:i') }}</td>
-                <td>{{ $r->origen }}</td>
-                <td>{{ $r->destino }}</td>
-                <td>{{ strtoupper($r->prioridad) }}</td>
-                <td>{{ is_object($r->estado) ? $r->estado->value : $r->estado }}</td>
-            </tr>
-        @endforeach
+    <tr>
+        <td>{{ $r->codigo }}</td>
+        <td>{{ $r->unidad?->nombre ?? 'N/A' }}</td>
+        <td>{{ $r->solicitante?->name ?? 'N/A' }}</td>
+        <td>{{ $r->fecha_salida ? $r->fecha_salida->format('d/m/Y H:i') : 'N/A' }}</td>
+        <td>{{ $r->origen }}</td>
+        <td>{{ $r->destino }}</td>
+        {{-- CORRECCIÓN AQUÍ: Usamos ->value o ->name --}}
+        <td>{{ strtoupper($r->prioridad->value ?? $r->prioridad) }}</td>
+        <td>{{ $r->estado->value ?? $r->estado }}</td>
+    </tr>
+@endforeach
         </tbody>
     </table>
 </body>
