@@ -85,13 +85,25 @@ class SolicitudTransporteResource extends Resource
                         ->label('Destino')
                         ->content(fn (SolicitudTransporte $record) => $record->destino ?? '-'),
 
-          Forms\Components\Placeholder::make('destino_adicional_ui')
+         Forms\Components\Placeholder::make('destino_adicional_ui')
     ->label('Destinos Adicionales')
     ->content(function (SolicitudTransporte $record) {
         if (!$record->destino_adicional) return 'Sin destinos adicionales';
-        
-        $destinos = array_map('trim', explode(',', $record->destino_adicional));
-        return implode(' • ', $destinos); // Separados por bullet points
+
+        // 1. Separamos por el guion que divide las direcciones completas
+        // Usamos trim para limpiar espacios alrededor
+        $destinos = array_map('trim', explode(' - ', $record->destino_adicional));
+
+        // 2. Creamos una lista HTML para que se vea ordenado y no se amontone
+        $html = '<ul style="list-style-type: disc; margin-left: 20px; line-height: 1.5;">';
+        foreach ($destinos as $destino) {
+            if (!empty($destino)) {
+                $html .= '<li style="margin-bottom: 8px; color: #374151;">' . e($destino) . '</li>';
+            }
+        }
+        $html .= '</ul>';
+
+        return new \Illuminate\Support\HtmlString($html);
     }),
                 ])
                 ->columns(3)
