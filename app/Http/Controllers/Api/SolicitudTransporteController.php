@@ -48,29 +48,33 @@ class SolicitudTransporteController extends Controller
         'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
         'motivo_actividad'      => ['required', 'string'],
         'origen'                => ['required', 'string'],
-        'destino_principal'     => ['required', 'string'], // Mapeado del front
+        'destino_principal'     => ['required', 'string'], 
+        'destino_adicional'     => ['nullable', 'string'], // 1. Agregado a la validación
         'fecha_salida'          => ['required', 'date'],
         'fecha_retorno'         => ['nullable', 'date', 'after_or_equal:fecha_salida'],
-        'hora_salida'           => ['required'], // Agregado ya que viene en el JSON
+        'hora_salida'           => ['required'], 
         'cantidad_personas'     => ['required', 'integer', 'min:1'],
         'prioridad'             => ['required', 'string'],
         'tipo_vehiculo'         => ['required', 'string'],
-        'encargado'             => ['required', 'string'], // Nuevo campo del JSON
-        'subencargado'          => ['nullable', 'string'], // Nuevo campo del JSON
+        'encargado'             => ['required', 'string'], 
+        'subencargado'          => ['nullable', 'string'], 
     ]);
 
     // --- MAPEO DE DATOS ---
-    // Extraemos los valores que tienen nombres diferentes en la base de datos
     $tipoVehiculoNombre = $data['tipo_vehiculo'];
     $destinoReal = $data['destino_principal'];
     
-    // Limpiamos el array para el mass assignment (evita errores de columna no encontrada)
-    unset($data['tipo_vehiculo'], $data['destino_principal']);
+    // 2. Extraemos el destino adicional si existe
+    $destinoAdicional = $data['destino_adicional'] ?? null;
+
+    // Limpiamos el array
+    unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
 
     $solicitud = SolicitudTransporte::create([
         ...$data,
-        'destino'              => $destinoReal,        // Se guarda en la columna 'destino'
-        'tipo_vehiculo_nombre' => $tipoVehiculoNombre, // Se guarda en la columna 'tipo_vehiculo_nombre'
+        'destino'              => $destinoReal,
+        'destino_adicional'    => $destinoAdicional, // 3. Se guarda en la columna correspondiente
+        'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
         'solicitante_id'       => Auth::id(),
         'estado'               => EstadoSolicitudEnum::BORRADOR,
     ]);
@@ -78,7 +82,6 @@ class SolicitudTransporteController extends Controller
     // El service cambia el estado de BORRADOR a PENDIENTE y notifica
     $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
-    // Cargamos relaciones para la respuesta (asegúrate que se llamen así en tu modelo)
     return response()->json(
         $solicitud->fresh()->load(['unidad', 'solicitante']), 
         201
