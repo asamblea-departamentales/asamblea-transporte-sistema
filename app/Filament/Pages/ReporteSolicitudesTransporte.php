@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Exports\SolicitudesTransporteExport;
 use App\Models\SolicitudTransporte;
 use App\Models\UnidadSolicitante;
@@ -27,21 +28,19 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
     protected static ?string $navigationGroup = 'Reportes';
     protected static ?string $navigationLabel = 'Reporte Solicitudes Transporte';
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
-
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.reporte-solicitudes-transporte';
 
-    // Filtros
-    public ?string $date_field = 'fecha_salida'; // fecha_salida | created_at
+    // Propiedades de Filtros (Sincronizadas con Livewire)
+    public ?string $date_field = 'fecha_salida';
     public ?string $date_from = null;
     public ?string $date_to = null;
-
     public ?int $unidad_solicitante_id = null;
     public ?string $estado = null;
     public ?string $prioridad = null;
 
-    // KPIs
+    // Propiedades de KPIs
     public int $kpi_total = 0;
     public int $kpi_pendientes = 0;
     public int $kpi_aprobadas = 0;
@@ -49,7 +48,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
 
     public function mount(): void
     {
-        // Default: hoy (por salida)
+        // Valores por defecto: Hoy
         $this->date_from = now()->startOfDay()->toDateTimeString();
         $this->date_to   = now()->endOfDay()->toDateTimeString();
 
@@ -62,6 +61,16 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
         return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) ?? false;
     }
 
+    /**
+     * Se ejecuta automáticamente cuando cualquier propiedad de Livewire cambia
+     */
+    public function updated($propertyName)
+    {
+        if (in_array($propertyName, ['date_field', 'date_from', 'date_to', 'unidad_solicitante_id', 'estado', 'prioridad'])) {
+            $this->refreshKpis();
+        }
+    }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -70,8 +79,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action(function () {
                     $query = $this->buildQuery();
-                    $filename = 'reporte_solicitudes_transporte_' . now()->format('Ymd_His') . '.xlsx';
-
+                    $filename = 'reporte_solicitudes_' . now()->format('Ymd_His') . '.xlsx';
                     return Excel::download(new SolicitudesTransporteExport($query), $filename);
                 }),
 
@@ -84,14 +92,12 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                         ->orderBy('fecha_salida')
                         ->get();
 
-                    $rangeLabel = $this->rangeLabel();
-
                     $pdf = Pdf::loadView('reports.solicitudes_transporte_pdf', [
                         'rows' => $rows,
-                        'rangeLabel' => $rangeLabel,
+                        'rangeLabel' => $this->rangeLabel(),
                     ])->setPaper('a4', 'landscape');
 
-                    $filename = 'reporte_solicitudes_transporte_' . now()->format('Ymd_His') . '.pdf';
+                    $filename = 'reporte_solicitudes_' . now()->format('Ymd_His') . '.pdf';
                     return response()->streamDownload(fn () => print($pdf->output()), $filename);
                 }),
         ];
@@ -100,7 +106,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
     public function form(Form $form): Form
     {
         return $form->schema([
-            Forms\Components\Section::make('Filtros')
+            Forms\Components\Section::make('Filtros de Reporte')
                 ->columns(4)
                 ->schema([
                     Forms\Components\Select::make('date_field')
@@ -123,73 +129,33 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
 
                     Forms\Components\Select::make('unidad_solicitante_id')
                         ->label('Unidad')
-                        ->options(fn () => UnidadSolicitante::query()->orderBy('nombre')->pluck('nombre', 'id')->all())
+                        ->options(fn () => UnidadSolicitante::orderBy('nombre')->pluck('nombre', 'id'))
                         ->searchable()
-                        ->preload()
                         ->live(),
 
                     Forms\Components\Select::make('estado')
                         ->label('Estado')
-                        ->options([
-                            EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
-                            EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
-                            EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
-                            EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
-                            EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
-                            EstadoSolicitudEnum::PROGRAMADA->value => 'Programada',
-                            EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
-                            EstadoSolicitudEnum::COMPLETADA->value => 'Completada',
-                            EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
-                        ])
+                        ->options(collect(EstadoSolicitudEnum::cases())->mapWithKeys(fn ($case) => [$case->value => $case->name]))
                         ->searchable()
                         ->live(),
 
                     Forms\Components\Select::make('prioridad')
                         ->label('Prioridad')
-                        ->options([
-                            'baja' => 'Baja',
-                            'media' => 'Media',
-                            'alta' => 'Alta',
-                        ])
+                        ->options(collect(PrioridadSolicitudEnum::cases())->mapWithKeys(fn ($case) => [$case->value => $case->value]))
                         ->live(),
 
                     Forms\Components\Actions::make([
-                        Forms\Components\Actions\Action::make('aplicar')
-                            ->label('Aplicar filtros')
+                        Forms\Components\Actions\Action::make('limpiar')
+                            ->label('Limpiar Filtros')
+                            ->color('gray')
                             ->action(function () {
-                                $this->refreshKpis();
-                                $this->resetTable();
-                            })
-                            ->color('primary'),
-
-                        Forms\Components\Actions\Action::make('hoy')
-                            ->label('Hoy')
-                            ->action(function () {
-                                $this->date_from = now()->startOfDay()->toDateTimeString();
-                                $this->date_to = now()->endOfDay()->toDateTimeString();
+                                $this->date_from = null;
+                                $this->date_to = null;
+                                $this->unidad_solicitante_id = null;
+                                $this->estado = null;
+                                $this->prioridad = null;
                                 $this->form->fill($this->getFilterState());
                                 $this->refreshKpis();
-                                $this->resetTable();
-                            }),
-
-                        Forms\Components\Actions\Action::make('mes')
-                            ->label('Este mes')
-                            ->action(function () {
-                                $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
-                                $this->form->fill($this->getFilterState());
-                                $this->refreshKpis();
-                                $this->resetTable();
-                            }),
-
-                        Forms\Components\Actions\Action::make('anio')
-                            ->label('Este año')
-                            ->action(function () {
-                                $this->date_from = now()->startOfYear()->startOfDay()->toDateTimeString();
-                                $this->date_to = now()->endOfYear()->endOfDay()->toDateTimeString();
-                                $this->form->fill($this->getFilterState());
-                                $this->refreshKpis();
-                                $this->resetTable();
                             }),
                     ])->columnSpanFull(),
                 ]),
@@ -202,32 +168,48 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
             ->query(fn () => $this->buildQuery()->with(['unidad', 'solicitante']))
             ->defaultSort('fecha_salida', 'asc')
             ->columns([
-                Tables\Columns\TextColumn::make('codigo')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('unidad.nombre')->label('Unidad')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('solicitante.name')->label('Solicitante')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('origen')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('destino')->sortable()->searchable(),
-                Tables\Columns\TextColumn::make('fecha_salida')->label('Salida')->dateTime('d/m/Y H:i')->sortable(),
-                Tables\Columns\TextColumn::make('prioridad')->badge()->formatStateUsing(fn ($s) => strtoupper($s)),
-                Tables\Columns\TextColumn::make('estado')->badge(),
+                Tables\Columns\TextColumn::make('codigo')
+                    ->label('Código')
+                    ->sortable()
+                    ->searchable(),
+                Tables\Columns\TextColumn::make('unidad.nombre')
+                    ->label('Unidad')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('solicitante.name')
+                    ->label('Solicitante')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('fecha_salida')
+                    ->label('Salida')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable(),
+                Tables\Columns\TextColumn::make('prioridad')
+                    ->badge()
+                    ->color(fn ($state) => match ($state->value ?? $state) {
+                        'ALTA' => 'danger',
+                        'MEDIA' => 'warning',
+                        'BAJA' => 'success',
+                        default => 'gray',
+                    }),
+                Tables\Columns\TextColumn::make('estado')
+                    ->badge(),
             ])
-            ->paginated([10, 25, 50])
-            ->bulkActions([]);
+            ->paginated([10, 25, 50]);
     }
 
     private function buildQuery(): Builder
     {
         $q = SolicitudTransporte::query();
 
-        // Rango
+        // Filtro de Rango de Fechas
+        $column = $this->date_field ?? 'fecha_salida';
         if ($this->date_from) {
-            $q->where($this->date_field ?? 'fecha_salida', '>=', $this->date_from);
+            $q->where($column, '>=', $this->date_from);
         }
         if ($this->date_to) {
-            $q->where($this->date_field ?? 'fecha_salida', '<=', $this->date_to);
+            $q->where($column, '<=', $this->date_to);
         }
 
-        // Filtros
+        // Filtros Adicionales
         if ($this->unidad_solicitante_id) {
             $q->where('unidad_solicitante_id', $this->unidad_solicitante_id);
         }
@@ -241,18 +223,33 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
         return $q;
     }
 
+    /**
+     * MODIFICACIÓN: refreshKpis ahora clona la base de filtros pero ignora el filtro de estado
+     * para que los conteos no se pongan en cero al seleccionar un estado específico.
+     */
     private function refreshKpis(): void
     {
-        $base = $this->buildQuery();
+        // Creamos una base que tenga fechas y unidad, pero NO el estado ni prioridad
+        $baseParaKpis = SolicitudTransporte::query();
+        $column = $this->date_field ?? 'fecha_salida';
+        
+        if ($this->date_from) $baseParaKpis->where($column, '>=', $this->date_from);
+        if ($this->date_to)   $baseParaKpis->where($column, '<=', $this->date_to);
+        if ($this->unidad_solicitante_id) $baseParaKpis->where('unidad_solicitante_id', $this->unidad_solicitante_id);
 
-        $this->kpi_total = (clone $base)->count();
-        $this->kpi_pendientes = (clone $base)->whereIn('estado', [
-            EstadoSolicitudEnum::PENDIENTE->value,
-            EstadoSolicitudEnum::EN_REVISION->value,
-        ])->count();
+        $this->kpi_total = (clone $baseParaKpis)->count();
+        
+        $this->kpi_pendientes = (clone $baseParaKpis)
+            ->whereIn('estado', [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA])
+            ->count();
 
-        $this->kpi_aprobadas = (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA->value)->count();
-        $this->kpi_rechazadas = (clone $base)->where('estado', EstadoSolicitudEnum::RECHAZADA->value)->count();
+        $this->kpi_aprobadas = (clone $baseParaKpis)
+            ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA])
+            ->count();
+
+        $this->kpi_rechazadas = (clone $baseParaKpis)
+            ->where('estado', EstadoSolicitudEnum::RECHAZADA)
+            ->count();
     }
 
     private function getFilterState(): array
@@ -269,11 +266,8 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
 
     private function rangeLabel(): string
     {
-        $from = $this->date_from ? \Carbon\Carbon::parse($this->date_from)->format('d/m/Y H:i') : 'N/A';
-        $to   = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y H:i') : 'N/A';
-        $tipo = $this->date_field === 'created_at' ? 'Creación' : 'Salida';
-
-        return "{$tipo}: {$from} - {$to}";
+        $from = $this->date_from ? \Carbon\Carbon::parse($this->date_from)->format('d/m/Y') : 'Inicio';
+        $to   = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
+        return "Periodo: {$from} al {$to}";
     }
 }
-
