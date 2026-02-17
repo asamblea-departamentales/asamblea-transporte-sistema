@@ -115,13 +115,26 @@ export default function TransportStep3Page() {
 
   // 1. Preparar Destinos
   const listaDestinos = payload.destinos || [];
-  // BACKEND: Pide "destino_principal"
   const destinoPrincipal = listaDestinos[0]?.address || "Sin destino especificado";
-  
-  // BACKEND: Pide "destino_adicional" para los extras
   const destinosExtras = listaDestinos.slice(1)
     .map(d => d.address)
     .join(" -> ");
+
+  // 2. Preparar el Motivo + Encargados
+  const infoEncargado = `Encargado: ${payload.encargado}` + 
+                        (payload.subencargado ? ` / Sub: ${payload.subencargado}` : "");
+  const motivoFinal = `Actividad de transporte. ${infoEncargado}`;
+
+  // 3. TRUCO DE LA HORA (CRUCIAL):
+  // El backend valida 'hora_salida', pero guarda en 'fecha_salida'.
+  // Así que enviamos la fecha combinada para que se guarde bien,
+  // y la hora suelta para que pase la validación.
+  
+  const fechaYHoraCombinada = `${payload.fecha} ${payload.hora}:00`; 
+  // Resultado: "2026-02-18 14:30:00"
+
+  // Para el retorno, usamos el final del día para evitar error "after_or_equal"
+  const fechaRetornoFinal = `${payload.fecha} 23:59:59`;
 
   const res = await fetch(`${API_BASE}/api/transport-requests`, {
     method: "POST",
@@ -132,33 +145,26 @@ export default function TransportStep3Page() {
       "ngrok-skip-browser-warning": "true",
     },
     body: JSON.stringify({
-      // ─── CORRECCIONES BASADAS EN EL ERROR ───
+      // ─── FECHAS Y HORAS ───
+      // Esto es lo que se guardará en la base de datos (DateTime):
+      fecha_salida: fechaYHoraCombinada, 
       
-      // 1. El error pedía "destino_principal"
+      // Esto es SOLO para que el validador de Laravel te deje pasar:
+      hora_salida: payload.hora,         
+
+      // Esto satisface la validación after_or_equal:
+      fecha_retorno: fechaRetornoFinal,  
+
+      // ─── RESTO DE DATOS ───
       destino_principal: destinoPrincipal,
-
-      // 2. El error pedía "encargado" explícitamente
       encargado: payload.encargado,
-
-      // 3. El error pedía "tipo_vehiculo"
       tipo_vehiculo: payload.tipoVehiculo, 
-
-      // ─── OTROS CAMPOS NECESARIOS ───
-      fecha_salida: payload.fecha,
-      hora_salida: payload.hora, // Requerido por validación anterior
-      fecha_retorno: payload.fecha, // Para evitar error "after_or_equal"
 
       cantidad_personas: parseInt(payload.pasajeros || "1"),
       origen: payload.origen,
-      
-      // El backend parece usar "destino_adicional" para info extra de ruta
       destino_adicional: destinosExtras || null, 
-      
-      // Enviamos el subencargado aquí por si acaso el backend lo acepta,
-      // o si no, lo concatenamos en motivo también para asegurarnos.
       subencargado: payload.subencargado,
-
-      motivo_actividad: "Actividad de transporte" + (payload.subencargado ? ` (Sub: ${payload.subencargado})` : ""),
+      motivo_actividad: motivoFinal,
       
       unidad_solicitante_id: 1, 
       prioridad: "media",
@@ -169,7 +175,6 @@ export default function TransportStep3Page() {
   try { json = await res.json(); } catch { /* ignore */ }
 
   if (!res.ok) {
-    // Si falla, mostramos los errores exactos
     const errorDetail = json?.errors 
       ? Object.entries(json.errors).map(([k, v]: any) => `${k}: ${v[0]}`).join("\n")
       : json?.message;
