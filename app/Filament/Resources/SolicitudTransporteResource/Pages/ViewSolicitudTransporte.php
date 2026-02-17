@@ -118,11 +118,44 @@ class ViewSolicitudTransporte extends ViewRecord
                         ->rows(4)
                         ->required()
                         ->maxLength(2000),
+
+                    Forms\Components\Section::make('Asignación de Vehículo y Motorista')
+            ->schema([
+                Forms\Components\Select::make('vehiculo_id')
+                    ->label('Vehículo')
+                    ->options(function () {
+                        return \App\Models\Vehiculo::where('activo', true)
+                            ->with('tipo')
+                            ->get()
+                            ->mapWithKeys(fn ($v) => [
+                                $v->id => "{$v->placa} - {$v->tipo->nombre} ({$v->capacidad_personas} cap.)"
+                            ]);
+                    })
+                    ->searchable()
+                    ->required()
+                    ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        $vehiculo = \App\Models\Vehiculo::find($state);
+                        // Asegúrate de que la relación 'asignacionVigenteMotorista' exista en tu modelo Vehiculo
+                        $asignacion = $vehiculo?->asignacionVigenteMotorista;
+                        if ($asignacion) {
+                            $set('motorista_id', $asignacion->motorista_id);
+                        }
+                    }),
+                
+                Forms\Components\Select::make('motorista_id')
+                    ->label('Motorista')
+                    ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
+                    ->searchable()
+                    ->required(),
+            ])->columns(2),    
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
 
                     $record->estado = EstadoSolicitudEnum::APROBADA;
+                    $record->vehiculo_id = $data['vehiculo_id'];
+                    $record->motorista_id = $data['motorista_id'];
                     $record->comentario_jefe = $data['comentario_jefe'];
                     $record->decidido_por = auth()->id();
                     $record->decidido_en = now();
@@ -144,6 +177,8 @@ class ViewSolicitudTransporte extends ViewRecord
                         'user_id'      => auth()->id(),
                         'datos_extras'  => [
                             'comentario' => $data['comentario_jefe'],
+                            'vehiculo_id' => $data['vehiculo_id'],
+                            'motorista_id' => $data['motorista_id'],
                         ],
                     ]);
                 })
