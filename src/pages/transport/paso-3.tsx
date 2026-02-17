@@ -51,20 +51,7 @@ type ApiSubmitResponse = {
   solicitudId?: string;
   message?: string;
 };
-function combineDateTimeISO(dateStr?: string, timeStr?: string): string | null {
-  if (!dateStr) return null;
-  
-  // Si no hay hora, asumimos las 00:00
-  const time = timeStr || "00:00";
-  
-  // 1. Creamos la fecha combinando ambos strings
-  // El navegador interpretará esto en tu zona horaria local (El Salvador)
-  const fechaLocal = new Date(`${dateStr}T${time}:00`);
 
-  // 2. Convertimos a ISO String (UTC)
-  // Esto añade la "T", los milisegundos y la "Z" al final.
-  return fechaLocal.toISOString(); 
-}
 
 export default function TransportStep3Page() {
   const navigate = useNavigate();
@@ -124,64 +111,88 @@ export default function TransportStep3Page() {
   }
 
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-  const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token");
 
-  // Combinamos fecha y hora aquí
-  const fechaSalidaISO = combineDateTimeISO(payload.fecha, payload.hora);
+    // 1. Preparar Destinos
+    // El backend espera 'destino' (string) y 'destino_adicional' (string)
+    const listaDestinos = payload.destinos || [];
+    const destinoPrincipal = listaDestinos[0]?.address || "Sin destino especificado";
+    
+    // Unimos los destinos extras (2, 3, 4...) en una sola cadena de texto
+    const destinosExtras = listaDestinos.slice(1)
+      .map(d => d.address)
+      .join(" -> ");
 
-  const res = await fetch(`${API_BASE}/api/transport-requests`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-      "ngrok-skip-browser-warning": "true",
-    },
-    body: JSON.stringify({
-      // ── Paso 1 MODIFICADO ──────────────────────────────
-      tipo_vehiculo: payload.tipoVehiculo,
-      
-      // AQUI ESTA EL CAMBIO: Enviamos todo junto en fecha_salida
-      fecha_salida: fechaSalidaISO, 
-      
-      // ELIMINAMOS hora_salida (ya va incluida arriba)
-      // hora_salida: payload.hora || null, 
+    // 2. Preparar el Motivo + Encargados
+    // COMO EL BACKEND NO TIENE CAMPO 'ENCARGADO', lo guardamos en el motivo
+    // para no perder el dato.
+    const infoEncargado = `Encargado: ${payload.encargado}` + 
+                          (payload.subencargado ? ` / Sub: ${payload.subencargado}` : "");
+    
+    // Unimos motivo base + info de encargados
+    const motivoFinal = `Actividad de transporte. ${infoEncargado}`;
 
-      encargado: payload.encargado,
-      subencargado: payload.subencargado?.trim() || null,
-      cantidad_personas: parseInt(payload.pasajeros || "1"),
+    // 3. Mapeo exacto para tu Modelo Laravel
+    const dataToSend = {
+      // FECHAS (Separadas para complacer al validador)
+      fecha_salida: payload.fecha,
+      hora_salida: payload.hora, 
       
-      // ── Paso 2 (Sin cambios) ──────────────────────────
-      origen: payload.origen,
-      destino_principal: (payload.destinos || [])[0]?.address || "Sin destino",
-      destinos: (payload.destinos || [])
-        .filter((d) => d.address?.trim())
-        .map((d, i) => ({ orden: i + 1, direccion: d.address })),
-      
-      // ── Campos fijos ──────────────────────────────────
-      unidad_solicitante_id: 1,
-      motivo_actividad: "Actividad de transporte",
-      
-      // Nota: Si fecha_retorno también necesita ser ISO, usa la misma función
+      // Fecha retorno: enviamos la misma que salida para evitar error "after_or_equal"
       fecha_retorno: payload.fecha, 
+
+      // VEHÍCULO
+      // Tu modelo usa 'tipo_vehiculo_nombre'. Enviamos el ID (ej: "sedan")
+      tipo_vehiculo_nombre: payload.tipoVehiculo, 
+
+      // CANTIDAD
+      cantidad_personas: parseInt(payload.pasajeros || "1"),
+
+      // RUTA
+      origen: payload.origen,
+      destino: destinoPrincipal,
+      destino_adicional: destinosExtras || null, // Guardamos los extras aquí
+
+      // CAMPOS DE CONTROL (Concatenados porque no existen columnas propias)
+      motivo_actividad: motivoFinal,
+
+      // VALORES FIJOS REQUERIDOS
+      unidad_solicitante_id: 1, // Ajustar si tienes el ID real del usuario
       prioridad: "media",
-    }),
-  });
+      
+      // Aseguramos que el estado inicial sea pendiente (si el backend no lo pone por defecto)
+      estado: "pendiente" 
+    };
 
-  let json: any = null;
-  try { json = await res.json(); } catch { /* ignore */ }
+    console.log("Enviando al backend:", dataToSend);
 
-  if (!res.ok) {
-    throw new Error(json?.message || "No se pudo enviar la solicitud.");
+    const res = await fetch(`${API_BASE}/api/transport-requests`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json",
+        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify(dataToSend),
+    });
+
+    let json: any = null;
+    try { json = await res.json(); } catch { /* ignore */ }
+
+    if (!res.ok) {
+      const errorDetail = json?.errors 
+        ? Object.values(json.errors).flat().join(", ")
+        : json?.message;
+      throw new Error(errorDetail || "No se pudo enviar la solicitud.");
+    }
+
+    return {
+      ok: true,
+      solicitudId: json?.codigo || json?.data?.codigo || json?.id, // Intentamos leer el código TR-2026...
+      message: json?.message,
+    };
   }
-
-  return {
-    ok: true,
-    solicitudId: json?.id || json?.data?.id,
-    message: json?.message,
-  };
-}
-
   async function handleSubmit() {
     setErrorMsg(null);
     setSubmitting(true);
