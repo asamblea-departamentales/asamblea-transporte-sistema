@@ -51,6 +51,20 @@ type ApiSubmitResponse = {
   solicitudId?: string;
   message?: string;
 };
+function combineDateTimeISO(dateStr?: string, timeStr?: string): string | null {
+  if (!dateStr) return null;
+  
+  // Si no hay hora, asumimos las 00:00
+  const time = timeStr || "00:00";
+  
+  // 1. Creamos la fecha combinando ambos strings
+  // El navegador interpretará esto en tu zona horaria local (El Salvador)
+  const fechaLocal = new Date(`${dateStr}T${time}:00`);
+
+  // 2. Convertimos a ISO String (UTC)
+  // Esto añade la "T", los milisegundos y la "Z" al final.
+  return fechaLocal.toISOString(); 
+}
 
 export default function TransportStep3Page() {
   const navigate = useNavigate();
@@ -110,51 +124,63 @@ export default function TransportStep3Page() {
   }
 
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-    const token = localStorage.getItem("auth_token");
+  const token = localStorage.getItem("auth_token");
 
-    const res = await fetch(`${API_BASE}/api/transport-requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Accept": "application/json",
-        ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify({
-        // ── Paso 1 ──────────────────────────────────
-        tipo_vehiculo:         payload.tipoVehiculo,           // ← AÑADIDO
-        fecha_salida:          payload.fecha,
-        hora_salida:  payload.hora || null,
-        encargado:             payload.encargado,
-        subencargado:          payload.subencargado?.trim() || null,
-        cantidad_personas:     parseInt(payload.pasajeros || "1"),
-        // ── Paso 2 ──────────────────────────────────
-        origen:                payload.origen,
-        destino_principal:     (payload.destinos || [])[0]?.address || "Sin destino",
-        destinos:              (payload.destinos || [])
-                                 .filter((d) => d.address?.trim())
-                                 .map((d, i) => ({ orden: i + 1, direccion: d.address })),
-        // ── Campos fijos ────────────────────────────
-        unidad_solicitante_id: 1,
-        motivo_actividad:      "Actividad de transporte",
-        fecha_retorno:         payload.fecha,
-        prioridad:             "media",
-      }),
-    });
+  // Combinamos fecha y hora aquí
+  const fechaSalidaISO = combineDateTimeISO(payload.fecha, payload.hora);
 
-    let json: any = null;
-    try { json = await res.json(); } catch { /* ignore */ }
+  const res = await fetch(`${API_BASE}/api/transport-requests`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json",
+      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
+      "ngrok-skip-browser-warning": "true",
+    },
+    body: JSON.stringify({
+      // ── Paso 1 MODIFICADO ──────────────────────────────
+      tipo_vehiculo: payload.tipoVehiculo,
+      
+      // AQUI ESTA EL CAMBIO: Enviamos todo junto en fecha_salida
+      fecha_salida: fechaSalidaISO, 
+      
+      // ELIMINAMOS hora_salida (ya va incluida arriba)
+      // hora_salida: payload.hora || null, 
 
-    if (!res.ok) {
-      throw new Error(json?.message || "No se pudo enviar la solicitud.");
-    }
+      encargado: payload.encargado,
+      subencargado: payload.subencargado?.trim() || null,
+      cantidad_personas: parseInt(payload.pasajeros || "1"),
+      
+      // ── Paso 2 (Sin cambios) ──────────────────────────
+      origen: payload.origen,
+      destino_principal: (payload.destinos || [])[0]?.address || "Sin destino",
+      destinos: (payload.destinos || [])
+        .filter((d) => d.address?.trim())
+        .map((d, i) => ({ orden: i + 1, direccion: d.address })),
+      
+      // ── Campos fijos ──────────────────────────────────
+      unidad_solicitante_id: 1,
+      motivo_actividad: "Actividad de transporte",
+      
+      // Nota: Si fecha_retorno también necesita ser ISO, usa la misma función
+      fecha_retorno: payload.fecha, 
+      prioridad: "media",
+    }),
+  });
 
-    return {
-      ok: true,
-      solicitudId: json?.id || json?.data?.id,
-      message: json?.message,
-    };
+  let json: any = null;
+  try { json = await res.json(); } catch { /* ignore */ }
+
+  if (!res.ok) {
+    throw new Error(json?.message || "No se pudo enviar la solicitud.");
   }
+
+  return {
+    ok: true,
+    solicitudId: json?.id || json?.data?.id,
+    message: json?.message,
+  };
+}
 
   async function handleSubmit() {
     setErrorMsg(null);
