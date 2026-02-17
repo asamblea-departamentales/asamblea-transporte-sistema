@@ -86,8 +86,20 @@ class SolicitudTransporteResource extends Resource
                         ->content(fn (SolicitudTransporte $record) => $record->destino ?? '-'),
 
                     Forms\Components\Placeholder::make('destino_adicional_ui')
-                        ->label('Destino Adicional')
-                        ->content(fn (SolicitudTransporte $record) => $record->destino_adicional ?? 'Sin destino adicional'),
+    ->label('Destinos Adicionales')
+    ->content(function (SolicitudTransporte $record) {
+        if (!$record->destino_adicional) return 'Sin destinos adicionales';
+        
+        // Convertimos la cadena "A, B, C" en una lista HTML
+        $destinos = explode(',', $record->destino_adicional);
+        $html = '<ul class="list-disc ml-4">';
+        foreach ($destinos as $destino) {
+            $html .= '<li>' . trim($destino) . '</li>';
+        }
+        $html .= '</ul>';
+        
+        return new \Illuminate\Support\HtmlString($html);
+    }),
                 ])
                 ->columns(3)
                 ->collapsible()
