@@ -125,7 +125,7 @@ export default function NewRequestPage() {
           "Solicitudes de transporte institucional, asignación de vehículos y seguimiento en tiempo real.",
         href: "/solicitudes/transporte/paso-1",
         accent: "blue",
-        allowedRoles: ["solicitante", "admin", "supervisor", "jefe"],
+        allowedRoles: ["solicitante", "admin", "supervisor", "jefe"],//Comentario: Se agregó "solicitante" para que los usuarios con ese rol también puedan ver el módulo de transporte.
         icon: (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path
