@@ -43,31 +43,39 @@ class SolicitudTransporteController extends Controller
     /**
      * Crear solicitud (Queda como PENDIENTE tras el service)
      */
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
-            'motivo_actividad'      => ['required', 'string'],
-            'origen'                => ['required', 'string'],
-            'destino'               => ['required', 'string'],
-            'destino_adicional'     => ['nullable', 'string', 'max:255'],
-            'fecha_salida'          => ['required', 'date'],
-            'fecha_retorno'         => ['nullable', 'date', 'after_or_equal:fecha_salida'],
-            'cantidad_personas'     => ['required', 'integer', 'min:1'],
-            'prioridad'             => ['required', 'string'],
-        ]);
+   public function store(Request $request)
+{
+    $data = $request->validate([
+        'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
+        'motivo_actividad'      => ['required', 'string'],
+        'origen'                => ['required', 'string'],
+        'destino'               => ['required', 'string'],
+        'destino_adicional'     => ['nullable', 'string', 'max:255'],
+        'fecha_salida'          => ['required', 'date'],
+        'fecha_retorno'         => ['nullable', 'date', 'after_or_equal:fecha_salida'],
+        'cantidad_personas'     => ['required', 'integer', 'min:1'],
+        'prioridad'             => ['required', 'string'],
+        'tipo_vehiculo'         => ['required', 'string'], // El campo que viene del JSON
+    ]);
 
-        $solicitud = SolicitudTransporte::create([
-            ...$data,
-            'solicitante_id' => Auth::id(),
-            'estado' => EstadoSolicitudEnum::BORRADOR,
-        ]);
+    // --- MAPEO DE CAMPOS ---
+    // Removemos 'tipo_vehiculo' del array para que no intente guardarlo 
+    // en una columna que no existe y cause error.
+    $tipoVehiculo = $data['tipo_vehiculo'];
+    unset($data['tipo_vehiculo']);
 
-        // El service cambia el estado de BORRADOR a PENDIENTE y notifica
-        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+    $solicitud = SolicitudTransporte::create([
+        ...$data,
+        'tipo_vehiculo_nombre' => $tipoVehiculo, // Lo asignamos a la columna real de la DB
+        'solicitante_id'       => Auth::id(),
+        'estado'               => EstadoSolicitudEnum::BORRADOR,
+    ]);
 
-        return response()->json($solicitud->fresh()->load(['unidad', 'solicitante']), 201);
-    }
+    // El service cambia el estado de BORRADOR a PENDIENTE y notifica
+    $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+    return response()->json($solicitud->fresh()->load(['unidad', 'solicitante']), 201);
+}
 
     /**
      * Ver detalle

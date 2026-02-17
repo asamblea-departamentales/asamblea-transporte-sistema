@@ -208,8 +208,9 @@ class SolicitudTransporteResource extends Resource
                         PrioridadSolicitudEnum::BAJA => 'success',
                     }),
 
-                    Tables\Columns\TextColumn::make('tipoVehiculo.nombre')
+                    Tables\Columns\TextColumn::make('tipo_vehiculo_nombre')
                     ->label('Tipo de Vehículo')
+                    ->placeholder('No especificado') //Por si viene vacio
                     ->badge()
                     ->color('gray'),
 

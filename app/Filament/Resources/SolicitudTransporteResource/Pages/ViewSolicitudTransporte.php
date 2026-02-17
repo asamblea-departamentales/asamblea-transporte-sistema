@@ -132,8 +132,7 @@ class ViewSolicitudTransporte extends ViewRecord
             ]);
     })
     // ESTA ES LA CLAVE: El "hint" ayuda al jefe a decidir
-    ->hint(fn ($record) => "Solicitado: " . ($record->tipo_vehiculo_nombre ?? 'No especificado'))
-    ->hintColor('warning')
+    ->hint(fn ($record) => "El usuario pidió: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))    ->hintColor('warning')
     ->searchable()
     ->required()
                     ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
