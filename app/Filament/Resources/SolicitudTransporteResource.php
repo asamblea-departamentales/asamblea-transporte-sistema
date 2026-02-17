@@ -56,7 +56,7 @@ class SolicitudTransporteResource extends Resource
                         ->content(fn (SolicitudTransporte $record) => optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '-'),
 
                     Forms\Components\Placeholder::make('retorno_ui')
-                        ->label('Retorno')
+                        ->label('Retorno (Estimado)')
                         ->content(fn (SolicitudTransporte $record) => optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '-'),
 
                     Forms\Components\Placeholder::make('cantidad_personas_ui')
