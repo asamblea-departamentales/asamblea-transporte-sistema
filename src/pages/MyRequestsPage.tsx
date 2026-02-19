@@ -11,6 +11,7 @@ import {
 } from "../services/requests.service";
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
+
 type FilterState = {
   estado: RequestStatus | "";
   search: string;
@@ -23,33 +24,34 @@ type RouteInfo = {
 };
 
 // ─── CONSTANTES ───────────────────────────────────────────────────────────────
+
 const NOMINATIM_EMAIL = "app@transporte.institucional.sv";
 
 const ESTADOS: { value: RequestStatus | ""; label: string }[] = [
-  { value: "", label: "Todos" },
-  { value: "pendiente", label: "Pendiente" },
-  { value: "aprobada", label: "Aprobada" },
+  { value: "",             label: "Todos"        },
+  { value: "pendiente",    label: "Pendiente"    },
+  { value: "aprobada",     label: "Aprobada"     },
   { value: "en_ejecucion", label: "En Ejecución" },
-  { value: "completada", label: "Completada" },
-  { value: "finalizada", label: "Finalizada" },
-  { value: "rechazada", label: "Rechazada" },
-  { value: "observada", label: "Observada" },
-  { value: "borrador", label: "Borrador" },
+  { value: "completada",   label: "Completada"   },
+  { value: "finalizada",   label: "Finalizada"   },
+  { value: "rechazada",    label: "Rechazada"    },
+  { value: "observada",    label: "Observada"    },
+  { value: "borrador",     label: "Borrador"     },
 ];
 
 const STATUS_STYLES: Record<string, string> = {
-  pendiente: "bg-amber-100 text-amber-700 border-amber-200 hover:shadow-md",
-  aprobada: "bg-emerald-100 text-emerald-700 border-emerald-200 hover:shadow-md",
-  en_ejecucion: "bg-purple-100 text-purple-700 border-purple-200 hover:shadow-md",
-  completada: "bg-slate-800 text-white border-slate-600 hover:shadow-md",
-  finalizada: "bg-slate-800 text-white border-slate-600 hover:shadow-md",
-  rechazada: "bg-red-100 text-red-700 border-red-200 hover:shadow-md",
-  observada: "bg-blue-100 text-blue-700 border-blue-200 hover:shadow-md",
-  borrador: "bg-gray-100 text-gray-600 border-gray-200 hover:shadow-md",
+  pendiente:    "bg-amber-100 text-amber-700 border-amber-200",
+  aprobada:     "bg-emerald-100 text-emerald-700 border-emerald-200",
+  en_ejecucion: "bg-purple-100 text-purple-700 border-purple-200",
+  completada:   "bg-slate-800 text-white border-slate-600",
+  finalizada:   "bg-slate-800 text-white border-slate-600",
+  rechazada:    "bg-red-100 text-red-700 border-red-200",
+  observada:    "bg-blue-100 text-blue-700 border-blue-200",
+  borrador:     "bg-gray-100 text-gray-600 border-gray-200",
 };
 
 function getStatusStyle(status: string): string {
-  return STATUS_STYLES[status.toLowerCase()] ?? "bg-gray-100 text-gray-600 border-gray-200 hover:shadow-md";
+  return STATUS_STYLES[status.toLowerCase()] ?? "bg-gray-100 text-gray-600 border-gray-200";
 }
 
 function isCompleted(status: string): boolean {
@@ -57,6 +59,8 @@ function isCompleted(status: string): boolean {
 }
 
 // ─── GEOCODING / OSRM ─────────────────────────────────────────────────────────
+// ✅ URLs cambiadas a proxy Vercel para evitar CORS / TLS 425 con Nominatim
+
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(
@@ -109,12 +113,13 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   const a =
     Math.sin(dLat / 2) ** 2 +
     Math.cos((lat1 * Math.PI) / 180) *
-    Math.cos((lat2 * Math.PI) / 180) *
-    Math.sin(dLon / 2) ** 2;
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) ** 2;
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
 // ─── MAPA EN DETALLE ──────────────────────────────────────────────────────────
+
 function RequestMap({ origen, destino }: { origen: string; destino: string }) {
   const mapId = useRef(`map-detail-${Math.random().toString(36).slice(2)}`);
   const mapRef = useRef<L.Map | null>(null);
@@ -148,7 +153,7 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
       }).setView([13.7942, -88.8965], 9);
 
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
 
@@ -205,46 +210,47 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
         mapRef.current = null;
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
-    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200 hover:shadow-lg transition-shadow">
-      <div className="border-b border-slate-200 bg-slate-50 px-4 py-3 hover:bg-slate-50">
-        <p className="text-sm font-semibold text-slate-700">🗺️ Ruta en mapa</p>
+    <div className="mt-4 overflow-hidden rounded-xl border border-slate-200">
+      <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5">
+        <p className="text-xs font-bold text-slate-600">🗺️ Ruta en mapa</p>
       </div>
 
       <div className="relative">
-        <div id={mapId.current} className="h-[280px] w-full bg-slate-100" />
+        <div id={mapId.current} className="h-[260px] w-full bg-slate-100" />
         {isLoadingMap && (
-          <div className="absolute inset-0 flex items-center justify-center bg-white/90">
-            <div className="flex items-center gap-3 rounded-xl bg-white px-6 py-3 shadow-lg border ring-1 ring-slate-200">
-              <svg className="h-5 w-5 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
+          <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
+            <div className="flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 shadow ring-1 ring-slate-200">
+              <svg className="h-4 w-4 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
                 <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
                 <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
               </svg>
-              <span className="font-semibold text-slate-700">Calculando ruta...</span>
+              <span className="text-xs font-semibold text-slate-700">Calculando ruta...</span>
             </div>
           </div>
         )}
       </div>
 
       {routeInfo && !isLoadingMap && (
-        <div className="grid grid-cols-2 gap-4 border-t border-slate-200 bg-slate-50 px-4 py-3 text-sm">
-          <div className="flex items-center gap-2 text-indigo-700 font-semibold">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="flex flex-wrap items-center gap-4 border-t border-slate-200 bg-white px-4 py-3 text-xs text-slate-700">
+          <div className="flex items-center gap-1.5">
+            <svg className="h-3.5 w-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
             </svg>
-            <span>{routeInfo.distance.toFixed(1)} km</span>
+            <span><span className="font-semibold">Distancia:</span> {routeInfo.distance.toFixed(1)} km</span>
           </div>
-          <div className="flex items-center gap-2 text-emerald-700 font-semibold">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <div className="flex items-center gap-1.5">
+            <svg className="h-3.5 w-3.5 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            <span>{Math.round(routeInfo.duration)} min</span>
+            <span><span className="font-semibold">Tiempo aprox.:</span> {Math.round(routeInfo.duration)} min</span>
           </div>
-          <div className="col-span-2 text-xs text-slate-500 pt-1">
+          <span className="text-slate-400">
             {routeInfo.isReal ? "Ruta real por carretera" : "Estimación en línea recta"}
-          </div>
+          </span>
         </div>
       )}
     </div>
@@ -252,6 +258,7 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
 }
 
 // ─── DETALLE EXPANDIDO ────────────────────────────────────────────────────────
+
 function RequestDetail({
   request,
   onComplete,
@@ -280,22 +287,22 @@ function RequestDetail({
   const puedeFinalizarse = request.estado?.toLowerCase() === "en_ejecucion";
 
   return (
-    <div className="border-t border-slate-200 bg-slate-50 p-4 sm:p-6">
-      <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-        
+    <div className="border-t border-slate-200 bg-slate-50 p-3 sm:p-6">
+      <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm">
+
         {/* Cabecera */}
-        <div className="mb-6 flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-center sm:justify-between">
-          <h3 className="text-lg font-bold text-slate-900">
+        <div className="mb-4 flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
+          <h3 className="text-base font-bold text-slate-800 sm:text-lg">
             Detalle #{request.codigo}
           </h3>
           {puedeFinalizarse && (
             <button
               onClick={handleCompleteClick}
               disabled={isUpdating}
-              className={`inline-flex w-full items-center justify-center gap-2 rounded-xl px-6 py-3 text-sm font-bold text-white shadow-lg transition-all sm:w-auto
+              className={`inline-flex w-full items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-bold text-white shadow-md transition-all sm:w-auto
                 ${isUpdating
                   ? "cursor-not-allowed bg-slate-400"
-                  : "bg-slate-900 hover:bg-black hover:shadow-xl hover:-translate-y-0.5 hover:ring-2 hover:ring-slate-200"
+                  : "bg-slate-800 hover:-translate-y-0.5 hover:bg-black hover:shadow-lg"
                 }`}
             >
               {isUpdating ? (
@@ -319,49 +326,34 @@ function RequestDetail({
         </div>
 
         {/* Info */}
-        <div className="grid gap-6 lg:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">Ruta</h4>
-            <div className="space-y-3">
-              <div className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="mt-2 h-3 w-3 flex-shrink-0 rounded-full bg-emerald-500 ring-2 ring-emerald-100" />
+            <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Ruta</h4>
+            <div className="flex flex-col gap-3">
+              <div className="flex items-start gap-2">
+                <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-green-500" />
                 <div>
-                  <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Origen</span>
-                  <span className="text-base font-semibold text-slate-900">{request.origen}</span>
+                  <span className="block text-xs text-slate-400">Origen</span>
+                  <span className="text-sm font-medium text-slate-900">{request.origen}</span>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="mt-2 h-3 w-3 flex-shrink-0 rounded-full bg-red-500 ring-2 ring-red-100" />
+              <div className="flex items-start gap-2">
+                <div className="mt-1.5 h-2 w-2 flex-shrink-0 rounded-full bg-red-500" />
                 <div>
-                  <span className="block text-xs font-semibold text-slate-500 uppercase tracking-wide">Destino</span>
-                  <span className="text-base font-semibold text-slate-900">{request.destino}</span>
+                  <span className="block text-xs text-slate-400">Destino</span>
+                  <span className="text-sm font-medium text-slate-900">{request.destino}</span>
                 </div>
               </div>
             </div>
           </div>
 
           <div>
-            <h4 className="mb-4 text-xs font-bold uppercase tracking-wider text-slate-500">Datos Generales</h4>
-            <div className="space-y-3">
-              <div className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="flex justify-between items-center">
-                  <span className="font-semibold text-slate-600">👥 Pasajeros</span>
-                  <span className="text-2xl font-bold text-slate-900">{request.cantidad_personas}</span>
-                </div>
-              </div>
-              <div className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                <div className="flex justify-between items-start">
-                  <span className="font-semibold text-slate-600">📋 Motivo</span>
-                  <span className="font-semibold text-slate-900">{request.motivo_actividad}</span>
-                </div>
-              </div>
+            <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Datos Generales</h4>
+            <div className="space-y-1.5 text-sm">
+              <p><span className="font-semibold text-slate-600">Pasajeros:</span> <span className="text-slate-900">{request.cantidad_personas}</span></p>
+              <p><span className="font-semibold text-slate-600">Motivo:</span> <span className="text-slate-900">{request.motivo_actividad}</span></p>
               {request.unidad && (
-                <div className="p-3 border border-slate-200 rounded-lg hover:bg-slate-50 transition-colors">
-                  <div className="flex justify-between items-center">
-                    <span className="font-semibold text-slate-600">🚗 Unidad</span>
-                    <span className="font-semibold text-slate-900">{request.unidad.nombre}</span>
-                  </div>
-                </div>
+                <p><span className="font-semibold text-slate-600">Unidad:</span> <span className="text-slate-900">{request.unidad.nombre}</span></p>
               )}
             </div>
           </div>
@@ -372,10 +364,8 @@ function RequestDetail({
           <RequestMap origen={request.origen} destino={request.destino} />
         )}
 
-        <div className="mt-6 pt-6 border-t border-slate-200 text-right">
-          <p className="text-xs font-semibold text-slate-500">
-            📅 Creado el {formatFecha(request.created_at)}
-          </p>
+        <div className="mt-4 text-right text-xs text-slate-400">
+          Creado el {formatFecha(request.created_at)}
         </div>
       </div>
     </div>
@@ -383,35 +373,34 @@ function RequestDetail({
 }
 
 // ─── SKELETONS ────────────────────────────────────────────────────────────────
+
 function SkeletonCard() {
   return (
-    <div className="animate-pulse rounded-xl border border-slate-100 bg-white p-6 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <div className="h-5 w-40 rounded-lg bg-slate-100" />
-        <div className="h-6 w-24 rounded-full bg-slate-100" />
+    <div className="animate-pulse rounded-xl border border-slate-100 bg-white p-4">
+      <div className="flex items-center justify-between">
+        <div className="h-4 w-32 rounded bg-slate-100" />
+        <div className="h-5 w-20 rounded-full bg-slate-100" />
       </div>
-      <div className="space-y-3">
-        <div className="h-4 w-64 rounded-lg bg-slate-100" />
-        <div className="h-4 w-48 rounded-lg bg-slate-100" />
-        <div className="h-4 w-32 rounded-lg bg-slate-100" />
-      </div>
+      <div className="mt-3 h-3 w-48 rounded bg-slate-100" />
+      <div className="mt-2 h-3 w-36 rounded bg-slate-100" />
     </div>
   );
 }
 
 function SkeletonRow() {
   return (
-    <tr className="animate-pulse border-b border-slate-50 hover:bg-transparent">
-      <td className="px-6 py-5"><div className="h-5 w-36 rounded-lg bg-slate-100" /></td>
-      <td className="px-6 py-5"><div className="h-5 w-32 rounded-lg bg-slate-100" /></td>
-      <td className="px-6 py-5"><div className="h-5 w-72 rounded-lg bg-slate-100" /></td>
-      <td className="px-6 py-5"><div className="h-5 w-24 rounded-lg bg-slate-100" /></td>
-      <td className="px-6 py-5"><div className="ml-auto h-8 w-28 rounded-full bg-slate-100" /></td>
+    <tr className="animate-pulse border-b border-slate-50">
+      <td className="px-6 py-4"><div className="h-4 w-32 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="h-4 w-28 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="h-4 w-40 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="h-4 w-20 rounded bg-slate-100" /></td>
+      <td className="px-6 py-4"><div className="ml-auto h-6 w-24 rounded-full bg-slate-100" /></td>
     </tr>
   );
 }
 
 // ─── PÁGINA PRINCIPAL ─────────────────────────────────────────────────────────
+
 export default function AllRequestsPage() {
   const navigate = useNavigate();
 
@@ -492,24 +481,24 @@ export default function AllRequestsPage() {
       : "Aún no tienes solicitudes registradas.";
 
   return (
-    <div className="min-h-screen bg-slate-50/50 py-8 px-4 sm:px-6 lg:px-8">
-      <div className="mx-auto max-w-7xl space-y-6">
-        
+    <div className="min-h-screen bg-background-light px-3 py-6 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-7xl space-y-5">
+
         {/* ENCABEZADO */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between p-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight text-slate-900">
+            <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-[34px]">
               Historial de Solicitudes
             </h1>
-            <p className="mt-2 text-sm font-semibold text-slate-600">
+            <p className="mt-0.5 text-sm text-slate-500">
               {total > 0
-                ? `${total.toLocaleString()} solicitud${total !== 1 ? "es" : ""} registradas`
+                ? `${total} solicitud${total !== 1 ? "es" : ""} registradas`
                 : "Sin solicitudes"}
             </p>
           </div>
           <button
             onClick={() => navigate("/")}
-            className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:shadow-md hover:bg-slate-50 hover:-translate-y-0.5 transition-all"
+            className="inline-flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:self-auto"
           >
             <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
@@ -519,9 +508,9 @@ export default function AllRequestsPage() {
         </div>
 
         {/* FILTROS */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm hover:shadow-md transition-shadow">
-          <div className="relative mb-4">
-            <svg className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <div className="rounded-2xl border border-slate-200 bg-white px-4 py-4 shadow-sm sm:px-5">
+          <div className="relative mb-3">
+            <svg className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
             </svg>
             <input
@@ -529,18 +518,18 @@ export default function AllRequestsPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Buscar por código, origen, destino..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-12 pr-4 text-sm font-semibold text-slate-900 focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100 transition-all"
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             />
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
+          <div className="flex gap-2 overflow-x-auto pb-1">
             {ESTADOS.map((opt) => (
               <button
                 key={opt.value}
                 onClick={() => handleEstadoChange(opt.value as RequestStatus | "")}
-                className={`flex-shrink-0 rounded-full border-2 px-4 py-2 text-sm font-semibold transition-all hover:scale-105 hover:shadow-md hover:-translate-y-0.5
+                className={`flex-shrink-0 rounded-full border px-3 py-1.5 text-xs font-semibold transition
                   ${filters.estado === opt.value
-                    ? "border-indigo-500 bg-indigo-600 text-white shadow-md"
-                    : "border-slate-200 bg-white text-slate-700 hover:border-indigo-300 hover:bg-indigo-50 hover:text-indigo-700"
+                    ? "border-indigo-500 bg-indigo-600 text-white shadow-sm"
+                    : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
                   }`}
               >
                 {opt.label}
@@ -550,60 +539,56 @@ export default function AllRequestsPage() {
         </div>
 
         {/* ── MÓVIL: tarjetas ──────────────────────────────────────── */}
-        <div className="block sm:hidden space-y-3">
+        <div className="block sm:hidden space-y-2">
           {loading ? (
-            <>
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-            </>
+            <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
           ) : requests.length === 0 ? (
-            <div className="rounded-2xl border border-slate-200 bg-white px-8 py-16 text-center shadow-sm">
-              <div className="mx-auto mb-6 grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 border">
-                <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-slate-100">
+                <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <p className="text-lg font-semibold text-slate-900 mb-2">No hay solicitudes</p>
-              <p className="text-sm text-slate-500">{emptyMessage}</p>
+              <p className="text-sm font-semibold text-slate-700">No hay solicitudes</p>
+              <p className="mt-1 text-xs text-slate-500">{emptyMessage}</p>
             </div>
           ) : (
             requests.map((req) => (
-              <div key={req.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm hover:shadow-md transition-all">
+              <div key={req.id} className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <button
                   onClick={() => handleRowClick(req)}
-                  className="flex w-full items-center justify-between p-6 text-left transition-all hover:bg-slate-50 hover:-translate-y-0.5"
+                  className="flex w-full items-center justify-between px-4 py-3.5 text-left transition hover:bg-slate-50"
                 >
-                  <div className="flex items-center gap-4">
-                    <div className="h-3 w-3 flex-shrink-0 rounded-full bg-indigo-500 ring-2 ring-indigo-100 shadow-md hover:scale-110 transition-transform" />
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-indigo-500 ring-2 ring-indigo-100" />
                     <div>
-                      <p className="text-base font-bold text-slate-900">{req.codigo}</p>
-                      <p className="text-sm text-slate-600">{formatFechaCorta(req.fecha_salida)}</p>
+                      <p className="text-sm font-bold text-slate-900">{req.codigo}</p>
+                      <p className="text-xs text-slate-500">{formatFechaCorta(req.fecha_salida)}</p>
                     </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-bold capitalize shadow-sm transition-all ${getStatusStyle(req.estado)} hover:scale-105`}>
+                  <div className="flex items-center gap-2">
+                    <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${getStatusStyle(req.estado)}`}>
                       {isCompleted(req.estado) && (
-                        <svg className="h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <svg className="mr-1 h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
                       )}
                       {req.estado}
                     </span>
                     <svg
-                      className={`h-5 w-5 text-slate-400 transition-transform hover:scale-110 ${expandedId === req.id ? "rotate-180" : ""}`}
+                      className={`h-4 w-4 flex-shrink-0 text-slate-400 transition-transform ${expandedId === req.id ? "rotate-180" : ""}`}
                       fill="none" viewBox="0 0 24 24" stroke="currentColor"
                     >
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                     </svg>
                   </div>
                 </button>
-                <div className="flex items-center gap-3 border-t border-slate-100 px-6 py-4 bg-slate-50">
-                  <span className="max-w-[45%] truncate font-semibold text-slate-900">{req.origen}</span>
-                  <svg className="h-4 w-4 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <div className="flex items-center gap-1.5 border-t border-slate-100 px-4 py-2.5 text-xs text-slate-600">
+                  <span className="max-w-[120px] truncate">{req.origen}</span>
+                  <svg className="h-3 w-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                   </svg>
-                  <span className="max-w-[45%] truncate font-semibold text-slate-900">{req.destino}</span>
+                  <span className="max-w-[120px] truncate">{req.destino}</span>
                 </div>
                 {expandedId === req.id && expandedRequest && (
                   <RequestDetail request={expandedRequest} onComplete={handleCompleteRequest} />
@@ -614,38 +599,32 @@ export default function AllRequestsPage() {
         </div>
 
         {/* ── DESKTOP: tabla ───────────────────────────────────────── */}
-        <div className="hidden sm:block rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="hidden overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm sm:block">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b-2 border-slate-200 bg-slate-50 text-left text-xs font-bold uppercase tracking-wider text-slate-600">
-                  <th className="px-8 py-4">Código</th>
-                  <th className="px-8 py-4">Fecha de Salida</th>
-                  <th className="px-8 py-4">Origen → Destino</th>
-                  <th className="px-8 py-4">Tipo</th>
-                  <th className="px-8 py-4 text-right">Estado</th>
+                <tr className="border-b border-slate-100 bg-slate-50/50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                  <th className="px-6 py-4">Código</th>
+                  <th className="px-6 py-4">Fecha de Salida</th>
+                  <th className="px-6 py-4">Origen → Destino</th>
+                  <th className="px-6 py-4">Tipo</th>
+                  <th className="px-6 py-4 text-right">Estado</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
-                  <>
-                    <SkeletonRow />
-                    <SkeletonRow />
-                    <SkeletonRow />
-                    <SkeletonRow />
-                    <SkeletonRow />
-                  </>
+                  <><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /></>
                 ) : requests.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-8 py-20 text-center">
-                      <div className="mx-auto flex max-w-sm flex-col items-center gap-4 p-8 rounded-2xl bg-slate-50 border border-slate-200">
-                        <div className="grid h-16 w-16 place-items-center rounded-2xl bg-slate-100 border">
-                          <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <td colSpan={5} className="px-6 py-16 text-center">
+                      <div className="mx-auto flex max-w-xs flex-col items-center gap-3">
+                        <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
+                          <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                           </svg>
                         </div>
-                        <p className="text-lg font-semibold text-slate-900">No hay solicitudes</p>
-                        <p className="text-sm text-slate-500">{emptyMessage}</p>
+                        <p className="text-sm font-semibold text-slate-700">No hay solicitudes</p>
+                        <p className="text-xs text-slate-500">{emptyMessage}</p>
                       </div>
                     </td>
                   </tr>
@@ -655,35 +634,33 @@ export default function AllRequestsPage() {
                       <tr
                         key={req.id}
                         onClick={() => handleRowClick(req)}
-                        className={`cursor-pointer border-b border-slate-100 transition-all hover:bg-slate-50 hover:shadow-sm ${expandedId === req.id ? "bg-slate-50 shadow-sm" : ""}`}
+                        className={`cursor-pointer border-b border-slate-50 transition-all hover:bg-slate-50 ${expandedId === req.id ? "bg-slate-50" : ""}`}
                       >
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-4">
-                            <div className="h-3 w-3 rounded-full bg-indigo-500 ring-2 ring-indigo-100 shadow-md hover:scale-110 transition-transform" />
-                            <span className="font-bold text-slate-900 text-lg">{req.codigo}</span>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="h-2.5 w-2.5 rounded-full bg-indigo-500 ring-2 ring-indigo-100" />
+                            <span className="font-bold text-slate-900">{req.codigo}</span>
                           </div>
                         </td>
-                        <td className="px-8 py-5">
-                          <span className="text-sm font-semibold text-slate-700">{formatFechaCorta(req.fecha_salida)}</span>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-medium text-slate-600">{formatFechaCorta(req.fecha_salida)}</span>
                         </td>
-                        <td className="px-8 py-5">
-                          <div className="flex items-center gap-3 text-sm font-semibold text-slate-800">
-                            <span className="max-w-[140px] truncate font-semibold" title={req.origen}>{req.origen}</span>
-                            <svg className="h-4 w-4 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <td className="px-6 py-4 max-w-[280px]">
+                          <div className="flex items-center gap-1.5 text-sm text-slate-700">
+                            <span className="max-w-[120px] truncate font-medium" title={req.origen}>{req.origen}</span>
+                            <svg className="h-3.5 w-3.5 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
-                            <span className="max-w-[140px] truncate font-semibold" title={req.destino}>{req.destino}</span>
+                            <span className="max-w-[120px] truncate font-medium" title={req.destino}>{req.destino}</span>
                           </div>
                         </td>
-                        <td className="px-8 py-5">
-                          <span className="px-3 py-1.5 bg-emerald-100 text-emerald-800 text-xs font-bold rounded-full border border-emerald-200">
-                            🚗 Transporte
-                          </span>
+                        <td className="px-6 py-4">
+                          <span className="text-sm font-bold text-slate-900">Transporte</span>
                         </td>
-                        <td className="px-8 py-5 text-right">
-                          <span className={`inline-flex items-center gap-1 rounded-full border px-4 py-1.5 text-xs font-bold capitalize shadow-sm transition-all ${getStatusStyle(req.estado)} hover:scale-105`}>
+                        <td className="px-6 py-4 text-right">
+                          <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold capitalize ${getStatusStyle(req.estado)}`}>
                             {isCompleted(req.estado) && (
-                              <svg className="h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                              <svg className="mr-1 h-3 w-3 text-emerald-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
                                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                               </svg>
                             )}
@@ -692,7 +669,7 @@ export default function AllRequestsPage() {
                         </td>
                       </tr>
                       {expandedId === req.id && expandedRequest && (
-                        <tr key={`detail-${req.id}`} className="border-b border-slate-200">
+                        <tr key={`detail-${req.id}`} className="border-b border-slate-100">
                           <td colSpan={5} className="p-0">
                             <RequestDetail request={expandedRequest} onComplete={handleCompleteRequest} />
                           </td>
@@ -706,16 +683,16 @@ export default function AllRequestsPage() {
           </div>
 
           {!loading && totalPages > 1 && (
-            <div className="flex items-center justify-between border-t-2 border-slate-200 bg-slate-50 px-8 py-6">
-              <p className="text-sm font-semibold text-slate-700">
-                Página <span className="font-bold text-lg text-slate-900">{page}</span> de{" "}
-                <span className="font-bold text-lg text-slate-900">{totalPages}</span>
+            <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+              <p className="text-sm text-slate-500">
+                Página <span className="font-semibold text-slate-800">{page}</span> de{" "}
+                <span className="font-semibold text-slate-800">{totalPages}</span>
               </p>
-              <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2">
                 <button
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page === 1}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:shadow-md hover:bg-slate-50 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -725,7 +702,7 @@ export default function AllRequestsPage() {
                 <button
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page === totalPages}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-semibold text-slate-700 shadow-sm hover:shadow-md hover:bg-slate-50 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Siguiente
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -739,22 +716,22 @@ export default function AllRequestsPage() {
 
         {/* Paginación móvil */}
         {!loading && totalPages > 1 && (
-          <div className="flex items-center justify-between sm:hidden p-4 bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="flex items-center justify-between sm:hidden">
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:shadow-md hover:bg-slate-50 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
               </svg>
               Anterior
             </button>
-            <span className="text-lg font-bold text-slate-900">{page} / {totalPages}</span>
+            <span className="text-sm text-slate-500">{page} / {totalPages}</span>
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm hover:shadow-md hover:bg-slate-50 hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+              className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40"
             >
               Siguiente
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -764,10 +741,8 @@ export default function AllRequestsPage() {
           </div>
         )}
 
-        <footer className="py-6 text-center">
-          <p className="text-sm text-slate-500">
-            © 2026 Sistema de Transporte Institucional
-          </p>
+        <footer className="py-3 text-center text-xs text-slate-400">
+          © 2026 Sistema de Transporte Institucional
         </footer>
       </div>
     </div>
