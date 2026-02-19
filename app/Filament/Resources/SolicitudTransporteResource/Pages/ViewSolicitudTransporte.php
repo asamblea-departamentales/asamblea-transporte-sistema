@@ -21,6 +21,8 @@ class ViewSolicitudTransporte extends ViewRecord
         return [
             // OBSERVACIÓN (PENDIENTE/EN_REVISION)
             Actions\Action::make('observacion')
+                ->button()
+                ->size('lg')
                 ->label('Observación')
                 ->icon('heroicon-o-chat-bubble-left-ellipsis')
                 ->modalHeading('Agregar Observación')
@@ -59,8 +61,8 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::OBSERVAR->value,
                         'user_id'      => auth()->id(),
-                        // OJO: usá el nombre real de tu columna (datos_extra vs datos_extras)
-                        'datos_extra'  => [
+                        // ✅ columna real
+                        'datos_extras' => [
                             'comentario' => $data['comentario_jefe'],
                         ],
                     ]);
@@ -72,6 +74,8 @@ class ViewSolicitudTransporte extends ViewRecord
 
             // PRE-APROBAR (PENDIENTE/EN_REVISION)
             Actions\Action::make('pre_aprobar')
+                ->button()
+                ->size('lg')
                 ->label('Pre-Aprobar')
                 ->color('warning')
                 ->icon('heroicon-o-clock')
@@ -107,6 +111,8 @@ class ViewSolicitudTransporte extends ViewRecord
 
             // PROGRAMAR ('aprobar') SOLO cuando está PRE_APROBADA
             Actions\Action::make('aprobar')
+                ->button()
+                ->size('lg')
                 ->label('Programar y Aprobar')
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
@@ -120,37 +126,42 @@ class ViewSolicitudTransporte extends ViewRecord
                         ->maxLength(2000),
 
                     Forms\Components\Section::make('Asignación de Vehículo y Motorista')
-            ->schema([
-                Forms\Components\Select::make('vehiculo_id')
-   ->label('Vehículo a Asignar')
-    ->options(function () {
-        return \App\Models\Vehiculo::where('activo', true)
-            ->with('tipo')
-            ->get()
-            ->mapWithKeys(fn ($v) => [
-                $v->id => "{$v->placa} - {$v->tipo->nombre}"
-            ]);
-    })
-    // ESTA ES LA CLAVE: El "hint" ayuda al jefe a decidir
-    ->hint(fn ($record) => "El usuario pidió: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))    ->hintColor('warning')
-    ->searchable()
-    ->required()
-                    ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        $vehiculo = \App\Models\Vehiculo::find($state);
-                        // Asegúrate de que la relación 'asignacionVigenteMotorista' exista en tu modelo Vehiculo
-                        $asignacion = $vehiculo?->asignacionVigenteMotorista;
-                        if ($asignacion) {
-                            $set('motorista_id', $asignacion->motorista_id);
-                        }
-                    }),
-                
-                Forms\Components\Select::make('motorista_id')
-                    ->label('Motorista')
-                    ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
-                    ->searchable()
-                    ->required(),
-            ])->columns(2),    
+                        ->schema([
+                            Forms\Components\Select::make('vehiculo_id')
+                                ->label('Vehículo a Asignar')
+                                ->options(function () {
+                                    return \App\Models\Vehiculo::where('activo', true)
+                                        ->with('tipo')
+                                        ->get()
+                                        ->mapWithKeys(fn ($v) => [
+                                            $v->id => "{$v->placa} - {$v->tipo->nombre}"
+                                        ]);
+                                })
+                                // ESTA ES LA CLAVE: El "hint" ayuda al jefe a decidir
+                                ->hint(fn ($record) => "El usuario pidió: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+                                ->hintColor('warning')
+                                ->searchable()
+                                ->required()
+                                ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    $vehiculo = \App\Models\Vehiculo::find($state);
+                                    // Asegúrate de que la relación 'asignacionVigenteMotorista' exista en tu modelo Vehiculo
+                                    $asignacion = $vehiculo?->asignacionVigenteMotorista;
+                                    if ($asignacion) {
+                                        $set('motorista_id', $asignacion->motorista_id);
+                                    }
+                                }),
+
+                            Forms\Components\Select::make('motorista_id')
+                                ->label('Motorista')
+                                ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
+                                ->searchable()
+                                ->required(),
+                        ])
+                        ->columns([
+                            'default' => 1,
+                            'md' => 2,
+                        ]),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
@@ -173,13 +184,13 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
 
                     BitacoraEvento::create([
-                        'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::APROBAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_tipo'  => 'solicitud_transporte',
+                        'entidad_id'    => $record->id,
+                        'accion'        => AccionBitacoraEnum::APROBAR->value,
+                        'user_id'       => auth()->id(),
                         'datos_extras'  => [
-                            'comentario' => $data['comentario_jefe'],
-                            'vehiculo_id' => $data['vehiculo_id'],
+                            'comentario'   => $data['comentario_jefe'],
+                            'vehiculo_id'  => $data['vehiculo_id'],
                             'motorista_id' => $data['motorista_id'],
                         ],
                     ]);
@@ -189,8 +200,10 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
-            // RECHAZAR (PENDIENTE/EN_REVISION)
+            // RECHAZAR (PENDIENTE/EN_REVISION/PRE_APROBADA)
             Actions\Action::make('rechazar')
+                ->button()
+                ->size('lg')
                 ->label('Rechazar')
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')
@@ -226,7 +239,8 @@ class ViewSolicitudTransporte extends ViewRecord
                         'entidad_id'   => $record->id,
                         'accion'       => AccionBitacoraEnum::RECHAZAR->value,
                         'user_id'      => auth()->id(),
-                        'datos_extra'  => [
+                        // ✅ columna real
+                        'datos_extras' => [
                             'comentario' => $data['comentario_jefe'],
                         ],
                     ]);
