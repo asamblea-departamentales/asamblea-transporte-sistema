@@ -47,8 +47,8 @@ class AdminPanelProvider extends PanelProvider
                     ->checkboxListColumns([ 'default' => 1, 'sm' => 2, 'lg' => 4 ])
                     ->resourceCheckboxListColumns([ 'default' => 1, 'sm' => 2 ]),
 
-            FilamentPwaPlugin::make()
-            ->startUrl('/admin')
+            //FilamentPwaPlugin::make()
+            //->startUrl('/admin')
             ]) //Cierra el array de plugins
 
             ->colors([

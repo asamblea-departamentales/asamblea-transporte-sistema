@@ -4,83 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "f6e9fa8143f90bb292d7841fd0cdb9d1",
+    "content-hash": "36e4fb380bed4fbc371fe3e468d67903",
     "packages": [
-        {
-            "name": "alareqi/filament-pwa",
-            "version": "1.0.1",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/aymanalareqi/filament-pwa.git",
-                "reference": "3377db841bb2e33a4c5496608bde3fed049638ff"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/aymanalareqi/filament-pwa/zipball/3377db841bb2e33a4c5496608bde3fed049638ff",
-                "reference": "3377db841bb2e33a4c5496608bde3fed049638ff",
-                "shasum": ""
-            },
-            "require": {
-                "filament/filament": "^3.0|^4.0",
-                "illuminate/contracts": "^10.0|^11.0|^12.0",
-                "php": "^8.2",
-                "spatie/laravel-package-tools": "^1.15.0"
-            },
-            "require-dev": {
-                "laravel/pint": "^1.0",
-                "nunomaduro/collision": "^7.9|^8.0",
-                "orchestra/testbench": "^8.0|^9.0",
-                "pestphp/pest": "^2.1",
-                "pestphp/pest-plugin-arch": "^2.0",
-                "pestphp/pest-plugin-laravel": "^2.0",
-                "phpstan/extension-installer": "^1.1",
-                "phpstan/phpstan-deprecation-rules": "^1.0",
-                "phpstan/phpstan-phpunit": "^1.0",
-                "spatie/laravel-ray": "^1.26"
-            },
-            "type": "library",
-            "extra": {
-                "laravel": {
-                    "providers": [
-                        "Alareqi\\FilamentPwa\\FilamentPwaServiceProvider"
-                    ]
-                }
-            },
-            "autoload": {
-                "psr-4": {
-                    "Alareqi\\FilamentPwa\\": "src/",
-                    "Alareqi\\FilamentPwa\\Database\\Factories\\": "database/factories/"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Ayman Al-Areqi",
-                    "email": "ayman.a.alareqi@gmail.com",
-                    "role": "Developer"
-                }
-            ],
-            "description": "A comprehensive PWA (Progressive Web App) plugin for Filament v3 and v4 admin panels with offline functionality, installation prompts, and icon generation.",
-            "homepage": "https://github.com/aymanalareqi/filament-pwa",
-            "keywords": [
-                "admin-panel",
-                "filament",
-                "laravel",
-                "manifest",
-                "offline",
-                "progressive-web-app",
-                "pwa",
-                "service-worker"
-            ],
-            "support": {
-                "issues": "https://github.com/aymanalareqi/filament-pwa/issues",
-                "source": "https://github.com/aymanalareqi/filament-pwa"
-            },
-            "time": "2025-06-28T11:07:29+00:00"
-        },
         {
             "name": "anourvalar/eloquent-serialize",
             "version": "1.3.5",
