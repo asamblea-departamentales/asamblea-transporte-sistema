@@ -3,88 +3,68 @@
 namespace App\Filament\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Filament\Resources\SolicitudTransporteResource;
 use App\Models\SolicitudTransporte;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
+use App\Models\UnidadSolicitante;
+use App\Models\User;
+use Filament\Widgets\StatsOverviewWidget as BaseWidget;
+use Filament\Widgets\StatsOverviewWidget\Stat;
 
-class RecentSolicitudes extends BaseWidget
+class StatsOverview extends BaseWidget
 {
-    protected int|string|array $columnSpan = 'full';
-
-    protected static ?int $sort = 2;
-    protected static ?string $heading = 'Bandeja de Aprobaciones';
+    protected static ?int $sort = 1;
 
     public static function canView(): bool
     {
         return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
     }
 
-    public function table(Table $table): Table
+    protected function getStats(): array
     {
-        return $table
-            ->query(
-                SolicitudTransporte::query()
-                    ->with(['unidad', 'solicitante'])
-                    ->whereIn('estado', [
-                        EstadoSolicitudEnum::PENDIENTE,
-                        EstadoSolicitudEnum::EN_REVISION,
-                        EstadoSolicitudEnum::PRE_APROBADA,
-                    ])
-                    ->orderBy('fecha_salida', 'asc')
-                    ->limit(8)
-            )
-            // ✅ Hacer toda la fila clickeable hacia el VIEW del Resource
-            ->recordUrl(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record]))
-            ->columns([
-                Tables\Columns\TextColumn::make('codigo')
-                    ->label('Código')
-                    ->searchable()
-                    ->sortable()
-                    ->description(fn (SolicitudTransporte $record) => $record->solicitante?->name ?? '-'),
+        $user = auth()->user();
 
-                Tables\Columns\TextColumn::make('tipo_solicitud')
-                    ->label('Tipo')
-                    ->state('Transporte')
-                    ->badge()
+        // ✅ KPI “operativos” para Jefe
+        if ($user->hasRole('jefe')) {
+            return [
+                Stat::make('Pendientes', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PENDIENTE)->count())
+                    ->description('Por revisar')
+                    ->descriptionIcon('heroicon-m-inbox')
+                    ->color('warning'),
+
+                Stat::make('En revisión', SolicitudTransporte::where('estado', EstadoSolicitudEnum::EN_REVISION)->count())
+                    ->description('Con observación / seguimiento')
+                    ->descriptionIcon('heroicon-m-eye')
                     ->color('info'),
 
-                Tables\Columns\TextColumn::make('unidad.nombre')
-                    ->label('Unidad'),
+                Stat::make('Pre-aprobadas', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PRE_APROBADA)->count())
+                    ->description('Listas para programar')
+                    ->descriptionIcon('heroicon-m-clock')
+                    ->color('warning'),
 
-                Tables\Columns\TextColumn::make('ruta_ui')
-                    ->label('Ruta')
-                    ->state(fn (SolicitudTransporte $record) =>
-                        ($record->origen ?? '-') . ' → ' . ($record->destino ?? '-')
-                    )
-                    ->wrap(),
+                Stat::make('Programadas (7 días)', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PROGRAMADA)
+                        ->whereBetween('fecha_salida', [now(), now()->addDays(7)])
+                        ->count())
+                    ->description('Próximas salidas')
+                    ->descriptionIcon('heroicon-m-calendar-days')
+                    ->color('success'),
+            ];
+        }
 
-                Tables\Columns\TextColumn::make('fecha_salida')
-                    ->label('Salida')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable(),
+        // ✅ KPI para TI/Admin
+        return [
+            Stat::make('Usuarios', User::count())
+                ->description('Personal con acceso')
+                ->descriptionIcon('heroicon-m-users')
+                ->color('primary'),
 
-                Tables\Columns\TextColumn::make('estado')
-                    ->label('Estado')
-                    ->badge()
-                    ->color(fn ($state): string => match ($state->value ?? $state) {
-                        'pendiente' => 'warning',
-                        'en_revision' => 'info',
-                        'pre_aprobada' => 'warning',
-                        'programada' => 'success',
-                        'rechazada' => 'danger',
-                        'borrador' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn ($state) => ucfirst($state->value ?? $state)),
-            ])
-            ->actions([
-                // ✅ En widgets, usa Action con URL (no ViewAction)
-                Tables\Actions\Action::make('ver')
-                    ->label('Ver')
-                    ->icon('heroicon-o-eye')
-                    ->url(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record])),
-            ]);
+            Stat::make('Unidades', UnidadSolicitante::count())
+                ->description('Unidades registradas')
+                ->descriptionIcon('heroicon-m-building-office')
+                ->color('success'),
+
+            Stat::make('Solicitudes', SolicitudTransporte::count())
+                ->description('Registradas en el sistema')
+                ->descriptionIcon('heroicon-m-truck')
+                ->color('info'),
+        ];
     }
 }

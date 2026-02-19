@@ -22,7 +22,7 @@ class StatsOverview extends BaseWidget
     {
         $user = auth()->user();
 
-        // ✅ KPI “operativos” para Jefe
+        // ✅ KPI “operativos” para Jefe (mobile-friendly)
         if ($user->hasRole('jefe')) {
             return [
                 Stat::make('Pendientes', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PENDIENTE)->count())
@@ -31,7 +31,7 @@ class StatsOverview extends BaseWidget
                     ->color('warning'),
 
                 Stat::make('En revisión', SolicitudTransporte::where('estado', EstadoSolicitudEnum::EN_REVISION)->count())
-                    ->description('Con observación / seguimiento')
+                    ->description('En seguimiento')
                     ->descriptionIcon('heroicon-m-eye')
                     ->color('info'),
 
@@ -40,16 +40,20 @@ class StatsOverview extends BaseWidget
                     ->descriptionIcon('heroicon-m-clock')
                     ->color('warning'),
 
-                Stat::make('Programadas (7 días)', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PROGRAMADA)
-                        ->whereBetween('fecha_salida', [now(), now()->addDays(7)])
-                        ->count())
-                    ->description('Próximas salidas')
-                    ->descriptionIcon('heroicon-m-calendar-days')
-                    ->color('success'),
+                Stat::make('Riesgo (<48h)', SolicitudTransporte::whereIn('estado', [
+                        EstadoSolicitudEnum::PENDIENTE,
+                        EstadoSolicitudEnum::EN_REVISION,
+                        EstadoSolicitudEnum::PRE_APROBADA,
+                    ])
+                    ->whereBetween('fecha_salida', [now(), now()->addDays(2)])
+                    ->count())
+                    ->description('Salen pronto')
+                    ->descriptionIcon('heroicon-m-exclamation-triangle')
+                    ->color('danger'),
             ];
         }
 
-        // ✅ KPI para TI/Admin
+        // ✅ KPI para TI/Admin (también mobile-friendly, 3 stats)
         return [
             Stat::make('Usuarios', User::count())
                 ->description('Personal con acceso')
@@ -62,7 +66,7 @@ class StatsOverview extends BaseWidget
                 ->color('success'),
 
             Stat::make('Solicitudes', SolicitudTransporte::count())
-                ->description('Registradas en el sistema')
+                ->description('En el sistema')
                 ->descriptionIcon('heroicon-m-truck')
                 ->color('info'),
         ];
