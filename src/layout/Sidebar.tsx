@@ -50,7 +50,7 @@ function NavItem({
         if (variant === "bottombar") {
           return cx(
             "relative flex flex-1 flex-col items-center justify-center gap-0.5",
-            "min-h-[56px] px-1 py-2 text-[10px] font-semibold tracking-tight",
+            "min-h-[56px] px-1 py-2 text-xs font-bold tracking-tight",
             "transition-colors duration-200 focus:outline-none",
             active ? "text-sky-400" : "text-slate-400"
           );
@@ -59,7 +59,7 @@ function NavItem({
         if (variant === "drawer") {
           return cx(
             "flex items-center gap-3 w-full px-4 py-3.5 rounded-2xl",
-            "text-[15px] font-semibold tracking-tight transition-all duration-200 focus:outline-none",
+            "text-base font-bold tracking-tight transition-all duration-200 focus:outline-none",
             active
               ? "bg-white/15 text-white ring-1 ring-white/20"
               : "text-slate-300/85 hover:text-white hover:bg-white/8"
@@ -68,7 +68,7 @@ function NavItem({
 
         return cx(
           "inline-flex items-center gap-2 h-11 px-4 rounded-full",
-          "text-[14px] font-semibold tracking-tight transition-all duration-200 focus:outline-none",
+          "text-sm font-bold tracking-tight transition-all duration-200 focus:outline-none",
           active
             ? "bg-white/15 text-white ring-1 ring-white/20"
             : "text-slate-200/85 hover:text-white hover:bg-white/8 ring-1 ring-transparent hover:ring-white/15"
@@ -89,7 +89,7 @@ function NavItem({
                   </span>
                 )}
               </span>
-              <span className="leading-none">{label}</span>
+              <span className="leading-tight font-bold">{label}</span>
               {active && <span className="absolute bottom-0 left-1/2 h-0.5 w-8 -translate-x-1/2 rounded-full bg-sky-400" />}
             </>
           );
@@ -101,7 +101,7 @@ function NavItem({
               <span className={cx("grid size-10 shrink-0 place-items-center rounded-2xl transition-all duration-200", active ? "bg-white/15 text-white" : "bg-white/5 text-slate-300/90")}>
                 <span className="[&>svg]:h-[18px] [&>svg]:w-[18px]">{icon}</span>
               </span>
-              <span className="flex-1 truncate">{label}</span>
+              <span className="flex-1 truncate font-bold">{label}</span>
               {badgeCount > 0 && (
                 <span className="flex size-5 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white">
                   {badgeCount > 99 ? "99+" : badgeCount}
@@ -116,7 +116,7 @@ function NavItem({
             <span className={cx("grid size-8 place-items-center rounded-full transition-all duration-200", active ? "bg-white/15 text-white" : "bg-white/5 text-slate-200/90")}>
               <span className="[&>svg]:h-[16px] [&>svg]:w-[16px]">{icon}</span>
             </span>
-            <span className="truncate">{label}</span>
+            <span className="truncate font-bold">{label}</span>
             {badgeCount > 0 && (
               <span className="ml-1 flex size-5 items-center justify-center rounded-full bg-sky-500 text-xs font-bold text-white">
                 {badgeCount > 99 ? "99+" : badgeCount}
@@ -191,7 +191,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       {/* Header fijo superior */}
       <header className="fixed left-0 right-0 top-0 z-50 lg:hidden">
         <div className="flex h-14 items-center justify-between bg-gradient-to-b from-[#0B1220] to-[#0A1424] border-b border-white/10 backdrop-blur-xl px-4">
-
           {/* ★ Botón hamburguesa — toggle real del drawer */}
           <button
             type="button"
@@ -222,7 +221,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             className="flex items-center gap-2.5 rounded-xl px-2.5 py-1.5 hover:bg-white/8 active:scale-95 transition-all duration-200"
           >
             <img src={logo} alt="Asamblea Legislativa" className="h-8 w-auto opacity-95" />
-            <span className="text-[13px] font-bold text-white tracking-tight">Transporte</span>
+            <span className="text-sm font-bold text-white tracking-tight">Transporte</span>
           </button>
 
           {/* Avatar — también abre el drawer */}
@@ -264,10 +263,10 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               <img src={logo} alt="Asamblea Legislativa" className="h-8 w-auto opacity-95" />
             </div>
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-xs font-bold uppercase tracking-wider text-slate-400">
                 Gestión institucional
               </p>
-              <p className="text-[14px] font-bold text-white">Transporte</p>
+              <p className="text-base font-bold text-white">Transporte</p>
             </div>
           </div>
           <button
@@ -282,7 +281,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
         {/* Navegación */}
         <nav className="flex-1 overflow-y-auto px-3 py-4">
-          <p className="mb-2 px-3 text-[10px] font-semibold uppercase tracking-wider text-slate-500">
+          <p className="mb-2 px-3 text-xs font-bold uppercase tracking-wider text-slate-500">
             Menú
           </p>
           <div className="space-y-1">
@@ -303,8 +302,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               {initials}
             </div>
             <div className="min-w-0">
-              <p className="truncate text-[13px] font-bold text-white">{user?.name || "Usuario"}</p>
-              <p className="truncate text-[11px] text-slate-400">{user?.email || ""}</p>
+              <p className="truncate text-sm font-bold text-white">{user?.name || "Usuario"}</p>
+              <p className="truncate text-xs text-slate-400">{user?.email || ""}</p>
             </div>
           </div>
 
@@ -312,7 +311,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           <button
             type="button"
             onClick={handleLogout}
-            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/10 px-4 py-3.5 text-[14px] font-bold text-red-400 ring-1 ring-red-500/20 hover:bg-red-500/20 hover:ring-red-500/40 active:scale-[0.98] transition-all duration-200 focus:outline-none"
+            className="flex w-full items-center justify-center gap-2 rounded-2xl bg-red-500/10 px-4 py-3.5 text-base font-bold text-red-400 ring-1 ring-red-500/20 hover:bg-red-500/20 hover:ring-red-500/40 active:scale-[0.98] transition-all duration-200 focus:outline-none"
           >
             <LogOut className="h-4 w-4" />
             Cerrar sesión
@@ -331,7 +330,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <NavItem to="/mis-solicitudes" label="Solicitudes" variant="bottombar" badgeCount={pendingCount} icon={<ClipboardList />} />
       </nav>
 
-
       {/* ══════════════════════════════════════════════════════
           DESKTOP  (lg+)
       ══════════════════════════════════════════════════════ */}
@@ -348,8 +346,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               >
                 <img src={logo} alt="Asamblea Legislativa" className="h-9 w-auto opacity-95" />
                 <div className="hidden border-l border-white/12 pl-4 xl:block">
-                  <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400">Gestión institucional</p>
-                  <p className="text-[13px] font-bold text-white">Transporte</p>
+                  <p className="text-xs font-bold uppercase tracking-wider text-slate-400">Gestión institucional</p>
+                  <p className="text-sm font-bold text-white">Transporte</p>
                 </div>
               </button>
 
@@ -375,8 +373,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                     {initials}
                   </div>
                   <div className="hidden min-w-0 text-left sm:block">
-                    <p className="max-w-[160px] truncate text-[13px] font-bold text-white">{user?.name || "Usuario"}</p>
-                    <p className="max-w-[160px] truncate text-[11px] text-slate-400">{user?.email || ""}</p>
+                    <p className="max-w-[160px] truncate text-sm font-bold text-white">{user?.name || "Usuario"}</p>
+                    <p className="max-w-[160px] truncate text-xs text-slate-400">{user?.email || ""}</p>
                   </div>
                   <ChevronDown
                     className="h-4 w-4 text-slate-400 transition-transform duration-200"
@@ -395,14 +393,14 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                   role="menu"
                 >
                   <div className="px-4 py-3.5">
-                    <p className="truncate text-[14px] font-bold text-slate-900">{user?.name || "Usuario"}</p>
-                    <p className="truncate text-xs text-slate-500">{user?.email || ""}</p>
+                    <p className="truncate text-base font-bold text-slate-900">{user?.name || "Usuario"}</p>
+                    <p className="truncate text-sm text-slate-500">{user?.email || ""}</p>
                   </div>
                   <div className="border-t border-black/8 p-2">
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-[13px] font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none"
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2.5 text-sm font-semibold text-red-600 hover:bg-red-50 transition-all duration-200 focus:outline-none"
                       role="menuitem"
                     >
                       <LogOut className="h-4 w-4 opacity-80" />
