@@ -59,11 +59,12 @@ function isCompleted(status: string): boolean {
 }
 
 // ─── GEOCODING / OSRM ─────────────────────────────────────────────────────────
+// ✅ URLs cambiadas a proxy Vercel para evitar CORS / TLS 425 con Nominatim
 
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=sv&limit=1&email=${NOMINATIM_EMAIL}`,
+      `/nominatim/search?format=json&q=${encodeURIComponent(address)}&countrycodes=sv&limit=1&email=${NOMINATIM_EMAIL}`,
       { headers: { "Accept-Language": "es" } }
     );
     if (!res.ok) return null;
@@ -86,7 +87,7 @@ async function getOSRMRoute(points: { lat: number; lng: number }[]): Promise<{
   try {
     const coords = points.map((p) => `${p.lng},${p.lat}`).join(";");
     const res = await fetch(
-      `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+      `/osrm/route/v1/driving/${coords}?overview=full&geometries=geojson`,
       { headers: { Accept: "application/json" } }
     );
     if (!res.ok) return null;
@@ -120,7 +121,6 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
 // ─── MAPA EN DETALLE ──────────────────────────────────────────────────────────
 
 function RequestMap({ origen, destino }: { origen: string; destino: string }) {
-  // ← FIX: usamos mapId.current en el JSX, no una variable "id" inexistente
   const mapId = useRef(`map-detail-${Math.random().toString(36).slice(2)}`);
   const mapRef = useRef<L.Map | null>(null);
   const [routeInfo, setRouteInfo] = useState<RouteInfo | null>(null);
@@ -141,7 +141,7 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
   });
 
   useEffect(() => {
-    const currentMapId = mapId.current; // capturar para el cleanup
+    const currentMapId = mapId.current;
 
     const initTimeout = setTimeout(() => {
       if (mapRef.current) return;
@@ -184,14 +184,12 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
           L.polyline(osrm.geometry, {
             color: "#4F46E5", weight: 5, opacity: 0.85,
           }).addTo(map);
-
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin, isReal: true });
         } else {
           L.polyline(
             [[origenCoords.lat, origenCoords.lng], [destinoCoords.lat, destinoCoords.lng]],
             { color: "#4F46E5", weight: 4, opacity: 0.7, dashArray: "10, 10" }
           ).addTo(map);
-
           const km = haversineKm(origenCoords.lat, origenCoords.lng, destinoCoords.lat, destinoCoords.lng);
           setRouteInfo({ distance: km, duration: (km / 45) * 60, isReal: false });
         }
@@ -222,7 +220,6 @@ function RequestMap({ origen, destino }: { origen: string; destino: string }) {
       </div>
 
       <div className="relative">
-        {/* ← FIX: id={mapId.current} en lugar de id={id} */}
         <div id={mapId.current} className="h-[260px] w-full bg-slate-100" />
         {isLoadingMap && (
           <div className="absolute inset-0 flex items-center justify-center bg-white/80 backdrop-blur-sm">
@@ -287,7 +284,6 @@ function RequestDetail({
       timeStyle: "short",
     });
 
-  // ← FIX: estado correcto del backend es "en_ejecucion"
   const puedeFinalizarse = request.estado?.toLowerCase() === "en_ejecucion";
 
   return (
@@ -418,7 +414,6 @@ export default function AllRequestsPage() {
   const [expandedId, setExpandedId] = useState<number | null>(null);
   const [expandedRequest, setExpandedRequest] = useState<Request | null>(null);
 
-  // ── Carga ──
   const loadRequests = useCallback(async (currentPage: number, currentFilters: FilterState) => {
     setLoading(true);
     try {
@@ -442,7 +437,6 @@ export default function AllRequestsPage() {
     loadRequests(page, filters);
   }, [page, filters, loadRequests]);
 
-  // ── Debounce búsqueda ──
   useEffect(() => {
     const t = setTimeout(() => {
       setPage(1);
@@ -451,7 +445,6 @@ export default function AllRequestsPage() {
     return () => clearTimeout(t);
   }, [searchInput]);
 
-  // ── Expansión ──
   const handleRowClick = (req: Request) => {
     if (expandedId === req.id) {
       setExpandedId(null);
@@ -462,7 +455,6 @@ export default function AllRequestsPage() {
     setExpandedRequest(req);
   };
 
-  // ── Completar ──
   const handleCompleteRequest = async (id: number) => {
     await completeRequest(id);
     setRequests((curr) =>
@@ -473,7 +465,6 @@ export default function AllRequestsPage() {
     }
   };
 
-  // ── Filtro estado ──
   const handleEstadoChange = (estado: RequestStatus | "") => {
     setPage(1);
     setExpandedId(null);
@@ -505,7 +496,6 @@ export default function AllRequestsPage() {
                 : "Sin solicitudes"}
             </p>
           </div>
-
           <button
             onClick={() => navigate("/")}
             className="inline-flex items-center gap-2 self-start rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:self-auto"
@@ -531,8 +521,6 @@ export default function AllRequestsPage() {
               className="w-full rounded-xl border border-slate-200 bg-slate-50 py-2.5 pl-9 pr-4 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
             />
           </div>
-
-          {/* Pills — scroll horizontal en móvil */}
           <div className="flex gap-2 overflow-x-auto pb-1">
             {ESTADOS.map((opt) => (
               <button
@@ -553,11 +541,7 @@ export default function AllRequestsPage() {
         {/* ── MÓVIL: tarjetas ──────────────────────────────────────── */}
         <div className="block sm:hidden space-y-2">
           {loading ? (
-            <>
-              <SkeletonCard />
-              <SkeletonCard />
-              <SkeletonCard />
-            </>
+            <><SkeletonCard /><SkeletonCard /><SkeletonCard /></>
           ) : requests.length === 0 ? (
             <div className="rounded-2xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
               <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-slate-100">
@@ -599,7 +583,6 @@ export default function AllRequestsPage() {
                     </svg>
                   </div>
                 </button>
-
                 <div className="flex items-center gap-1.5 border-t border-slate-100 px-4 py-2.5 text-xs text-slate-600">
                   <span className="max-w-[120px] truncate">{req.origen}</span>
                   <svg className="h-3 w-3 flex-shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -607,7 +590,6 @@ export default function AllRequestsPage() {
                   </svg>
                   <span className="max-w-[120px] truncate">{req.destino}</span>
                 </div>
-
                 {expandedId === req.id && expandedRequest && (
                   <RequestDetail request={expandedRequest} onComplete={handleCompleteRequest} />
                 )}
@@ -631,10 +613,7 @@ export default function AllRequestsPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <>
-                    <SkeletonRow /><SkeletonRow /><SkeletonRow />
-                    <SkeletonRow /><SkeletonRow />
-                  </>
+                  <><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /><SkeletonRow /></>
                 ) : requests.length === 0 ? (
                   <tr>
                     <td colSpan={5} className="px-6 py-16 text-center">
@@ -689,7 +668,6 @@ export default function AllRequestsPage() {
                           </span>
                         </td>
                       </tr>
-
                       {expandedId === req.id && expandedRequest && (
                         <tr key={`detail-${req.id}`} className="border-b border-slate-100">
                           <td colSpan={5} className="p-0">
@@ -704,7 +682,6 @@ export default function AllRequestsPage() {
             </table>
           </div>
 
-          {/* Paginación desktop */}
           {!loading && totalPages > 1 && (
             <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
               <p className="text-sm text-slate-500">
