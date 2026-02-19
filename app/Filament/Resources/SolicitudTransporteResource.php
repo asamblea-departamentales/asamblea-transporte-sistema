@@ -2,6 +2,12 @@
 
 namespace App\Filament\Resources;
 
+//Imports para los emails
+use App\Mail\NotificacionEventMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
+use App\Helpers\MapHelper;
+
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Filament\Resources\SolicitudTransporteResource\Pages;
@@ -17,6 +23,8 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use App\Models\HistorialEstado;
 use App\Models\BitacoraEvento;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+
+use function Symfony\Component\Clock\now;
 
 class SolicitudTransporteResource extends Resource
 {
@@ -391,62 +399,122 @@ class SolicitudTransporteResource extends Resource
                 ),
 
             // APROBAR
-            Tables\Actions\Action::make('aprobar')
-                ->label('Aprobar')
-                ->color('success')
-                ->icon('heroicon-o-check-circle')
-                ->modalHeading('Aprobar y Asignar Vehículo')
-                ->form([
-                    Forms\Components\Textarea::make('comentario_jefe')
-                        ->label('Motivo de la aprobación')
-                        ->required(),
-                    Forms\Components\Section::make('Asignación')
-                        ->schema([
-                            Forms\Components\Select::make('vehiculo_id')
-                                ->label('Vehículo')
-                                ->options(fn () => \App\Models\Vehiculo::where('activo', true)->get()->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
-                                ->searchable()
-                                ->required()
-                                ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                ->hintColor('warning')
-                                ->reactive()
-                                ->afterStateUpdated(function ($state, callable $set) {
-                                    $vehiculo = \App\Models\Vehiculo::find($state);
-                                    if ($asignacion = $vehiculo?->asignacionVigenteMotorista) {
-                                        $set('motorista_id', $asignacion->motorista_id);
-                                    }
-                                }),
-                            Forms\Components\Select::make('motorista_id')
-                                ->label('Motorista')
-                                ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
-                                ->searchable()
-                                ->required(),
-                        ])->columns(2),
-                ])
-                ->action(function (SolicitudTransporte $record, array $data) {
-                    $estadoAnterior = $record->estado;
-                    $record->update([
-                        'estado' => EstadoSolicitudEnum::PROGRAMADA,
-                        'comentario_jefe' => $data['comentario_jefe'],
-                        'vehiculo_id' => $data['vehiculo_id'],
-                        'motorista_id' => $data['motorista_id'],
-                        'decidido_por' => auth()->id(),
-                        'decidido_en' => now(),
-                    ]);
+Tables\Actions\Action::make('aprobar')
+    ->label('Aprobar')
+    ->color('success')
+    ->icon('heroicon-o-check-circle')
+    ->modalHeading('Aprobar y Asignar Vehículo')
+    ->modalWidth('2xl')
+    ->form([
+        Forms\Components\Textarea::make('comentario_jefe')
+            ->label('Motivo de la aprobación')
+            ->rows(4)
+            ->required()
+            ->maxLength(2000)
+            ->columnSpanFull(),
 
-                    HistorialEstado::create([
-                        'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id' => $record->id,
-                        'estado_anterior' => $estadoAnterior->value,
-                        'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
-                        'user_id' => auth()->id(),
-                        'comentario' => $data['comentario_jefe'],
-                    ]);
-                })
-                ->visible(fn (SolicitudTransporte $record) => 
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                    $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                ),
+        Forms\Components\Section::make('Asignación de Vehiculo y Motorista')
+            ->schema([
+                Forms\Components\Select::make('vehiculo_id')
+                    ->label('Vehículo')
+                    ->options(fn () => \App\Models\Vehiculo::where('activo', true)->get()->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
+                    ->searchable()
+                    ->required()
+                    ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+                    ->hintColor('warning')
+                    ->reactive()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        $vehiculo = \App\Models\Vehiculo::find($state);
+                        if ($asignacion = $vehiculo?->asignacionVigenteMotorista) {
+                            $set('motorista_id', $asignacion->motorista_id);
+                        }
+                    }),
+                Forms\Components\Select::make('motorista_id')
+                    ->label('Motorista')
+                    ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
+                    ->searchable()
+                    ->required(),
+            ])->columns(2),
+    ])
+    ->action(function (SolicitudTransporte $record, array $data) {
+        $estadoAnterior = $record->estado;
+
+        $record->estado = EstadoSolicitudEnum::PROGRAMADA;
+        $record->comentario_jefe = $data['comentario_jefe'];
+        $record->decidido_por = auth()->id();
+        $record->decidido_en = now();
+        $record->vehiculo_id = $data['vehiculo_id'];
+        $record->motorista_id = $data['motorista_id'];
+        $record->save();
+
+        // Recargar relaciones
+        $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
+
+        // Historial
+        HistorialEstado::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id' => $record->id,
+            'estado_anterior' => $estadoAnterior->value,
+            'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
+            'user_id' => auth()->id(),
+            'comentario' => $data['comentario_jefe'],
+        ]);
+
+        // Bitácora
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id'   => $record->id,
+            'accion'       => AccionBitacoraEnum::APROBAR->value,
+            'user_id'      => auth()->id(),
+            'datos_extra'  => [
+                'comentario' => $data['comentario_jefe'],
+                'vehiculo_id' => $data['vehiculo_id'],
+                'motorista_id' => $data['motorista_id'],
+            ], // 👈 CIERRA datos_extra
+        ]); // 👈 CIERRA BitacoraEvento
+
+        // 📧 ENVIAR CORREO
+        try {
+            $payload = [
+                'tipo' => 'transporte',
+                'evento' => 'solicitud_aprobada',
+                'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
+                'solicitud' => [
+                    'codigo' => $record->codigo,
+                    'estado' => 'aprobado',
+                    'tipo_vehiculo_nombre' => $record->vehiculo->tipo->nombre ?? 'No asignado',
+                    'cantidad_personas' => $record->cantidad_personas,
+                    'origen' => $record->origen,
+                    'destino' => $record->destino,
+                    'destino_adicional' => $record->destino_adicional,
+                    'fecha_salida' => $record->fecha_salida,
+                    'fecha_retorno' => $record->fecha_retorno,
+                    'motivo_actividad' => $record->motivo_actividad,
+                    'vehiculo_placa' => $record->vehiculo->placa ?? 'N/A',
+                    'motorista_nombre' => $record->motorista->nombre ?? 'N/A',
+                ],
+                'solicitante' => [
+                    'name' => $record->solicitante->name,
+                    'email' => $record->solicitante->email,
+                    'unidad' => [
+                        'nombre' => $record->unidad->nombre ?? 'N/A',
+                        'siglas' => $record->unidad->siglas ?? 'N/A',
+                    ],
+                ],
+                'timestamp' => now()->format(\DateTimeInterface::ATOM),
+            ];
+
+            Mail::to($record->solicitante->email)->send(
+                new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
+        }
+    })
+    ->visible(fn (SolicitudTransporte $record) => 
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+    ),
 
             // RECHAZAR
             Tables\Actions\Action::make('rechazar')

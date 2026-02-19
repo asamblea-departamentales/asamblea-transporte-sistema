@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    // Configuración para MapTiler (NUEVO)
+    'maptil' => [
+        'api_key' => env('MAPTILER_API_KEY'),
+    ]
+
 ];
