@@ -21,8 +21,7 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use TomatoPHP\FilamentPWA\FilamentPWAPlugin;
-
+use Alareqi\FilamentPwa\FilamentPwaPlugin;
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
@@ -48,8 +47,9 @@ class AdminPanelProvider extends PanelProvider
                     ->checkboxListColumns([ 'default' => 1, 'sm' => 2, 'lg' => 4 ])
                     ->resourceCheckboxListColumns([ 'default' => 1, 'sm' => 2 ]),
 
-               // FilamentPWAPlugin::make(),
-            ]) // 👈 Cierra el array de plugins
+            FilamentPwaPlugin::make()
+            ->startUrl('/admin')
+            ]) //Cierra el array de plugins
 
             ->colors([
                 'primary' => Color::Blue,
