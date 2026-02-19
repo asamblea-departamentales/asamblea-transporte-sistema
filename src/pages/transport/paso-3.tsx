@@ -1,16 +1,20 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
 
 type VehiculoId = "sedan" | "microbus" | "camion";
 
 type DestinationPoint = {
   id: string;
   address: string;
+  lat?: number;
+  lng?: number;
 };
 
 type WizardData = {
   // Paso 1
-  tipoVehiculo?: VehiculoId;   // ← AÑADIDO
+  tipoVehiculo?: VehiculoId;
   fecha?: string;
   hora?: string;
   encargado?: string;
@@ -18,10 +22,13 @@ type WizardData = {
   pasajeros?: string;
   // Paso 2
   origen?: string;
+  origenLat?: number;
+  origenLng?: number;
   destinos?: DestinationPoint[];
 };
 
 const STORAGE_KEY = "solicitud_transporte";
+const NOMINATIM_EMAIL = "app@transporte.institucional.sv";
 
 const VEHICULO_LABELS: Record<VehiculoId, string> = {
   sedan:    "Sedán",
@@ -37,10 +44,6 @@ function safeParse(json: string | null): any {
   }
 }
 
-function enc(s: string) {
-  return encodeURIComponent(String(s || "").trim());
-}
-
 const API_BASE =
   import.meta.env.VITE_API_URL ||
   import.meta.env.VITE_API_BASE_URL ||
@@ -52,21 +55,76 @@ type ApiSubmitResponse = {
   message?: string;
 };
 
-
 export default function TransportStep3Page() {
   const navigate = useNavigate();
+
+  const mapRef = useRef<L.Map | null>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
 
   const [data, setData] = useState<WizardData>({});
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [success, setSuccess] = useState<{ open: boolean; solicitudId?: string }>({ open: false });
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
 
+  // Iconos reutilizados del paso 2
+  const originIcon = L.icon({
+    iconUrl:
+      "data:image/svg+xml;base64," +
+      btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4F46E5" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+  const destinationIcon = L.icon({
+    iconUrl:
+      "data:image/svg+xml;base64," +
+      btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#DC2626" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`),
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32],
+  });
+
+  // Fórmula Haversine
+  function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+    const R = 6371;
+    const dLat = ((lat2 - lat1) * Math.PI) / 180;
+    const dLon = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((lat1 * Math.PI) / 180) *
+        Math.cos((lat2 * Math.PI) / 180) *
+        Math.sin(dLon / 2) *
+        Math.sin(dLon / 2);
+    return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  }
+
+  // Geocodificar una dirección si no tiene coordenadas
+  async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=sv&limit=1&email=${NOMINATIM_EMAIL}`,
+        { headers: { "Accept-Language": "es" } }
+      );
+      const data = await response.json();
+      if (data?.length > 0) {
+        return { lat: parseFloat(data[0].lat), lng: parseFloat(data[0].lon) };
+      }
+      return null;
+    } catch {
+      return null;
+    }
+  }
+
+  // Cargar datos desde localStorage
   useEffect(() => {
     const saved = safeParse(localStorage.getItem(STORAGE_KEY)) as WizardData;
 
     const hasBasics =
-      !!saved.tipoVehiculo &&   // ← AÑADIDO a la validación
+      !!saved.tipoVehiculo &&
       !!saved.fecha &&
       !!saved.hora &&
       !!saved.encargado &&
@@ -85,6 +143,127 @@ export default function TransportStep3Page() {
     setLoading(false);
   }, [navigate]);
 
+  // Inicializar mapa (solo lectura, sin clic)
+  useEffect(() => {
+    if (loading) return;
+
+    if (!mapRef.current) {
+      const map = L.map("map-resumen", {
+        zoomControl: true,
+        dragging: true,
+        scrollWheelZoom: false, // Más cómodo en pantalla de resumen
+      }).setView([13.7942, -88.8965], 9);
+
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
+      }).addTo(map);
+
+      mapRef.current = map;
+    }
+
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove();
+        mapRef.current = null;
+      }
+    };
+  }, [loading]);
+
+  // Pintar marcadores y ruta cuando el mapa y los datos estén listos
+  useEffect(() => {
+    if (!mapRef.current || !data.origen) return;
+
+    async function renderMap() {
+      // Limpiar
+      markersRef.current.forEach((m) => m.remove());
+      markersRef.current = [];
+      if (routeLayerRef.current) {
+        routeLayerRef.current.remove();
+        routeLayerRef.current = null;
+      }
+
+      const bounds: [number, number][] = [];
+
+      // Coordenadas del origen
+      let origenCoords: { lat: number; lng: number } | null = null;
+      if (data.origenLat && data.origenLng) {
+        origenCoords = { lat: data.origenLat, lng: data.origenLng };
+      } else if (data.origen) {
+        origenCoords = await geocodeAddress(data.origen);
+      }
+
+      if (origenCoords) {
+        const marker = L.marker([origenCoords.lat, origenCoords.lng], { icon: originIcon })
+          .addTo(mapRef.current!)
+          .bindPopup(`<b>Origen:</b><br>${data.origen}`);
+        markersRef.current.push(marker);
+        bounds.push([origenCoords.lat, origenCoords.lng]);
+      }
+
+      // Coordenadas de destinos
+      const destinosConCoords: { address: string; lat: number; lng: number }[] = [];
+
+      for (const [idx, dest] of (data.destinos || []).entries()) {
+        if (!dest.address?.trim()) continue;
+
+        let coords: { lat: number; lng: number } | null = null;
+        if (dest.lat && dest.lng) {
+          coords = { lat: dest.lat, lng: dest.lng };
+        } else {
+          coords = await geocodeAddress(dest.address);
+        }
+
+        if (coords) {
+          destinosConCoords.push({ address: dest.address, ...coords });
+          const marker = L.marker([coords.lat, coords.lng], { icon: destinationIcon })
+            .addTo(mapRef.current!)
+            .bindPopup(`<b>Destino ${idx + 1}:</b><br>${dest.address}`);
+          markersRef.current.push(marker);
+          bounds.push([coords.lat, coords.lng]);
+        }
+      }
+
+      // Dibujar ruta y calcular distancia
+      if (origenCoords && destinosConCoords.length > 0) {
+        const routePoints: L.LatLngExpression[] = [
+          [origenCoords.lat, origenCoords.lng],
+          ...destinosConCoords.map((d) => [d.lat, d.lng] as L.LatLngExpression),
+        ];
+
+        routeLayerRef.current = L.polyline(routePoints, {
+          color: "#4F46E5",
+          weight: 4,
+          opacity: 0.7,
+          dashArray: "10, 10",
+        }).addTo(mapRef.current!);
+
+        // Calcular distancia total
+        let totalDistance = 0;
+        let prev = origenCoords;
+        destinosConCoords.forEach((dest) => {
+          totalDistance += calculateDistance(prev.lat, prev.lng, dest.lat, dest.lng);
+          prev = dest;
+        });
+
+        if (totalDistance > 0) {
+          setRouteInfo({
+            distance: totalDistance,
+            duration: totalDistance / 45,
+          });
+        }
+      }
+
+      // Ajustar vista
+      if (bounds.length > 0) {
+        mapRef.current!.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
+      }
+    }
+
+    renderMap();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data]);
+
   const destinosValidos = useMemo(() => {
     return (data.destinos || []).filter((d) => d.address?.trim());
   }, [data.destinos]);
@@ -92,113 +271,82 @@ export default function TransportStep3Page() {
   const mainDestino = destinosValidos[0]?.address || "";
   const extraDestinos = destinosValidos.slice(1);
 
-  const mapUrl = useMemo(() => {
-    if (!data.origen?.trim() || !mainDestino.trim()) return null;
-    return `https://www.google.com/maps?saddr=${enc(data.origen)}&daddr=${enc(mainDestino)}&output=embed`;
-  }, [data.origen, mainDestino]);
-
-  const mapFooterText = useMemo(() => {
-    if (!data.origen?.trim() || !mainDestino.trim()) return null;
-    return {
-      origen: data.origen!,
-      destino: mainDestino,
-      extras: extraDestinos.map((d) => d.address),
-    };
-  }, [data.origen, mainDestino, extraDestinos]);
-
   function handleBack() {
     navigate("/solicitudes/transporte/paso-2");
   }
 
   async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-  const token = localStorage.getItem("auth_token");
+    const token = localStorage.getItem("auth_token");
 
-  // ─── 1. BLINDAJE DE DESTINOS ───
-  
-  // Obtenemos el array, asegurando que no sea undefined
-  const rawDestinos = payload.destinos || [];
-  
-  // Filtramos solo los que tienen texto real
-  const destinosValidos = rawDestinos.filter(d => d.address && d.address.trim().length > 0);
+    const rawDestinos = payload.destinos || [];
+    const destinosValidos = rawDestinos.filter((d) => d.address && d.address.trim().length > 0);
+    const destinoPrincipal =
+      destinosValidos.length > 0
+        ? destinosValidos[0].address
+        : "Destino pendiente de asignar";
+    const destinosExtras = destinosValidos
+      .slice(1)
+      .map((d) => d.address.trim())
+      .join(" - ");
 
-  // LÓGICA DE SEGURIDAD:
-  // Si hay al menos un destino válido, usamos el primero.
-  // SI NO HAY NINGUNO (array vacío), usamos un texto por defecto para que no falle.
-  const destinoPrincipal = destinosValidos.length > 0 
-      ? destinosValidos[0].address 
-      : "Destino pendiente de asignar"; // <--- ESTO EVITA EL ERROR validation.required
+    let infoExtra = `Encargado: ${payload.encargado}`;
+    if (payload.subencargado) infoExtra += ` / Sub: ${payload.subencargado}`;
+    if (destinosExtras.length > 0) infoExtra += ` / Ruta Extra: ${destinosExtras}`;
+    const motivoFinal = `Actividad de transporte. ${infoExtra}`;
 
-  // El resto (del segundo en adelante) son adicionales
-  const destinosExtras = destinosValidos.slice(1)
-    .map(d => d.address.trim())
-    .join(" - ");
+    const fechaStr = payload.fecha || new Date().toISOString().split("T")[0];
+    const horaStr = payload.hora || "08:00";
+    const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
+    const fechaYHoraCombinada = `${fechaStr}T${horaFinal}`;
+    const fechaRetornoFinal = `${fechaStr}T23:59:59`;
 
-  // ─── 2. PREPARAR MOTIVO ───
-  let infoExtra = `Encargado: ${payload.encargado}`;
-  if (payload.subencargado) infoExtra += ` / Sub: ${payload.subencargado}`;
-  if (destinosExtras.length > 0) infoExtra += ` / Ruta Extra: ${destinosExtras}`;
-  
-  const motivoFinal = `Actividad de transporte. ${infoExtra}`;
+    console.log(">> ENVIANDO DESTINO PRINCIPAL:", destinoPrincipal);
 
-  // ─── 3. FECHAS ISO ───
-  const fechaStr = payload.fecha || new Date().toISOString().split('T')[0]; // Fallback fecha hoy
-  const horaStr = payload.hora || "08:00"; // Fallback hora laboral
-  const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
-  
-  const fechaYHoraCombinada = `${fechaStr}T${horaFinal}`; 
-  const fechaRetornoFinal = `${fechaStr}T23:59:59`;
+    const res = await fetch(`${API_BASE}/api/transport-requests`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        "ngrok-skip-browser-warning": "true",
+      },
+      body: JSON.stringify({
+        destino_principal: destinoPrincipal,
+        encargado: payload.encargado || "Sin encargado",
+        tipo_vehiculo: payload.tipoVehiculo || "sedan",
+        fecha_salida: fechaYHoraCombinada,
+        hora_salida: horaStr,
+        fecha_retorno: fechaRetornoFinal,
+        destino_adicional: destinosExtras.length > 0 ? destinosExtras : null,
+        motivo_actividad: motivoFinal,
+        cantidad_personas: parseInt(payload.pasajeros || "1"),
+        origen: payload.origen || "Sin origen",
+        subencargado: payload.subencargado,
+        unidad_solicitante_id: 1,
+        prioridad: "media",
+      }),
+    });
 
-  // 🔍 DEBUG: Mira esto en la consola (F12) antes de que falle
-  console.log(">> ENVIANDO DESTINO PRINCIPAL:", destinoPrincipal);
+    let json: any = null;
+    try {
+      json = await res.json();
+    } catch { /* ignore */ }
 
-  const res = await fetch(`${API_BASE}/api/transport-requests`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json",
-      ...(token ? { "Authorization": `Bearer ${token}` } : {}),
-      "ngrok-skip-browser-warning": "true",
-    },
-    body: JSON.stringify({
-      // DATOS OBLIGATORIOS QUE DABAN ERROR
-      destino_principal: destinoPrincipal, // Ahora garantizado que lleva texto
-      
-      encargado: payload.encargado || "Sin encargado", // Blindaje extra
-      tipo_vehiculo: payload.tipoVehiculo || "sedan",  // Blindaje extra
+    if (!res.ok) {
+      const errorDetail = json?.errors
+        ? Object.entries(json.errors)
+            .map(([k, v]: any) => `${k}: ${v[0]}`)
+            .join("\n")
+        : json?.message;
+      throw new Error(errorDetail || "No se pudo enviar la solicitud.");
+    }
 
-      // RESTO DE DATOS
-      fecha_salida: fechaYHoraCombinada, 
-      hora_salida: horaStr,        
-      fecha_retorno: fechaRetornoFinal,  
-
-      destino_adicional: destinosExtras.length > 0 ? destinosExtras : null, 
-      motivo_actividad: motivoFinal,
-
-      cantidad_personas: parseInt(payload.pasajeros || "1"),
-      origen: payload.origen || "Sin origen",
-      subencargado: payload.subencargado,
-      
-      unidad_solicitante_id: 1, 
-      prioridad: "media",
-    }),
-  });
-
-  let json: any = null;
-  try { json = await res.json(); } catch { /* ignore */ }
-
-  if (!res.ok) {
-    const errorDetail = json?.errors 
-      ? Object.entries(json.errors).map(([k, v]: any) => `${k}: ${v[0]}`).join("\n")
-      : json?.message;
-    throw new Error(errorDetail || "No se pudo enviar la solicitud.");
+    return {
+      ok: true,
+      solicitudId: json?.codigo || json?.data?.codigo || json?.id,
+      message: json?.message,
+    };
   }
-
-  return {
-    ok: true,
-    solicitudId: json?.codigo || json?.data?.codigo || json?.id,
-    message: json?.message,
-  };
-}
 
   async function handleSubmit() {
     setErrorMsg(null);
@@ -305,41 +453,32 @@ export default function TransportStep3Page() {
             <div className="rounded-3xl border border-slate-200 bg-white shadow-sm">
               <div className="p-6 sm:p-8 space-y-8">
 
-                {/* bloque: datos viaje */}
+                {/* Datos del viaje */}
                 <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-extrabold tracking-wider text-slate-500">
-                    DATOS DEL VIAJE
-                  </p>
+                  <p className="text-xs font-extrabold tracking-wider text-slate-500">DATOS DEL VIAJE</p>
                   <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                    {/* ← NUEVA fila: tipo de vehículo */}
                     <p className="text-slate-700 sm:col-span-2">
                       <span className="font-semibold text-slate-900">Tipo de vehículo:</span>{" "}
                       {data.tipoVehiculo ? VEHICULO_LABELS[data.tipoVehiculo] : "—"}
                     </p>
                     <p className="text-slate-700">
-                      <span className="font-semibold text-slate-900">Fecha:</span>{" "}
-                      {data.fecha}
+                      <span className="font-semibold text-slate-900">Fecha:</span> {data.fecha}
                     </p>
                     <p className="text-slate-700">
-                      <span className="font-semibold text-slate-900">Hora:</span>{" "}
-                      {data.hora}
+                      <span className="font-semibold text-slate-900">Hora:</span> {data.hora}
                     </p>
                     <p className="text-slate-700">
-                      <span className="font-semibold text-slate-900">Pasajeros:</span>{" "}
-                      {data.pasajeros}
+                      <span className="font-semibold text-slate-900">Pasajeros:</span> {data.pasajeros}
                     </p>
                   </div>
                 </section>
 
-                {/* bloque: encargados */}
+                {/* Encargados */}
                 <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-extrabold tracking-wider text-slate-500">
-                    ENCARGADOS
-                  </p>
+                  <p className="text-xs font-extrabold tracking-wider text-slate-500">ENCARGADOS</p>
                   <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
                     <p className="text-slate-700">
-                      <span className="font-semibold text-slate-900">Encargado:</span>{" "}
-                      {data.encargado}
+                      <span className="font-semibold text-slate-900">Encargado:</span> {data.encargado}
                     </p>
                     <p className="text-slate-700">
                       <span className="font-semibold text-slate-900">Subencargado:</span>{" "}
@@ -348,31 +487,22 @@ export default function TransportStep3Page() {
                   </div>
                 </section>
 
-                {/* bloque: ruta */}
+                {/* Ruta */}
                 <section className="rounded-3xl border border-slate-200 bg-slate-50 p-5">
-                  <p className="text-xs font-extrabold tracking-wider text-slate-500">
-                    RUTA
-                  </p>
+                  <p className="text-xs font-extrabold tracking-wider text-slate-500">RUTA</p>
                   <div className="mt-4 space-y-2 text-sm text-slate-700">
                     <p>
-                      <span className="font-semibold text-slate-900">Origen:</span>{" "}
-                      {data.origen}
+                      <span className="font-semibold text-slate-900">Origen:</span> {data.origen}
                     </p>
                     <p>
-                      <span className="font-semibold text-slate-900">Destino 1:</span>{" "}
-                      {mainDestino}
+                      <span className="font-semibold text-slate-900">Destino 1:</span> {mainDestino}
                     </p>
                     {extraDestinos.length > 0 && (
                       <div className="pt-2">
-                        <p className="mb-2 text-xs font-bold text-slate-500">
-                          DESTINOS ADICIONALES
-                        </p>
+                        <p className="mb-2 text-xs font-bold text-slate-500">DESTINOS ADICIONALES</p>
                         <ul className="space-y-2">
                           {extraDestinos.map((d, idx) => (
-                            <li
-                              key={d.id}
-                              className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3"
-                            >
+                            <li key={d.id} className="flex items-start gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-3">
                               <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-extrabold text-indigo-700 ring-1 ring-indigo-100">
                                 {idx + 2}
                               </span>
@@ -385,7 +515,7 @@ export default function TransportStep3Page() {
                   </div>
                 </section>
 
-                {/* acciones */}
+                {/* Acciones */}
                 <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <button
                     onClick={handleBack}
@@ -406,8 +536,8 @@ export default function TransportStep3Page() {
                     {submitting ? (
                       <>
                         <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
                         </svg>
                         Enviando...
                       </>
@@ -431,62 +561,65 @@ export default function TransportStep3Page() {
             </div>
           </div>
 
-          {/* MAPA */}
+          {/* MAPA LEAFLET */}
           <div className="lg:col-span-2">
             <div className="sticky top-24 space-y-4">
               <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
                 <div className="border-b border-slate-200 px-6 py-4">
                   <h3 className="text-sm font-bold text-slate-900">Vista previa del mapa</h3>
-                  <p className="mt-1 text-xs text-slate-500">Se muestra la ruta Origen → Destino 1.</p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    Ruta completa con todos los puntos del viaje.
+                  </p>
                 </div>
 
-                <div className="h-[520px] bg-slate-50">
-                  {mapUrl ? (
-                    <iframe
-                      title="Mapa de ruta"
-                      className="h-full w-full"
-                      src={mapUrl}
-                      style={{ border: 0 }}
-                      loading="lazy"
-                      referrerPolicy="no-referrer-when-downgrade"
-                    />
-                  ) : (
-                    <div className="grid h-full w-full place-items-center p-6 text-center">
-                      <div className="max-w-xs">
-                        <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-2xl bg-indigo-50 ring-1 ring-indigo-100">
-                          <svg className="h-6 w-6 text-indigo-700" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                          </svg>
-                        </div>
-                        <p className="text-sm font-semibold text-slate-700">No hay datos para el mapa</p>
-                        <p className="mt-1 text-xs text-slate-500">Regresa al paso 2 y completa origen y destino.</p>
+                <div id="map-resumen" className="h-[500px] bg-slate-50" />
+
+                {/* Distancia y tiempo */}
+                {routeInfo && (
+                  <div className="border-t border-slate-200 bg-white px-6 py-4">
+                    <div className="flex items-center gap-6 text-sm text-slate-700">
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
+                        </svg>
+                        <span>
+                          <span className="font-semibold">Distancia:</span>{" "}
+                          {routeInfo.distance.toFixed(1)} km
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span>
+                          <span className="font-semibold">Tiempo aprox.:</span>{" "}
+                          {(routeInfo.duration * 60).toFixed(0)} min
+                        </span>
                       </div>
                     </div>
-                  )}
-                </div>
-
-                {mapFooterText && (
-                  <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-                    <p className="text-xs text-slate-600">
-                      <span className="font-semibold">Origen:</span> {mapFooterText.origen}
-                      <br />
-                      <span className="font-semibold">Destino:</span> {mapFooterText.destino}
-                      {mapFooterText.extras.length > 0 && (
-                        <>
-                          <br />
-                          <span className="font-semibold">Adicionales:</span>{" "}
-                          {mapFooterText.extras.join(" • ")}
-                        </>
-                      )}
+                    <p className="mt-1.5 text-xs text-slate-400">
+                      * Estimación sin considerar tráfico en tiempo real.
                     </p>
                   </div>
                 )}
-              </div>
 
-              <div className="rounded-3xl border border-slate-200 bg-white px-6 py-5 text-xs text-slate-600 shadow-sm">
-                <span className="font-semibold">💡 Tip:</span> cuando tu backend
-                esté listo, devuelve un identificador (ej: <b>ST-2026-001</b>) y
-                aquí lo mostraremos en el modal de éxito.
+                {/* Leyenda de la ruta */}
+                <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
+                  <div className="space-y-1.5 text-xs text-slate-600">
+                    <p className="font-semibold text-slate-700">Resumen de ruta:</p>
+                    <p>
+                      <span className="font-semibold">📍 Origen:</span> {data.origen}
+                    </p>
+                    <p>
+                      <span className="font-semibold">🔴 Destino 1:</span> {mainDestino}
+                    </p>
+                    {extraDestinos.map((d, idx) => (
+                      <p key={d.id}>
+                        <span className="font-semibold">🔴 Destino {idx + 2}:</span> {d.address}
+                      </p>
+                    ))}
+                  </div>
+                </div>
               </div>
             </div>
           </div>
