@@ -28,7 +28,7 @@ class NotificacionEventMail extends Mailable
     public function build()
     {
         return $this->subject($this->subject)
-                    ->view('emails.notificacion_event')  // ← Cambié el guion medio (-) por guion bajo (_)
+                    ->view('emails.notificacion_event')
                     ->with([
                         'subject' => $this->subject,
                         'payload' => $this->payload,
