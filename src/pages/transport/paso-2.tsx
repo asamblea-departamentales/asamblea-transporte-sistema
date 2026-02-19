@@ -1,3 +1,4 @@
+//Src/pages/transport/paso-2.tsx
 import { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import L from "leaflet";
@@ -26,6 +27,7 @@ type WizardData = {
 };
 
 const STORAGE_KEY = "solicitud_transporte";
+const NOMINATIM_EMAIL = "app@transporte.institucional.sv";
 
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
@@ -39,25 +41,19 @@ function safeParse(json: string | null): any {
   }
 }
 
-// Función para geocodificar usando Nominatim (OpenStreetMap)
-async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}&countrycodes=sv&limit=1`
-    );
-    const data = await response.json();
-    
-    if (data && data.length > 0) {
-      return {
-        lat: parseFloat(data[0].lat),
-        lng: parseFloat(data[0].lon),
-      };
-    }
-    return null;
-  } catch (error) {
-    console.error("Error geocoding:", error);
-    return null;
-  }
+// Fórmula Haversine para calcular distancia entre dos coordenadas (en km)
+function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLon = ((lon2 - lon1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLon / 2) *
+      Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return R * c;
 }
 
 export default function TransportStep2Page() {
@@ -66,6 +62,10 @@ export default function TransportStep2Page() {
   const markersRef = useRef<L.Marker[]>([]);
   const routeLayerRef = useRef<L.Polyline | null>(null);
 
+  // AbortController como useRef para evitar conflictos entre instancias
+  const geocodeControllerRef = useRef<AbortController | null>(null);
+  const reverseGeoControllerRef = useRef<AbortController | null>(null);
+
   const [origen, setOrigen] = useState("");
   const [origenCoords, setOrigenCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [destinos, setDestinos] = useState<DestinationPoint[]>([
@@ -73,10 +73,48 @@ export default function TransportStep2Page() {
   ]);
   const [error, setError] = useState(false);
   const [isGeocoding, setIsGeocoding] = useState(false);
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+
+  // Función de geocodificación robusta con AbortController y email institucional
+  async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
+    try {
+      if (geocodeControllerRef.current) {
+        geocodeControllerRef.current.abort();
+      }
+      geocodeControllerRef.current = new AbortController();
+
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+          address
+        )}&countrycodes=sv&limit=1&email=${NOMINATIM_EMAIL}`,
+        {
+          signal: geocodeControllerRef.current.signal,
+          headers: { "Accept-Language": "es" },
+        }
+      );
+
+      const data = await response.json();
+
+      if (data?.length > 0) {
+        return {
+          lat: parseFloat(data[0].lat),
+          lng: parseFloat(data[0].lon),
+        };
+      }
+      return null;
+    } catch (error: any) {
+      if (error.name !== "AbortError") {
+        console.error("Error geocoding:", error);
+      }
+      return null;
+    }
+  }
 
   // Iconos personalizados para los marcadores
   const originIcon = L.icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+    iconUrl:
+      "data:image/svg+xml;base64," +
+      btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#4F46E5" width="32" height="32">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
       </svg>
@@ -87,7 +125,9 @@ export default function TransportStep2Page() {
   });
 
   const destinationIcon = L.icon({
-    iconUrl: 'data:image/svg+xml;base64,' + btoa(`
+    iconUrl:
+      "data:image/svg+xml;base64," +
+      btoa(`
       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#DC2626" width="32" height="32">
         <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
       </svg>
@@ -101,49 +141,62 @@ export default function TransportStep2Page() {
   useEffect(() => {
     if (!mapRef.current) {
       const map = L.map("map").setView([13.7942, -88.8965], 9);
-      
+
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        attribution:
+          '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
         maxZoom: 19,
       }).addTo(map);
 
       mapRef.current = map;
 
-      // Permitir hacer clic en el mapa para seleccionar ubicaciones
+      // Clic en el mapa para seleccionar ubicaciones
       map.on("click", async (e) => {
         const { lat, lng } = e.latlng;
-        
-        // Reverse geocoding para obtener la dirección
+
         try {
+          // Cancelar reverse geocoding anterior si existe
+          if (reverseGeoControllerRef.current) {
+            reverseGeoControllerRef.current.abort();
+          }
+          reverseGeoControllerRef.current = new AbortController();
+
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&email=${NOMINATIM_EMAIL}`,
+            {
+              signal: reverseGeoControllerRef.current.signal,
+              headers: { "Accept-Language": "es" },
+            }
           );
           const data = await response.json();
-          const address = data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
-          
-          // Si no hay origen, establecerlo
+          const address =
+            data.display_name || `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+
           setOrigenCoords((currentOrigenCoords) => {
             if (!currentOrigenCoords) {
               setOrigen(address);
               return { lat, lng };
             }
-            
-            // Agregar como destino o actualizar el primero vacío
+
             setDestinos((currentDestinos) => {
-              const emptyIndex = currentDestinos.findIndex(d => !d.address.trim());
+              const emptyIndex = currentDestinos.findIndex(
+                (d) => !d.address.trim()
+              );
               if (emptyIndex !== -1) {
-                return currentDestinos.map((d, i) => 
+                return currentDestinos.map((d, i) =>
                   i === emptyIndex ? { ...d, address, lat, lng } : d
                 );
               } else {
                 return [...currentDestinos, { id: uid(), address, lat, lng }];
               }
             });
-            
+
             return currentOrigenCoords;
           });
-        } catch (error) {
-          console.error("Error reverse geocoding:", error);
+        } catch (error: any) {
+          if (error.name !== "AbortError") {
+            console.error("Error reverse geocoding:", error);
+          }
         }
       });
     }
@@ -172,12 +225,12 @@ export default function TransportStep2Page() {
     }
   }, []);
 
-  // Actualizar marcadores y ruta cuando cambien las coordenadas
+  // Actualizar marcadores, ruta y calcular distancia/tiempo cuando cambien las coordenadas
   useEffect(() => {
     if (!mapRef.current) return;
 
     // Limpiar marcadores anteriores
-    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current.forEach((marker) => marker.remove());
     markersRef.current = [];
 
     // Limpiar ruta anterior
@@ -188,16 +241,18 @@ export default function TransportStep2Page() {
 
     const bounds: [number, number][] = [];
 
-    // Agregar marcador de origen
+    // Marcador de origen
     if (origenCoords) {
-      const marker = L.marker([origenCoords.lat, origenCoords.lng], { icon: originIcon })
+      const marker = L.marker([origenCoords.lat, origenCoords.lng], {
+        icon: originIcon,
+      })
         .addTo(mapRef.current)
         .bindPopup(`<b>Origen:</b><br>${origen}`);
       markersRef.current.push(marker);
       bounds.push([origenCoords.lat, origenCoords.lng]);
     }
 
-    // Agregar marcadores de destinos
+    // Marcadores de destinos
     destinos.forEach((dest, index) => {
       if (dest.lat && dest.lng) {
         const marker = L.marker([dest.lat, dest.lng], { icon: destinationIcon })
@@ -208,13 +263,13 @@ export default function TransportStep2Page() {
       }
     });
 
-    // Dibujar ruta si hay origen y al menos un destino
-    if (origenCoords && destinos.some(d => d.lat && d.lng)) {
+    // Dibujar ruta y calcular distancia
+    const destinosConCoords = destinos.filter((d) => d.lat && d.lng);
+
+    if (origenCoords && destinosConCoords.length > 0) {
       const routePoints: L.LatLngExpression[] = [
         [origenCoords.lat, origenCoords.lng],
-        ...destinos
-          .filter(d => d.lat && d.lng)
-          .map(d => [d.lat!, d.lng!] as L.LatLngExpression),
+        ...destinosConCoords.map((d) => [d.lat!, d.lng!] as L.LatLngExpression),
       ];
 
       routeLayerRef.current = L.polyline(routePoints, {
@@ -223,16 +278,41 @@ export default function TransportStep2Page() {
         opacity: 0.7,
         dashArray: "10, 10",
       }).addTo(mapRef.current);
+
+      // Calcular distancia total de la ruta
+      let totalDistance = 0;
+      let prev = origenCoords;
+
+      destinosConCoords.forEach((dest) => {
+        totalDistance += calculateDistance(
+          prev.lat,
+          prev.lng,
+          dest.lat!,
+          dest.lng!
+        );
+        prev = { lat: dest.lat!, lng: dest.lng! };
+      });
+
+      if (totalDistance > 0) {
+        // Velocidad promedio estimada (considerando tráfico urbano/interurbano de El Salvador)
+        const avgSpeed = 45; // km/h
+        const estimatedTime = totalDistance / avgSpeed;
+        setRouteInfo({ distance: totalDistance, duration: estimatedTime });
+      }
+    } else {
+      setRouteInfo(null);
     }
 
-    // Ajustar vista del mapa para mostrar todos los puntos
+    // Ajustar vista del mapa
     if (bounds.length > 0) {
-      mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
+      mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, {
+        padding: [50, 50],
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [origenCoords, destinos]);
 
-  // Geocodificar cuando el usuario termina de escribir
+  // Geocodificar origen cuando el usuario termina de escribir (debounce 1s)
   useEffect(() => {
     const timer = setTimeout(async () => {
       if (origen.trim() && !origenCoords) {
@@ -258,17 +338,17 @@ export default function TransportStep2Page() {
     );
     setError(false);
 
-    // Geocodificar después de 1 segundo si no hay coordenadas
+    // Geocodificar destino con debounce si no tiene coordenadas
     if (!lat || !lng) {
       setTimeout(async () => {
-        const dest = destinos.find(d => d.id === id);
-        if (dest && dest.address.trim() && (!dest.lat || !dest.lng)) {
-          const coords = await geocodeAddress(address);
-          if (coords) {
-            setDestinos(prev =>
-              prev.map(d => d.id === id ? { ...d, lat: coords.lat, lng: coords.lng } : d)
-            );
-          }
+        if (!address.trim()) return;
+        const coords = await geocodeAddress(address);
+        if (coords) {
+          setDestinos((prev) =>
+            prev.map((d) =>
+              d.id === id ? { ...d, lat: coords.lat, lng: coords.lng } : d
+            )
+          );
         }
       }, 1000);
     }
@@ -293,13 +373,11 @@ export default function TransportStep2Page() {
   }
 
   function handleContinue() {
-    // Validar origen y al menos un destino
     if (!origen.trim() || !destinos[0]?.address.trim()) {
       setError(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-
     saveToStorage();
     navigate("/solicitudes/transporte/paso-3");
   }
@@ -423,7 +501,7 @@ export default function TransportStep2Page() {
                       value={origen}
                       onChange={(e) => {
                         setOrigen(e.target.value);
-                        setOrigenCoords(null); // Reset coords para forzar nueva geocodificación
+                        setOrigenCoords(null);
                         setError(false);
                       }}
                       placeholder="Ej: Asamblea Legislativa, San Salvador, El Salvador"
@@ -431,7 +509,11 @@ export default function TransportStep2Page() {
                     />
                     <p className="mt-2 text-xs text-slate-500">
                       Ingrese la dirección completa o haga clic en el mapa para seleccionar.
-                      {isGeocoding && <span className="ml-2 text-indigo-600">Buscando ubicación...</span>}
+                      {isGeocoding && (
+                        <span className="ml-2 text-indigo-600">
+                          Buscando ubicación...
+                        </span>
+                      )}
                     </p>
                   </div>
                 </section>
@@ -467,7 +549,9 @@ export default function TransportStep2Page() {
                         <div className="mb-2 flex items-center justify-between">
                           <label className="text-xs font-semibold text-slate-700">
                             Destino {index + 1}{" "}
-                            {index === 0 && <span className="text-red-500">*</span>}
+                            {index === 0 && (
+                              <span className="text-red-500">*</span>
+                            )}
                           </label>
                           {destinos.length > 1 && (
                             <button
@@ -580,6 +664,55 @@ export default function TransportStep2Page() {
 
                 <div id="map" className="h-[500px] bg-slate-50"></div>
 
+                {/* Distancia y tiempo estimado */}
+                {routeInfo && (
+                  <div className="border-t border-slate-200 bg-white px-6 py-4">
+                    <div className="flex items-center gap-6 text-sm text-slate-700">
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 text-indigo-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"
+                          />
+                        </svg>
+                        <span>
+                          <span className="font-semibold">Distancia:</span>{" "}
+                          {routeInfo.distance.toFixed(1)} km
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <svg
+                          className="h-4 w-4 text-indigo-600"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                        <span>
+                          <span className="font-semibold">Tiempo aprox.:</span>{" "}
+                          {(routeInfo.duration * 60).toFixed(0)} min
+                        </span>
+                      </div>
+                    </div>
+                    <p className="mt-1.5 text-xs text-slate-400">
+                      * Estimación sin considerar tráfico en tiempo real.
+                    </p>
+                  </div>
+                )}
+
                 {/* Info adicional */}
                 <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
                   <div className="space-y-2 text-xs text-slate-600">
@@ -588,7 +721,9 @@ export default function TransportStep2Page() {
                     </p>
                     <ul className="ml-4 space-y-1 list-disc">
                       <li>Escriba direcciones completas en los campos de texto</li>
-                      <li>O haga clic directamente en el mapa para seleccionar ubicaciones</li>
+                      <li>
+                        O haga clic directamente en el mapa para seleccionar ubicaciones
+                      </li>
                       <li>El marcador azul 📍 indica el origen</li>
                       <li>Los marcadores rojos 📍 indican los destinos</li>
                     </ul>
