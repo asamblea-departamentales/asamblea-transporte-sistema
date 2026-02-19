@@ -30,21 +30,21 @@
             gap:16px;
         }
         .email-logo {
-            width:56px;
-            height:56px;
-            border-radius:50%;
-            overflow:hidden;
-            background:#0f172a;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-shrink:0;
-        }
-        .email-logo img {
-            width:100%;
-            height:100%;
-            object-fit:cover;
-        }
+    width:40px;          /* 👈 Más pequeño */
+    height:40px;
+    border-radius:50%;
+    overflow:hidden;
+    background:#0f172a;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+}
+    .email-logo img {
+    width:80%;           /* 👈 El logo ocupará 80% del círculo */
+    height:80%;
+    object-fit:contain;
+    }
         .email-header-text h1 {
             font-size:18px;
             font-weight:700;
