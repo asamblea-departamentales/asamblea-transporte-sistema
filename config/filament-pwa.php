@@ -1,46 +1,43 @@
 <?php
 
 return [
-    /*
-     * ---------------------------------------------------------------
-     * Add Middleware To Routes
-     * ---------------------------------------------------------------
-     */
     "middlewares" => [],
-
-    /*
-     * ---------------------------------------------------------------
-     * Allow Routes
-     * ---------------------------------------------------------------
-     */
     "allow_routes" => true,
 
-    /*
-     * ---------------------------------------------------------------
-     * PWA Manifest Configuration
-     * ---------------------------------------------------------------
-     */
-    'name' => env('APP_NAME', 'Transporte Asamblea'),
-    'short_name' => 'Transporte',
-    'description' => 'Sistema de Gestión de Transporte para la Asamblea Legislativa de El Salvador',
-    'start_url' => '/admin',
-    'background_color' => '#FFFFFF',
-    'theme_color' => '#1E40AF',
-    'display' => 'standalone',
-    'orientation' => 'portrait',
-    'scope' => '/',
+    'name'             => env('APP_NAME', 'Transporte Asamblea'),
+    'short_name'       => 'Aprobaciones',
+    'description'      => 'Panel de aprobaciones - Asamblea Legislativa de El Salvador',
+    'start_url'        => '/admin/',
+    'background_color' => '#1E40AF',  // fondo azul para que el ícono con fondo transparente se vea bien
+    'theme_color'      => '#1E40AF',
+    'display'          => 'standalone',
+    'orientation'      => 'portrait',
+    'scope'            => '/admin/',  // ← solo controla /admin/, no todo el sitio
+
     'icons' => [
         [
-            'src' => '/images/logo-azul-fondo-transparente.png',
-            'sizes' => '192x192',
-            'type' => 'image/png',
-            'purpose' => 'any maskable',
+            'src'     => '/vendor/filament-pwa/icons/icon-192x192.png',
+            'sizes'   => '192x192',
+            'type'    => 'image/png',
+            'purpose' => 'any',
         ],
         [
-            'src' => '/images/logo-blanco-fondo-transparente.png',
-            'sizes' => '512x512',
-            'type' => 'image/png',
-            'purpose' => 'any maskable',
+            'src'     => '/vendor/filament-pwa/icons/icon-512x512.png',
+            'sizes'   => '512x512',
+            'type'    => 'image/png',
+            'purpose' => 'any',
+        ],
+        [
+            'src'     => '/vendor/filament-pwa/icons/icon-192x192-maskable.png',
+            'sizes'   => '192x192',
+            'type'    => 'image/png',
+            'purpose' => 'maskable',
+        ],
+        [
+            'src'     => '/vendor/filament-pwa/icons/icon-512x512-maskable.png',
+            'sizes'   => '512x512',
+            'type'    => 'image/png',
+            'purpose' => 'maskable',
         ],
     ],
 ];

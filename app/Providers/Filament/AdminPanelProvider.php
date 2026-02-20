@@ -47,8 +47,7 @@ class AdminPanelProvider extends PanelProvider
                     ->checkboxListColumns([ 'default' => 1, 'sm' => 2, 'lg' => 4 ])
                     ->resourceCheckboxListColumns([ 'default' => 1, 'sm' => 2 ]),
 
-            //FilamentPwaPlugin::make()
-            //->startUrl('/admin')
+                FilamentPwaPlugin::make(),
             ]) //Cierra el array de plugins
 
             ->colors([
@@ -94,6 +93,20 @@ class AdminPanelProvider extends PanelProvider
                         <p>Todos los derechos reservados.</p>
                     </div>
                 '),
-            );
+            )
+
+            ->renderHook(
+    PanelsRenderHook::HEAD_START,
+    fn () => '
+        <meta name="color-scheme" content="light">
+        <style>
+            :root { color-scheme: light !important; }
+            html, body {
+                background-color: #ffffff !important;
+                color: #111827 !important;
+            }
+        </style>
+    ',
+); 
     }
 }

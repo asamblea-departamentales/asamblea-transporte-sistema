@@ -93,87 +93,83 @@ class PWAInstaller {
     }
 
     createInstallBanner() {
-        // Check if we should show banner in debug mode
-        const isDebugMode = {{ config('app.debug') ? 'true' : 'false' }};
-        const showBannerInDebug = this.config.installation?.show_banner_in_debug ?? true;
+    // Siempre verificar dismissed PRIMERO, antes de cualquier otra lógica
+    const dismissed = localStorage.getItem('pwa-banner-dismissed');
+    const alreadyDismissed = dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000;
 
-        // In debug mode, bypass installation and dismissal checks if debug banner is enabled
-        if (isDebugMode && showBannerInDebug) {
-            console.log('[PWA] Debug mode: Showing installation banner regardless of state');
-        } else {
-            // Normal logic: Don't show banner if already installed or disabled
-            if (this.isInstalled || !this.config.installation_prompts?.enabled) return;
-        }
+    if (this.isInstalled || alreadyDismissed || !this.config.installation_prompts?.enabled) return;
 
-        const banner = document.createElement('div');
-        banner.className = 'pwa-install-banner';
-        banner.innerHTML = `
-            <div class="pwa-install-content">
-                <div class="pwa-install-text">
-                    <div class="pwa-install-title">{{ __('filament-pwa::pwa.install_title') }}</div>
-                    <div class="pwa-install-description">{{ __('filament-pwa::pwa.install_description') }}</div>
-                </div>
-                <div class="pwa-install-actions">
-                    <button class="pwa-install-btn primary" id="pwa-install-btn">
-                        <svg class="pwa-install-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                        {{ __('filament-pwa::pwa.install_button') }}
-                    </button>
-                    <button class="pwa-install-btn" id="pwa-dismiss-btn">
-                        <svg class="pwa-install-icon" fill="currentColor" viewBox="0 0 20 20">
-                            <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
-                        </svg>
-                        {{ __('filament-pwa::pwa.dismiss_button') }}
-                    </button>
-                </div>
+    const isDebugMode = {{ config('app.debug') ? 'true' : 'false' }};
+    if (isDebugMode) {
+        console.log('[PWA] Debug mode: Banner visible pero respeta dismiss del usuario');
+    }
+
+    const banner = document.createElement('div');
+    banner.className = 'pwa-install-banner';
+    banner.innerHTML = `
+        <div class="pwa-install-content">
+            <div class="pwa-install-text">
+                <div class="pwa-install-title">{{ __('filament-pwa::pwa.install_title') }}</div>
+                <div class="pwa-install-description">{{ __('filament-pwa::pwa.install_description') }}</div>
             </div>
-        `;
+            <div class="pwa-install-actions">
+                <button class="pwa-install-btn primary" id="pwa-install-btn">
+                    <svg class="pwa-install-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ __('filament-pwa::pwa.install_button') }}
+                </button>
+                <button class="pwa-install-btn" id="pwa-dismiss-btn">
+                    <svg class="pwa-install-icon" fill="currentColor" viewBox="0 0 20 20">
+                        <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd"></path>
+                    </svg>
+                    {{ __('filament-pwa::pwa.dismiss_button') }}
+                </button>
+            </div>
+        </div>
+    `;
 
-        document.body.appendChild(banner);
-        this.banner = banner;
+    document.body.appendChild(banner);
+    this.banner = banner;
 
-        // Add event listeners
-        document.getElementById('pwa-install-btn').addEventListener('click', () => {
-            this.installApp();
-        });
+    document.getElementById('pwa-install-btn').addEventListener('click', () => {
+        this.installApp();
+    });
 
-        document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
-            this.dismissInstallBanner();
-        });
+    document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
+        this.dismissInstallBanner();
+    });
+}
+
+    // ✅ DESPUÉS - siempre respeta el dismiss
+showInstallBanner() {
+    if (!this.banner) return;
+
+    // Siempre respetar si el usuario ya lo instaló
+    if (this.isInstalled) return;
+
+    // Siempre respetar si el usuario descartó (independiente de debug)
+    const dismissed = localStorage.getItem('pwa-banner-dismissed');
+    if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
+        console.log('[PWA] Banner dismissed by user, skipping.');
+        return;
     }
 
-    showInstallBanner() {
-        if (!this.banner) return;
+    const isDebugMode = {{ config('app.debug') ? 'true' : 'false' }};
+    const showBannerInDebug = this.config.installation?.show_banner_in_debug ?? true;
 
-        // Check if we should show banner in debug mode
-        const isDebugMode = {{ config('app.debug') ? 'true' : 'false' }};
-        const showBannerInDebug = this.config.installation?.show_banner_in_debug ?? true;
-
-        // In debug mode, bypass all checks if debug banner is enabled
-        if (isDebugMode && showBannerInDebug) {
-            console.log('[PWA] Debug mode: Bypassing dismissal and installation checks');
-            const delay = this.config.installation?.prompt_delay || this.config.installation_prompts?.delay || 2000;
-            setTimeout(() => {
-                this.banner.classList.add('show');
-            }, delay);
-            return;
-        }
-
-        // Normal logic: Check installation status and dismissal
-        if (this.isInstalled) return;
-
-        // Don't show if user dismissed recently
-        const dismissed = localStorage.getItem('pwa-banner-dismissed');
-        if (dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000) {
-            return;
-        }
-
-        const delay = this.config.installation_prompts?.delay || 2000;
-        setTimeout(() => {
-            this.banner.classList.add('show');
-        }, delay);
+    if (isDebugMode) {
+        console.log('[PWA] Debug mode - banner will show but respects user dismissal');
     }
+
+    const delay = this.config.installation?.prompt_delay 
+               || this.config.installation_prompts?.delay 
+               || 2000;
+               
+    setTimeout(() => {
+        this.banner.classList.add('show');
+    }, delay);
+}
 
     hideInstallBanner() {
         if (this.banner) {
