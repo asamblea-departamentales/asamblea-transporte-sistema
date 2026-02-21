@@ -68,8 +68,9 @@ class PWAInstaller {
     async registerServiceWorker() {
         if ('serviceWorker' in navigator) {
             try {
-                const registration = await navigator.serviceWorker.register('{{ route("filament-pwa.service-worker") }}', {
-                    scope: this.config.scope || '/admin'
+                   const registration = await navigator.serviceWorker.register('/sw.js', {
+                     scope: '/admin/'
+            });
                 });
                 
                 console.log('[PWA] Service Worker registered successfully:', registration);
