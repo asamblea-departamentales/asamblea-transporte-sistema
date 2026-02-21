@@ -92,16 +92,14 @@ class PWAInstaller {
     }  
 
     createInstallBanner() {
-    // Siempre verificar dismissed PRIMERO, antes de cualquier otra lógica
     const dismissed = localStorage.getItem('pwa-banner-dismissed');
     const alreadyDismissed = dismissed && Date.now() - parseInt(dismissed) < 7 * 24 * 60 * 60 * 1000;
 
-    if (this.isInstalled || alreadyDismissed || !this.config.installation_prompts?.enabled) return;
+    if (this.isInstalled || alreadyDismissed) return;
 
-    const isDebugMode = {{ config('app.debug') ? 'true' : 'false' }};
-    if (isDebugMode) {
-        console.log('[PWA] Debug mode: Banner visible pero respeta dismiss del usuario');
-    }
+    // En desktop solo mostrar si hay prompt disponible
+    const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+    if (!isMobile && !this.deferredPrompt) return;
 
     const banner = document.createElement('div');
     banner.className = 'pwa-install-banner';
@@ -138,6 +136,11 @@ class PWAInstaller {
     document.getElementById('pwa-dismiss-btn').addEventListener('click', () => {
         this.dismissInstallBanner();
     });
+
+    // Mostrar el banner con delay
+    setTimeout(() => {
+        banner.classList.add('show');
+    }, 2000);
 }
 
     // ✅ DESPUÉS - siempre respeta el dismiss
@@ -182,35 +185,32 @@ showInstallBanner() {
     }
 
     async installApp() {
-        if (!this.deferredPrompt) {
-            console.log('[PWA] No deferred prompt available');
-            return;
+    if (!this.deferredPrompt) {
+        // Móvil sin prompt automático — instrucciones manuales
+        const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        if (isMobile) {
+            alert('Para instalar la app:\n\n1. Toca los 3 puntos (⋮) del navegador\n2. Selecciona "Añadir a pantalla de inicio"\n3. Confirma tocando "Añadir"');
         }
-
-        try {
-            // Show the install prompt
-            this.deferredPrompt.prompt();
-
-            // Wait for the user to respond
-            const { outcome } = await this.deferredPrompt.userChoice;
-            
-            console.log('[PWA] User choice:', outcome);
-
-            if (outcome === 'accepted') {
-                console.log('[PWA] User accepted the install prompt');
-                this.hideInstallBanner();
-            } else {
-                console.log('[PWA] User dismissed the install prompt');
-                this.dismissInstallBanner();
-            }
-
-            // Clear the deferred prompt
-            this.deferredPrompt = null;
-
-        } catch (error) {
-            console.error('[PWA] Error during installation:', error);
-        }
+        this.dismissInstallBanner();
+        return;
     }
+
+    try {
+        this.deferredPrompt.prompt();
+        const { outcome } = await this.deferredPrompt.userChoice;
+        console.log('[PWA] User choice:', outcome);
+
+        if (outcome === 'accepted') {
+            this.hideInstallBanner();
+        } else {
+            this.dismissInstallBanner();
+        }
+
+        this.deferredPrompt = null;
+    } catch (error) {
+        console.error('[PWA] Error durante instalación:', error);
+    }
+}
 
     handleIOSInstallation() {
         // Check if iOS Safari
