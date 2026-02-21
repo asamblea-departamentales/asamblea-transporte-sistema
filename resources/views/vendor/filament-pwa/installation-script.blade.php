@@ -66,32 +66,30 @@ class PWAInstaller {
     }
 
     async registerServiceWorker() {
-        if ('serviceWorker' in navigator) {
-            try {
-                   const registration = await navigator.serviceWorker.register('/sw.js', {
-                     scope: '/admin/'
+    if ('serviceWorker' in navigator) {
+        try {
+            const registration = await navigator.serviceWorker.register('/sw.js', {
+                scope: '/admin/'
             });
-                });
-                
-                console.log('[PWA] Service Worker registered successfully:', registration);
+            
+            console.log('[PWA] Service Worker registered successfully:', registration);
 
-                // Handle service worker updates
-                registration.addEventListener('updatefound', () => {
-                    const newWorker = registration.installing;
-                    newWorker.addEventListener('statechange', () => {
-                        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                            this.showUpdateAvailable();
-                        }
-                    });
+            registration.addEventListener('updatefound', () => {
+                const newWorker = registration.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        this.showUpdateAvailable();
+                    }
                 });
+            });
 
-            } catch (error) {
-                console.error('[PWA] Service Worker registration failed:', error);
-            }
-        } else {
-            console.log('[PWA] Service Worker not supported');
+        } catch (error) {
+            console.error('[PWA] Service Worker registration failed:', error);
         }
+    } else {
+        console.log('[PWA] Service Worker not supported');
     }
+    }  
 
     createInstallBanner() {
     // Siempre verificar dismissed PRIMERO, antes de cualquier otra lógica
