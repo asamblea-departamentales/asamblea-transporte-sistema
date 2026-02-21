@@ -8,8 +8,8 @@ return [
     'short_name'       => 'Aprobaciones',
     'description'      => 'Panel de aprobaciones - Asamblea Legislativa de El Salvador',
     'start_url'        => '/admin/',
-    'background_color' => '#1E40AF',  // fondo azul para que el ícono con fondo transparente se vea bien
-    'theme_color'      => '#1E40AF',
+    'background_color' => '#FFFFFF',  // ← blanco
+    'theme_color'      => '#1E40AF',  // ← este se queda azul
     'display'          => 'standalone',
     'orientation'      => 'portrait',
     'scope'            => '/admin/',  // ← solo controla /admin/, no todo el sitio
