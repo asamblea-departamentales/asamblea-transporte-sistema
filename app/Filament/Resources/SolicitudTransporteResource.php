@@ -24,8 +24,6 @@ use App\Models\HistorialEstado;
 use App\Models\BitacoraEvento;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 
-use function Symfony\Component\Clock\now;
-
 class SolicitudTransporteResource extends Resource
 {
     protected static ?string $model = SolicitudTransporte::class;
@@ -129,7 +127,7 @@ class SolicitudTransporteResource extends Resource
                     ->collapsed()
                     ->compact(),
 
-                // ✅ MOTIVO (colapsable)
+                //  MOTIVO (colapsable)
                 Forms\Components\Section::make('Motivo de la actividad')
                     ->schema([
                         Forms\Components\Placeholder::make('motivo_ui')
@@ -140,7 +138,7 @@ class SolicitudTransporteResource extends Resource
                     ->collapsed(false)
                     ->compact(),
 
-                // ✅ DECISIÓN / AUDITORÍA (colapsable) - RESPONSIVE
+                //  DECISIÓN / AUDITORÍA (colapsable) - RESPONSIVE
                 Forms\Components\Section::make('Decisión / Auditoría')
                     ->schema([
                         Forms\Components\Placeholder::make('comentario_jefe_ui')
@@ -174,7 +172,7 @@ class SolicitudTransporteResource extends Resource
                     ->collapsed()
                     ->compact(),
 
-                // ✅ HISTORIAL
+                //  HISTORIAL
                 Forms\Components\Section::make('Historial de estados')
                     ->schema([
                         Forms\Components\Repeater::make('historial_ui')
@@ -221,14 +219,14 @@ class SolicitudTransporteResource extends Resource
         return $table
             ->defaultSort('fecha_salida', 'asc')
 
-            // ✅ CARDS / GRID para mejor UX en móvil
+            //  CARDS / GRID para mejor UX en móvil
             ->contentGrid([
                 'default' => 1,
                 'md' => 2,
                 'xl' => 3,
             ])
 
-            // ✅ Tap en tarjeta/fila para abrir el detalle (mobile feel)
+            //  Tap en tarjeta/fila para abrir el detalle (mobile feel)
             ->recordUrl(fn (SolicitudTransporte $record) => static::getUrl('view', ['record' => $record]))
 
             ->columns([
@@ -297,7 +295,7 @@ class SolicitudTransporteResource extends Resource
                         EstadoSolicitudEnum::APROBADA => 'success',
                         EstadoSolicitudEnum::RECHAZADA => 'danger',
                         EstadoSolicitudEnum::PROGRAMADA => 'info',
-                        EstadoSolicitudEnum::EN_EJECUCUCION => 'primary',
+                        EstadoSolicitudEnum::EN_EJECUCION => 'primary',
                         EstadoSolicitudEnum::COMPLETADA => 'success',
                         EstadoSolicitudEnum::CANCELADA => 'gray',
                         default => 'primary',
@@ -345,7 +343,7 @@ class SolicitudTransporteResource extends Resource
             ->actions([
                 Tables\Actions\ViewAction::make(),
 
-                // ✅ Agrupar acciones para que no se vea saturado en móvil
+                //  Agrupar acciones para que no se vea saturado en móvil
                 Tables\Actions\ActionGroup::make([
                     Tables\Actions\Action::make('observacion')
                         ->label('Observación')
@@ -422,7 +420,7 @@ class SolicitudTransporteResource extends Resource
                             in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
                         ),
 
-                    // APROBAR (PROGRAMAR) - se mantiene igual
+                    // APROBAR (PROGRAMAR)
                     Tables\Actions\Action::make('aprobar')
                         ->label('Aprobar')
                         ->color('success')
@@ -438,27 +436,40 @@ class SolicitudTransporteResource extends Resource
                                 ->columnSpanFull(),
 
                             Forms\Components\Section::make('Asignación de Vehiculo y Motorista')
-                                ->schema([
-                                    Forms\Components\Select::make('vehiculo_id')
-                                        ->label('Vehículo')
-                                        ->options(fn () => \App\Models\Vehiculo::where('activo', true)->get()->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
-                                        ->searchable()
-                                        ->required()
-                                        ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                        ->hintColor('warning')
-                                        ->reactive()
-                                        ->afterStateUpdated(function ($state, callable $set) {
-                                            $vehiculo = \App\Models\Vehiculo::find($state);
-                                            if ($asignacion = $vehiculo?->asignacionVigenteMotorista) {
-                                                $set('motorista_id', $asignacion->motorista_id);
-                                            }
-                                        }),
-                                    Forms\Components\Select::make('motorista_id')
-                                        ->label('Motorista')
-                                        ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
-                                        ->searchable()
-                                        ->required(),
-                                ])->columns(2),
+    ->schema([
+        Forms\Components\Select::make('vehiculo_id')
+            ->label('Vehículo')
+            ->options(fn () => \App\Models\Vehiculo::where('activo', true)
+                ->get()
+                ->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
+            ->searchable()
+            ->required()
+            ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+            ->hintColor('warning')
+            ->reactive()
+            ->afterStateUpdated(function ($state, callable $set) {
+                if (!$state) {
+                    $set('motorista_nombre', 'Sin motorista asignado');
+                    $set('motorista_id', null);
+                    return;
+                }
+                $vehiculo = \App\Models\Vehiculo::find($state);
+                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                $set('motorista_nombre', $motorista 
+                    ? "{$motorista->nombre} — DUI: {$motorista->dui}" 
+                    : 'Sin motorista asignado');
+                $set('motorista_id', $motorista?->id);
+            }),
+
+        // Campo oculto para guardar el motorista_id real
+        Forms\Components\Hidden::make('motorista_id'),
+
+        // Solo visual — no editable
+        Forms\Components\Placeholder::make('motorista_nombre')
+            ->label('Motorista Asignado')
+            ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero'),
+
+    ])->columns(2),
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
                             $estadoAnterior = $record->estado;
@@ -575,8 +586,8 @@ class SolicitudTransporteResource extends Resource
 
     public static function getEloquentQuery(): Builder
     {
-        return parent::getEloquentQuery()
-            ->with(['solicitante', 'unidad', 'autorizador']);
+     return parent::getEloquentQuery()
+        ->with(['solicitante', 'unidad', 'autorizador', 'vehiculo.tipo', 'motorista']);
     }
 
     public static function getRelations(): array

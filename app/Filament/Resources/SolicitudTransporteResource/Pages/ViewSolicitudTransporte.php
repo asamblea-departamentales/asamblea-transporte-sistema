@@ -126,42 +126,48 @@ class ViewSolicitudTransporte extends ViewRecord
                         ->maxLength(2000),
 
                     Forms\Components\Section::make('Asignación de Vehículo y Motorista')
-                        ->schema([
-                            Forms\Components\Select::make('vehiculo_id')
-                                ->label('Vehículo a Asignar')
-                                ->options(function () {
-                                    return \App\Models\Vehiculo::where('activo', true)
-                                        ->with('tipo')
-                                        ->get()
-                                        ->mapWithKeys(fn ($v) => [
-                                            $v->id => "{$v->placa} - {$v->tipo->nombre}"
-                                        ]);
-                                })
-                                // ESTA ES LA CLAVE: El "hint" ayuda al jefe a decidir
-                                ->hint(fn ($record) => "El usuario pidió: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                ->hintColor('warning')
-                                ->searchable()
-                                ->required()
-                                ->live() // Cambiado de reactive() a live() que es el estándar de Filament v3
-                                ->afterStateUpdated(function ($state, callable $set) {
-                                    $vehiculo = \App\Models\Vehiculo::find($state);
-                                    // Asegúrate de que la relación 'asignacionVigenteMotorista' exista en tu modelo Vehiculo
-                                    $asignacion = $vehiculo?->asignacionVigenteMotorista;
-                                    if ($asignacion) {
-                                        $set('motorista_id', $asignacion->motorista_id);
-                                    }
-                                }),
+    ->schema([
+        Forms\Components\Select::make('vehiculo_id')
+            ->label('Vehículo a Asignar')
+            ->options(function () {
+                return \App\Models\Vehiculo::where('activo', true)
+                    ->with('tipo')
+                    ->get()
+                    ->mapWithKeys(fn ($v) => [
+                        $v->id => "{$v->placa} - {$v->tipo->nombre}"
+                    ]);
+            })
+            ->hint(fn ($record) => "El usuario pidió: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+            ->hintColor('warning')
+            ->searchable()
+            ->required()
+            ->live()
+            ->afterStateUpdated(function ($state, callable $set) {
+                if (!$state) {
+                    $set('motorista_nombre', 'Sin motorista asignado');
+                    $set('motorista_id', null);
+                    return;
+                }
+                $vehiculo = \App\Models\Vehiculo::find($state);
+                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                $set('motorista_nombre', $motorista
+                    ? "{$motorista->nombre} — DUI: {$motorista->dui}"
+                    : 'Sin motorista asignado');
+                $set('motorista_id', $motorista?->id);
+            }),
 
-                            Forms\Components\Select::make('motorista_id')
-                                ->label('Motorista')
-                                ->options(fn () => \App\Models\Motorista::where('activo', true)->pluck('nombre', 'id'))
-                                ->searchable()
-                                ->required(),
-                        ])
-                        ->columns([
-                            'default' => 1,
-                            'md' => 2,
-                        ]),
+        // ID oculto para guardar en BD
+        Forms\Components\Hidden::make('motorista_id'),
+
+        // Solo visual
+        Forms\Components\Placeholder::make('motorista_nombre')
+            ->label('Motorista Asignado')
+            ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero'),
+    ])
+    ->columns([
+        'default' => 1,
+        'md' => 2,
+    ]),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
