@@ -51,9 +51,9 @@ function AsignacionBloque({ request }: { request: Request }) {
 
             {/* Imagen del vehículo */}
             <div className="flex-shrink-0">
-              {vehiculo?.imagen_url && !imgError ? (
+              {vehiculo?.fotografia_url && !imgError ? (
                 <img
-                  src={vehiculo.imagen_url}
+                  src={vehiculo.fotografia_url}
                   alt={`${vehiculo.marca} ${vehiculo.modelo}`}
                   onError={() => setImgError(true)}
                   className="h-36 w-full rounded-xl object-cover shadow ring-2 ring-white sm:h-28 sm:w-48"
@@ -115,10 +115,10 @@ function AsignacionBloque({ request }: { request: Request }) {
                 {motorista ? (
                   <div className="flex items-center gap-3">
                     <div className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-base font-black text-white shadow">
-                      {motorista.name.charAt(0).toUpperCase()}
+                      {motorista.nombre?.charAt(0).toUpperCase() ?? "?"}
                     </div>
                     <div>
-                      <p className="text-sm font-black text-slate-900">{motorista.name}</p>
+                      <p className="text-sm font-black text-slate-900">{motorista.nombre ?? "Sin nombre"}</p>
                       {motorista.telefono ? (
                         <a
                           href={`tel:${motorista.telefono}`}

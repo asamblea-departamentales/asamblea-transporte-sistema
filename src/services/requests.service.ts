@@ -27,17 +27,17 @@ export type Solicitante = {
 export type Vehiculo = {
   id: number;
   placa: string;
-  marca: string;
-  modelo: string;
+  marca: string;       // campo string directo en la tabla
+  modelo: string;      // campo string directo en la tabla
   tipo?: string;
-  imagen_url: string | null; // generado por accessor en Laravel: asset('storage/' . $this->imagen)
+  fotografia_url: string | null; // accessor getFotografiaUrlAttribute en Vehiculo.php
 };
 
 export type Motorista = {
   id: number;
-  name: string;
-  email?: string;
+  nombre: string;      // campo real en tabla motoristas (NO 'name')
   telefono?: string | null;
+  dui?: string;
 };
 
 export type Request = {
