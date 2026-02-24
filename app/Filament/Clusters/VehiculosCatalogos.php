@@ -11,7 +11,7 @@ class VehiculosCatalogos extends Cluster
     protected static ?string $navigationLabel = 'Catálogo de Vehículos';
     protected static ?int $navigationSort = 10;
 
-    public static function canView(): bool
+    public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
