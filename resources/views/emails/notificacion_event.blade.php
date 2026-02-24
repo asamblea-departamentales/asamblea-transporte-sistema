@@ -30,21 +30,21 @@
             gap:16px;
         }
         .email-logo {
-    width:40px;          /* 👈 Más pequeño */
-    height:40px;
-    border-radius:50%;
-    overflow:hidden;
-    background:#0f172a;
-    display:flex;
-    align-items:center;
-    justify-content:center;
-    flex-shrink:0;
-}
-    .email-logo img {
-    width:80%;           /* 👈 El logo ocupará 80% del círculo */
-    height:80%;
-    object-fit:contain;
-    }
+            width:56px;
+            height:56px;
+            border-radius:50%;
+            overflow:hidden;
+            background:#0f172a;
+            display:flex;
+            align-items:center;
+            justify-content:center;
+            flex-shrink:0;
+        }
+        .email-logo img {
+            width:100%;
+            height:100%;
+            object-fit:cover;
+        }
         .email-header-text h1 {
             font-size:18px;
             font-weight:700;
@@ -261,7 +261,7 @@
 <div class="email-container">
     <div class="email-header">
         <div class="email-logo">
-            <img src="{{ asset('images/logo-blanco-fondo-transparente.png') }}" alt="Logo">
+            <img src="{{ asset('images/logo-asamblea.png') }}" alt="Logo">
         </div>
         <div class="email-header-text">
             <h1>{{ $subject }}</h1>
@@ -313,6 +313,7 @@
             </div>
         @endif
 
+        {{-- TRANSPORTE --}}
         @if($tipo === 'transporte' && isset($payload['solicitud']))
             <div class="details-grid">
                 @if(isset($payload['solicitud']['estado']))
@@ -324,7 +325,7 @@
                             </span>
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['tipo_vehiculo_nombre']))
                     <div class="detail-item">
@@ -333,7 +334,7 @@
                             {{ ucfirst($payload['solicitud']['tipo_vehiculo_nombre']) }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['cantidad_personas']))
                     <div class="detail-item">
@@ -342,7 +343,7 @@
                             {{ $payload['solicitud']['cantidad_personas'] }} personas
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['origen']))
                     <div class="detail-item-full">
@@ -351,7 +352,7 @@
                             {{ $payload['solicitud']['origen'] }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['destino']))
                     <div class="detail-item-full">
@@ -360,7 +361,7 @@
                             {{ $payload['solicitud']['destino'] }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== '')
                     <div class="detail-item-full">
@@ -369,7 +370,7 @@
                             {{ $payload['solicitud']['destino_adicional'] }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['fecha_salida']))
                     <div class="detail-item">
@@ -378,7 +379,7 @@
                             {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_salida'])->format('d/m/Y H:i') }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['fecha_retorno']))
                     <div class="detail-item">
@@ -387,7 +388,7 @@
                             {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_retorno'])->format('d/m/Y H:i') }}
                         </div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['motivo_actividad']))
                     <div class="detail-item-full">
@@ -400,10 +401,12 @@
             </div>
 
             @php
-                $origen = $payload['solicitud']['origen'] ?? 'San Salvador';
-                $destino = $payload['solicitud']['destino'] ?? 'Centro Histórico, San Salvador';
+                $origen    = $payload['solicitud']['origen'] ?? 'San Salvador';
+                $destino   = $payload['solicitud']['destino'] ?? 'Centro Histórico, San Salvador';
                 $destinoAd = $payload['solicitud']['destino_adicional'] ?? null;
-                $mapUrl = App\Helpers\MapHelper::generarMapaTransporte($origen, $destino, $destinoAd);
+
+                // Imagen estática del mapa en public/images
+                $mapUrl = asset('images/mapa-el-salvador.png');
             @endphp
 
             @if($mapUrl)
@@ -417,9 +420,12 @@
                             <strong>{{ $origen }}</strong>
                             →
                             <strong>{{ $destino }}</strong>
-                            @if($destinoAd)
+                            @if($destinoAd && $destinoAd !== 'Sin destino adicional')
                                 →
                                 <strong>{{ $destinoAd }}</strong>
+                            @else
+                                →
+                                <strong>Sin destino adicional</strong>
                             @endif
                         </div>
 
@@ -427,11 +433,12 @@
                             <img src="{{ $mapUrl }}" alt="Mapa de ruta en El Salvador">
                         </div>
                         <div class="map-note">
-                            Mapa generado automáticamente con base en los destinos indicados.
+                            Mapa de referencia general con base en los destinos indicados.
                         </div>
                     </div>
                 </div>
             @endif
+
         @elseif($tipo === 'combustible' && isset($payload['solicitud']))
             <div class="details-grid">
                 <div class="detail-item-full">
@@ -444,14 +451,14 @@
                         <div class="detail-label">Vehículo</div>
                         <div class="detail-value">{{ $payload['solicitud']['vehiculo'] }}</div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['cantidad_combustible']))
                     <div class="detail-item">
                         <div class="detail-label">Cantidad solicitada</div>
                         <div class="detail-value">{{ $payload['solicitud']['cantidad_combustible'] }}</div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['motivo']))
                     <div class="detail-item-full">
@@ -472,14 +479,14 @@
                         <div class="detail-label">Vehículo</div>
                         <div class="detail-value">{{ $payload['solicitud']['vehiculo'] }}</div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['tipo_mantenimiento']))
                     <div class="detail-item">
                         <div class="detail-label">Tipo de mantenimiento</div>
                         <div class="detail-value">{{ $payload['solicitud']['tipo_mantenimiento'] }}</div>
                     </div>
-                @endif>
+                @endif
 
                 @if(isset($payload['solicitud']['descripcion_falla']))
                     <div class="detail-item-full">
