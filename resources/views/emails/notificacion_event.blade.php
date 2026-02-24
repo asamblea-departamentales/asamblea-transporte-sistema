@@ -261,7 +261,7 @@
 <div class="email-container">
     <div class="email-header">
         <div class="email-logo">
-            <img src="{{ asset('images/logo-asamblea.png') }}" alt="Logo">
+            <img src="{{ asset('images/logo-blanco-fondo-transparente.png') }}" alt="Logo">
         </div>
         <div class="email-header-text">
             <h1>{{ $subject }}</h1>
