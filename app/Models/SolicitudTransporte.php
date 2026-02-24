@@ -95,6 +95,6 @@ public function getDestinoAdicionalAttribute($value)
 //Para tipo de vehículo
 public function tipoVehiculo()
 {
-    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_nombre', 'nombre');
+    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
 }
 }
