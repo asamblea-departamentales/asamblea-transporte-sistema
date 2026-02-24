@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Vehiculos\Services;
+namespace App\Domain\Solicitudes\Services;
 
 use App\Models\AsignacionVehiculoMotorista;
 use Illuminate\Support\Facades\DB;
