@@ -5,7 +5,7 @@ return [
     "allow_routes" => true,
 
     'name'             => env('APP_NAME', 'Transporte Asamblea'),
-    'short_name'       => 'Aprobaciones',
+    'short_name'       => 'Transporte Back Office',
     'description'      => 'Panel de aprobaciones - Asamblea Legislativa de El Salvador',
     'start_url'        => '/admin/',
     'background_color' => '#FFFFFF',  // ← blanco
