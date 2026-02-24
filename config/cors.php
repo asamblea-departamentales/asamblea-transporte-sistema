@@ -6,11 +6,11 @@ return [
     'allowed_methods' => ['*'],
 
     'allowed_origins' => [
-        'https://asamblea-transporte.vercel.app/',
+        'https://asamblea-transporte.vercel.app',
     ],
 
     'allowed_origins_patterns' => [
-        '/^https:\/\/asamblea-transporte-sistema.*\.vercel\.app$/',
+        '/^https:\/\/asamblea-transporte.*\.vercel\.app$/',
     ],
 
     'allowed_headers' => ['*'],
