@@ -21,10 +21,23 @@ class VehCatalogosSeeder extends Seeder
             DB::table('veh_modelos')->insertOrIgnore(['nombre' => $modelo, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        // Colores
-        $colores = ['Blanco', 'Gris', 'Negro', 'Plata', 'Azul', 'Rojo', 'Verde'];
-        foreach ($colores as $color) {
-            DB::table('veh_colores')->insertOrIgnore(['nombre' => $color, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
+       // COLORES REALES (Extraídos del SQL de clv_color_vehiculo)
+        $coloresReales = [
+            'BLANCO', 'GRIS OSCURO', 'CAFÉ', 'BLANCO C/DIST COM', 'GRIS CLARO', 
+            'AZUL', 'GRIS', 'AZUL/NARANJA/VERDE/PLATA', 'ROJO', 'VERDE', 
+            'PLATEADO', 'CAFE', 'VERDE METALICO', 'NEGRO', 'GRIS C/FRANJAS', 
+            'AZUL CON FRANJAS', 'NEGRO C/FRANJAS', 'AZUL C/FRANJAS', 'ROJO C/FRANJAS', 
+            'AZUL C/F MULTICOLOR', 'AZUL F/MULTICOLOR', 'GRIS/PLATEADO', 'GRIS ', 
+            'BLANCO DIST INST', 'CELESTE', 'BEIGE'
+        ];
+        
+        foreach ($coloresReales as $color) {
+            DB::table('veh_colores')->insertOrIgnore([
+                'nombre' => $color, 
+                'activo' => true, 
+                'created_at' => now(), 
+                'updated_at' => now()
+            ]);
         }
 
         // Tipos de motor
