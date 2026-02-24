@@ -80,7 +80,7 @@ class VehCatalogosSeeder extends Seeder
             DB::table('veh_transmisiones')->insertOrIgnore(['nombre' => $transmision, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        $tracciones = ['4x2', '4x4'];
+        $tracciones = ['4x2', '4x4', 'TRASERA', 'DELANTERA'];
         foreach ($tracciones as $traccion) {
             DB::table('veh_tracciones')->insertOrIgnore(['nombre' => $traccion, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
