@@ -20,6 +20,8 @@ class VehTraccionResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Tracciones de Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-arrows-up-down';
+    protected static ?string $modelLabel = 'Tracción';
+    protected static ?string $pluralModelLabel = 'Tracciones';
     protected static ?int $navigationSort = 6;
 
         public static function canViewAny(): bool

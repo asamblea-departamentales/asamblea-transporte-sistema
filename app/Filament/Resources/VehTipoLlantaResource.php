@@ -20,6 +20,8 @@ class VehTipoLlantaResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Tipos de Llantas';
     protected static ?string $navigationIcon = 'heroicon-o-circle-stack';
+    protected static ?string $modelLabel = 'Tipo de Llanta';
+    protected static ?string $pluralModelLabel = 'Tipos de Llantas';
     protected static ?int $navigationSort = 7;
 
         public static function canViewAny(): bool

@@ -22,6 +22,8 @@ class VehEstadoCatalogoResource extends Resource
     protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    protected static ?string $modelLabel = 'Estado de Catálogo';
+    protected static ?string $pluralModelLabel = 'Estados de Catálogo';
 
         public static function canViewAny(): bool
         {

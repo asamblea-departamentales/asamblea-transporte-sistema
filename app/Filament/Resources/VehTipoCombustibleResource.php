@@ -21,6 +21,8 @@ class VehTipoCombustibleResource extends Resource
     protected static ?string $navigationLabel = 'Tipos de Combustible';
 
     protected static ?string $navigationIcon = 'heroicon-o-beaker';
+    protected static ?string $modelLabel = 'Tipo de Combustible';
+    protected static ?string $pluralModelLabel = 'Tipos de Combustible';
     protected static ?int $navigationSort = 8;
 
         public static function canViewAny(): bool

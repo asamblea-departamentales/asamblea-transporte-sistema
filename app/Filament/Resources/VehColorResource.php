@@ -20,6 +20,8 @@ class VehColorResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Colores de Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-swatch';
+    protected static ?string $modelLabel = 'Color';
+    protected static ?string $pluralModelLabel = 'Colores';
     protected static ?int $navigationSort = 3;
 
         public static function canViewAny(): bool

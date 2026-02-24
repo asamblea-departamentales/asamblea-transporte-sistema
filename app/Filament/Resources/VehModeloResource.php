@@ -21,6 +21,8 @@ class VehModeloResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Modelos de Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $modelLabel = 'Modelo';
+    protected static ?string $pluralModelLabel = 'Modelos';
     protected static ?int $navigationSort = 2;
 
         public static function canViewAny(): bool

@@ -20,6 +20,8 @@ class VehClasificacionResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class; 
     protected static ?string $navigationLabel = 'Clasificaciones de Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
+    protected static ?string $modelLabel = 'Clasificación';
+    protected static ?string $pluralModelLabel = 'Clasificaciones';
     protected static ?int $navigationSort = 9;
 
         public static function canViewAny(): bool

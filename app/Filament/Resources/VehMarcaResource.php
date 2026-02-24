@@ -20,6 +20,8 @@ class VehMarcaResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Marcas de Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-tag';
+    protected static ?string $modelLabel = 'Marca';
+    protected static ?string $pluralModelLabel = 'Marcas';
     protected static ?int $navigationSort = 1;
 
     public static function canViewAny(): bool

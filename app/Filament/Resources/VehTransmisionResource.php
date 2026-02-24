@@ -21,6 +21,8 @@ class VehTransmisionResource extends Resource
     protected static ?string $navigationLabel = 'Transmisiones de Vehículos';
 
     protected static ?string $navigationIcon = 'heroicon-o-arrows-right-left';
+    protected static ?string $modelLabel = 'Transmisión';
+    protected static ?string $pluralModelLabel = 'Transmisiones';
         protected static ?int $navigationSort = 5;
     
         public static function canViewAny(): bool

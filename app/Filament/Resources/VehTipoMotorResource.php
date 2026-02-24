@@ -20,6 +20,8 @@ class VehTipoMotorResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Tipos de Motores';
     protected static ?string $navigationIcon = 'heroicon-o-cpu-chip';
+    protected static ?string $modelLabel = 'Tipo de Motor';
+    protected static ?string $pluralModelLabel = 'Tipos de Motores';
     protected static ?int $navigationSort = 4;
 
      public static function canViewAny(): bool
