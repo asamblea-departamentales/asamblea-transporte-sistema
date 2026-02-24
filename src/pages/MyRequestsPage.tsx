@@ -281,7 +281,7 @@ function AsignacionBloque({ request }: { request: Request }) {
 
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start">
 
-        {/* ── Imagen del vehículo ── */}
+        {/* Imagen del vehículo */}
         <div className="flex-shrink-0">
           {vehiculo?.imagen_url && !imgError ? (
             <img
@@ -301,7 +301,7 @@ function AsignacionBloque({ request }: { request: Request }) {
           )}
         </div>
 
-        {/* ── Datos vehículo y motorista ── */}
+        {/* Datos vehículo y motorista */}
         <div className="flex flex-1 flex-col gap-4 sm:flex-row sm:gap-5">
 
           {/* Vehículo */}
@@ -315,7 +315,6 @@ function AsignacionBloque({ request }: { request: Request }) {
                   {vehiculo.marca} {vehiculo.modelo}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
-                  {/* Placa */}
                   <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-0.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200">
                     <svg className="h-3 w-3 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2}
@@ -324,7 +323,6 @@ function AsignacionBloque({ request }: { request: Request }) {
                     </svg>
                     {vehiculo.placa}
                   </span>
-                  {/* Tipo */}
                   {vehiculo.tipo && (
                     <span className="inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                       {vehiculo.tipo}
@@ -337,9 +335,9 @@ function AsignacionBloque({ request }: { request: Request }) {
             )}
           </div>
 
-          {/* Divisor solo en sm+ */}
+          {/* Divisor sm+ */}
           <div className="hidden w-px self-stretch bg-emerald-100 sm:block" />
-          {/* Divisor solo en móvil */}
+          {/* Divisor móvil */}
           <div className="h-px w-full bg-emerald-100 sm:hidden" />
 
           {/* Motorista */}
@@ -349,12 +347,14 @@ function AsignacionBloque({ request }: { request: Request }) {
             </p>
             {motorista ? (
               <div className="flex items-center gap-3">
-                {/* Avatar inicial */}
+                {/* ✅ Guard contra name null/undefined */}
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white shadow">
-                  {motorista.name.charAt(0).toUpperCase()}
+                  {motorista.name?.charAt(0).toUpperCase() ?? "?"}
                 </div>
                 <div>
-                  <p className="text-sm font-bold text-slate-900">{motorista.name}</p>
+                  <p className="text-sm font-bold text-slate-900">
+                    {motorista.name ?? "Sin nombre"}
+                  </p>
                   {motorista.telefono ? (
                     <a
                       href={`tel:${motorista.telefono}`}
@@ -416,7 +416,7 @@ function RequestDetail({
     <div className="border-t border-slate-200 bg-slate-50 p-3 sm:p-6">
       <div className="rounded-xl border border-slate-200 bg-white p-4 sm:p-6 shadow-sm space-y-5">
 
-        {/* ── Cabecera ── */}
+        {/* Cabecera */}
         <div className="flex flex-col gap-3 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
           <h3 className="text-base font-bold text-slate-800 sm:text-lg">
             Detalle #{request.codigo}
@@ -451,10 +451,10 @@ function RequestDetail({
           )}
         </div>
 
-        {/* ── Bloque vehículo + motorista (solo si está aprobada o más) ── */}
+        {/* Bloque vehículo + motorista */}
         {mostrarAsignacion && <AsignacionBloque request={request} />}
 
-        {/* ── Info general ── */}
+        {/* Info general */}
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
             <h4 className="mb-2 text-xs font-black uppercase tracking-wider text-slate-500">Ruta</h4>
@@ -488,7 +488,7 @@ function RequestDetail({
           </div>
         </div>
 
-        {/* ── Mapa ── */}
+        {/* Mapa */}
         {request.origen && request.destino && (
           <RequestMap origen={request.origen} destino={request.destino} />
         )}
