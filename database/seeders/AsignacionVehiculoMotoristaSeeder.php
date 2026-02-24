@@ -3,7 +3,7 @@
 namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
-use App\Domain\Vehiculos\Services\AsignacionVehiculoMotoristaService;
+use App\Domain\Solicitudes\Services\AsignacionVehiculoMotoristaService;
 use Illuminate\Support\Facades\DB;
 
 class AsignacionVehiculoMotoristaSeeder extends Seeder
