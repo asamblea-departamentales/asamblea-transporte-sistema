@@ -9,7 +9,7 @@ export type RequestStatus =
   | "aprobada"
   | "rechazada"
   | "programada"
-  | "en_ejecucion"  // ← corregido: estado real del backend
+  | "en_ejecucion"
   | "completada"
   | "finalizada";
 
@@ -22,6 +22,22 @@ export type Solicitante = {
   id: number;
   name: string;
   email: string;
+};
+
+export type Vehiculo = {
+  id: number;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo?: string;
+  imagen_url: string | null; // generado por accessor en Laravel: asset('storage/' . $this->imagen)
+};
+
+export type Motorista = {
+  id: number;
+  name: string;
+  email?: string;
+  telefono?: string | null;
 };
 
 export type Request = {
@@ -41,6 +57,8 @@ export type Request = {
   updated_at: string;
   unidad?: Unidad;
   solicitante?: Solicitante;
+  vehiculo?: Vehiculo | null;   // ← nuevo
+  motorista?: Motorista | null; // ← nuevo
 };
 
 export type LaravelPaginatedResponse = {
