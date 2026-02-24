@@ -17,7 +17,7 @@ class VehiculoResource extends Resource
 {
     protected static ?string $model = Vehiculo::class;
 
-    protected static ?string $navigationGroup = 'Catálogos de Vehículos';    protected static ?string $navigationLabel = 'Vehículos';
+    protected static ?string $navigationGroup = 'Catálogos';    protected static ?string $navigationLabel = 'Vehículos';
     protected static ?string $navigationIcon = 'heroicon-o-truck';
     protected static ?int $navigationSort = 1;
 

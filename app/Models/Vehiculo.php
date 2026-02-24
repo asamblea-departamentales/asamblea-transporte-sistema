@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Support\Facades\Storage;
 
 class Vehiculo extends Model
 {
@@ -55,6 +56,15 @@ class Vehiculo extends Model
         'activo'              => 'boolean',
         'vencimiento_tarjeta' => 'date',
     ];
+
+    protected $appends = ['fotografia_url'];
+
+    //Accesor para la fotografía
+    public function getFotografiaUrlAttribute(): ?string
+    {
+        if (!$this->fotografia) return null;
+        return Storage::disk('public')->url($this->fotografia);
+    }
 
     // Relaciones originales
 

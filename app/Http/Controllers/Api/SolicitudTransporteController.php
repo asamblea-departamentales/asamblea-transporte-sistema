@@ -29,7 +29,7 @@ class SolicitudTransporteController extends Controller
         $user = $request->user();
 
         $query = SolicitudTransporte::query()
-            ->with(['unidad', 'solicitante', 'autorizador']);
+            ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']); // Carga relaciones para optimizar consultas 
 
         if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
             $query->where('solicitante_id', $user->id);
@@ -93,10 +93,10 @@ class SolicitudTransporteController extends Controller
      */
     public function show(SolicitudTransporte $solicitud)
     {
-        $this->authorizeView($solicitud);
+     $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['unidad', 'solicitante', 'autorizador'])
+        $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']) //Catalogos nuevos agregados
         );
     }
 
