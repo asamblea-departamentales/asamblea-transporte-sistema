@@ -10,4 +10,9 @@ class VehiculosCatalogos extends Cluster
     protected static ?string $navigationIcon = 'heroicon-o-squares-2x2';
     protected static ?string $navigationLabel = 'Catálogo de Vehículos';
     protected static ?int $navigationSort = 10;
+
+    public static function canView(): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+    }
 }
