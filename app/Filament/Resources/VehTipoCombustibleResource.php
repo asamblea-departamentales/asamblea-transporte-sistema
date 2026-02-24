@@ -20,7 +20,7 @@ class VehTipoCombustibleResource extends Resource
     protected static ?string $cluster = VehiculosCatalogos::class;
     protected static ?string $navigationLabel = 'Tipos de Combustible';
 
-    protected static ?string $navigationIcon = 'heroicon-o-fuel';
+    protected static ?string $navigationIcon = 'heroicon-o-beaker';
     protected static ?int $navigationSort = 8;
 
         public static function canViewAny(): bool
