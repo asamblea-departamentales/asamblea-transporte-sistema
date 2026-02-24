@@ -10,9 +10,9 @@ class TipoVehiculoSeeder extends Seeder
     public function run(): void
     {
         $tipos = [
-            ['nombre' => 'Sedán',               'activo' => true],
-            ['nombre' => 'Microbús',             'activo' => true],
-            ['nombre' => 'Camión 2 Toneladas',   'activo' => true],
+            ['nombre' => 'Sedán',          'activo' => true],
+            ['nombre' => 'Microbús',       'activo' => true],
+            ['nombre' => 'Camión Pesado',  'activo' => true],
         ];
 
         foreach ($tipos as $tipo) {
@@ -22,6 +22,6 @@ class TipoVehiculoSeeder extends Seeder
             ]));
         }
 
-        $this->command->info('Tipos de vehículo insertados correctamente.');
+        $this->command->info('Tipos de vehículo insertados correctamente (Filtro Ingeniero).');
     }
 }
