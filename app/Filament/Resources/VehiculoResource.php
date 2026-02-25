@@ -234,4 +234,7 @@ class VehiculoResource extends Resource
     {
         return [
             'index' => Pages\ListVehiculos::route('/'),
-            'view'  => Pages\ViewVehiculo::route('/{record
+            'view'  => Pages\ViewVehiculo::route('/{record}'),
+        ];
+    }
+}
