@@ -15,11 +15,45 @@ class VehCatalogosSeeder extends Seeder
             DB::table('veh_marcas')->insertOrIgnore(['nombre' => $marca, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        // 2. MODELOS
-        $modelos = ['Corolla', 'Hilux', 'Land Cruiser', 'L200', 'Montero', 'Urvan', 'NV350', 'Tucson', 'Accent', 'F-150', 'Transit', 'Silverado', 'NPR', 'Dutro', 'Sprinter', 'Sportage', 'Frontier'];
-        foreach ($modelos as $modelo) {
-            DB::table('veh_modelos')->insertOrIgnore(['nombre' => $modelo, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
-        }
+        // 2. MODELOS (con su marca correspondiente)
+$toyotaId     = DB::table('veh_marcas')->where('nombre', 'Toyota')->value('id');
+$mitsubishiId = DB::table('veh_marcas')->where('nombre', 'Mitsubishi')->value('id');
+$nissanId     = DB::table('veh_marcas')->where('nombre', 'Nissan')->value('id');
+$isuzuId      = DB::table('veh_marcas')->where('nombre', 'Isuzu')->value('id');
+$hinoId       = DB::table('veh_marcas')->where('nombre', 'Hino')->value('id');
+$fordId       = DB::table('veh_marcas')->where('nombre', 'Ford')->value('id');
+$chevroletId  = DB::table('veh_marcas')->where('nombre', 'Chevrolet')->value('id');
+$mercedesId   = DB::table('veh_marcas')->where('nombre', 'Mercedes-Benz')->value('id');
+$kiaId        = DB::table('veh_marcas')->where('nombre', 'Kia')->value('id');
+$hyundaiId    = DB::table('veh_marcas')->where('nombre', 'Hyundai')->value('id');
+
+$modelos = [
+    ['nombre' => 'Corolla',       'veh_marca_id' => $toyotaId],
+    ['nombre' => 'Hilux',         'veh_marca_id' => $toyotaId],
+    ['nombre' => 'Land Cruiser',  'veh_marca_id' => $toyotaId],
+    ['nombre' => 'L200',          'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Montero',       'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Urvan',         'veh_marca_id' => $nissanId],
+    ['nombre' => 'NV350',         'veh_marca_id' => $nissanId],
+    ['nombre' => 'Frontier',      'veh_marca_id' => $nissanId],
+    ['nombre' => 'NPR',           'veh_marca_id' => $isuzuId],
+    ['nombre' => 'Dutro',         'veh_marca_id' => $hinoId],
+    ['nombre' => 'F-150',         'veh_marca_id' => $fordId],
+    ['nombre' => 'Transit',       'veh_marca_id' => $fordId],
+    ['nombre' => 'Silverado',     'veh_marca_id' => $chevroletId],
+    ['nombre' => 'Sprinter',      'veh_marca_id' => $mercedesId],
+    ['nombre' => 'Sportage',      'veh_marca_id' => $kiaId],
+    ['nombre' => 'Tucson',        'veh_marca_id' => $hyundaiId],
+    ['nombre' => 'Accent',        'veh_marca_id' => $hyundaiId],
+];
+
+foreach ($modelos as $modelo) {
+    DB::table('veh_modelos')->insertOrIgnore(array_merge($modelo, [
+        'activo'     => true,
+        'created_at' => now(),
+        'updated_at' => now(),
+    ]));
+}
 
         // 3. COLORES REALES
         $coloresReales = [
