@@ -24,7 +24,7 @@ class VehiculoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
     public static function canCreate(): bool        { return false; }
@@ -44,25 +44,27 @@ class VehiculoResource extends Resource
             ->columns([
                 // ── FILA PRINCIPAL (siempre visible) ──────────────────
                 Split::make([
-                    Tables\Columns\ImageColumn::make('fotografia')
+                    // ✅ Imagen usando accessor (URL lista). No disk().
+                    Tables\Columns\ImageColumn::make('fotografia_url')
                         ->label('')
-                        ->disk('public')
                         ->circular()
-                        ->size(50)
+                        ->size(52)
                         ->grow(false)
                         ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
+                    // ✅ Texto + chips (placa/estado) + motorista abajo
                     Stack::make([
                         Tables\Columns\TextColumn::make('vehiculo_titulo')
                             ->label('')
                             ->weight('bold')
-                            ->size(TextColumnSize::Medium)
+                            ->size(TextColumnSize::Large)
                             ->getStateUsing(fn (Vehiculo $record) =>
                                 collect([
                                     $record->marca?->nombre,
                                     $record->modelo?->nombre,
                                 ])->filter()->join(' ')
-                            ),
+                            )
+                            ->searchable(),
 
                         Tables\Columns\TextColumn::make('vehiculo_sub')
                             ->label('')
@@ -74,47 +76,51 @@ class VehiculoResource extends Resource
                                     $record->anio,
                                 ])->filter()->join(' • ')
                             ),
-                    ])->space(1),
 
-                    Tables\Columns\TextColumn::make('placa')
-                        ->label('Placa')
-                        ->badge()
-                        ->color('gray')
-                        ->fontFamily('mono')
-                        ->weight('bold')
-                        ->copyable()
-                        ->searchable()
-                        ->sortable()
-                        ->grow(false),
+                        // Chips: placa + estado (más limpio que meterlos como columnas separadas)
+                        Split::make([
+                            Tables\Columns\TextColumn::make('placa')
+                                ->label('')
+                                ->badge()
+                                ->color('gray')
+                                ->fontFamily('mono')
+                                ->weight('bold')
+                                ->copyable()
+                                ->searchable()
+                                ->sortable()
+                                ->grow(false),
 
-                    Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
-                        ->label('Motorista')
-                        ->placeholder('Sin motorista')
-                        ->icon('heroicon-m-user')
-                        ->size(TextColumnSize::Small)
-                        ->color('gray')
-                        ->searchable()
-                        ->grow(false),
+                            Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
+                                ->label('')
+                                ->badge()
+                                ->grow(false)
+                                ->icon(fn (?string $state): ?string => match ($state) {
+                                    'Disponible' => 'heroicon-o-check-circle',
+                                    'Reservado'  => 'heroicon-o-clock',
+                                    'Ocupado'    => 'heroicon-o-user',
+                                    'En Taller'  => 'heroicon-o-wrench-screwdriver',
+                                    'Baja'       => 'heroicon-o-minus-circle',
+                                    default      => 'heroicon-o-information-circle',
+                                })
+                                ->color(fn (?string $state): string => match ($state) {
+                                    'Disponible' => 'success',
+                                    'Reservado'  => 'primary',
+                                    'Ocupado'    => 'warning',
+                                    'En Taller'  => 'danger',
+                                    'Baja'       => 'gray',
+                                    default      => 'gray',
+                                }),
+                        ])->from('sm')->columnSpanFull(),
 
-                    Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
-                        ->label('Estado')
-                        ->badge()
-                        ->grow(false)
-                        ->icon(fn (?string $state): string => match ($state) {
-                            'Disponible' => 'heroicon-o-check-circle',
-                            'Reservado'  => 'heroicon-o-clock',
-                            'En Taller'  => 'heroicon-o-wrench-screwdriver',
-                            'Baja'       => 'heroicon-o-minus-circle',
-                            default      => 'heroicon-o-information-circle',
-                        })
-                        ->color(fn (?string $state): string => match ($state) {
-                            'Disponible' => 'success',
-                            'Reservado'  => 'primary',
-                            'En Taller'  => 'danger',
-                            'Baja'       => 'gray',
-                            default      => 'gray',
-                        }),
-                ]),
+                        Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
+                            ->label('')
+                            ->placeholder('Sin motorista asignado')
+                            ->icon('heroicon-o-user')
+                            ->size(TextColumnSize::Small)
+                            ->color('gray')
+                            ->searchable(),
+                    ])->space(2),
+                ])->from('md'),
 
                 // ── COLUMNAS OPCIONALES (toggleable) ──────────────────
                 Tables\Columns\TextColumn::make('tipo.nombre')
