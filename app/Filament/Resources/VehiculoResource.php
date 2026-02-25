@@ -12,7 +12,7 @@ use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables\Columns\TextColumn\TextColumnSize; // ✅ correcto en v3
+use Filament\Tables\Columns\TextColumn\TextColumnSize;
 use Illuminate\Database\Eloquent\Builder;
 
 class VehiculoResource extends Resource
@@ -54,104 +54,122 @@ class VehiculoResource extends Resource
                     ->columns(1)
                     ->schema([
                         Stack::make([
-                            Split::make([
-                                // ✅ Foto a la izquierda (usar accessor URL)
-                                Tables\Columns\ImageColumn::make('fotografia_url')
-                                    ->label('')
-                                    ->size(110)
-                                    ->extraImgAttributes([
-                                        'class' => 'object-cover rounded-xl shadow-md ring-1 ring-gray-200 dark:ring-gray-700 group-hover:scale-105 transition-transform duration-300',
-                                    ])
-                                    ->grow(false)
-                                    ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
+                            // Foto con overlay hover
+                            Tables\Columns\ImageColumn::make('fotografia_url')
+                                ->label('')
+                                ->size(140)
+                                ->extraImgAttributes([
+                                    'class' => 'object-cover w-full h-40 rounded-t-2xl transition-all duration-500 group-hover:scale-110 group-hover:brightness-90',
+                                ])
+                                ->grow(false)
+                                ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                                // Contenido principal
-                                Stack::make([
-                                    Tables\Columns\TextColumn::make('vehiculo_titulo')
-                                        ->weight(FontWeight::ExtraBold)
-                                        ->size('xl')
-                                        ->getStateUsing(fn (Vehiculo $record) =>
-                                            collect([$record->marca?->nombre, $record->modelo?->nombre])
-                                                ->filter()->join(' ')
-                                        ),
+                            // Contenido principal con mejor jerarquía
+                            Stack::make([
+                                Split::make([
+                                    // Izquierda: título + subtítulo
+                                    Stack::make([
+                                        Tables\Columns\TextColumn::make('vehiculo_titulo')
+                                            ->weight(FontWeight::Black)
+                                            ->size('2xl') // Más grande y bold
+                                            ->color('primary')
+                                            ->extraAttributes(['class' => 'leading-tight'])
+                                            ->getStateUsing(fn (Vehiculo $record) =>
+                                                collect([$record->marca?->nombre, $record->modelo?->nombre])
+                                                    ->filter()->join(' ')
+                                            ),
 
-                                    Tables\Columns\TextColumn::make('vehiculo_sub')
-                                        ->color('gray')
-                                        ->size(TextColumnSize::Medium)
-                                        ->getStateUsing(fn (Vehiculo $record) =>
-                                            collect([$record->tipo?->nombre, $record->anio])
-                                                ->filter()->join(' • ')
-                                        ),
+                                        Tables\Columns\TextColumn::make('vehiculo_sub')
+                                            ->color('gray.600 dark:gray.400')
+                                            ->size(TextColumnSize::Large)
+                                            ->extraAttributes(['class' => 'mt-1'])
+                                            ->getStateUsing(fn (Vehiculo $record) =>
+                                                collect([$record->tipo?->nombre, $record->anio])
+                                                    ->filter()->join(' • ')
+                                            ),
+                                    ])->grow(),
 
-                                    Split::make([
-                                        Tables\Columns\TextColumn::make('color.nombre')
-                                            ->label('Color')
+                                    // Derecha: placa + estado + motorista
+                                    Stack::make([
+                                        Tables\Columns\TextColumn::make('placa')
                                             ->badge()
-                                            ->color('gray')
-                                            ->icon('heroicon-o-swatch') // ✅ existe (en lugar de color-swatch)
-                                            ->size(TextColumnSize::Small),
+                                            ->color('primary')
+                                            ->fontFamily('mono')
+                                            ->weight(FontWeight::ExtraBold)
+                                            ->size('2xl') // Placa más impactante
+                                            ->extraAttributes([
+                                                'class' => 'px-6 py-3 text-center border-2 border-primary-200 dark:border-primary-800 rounded-lg shadow-sm group-hover:shadow-lg group-hover:border-primary-400 transition-all duration-300',
+                                            ])
+                                            ->copyable()
+                                            ->searchable()
+                                            ->sortable(),
 
-                                        Tables\Columns\TextColumn::make('capacidad_personas')
-                                            ->label('Capacidad')
+                                        Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
                                             ->badge()
-                                            ->color('info')
-                                            ->icon('heroicon-o-user-group') // ✅ existe
-                                            ->formatStateUsing(fn ($state) => $state ? "$state personas" : null)
-                                            ->size(TextColumnSize::Small),
-                                    ])->from('sm'),
+                                            ->size(TextColumnSize::Large)
+                                            ->icon(fn (?string $state): string => match ($state) {
+                                                'Disponible' => 'heroicon-o-check-circle',
+                                                'Reservado'  => 'heroicon-o-clock',
+                                                'Ocupado'    => 'heroicon-o-user',
+                                                'En Taller'  => 'heroicon-o-wrench-screwdriver',
+                                                'Baja'       => 'heroicon-o-minus-circle',
+                                                default      => 'heroicon-o-information-circle',
+                                            })
+                                            ->color(fn (?string $state): string => match ($state) {
+                                                'Disponible' => 'success',
+                                                'Reservado'  => 'info',
+                                                'Ocupado'    => 'warning',
+                                                'En Taller'  => 'danger',
+                                                'Baja'       => 'gray',
+                                                default      => 'gray',
+                                            })
+                                            ->extraAttributes(['class' => 'mt-2']),
 
-                                ])->grow(),
+                                        Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
+                                            ->icon('heroicon-o-user')
+                                            ->color('gray.600 dark:gray.400')
+                                            ->size(TextColumnSize::Medium)
+                                            ->placeholder('Sin conductor')
+                                            ->searchable()
+                                            ->visibleFrom('md'),
+                                    ])->alignEnd()->space(3),
+                                ])->from('lg')->grow(),
 
-                                // Derecha
-                                Stack::make([
-                                    Tables\Columns\TextColumn::make('placa')
+                                // Detalles extras (color + capacidad) en fila horizontal
+                                Split::make([
+                                    Tables\Columns\TextColumn::make('color.nombre')
+                                        ->label('Color')
                                         ->badge()
-                                        ->color('primary')
-                                        ->fontFamily('mono')
-                                        ->weight(FontWeight::ExtraBold)
-                                        ->size('xl')
-                                        ->extraAttributes(['class' => 'px-6 py-3 text-center'])
-                                        ->copyable()
-                                        ->searchable()
-                                        ->sortable(),
-
-                                    Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
-                                        ->badge()
-                                        ->icon(fn (?string $state): string => match ($state) {
-                                            'Disponible' => 'heroicon-o-check-circle',
-                                            'Reservado'  => 'heroicon-o-clock',
-                                            'Ocupado'    => 'heroicon-o-user',
-                                            'En Taller'  => 'heroicon-o-wrench-screwdriver',
-                                            'Baja'       => 'heroicon-o-minus-circle',
-                                            default      => 'heroicon-o-information-circle',
-                                        })
-                                        ->color(fn (?string $state): string => match ($state) {
-                                            'Disponible' => 'success',
-                                            'Reservado'  => 'info',
-                                            'Ocupado'    => 'warning',
-                                            'En Taller'  => 'danger',
-                                            'Baja'       => 'gray',
-                                            default      => 'gray',
-                                        })
-                                        ->size(TextColumnSize::Medium),
-
-                                    Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
-                                        ->icon('heroicon-o-user') // ✅ existe
                                         ->color('gray')
-                                        ->size(TextColumnSize::Small)
-                                        ->placeholder('Sin conductor')
-                                        ->searchable()
-                                        ->visibleFrom('md'),
-                                ])->alignEnd(),
-                            ])->from('md'),
+                                        ->icon('heroicon-o-swatch')
+                                        ->size(TextColumnSize::Small),
+
+                                    Tables\Columns\TextColumn::make('capacidad_personas')
+                                        ->label('Capacidad')
+                                        ->badge()
+                                        ->color('info')
+                                        ->icon('heroicon-o-user-group')
+                                        ->formatStateUsing(fn ($state) => $state ? "$state personas" : null)
+                                        ->size(TextColumnSize::Small),
+                                ])->from('md')->space(4),
+
+                            ])->space(4)->extraAttributes(['class' => 'p-6 pt-4']),
+
+                            // Footer sutil
+                            Tables\Columns\TextColumn::make('ver_ficha_hint')
+                                ->state('Ver ficha completa →')
+                                ->color('primary')
+                                ->size(TextColumnSize::Small)
+                                ->extraAttributes(['class' => 'text-right italic opacity-50 group-hover:opacity-100 transition-opacity duration-300 pr-6 pb-4'])
+                                ->visibleFrom('md'),
                         ])
-                        // Card styling
+                        // Card completa - diseño premium
                         ->extraAttributes([
-                            'class' => 'group relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-md hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden cursor-pointer p-6',
+                            'class' => 'group relative bg-white dark:bg-gray-850 rounded-3xl overflow-hidden border border-gray-200 dark:border-gray-700 shadow-lg hover:shadow-2xl hover:-translate-y-2 transition-all duration-400 ease-out cursor-pointer',
                         ]),
                     ]),
 
-                // Columnas toggleable (todas intactas)
+                // Todas las columnas toggleable intactas (no toqué nada aquí)
                 Tables\Columns\TextColumn::make('tipo.nombre')
                     ->label('Tipo')
                     ->badge()->color('info')
@@ -220,7 +238,7 @@ class VehiculoResource extends Resource
                     ->button()
                     ->size('sm')
                     ->color('gray')
-                    ->icon('heroicon-o-eye'), // ✅ existe
+                    ->icon('heroicon-o-eye'),
             ])
             ->bulkActions([]);
     }
