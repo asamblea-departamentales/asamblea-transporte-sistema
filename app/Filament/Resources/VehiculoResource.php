@@ -16,184 +16,108 @@ use Illuminate\Database\Eloquent\Builder;
 class VehiculoResource extends Resource
 {
     protected static ?string $model = Vehiculo::class;
-
     protected static ?string $navigationGroup = 'Flota';
     protected static ?string $navigationLabel = 'Vehículos';
     protected static ?string $navigationIcon  = 'heroicon-o-truck';
     protected static ?int    $navigationSort  = 1;
-
-    public static function canViewAny(): bool
-    {
-        return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
-    }
-
-    public static function canCreate(): bool        { return false; }
-    public static function canEdit($record): bool   { return false; }
-    public static function canDelete($record): bool { return false; }
-
-    public static function form(Form $form): Form
-    {
-        return $form->schema([]);
-    }
 
     public static function table(Table $table): Table
     {
         return $table
             ->defaultSort('placa', 'asc')
             ->recordUrl(fn (Vehiculo $record) => static::getUrl('view', ['record' => $record]))
+            // Añadimos un poco de padding extra a las filas para que "respiren"
+            ->contentGrid([
+                'md' => 1,
+                'xl' => 1,
+            ])
             ->columns([
-                // ── FILA PRINCIPAL (siempre visible) ──────────────────
                 Split::make([
-                    // ✅ Imagen usando accessor (URL lista). No disk().
+                    // 1. Fotografía con borde y sombra sutil
                     Tables\Columns\ImageColumn::make('fotografia_url')
                         ->label('')
                         ->circular()
-                        ->size(52)
+                        ->size(60)
                         ->grow(false)
+                        ->extraImgAttributes(['class' => 'ring-2 ring-gray-100 shadow-sm'])
                         ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                    // ✅ Texto + chips (placa/estado) + motorista abajo
+                    // 2. Información Principal (Marca, Modelo, Tipo)
                     Stack::make([
                         Tables\Columns\TextColumn::make('vehiculo_titulo')
-                            ->label('')
-                            ->weight('bold')
+                            ->weight('extrabold')
                             ->size(TextColumnSize::Large)
-                            ->getStateUsing(fn (Vehiculo $record) =>
-                                collect([
-                                    $record->marca?->nombre,
-                                    $record->modelo?->nombre,
-                                ])->filter()->join(' ')
+                            ->color('gray.950') // Texto principal más oscuro
+                            ->getStateUsing(fn (Vehiculo $record) => 
+                                "{$record->marca?->nombre} {$record->modelo?->nombre}"
                             )
-                            ->searchable(),
+                            ->searchable(['marca.nombre', 'modelo.nombre']),
 
                         Tables\Columns\TextColumn::make('vehiculo_sub')
-                            ->label('')
-                            ->color('gray')
+                            ->color('gray.500')
                             ->size(TextColumnSize::Small)
-                            ->getStateUsing(fn (Vehiculo $record) =>
-                                collect([
-                                    $record->tipo?->nombre,
-                                    $record->anio,
-                                ])->filter()->join(' • ')
+                            ->getStateUsing(fn (Vehiculo $record) => 
+                                strtoupper("{$record->tipo?->nombre} • {$record->anio}")
                             ),
+                    ])->space(1)->grow(true),
 
-                        // Chips: placa + estado (más limpio que meterlos como columnas separadas)
+                    // 3. Identificadores (Placa y Estado) - Agrupados lateralmente
+                    Stack::make([
                         Split::make([
                             Tables\Columns\TextColumn::make('placa')
-                                ->label('')
                                 ->badge()
                                 ->color('gray')
                                 ->fontFamily('mono')
-                                ->weight('bold')
-                                ->copyable()
-                                ->searchable()
-                                ->sortable()
-                                ->grow(false),
+                                ->extraAttributes(['class' => 'ring-1 ring-gray-200']) // Efecto de placa real
+                                ->copyable(),
 
                             Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
-                                ->label('')
                                 ->badge()
-                                ->grow(false)
                                 ->icon(fn (?string $state): ?string => match ($state) {
-                                    'Disponible' => 'heroicon-o-check-circle',
-                                    'Reservado'  => 'heroicon-o-clock',
-                                    'Ocupado'    => 'heroicon-o-user',
-                                    'En Taller'  => 'heroicon-o-wrench-screwdriver',
-                                    'Baja'       => 'heroicon-o-minus-circle',
-                                    default      => 'heroicon-o-information-circle',
+                                    'Disponible' => 'heroicon-m-check-circle',
+                                    'Reservado'  => 'heroicon-m-clock',
+                                    'Ocupado'    => 'heroicon-m-minus-circle',
+                                    'En Taller'  => 'heroicon-m-wrench-screwdriver',
+                                    default      => 'heroicon-m-information-circle',
                                 })
                                 ->color(fn (?string $state): string => match ($state) {
                                     'Disponible' => 'success',
-                                    'Reservado'  => 'primary',
+                                    'Reservado'  => 'info',
                                     'Ocupado'    => 'warning',
                                     'En Taller'  => 'danger',
-                                    'Baja'       => 'gray',
                                     default      => 'gray',
                                 }),
-                        ])->from('sm')->columnSpanFull(),
+                        ])->space(2),
 
+                        // 4. Motorista asignado con estilo discreto abajo
                         Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
-                            ->label('')
-                            ->placeholder('Sin motorista asignado')
-                            ->icon('heroicon-o-user')
-                            ->size(TextColumnSize::Small)
-                            ->color('gray')
-                            ->searchable(),
-                    ])->space(2),
-                ])->from('md'),
+                            ->icon('heroicon-m-user-circle')
+                            ->size(TextColumnSize::ExtraSmall)
+                            ->color('gray.400')
+                            ->label('Conductor')
+                            ->placeholder('Sin conductor asignado'),
+                    ])->space(2)->alignEnd(),
 
-                // ── COLUMNAS OPCIONALES (toggleable) ──────────────────
-                Tables\Columns\TextColumn::make('tipo.nombre')
-                    ->label('Tipo')
-                    ->badge()
-                    ->color('info')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('marca.nombre')
-                    ->label('Marca')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('modelo.nombre')
-                    ->label('Modelo')
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('anio')
-                    ->label('Año')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('color.nombre')
-                    ->label('Color')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('capacidad_personas')
-                    ->label('Capacidad')
-                    ->suffix(' personas')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('tipoCombustible.nombre')
-                    ->label('Combustible')
-                    ->badge()
-                    ->color('warning')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('clasificacion.nombre')
-                    ->label('Clasificación')
-                    ->badge()
-                    ->color('gray')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\IconColumn::make('activo')
-                    ->label('Activo')
-                    ->boolean()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                ])->verticalAlignment('center')->contentPadding(4),
+                
+                // Columnas ocultas para filtros y búsqueda técnica
+                Tables\Columns\TextColumn::make('marca.nombre')->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('modelo.nombre')->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                Tables\Filters\SelectFilter::make('tipo_vehiculo_id')
-                    ->label('Tipo')
-                    ->relationship('tipo', 'nombre'),
-
-                Tables\Filters\SelectFilter::make('veh_marca_id')
-                    ->label('Marca')
-                    ->relationship('marca', 'nombre'),
-
                 Tables\Filters\SelectFilter::make('veh_estado_catalogo_id')
-                    ->label('Estado')
-                    ->relationship('estadoCatalogo', 'nombre'),
-
-                Tables\Filters\TernaryFilter::make('activo')
-                    ->label('Activo'),
+                    ->label('Estado Actual')
+                    ->relationship('estadoCatalogo', 'nombre')
+                    ->preload(),
+                Tables\Filters\TernaryFilter::make('activo')->label('Solo Activos'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Actions\ViewAction::make()
+                    ->label('Ver Ficha')
+                    ->button() // Cambiamos de iconButton a Button para que se vea más importante
+                    ->size('sm')
+                    ->color('gray')
+                    ->icon('heroicon-m-eye'),
             ])
             ->bulkActions([]);
     }
