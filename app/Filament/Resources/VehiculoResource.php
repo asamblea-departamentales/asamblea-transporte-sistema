@@ -12,7 +12,7 @@ use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Support\Enums\FontWeight;
-use Filament\Tables\Columns\TextColumn\TextColumnSize;
+use Filament\Tables\Columns\TextColumn\TextColumnSize; // ✅ correcto en v3
 use Illuminate\Database\Eloquent\Builder;
 
 class VehiculoResource extends Resource
@@ -20,16 +20,16 @@ class VehiculoResource extends Resource
     protected static ?string $model = Vehiculo::class;
     protected static ?string $navigationGroup = 'Flota';
     protected static ?string $navigationLabel = 'Vehículos';
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationIcon  = 'heroicon-o-truck';
+    protected static ?int    $navigationSort  = 1;
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
-    public static function canCreate(): bool { return false; }
-    public static function canEdit($record): bool { return false; }
+    public static function canCreate(): bool        { return false; }
+    public static function canEdit($record): bool   { return false; }
     public static function canDelete($record): bool { return false; }
 
     public static function form(Form $form): Form
@@ -55,10 +55,9 @@ class VehiculoResource extends Resource
                     ->schema([
                         Stack::make([
                             Split::make([
-                                // Foto a la izquierda
-                                Tables\Columns\ImageColumn::make('fotografia')
+                                // ✅ Foto a la izquierda (usar accessor URL)
+                                Tables\Columns\ImageColumn::make('fotografia_url')
                                     ->label('')
-                                    ->disk('public')
                                     ->size(110)
                                     ->extraImgAttributes([
                                         'class' => 'object-cover rounded-xl shadow-md ring-1 ring-gray-200 dark:ring-gray-700 group-hover:scale-105 transition-transform duration-300',
@@ -70,15 +69,14 @@ class VehiculoResource extends Resource
                                 Stack::make([
                                     Tables\Columns\TextColumn::make('vehiculo_titulo')
                                         ->weight(FontWeight::ExtraBold)
-                                        ->size('xl') // strings como 'xl' funcionan en v3
-                                        ->color('primary')
+                                        ->size('xl')
                                         ->getStateUsing(fn (Vehiculo $record) =>
                                             collect([$record->marca?->nombre, $record->modelo?->nombre])
                                                 ->filter()->join(' ')
                                         ),
 
                                     Tables\Columns\TextColumn::make('vehiculo_sub')
-                                        ->color('gray.600 dark:gray.300')
+                                        ->color('gray')
                                         ->size(TextColumnSize::Medium)
                                         ->getStateUsing(fn (Vehiculo $record) =>
                                             collect([$record->tipo?->nombre, $record->anio])
@@ -90,14 +88,14 @@ class VehiculoResource extends Resource
                                             ->label('Color')
                                             ->badge()
                                             ->color('gray')
-                                            ->icon('heroicon-m-color-swatch') // ← cambiado a m-
+                                            ->icon('heroicon-o-swatch') // ✅ existe (en lugar de color-swatch)
                                             ->size(TextColumnSize::Small),
 
                                         Tables\Columns\TextColumn::make('capacidad_personas')
                                             ->label('Capacidad')
                                             ->badge()
-                                            ->color('blue')
-                                            ->icon('heroicon-m-user-group') // ← cambiado a m-
+                                            ->color('info')
+                                            ->icon('heroicon-o-user-group') // ✅ existe
                                             ->formatStateUsing(fn ($state) => $state ? "$state personas" : null)
                                             ->size(TextColumnSize::Small),
                                     ])->from('sm'),
@@ -120,24 +118,26 @@ class VehiculoResource extends Resource
                                     Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
                                         ->badge()
                                         ->icon(fn (?string $state): string => match ($state) {
-                                            'Disponible' => 'heroicon-m-check-circle', // ← m-
-                                            'Reservado' => 'heroicon-m-clock', // ← m-
-                                            'Ocupado' => 'heroicon-m-x-circle', // ← m- (x-circle en lugar de minus)
-                                            'En Taller' => 'heroicon-m-wrench-screwdriver', // ← m-
-                                            default => 'heroicon-m-information-circle', // ← m-
+                                            'Disponible' => 'heroicon-o-check-circle',
+                                            'Reservado'  => 'heroicon-o-clock',
+                                            'Ocupado'    => 'heroicon-o-user',
+                                            'En Taller'  => 'heroicon-o-wrench-screwdriver',
+                                            'Baja'       => 'heroicon-o-minus-circle',
+                                            default      => 'heroicon-o-information-circle',
                                         })
                                         ->color(fn (?string $state): string => match ($state) {
                                             'Disponible' => 'success',
-                                            'Reservado' => 'info',
-                                            'Ocupado' => 'warning',
-                                            'En Taller' => 'danger',
-                                            default => 'gray',
+                                            'Reservado'  => 'info',
+                                            'Ocupado'    => 'warning',
+                                            'En Taller'  => 'danger',
+                                            'Baja'       => 'gray',
+                                            default      => 'gray',
                                         })
                                         ->size(TextColumnSize::Medium),
 
                                     Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
-                                        ->icon('heroicon-m-user-circle') // ← cambiado a m-
-                                        ->color('gray.700 dark:gray.300')
+                                        ->icon('heroicon-o-user') // ✅ existe
+                                        ->color('gray')
                                         ->size(TextColumnSize::Small)
                                         ->placeholder('Sin conductor')
                                         ->searchable()
@@ -220,7 +220,7 @@ class VehiculoResource extends Resource
                     ->button()
                     ->size('sm')
                     ->color('gray')
-                    ->icon('heroicon-m-eye'),
+                    ->icon('heroicon-o-eye'), // ✅ existe
             ])
             ->bulkActions([]);
     }
@@ -244,7 +244,7 @@ class VehiculoResource extends Resource
     {
         return [
             'index' => Pages\ListVehiculos::route('/'),
-            'view' => Pages\ViewVehiculo::route('/{record}'),
+            'view'  => Pages\ViewVehiculo::route('/{record}'),
         ];
     }
 }
