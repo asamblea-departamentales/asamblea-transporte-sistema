@@ -86,17 +86,18 @@ class VehCatalogosSeeder extends Seeder
         }
 
         $tiposMantenimiento = [
-         ['nombre' => 'MANTENIMIENTO PREVENTIVO', 'descripcion' => 'MANTENIMIENTO PREVENTIVO'],
-         ['nombre' => 'MANTENIMIENTO CORRECTIVO', 'descripcion' => 'MANTENIMIENTO PARA CORREGIR FALLAS'],
-    ];
+            ['nombre' => 'MANTENIMIENTO PREVENTIVO', 'descripcion' => 'MANTENIMIENTO PREVENTIVO'],
+            ['nombre' => 'MANTENIMIENTO CORRECTIVO', 'descripcion' => 'MANTENIMIENTO PARA CORREGIR FALLAS'],
+        ];
     foreach ($tiposMantenimiento as $tipo) {
-    DB::table('veh_tipo_mantenimientos')->insertOrIgnore(array_merge($tipo, [
-        'activo' => true,
-        'created_at' => now(),
-        'updated_at' => now(),
-    ]));
+        DB::table('veh_tipo_mantenimientos')->insertOrIgnore(array_merge($tipo, [
+            'activo' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]));
+    }
 
         $this->command->info('Base de datos de catálogos sincronizada con éxito.');
     }
-    }
+
 }
