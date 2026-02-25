@@ -24,11 +24,6 @@ use App\Models\HistorialEstado;
 use App\Models\BitacoraEvento;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 
-//Estilos
-use Filament\Tables\Columns\Layout\Split;
-use Filament\Tables\Columns\Layout\Stack;
-use Filament\Tables\Columns\TextColumn\TextColumnSize;
-
 class SolicitudTransporteResource extends Resource
 {
     protected static ?string $model = SolicitudTransporte::class;
@@ -220,399 +215,374 @@ class SolicitudTransporteResource extends Resource
     }
 
     public static function table(Table $table): Table
-{
-    return $table
-        ->defaultSort('fecha_salida', 'asc')
+    {
+        return $table
+            ->defaultSort('fecha_salida', 'asc')
 
-        //  CARDS / GRID para mejor UX en móvil
-        ->contentGrid([
-            'default' => 1,
-            'md' => 2,
-            'xl' => 3,
-        ])
+            //  CARDS / GRID para mejor UX en móvil
+            ->contentGrid([
+                'default' => 1,
+                'md' => 2,
+                'xl' => 3,
+            ])
 
-        //  Tap en tarjeta/fila para abrir el detalle (mobile feel)
-        ->recordUrl(fn (SolicitudTransporte $record) => static::getUrl('view', ['record' => $record]))
+            //  Tap en tarjeta/fila para abrir el detalle (mobile feel)
+            ->recordUrl(fn (SolicitudTransporte $record) => static::getUrl('view', ['record' => $record]))
 
-        ->columns([
-            //Cambios aqui
-            Split::make([
-                Stack::make([
-                    Tables\Columns\TextColumn::make('codigo')
-                        ->label('Código')
-                        ->badge()
-                        ->color('gray')
-                        ->fontFamily('mono')
-                        ->weight('bold')
-                        ->copyable()
-                        ->searchable(),
+            ->columns([
+                Tables\Columns\TextColumn::make('codigo')
+                    ->label('Código')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->copyable(),
 
-                    Tables\Columns\TextColumn::make('unidad.nombre')
-                        ->label('Unidad')
-                        ->weight('medium')
-                        ->searchable()
-                        ->sortable()
-                        ->wrap(),
+                Tables\Columns\TextColumn::make('unidad.nombre')
+                    ->label('Unidad')
+                    ->searchable()
+                    ->sortable()
+                    ->wrap(),
 
-                    Tables\Columns\TextColumn::make('solicitante.name')
-                        ->label('Solicitante')
-                        ->color('gray')
-                        ->size(TextColumnSize::Small)
-                        ->searchable(),
-                ])->space(1),
-            ])->from('md'),
+                Tables\Columns\TextColumn::make('solicitante.name')
+                    ->label('Solicitante')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
-            Tables\Columns\TextColumn::make('prioridad')
-                ->label('Prioridad')
-                ->badge()
-                ->icon(fn (PrioridadSolicitudEnum $state): ?string => match ($state) {
-                    PrioridadSolicitudEnum::ALTA => 'heroicon-o-exclamation-triangle',
-                    PrioridadSolicitudEnum::MEDIA => 'heroicon-o-exclamation-circle',
-                    PrioridadSolicitudEnum::BAJA => 'heroicon-o-check-circle',
-                })
-                ->formatStateUsing(fn (PrioridadSolicitudEnum $state): string => match ($state) {
-                    PrioridadSolicitudEnum::ALTA => 'ALTA',
-                    PrioridadSolicitudEnum::MEDIA => 'MEDIA',
-                    PrioridadSolicitudEnum::BAJA => 'BAJA',
-                })
-                ->color(fn (PrioridadSolicitudEnum $state): string => match ($state) {
-                    PrioridadSolicitudEnum::ALTA => 'danger',
-                    PrioridadSolicitudEnum::MEDIA => 'warning',
-                    PrioridadSolicitudEnum::BAJA => 'success',
-                }),
+                Tables\Columns\TextColumn::make('prioridad')
+                    ->label('Prioridad')
+                    ->badge()
+                    ->formatStateUsing(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                        PrioridadSolicitudEnum::ALTA => 'ALTA',
+                        PrioridadSolicitudEnum::MEDIA => 'MEDIA',
+                        PrioridadSolicitudEnum::BAJA => 'BAJA',
+                    })
+                    ->color(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                        PrioridadSolicitudEnum::ALTA => 'danger',
+                        PrioridadSolicitudEnum::MEDIA => 'warning',
+                        PrioridadSolicitudEnum::BAJA => 'success',
+                    }),
 
-            Tables\Columns\TextColumn::make('tipo_vehiculo_nombre')
-                ->label('Vehículo Pedido')
-                ->placeholder('No especificado')
-                ->badge()
-                ->color('info')
-                ->icon('heroicon-o-truck')
-                ->formatStateUsing(fn (?string $state): string => $state ? ucfirst($state) : 'No especificado')
-                ->toggleable(isToggledHiddenByDefault: true),
+                Tables\Columns\TextColumn::make('tipo_vehiculo_nombre')
+                    ->label('Vehículo Pedido')
+                    ->placeholder('No especificado')
+                    ->badge()
+                    ->color('info')
+                    ->icon('heroicon-m-truck')
+                    ->formatStateUsing(fn (string $state): string => ucfirst($state))
+                    ->toggleable(isToggledHiddenByDefault: true),
 
-            Tables\Columns\TextColumn::make('estado')
-                ->label('Estado')
-                ->badge()
-                ->icon(fn (EstadoSolicitudEnum $state): ?string => match ($state) {
-                    EstadoSolicitudEnum::BORRADOR => 'heroicon-o-pencil',
-                    EstadoSolicitudEnum::PENDIENTE => 'heroicon-o-clock',
-                    EstadoSolicitudEnum::EN_REVISION => 'heroicon-o-magnifying-glass',
-                    EstadoSolicitudEnum::PRE_APROBADA => 'heroicon-o-shield-check',
-                    EstadoSolicitudEnum::APROBADA => 'heroicon-o-check-circle',
-                    EstadoSolicitudEnum::RECHAZADA => 'heroicon-o-x-circle',
-                    EstadoSolicitudEnum::PROGRAMADA => 'heroicon-o-calendar-days',
-                    EstadoSolicitudEnum::EN_EJECUCION => 'heroicon-o-play-circle',
-                    EstadoSolicitudEnum::COMPLETADA => 'heroicon-o-check-badge',
-                    EstadoSolicitudEnum::CANCELADA => 'heroicon-o-minus-circle',
-                })
-                ->formatStateUsing(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                    EstadoSolicitudEnum::BORRADOR => 'Borrador',
-                    EstadoSolicitudEnum::PENDIENTE => 'Pendiente',
-                    EstadoSolicitudEnum::EN_REVISION => 'En revisión',
-                    EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada',
-                    EstadoSolicitudEnum::APROBADA => 'Aprobada',
-                    EstadoSolicitudEnum::RECHAZADA => 'Rechazada',
-                    EstadoSolicitudEnum::PROGRAMADA => 'Programada',
-                    EstadoSolicitudEnum::EN_EJECUCION => 'En ejecución',
-                    EstadoSolicitudEnum::COMPLETADA => 'Completada',
-                    EstadoSolicitudEnum::CANCELADA => 'Cancelada',
-                })
-                ->color(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                    EstadoSolicitudEnum::BORRADOR => 'gray',
-                    EstadoSolicitudEnum::PENDIENTE => 'warning',
-                    EstadoSolicitudEnum::EN_REVISION => 'info',
-                    EstadoSolicitudEnum::PRE_APROBADA => 'warning',
-                    EstadoSolicitudEnum::APROBADA => 'success',
-                    EstadoSolicitudEnum::RECHAZADA => 'danger',
-                    EstadoSolicitudEnum::PROGRAMADA => 'info',
-                    EstadoSolicitudEnum::EN_EJECUCION => 'primary',
-                    EstadoSolicitudEnum::COMPLETADA => 'success',
-                    EstadoSolicitudEnum::CANCELADA => 'gray',
-                    default => 'primary',
-                })
-                ->sortable(),
+                Tables\Columns\TextColumn::make('estado')
+                    ->label('Estado')
+                    ->badge()
+                    ->formatStateUsing(fn (EstadoSolicitudEnum $state): string => match ($state) {
+                        EstadoSolicitudEnum::BORRADOR => 'Borrador',
+                        EstadoSolicitudEnum::PENDIENTE => 'Pendiente',
+                        EstadoSolicitudEnum::EN_REVISION => 'En revisión',
+                        EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada',
+                        EstadoSolicitudEnum::APROBADA => 'Aprobada',
+                        EstadoSolicitudEnum::RECHAZADA => 'Rechazada',
+                        EstadoSolicitudEnum::PROGRAMADA => 'Programada',
+                        EstadoSolicitudEnum::EN_EJECUCION => 'En ejecución',
+                        EstadoSolicitudEnum::COMPLETADA => 'Completada',
+                        EstadoSolicitudEnum::CANCELADA => 'Cancelada',
+                    })
+                    ->color(fn (EstadoSolicitudEnum $state): string => match ($state) {
+                        EstadoSolicitudEnum::BORRADOR => 'gray',
+                        EstadoSolicitudEnum::PENDIENTE => 'warning',
+                        EstadoSolicitudEnum::EN_REVISION => 'info',
+                        EstadoSolicitudEnum::PRE_APROBADA => 'warning',
+                        EstadoSolicitudEnum::APROBADA => 'success',
+                        EstadoSolicitudEnum::RECHAZADA => 'danger',
+                        EstadoSolicitudEnum::PROGRAMADA => 'info',
+                        EstadoSolicitudEnum::EN_EJECUCION => 'primary',
+                        EstadoSolicitudEnum::COMPLETADA => 'success',
+                        EstadoSolicitudEnum::CANCELADA => 'gray',
+                        default => 'primary',
+                    })
+                    ->sortable(),
 
-            Tables\Columns\TextColumn::make('fecha_salida')
-                ->label('Fecha Salida')
-                ->dateTime('d/m/Y')
-                ->description(fn ($record) => $record->hora_salida)
-                ->sortable(),
+                Tables\Columns\TextColumn::make('fecha_salida')
+                    ->label('Fecha Salida')
+                    ->dateTime('d/m/Y')
+                    ->description(fn ($record) => $record->hora_salida)
+                    ->sortable(),
 
-            Tables\Columns\TextColumn::make('created_at')
-                ->label('Creada')
-                ->dateTime('d/m/Y H:i')
-                ->sortable()
-                ->toggleable(isToggledHiddenByDefault: true),
-        ])
-        ->filters([
-            Tables\Filters\SelectFilter::make('estado')
-                ->multiple()
-                ->options([
-                    EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
-                    EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
-                    EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
-                    EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
-                    EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
-                    EstadoSolicitudEnum::PROGRAMADA->value => 'Programada',
-                    EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
-                    EstadoSolicitudEnum::COMPLETADA->value => 'Completada',
-                    EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
-                ]),
+                Tables\Columns\TextColumn::make('created_at')
+                    ->label('Creada')
+                    ->dateTime('d/m/Y H:i')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+            ])
+            ->filters([
+                Tables\Filters\SelectFilter::make('estado')
+                    ->multiple()
+                    ->options([
+                        EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
+                        EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
+                        EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
+                        EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
+                        EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
+                        EstadoSolicitudEnum::PROGRAMADA->value => 'Programada',
+                        EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
+                        EstadoSolicitudEnum::COMPLETADA->value => 'Completada',
+                        EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
+                    ]),
 
-            Tables\Filters\SelectFilter::make('prioridad')
-                ->options([
-                    PrioridadSolicitudEnum::BAJA->value => 'BAJA',
-                    PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
-                    PrioridadSolicitudEnum::ALTA->value => 'ALTA',
-                ]),
+                Tables\Filters\SelectFilter::make('prioridad')
+                    ->options([
+                        PrioridadSolicitudEnum::BAJA->value => 'BAJA',
+                        PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
+                        PrioridadSolicitudEnum::ALTA->value => 'ALTA',
+                    ]),
 
-            Tables\Filters\SelectFilter::make('unidad_solicitante_id')
-                ->label('Unidad')
-                ->relationship('unidad', 'nombre'),
-        ])
-        ->actions([
-            Tables\Actions\ViewAction::make()->iconButton(),
+                Tables\Filters\SelectFilter::make('unidad_solicitante_id')
+                    ->label('Unidad')
+                    ->relationship('unidad', 'nombre'),
+            ])
+            ->actions([
+                Tables\Actions\ViewAction::make(),
 
-            //  Agrupar acciones para que no se vea saturado en móvil
-            Tables\Actions\ActionGroup::make([
-                Tables\Actions\Action::make('observacion')
-                    ->label('Observación')
-                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                    ->modalHeading('Agregar Observación')
-                    ->modalSubmitActionLabel('Guardar Observación')
-                    ->form([
-                        Forms\Components\Textarea::make('comentario_jefe')
-                            ->label('Observación del jefe')
-                            ->rows(4)
-                            ->required()
-                            ->maxLength(2000),
-                    ])
-                    ->action(function (SolicitudTransporte $record, array $data) {
-                        $estadoAnterior = $record->estado;
-                        $record->comentario_jefe = $data['comentario_jefe'];
-                        if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                            $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                        }
-                        $record->save();
+                //  Agrupar acciones para que no se vea saturado en móvil
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\Action::make('observacion')
+                        ->label('Observación')
+                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                        ->modalHeading('Agregar Observación')
+                        ->modalSubmitActionLabel('Guardar Observación')
+                        ->form([
+                            Forms\Components\Textarea::make('comentario_jefe')
+                                ->label('Observación del jefe')
+                                ->rows(4)
+                                ->required()
+                                ->maxLength(2000),
+                        ])
+                        ->action(function (SolicitudTransporte $record, array $data) {
+                            $estadoAnterior = $record->estado;
+                            $record->comentario_jefe = $data['comentario_jefe'];
+                            if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
+                                $record->estado = EstadoSolicitudEnum::EN_REVISION;
+                            }
+                            $record->save();
 
-                        if ($estadoAnterior !== $record->estado) {
+                            if ($estadoAnterior !== $record->estado) {
+                                HistorialEstado::create([
+                                    'entidad_tipo'    => 'solicitud_transporte',
+                                    'entidad_id'      => $record->id,
+                                    'estado_anterior' => $estadoAnterior?->value,
+                                    'estado_nuevo'    => $record->estado?->value,
+                                    'user_id'         => auth()->id(),
+                                    'comentario'      => $data['comentario_jefe'],
+                                ]);
+                            }
+
+                            BitacoraEvento::create([
+                                'entidad_tipo' => 'solicitud_transporte',
+                                'entidad_id'   => $record->id,
+                                'accion'       => AccionBitacoraEnum::OBSERVAR->value,
+                                'user_id'      => auth()->id(),
+                                'datos_extras' => ['comentario' => $data['comentario_jefe']],
+                            ]);
+                        })
+                        ->visible(fn (SolicitudTransporte $record) =>
+                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+                        ),
+
+                    Tables\Actions\Action::make('pre_aprobar')
+                        ->label('Pre-Aprobar')
+                        ->color('warning')
+                        ->icon('heroicon-o-clock')
+                        ->requiresConfirmation()
+                        ->modalHeading('Pre-aprobar Solicitud')
+                        ->action(function (SolicitudTransporte $record) {
+                            $estadoAnterior = $record->estado;
+                            $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
+                            $record->save();
+
                             HistorialEstado::create([
                                 'entidad_tipo'    => 'solicitud_transporte',
                                 'entidad_id'      => $record->id,
                                 'estado_anterior' => $estadoAnterior?->value,
                                 'estado_nuevo'    => $record->estado?->value,
                                 'user_id'         => auth()->id(),
+                                'comentario'      => 'Solicitud pre-aprobada en revisión inicial.',
+                            ]);
+
+                            BitacoraEvento::create([
+                                'entidad_tipo' => 'solicitud_transporte',
+                                'entidad_id'   => $record->id,
+                                'accion'       => 'PRE_APROBAR',
+                                'user_id'      => auth()->id(),
+                            ]);
+                        })
+                        ->visible(fn (SolicitudTransporte $record) =>
+                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+                        ),
+
+                    // APROBAR (PROGRAMAR)
+                    Tables\Actions\Action::make('aprobar')
+                        ->label('Aprobar')
+                        ->color('success')
+                        ->icon('heroicon-o-check-circle')
+                        ->modalHeading('Aprobar y Asignar Vehículo')
+                        ->modalWidth('2xl')
+                        ->form([
+                            Forms\Components\Textarea::make('comentario_jefe')
+                                ->label('Motivo de la aprobación')
+                                ->rows(4)
+                                ->required()
+                                ->maxLength(2000)
+                                ->columnSpanFull(),
+
+                            Forms\Components\Section::make('Asignación de Vehiculo y Motorista')
+    ->schema([
+        Forms\Components\Select::make('vehiculo_id')
+            ->label('Vehículo')
+            ->options(fn () => \App\Models\Vehiculo::where('activo', true)
+                ->get()
+                ->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
+            ->searchable()
+            ->required()
+            ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+            ->hintColor('warning')
+            ->reactive()
+            ->afterStateUpdated(function ($state, callable $set) {
+                if (!$state) {
+                    $set('motorista_nombre', 'Sin motorista asignado');
+                    $set('motorista_id', null);
+                    return;
+                }
+                $vehiculo = \App\Models\Vehiculo::find($state);
+                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                $set('motorista_nombre', $motorista 
+                    ? "{$motorista->nombre} — DUI: {$motorista->dui}" 
+                    : 'Sin motorista asignado');
+                $set('motorista_id', $motorista?->id);
+            }),
+
+        // Campo oculto para guardar el motorista_id real
+        Forms\Components\Hidden::make('motorista_id'),
+
+        // Solo visual — no editable
+        Forms\Components\Placeholder::make('motorista_nombre')
+            ->label('Motorista Asignado')
+            ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero'),
+
+    ])->columns(2),
+                        ])
+                        ->action(function (SolicitudTransporte $record, array $data) {
+                            $estadoAnterior = $record->estado;
+
+                            $record->estado = EstadoSolicitudEnum::PROGRAMADA;
+                            $record->comentario_jefe = $data['comentario_jefe'];
+                            $record->decidido_por = auth()->id();
+                            $record->decidido_en = now();
+                            $record->vehiculo_id = $data['vehiculo_id'];
+                            $record->motorista_id = $data['motorista_id'];
+                            $record->save();
+
+                            $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
+
+                            HistorialEstado::create([
+                                'entidad_tipo' => 'solicitud_transporte',
+                                'entidad_id' => $record->id,
+                                'estado_anterior' => $estadoAnterior->value,
+                                'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
+                                'user_id' => auth()->id(),
+                                'comentario' => $data['comentario_jefe'],
+                            ]);
+
+                            BitacoraEvento::create([
+                                'entidad_tipo' => 'solicitud_transporte',
+                                'entidad_id'   => $record->id,
+                                'accion'       => AccionBitacoraEnum::APROBAR->value,
+                                'user_id'      => auth()->id(),
+                                'datos_extras' => [
+                                    'comentario' => $data['comentario_jefe'],
+                                    'vehiculo_id' => $data['vehiculo_id'],
+                                    'motorista_id' => $data['motorista_id'],
+                                ],
+                            ]);
+
+                            try {
+                                $payload = [
+                                    'tipo' => 'transporte',
+                                    'evento' => 'solicitud_aprobada',
+                                    'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
+                                    'solicitud' => [
+                                        'codigo' => $record->codigo,
+                                        'estado' => 'aprobado',
+                                        'tipo_vehiculo_nombre' => $record->vehiculo->tipo->nombre ?? 'No asignado',
+                                        'cantidad_personas' => $record->cantidad_personas,
+                                        'origen' => $record->origen,
+                                        'destino' => $record->destino,
+                                        'destino_adicional' => $record->destino_adicional,
+                                        'fecha_salida' => $record->fecha_salida,
+                                        'fecha_retorno' => $record->fecha_retorno,
+                                        'motivo_actividad' => $record->motivo_actividad,
+                                        'vehiculo_placa' => $record->vehiculo->placa ?? 'N/A',
+                                        'motorista_nombre' => $record->motorista->nombre ?? 'N/A',
+                                    ],
+                                    'solicitante' => [
+                                        'name' => $record->solicitante->name,
+                                        'email' => $record->solicitante->email,
+                                        'unidad' => [
+                                            'nombre' => $record->unidad->nombre ?? 'N/A',
+                                            'siglas' => $record->unidad->siglas ?? 'N/A',
+                                        ],
+                                    ],
+                                    'timestamp' => now()->format(\DateTimeInterface::ATOM),
+                                ];
+
+                                Mail::to($record->solicitante->email)->send(
+                                    new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+                                );
+                            } catch (\Exception $e) {
+                                Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
+                            }
+                        })
+                        ->visible(fn (SolicitudTransporte $record) =>
+                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+                        ),
+
+                    Tables\Actions\Action::make('rechazar')
+                        ->label('Rechazar')
+                        ->color('danger')
+                        ->icon('heroicon-o-x-circle')
+                        ->form([
+                            Forms\Components\Textarea::make('comentario_jefe')
+                                ->label('Motivo del rechazo')
+                                ->required(),
+                        ])
+                        ->action(function (SolicitudTransporte $record, array $data) {
+                            $estadoAnterior = $record->estado;
+                            $record->update([
+                                'estado' => EstadoSolicitudEnum::RECHAZADA,
+                                'comentario_jefe' => $data['comentario_jefe'],
+                                'decidido_por' => auth()->id(),
+                                'decidido_en' => now(),
+                            ]);
+
+                            HistorialEstado::create([
+                                'entidad_tipo'    => 'solicitud_transporte',
+                                'entidad_id'      => $record->id,
+                                'estado_anterior' => $estadoAnterior->value,
+                                'estado_nuevo'    => EstadoSolicitudEnum::RECHAZADA->value,
+                                'user_id'         => auth()->id(),
                                 'comentario'      => $data['comentario_jefe'],
                             ]);
-                        }
-
-                        BitacoraEvento::create([
-                            'entidad_tipo' => 'solicitud_transporte',
-                            'entidad_id'   => $record->id,
-                            'accion'       => AccionBitacoraEnum::OBSERVAR->value,
-                            'user_id'      => auth()->id(),
-                            'datos_extras' => ['comentario' => $data['comentario_jefe']],
-                        ]);
-                    })
-                    ->visible(fn (SolicitudTransporte $record) =>
-                        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                    ),
-
-                Tables\Actions\Action::make('pre_aprobar')
-                    ->label('Pre-Aprobar')
-                    ->color('warning')
-                    ->icon('heroicon-o-clock')
-                    ->requiresConfirmation()
-                    ->modalHeading('Pre-aprobar Solicitud')
-                    ->action(function (SolicitudTransporte $record) {
-                        $estadoAnterior = $record->estado;
-                        $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
-                        $record->save();
-
-                        HistorialEstado::create([
-                            'entidad_tipo'    => 'solicitud_transporte',
-                            'entidad_id'      => $record->id,
-                            'estado_anterior' => $estadoAnterior?->value,
-                            'estado_nuevo'    => $record->estado?->value,
-                            'user_id'         => auth()->id(),
-                            'comentario'      => 'Solicitud pre-aprobada en revisión inicial.',
-                        ]);
-
-                        BitacoraEvento::create([
-                            'entidad_tipo' => 'solicitud_transporte',
-                            'entidad_id'   => $record->id,
-                            'accion'       => 'PRE_APROBAR',
-                            'user_id'      => auth()->id(),
-                        ]);
-                    })
-                    ->visible(fn (SolicitudTransporte $record) =>
-                        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                    ),
-
-                // APROBAR (PROGRAMAR)
-                Tables\Actions\Action::make('aprobar')
-                    ->label('Aprobar')
-                    ->color('success')
-                    ->icon('heroicon-o-check-circle')
-                    ->modalHeading('Aprobar y Asignar Vehículo')
-                    ->modalWidth('2xl')
-                    ->form([
-                        Forms\Components\Textarea::make('comentario_jefe')
-                            ->label('Motivo de la aprobación')
-                            ->rows(4)
-                            ->required()
-                            ->maxLength(2000)
-                            ->columnSpanFull(),
-
-                        Forms\Components\Section::make('Asignación de Vehiculo y Motorista')
-                            ->schema([
-                                Forms\Components\Select::make('vehiculo_id')
-                                    ->label('Vehículo')
-                                    ->options(fn () => \App\Models\Vehiculo::where('activo', true)
-                                        ->get()
-                                        ->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
-                                    ->searchable()
-                                    ->required()
-                                    ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                    ->hintColor('warning')
-                                    ->reactive()
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        if (!$state) {
-                                            $set('motorista_nombre', 'Sin motorista asignado');
-                                            $set('motorista_id', null);
-                                            return;
-                                        }
-                                        $vehiculo = \App\Models\Vehiculo::find($state);
-                                        $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                                        $set('motorista_nombre', $motorista
-                                            ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                            : 'Sin motorista asignado');
-                                        $set('motorista_id', $motorista?->id);
-                                    }),
-
-                                // Campo oculto para guardar el motorista_id real
-                                Forms\Components\Hidden::make('motorista_id'),
-
-                                // Solo visual — no editable
-                                Forms\Components\Placeholder::make('motorista_nombre')
-                                    ->label('Motorista Asignado')
-                                    ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero'),
-
-                            ])->columns(2),
-                    ])
-                    ->action(function (SolicitudTransporte $record, array $data) {
-                        $estadoAnterior = $record->estado;
-
-                        $record->estado = EstadoSolicitudEnum::PROGRAMADA;
-                        $record->comentario_jefe = $data['comentario_jefe'];
-                        $record->decidido_por = auth()->id();
-                        $record->decidido_en = now();
-                        $record->vehiculo_id = $data['vehiculo_id'];
-                        $record->motorista_id = $data['motorista_id'];
-                        $record->save();
-
-                        $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
-
-                        HistorialEstado::create([
-                            'entidad_tipo' => 'solicitud_transporte',
-                            'entidad_id' => $record->id,
-                            'estado_anterior' => $estadoAnterior->value,
-                            'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
-                            'user_id' => auth()->id(),
-                            'comentario' => $data['comentario_jefe'],
-                        ]);
-
-                        BitacoraEvento::create([
-                            'entidad_tipo' => 'solicitud_transporte',
-                            'entidad_id'   => $record->id,
-                            'accion'       => AccionBitacoraEnum::APROBAR->value,
-                            'user_id'      => auth()->id(),
-                            'datos_extras' => [
-                                'comentario' => $data['comentario_jefe'],
-                                'vehiculo_id' => $data['vehiculo_id'],
-                                'motorista_id' => $data['motorista_id'],
-                            ],
-                        ]);
-
-                        try {
-                            $payload = [
-                                'tipo' => 'transporte',
-                                'evento' => 'solicitud_aprobada',
-                                'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
-                                'solicitud' => [
-                                    'codigo' => $record->codigo,
-                                    'estado' => 'aprobado',
-                                    'tipo_vehiculo_nombre' => $record->vehiculo->tipo->nombre ?? 'No asignado',
-                                    'cantidad_personas' => $record->cantidad_personas,
-                                    'origen' => $record->origen,
-                                    'destino' => $record->destino,
-                                    'destino_adicional' => $record->destino_adicional,
-                                    'fecha_salida' => $record->fecha_salida,
-                                    'fecha_retorno' => $record->fecha_retorno,
-                                    'motivo_actividad' => $record->motivo_actividad,
-                                    'vehiculo_placa' => $record->vehiculo->placa ?? 'N/A',
-                                    'motorista_nombre' => $record->motorista->nombre ?? 'N/A',
-                                ],
-                                'solicitante' => [
-                                    'name' => $record->solicitante->name,
-                                    'email' => $record->solicitante->email,
-                                    'unidad' => [
-                                        'nombre' => $record->unidad->nombre ?? 'N/A',
-                                        'siglas' => $record->unidad->siglas ?? 'N/A',
-                                    ],
-                                ],
-                                'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                            ];
-
-                            Mail::to($record->solicitante->email)->send(
-                                new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
-                            );
-                        } catch (\Exception $e) {
-                            Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
-                        }
-                    })
-                    ->visible(fn (SolicitudTransporte $record) =>
-                        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                    ),
-
-                Tables\Actions\Action::make('rechazar')
-                    ->label('Rechazar')
-                    ->color('danger')
-                    ->icon('heroicon-o-x-circle')
-                    ->form([
-                        Forms\Components\Textarea::make('comentario_jefe')
-                            ->label('Motivo del rechazo')
-                            ->required(),
-                    ])
-                    ->action(function (SolicitudTransporte $record, array $data) {
-                        $estadoAnterior = $record->estado;
-                        $record->update([
-                            'estado' => EstadoSolicitudEnum::RECHAZADA,
-                            'comentario_jefe' => $data['comentario_jefe'],
-                            'decidido_por' => auth()->id(),
-                            'decidido_en' => now(),
-                        ]);
-
-                        HistorialEstado::create([
-                            'entidad_tipo'    => 'solicitud_transporte',
-                            'entidad_id'      => $record->id,
-                            'estado_anterior' => $estadoAnterior->value,
-                            'estado_nuevo'    => EstadoSolicitudEnum::RECHAZADA->value,
-                            'user_id'         => auth()->id(),
-                            'comentario'      => $data['comentario_jefe'],
-                        ]);
-                    })
-                    ->visible(fn (SolicitudTransporte $record) =>
-                        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)
-                    ),
-            ])
+                        })
+                        ->visible(fn (SolicitudTransporte $record) =>
+                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)
+                        ),
+                ])
                 ->label('Más')
                 ->icon('heroicon-m-ellipsis-vertical'),
-        ])
-        ->bulkActions([]);
-}
+            ])
+            ->bulkActions([]);
+    }
 
     public static function getEloquentQuery(): Builder
     {
