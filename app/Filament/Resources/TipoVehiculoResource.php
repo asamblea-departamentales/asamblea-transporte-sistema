@@ -23,7 +23,7 @@ class TipoVehiculoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti']);
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
     public static function form(Form $form): Form
