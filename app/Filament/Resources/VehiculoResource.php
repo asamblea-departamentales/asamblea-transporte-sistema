@@ -49,14 +49,14 @@ class VehiculoResource extends Resource
             ])
             ->columns([
                 Stack::make([
-                    // Foto de portada centrada tipo gallery
+                    // Imagen tipo marketplace
                     Tables\Columns\ImageColumn::make('fotografia')
                         ->label('')
                         ->disk('public')
-                        ->height(160)
-                        ->width(200)
+                        ->height(180)
+                        ->width(220)
                         ->extraImgAttributes([
-                            'class' => 'object-contain mx-auto rounded-t-2xl',
+                            'class' => 'object-contain mx-auto rounded-t-xl',
                         ])
                         ->extraAttributes([
                             'class' => 'flex justify-center items-center w-full bg-gray-50 dark:bg-gray-900',
@@ -64,10 +64,10 @@ class VehiculoResource extends Resource
                         ->grow(false)
                         ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                    // Contenido de la tarjeta debajo de la foto
+                    // Contenido tipo producto
                     Stack::make([
 
-                        // Marca + Modelo
+                        // Marca + Modelo (título principal)
                         Tables\Columns\TextColumn::make('vehiculo_titulo')
                             ->weight(FontWeight::Bold)
                             ->size(TextColumnSize::Large)
@@ -76,7 +76,7 @@ class VehiculoResource extends Resource
                                     ->filter()->join(' ')
                             ),
 
-                        // Tipo + Año
+                        // Tipo + Año (subtítulo)
                         Tables\Columns\TextColumn::make('vehiculo_sub')
                             ->color('gray')
                             ->size(TextColumnSize::Small)
@@ -145,8 +145,8 @@ class VehiculoResource extends Resource
                     ])->space(2)->extraAttributes(['class' => 'p-4 space-y-2']),
 
                 ])->extraAttributes([
-                    'class' => 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 
-                                dark:border-gray-700 shadow hover:shadow-lg 
+                    'class' => 'bg-white dark:bg-gray-800 rounded-xl border border-gray-200 
+                                dark:border-gray-700 shadow-md hover:shadow-xl 
                                 hover:-translate-y-1 transition-all duration-300 
                                 cursor-pointer overflow-hidden h-full flex flex-col',
                 ]),
@@ -209,7 +209,7 @@ class VehiculoResource extends Resource
                     ->label('Ver Ficha')
                     ->button()
                     ->size('sm')
-                    ->color('gray')
+                    ->color('primary')
                     ->icon('heroicon-o-eye'),
             ])
             ->bulkActions([]);
@@ -234,7 +234,4 @@ class VehiculoResource extends Resource
     {
         return [
             'index' => Pages\ListVehiculos::route('/'),
-            'view'  => Pages\ViewVehiculo::route('/{record}'),
-        ];
-    }
-}
+            'view'  => Pages\ViewVehiculo::route('/{record
