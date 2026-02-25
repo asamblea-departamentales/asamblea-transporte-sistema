@@ -22,13 +22,12 @@ class VehiculosSeeder extends Seeder
         $modeloUrvan     = DB::table('veh_modelos')->where('nombre', 'Urvan')->value('id');
         $modeloNPR       = DB::table('veh_modelos')->where('nombre', 'NPR')->value('id');
 
-        // ← Nombres reales en mayúsculas
         $colorBlanco     = DB::table('veh_colores')->where('nombre', 'BLANCO')->value('id');
         $colorGris       = DB::table('veh_colores')->where('nombre', 'GRIS')->value('id');
         $colorGrisOscuro = DB::table('veh_colores')->where('nombre', 'GRIS OSCURO')->value('id');
 
-        // ← Tipos de motor reales
-        $motorCombInterna = DB::table('veh_tipos_motor')->where('nombre', 'Combustión interna')->value('id');
+        $motorGasolina   = DB::table('veh_tipos_motor')->where('nombre', 'GASOLINA')->value('id');
+        $motorDiesel     = DB::table('veh_tipos_motor')->where('nombre', 'DIESEL')->value('id');
 
         $transManual     = DB::table('veh_transmisiones')->where('nombre', 'Manual')->value('id');
         $transAuto       = DB::table('veh_transmisiones')->where('nombre', 'Automática')->value('id');
@@ -36,16 +35,13 @@ class VehiculosSeeder extends Seeder
         $traccion4x2     = DB::table('veh_tracciones')->where('nombre', '4x2')->value('id');
         $traccion4x4     = DB::table('veh_tracciones')->where('nombre', '4x4')->value('id');
 
-        // ← Medidas reales de llanta
         $llanta205_60R16 = DB::table('veh_tipo_llantas')->where('nombre', '205/60R16')->value('id');
         $llanta195R14    = DB::table('veh_tipo_llantas')->where('nombre', '195R14')->value('id');
         $llanta11R22     = DB::table('veh_tipo_llantas')->where('nombre', '11.0R22.5')->value('id');
 
-        // ← Combustibles reales en mayúsculas
         $combGasolina    = DB::table('veh_tipo_combustible')->where('nombre', 'GASOLINA')->value('id');
         $combDiesel      = DB::table('veh_tipo_combustible')->where('nombre', 'DIESEL')->value('id');
 
-        // ← Clasificaciones reales
         $clasAdmin       = DB::table('veh_clasificaciones')->where('nombre', 'ADMINISTRATIVO')->value('id');
         $clasTransporte  = DB::table('veh_clasificaciones')->where('nombre', 'TRANSPORTE DE PERSONAL')->value('id');
 
@@ -67,7 +63,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaToyota,
                 'veh_modelo_id'           => $modeloCorolla,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorGasolina,
                 'veh_transmision_id'      => $transAuto,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta205_60R16,
@@ -89,7 +85,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaMitsubishi,
                 'veh_modelo_id'           => $modeloMontero,
                 'veh_color_id'            => $colorGris,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorGasolina,
                 'veh_transmision_id'      => $transAuto,
                 'veh_traccion_id'         => $traccion4x4,
                 'veh_tipo_llanta_id'      => $llanta205_60R16,
@@ -111,7 +107,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaToyota,
                 'veh_modelo_id'           => $modeloCorolla,
                 'veh_color_id'            => $colorGrisOscuro,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorGasolina,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta205_60R16,
@@ -135,7 +131,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaNissan,
                 'veh_modelo_id'           => $modeloUrvan,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta195R14,
@@ -157,7 +153,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaNissan,
                 'veh_modelo_id'           => $modeloUrvan,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta195R14,
@@ -179,7 +175,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaIsuzu,
                 'veh_modelo_id'           => $modeloNPR,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta195R14,
@@ -203,7 +199,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaHino,
                 'veh_modelo_id'           => $modeloDutro,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta11R22,
@@ -225,7 +221,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaHino,
                 'veh_modelo_id'           => $modeloDutro,
                 'veh_color_id'            => $colorGris,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta11R22,
@@ -247,7 +243,7 @@ class VehiculosSeeder extends Seeder
                 'veh_marca_id'            => $marcaIsuzu,
                 'veh_modelo_id'           => $modeloNPR,
                 'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorCombInterna,
+                'veh_tipo_motor_id'       => $motorDiesel,
                 'veh_transmision_id'      => $transManual,
                 'veh_traccion_id'         => $traccion4x2,
                 'veh_tipo_llanta_id'      => $llanta11R22,
@@ -268,6 +264,6 @@ class VehiculosSeeder extends Seeder
             ]));
         }
 
-        $this->command->info('✅ Vehículos de prueba insertados correctamente.');
+        $this->command->info(' Vehículos de prueba insertados correctamente.');
     }
 }

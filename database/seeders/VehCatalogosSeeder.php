@@ -69,8 +69,8 @@ class VehCatalogosSeeder extends Seeder
             DB::table('veh_tipo_llantas')->insertOrIgnore(['nombre' => $llanta, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
 
-        // 8. OTROS CATÁLOGOS
-        $tiposMotor = ['Combustión interna', 'Híbrido', 'Eléctrico'];
+        // 8. TIPOS DE MOTOR REALES
+        $tiposMotor = ['2500 CC', '1100 CC', 'DIESEL', 'GASOLINA'];
         foreach ($tiposMotor as $tipo) {
             DB::table('veh_tipos_motor')->insertOrIgnore(['nombre' => $tipo, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
