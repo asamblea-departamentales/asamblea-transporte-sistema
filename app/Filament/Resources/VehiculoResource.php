@@ -12,7 +12,7 @@ use Filament\Tables\Columns\Layout\Grid;
 use Filament\Tables\Columns\Layout\Split;
 use Filament\Tables\Columns\Layout\Stack;
 use Filament\Support\Enums\FontWeight;
-use Filament\Support\Enums\TextColumnSize;
+use Filament\Tables\Columns\TextColumn\TextColumnSize; // ← Este es el namespace correcto en v3
 use Illuminate\Database\Eloquent\Builder;
 
 class VehiculoResource extends Resource
@@ -55,7 +55,7 @@ class VehiculoResource extends Resource
                     ->schema([
                         Stack::make([
                             Split::make([
-                                // Foto a la izquierda (más grande, rectangular redondeado, zoom en hover)
+                                // Foto a la izquierda
                                 Tables\Columns\ImageColumn::make('fotografia')
                                     ->label('')
                                     ->disk('public')
@@ -66,11 +66,11 @@ class VehiculoResource extends Resource
                                     ->grow(false)
                                     ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                                // Contenido principal (centro)
+                                // Contenido principal
                                 Stack::make([
                                     Tables\Columns\TextColumn::make('vehiculo_titulo')
                                         ->weight(FontWeight::ExtraBold)
-                                        ->size('xl')
+                                        ->size('xl')  // En v3 acepta strings como 'xl' o usa el enum abajo
                                         ->color('primary')
                                         ->getStateUsing(fn (Vehiculo $record) =>
                                             collect([$record->marca?->nombre, $record->modelo?->nombre])
@@ -85,7 +85,6 @@ class VehiculoResource extends Resource
                                                 ->filter()->join(' • ')
                                         ),
 
-                                    // Info extra (color y capacidad)
                                     Split::make([
                                         Tables\Columns\TextColumn::make('color.nombre')
                                             ->label('Color')
@@ -103,9 +102,9 @@ class VehiculoResource extends Resource
                                             ->size(TextColumnSize::Small),
                                     ])->from('sm'),
 
-                                ])->space(2),
+                                ])->grow(),
 
-                                // Columna derecha (placa, estado, motorista)
+                                // Derecha
                                 Stack::make([
                                     Tables\Columns\TextColumn::make('placa')
                                         ->badge()
@@ -143,16 +142,16 @@ class VehiculoResource extends Resource
                                         ->placeholder('Sin conductor')
                                         ->searchable()
                                         ->visibleFrom('md'),
-                                ])->space(3)->alignEnd(),
-                            ])->from('md')->grow(),
+                                ])->alignEnd(),
+                            ])->from('md'),
                         ])
-                        // Estilos de "card" completa en el Stack principal
+                        // Card styling
                         ->extraAttributes([
                             'class' => 'group relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-md hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden cursor-pointer p-6',
                         ]),
                     ]),
 
-                // Todas las columnas ocultas que tenías (no quité ninguna)
+                // Columnas toggleable (todas intactas)
                 Tables\Columns\TextColumn::make('tipo.nombre')
                     ->label('Tipo')
                     ->badge()->color('info')
