@@ -49,22 +49,22 @@ class VehiculoResource extends Resource
             ])
             ->columns([
                 Stack::make([
-                    // Foto de portada
+                    // Foto de portada centrada tipo gallery
                     Tables\Columns\ImageColumn::make('fotografia')
-    ->label('')
-    ->disk('public')
-    ->height(160)
-    ->width('100%')
-    ->extraImgAttributes([
-        'class' => 'object-cover w-full rounded-t-2xl',
-    ])
-    ->extraAttributes([
-        'class' => 'flex justify-center items-center w-full bg-gray-50 dark:bg-gray-900',
-    ])
-    ->grow(false)
-    ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
+                        ->label('')
+                        ->disk('public')
+                        ->height(160)
+                        ->width(200)
+                        ->extraImgAttributes([
+                            'class' => 'object-contain mx-auto rounded-t-2xl',
+                        ])
+                        ->extraAttributes([
+                            'class' => 'flex justify-center items-center w-full bg-gray-50 dark:bg-gray-900',
+                        ])
+                        ->grow(false)
+                        ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                    // Contenido de la tarjeta
+                    // Contenido de la tarjeta debajo de la foto
                     Stack::make([
 
                         // Marca + Modelo
@@ -85,7 +85,7 @@ class VehiculoResource extends Resource
                                     ->filter()->join(' • ')
                             ),
 
-                        // Separador visual (placa + estado lado a lado)
+                        // Placa + Estado
                         Split::make([
                             Tables\Columns\TextColumn::make('placa')
                                 ->badge()
@@ -142,10 +142,13 @@ class VehiculoResource extends Resource
                             ->placeholder('Sin conductor')
                             ->searchable(),
 
-                    ])->space(2)->extraAttributes(['class' => 'p-4']),
+                    ])->space(2)->extraAttributes(['class' => 'p-4 space-y-2']),
 
                 ])->extraAttributes([
-                    'class' => 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 dark:border-gray-700 shadow hover:shadow-xl hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden h-full',
+                    'class' => 'bg-white dark:bg-gray-800 rounded-2xl border border-gray-200 
+                                dark:border-gray-700 shadow hover:shadow-lg 
+                                hover:-translate-y-1 transition-all duration-300 
+                                cursor-pointer overflow-hidden h-full flex flex-col',
                 ]),
 
                 // ── Columnas ocultas para búsqueda/filtros ──
