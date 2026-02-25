@@ -20,8 +20,8 @@ class VehiculoResource extends Resource
     protected static ?string $model = Vehiculo::class;
     protected static ?string $navigationGroup = 'Flota';
     protected static ?string $navigationLabel = 'Vehículos';
-    protected static ?string $navigationIcon = 'heroicon-o-truck';
-    protected static ?int $navigationSort = 1;
+    protected static ?string $navigationIcon  = 'heroicon-o-truck';
+    protected static ?int    $navigationSort  = 1;
 
     public static function canViewAny(): bool
     {
@@ -43,123 +43,161 @@ class VehiculoResource extends Resource
             ->defaultSort('placa', 'asc')
             ->recordUrl(fn (Vehiculo $record) => static::getUrl('view', ['record' => $record]))
             ->contentGrid([
+                'sm' => 1,
                 'md' => 2,
                 'xl' => 3,
-            ]) // ← Esto hace que se vea como cards en pantallas medianas/grandes
+                '2xl' => 4,
+            ])
+            ->striped(false)
             ->columns([
-                // Usamos un Grid de 1 columna para que cada "fila" sea una card completa
                 Grid::make()
                     ->columns(1)
                     ->schema([
+                        Stack::make([
+                            Split::make([
+                                // Foto a la izquierda (más grande, rectangular redondeado, zoom en hover)
+                                Tables\Columns\ImageColumn::make('fotografia')
+                                    ->label('')
+                                    ->disk('public')
+                                    ->size(110)
+                                    ->extraImgAttributes([
+                                        'class' => 'object-cover rounded-xl shadow-md ring-1 ring-gray-200 dark:ring-gray-700 group-hover:scale-105 transition-transform duration-300',
+                                    ])
+                                    ->grow(false)
+                                    ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
 
-                        // Card principal con borde, padding, shadow sutil y hover
-                        \Filament\Tables\Columns\Layout\Panel::make() // o simplemente usa un Stack con extra styling si prefieres
-                            ->extraAttributes([
-                                'class' => 'bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 overflow-hidden',
-                            ])
-                            ->schema([
+                                // Contenido principal (centro)
+                                Stack::make([
+                                    Tables\Columns\TextColumn::make('vehiculo_titulo')
+                                        ->weight(FontWeight::ExtraBold)
+                                        ->size('xl')
+                                        ->color('primary')
+                                        ->getStateUsing(fn (Vehiculo $record) =>
+                                            collect([$record->marca?->nombre, $record->modelo?->nombre])
+                                                ->filter()->join(' ')
+                                        ),
 
-                                Split::make([
-                                    // Foto a la izquierda (más grande y con ring sutil)
-                                    Tables\Columns\ImageColumn::make('fotografia')
-                                        ->label('')
-                                        ->disk('public')
-                                        ->circular()
-                                        ->size(80)                      // un poco más grande para destacar
-                                        ->grow(false)
-                                        ->extraImgAttributes(['class' => 'ring-2 ring-gray-200 dark:ring-gray-600'])
-                                        ->defaultImageUrl(url('/images/icons/icon-96x96.png')),
+                                    Tables\Columns\TextColumn::make('vehiculo_sub')
+                                        ->color('gray.600 dark:gray.300')
+                                        ->size(TextColumnSize::Medium)
+                                        ->getStateUsing(fn (Vehiculo $record) =>
+                                            collect([$record->tipo?->nombre, $record->anio])
+                                                ->filter()->join(' • ')
+                                        ),
 
-                                    // Contenido principal
-                                    Stack::make([
-
-                                        // Título (Marca + Modelo)
-                                        Tables\Columns\TextColumn::make('vehiculo_titulo')
-                                            ->weight(FontWeight::Bold)
-                                            ->size(TextColumnSize::Medium)
-                                            ->getStateUsing(fn (Vehiculo $record) =>
-                                                collect([$record->marca?->nombre, $record->modelo?->nombre])
-                                                    ->filter()->join(' ')
-                                            ),
-
-                                        // Subtítulo (Tipo • Año)
-                                        Tables\Columns\TextColumn::make('vehiculo_sub')
-                                            ->color('gray')
-                                            ->size(TextColumnSize::Small)
-                                            ->getStateUsing(fn (Vehiculo $record) =>
-                                                collect([$record->tipo?->nombre, $record->anio])
-                                                    ->filter()->join(' • ')
-                                            ),
-
-                                        // Info extra en gris claro
+                                    // Info extra (color y capacidad)
+                                    Split::make([
                                         Tables\Columns\TextColumn::make('color.nombre')
                                             ->label('Color')
-                                            ->formatStateUsing(fn ($state) => $state ? "Color: $state" : null)
-                                            ->color('gray')
-                                            ->size(TextColumnSize::ExtraSmall)
-                                            ->visibleFrom('md'),
-
-                                    ])->space(1),
-
-                                    // Columna derecha (alineada a la derecha)
-                                    Stack::make([
-
-                                        // Placa como badge grande
-                                        Tables\Columns\TextColumn::make('placa')
                                             ->badge()
                                             ->color('gray')
-                                            ->fontFamily('mono')
-                                            ->weight(FontWeight::Bold)
-                                            ->size(TextColumnSize::Medium)
-                                            ->copyable()
-                                            ->searchable()
-                                            ->sortable(),
-
-                                        // Estado con icono y color
-                                        Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
-                                            ->badge()
-                                            ->icon(fn (?string $state): string => match ($state) {
-                                                'Disponible' => 'heroicon-m-check-circle',
-                                                'Reservado'  => 'heroicon-m-clock',
-                                                'Ocupado'    => 'heroicon-m-minus-circle',
-                                                'En Taller'  => 'heroicon-m-wrench-screwdriver',
-                                                default      => 'heroicon-m-information-circle',
-                                            })
-                                            ->color(fn (?string $state): string => match ($state) {
-                                                'Disponible' => 'success',
-                                                'Reservado'  => 'info',
-                                                'Ocupado'    => 'warning',
-                                                'En Taller'  => 'danger',
-                                                default      => 'gray',
-                                            })
+                                            ->icon('heroicon-m-color-swatch')
                                             ->size(TextColumnSize::Small),
 
-                                        // Motorista (si existe)
-                                        Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
-                                            ->icon('heroicon-m-user-circle')
-                                            ->color('gray')
-                                            ->size(TextColumnSize::Small)
-                                            ->placeholder('Sin conductor asignado')
-                                            ->searchable()
-                                            ->visibleFrom('md'),
+                                        Tables\Columns\TextColumn::make('capacidad_personas')
+                                            ->label('Capacidad')
+                                            ->badge()
+                                            ->color('blue')
+                                            ->icon('heroicon-m-user-group')
+                                            ->formatStateUsing(fn ($state) => $state ? "$state personas" : null)
+                                            ->size(TextColumnSize::Small),
+                                    ])->from('sm'),
 
-                                    ])->space(2)->alignEnd(),
+                                ])->space(2),
 
-                                ])->space(4),
+                                // Columna derecha (placa, estado, motorista)
+                                Stack::make([
+                                    Tables\Columns\TextColumn::make('placa')
+                                        ->badge()
+                                        ->color('primary')
+                                        ->fontFamily('mono')
+                                        ->weight(FontWeight::ExtraBold)
+                                        ->size('xl')
+                                        ->extraAttributes(['class' => 'px-6 py-3 text-center'])
+                                        ->copyable()
+                                        ->searchable()
+                                        ->sortable(),
 
-                            ]),
+                                    Tables\Columns\TextColumn::make('estadoCatalogo.nombre')
+                                        ->badge()
+                                        ->icon(fn (?string $state): string => match ($state) {
+                                            'Disponible' => 'heroicon-c-check-circle',
+                                            'Reservado'  => 'heroicon-c-clock',
+                                            'Ocupado'    => 'heroicon-c-x-circle',
+                                            'En Taller'  => 'heroicon-c-wrench-screwdriver',
+                                            default      => 'heroicon-c-information-circle',
+                                        })
+                                        ->color(fn (?string $state): string => match ($state) {
+                                            'Disponible' => 'success',
+                                            'Reservado'  => 'info',
+                                            'Ocupado'    => 'warning',
+                                            'En Taller'  => 'danger',
+                                            default      => 'gray',
+                                        })
+                                        ->size(TextColumnSize::Medium),
 
+                                    Tables\Columns\TextColumn::make('asignacionVigenteMotorista.motorista.nombre')
+                                        ->icon('heroicon-c-user')
+                                        ->color('gray.700 dark:gray.300')
+                                        ->size(TextColumnSize::Small)
+                                        ->placeholder('Sin conductor')
+                                        ->searchable()
+                                        ->visibleFrom('md'),
+                                ])->space(3)->alignEnd(),
+                            ])->from('md')->grow(),
+                        ])
+                        // Estilos de "card" completa en el Stack principal
+                        ->extraAttributes([
+                            'class' => 'group relative bg-gradient-to-br from-white to-gray-50 dark:from-gray-800 dark:to-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-md hover:shadow-2xl hover:scale-[1.02] transition-all duration-300 overflow-hidden cursor-pointer p-6',
+                        ]),
                     ]),
-                // Columnas ocultas (para filtros y búsqueda)
-                Tables\Columns\TextColumn::make('tipo.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('marca.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('modelo.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('anio')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('color.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('capacidad_personas')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('tipoCombustible.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\TextColumn::make('clasificacion.nombre')->toggleable(isToggledHiddenByDefault: true),
-                Tables\Columns\IconColumn::make('activo')->boolean()->toggleable(isToggledHiddenByDefault: true),
+
+                // Todas las columnas ocultas que tenías (no quité ninguna)
+                Tables\Columns\TextColumn::make('tipo.nombre')
+                    ->label('Tipo')
+                    ->badge()->color('info')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('marca.nombre')
+                    ->label('Marca')
+                    ->searchable()->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('modelo.nombre')
+                    ->label('Modelo')
+                    ->searchable()->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('anio')
+                    ->label('Año')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('color.nombre')
+                    ->label('Color')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('capacidad_personas')
+                    ->label('Capacidad')
+                    ->suffix(' personas')
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('tipoCombustible.nombre')
+                    ->label('Combustible')
+                    ->badge()->color('warning')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('clasificacion.nombre')
+                    ->label('Clasificación')
+                    ->badge()->color('gray')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\IconColumn::make('activo')
+                    ->label('Activo')
+                    ->boolean()->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('tipo_vehiculo_id')
