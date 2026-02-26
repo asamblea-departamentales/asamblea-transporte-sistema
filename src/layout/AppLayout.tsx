@@ -6,7 +6,7 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-gray-50 to-slate-100">
+    <div style={{ minHeight: "100vh", background: "#fff" }}>
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
@@ -14,10 +14,17 @@ export default function AppLayout() {
       />
 
       <main
-        className="pt-14 lg:pt-[68px] lg:pb-0"
-        style={{ paddingBottom: "calc(56px + env(safe-area-inset-bottom))" }}
+        style={{
+          paddingTop: 60,
+          paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
+        }}
       >
-        <div className="mx-auto w-full max-w-[1600px] px-4 py-8 sm:px-6 lg:px-10">
+        <div style={{
+          margin: "0 auto",
+          width: "100%",
+          maxWidth: 1440,
+          padding: "32px 24px",
+        }}>
           <Outlet />
         </div>
       </main>
