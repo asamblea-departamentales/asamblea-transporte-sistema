@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Filament\Forms;
 use App\Filament\Resources\VehiculoResource\Pages;
 use App\Models\Vehiculo;
 use Filament\Forms\Form;
@@ -27,14 +28,178 @@ class VehiculoResource extends Resource
         return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
-    public static function canCreate(): bool        { return false; }
-    public static function canEdit($record): bool   { return false; }
-    public static function canDelete($record): bool { return false; }
+    public static function canCreate(): bool        { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']); }
+    public static function canEdit($record): bool   { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']); }
+    public static function canDelete($record): bool { return auth()->user()->hasAnyRole(['admin', 'jefe']); }
 
     public static function form(Form $form): Form
-    {
-        return $form->schema([]);
-    }
+{
+    return $form->schema([
+
+        Forms\Components\Section::make('Identificación')
+            ->icon('heroicon-o-identification')
+            ->schema([
+                Forms\Components\TextInput::make('placa')
+                    ->label('Placa')
+                    ->required()
+                    ->maxLength(20)
+                    ->unique(ignoreRecord: true)
+                    ->extraInputAttributes(['class' => 'font-mono uppercase']),
+
+                Forms\Components\Select::make('tipo_vehiculo_id')
+                    ->label('Tipo de Vehículo')
+                    ->relationship('tipo', 'nombre')
+                    ->required()
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_estado_catalogo_id')
+                    ->label('Estado')
+                    ->relationship('estadoCatalogo', 'nombre')
+                    ->required()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_clasificacion_id')
+                    ->label('Clasificación')
+                    ->relationship('clasificacion', 'nombre')
+                    ->required()
+                    ->preload(),
+
+                Forms\Components\Toggle::make('activo')
+                    ->label('Activo')
+                    ->default(true),
+            ])->columns(2),
+
+        Forms\Components\Section::make('Marca y Modelo')
+            ->icon('heroicon-o-tag')
+            ->schema([
+                Forms\Components\Select::make('veh_marca_id')
+                    ->label('Marca')
+                    ->relationship('marca', 'nombre')
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->live()
+                    ->afterStateUpdated(fn (callable $set) => $set('veh_modelo_id', null)),
+
+                Forms\Components\Select::make('veh_modelo_id')
+                    ->label('Modelo')
+                    ->required()
+                    ->searchable()
+                    ->preload()
+                    ->options(function (callable $get) {
+                        $marcaId = $get('veh_marca_id');
+                        if (!$marcaId) return [];
+                        return \App\Models\VehModelo::where('veh_marca_id', $marcaId)
+                            ->where('activo', true)
+                            ->pluck('nombre', 'id');
+                    }),
+
+                Forms\Components\TextInput::make('anio')
+                    ->label('Año')
+                    ->required()
+                    ->numeric()
+                    ->minValue(1990)
+                    ->maxValue(now()->year + 1),
+
+                Forms\Components\Select::make('veh_color_id')
+                    ->label('Color')
+                    ->relationship('color', 'nombre')
+                    ->required()
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\TextInput::make('capacidad_personas')
+                    ->label('Capacidad (personas)')
+                    ->required()
+                    ->numeric()
+                    ->minValue(1),
+            ])->columns(2),
+
+        Forms\Components\Section::make('Datos Técnicos')
+            ->icon('heroicon-o-cog-6-tooth')
+            ->schema([
+                Forms\Components\Select::make('veh_tipo_motor_id')
+                    ->label('Tipo de Motor')
+                    ->relationship('tipoMotor', 'nombre')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_tipo_combustible_id')
+                    ->label('Combustible')
+                    ->relationship('tipoCombustible', 'nombre')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_transmision_id')
+                    ->label('Transmisión')
+                    ->relationship('transmision', 'nombre')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_traccion_id')
+                    ->label('Tracción')
+                    ->relationship('traccion', 'nombre')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\Select::make('veh_tipo_llanta_id')
+                    ->label('Tipo de Llanta')
+                    ->relationship('tipoLlanta', 'nombre')
+                    ->searchable()
+                    ->preload(),
+
+                Forms\Components\TextInput::make('num_llantas')
+                    ->label('Número de Llantas')
+                    ->numeric()
+                    ->minValue(2),
+            ])->columns(2),
+
+        Forms\Components\Section::make('Datos Registrales')
+            ->icon('heroicon-o-document-text')
+            ->schema([
+                Forms\Components\TextInput::make('chasis')
+                    ->label('Chasis')
+                    ->maxLength(100),
+
+                Forms\Components\TextInput::make('vin')
+                    ->label('VIN')
+                    ->maxLength(100),
+
+                Forms\Components\TextInput::make('motor_numero')
+                    ->label('Número de Motor')
+                    ->maxLength(100),
+
+                Forms\Components\TextInput::make('activo_fijo')
+                    ->label('Activo Fijo')
+                    ->maxLength(100),
+
+                Forms\Components\DatePicker::make('vencimiento_tarjeta')
+                    ->label('Vencimiento Tarjeta de Circulación'),
+            ])->columns(2),
+
+        Forms\Components\Section::make('Fotografía y Observaciones')
+            ->icon('heroicon-o-camera')
+            ->schema([
+                Forms\Components\FileUpload::make('fotografia')
+                    ->label('Fotografía')
+                    ->image()
+                    ->disk('public')
+                    ->directory('vehiculos')
+                    ->imageResizeMode('cover')
+                    ->imageCropAspectRatio('16:9')
+                    ->maxSize(5120)
+                    ->columnSpanFull(),
+
+                Forms\Components\Textarea::make('observacion')
+                    ->label('Observaciones')
+                    ->rows(3)
+                    ->maxLength(1000)
+                    ->columnSpanFull(),
+            ]),
+
+    ]);
+}
 
     public static function table(Table $table): Table
     {
@@ -234,6 +399,8 @@ class VehiculoResource extends Resource
     {
         return [
             'index' => Pages\ListVehiculos::route('/'),
+            'create' => Pages\CreateVehiculo::route('/create'),
+            'edit' => Pages\EditVehiculo::route('/{record}/edit'),
             'view'  => Pages\ViewVehiculo::route('/{record}'),
         ];
     }
