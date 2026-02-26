@@ -3,21 +3,21 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
+use App\Http\Controllers\Api\SolicitudMantenimientoController;
 use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 
 // AUTH POR TOKEN (PUBLICO)
 Route::post('/auth/login', [TokenAuthController::class, 'login']);
 
-// TODO lo protegido
 Route::middleware('auth:sanctum')->group(function () {
 
     // Usuario autenticado
-    Route::get('/auth/me', [TokenAuthController::class, 'me']);
+    Route::get('/auth/me',      [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
-    Route::get('/user', [TokenAuthController::class, 'me']);
+    Route::get('/user',         [TokenAuthController::class, 'me']);
 
-    // Dashboard Summary
+    // Dashboard Summary (por ahora solo Transporte)
     Route::get('/dashboard/summary', function () {
         $user = request()->user();
         $q = SolicitudTransporte::query();
@@ -34,7 +34,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ]);
     });
 
-    // Solicitudes Recientes
+    // Solicitudes Recientes (por ahora solo Transporte)
     Route::get('/solicitudes/recientes', function () {
         $user = request()->user();
         $q = SolicitudTransporte::query();
@@ -56,18 +56,37 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['data' => $rows]);
     });
 
-    // CRUD de Solicitudes (transport-requests)
-    Route::apiResource('transport-requests', SolicitudTransporteController::class);
-    
-    // Acciones del Solicitante
-    Route::post('transport-requests/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
-    Route::post('transport-requests/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']); // NUEVA RUTA
+    // ── TRANSPORTE ───────────────────────────────────────────
+    Route::apiResource('transport-requests', SolicitudTransporteController::class)
+        ->only(['index', 'store', 'show']);
 
-    // Acciones de Jefatura (Protegidas por rol)
+    // Acciones del Solicitante
+    Route::post('transport-requests/{solicitud}/enviar',    [SolicitudTransporteController::class, 'enviar']);
+    Route::post('transport-requests/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
+
+    // Acciones de Jefatura
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('transport-requests/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
-        Route::post('transport-requests/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
-        Route::post('transport-requests/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
+        Route::post('transport-requests/{solicitud}/aprobar',     [SolicitudTransporteController::class, 'aprobar']);
+        Route::post('transport-requests/{solicitud}/rechazar',    [SolicitudTransporteController::class, 'rechazar']);
     });
 
-}); 
+    // ── MANTENIMIENTO ────────────────────────────────────────
+    Route::apiResource('maintenance-requests', SolicitudMantenimientoController::class)
+        ->only(['index', 'store', 'show']);
+
+    // Acciones del Solicitante
+    Route::post('maintenance-requests/{solicitud}/enviar',    [SolicitudMantenimientoController::class, 'enviar']);
+    Route::post('maintenance-requests/{solicitud}/completar', [SolicitudMantenimientoController::class, 'completar']);
+    Route::post('maintenance-requests/{solicitud}/cancelar',  [SolicitudMantenimientoController::class, 'cancelar']);
+
+    // Acciones de Jefatura
+    Route::middleware('role:jefe|admin|ti')->group(function () {
+        Route::post('maintenance-requests/{solicitud}/observacion',  [SolicitudMantenimientoController::class, 'observacion']);
+        Route::post('maintenance-requests/{solicitud}/pre-aprobar',  [SolicitudMantenimientoController::class, 'preAprobar']);
+        Route::post('maintenance-requests/{solicitud}/aprobar',      [SolicitudMantenimientoController::class, 'aprobar']);
+        Route::post('maintenance-requests/{solicitud}/rechazar',     [SolicitudMantenimientoController::class, 'rechazar']);
+        Route::post('maintenance-requests/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
+    });
+
+});
