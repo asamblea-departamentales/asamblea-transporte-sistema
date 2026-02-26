@@ -1,5 +1,5 @@
 // src/pages/solicitudes/mantenimiento/NuevaSolicitudMantenimiento.tsx
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 const API_BASE =
@@ -10,6 +10,18 @@ const API_BASE =
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Prioridad = "baja" | "media" | "alta";
 type TipoSolicitud = "taller" | "llantas";
+
+interface Catalogo {
+  id: string;
+  label: string;
+}
+
+interface CatalogosState {
+  vehiculos: Catalogo[];
+  tiposMantenimiento: Catalogo[];
+  loading: boolean;
+  error: string | null;
+}
 
 interface FormData {
   vehiculo_id: string;
@@ -32,19 +44,6 @@ const INITIAL: FormData = {
   costo_estimado: "",
   observaciones: "",
 };
-
-// ─── Mock data (reemplazar con fetch real) ────────────────────────────────────
-const VEHICULOS = [
-  { id: "1", label: "ABC-123 · Toyota Hilux 2022" },
-  { id: "2", label: "DEF-456 · Nissan NP300 2021" },
-  { id: "3", label: "GHI-789 · Ford Ranger 2023" },
-];
-
-const TIPOS_MANT = [
-  { id: "1", label: "Preventivo" },
-  { id: "2", label: "Correctivo" },
-  { id: "3", label: "Predictivo" },
-];
 
 // ─── Step definitions ─────────────────────────────────────────────────────────
 const STEPS = [
@@ -129,23 +128,25 @@ function inputCls(hasError = false) {
 }
 
 function SelectInput({
-  value, onChange, options, placeholder, error,
+  value, onChange, options, placeholder, error, disabled,
 }: {
   value: string;
   onChange: (v: string) => void;
-  options: { id: string; label: string }[];
+  options: Catalogo[];
   placeholder?: string;
   error?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <select
       value={value}
       onChange={(e) => onChange(e.target.value)}
-      className={inputCls(error) + " cursor-pointer appearance-none"}
+      disabled={disabled}
+      className={inputCls(error) + " cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"}
       style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
     >
       {placeholder && <option value="">{placeholder}</option>}
-      {options.map((o) => <option key={o.id} value={o.id}>{o.label}</option>)}
+      {options.map((o) => <option key={o.id} value={String(o.id)}>{o.label}</option>)}
     </select>
   );
 }
@@ -227,7 +228,16 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 
 // ─── Steps ────────────────────────────────────────────────────────────────────
 
-function Step1({ data, update, errors }: { data: FormData; update: (k: keyof FormData, v: string) => void; errors: Partial<Record<keyof FormData, string>> }) {
+function Step1({
+  data, update, errors, vehiculos, tiposMantenimiento, loadingCatalogos,
+}: {
+  data: FormData;
+  update: (k: keyof FormData, v: string) => void;
+  errors: Partial<Record<keyof FormData, string>>;
+  vehiculos: Catalogo[];
+  tiposMantenimiento: Catalogo[];
+  loadingCatalogos: boolean;
+}) {
   return (
     <div className="space-y-5">
       <div>
@@ -235,9 +245,10 @@ function Step1({ data, update, errors }: { data: FormData; update: (k: keyof For
         <SelectInput
           value={data.vehiculo_id}
           onChange={(v) => update("vehiculo_id", v)}
-          options={VEHICULOS}
-          placeholder="Seleccione un vehículo..."
+          options={vehiculos}
+          placeholder={loadingCatalogos ? "Cargando vehículos..." : "Seleccione un vehículo..."}
           error={!!errors.vehiculo_id}
+          disabled={loadingCatalogos}
         />
         {errors.vehiculo_id && <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>}
       </div>
@@ -247,9 +258,10 @@ function Step1({ data, update, errors }: { data: FormData; update: (k: keyof For
         <SelectInput
           value={data.veh_tipo_mantenimiento_id}
           onChange={(v) => update("veh_tipo_mantenimiento_id", v)}
-          options={TIPOS_MANT}
-          placeholder="Seleccione el tipo..."
+          options={tiposMantenimiento}
+          placeholder={loadingCatalogos ? "Cargando tipos..." : "Seleccione el tipo..."}
           error={!!errors.veh_tipo_mantenimiento_id}
+          disabled={loadingCatalogos}
         />
         {errors.veh_tipo_mantenimiento_id && <p className="mt-1 text-xs font-semibold text-red-500">{errors.veh_tipo_mantenimiento_id}</p>}
       </div>
@@ -359,9 +371,14 @@ function Step2({ data, update, errors }: { data: FormData; update: (k: keyof For
   );
 }
 
-function Step3({ data }: { data: FormData }) {
-  const vehiculo   = VEHICULOS.find((v) => v.id === data.vehiculo_id)?.label ?? "";
-  const tipoMant   = TIPOS_MANT.find((t) => t.id === data.veh_tipo_mantenimiento_id)?.label ?? "";
+function Step3({ data, vehiculos, tiposMantenimiento }: {
+  data: FormData;
+  vehiculos: Catalogo[];
+  tiposMantenimiento: Catalogo[];
+}) {
+  // Resuelve labels desde los catálogos reales
+  const vehiculo = vehiculos.find((v) => String(v.id) === data.vehiculo_id)?.label ?? "";
+  const tipoMant = tiposMantenimiento.find((t) => String(t.id) === data.veh_tipo_mantenimiento_id)?.label ?? "";
   const prioridadCfg = data.prioridad ? prioridadConfig[data.prioridad as Prioridad] : null;
 
   return (
@@ -429,6 +446,14 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
   return e;
 }
 
+// ─── API helper ───────────────────────────────────────────────────────────────
+function authHeaders(): HeadersInit {
+  const token = localStorage.getItem("auth_token");
+  return {
+    Accept: "application/json",
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+  };
+}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NuevaSolicitudMantenimiento() {
@@ -440,6 +465,54 @@ export default function NuevaSolicitudMantenimiento() {
   const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError]   = useState<string | null>(null);
 
+  // ── Catálogos ──────────────────────────────────────────────────────────────
+  const [catalogos, setCatalogos] = useState<CatalogosState>({
+    vehiculos: [],
+    tiposMantenimiento: [],
+    loading: true,
+    error: null,
+  });
+
+  const fetchCatalogos = useCallback(async () => {
+    setCatalogos((prev) => ({ ...prev, loading: true, error: null }));
+    try {
+      const headers = authHeaders();
+      const [resVehs, resTipos] = await Promise.all([
+        fetch(`${API_BASE}/api/catalogos/vehiculos`,           { headers }),
+        fetch(`${API_BASE}/api/catalogos/tipos-mantenimiento`, { headers }),
+      ]);
+
+      if (!resVehs.ok || !resTipos.ok) {
+        throw new Error("Error al obtener los catálogos del servidor.");
+      }
+
+      const [jsonVehs, jsonTipos] = await Promise.all([resVehs.json(), resTipos.json()]);
+
+      // El endpoint de vehiculos devuelve array con { id, label, placa, marca, modelo, tipo }
+      // El endpoint de tipos devuelve array con { id, nombre }
+      const vehiculos: Catalogo[] = (Array.isArray(jsonVehs) ? jsonVehs : jsonVehs.data ?? []).map(
+        (v: any) => ({ id: String(v.id), label: v.label ?? v.nombre ?? String(v.id) })
+      );
+
+      const tiposMantenimiento: Catalogo[] = (Array.isArray(jsonTipos) ? jsonTipos : jsonTipos.data ?? []).map(
+        (t: any) => ({ id: String(t.id), label: t.nombre ?? t.label ?? String(t.id) })
+      );
+
+      setCatalogos({ vehiculos, tiposMantenimiento, loading: false, error: null });
+    } catch (err: any) {
+      setCatalogos((prev) => ({
+        ...prev,
+        loading: false,
+        error: err?.message ?? "No se pudieron cargar los catálogos.",
+      }));
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCatalogos();
+  }, [fetchCatalogos]);
+
+  // ── Handlers ───────────────────────────────────────────────────────────────
   const update = useCallback((key: keyof FormData, value: string) => {
     setData((prev) => ({ ...prev, [key]: value }));
     setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
@@ -461,14 +534,11 @@ export default function NuevaSolicitudMantenimiento() {
     setApiError(null);
     setLoading(true);
     try {
-      const token = localStorage.getItem("auth_token");
-
       const res = await fetch(`${API_BASE}/api/solicitudes-mantenimiento`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Accept: "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...authHeaders(),
         },
         body: JSON.stringify({
           vehiculo_id:               parseInt(data.vehiculo_id),
@@ -543,6 +613,34 @@ export default function NuevaSolicitudMantenimiento() {
     );
   }
 
+  // ── Error de catálogos (pantalla bloqueante) ───────────────────────────────
+  if (!catalogos.loading && catalogos.error) {
+    return (
+      <div className="pb-10">
+        <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 bg-white">
+          <div className="relative mx-auto max-w-lg px-6 py-16 text-center">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200">
+              <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+            </div>
+            <h2 className="text-lg font-black text-slate-900">Error al cargar datos</h2>
+            <p className="mt-2 text-sm font-semibold text-slate-500">{catalogos.error}</p>
+            <button
+              onClick={fetchCatalogos}
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+            >
+              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Reintentar
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // ── Main Form ──────────────────────────────────────────────────────────────
   return (
     <div className="pb-10">
@@ -581,7 +679,7 @@ export default function NuevaSolicitudMantenimiento() {
             </button>
           </div>
 
-          {/* Error de API */}
+          {/* Error de API al enviar */}
           {apiError && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200/80 bg-red-50 px-5 py-4">
               <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -616,9 +714,24 @@ export default function NuevaSolicitudMantenimiento() {
             </div>
 
             {/* Step content */}
-            {step === 1 && <Step1 data={data} update={update} errors={errors} />}
+            {step === 1 && (
+              <Step1
+                data={data}
+                update={update}
+                errors={errors}
+                vehiculos={catalogos.vehiculos}
+                tiposMantenimiento={catalogos.tiposMantenimiento}
+                loadingCatalogos={catalogos.loading}
+              />
+            )}
             {step === 2 && <Step2 data={data} update={update} errors={errors} />}
-            {step === 3 && <Step3 data={data} />}
+            {step === 3 && (
+              <Step3
+                data={data}
+                vehiculos={catalogos.vehiculos}
+                tiposMantenimiento={catalogos.tiposMantenimiento}
+              />
+            )}
 
             {/* Navigation */}
             <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
@@ -640,12 +753,25 @@ export default function NuevaSolicitudMantenimiento() {
               {step < 3 ? (
                 <button
                   onClick={handleNext}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_6px_18px_-8px_rgba(16,185,129,.7)] transition-all hover:opacity-90 hover:shadow-[0_8px_22px_-8px_rgba(16,185,129,.75)] active:scale-95"
+                  disabled={catalogos.loading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_6px_18px_-8px_rgba(16,185,129,.7)] transition-all hover:opacity-90 hover:shadow-[0_8px_22px_-8px_rgba(16,185,129,.75)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Siguiente
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                  </svg>
+                  {catalogos.loading && step === 1 ? (
+                    <>
+                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                      </svg>
+                      Cargando...
+                    </>
+                  ) : (
+                    <>
+                      Siguiente
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      </svg>
+                    </>
+                  )}
                 </button>
               ) : (
                 <button
