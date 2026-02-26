@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Builder;
 class VehiculoResource extends Resource
 {
     protected static ?string $model = Vehiculo::class;
-    protected static ?string $navigationGroup = 'Flota';
+    protected static ?string $navigationGroup = 'Catálogos';
     protected static ?string $navigationLabel = 'Vehículos';
     protected static ?string $navigationIcon  = 'heroicon-o-truck';
     protected static ?int    $navigationSort  = 1;

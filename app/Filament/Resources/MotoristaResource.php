@@ -15,7 +15,7 @@ class MotoristaResource extends Resource
 {
     protected static ?string $model = Motorista::class;
 
-    protected static ?string $navigationGroup = 'Flota';
+    protected static ?string $navigationGroup = 'Catálogos';
     protected static ?string $navigationLabel = 'Motoristas';
     protected static ?string $navigationIcon  = 'heroicon-o-identification';
     protected static ?int    $navigationSort  = 2;
