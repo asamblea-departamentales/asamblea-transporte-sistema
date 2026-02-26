@@ -23,7 +23,7 @@ class SolicitudCombustible extends Model
         'solicitud_transporte_id',
         'destino_actividad',
         'solicitante_id',
-        'cantidad',
+        'cantidad_combustible',
         'valor_unitario',
         'valor_total',
         'forma_pago',
