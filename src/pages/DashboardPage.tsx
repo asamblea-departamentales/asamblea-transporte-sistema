@@ -241,7 +241,7 @@ export default function DashboardPage() {
         minHeight: "100vh",
         background: "#fff",
         fontFamily: FONT,
-        padding: "32px 24px 60px",
+        padding: "28px 0 48px",
       }}>
         <div style={{ maxWidth: 1100, margin: "0 auto" }}>
 

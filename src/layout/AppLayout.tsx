@@ -15,7 +15,7 @@ export default function AppLayout() {
 
       <main
         style={{
-          paddingTop: 60,
+          paddingTop: 60, // exact navbar height
           paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
         }}
       >
@@ -23,7 +23,7 @@ export default function AppLayout() {
           margin: "0 auto",
           width: "100%",
           maxWidth: 1440,
-          padding: "32px 24px",
+          padding: "0 24px", // NO vertical padding here — let each page control its own
         }}>
           <Outlet />
         </div>
