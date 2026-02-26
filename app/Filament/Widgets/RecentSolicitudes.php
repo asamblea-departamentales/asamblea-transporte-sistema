@@ -4,108 +4,82 @@ namespace App\Filament\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Filament\Resources\SolicitudTransporteResource;
+use App\Filament\Resources\SolicitudMantenimientoResource;
+use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\SolicitudTransporte;
-use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Widgets\TableWidget as BaseWidget;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudCombustible;
+use Filament\Widgets\Widget;
 
-class RecentSolicitudes extends BaseWidget
+class RecentSolicitudes extends Widget
 {
-    protected int|string|array $columnSpan = 'full';
-
     protected static ?int $sort = 2;
-    protected static ?string $heading = 'Bandeja de Aprobaciones';
+    protected int|string|array $columnSpan = 'full';
+    protected static string $view = 'filament.widgets.recent-solicitudes';
 
     public static function canView(): bool
     {
         return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
     }
 
-    public function table(Table $table): Table
+    public function getSolicitudes(): \Illuminate\Support\Collection
     {
-        return $table
-            ->query(
-                SolicitudTransporte::query()
-                    ->with(['unidad', 'solicitante'])
-                    ->whereIn('estado', [
-                        EstadoSolicitudEnum::PENDIENTE,
-                        EstadoSolicitudEnum::EN_REVISION,
-                        EstadoSolicitudEnum::PRE_APROBADA,
-                    ])
-                    ->orderBy('fecha_salida', 'asc')
-                    ->limit(8)
-            )
+        $estadosPendientes = [
+            EstadoSolicitudEnum::PENDIENTE->value,
+            EstadoSolicitudEnum::EN_REVISION->value,
+            EstadoSolicitudEnum::PRE_APROBADA->value,
+        ];
 
-            // ✅ Mobile feel: tarjetas
-            ->contentGrid([
-                'default' => 1,
-                'md' => 2,
-                'xl' => 3,
-            ])
+        $transporte = SolicitudTransporte::query()
+            ->with(['solicitante'])
+            ->whereIn('estado', $estadosPendientes)
+            ->latest('created_at')
+            ->limit(5)
+            ->get()
+            ->map(fn ($s) => [
+                'codigo'      => $s->codigo,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'estado'      => $s->estado?->value ?? $s->estado,
+                'fecha'       => optional($s->fecha_salida ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo'      => 'Transporte',
+                'url'         => SolicitudTransporteResource::getUrl('view', ['record' => $s->id]),
+            ]);
 
-            // ✅ Tap en la tarjeta/fila
-            ->recordUrl(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record]))
+        $mantenimiento = SolicitudMantenimiento::query()
+            ->with(['solicitante', 'vehiculo'])
+            ->whereIn('estado', $estadosPendientes)
+            ->latest('created_at')
+            ->limit(5)
+            ->get()
+            ->map(fn ($s) => [
+                'codigo'      => $s->codigo,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'estado'      => $s->estado?->value ?? $s->estado,
+                'fecha'       => optional($s->fecha_sugerida ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo'      => 'Mantenimiento',
+                'url'         => SolicitudMantenimientoResource::getUrl('view', ['record' => $s->id]),
+            ]);
 
-            ->columns([
-                Tables\Columns\TextColumn::make('codigo')
-                    ->label('Código')
-                    ->weight('bold')
-                    ->searchable()
-                    ->sortable()
-                    ->copyable()
-                    ->description(fn (SolicitudTransporte $record) => $record->solicitante?->name ?? '-')
-                    ->wrap(),
+        $combustible = SolicitudCombustible::query()
+            ->with(['solicitante', 'vehiculo'])
+            ->whereIn('estado', $estadosPendientes)
+            ->latest('created_at')
+            ->limit(5)
+            ->get()
+            ->map(fn ($s) => [
+                'codigo'      => $s->codigo,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'estado'      => $s->estado?->value ?? $s->estado,
+                'fecha'       => optional($s->fecha_solicitud ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo'      => 'Combustible',
+                'url'         => SolicitudCombustibleResource::getUrl('view', ['record' => $s->id]),
+            ]);
 
-                Tables\Columns\TextColumn::make('estado')
-                    ->label('Estado')
-                    ->badge()
-                    ->color(fn ($state): string => match ($state->value ?? $state) {
-                        'pendiente' => 'warning',
-                        'en_revision' => 'info',
-                        'pre_aprobada' => 'warning',
-                        'programada' => 'success',
-                        'rechazada' => 'danger',
-                        'borrador' => 'gray',
-                        default => 'gray',
-                    })
-                    ->formatStateUsing(fn ($state) => ucfirst($state->value ?? $state)),
-
-                Tables\Columns\TextColumn::make('fecha_salida')
-                    ->label('Salida')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable(),
-
-                // 👇 Secundarias (mejor escondidas por defecto en móvil)
-                Tables\Columns\TextColumn::make('tipo_solicitud')
-                    ->label('Tipo')
-                    ->state('Transporte')
-                    ->badge()
-                    ->color('info')
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('unidad.nombre')
-                    ->label('Unidad')
-                    ->wrap()
-                    ->lineClamp(2)
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('ruta_ui')
-                    ->label('Ruta')
-                    ->state(fn (SolicitudTransporte $record) =>
-                        ($record->origen ?? '-') . ' → ' . ($record->destino ?? '-')
-                    )
-                    ->wrap()
-                    ->lineClamp(2)
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->actions([
-                Tables\Actions\Action::make('ver')
-                    ->label('Ver')
-                    ->icon('heroicon-o-eye')
-                    ->button()
-                    ->size('lg')
-                    ->url(fn (SolicitudTransporte $record) => SolicitudTransporteResource::getUrl('view', ['record' => $record])),
-            ])
-            ->paginated(false); // widget tipo "bandeja" (sin paginación)
+        return $transporte
+            ->concat($mantenimiento)
+            ->concat($combustible)
+            ->sortByDesc('fecha')
+            ->take(12)
+            ->values();
     }
 }
