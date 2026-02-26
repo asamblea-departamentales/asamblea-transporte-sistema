@@ -116,15 +116,15 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
 }
 
 export async function getRequestById(id: string | number): Promise<Request> {
-  const { data } = await api.get<Request>(`/api/transport-requests/${id}`);
+  const { data } = await api.get<Request>(`/api/solicitudes-transporte/${id}`);
   return data;
 }
 
 export async function deleteRequest(id: string | number): Promise<void> {
-  await api.delete(`/api/transport-requests/${id}`);
+  await api.delete(`/api/solicitudes-transporte/${id}`);
 }
 
 export async function completeRequest(id: number): Promise<Request> {
-  const { data } = await api.post(`/api/transport-requests/${id}/finalizar`);
+  const { data } = await api.post(`/api/solicitudes-transporte/${id}/finalizar`);
   return data.data;
 }
