@@ -8,12 +8,6 @@ import { useEffect, useMemo, useState } from "react";
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 type Variant = "top" | "drawer" | "bottom";
 
-// ─── Utility ─────────────────────────────────────────────────────────────────
-
-function cx(...c: Array<string | false | null | undefined>) {
-  return c.filter(Boolean).join(" ");
-}
-
 // ─── CSS Variables Injection ──────────────────────────────────────────────────
 
 const GLOBAL_STYLES = `
