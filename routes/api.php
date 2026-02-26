@@ -110,4 +110,45 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/rechazar',    [SolicitudCombustibleController::class, 'rechazar']);
     });
 
+    //Endpoints adicionales para que el frontend acceda
+    // ── CATÁLOGOS (para el frontend) ────────────────────────
+Route::prefix('catalogos')->group(function () {
+
+    Route::get('/vehiculos', function () {
+        return response()->json(
+            \App\Models\Vehiculo::with(['marca', 'modelo', 'tipo'])
+                ->where('activo', true)
+                ->get()
+                ->map(fn ($v) => [
+                    'id'     => $v->id,
+                    'placa'  => $v->placa,
+                    'marca'  => $v->marca?->nombre,
+                    'modelo' => $v->modelo?->nombre,
+                    'tipo'   => $v->tipo?->nombre,
+                    'label'  => "{$v->placa} — {$v->marca?->nombre} {$v->modelo?->nombre}",
+                ])
+        );
+    });
+
+    Route::get('/motoristas', function () {
+        return response()->json(
+            \App\Models\Motorista::where('activo', true)
+                ->get()
+                ->map(fn ($m) => [
+                    'id'     => $m->id,
+                    'nombre' => $m->nombre,
+                    'dui'    => $m->dui,
+                ])
+        );
+    });
+
+    Route::get('/tipos-mantenimiento', function () {
+        return response()->json(
+            \App\Models\VehTipoMantenimiento::where('activo', true)
+                ->get(['id', 'nombre'])
+        );
+    });
+
+});
+
 });
