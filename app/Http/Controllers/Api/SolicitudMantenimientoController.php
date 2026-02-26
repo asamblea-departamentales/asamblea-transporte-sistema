@@ -10,14 +10,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\Response;
-
+use App\Models\HistorialEstado;
+use App\Models\BitacoraEvento;
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 class SolicitudMantenimientoController extends Controller
 {
     public function __construct(
         protected SolicitudMantenimientoService $service
     ) {}
 
-    // ── GET /api/mantenimiento ───────────────────────────────
+    // ── GET /api/mantenimiento ----------------------------------------------
     public function index(Request $request)
     {
         $user  = $request->user();
@@ -91,37 +93,48 @@ class SolicitudMantenimientoController extends Controller
 
     // ── POST /api/mantenimiento/{solicitud}/completar ────────
     // Solo desde el frontend del usuario
-    public function completar(Request $request, SolicitudMantenimiento $solicitud)
-    {
-        $this->authorizeOwner($solicitud);
+    public function finalizar(Request $request, SolicitudMantenimiento $solicitud)
+{
+    $this->authorizeOwner($solicitud);
 
-        $data = $request->validate([
-            'fecha_realizada' => ['required', 'date'],
-            'costo_real'      => ['required', 'numeric', 'min:0'],
-            'adjuntos'        => ['nullable', 'array'],
-            'adjuntos.*'      => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-        ]);
-
-        // Procesar archivos subidos
-        $rutas = [];
-        if ($request->hasFile('adjuntos')) {
-            foreach ($request->file('adjuntos') as $archivo) {
-                $rutas[] = $archivo->store('mantenimiento/adjuntos', 'public');
-            }
-        }
-        $data['adjuntos'] = $rutas;
-
-        try {
-            $solicitud = $this->service->completar($solicitud, Auth::id(), $data);
-
-            return response()->json([
-                'message' => 'Solicitud completada exitosamente.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento', 'solicitante']),
-            ]);
-        } catch (\DomainException $e) {
-            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
+    // Validación de estados según tu lógica: Solo si ya fue procesada por jefatura
+    if (!in_array($solicitud->estado, [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION])) {
+        return response()->json(['error' => 'Solo se pueden finalizar solicitudes aprobadas o en ejecución.'], 422);
     }
+
+    $data = $request->validate([
+        'fecha_realizada' => ['required', 'date'],
+        'costo_real'      => ['required', 'numeric', 'min:0'],
+        'adjuntos'        => ['required', 'array', 'min:1'],
+        'adjuntos.*'      => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+    ]);
+
+    $rutas = [];
+    foreach ($request->file('adjuntos') as $archivo) {
+        $rutas[] = $archivo->store('mantenimiento/comprobantes', 'public');
+    }
+
+    $estadoAnterior = $solicitud->estado;
+    $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
+    $solicitud->fecha_realizada = $data['fecha_realizada'];
+    $solicitud->costo_real = $data['costo_real'];
+    $solicitud->adjuntos = array_merge($solicitud->adjuntos ?? [], $rutas);
+    $solicitud->save();
+
+    HistorialEstado::create([
+        'entidad_tipo'    => 'solicitud_mantenimiento',
+        'entidad_id'      => $solicitud->id,
+        'estado_anterior' => $estadoAnterior->value,
+        'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
+        'user_id'         => Auth::id(),
+        'comentario'      => 'Mantenimiento finalizado por el usuario desde el frontend móvil.',
+    ]);
+
+    return response()->json([
+        'message' => 'Mantenimiento finalizado con éxito.',
+        'data'    => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento'])
+    ]);
+}
 
     // ── POST /api/mantenimiento/{solicitud}/cancelar ─────────
     public function cancelar(SolicitudMantenimiento $solicitud)

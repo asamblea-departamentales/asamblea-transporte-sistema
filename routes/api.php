@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
+use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 
@@ -56,37 +57,57 @@ Route::middleware('auth:sanctum')->group(function () {
         return response()->json(['data' => $rows]);
     });
 
-    // ── TRANSPORTE ───────────────────────────────────────────
-    Route::apiResource('transport-requests', SolicitudTransporteController::class)
-        ->only(['index', 'store', 'show']);
+    // ── TRANSPORTE ──────────────────────────────────────────────────
+    Route::apiResource('solicitudes-transporte', SolicitudTransporteController::class)
+        ->only(['index', 'store', 'show'])
+        ->parameters(['solicitudes-transporte' => 'solicitud']);
 
     // Acciones del Solicitante
-    Route::post('transport-requests/{solicitud}/enviar',    [SolicitudTransporteController::class, 'enviar']);
-    Route::post('transport-requests/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
+    Route::post('solicitudes-transporte/{solicitud}/enviar',    [SolicitudTransporteController::class, 'enviar']);
+    Route::post('solicitudes-transporte/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
 
-    // Acciones de Jefatura
+    // Acciones de Jefatura (Roles protegidos)
     Route::middleware('role:jefe|admin|ti')->group(function () {
-        Route::post('transport-requests/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
-        Route::post('transport-requests/{solicitud}/aprobar',     [SolicitudTransporteController::class, 'aprobar']);
-        Route::post('transport-requests/{solicitud}/rechazar',    [SolicitudTransporteController::class, 'rechazar']);
+        Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
+        Route::post('solicitudes-transporte/{solicitud}/aprobar',     [SolicitudTransporteController::class, 'aprobar']);
+        Route::post('solicitudes-transporte/{solicitud}/rechazar',    [SolicitudTransporteController::class, 'rechazar']);
     });
 
-    // ── MANTENIMIENTO ────────────────────────────────────────
-    Route::apiResource('maintenance-requests', SolicitudMantenimientoController::class)
-        ->only(['index', 'store', 'show']);
+    // ── MANTENIMIENTO ───────────────────────────────────────────────
+    Route::apiResource('solicitudes-mantenimiento', SolicitudMantenimientoController::class)
+        ->only(['index', 'store', 'show'])
+        ->parameters(['solicitudes-mantenimiento' => 'solicitud']);
 
     // Acciones del Solicitante
-    Route::post('maintenance-requests/{solicitud}/enviar',    [SolicitudMantenimientoController::class, 'enviar']);
-    Route::post('maintenance-requests/{solicitud}/completar', [SolicitudMantenimientoController::class, 'completar']);
-    Route::post('maintenance-requests/{solicitud}/cancelar',  [SolicitudMantenimientoController::class, 'cancelar']);
+    Route::post('solicitudes-mantenimiento/{solicitud}/enviar',    [SolicitudMantenimientoController::class, 'enviar']);
+    Route::post('solicitudes-mantenimiento/{solicitud}/finalizar', [SolicitudMantenimientoController::class, 'finalizar']);
+    //Route::post('solicitudes-mantenimiento/{solicitud}/cancelar',  [SolicitudMantenimientoController::class, 'cancelar']);
 
-    // Acciones de Jefatura
+    // Acciones de Jefatura (Roles protegidos)
     Route::middleware('role:jefe|admin|ti')->group(function () {
-        Route::post('maintenance-requests/{solicitud}/observacion',  [SolicitudMantenimientoController::class, 'observacion']);
-        Route::post('maintenance-requests/{solicitud}/pre-aprobar',  [SolicitudMantenimientoController::class, 'preAprobar']);
-        Route::post('maintenance-requests/{solicitud}/aprobar',      [SolicitudMantenimientoController::class, 'aprobar']);
-        Route::post('maintenance-requests/{solicitud}/rechazar',     [SolicitudMantenimientoController::class, 'rechazar']);
-        Route::post('maintenance-requests/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/observacion',  [SolicitudMantenimientoController::class, 'observacion']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/pre-aprobar',  [SolicitudMantenimientoController::class, 'preAprobar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/aprobar',      [SolicitudMantenimientoController::class, 'aprobar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/rechazar',     [SolicitudMantenimientoController::class, 'rechazar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
+    });
+
+    // ── COMBUSTIBLE ─────────────────────────────────────────────────
+    Route::apiResource('solicitudes-combustible', SolicitudCombustibleController::class)
+        ->only(['index', 'store', 'show'])
+        ->parameters(['solicitudes-combustible' => 'solicitud']);
+
+    // Acciones del Solicitante
+    Route::post('solicitudes-combustible/{solicitud}/enviar',    [SolicitudCombustibleController::class, 'enviar']);
+    Route::post('solicitudes-combustible/{solicitud}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
+    //Route::post('solicitudes-combustible/{solicitud}/cancelar',  [SolicitudCombustibleController::class, 'cancelar']);
+
+    // Acciones de Jefatura (Roles protegidos)
+    Route::middleware('role:jefe|admin|ti')->group(function () {
+        Route::post('solicitudes-combustible/{solicitud}/observacion', [SolicitudCombustibleController::class, 'observacion']);
+        Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
+        Route::post('solicitudes-combustible/{solicitud}/aprobar',     [SolicitudCombustibleController::class, 'aprobar']);
+        Route::post('solicitudes-combustible/{solicitud}/rechazar',    [SolicitudCombustibleController::class, 'rechazar']);
     });
 
 });

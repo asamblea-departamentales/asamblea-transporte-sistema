@@ -11,4 +11,6 @@ enum AccionBitacoraEnum: string
     case CANCELAR = 'cancelar';
     case VER = 'ver';
     case OBSERVAR = 'observar';
+
+    case COMPLETAR = 'completar';
 }
