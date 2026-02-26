@@ -103,7 +103,7 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
   if (filters?.per_page) params.append("per_page",  filters.per_page.toString());
 
   const { data } = await api.get<LaravelPaginatedResponse>(
-    `/api/transport-requests?${params.toString()}`
+    `/api/solicitudes-transporte?${params.toString()}`
   );
 
   return {
