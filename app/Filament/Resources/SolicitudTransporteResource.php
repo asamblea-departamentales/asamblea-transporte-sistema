@@ -445,7 +445,8 @@ class SolicitudTransporteResource extends Resource
             ->where('id', '!=', $record->id) // Excluir la solicitud actual
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PROGRAMADA, 
-                EstadoSolicitudEnum::EN_EJECUCION
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::EN_EJECUCION,
             ])
             ->where(function ($query) use ($record) {
                 $query->where(function ($q) use ($record) {
