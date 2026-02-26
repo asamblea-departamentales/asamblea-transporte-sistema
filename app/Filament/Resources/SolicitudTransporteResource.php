@@ -438,28 +438,50 @@ class SolicitudTransporteResource extends Resource
                             Forms\Components\Section::make('Asignación de Vehiculo y Motorista')
     ->schema([
         Forms\Components\Select::make('vehiculo_id')
-            ->label('Vehículo')
-            ->options(fn () => \App\Models\Vehiculo::where('activo', true)
-                ->get()
-                ->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]))
-            ->searchable()
-            ->required()
-            ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-            ->hintColor('warning')
-            ->reactive()
-            ->afterStateUpdated(function ($state, callable $set) {
-                if (!$state) {
-                    $set('motorista_nombre', 'Sin motorista asignado');
-                    $set('motorista_id', null);
-                    return;
-                }
-                $vehiculo = \App\Models\Vehiculo::find($state);
-                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                $set('motorista_nombre', $motorista 
-                    ? "{$motorista->nombre} — DUI: {$motorista->dui}" 
-                    : 'Sin motorista asignado');
-                $set('motorista_id', $motorista?->id);
-            }),
+    ->label('Vehículo')
+    ->options(function (SolicitudTransporte $record) {
+        // 1. Obtenemos los IDs de vehículos ocupados para este rango de tiempo
+        $ocupados = SolicitudTransporte::query()
+            ->where('id', '!=', $record->id) // Excluir la solicitud actual
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::PROGRAMADA, 
+                EstadoSolicitudEnum::EN_EJECUCION
+            ])
+            ->where(function ($query) use ($record) {
+                $query->where(function ($q) use ($record) {
+                    // Si el viaje solicitado se solapa con uno existente
+                    $q->where('fecha_salida', '<=', $record->fecha_retorno)
+                      ->where('fecha_retorno', '>=', $record->fecha_salida);
+                });
+            })
+            ->pluck('vehiculo_id')
+            ->filter()
+            ->unique();
+
+        // 2. Retornamos solo los vehículos activos que NO están en la lista de ocupados
+        return \App\Models\Vehiculo::where('activo', true)
+            ->whereNotIn('id', $ocupados)
+            ->get()
+            ->mapWithKeys(fn ($v) => [$v->id => "{$v->placa} - {$v->tipo->nombre}"]);
+    })
+    ->searchable()
+    ->required()
+    ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+    ->hintColor('warning')
+    ->reactive()
+    ->afterStateUpdated(function ($state, callable $set) {
+        if (!$state) {
+            $set('motorista_nombre', 'Sin motorista asignado');
+            $set('motorista_id', null);
+            return;
+        }
+        $vehiculo = \App\Models\Vehiculo::find($state);
+        $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+        $set('motorista_nombre', $motorista 
+            ? "{$motorista->nombre} — DUI: {$motorista->dui}" 
+            : 'Sin motorista asignado');
+        $set('motorista_id', $motorista?->id);
+    }),
 
         // Campo oculto para guardar el motorista_id real
         Forms\Components\Hidden::make('motorista_id'),
