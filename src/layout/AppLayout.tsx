@@ -12,18 +12,15 @@ export default function AppLayout() {
         onClose={() => setSidebarOpen(false)}
         onOpen={() => setSidebarOpen(true)}
       />
-
-      <main
-        style={{
-          paddingTop: 60, // exact navbar height
-          paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
-        }}
-      >
+      <main style={{
+        paddingTop: 60,
+        paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
+      }}>
         <div style={{
           margin: "0 auto",
           width: "100%",
           maxWidth: 1440,
-          padding: "0 24px", // NO vertical padding here — let each page control its own
+          padding: "24px 28px",
         }}>
           <Outlet />
         </div>
