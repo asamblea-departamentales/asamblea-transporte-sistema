@@ -160,7 +160,7 @@ export default function NewRequestPage() {
           "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
         href: "/solicitudes/mantenimiento/nueva",
         accent: "emerald",
-        allowedRoles: ["admin", "supervisor", "jefe"],
+        allowedRoles: ["admin", "supervisor", "jefe","solicitante"],
         icon: (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
