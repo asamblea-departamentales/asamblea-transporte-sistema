@@ -104,8 +104,16 @@ class MotoristaResource extends Resource
                     ->label('Activo'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make()->iconButton(),
-                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\ViewAction::make()
+                    ->button()
+                    ->size('sm')
+                    ->color('primary')
+                    ->icon('heroicon-o-eye'),
+                Tables\Actions\EditAction::make()
+                    ->button()
+                    ->size('sm')
+                    ->color('warning')
+                    ->icon('heroicon-o-pencil'),
             ])
             ->bulkActions([]);
     }
