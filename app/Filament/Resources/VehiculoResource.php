@@ -376,6 +376,12 @@ class VehiculoResource extends Resource
                     ->size('sm')
                     ->color('primary')
                     ->icon('heroicon-o-eye'),
+
+                Tables\Actions\EditAction::make()
+                    ->button()
+                    ->size('sm')
+                    ->color('gray')
+                    ->icon('heroicon-o-pencil'),    
             ])
             ->bulkActions([]);
     }
