@@ -121,7 +121,7 @@ class MotoristaResource extends Resource
                     ->color('primary')
                     ->icon('heroicon-o-eye'),
             ])
-            ->actionsAlignment(Tables\Enums\ActionsPosition::Center)
+            ->actionsAlignment('center')
             ->bulkActions([]);
     }
 

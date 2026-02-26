@@ -404,10 +404,10 @@ class VehiculoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListVehiculos::route('/'),
+            'index'  => Pages\ListVehiculos::route('/'),
             'create' => Pages\CreateVehiculo::route('/create'),
-            'edit' => Pages\EditVehiculo::route('/{record}/edit'),
-            'view'  => Pages\ViewVehiculo::route('/{record}'),
-        ];
+            'edit'   => Pages\EditVehiculo::route('/{record}/edit'),
+            'view'   => Pages\ViewVehiculo::route('/{record}'),
+    ];
     }
 }
