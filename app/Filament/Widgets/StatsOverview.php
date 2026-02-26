@@ -4,6 +4,8 @@ namespace App\Filament\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\SolicitudTransporte;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudCombustible;
 use App\Models\UnidadSolicitante;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -22,38 +24,53 @@ class StatsOverview extends BaseWidget
     {
         $user = auth()->user();
 
-        // ✅ KPI “operativos” para Jefe (mobile-friendly)
+        $estadosPendientes = [
+            EstadoSolicitudEnum::PENDIENTE,
+            EstadoSolicitudEnum::EN_REVISION,
+            EstadoSolicitudEnum::PRE_APROBADA,
+        ];
+
         if ($user->hasRole('jefe')) {
             return [
-                Stat::make('Pendientes', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PENDIENTE)->count())
-                    ->description('Por revisar')
+                Stat::make('Pendientes',
+                    SolicitudTransporte::whereIn('estado', $estadosPendientes)->count()
+                    + SolicitudMantenimiento::whereIn('estado', $estadosPendientes)->count()
+                    + SolicitudCombustible::whereIn('estado', $estadosPendientes)->count()
+                )
+                    ->description('Transporte · Mantenimiento · Combustible')
                     ->descriptionIcon('heroicon-m-inbox')
                     ->color('warning'),
 
-                Stat::make('En revisión', SolicitudTransporte::where('estado', EstadoSolicitudEnum::EN_REVISION)->count())
+                Stat::make('En Revisión',
+                    SolicitudTransporte::where('estado', EstadoSolicitudEnum::EN_REVISION)->count()
+                    + SolicitudMantenimiento::where('estado', EstadoSolicitudEnum::EN_REVISION)->count()
+                    + SolicitudCombustible::where('estado', EstadoSolicitudEnum::EN_REVISION)->count()
+                )
                     ->description('En seguimiento')
                     ->descriptionIcon('heroicon-m-eye')
                     ->color('info'),
 
-                Stat::make('Pre-aprobadas', SolicitudTransporte::where('estado', EstadoSolicitudEnum::PRE_APROBADA)->count())
-                    ->description('Listas para programar')
+                Stat::make('Pre-Aprobadas',
+                    SolicitudTransporte::where('estado', EstadoSolicitudEnum::PRE_APROBADA)->count()
+                    + SolicitudMantenimiento::where('estado', EstadoSolicitudEnum::PRE_APROBADA)->count()
+                    + SolicitudCombustible::where('estado', EstadoSolicitudEnum::PRE_APROBADA)->count()
+                )
+                    ->description('Listas para aprobar')
                     ->descriptionIcon('heroicon-m-clock')
                     ->color('warning'),
 
-                Stat::make('Riesgo (<48h)', SolicitudTransporte::whereIn('estado', [
-                        EstadoSolicitudEnum::PENDIENTE,
-                        EstadoSolicitudEnum::EN_REVISION,
-                        EstadoSolicitudEnum::PRE_APROBADA,
-                    ])
-                    ->whereBetween('fecha_salida', [now(), now()->addDays(2)])
-                    ->count())
-                    ->description('Salen pronto')
+                Stat::make('Riesgo (<48h)',
+                    SolicitudTransporte::whereIn('estado', $estadosPendientes)
+                        ->whereBetween('fecha_salida', [now(), now()->addDays(2)])
+                        ->count()
+                )
+                    ->description('Transportes que salen pronto')
                     ->descriptionIcon('heroicon-m-exclamation-triangle')
                     ->color('danger'),
             ];
         }
 
-        // ✅ KPI para TI/Admin (también mobile-friendly, 3 stats)
+        // TI / Admin — totales globales
         return [
             Stat::make('Usuarios', User::count())
                 ->description('Personal con acceso')
@@ -65,10 +82,26 @@ class StatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-building-office')
                 ->color('success'),
 
-            Stat::make('Solicitudes', SolicitudTransporte::count())
-                ->description('En el sistema')
+            Stat::make('Transporte',
+                SolicitudTransporte::whereIn('estado', $estadosPendientes)->count()
+            )
+                ->description('Solicitudes pendientes')
                 ->descriptionIcon('heroicon-m-truck')
                 ->color('info'),
+
+            Stat::make('Mantenimiento',
+                SolicitudMantenimiento::whereIn('estado', $estadosPendientes)->count()
+            )
+                ->description('Solicitudes pendientes')
+                ->descriptionIcon('heroicon-m-wrench-screwdriver')
+                ->color('warning'),
+
+            Stat::make('Combustible',
+                SolicitudCombustible::whereIn('estado', $estadosPendientes)->count()
+            )
+                ->description('Solicitudes pendientes')
+                ->descriptionIcon('heroicon-m-fire')
+                ->color('success'),
         ];
     }
 }
