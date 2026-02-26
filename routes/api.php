@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\SolicitudMantenimientoController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\SolicitudMantenimiento;
 
 // AUTH POR TOKEN (PUBLICO)
 Route::post('/auth/login', [TokenAuthController::class, 'login']);
@@ -18,44 +19,114 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
     Route::get('/user',         [TokenAuthController::class, 'me']);
 
-    // Dashboard Summary (por ahora solo Transporte)
-    Route::get('/dashboard/summary', function () {
-        $user = request()->user();
-        $q = SolicitudTransporte::query();
+    // Dashboard Summary (Transporte + Mantenimiento + Combustible)
+Route::get('/dashboard/summary', function () {
+    $user = request()->user();
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
-            $q->where('solicitante_id', $user->id);
-        }
+    $qTransporte    = \App\Models\SolicitudTransporte::query();
+    $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
+    $qCombustible   = \App\Models\SolicitudCombustible::query();
 
-        return response()->json([
-            'pending'     => (clone $q)->whereIn('estado', [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION])->count(),
-            'in_progress' => (clone $q)->whereIn('estado', [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION])->count(),
-            'accepted'    => (clone $q)->where('estado', EstadoSolicitudEnum::APROBADA)->count(),
-            'completed'   => (clone $q)->where('estado', EstadoSolicitudEnum::COMPLETADA)->count(),
+    if (!$user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        $qTransporte->where('solicitante_id', $user->id);
+        $qMantenimiento->where('solicitante_id', $user->id);
+        $qCombustible->where('solicitante_id', $user->id);
+    }
+
+    $estadosPendientes   = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
+    $estadosEnProceso    = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
+    $estadosAprobados    = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
+    $estadoCompletado    = EstadoSolicitudEnum::COMPLETADA;
+
+    return response()->json([
+        'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count()
+                   + (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count()
+                   + (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
+
+        'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count()
+                       + (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count()
+                       + (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
+
+        'accepted' => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count()
+                    + (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count()
+                    + (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
+
+        'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count()
+                     + (clone $qMantenimiento)->where('estado', $estadoCompletado)->count()
+                     + (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
+
+        // Desglose por módulo si el frontend lo necesita
+        'by_module' => [
+            'transporte' => [
+                'pending'     => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
+                'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
+                'accepted'    => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count(),
+                'completed'   => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
+            ],
+            'mantenimiento' => [
+                'pending'     => (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count(),
+                'in_progress' => (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count(),
+                'accepted'    => (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count(),
+                'completed'   => (clone $qMantenimiento)->where('estado', $estadoCompletado)->count(),
+            ],
+            'combustible' => [
+                'pending'     => (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
+                'in_progress' => (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
+                'accepted'    => (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
+                'completed'   => (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
+            ],
+        ],
+    ]);
+});
+
+// Solicitudes Recientes (Transporte + Mantenimiento + Combustible)
+Route::get('/solicitudes/recientes', function () {
+    $user = request()->user();
+
+    $qTransporte    = \App\Models\SolicitudTransporte::query();
+    $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
+    $qCombustible   = \App\Models\SolicitudCombustible::query();
+
+    if (!$user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        $qTransporte->where('solicitante_id', $user->id);
+        $qMantenimiento->where('solicitante_id', $user->id);
+        $qCombustible->where('solicitante_id', $user->id);
+    }
+
+    $transporte = $qTransporte->latest('created_at')->take(5)->get()
+        ->map(fn ($s) => [
+            'code'   => $s->codigo,
+            'date'   => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
+            'type'   => 'Transporte',
+            'status' => $s->estado?->value ?? (string) $s->estado,
         ]);
-    });
 
-    // Solicitudes Recientes (por ahora solo Transporte)
-    Route::get('/solicitudes/recientes', function () {
-        $user = request()->user();
-        $q = SolicitudTransporte::query();
+    $mantenimiento = $qMantenimiento->latest('created_at')->take(5)->get()
+        ->map(fn ($s) => [
+            'code'   => $s->codigo,
+            'date'   => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
+            'type'   => 'Mantenimiento',
+            'status' => $s->estado?->value ?? (string) $s->estado,
+        ]);
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
-            $q->where('solicitante_id', $user->id);
-        }
+    $combustible = $qCombustible->latest('created_at')->take(5)->get()
+        ->map(fn ($s) => [
+            'code'   => $s->codigo,
+            'date'   => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
+            'type'   => 'Combustible',
+            'status' => $s->estado?->value ?? (string) $s->estado,
+        ]);
 
-        $rows = $q->latest('created_at')
-            ->take(5)
-            ->get()
-            ->map(fn ($s) => [
-                'code'   => $s->codigo,
-                'date'   => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
-                'type'   => 'Transporte',
-                'status' => $s->estado?->value ?? (string) $s->estado,
-            ]);
+    // Combinar, ordenar por fecha y tomar los 10 más recientes
+    $rows = $transporte
+        ->concat($mantenimiento)
+        ->concat($combustible)
+        ->sortByDesc('date')
+        ->take(10)
+        ->values();
 
-        return response()->json(['data' => $rows]);
-    });
+    return response()->json(['data' => $rows]);
+});
 
     // ── TRANSPORTE ──────────────────────────────────────────────────
     Route::apiResource('solicitudes-transporte', SolicitudTransporteController::class)
