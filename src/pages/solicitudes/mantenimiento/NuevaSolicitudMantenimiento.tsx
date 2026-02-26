@@ -2,6 +2,11 @@
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 
+const API_BASE =
+  import.meta.env.VITE_API_URL ||
+  import.meta.env.VITE_API_BASE_URL ||
+  "http://localhost:8000";
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 type Prioridad = "baja" | "media" | "alta";
 type TipoSolicitud = "taller" | "llantas";
@@ -424,14 +429,16 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
   return e;
 }
 
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NuevaSolicitudMantenimiento() {
   const navigate  = useNavigate();
-  const [step, setStep]     = useState(1);
-  const [data, setData]     = useState<FormData>(INITIAL);
-  const [errors, setErrors] = useState<Partial<Record<keyof FormData, string>>>({});
+  const [step, setStep]       = useState(1);
+  const [data, setData]       = useState<FormData>(INITIAL);
+  const [errors, setErrors]   = useState<Partial<Record<keyof FormData, string>>>({});
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [apiError, setApiError]   = useState<string | null>(null);
 
   const update = useCallback((key: keyof FormData, value: string) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -451,11 +458,46 @@ export default function NuevaSolicitudMantenimiento() {
   };
 
   const handleSubmit = async () => {
+    setApiError(null);
     setLoading(true);
     try {
-      // Aquí va la llamada real: await api.post('/solicitudes-mantenimiento', data)
-      await new Promise((r) => setTimeout(r, 1400)); // simulate
+      const token = localStorage.getItem("auth_token");
+
+      const res = await fetch(`${API_BASE}/api/solicitudes-mantenimiento`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          vehiculo_id:               parseInt(data.vehiculo_id),
+          veh_tipo_mantenimiento_id: parseInt(data.veh_tipo_mantenimiento_id),
+          tipo_solicitud:            data.tipo_solicitud,
+          detalle:                   data.detalle,
+          fecha_sugerida:            data.fecha_sugerida,
+          prioridad:                 data.prioridad,
+          costo_estimado:            data.costo_estimado ? parseFloat(data.costo_estimado) : null,
+          observaciones:             data.observaciones || null,
+        }),
+      });
+
+      let json: any = null;
+      try { json = await res.json(); } catch { /* respuesta vacía */ }
+
+      if (!res.ok) {
+        const detail = json?.errors
+          ? Object.entries(json.errors as Record<string, string[]>)
+              .map(([k, v]) => `${k}: ${v[0]}`)
+              .join("\n")
+          : json?.message || `Error ${res.status}`;
+        throw new Error(detail);
+      }
+
       setSubmitted(true);
+    } catch (e: any) {
+      setApiError(e?.message || "No se pudo conectar con el servidor.");
+      window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
@@ -466,13 +508,11 @@ export default function NuevaSolicitudMantenimiento() {
     return (
       <div className="pb-10">
         <div className="relative overflow-hidden rounded-3xl border border-slate-200/60 bg-white">
-          {/* bg effects */}
           <div className="pointer-events-none absolute inset-0">
             <div className="absolute -top-28 left-1/2 h-80 w-80 -translate-x-1/2 rounded-full bg-emerald-200/50 blur-3xl" />
             <div className="absolute -bottom-32 -left-24 h-96 w-96 rounded-full bg-teal-200/40 blur-3xl" />
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_1px_1px,rgba(148,163,184,.22)_1px,transparent_0)] [background-size:18px_18px] opacity-60" />
           </div>
-
           <div className="relative mx-auto max-w-lg px-6 py-16 text-center">
             <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.6)]">
               <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -491,7 +531,7 @@ export default function NuevaSolicitudMantenimiento() {
                 Ver mis solicitudes
               </button>
               <button
-                onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); }}
+                onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
                 className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
               >
                 Nueva solicitud
@@ -530,7 +570,6 @@ export default function NuevaSolicitudMantenimiento() {
                 Complete los datos para registrar el mantenimiento.
               </p>
             </div>
-
             <button
               onClick={() => navigate(-1)}
               className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white/80 px-4 py-2.5 text-sm font-extrabold text-slate-700 ring-1 ring-slate-200/70 shadow-sm backdrop-blur transition-all hover:bg-white hover:shadow-md active:scale-95"
@@ -541,6 +580,24 @@ export default function NuevaSolicitudMantenimiento() {
               <span className="hidden sm:inline">Volver</span>
             </button>
           </div>
+
+          {/* Error de API */}
+          {apiError && (
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200/80 bg-red-50 px-5 py-4">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+              </svg>
+              <div className="flex-1">
+                <p className="text-sm font-black text-red-800">No se pudo enviar la solicitud</p>
+                <p className="mt-1 whitespace-pre-line text-xs font-semibold text-red-700">{apiError}</p>
+              </div>
+              <button onClick={() => setApiError(null)} className="text-red-400 hover:text-red-600">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+          )}
 
           {/* Stepper */}
           <StepperHeader current={step} />
@@ -568,7 +625,8 @@ export default function NuevaSolicitudMantenimiento() {
               {step > 1 ? (
                 <button
                   onClick={handleBack}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
@@ -624,4 +682,4 @@ export default function NuevaSolicitudMantenimiento() {
       </div>
     </div>
   );
-}//As
+}
