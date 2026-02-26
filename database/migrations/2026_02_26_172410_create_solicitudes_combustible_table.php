@@ -6,47 +6,38 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
+        // Desactivar restricciones temporalmente
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('solicitudes_combustible', function (Blueprint $table) {
             $table->id();
-
-            $table->string('codigo')->unique(); //Codigo único para cada solicitud
-
-            //Periodo
+            $table->string('codigo')->unique();
             $table->date('fecha_solicitud');
             $table->date('fecha_inicio_periodo')->nullable();
             $table->date('fecha_fin_periodo')->nullable();
 
-            //Vehiculo y Motorista Vinculada
             $table->foreignId('vehiculo_id')->constrained('vehiculos');
             $table->foreignId('motorista_id')->constrained('motoristas');
+            
+            // Relación opcional con transporte
+            $table->foreignId('solicitud_transporte_id')
+                  ->nullable()
+                  ->constrained('solicitudes_transporte')
+                  ->nullOnDelete();
 
-            //Asociada a solicitud de transporte (OPCIONAL)
-            $table->foreignId('solicitud_transporte_id')->nullable()->constrained('solicitudes_transporte');
-
-            //Destino / Actividad
             $table->string('destino_actividad');
-
-            //Responsable
             $table->foreignId('solicitante_id')->constrained('users');
 
-            //Combustible
-            $table->decimal('cantidad_combustible', 10, 2); //Cantidad en litros/galones
-            $table->decimal('valor_unitario', 10, 2); //Valor por unidad de combustible
-            $table->decimal('valor_total', 10, 2); //Valor total (cantidad * valor_unitario)
+            $table->decimal('cantidad_combustible', 10, 2);
+            $table->decimal('valor_unitario', 10, 2);
+            $table->decimal('valor_total', 10, 2);
 
-            //Forma de pago (yo lo recibo desde el frontend nada mas)
             $table->enum('forma_pago', ['efectivo', 'tarjeta', 'vale', 'ticket', 'otro']);
-            $table->string('numero_vale_ticket')->nullable(); //Número de vale o ticket si aplica
+            $table->string('numero_vale_ticket')->nullable();
+            $table->json('comprobantes')->nullable(); 
 
-            //Comprobante (Recibo desde el frontend)
-            $table->json('comprobantes')->nullable(); //URL del comprobante digitalizado 
-
-            // Flujo
             $table->string('estado')->default('borrador');
             $table->string('prioridad')->default('media');
             $table->foreignId('aprobador_id')->nullable()->constrained('users');
@@ -57,11 +48,11 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
         });
+
+        // Reactivar restricciones
+        Schema::enableForeignKeyConstraints();
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::dropIfExists('solicitudes_combustible');

@@ -42,7 +42,7 @@ class SolicitudCombustible extends Model
         'fecha_inicio_periodo' => 'date',
         'fecha_fin_periodo'    => 'date',
         'fecha_aprobacion'     => 'datetime',
-        'cantidad'             => 'decimal:2',
+        'cantidad_combustible' => 'decimal:2',
         'valor_unitario'       => 'decimal:2',
         'valor_total'          => 'decimal:2',
         'comprobantes'         => 'array',
