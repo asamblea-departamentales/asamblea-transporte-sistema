@@ -54,30 +54,63 @@ class MunicipioResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('nombre')
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre')
-                    ->label('Municipio')->searchable()->sortable()->weight('bold'),
-                Tables\Columns\TextColumn::make('departamento.nombre')
-                    ->label('Departamento')->searchable()->sortable()->badge()->color('info'),
-                Tables\Columns\TextColumn::make('departamento.pais.nombre')
-                    ->label('País')->sortable()->badge()->color('gray'),
-                Tables\Columns\IconColumn::make('activo')->label('Activo')->boolean(),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('departamento_id')
-                    ->label('Departamento')
-                    ->options(Departamento::pluck('nombre', 'id'))
-                    ->searchable(),
-                Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make()->button()->size('sm'),
-                Tables\Actions\DeleteAction::make()->button()->size('sm'),
-            ]);
-    }
+{
+    return $table
+        ->defaultSort('nombre')
+        ->groups([
+            Tables\Grouping\Group::make('departamento.nombre')
+                ->label('Departamento')
+                ->collapsible(),
+        ])
+        ->columns([
+            Tables\Columns\TextColumn::make('nombre')
+                ->label('Municipio')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->description(fn (Municipio $record): string => "País: {$record->departamento?->pais?->nombre}"),
+
+            Tables\Columns\TextColumn::make('departamento.nombre')
+                ->label('Ubicación')
+                ->badge()
+                ->color('info')
+                ->icon('heroicon-m-map')
+                ->sortable(),
+
+            Tables\Columns\IconColumn::make('activo')
+                ->label('Estado')
+                ->boolean()
+                ->toggleable(), // Permite ocultar la columna si el usuario quiere
+
+            Tables\Columns\TextColumn::make('updated_at')
+                ->label('Última edición')
+                ->dateTime('d/m/Y H:i')
+                ->color('gray')
+                ->size('xs')
+                ->toggleable(isToggledHiddenByDefault: true),
+        ])
+        ->filters([
+            Tables\Filters\SelectFilter::make('pais_id')
+                ->label('Filtrar por País')
+                ->relationship('departamento.pais', 'nombre')
+                ->searchable()
+                ->preload(),
+            Tables\Filters\SelectFilter::make('departamento_id')
+                ->label('Filtrar por Departamento')
+                ->relationship('departamento', 'nombre')
+                ->searchable()
+                ->preload(),
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([ // Agrupa las acciones en un menú desplegable
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])->icon('heroicon-m-ellipsis-vertical')
+            ->color('gray')
+            ->button()
+            ->label('Opciones'),
+        ]);
+}
 
     public static function getPages(): array
     {

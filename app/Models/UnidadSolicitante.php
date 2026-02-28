@@ -17,11 +17,15 @@ class UnidadSolicitante extends Model
         'descripcion',
         'estado',
         'puede_solicitar_transporte',
+        'puede_solicitar_mantenimiento',
+        'puede_solicitar_combustible',
     ];
 
     protected $casts = [
         'estado' => 'boolean',
         'puede_solicitar_transporte' => 'boolean',
+        'puede_solicitar_mantenimiento' => 'boolean',
+        'puede_solicitar_combustible' => 'boolean',
     ];
 
     //Relacion con solicitudes (una unidad solicitante puede tener muchas solicitudes)
