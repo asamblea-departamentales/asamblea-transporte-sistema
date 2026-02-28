@@ -56,33 +56,60 @@ class SerieValeResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('fecha_emision', 'desc')
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre')
-                    ->label('Serie')->searchable()->sortable()->weight('bold')
-                    ->wrap(),
-                Tables\Columns\TextColumn::make('valor')
-                    ->label('Valor')->money('USD')->sortable(),
-                Tables\Columns\TextColumn::make('cantidad')
-                    ->label('Cantidad')->numeric()->sortable(),
-                Tables\Columns\TextColumn::make('fecha_emision')
-                    ->label('Emisión')->date('d/m/Y')->sortable(),
-                Tables\Columns\TextColumn::make('fecha_vencimiento')
-                    ->label('Vencimiento')->date('d/m/Y')->sortable()
-                    ->color(fn ($record) => $record->fecha_vencimiento < now() ? 'danger' : 'success'),
-                Tables\Columns\IconColumn::make('activo')->label('Activo')->boolean(),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make()->button()->size('sm'),
-                Tables\Actions\DeleteAction::make()->button()->size('sm'),
-            ]);
-    }
+{
+    return $table
+        ->defaultSort('fecha_emision', 'desc')
+        ->columns([
+            // Identidad y Observación oculta
+            Tables\Columns\TextColumn::make('nombre')
+                ->label('Serie de Vales')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->description(fn ($record) => "Rango: {$record->correlativo_inicio} - {$record->correlativo_fin}"),
 
+            // Información Financiera
+            Tables\Columns\TextColumn::make('valor')
+                ->label('Valor Unit.')
+                ->money('USD')
+                ->sortable()
+                ->alignCenter()
+                ->badge()
+                ->color('success'),
+
+            Tables\Columns\TextColumn::make('cantidad')
+                ->label('Stock')
+                ->numeric()
+                ->sortable()
+                ->alignCenter()
+                ->suffix(' vales'),
+
+            // Fechas con lógica de Semáforo
+            Tables\Columns\TextColumn::make('fecha_vencimiento')
+                ->label('Vencimiento')
+                ->date('d/m/Y')
+                ->sortable()
+                ->badge()
+                ->color(fn ($record) => $record->fecha_vencimiento < now() ? 'danger' : ($record->fecha_vencimiento < now()->addMonth() ? 'warning' : 'success'))
+                ->icon(fn ($record) => $record->fecha_vencimiento < now() ? 'heroicon-m-clock' : 'heroicon-m-check-circle'),
+
+            // Estado rápido
+            Tables\Columns\ToggleColumn::make('activo')
+                ->label('Circulando'),
+        ])
+        ->filters([
+            Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
+            Tables\Filters\Filter::make('vencidos')
+                ->label('Solo Vencidos')
+                ->query(fn ($query) => $query->where('fecha_vencimiento', '<', now())),
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])->button()->label('Gestionar')->color('gray'),
+        ]);
+}
     public static function getPages(): array
     {
         return [

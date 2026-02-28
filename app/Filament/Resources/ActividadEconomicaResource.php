@@ -43,40 +43,77 @@ class ActividadEconomicaResource extends Resource
         ]);
     }
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('nombre')
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre')
-                    ->label('Actividad Económica')
-                    ->searchable()->sortable()->weight('bold'),
-                Tables\Columns\TextColumn::make('proveedores_count')
-                    ->label('Proveedores')
-                    ->counts('proveedores')
-                    ->badge()->color('info'),
-                Tables\Columns\IconColumn::make('activo')
-                    ->label('Activo')->boolean()->sortable(),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make()->button()->size('sm')->color('warning'),
-                Tables\Actions\DeleteAction::make()->button()->size('sm')
-                    ->before(function ($record, $action) {
-                        if ($record->proveedores_count > 0) {
-                            $action->cancel();
-                            \Filament\Notifications\Notification::make()
-                                ->title('No se puede eliminar')
-                                ->body('Esta actividad tiene proveedores asignados.')
-                                ->danger()->send();
-                        }
-                    }),
-            ])
-            ->bulkActions([]);
-    }
+   public static function table(Table $table): Table
+{
+    return $table
+        ->defaultSort('nombre')
+        ->columns([
+            // Usamos un Layout de Split para dividir la fila en dos grandes áreas
+            Tables\Columns\Layout\Split::make([
+                
+                // ÁREA IZQUIERDA: Identificación (Principal)
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('nombre')
+                        ->searchable()
+                        ->sortable()
+                        ->weight('bold')
+                        ->size('lg')
+                        ->color('primary')
+                        ->icon('heroicon-m-briefcase'),
+                    
+                    Tables\Columns\TextColumn::make('proveedores_count')
+                        ->formatStateUsing(fn ($state) => $state . ' proveedores vinculados a este rubro')
+                        ->size('xs')
+                        ->color('gray'),
+                ])->space(1),
 
+                // ÁREA DERECHA: Estado y Contador rápido (Secundario)
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('proveedores_count')
+                        ->label('')
+                        ->counts('proveedores')
+                        ->badge()
+                        ->color(fn ($state) => $state > 0 ? 'info' : 'gray')
+                        ->alignEnd(),
+                        
+                    Tables\Columns\TextColumn::make('activo_label')
+                        ->default(fn ($record) => $record->activo ? 'VIGENTE' : 'INACTIVO')
+                        ->weight('black')
+                        ->size('micro')
+                        ->color(fn ($record) => $record->activo ? 'success' : 'danger')
+                        ->alignEnd(),
+                ])->space(1),
+            ]),
+            
+            // PANEL COLAPSABLE: Para ver el interruptor de estado sin ensuciar la vista principal
+            Tables\Columns\Layout\Panel::make([
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('created_at')
+                        ->label('Registrado el')
+                        ->dateTime('d M, Y')
+                        ->color('gray')
+                        ->size('xs')
+                        ->prefix('Fecha de creación: '),
+                        
+                    Tables\Columns\ToggleColumn::make('activo')
+                        ->label('¿Habilitar rubro?')
+                        ->alignEnd(),
+                ]),
+            ])->collapsible(), // Esto añade una flechita para expandir la fila
+        ])
+        ->filters([
+            Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make(),
+            ])
+            ->icon('heroicon-m-ellipsis-vertical')
+            ->tooltip('Opciones')
+            ->color('gray')
+        ]);
+}
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()->withCount('proveedores');

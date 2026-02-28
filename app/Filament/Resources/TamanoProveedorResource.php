@@ -44,38 +44,54 @@ class TamanoProveedorResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('nombre')
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre')
-                    ->label('Tamaño')
-                    ->searchable()->sortable()->weight('bold'),
-                Tables\Columns\TextColumn::make('proveedores_count')
-                    ->label('Proveedores')
-                    ->counts('proveedores')
-                    ->badge()->color('info'),
-                Tables\Columns\IconColumn::make('activo')
-                    ->label('Activo')->boolean()->sortable(),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make()->button()->size('sm')->color('warning'),
-                Tables\Actions\DeleteAction::make()->button()->size('sm')
+{
+    return $table
+        ->defaultSort('nombre')
+        ->columns([
+            Tables\Columns\TextColumn::make('nombre')
+                ->label('Tamaño de Empresa')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->color('primary')
+                ->icon('heroicon-m-briefcase'),
+
+            Tables\Columns\TextColumn::make('proveedores_count')
+                ->label('Proveedores Registrados')
+                ->counts('proveedores')
+                ->badge()
+                // Color dinámico según cantidad: si hay muchos, se ve info, si no, gray
+                ->color(fn ($state) => $state > 0 ? 'info' : 'gray')
+                ->sortable()
+                ->alignCenter(),
+
+            // Cambio de IconColumn a ToggleColumn para edición rápida
+            Tables\Columns\ToggleColumn::make('activo')
+                ->label('Estado')
+                ->alignEnd(),
+        ])
+        ->filters([
+            Tables\Filters\TernaryFilter::make('activo')
+                ->label('Filtrar por Estado'),
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
                     ->before(function ($record, $action) {
                         if ($record->proveedores_count > 0) {
                             $action->cancel();
                             \Filament\Notifications\Notification::make()
                                 ->title('No se puede eliminar')
-                                ->body('Este tamaño tiene proveedores asignados.')
-                                ->danger()->send();
+                                ->body("Existen {$record->proveedores_count} proveedores asociados a esta categoría.")
+                                ->danger()
+                                ->send();
                         }
                     }),
-            ])
-            ->bulkActions([]);
-    }
+            ])->button()->label('Opciones')->color('gray'),
+        ])
+        ->bulkActions([]);
+}
 
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {

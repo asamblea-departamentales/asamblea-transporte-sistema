@@ -44,54 +44,54 @@ class TipoLicenciaResource extends Resource
         ]);
     }
 
-    public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('nombre')
-            ->columns([
-                Tables\Columns\TextColumn::make('nombre')
-                    ->label('Tipo de Licencia')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold'),
+   public static function table(Table $table): Table
+{
+    return $table
+        ->defaultSort('nombre')
+        ->columns([
+            Tables\Columns\TextColumn::make('nombre')
+                ->label('Categoría de Licencia')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->size('lg')
+                ->icon('heroicon-m-identification')
+                ->color('primary'),
 
-                Tables\Columns\TextColumn::make('motoristas_count')
-                    ->label('Motoristas')
-                    ->counts('motoristas')
-                    ->badge()
-                    ->color('info'),
+            Tables\Columns\TextColumn::make('motoristas_count')
+                ->label('Personal Asignado')
+                ->counts('motoristas')
+                ->badge()
+                ->color(fn ($state) => $state > 0 ? 'info' : 'gray')
+                ->icon('heroicon-m-users')
+                ->alignCenter(),
 
-                Tables\Columns\IconColumn::make('activo')
-                    ->label('Activo')
-                    ->boolean()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Creado')
-                    ->dateTime('d/m/Y')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                Tables\Filters\TernaryFilter::make('activo')->label('Estado'),
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make()->button()->size('sm')->color('warning'),
-                Tables\Actions\DeleteAction::make()->button()->size('sm')
+            // Usamos ToggleColumn para que puedas activar/desactivar licencias desde la lista
+            Tables\Columns\ToggleColumn::make('activo')
+                ->label('Estado')
+                ->alignEnd(),
+        ])
+        ->filters([
+            Tables\Filters\TernaryFilter::make('activo')
+                ->label('Estado de Categoría'),
+        ])
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
                     ->before(function ($record, $action) {
                         if ($record->motoristas_count > 0) {
                             $action->cancel();
                             \Filament\Notifications\Notification::make()
-                                ->title('No se puede eliminar')
-                                ->body('Este tipo de licencia tiene motoristas asignados.')
+                                ->title('Acción Bloqueada')
+                                ->body('No puedes eliminar una licencia que ya está siendo usada por motoristas.')
                                 ->danger()
                                 ->send();
                         }
                     }),
-            ])
-            ->bulkActions([]);
-    }
-
+            ])->button()->label('Acciones')->color('gray')
+        ]);
+}
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()->withCount('motoristas');
