@@ -11,10 +11,17 @@ class UnidadSolicitante extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'codigo',
         'nombre',
         'siglas',
+        'descripcion',
         'estado',
         'puede_solicitar_transporte',
+    ];
+
+    protected $casts = [
+        'estado' => 'boolean',
+        'puede_solicitar_transporte' => 'boolean',
     ];
 
     //Relacion con solicitudes (una unidad solicitante puede tener muchas solicitudes)

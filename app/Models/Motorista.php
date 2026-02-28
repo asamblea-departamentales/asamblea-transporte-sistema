@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -28,6 +29,11 @@ class Motorista extends Model
     {
         return $this->hasMany(AsignacionVehiculoMotorista::class, 'motorista_id');
     }
+
+    public function tipoLicencia(): BelongsTo
+{
+    return $this->belongsTo(\App\Models\TipoLicencia::class);
+}
 
     /**
      * Vehículo vigente del motorista (si existe).

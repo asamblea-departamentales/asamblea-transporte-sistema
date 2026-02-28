@@ -40,6 +40,11 @@ class MotoristaResource extends Resource
                         ->required()
                         ->maxLength(200),
 
+                    Forms\Components\TextInput::make('numero_empleado')
+                        ->label('N° Empleado')
+                        ->maxLength(50)
+                        ->placeholder('Ej: 1078'),    
+
                     Forms\Components\TextInput::make('dui')
                         ->label('DUI')
                         ->required()
@@ -53,10 +58,42 @@ class MotoristaResource extends Resource
                         ->mask('9999-9999') // También añadimos máscara al teléfono
                         ->placeholder('0000-0000'),
 
+                    Forms\Components\TextInput::make('correo')
+                        ->label('Correo Electrónico')
+                        ->email()
+                        ->maxLength(255)
+                        ->placeholder('ejemplo@asamblea.gob.sv'),
+
+                    Forms\Components\TextInput::make('radio')
+                        ->label('Radio / Nexte;')
+                        ->maxLength(100)
+                        ->placeholder('Ej: 1025*315*98'),    
+
                     Forms\Components\Toggle::make('activo')
                         ->label('Activo')
                         ->default(true),
+     
                 ])->columns(2),
+
+            Forms\Components\Section::make('Licencia de Conducir')
+                ->icon('heroicon-o-identification')
+                ->schema([
+                    Forms\Components\Select::make('tipo_licencia_id')
+                        ->label('Tipo de Licencia')
+                        ->relationship('tipoLicencia', 'nombre')
+                        ->searchable()
+                        ->required(),
+
+                    Forms\Components\TextInput::make('numero_licencia')
+                        ->label('Número de Licencia')
+                        ->maxLength(100)
+                        ->placeholder('Ej: 0614-050962-012-9'),   
+                        
+                    Forms\Components\DatePicker::make('fecha_vencimiento_licencia')
+                        ->label('Fecha de Vencimiento')
+                        ->displayFormat('d/m/Y')
+                    
+                    ])->columns(3),
         ]);
     }
 
@@ -98,6 +135,13 @@ class MotoristaResource extends Resource
                         ->badge()
                         ->color('info')
                         ->grow(false),
+
+                    Tables\Columns\TextColumn::make('tipoLicencia.nombre')
+                        ->label('Tipo Licencia')
+                        ->placeholder('Sin licencia')
+                        ->badge()
+                        ->color('warning')
+                        ->grow(false),    
 
                     Tables\Columns\IconColumn::make('activo')
                         ->label('Activo')
