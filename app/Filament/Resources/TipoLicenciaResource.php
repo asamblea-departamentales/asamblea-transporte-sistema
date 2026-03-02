@@ -15,6 +15,8 @@ class TipoLicenciaResource extends Resource
     protected static ?string $model = TipoLicencia::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Tipos de Licencia';
+    protected static ?string $pluralModelLabel = 'Tipos de Licencia';
+    protected static ?string $modelLabel = 'Tipo de Licencia';
     protected static ?string $navigationIcon  = 'heroicon-o-identification';
     protected static ?int    $navigationSort  = 11;
 

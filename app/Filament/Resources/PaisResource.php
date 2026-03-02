@@ -18,6 +18,8 @@ class PaisResource extends Resource
     protected static ?string $model = Pais::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Países';
+    protected static ?string $pluralModelLabel = 'Países';
+    protected static ?string $modelLabel = 'País';
     protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
     protected static ?int $navigationSort = 6;
 

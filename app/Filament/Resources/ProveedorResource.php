@@ -18,6 +18,8 @@ class ProveedorResource extends Resource
     protected static ?string $model = Proveedor::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Proveedores';
+    protected static ?string $pluralModelLabel = 'Proveedores';
+    protected static ?string $modelLabel = 'Proveedor';
     protected static ?string $navigationIcon  = 'heroicon-o-building-storefront';
     protected static ?int    $navigationSort  = 9;
 

@@ -15,6 +15,8 @@ class TamanoProveedorResource extends Resource
     protected static ?string $model = TamanoProveedor::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Tamaños de Proveedor';
+    protected static ?string $pluralModelLabel = 'Tamaños de Proveedor';
+    protected static ?string $modelLabel = 'Tamaño de Proveedor';
     protected static ?string $navigationIcon  = 'heroicon-o-arrows-pointing-out';
     protected static ?int    $navigationSort  = 11;
 

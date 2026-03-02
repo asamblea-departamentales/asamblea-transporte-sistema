@@ -16,6 +16,8 @@ class UnidadSolicitanteResource extends Resource
     protected static ?string $model = UnidadSolicitante::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Unidades Solicitantes';
+    protected static ?string $pluralModelLabel = 'Unidades Solicitantes';
+    protected static ?string $modelLabel = 'Unidad Solicitante';
     protected static ?string $navigationIcon  = 'heroicon-o-building-office-2';
     protected static ?int    $navigationSort  = 12;
 

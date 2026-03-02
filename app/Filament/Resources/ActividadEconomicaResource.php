@@ -15,6 +15,8 @@ class ActividadEconomicaResource extends Resource
     protected static ?string $model = ActividadEconomica::class;
     protected static ?string $navigationGroup = 'Catálogos Globales';
     protected static ?string $navigationLabel = 'Actividades Económicas';
+    protected static ?string $pluralModelLabel = 'Actividades Económicas';
+    protected static ?string $modelLabel = 'Actividad Económica';
     protected static ?string $navigationIcon  = 'heroicon-o-briefcase';
     protected static ?int    $navigationSort  = 2;
 
