@@ -36,35 +36,43 @@ class SolicitudCombustibleController extends Controller
     }
 
     // ── CREAR SOLICITUD ─────────────────────────────────────────────────────
-    public function store(Request $request)
-    {
-        $data = $request->validate([
-            'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
-            'motorista_id'            => ['nullable', 'exists:motoristas,id'],
-            'solicitud_transporte_id' => ['nullable', 'exists:solicitudes_transporte,id'],
-            'destino_actividad'       => ['required', 'string'],
-            'fecha_solicitud'         => ['required', 'date'],
-            'fecha_inicio_periodo'    => ['nullable', 'date'],
-            'fecha_fin_periodo'       => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
-            'cantidad'                => ['required', 'numeric', 'min:0'],
-            'prioridad'               => ['required', 'in:baja,media,alta'],
-            'observaciones'           => ['nullable', 'string', 'max:2000'],
-        ]);
+   public function store(Request $request)
+{
+    // 1. Mapeo previo: Si envían 'cantidad', lo tratamos como 'cantidad_combustible'
+    if ($request->has('cantidad') && !$request->has('cantidad_combustible')) {
+        $request->merge(['cantidad_combustible' => $request->cantidad]);
+    }
 
-        $solicitud = SolicitudCombustible::create([
-            ...$data,
-            'solicitante_id' => Auth::id(),
-            'estado'         => EstadoSolicitudEnum::BORRADOR,
-        ]);
+    // 2. Validación
+    $data = $request->validate([
+        'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
+        'motorista_id'            => ['nullable', 'exists:motoristas,id'],
+        'solicitud_transporte_id' => ['nullable', 'exists:solicitudes_transporte,id'],
+        'destino_actividad'       => ['required', 'string'],
+        'fecha_solicitud'         => ['required', 'date'],
+        'fecha_inicio_periodo'    => ['nullable', 'date'],
+        'fecha_fin_periodo'       => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
+        'cantidad_combustible'    => ['required', 'numeric', 'min:0'], // Ahora coincide con el merge
+        'prioridad'               => ['required', 'in:baja,media,alta'],
+        'observaciones'           => ['nullable', 'string', 'max:2000'],
+    ]);
 
-        // Envío automático al flujo de aprobación
+    try {
+        // 3. Delegar la creación al Service (Usa el método 'crear' que definimos antes)
+        // Esto generará el código correlativo y asignará el motorista automáticamente si falta
+        $solicitud = $this->service->crear($data, Auth::id());
+
+        // 4. Envío automático al flujo de aprobación (opcional, según tu lógica)
         $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
         return response()->json(
             $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante']),
             201
         );
+    } catch (\Exception $e) {
+        return response()->json(['message' => $e->getMessage()], 422);
     }
+}
 
     // ── VER DETALLE ─────────────────────────────────────────────────────────
     public function show(SolicitudCombustible $solicitud)
