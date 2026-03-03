@@ -433,11 +433,16 @@ export default function NuevaSolicitudCombustible() {
       try { json = await res.json(); } catch { /* vacío */ }
 
       if (!res.ok) {
-        const detail = json?.errors
-          ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
-          : json?.message || `Error ${res.status}`;
-        throw new Error(detail);
-      }
+  // Muestra TODO lo que devuelve el servidor
+  console.error("🔴 Error completo del servidor:", json);
+  console.error("🔴 Status:", res.status);
+  console.error("🔴 Headers:", Object.fromEntries(res.headers.entries()));
+
+  const detail = json?.errors
+    ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
+    : json?.message || json?.exception || json?.trace?.[0]?.file || `Error ${res.status}`;
+  throw new Error(detail);
+}
       setSubmitted(true);
     } catch (e: any) {
       setApiError(e?.message || "No se pudo conectar con el servidor.");
