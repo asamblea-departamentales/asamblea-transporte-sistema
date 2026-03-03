@@ -13,10 +13,10 @@ class VehMarca extends Model
     //Para evitar problemas de deletes
     public function modelos(): HasMany
     {
-        return $this->hasMany(VehModelo::class, 'veh_marcas_id');
+        return $this->hasMany(VehModelo::class, 'veh_marca_id');
     }
     public function vehiculos(): HasMany
     {
-        return $this->hasMany(Vehiculo::class, 'veh_marcas_id');
+        return $this->hasMany(Vehiculo::class, 'veh_marca_id');
     }
 }
