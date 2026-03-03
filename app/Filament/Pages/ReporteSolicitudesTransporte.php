@@ -91,63 +91,128 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
         ];
     }
     public function form(Form $form): Form
-    {
-        return $form->schema([
-            Forms\Components\Section::make('Filtros de Reporte')
-                ->columns(4)
+{
+    return $form->schema([
+        Forms\Components\Grid::make(12)->schema([
+
+            Forms\Components\Section::make('Filtros del reporte')
+                ->description('Ajusta los criterios. La tabla y los indicadores se actualizan con tus filtros.')
+                ->icon('heroicon-o-funnel')
+                ->collapsible()
+                ->columnSpan(12)
                 ->schema([
-                    Forms\Components\Select::make('date_field')
-                        ->label('Tipo de fecha')
-                        ->options([
-                            'fecha_salida' => 'Fecha salida',
-                            'created_at'   => 'Fecha creación',
+                    Forms\Components\Grid::make(12)->schema([
+
+                        Forms\Components\Select::make('date_field')
+                            ->label('Tipo de fecha')
+                            ->options([
+                                'fecha_salida' => 'Fecha salida',
+                                'created_at'   => 'Fecha creación',
+                            ])
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        Forms\Components\DateTimePicker::make('date_from')
+                            ->label('Desde')
+                            ->seconds(false)
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        Forms\Components\DateTimePicker::make('date_to')
+                            ->label('Hasta')
+                            ->seconds(false)
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        Forms\Components\Select::make('unidad_solicitante_id')
+                            ->label('Unidad')
+                            ->options(fn () => UnidadSolicitante::orderBy('nombre')->pluck('nombre', 'id'))
+                            ->searchable()
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        Forms\Components\Select::make('estado')
+                            ->label('Estado')
+                            ->options(collect(EstadoSolicitudEnum::cases())
+                                ->mapWithKeys(fn ($c) => [$c->value => str($c->name)->replace('_', ' ')->title()]))
+                            ->searchable()
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        Forms\Components\Select::make('prioridad')
+                            ->label('Prioridad')
+                            ->options(collect(PrioridadSolicitudEnum::cases())
+                                ->mapWithKeys(fn ($c) => [$c->value => strtoupper($c->value)]))
+                            ->native(false)
+                            ->live()
+                            ->columnSpan([
+                                'default' => 12,
+                                'md' => 3,
+                            ]),
+
+                        // Acciones / presets
+                        Forms\Components\Actions::make([
+                            Forms\Components\Actions\Action::make('hoy')
+                                ->label('Hoy')
+                                ->icon('heroicon-o-clock')
+                                ->action(function () {
+                                    $this->date_from = now()->startOfDay()->toDateTimeString();
+                                    $this->date_to   = now()->endOfDay()->toDateTimeString();
+                                    $this->form->fill($this->getFilterState());
+                                    $this->refreshKpis();
+                                }),
+
+                            Forms\Components\Actions\Action::make('esta_semana')
+                                ->label('Esta semana')
+                                ->icon('heroicon-o-calendar-days')
+                                ->action(function () {
+                                    $this->date_from = now()->startOfWeek()->startOfDay()->toDateTimeString();
+                                    $this->date_to   = now()->endOfWeek()->endOfDay()->toDateTimeString();
+                                    $this->form->fill($this->getFilterState());
+                                    $this->refreshKpis();
+                                }),
+
+                            Forms\Components\Actions\Action::make('limpiar')
+                                ->label('Limpiar')
+                                ->color('gray')
+                                ->icon('heroicon-o-x-mark')
+                                ->action(function () {
+                                    $this->date_from = null;
+                                    $this->date_to = null;
+                                    $this->unidad_solicitante_id = null;
+                                    $this->estado = null;
+                                    $this->prioridad = null;
+                                    $this->form->fill($this->getFilterState());
+                                    $this->refreshKpis();
+                                }),
                         ])
-                        ->live(),
-
-                    Forms\Components\DateTimePicker::make('date_from')
-                        ->label('Desde')
-                        ->seconds(false)
-                        ->live(),
-
-                    Forms\Components\DateTimePicker::make('date_to')
-                        ->label('Hasta')
-                        ->seconds(false)
-                        ->live(),
-
-                    Forms\Components\Select::make('unidad_solicitante_id')
-                        ->label('Unidad')
-                        ->options(fn () => UnidadSolicitante::orderBy('nombre')->pluck('nombre', 'id'))
-                        ->searchable()
-                        ->live(),
-
-                    Forms\Components\Select::make('estado')
-                        ->label('Estado')
-                        ->options(collect(EstadoSolicitudEnum::cases())->mapWithKeys(fn ($case) => [$case->value => $case->name]))
-                        ->searchable()
-                        ->live(),
-
-                    Forms\Components\Select::make('prioridad')
-                        ->label('Prioridad')
-                        ->options(collect(PrioridadSolicitudEnum::cases())->mapWithKeys(fn ($case) => [$case->value => $case->value]))
-                        ->live(),
-
-                    Forms\Components\Actions::make([
-                        Forms\Components\Actions\Action::make('limpiar')
-                            ->label('Limpiar Filtros')
-                            ->color('gray')
-                            ->action(function () {
-                                $this->date_from = null;
-                                $this->date_to = null;
-                                $this->unidad_solicitante_id = null;
-                                $this->estado = null;
-                                $this->prioridad = null;
-                                $this->form->fill($this->getFilterState());
-                                $this->refreshKpis();
-                            }),
-                    ])->columnSpanFull(),
+                            ->columnSpan(12)
+                            ->alignEnd(),
+                    ]),
                 ]),
-        ])->statePath('');
-    }
+        ]),
+    ])->statePath('');
+}
 
     public function table(Table $table): Table
     {
