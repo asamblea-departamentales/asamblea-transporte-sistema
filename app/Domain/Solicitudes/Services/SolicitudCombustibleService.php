@@ -11,6 +11,54 @@ use Illuminate\Support\Facades\DB;
 
 class SolicitudCombustibleService
 {
+// BORRADOR (Creación inicial)
+public function crear(array $data, int $userId): SolicitudCombustible
+{
+    return DB::transaction(function () use ($data, $userId) {
+        // 1. Lógica Automática para Motorista
+        if (!isset($data['motorista_id'])) {
+            $asignacion = \App\Models\AsignacionVehiculoMotorista::where('vehiculo_id', $data['vehiculo_id'])
+                ->where('vigente', true)
+                ->first();
+
+            // Si no hay motorista asignado al vehículo, lanzamos excepción clara
+            if (!$asignacion) {
+                throw new \DomainException('No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.');
+            }
+
+            $data['motorista_id'] = $asignacion->motorista_id;
+        }
+
+        // 2. Valores por defecto para evitar errores de base de datos (Error 1364)
+        $data['solicitante_id'] = $userId;
+        $data['estado'] = EstadoSolicitudEnum::BORRADOR;
+        $data['cantidad_combustible'] = $data['cantidad_combustible'] ?? 0;
+        $data['valor_unitario'] = $data['valor_unitario'] ?? 0;
+        $data['valor_total'] = $data['valor_total'] ?? 0;
+        
+        // 3. Generar código único (ej: CB-2026-0001) si no viene en el data
+        if (!isset($data['codigo'])) {
+            $data['codigo'] = $this->generarCodigoCorrelativo();
+        }
+
+        $solicitud = SolicitudCombustible::create($data);
+
+        // 4. Bitácora inicial
+        $this->registrarCambioEstado($solicitud, null, $solicitud->estado, $userId, 'Creación inicial de borrador.');
+        $this->registrarEvento($solicitud, 'CREAR_BORRADOR', $userId, null);
+
+        return $solicitud;
+    });
+}
+
+// Helper para el código correlativo
+private function generarCodigoCorrelativo(): string
+{
+    $anio = now()->year;
+    $ultimo = SolicitudCombustible::whereYear('created_at', $anio)->count();
+    return "CB-{$anio}-" . str_pad($ultimo + 1, 6, '0', STR_PAD_LEFT);
+}
+
     // BORRADOR → PENDIENTE
     public function enviarSolicitud(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible
     {
