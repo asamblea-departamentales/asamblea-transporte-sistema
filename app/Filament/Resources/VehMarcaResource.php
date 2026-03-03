@@ -71,23 +71,25 @@ class VehMarcaResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->button()
-                    ->size('sm')
-                    ->before(function ($record, $action) {
-    $conteoModelos = $record->modelos()->count();
-    $conteoVehiculos = $record->vehiculos()->count();
+               Tables\Actions\DeleteAction::make()
+    ->button()
+    ->size('sm')
+    ->before(function ($record, Tables\Actions\DeleteAction $action) {
+        $conteoModelos = $record->modelos()->count();
+        $conteoVehiculos = $record->vehiculos()->count();
 
-    if ($conteoModelos > 0 || $conteoVehiculos > 0) {
-        $action->cancel();
+        if ($conteoModelos > 0 || $conteoVehiculos > 0) {
+            // Enviamos la notificación
+            \Filament\Notifications\Notification::make()
+                ->title('No se puede eliminar la marca')
+                ->body("Esta marca está en uso: tiene {$conteoModelos} modelos y {$conteoVehiculos} vehículos asociados.")
+                ->danger()
+                ->send();
 
-        \Filament\Notifications\Notification::make()
-            ->title('No se puede eliminar la marca')
-            ->body("Esta marca está en uso: tiene {$conteoModelos} modelos y {$conteoVehiculos} vehículos asociados.")
-            ->danger()
-            ->send();
-    }
-}),
+            // Detenemos el proceso de borrado por completo
+            $action->halt();
+        }
+    }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
