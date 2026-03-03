@@ -12,42 +12,53 @@ type Prioridad = "baja" | "media" | "alta";
 interface Catalogo { id: string; label: string; }
 
 interface VehiculoRaw {
+  id: number; placa: string; marca: string; modelo: string; tipo: string; label: string;
+}
+
+interface SolicitudTransporte {
   id: number;
-  placa: string;
-  marca: string;
-  modelo: string;
-  tipo: string;
-  label: string;
+  codigo: string;
+  estado: string;
+  destino: string;
+  motivo_actividad: string;
+  fecha_salida: string;
+  fecha_retorno: string | null;
+  vehiculo:  { id: number; placa: string; marca?: any; modelo?: any } | null;
+  motorista: { id: number; nombre: string } | null;
 }
 
 interface CatalogosState {
   vehiculos: Catalogo[];
   vehiculosRaw: VehiculoRaw[];
   motoristas: Catalogo[];
+  solicitudesTransporte: SolicitudTransporte[];
+  loadingSolicitudes: boolean;
   loading: boolean;
   error: string | null;
 }
 
 interface FormData {
+  solicitud_transporte_id: string;
   vehiculo_id: string;
   motorista_id: string;
   destino_actividad: string;
   fecha_solicitud: string;
   fecha_inicio_periodo: string;
   fecha_fin_periodo: string;
-  cantidad_combustible: string;
+  cantidad: string;
   prioridad: Prioridad | "";
   observaciones: string;
 }
 
 const INITIAL: FormData = {
+  solicitud_transporte_id: "",
   vehiculo_id: "",
   motorista_id: "",
   destino_actividad: "",
   fecha_solicitud: new Date().toISOString().split("T")[0],
   fecha_inicio_periodo: "",
   fecha_fin_periodo: "",
-  cantidad_combustible: "",
+  cantidad: "",
   prioridad: "",
   observaciones: "",
 };
@@ -62,6 +73,11 @@ const prioridadConfig = {
   baja:  { label: "Baja",  dot: "bg-emerald-400", badge: "bg-emerald-50 text-emerald-700 ring-emerald-200/70" },
   media: { label: "Media", dot: "bg-amber-400",   badge: "bg-amber-50 text-amber-700 ring-amber-200/70"       },
   alta:  { label: "Alta",  dot: "bg-red-400",     badge: "bg-red-50 text-red-700 ring-red-200/70"             },
+};
+
+const estadoTransporteColor: Record<string, string> = {
+  aprobada:   "bg-emerald-50 text-emerald-700 ring-emerald-200/70",
+  programada: "bg-blue-50 text-blue-700 ring-blue-200/70",
 };
 
 function authHeaders(): HeadersInit {
@@ -172,16 +188,169 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
 }
 
 // ─── Step 1 ───────────────────────────────────────────────────────────────────
-function Step1({ data, update, errors, catalogos }: {
-  data: FormData; update: (k: keyof FormData, v: string) => void;
-  errors: Partial<Record<keyof FormData, string>>; catalogos: CatalogosState;
+function Step1({ data, update, updateMultiple, errors, catalogos }: {
+  data: FormData;
+  update: (k: keyof FormData, v: string) => void;
+  updateMultiple: (fields: Partial<FormData>) => void;
+  errors: Partial<Record<keyof FormData, string>>;
+  catalogos: CatalogosState;
 }) {
+  const [asociarTransporte, setAsociarTransporte] = useState(!!data.solicitud_transporte_id);
+
   const vehiculoSeleccionado = catalogos.vehiculosRaw.find(
     (v) => String(v.id) === data.vehiculo_id
   );
 
+  const solicitudTransporteSeleccionada = catalogos.solicitudesTransporte.find(
+    (s) => String(s.id) === data.solicitud_transporte_id
+  );
+
+  // Al seleccionar una solicitud de transporte, pre-carga los campos
+  const handleSelectTransporte = (solicitudId: string) => {
+    update("solicitud_transporte_id", solicitudId);
+    if (!solicitudId) return;
+
+    const sol = catalogos.solicitudesTransporte.find((s) => String(s.id) === solicitudId);
+    if (!sol) return;
+
+    const fields: Partial<FormData> = {
+      solicitud_transporte_id: solicitudId,
+    };
+
+    if (sol.vehiculo?.id) {
+      fields.vehiculo_id = String(sol.vehiculo.id);
+    }
+    if (sol.motorista?.id) {
+      fields.motorista_id = String(sol.motorista.id);
+    }
+    if (sol.destino) {
+      fields.destino_actividad = sol.destino;
+    }
+    if (sol.fecha_salida) {
+      fields.fecha_inicio_periodo = sol.fecha_salida.split("T")[0].split(" ")[0];
+    }
+    if (sol.fecha_retorno) {
+      fields.fecha_fin_periodo = sol.fecha_retorno.split("T")[0].split(" ")[0];
+    }
+
+    updateMultiple(fields);
+  };
+
+  const handleToggleAsociar = (val: boolean) => {
+    setAsociarTransporte(val);
+    if (!val) {
+      // Limpia la asociación y los campos pre-cargados
+      updateMultiple({
+        solicitud_transporte_id: "",
+        vehiculo_id: "",
+        motorista_id: "",
+        destino_actividad: "",
+        fecha_inicio_periodo: "",
+        fecha_fin_periodo: "",
+      });
+    }
+  };
+
   return (
     <div className="space-y-5">
+
+      {/* Toggle asociar transporte */}
+      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
+              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-800">Asociar a solicitud de transporte</p>
+              <p className="text-xs font-semibold text-slate-400">Opcional — pre-carga vehículo, motorista y destino</p>
+            </div>
+          </div>
+          {/* Toggle switch */}
+          <button
+            type="button"
+            onClick={() => handleToggleAsociar(!asociarTransporte)}
+            className={[
+              "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
+              asociarTransporte ? "bg-emerald-500" : "bg-slate-200",
+            ].join(" ")}
+          >
+            <span className={[
+              "inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200",
+              asociarTransporte ? "translate-x-5" : "translate-x-0",
+            ].join(" ")} />
+          </button>
+        </div>
+
+        {/* Selector de solicitud de transporte */}
+        {asociarTransporte && (
+          <div className="mt-4 border-t border-slate-100 pt-4">
+            <FieldLabel>Solicitud de transporte</FieldLabel>
+            {catalogos.loadingSolicitudes ? (
+              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+                <svg className="h-4 w-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
+                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                </svg>
+                <span className="text-sm font-semibold text-slate-400">Cargando solicitudes...</span>
+              </div>
+            ) : catalogos.solicitudesTransporte.length === 0 ? (
+              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+                <p className="text-sm font-semibold text-slate-400">No tienes solicitudes de transporte aprobadas o programadas.</p>
+              </div>
+            ) : (
+              <select
+                value={data.solicitud_transporte_id}
+                onChange={(e) => handleSelectTransporte(e.target.value)}
+                className={inputCls() + " cursor-pointer appearance-none"}
+                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+              >
+                <option value="">Seleccione una solicitud...</option>
+                {catalogos.solicitudesTransporte.map((s) => (
+                  <option key={s.id} value={String(s.id)}>
+                    {s.codigo} — {s.destino}
+                  </option>
+                ))}
+              </select>
+            )}
+
+            {/* Card resumen solicitud de transporte seleccionada */}
+            {solicitudTransporteSeleccionada && (
+              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <p className="text-xs font-black text-slate-700">{solicitudTransporteSeleccionada.codigo}</p>
+                  <span className={[
+                    "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ring-1",
+                    estadoTransporteColor[solicitudTransporteSeleccionada.estado] ?? "bg-slate-50 text-slate-600 ring-slate-200",
+                  ].join(" ")}>
+                    {solicitudTransporteSeleccionada.estado}
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {[
+                    { label: "Destino",   value: solicitudTransporteSeleccionada.destino },
+                    { label: "Motorista", value: solicitudTransporteSeleccionada.motorista?.nombre ?? "Sin asignar" },
+                    { label: "Salida",    value: solicitudTransporteSeleccionada.fecha_salida?.split("T")[0] ?? "" },
+                    { label: "Retorno",   value: solicitudTransporteSeleccionada.fecha_retorno?.split("T")[0] ?? "—" },
+                  ].map((item) => (
+                    <div key={item.label} className="rounded-lg border border-slate-100 bg-white px-2.5 py-2">
+                      <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
+                      <p className="mt-0.5 text-xs font-bold text-slate-700 truncate">{item.value}</p>
+                    </div>
+                  ))}
+                </div>
+                <p className="mt-2 text-[10px] font-semibold text-slate-400">
+                  ✓ Vehículo, motorista, destino y fechas pre-cargados. Puedes editarlos en los pasos siguientes.
+                </p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Selector de vehículo */}
       <div>
         <FieldLabel required>Vehículo</FieldLabel>
         <SelectInput
@@ -224,6 +393,7 @@ function Step1({ data, update, errors, catalogos }: {
         </div>
       )}
 
+      {/* Motorista */}
       <div>
         <FieldLabel>Motorista <span className="font-normal text-slate-400">(opcional)</span></FieldLabel>
         <SelectInput
@@ -258,21 +428,17 @@ function Step2({ data, update, errors }: {
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <FieldLabel required>Fecha de solicitud</FieldLabel>
-          <input
-            type="date" value={data.fecha_solicitud}
+          <input type="date" value={data.fecha_solicitud}
             onChange={(e) => update("fecha_solicitud", e.target.value)}
-            className={inputCls(!!errors.fecha_solicitud)}
-          />
+            className={inputCls(!!errors.fecha_solicitud)} />
           {errors.fecha_solicitud && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_solicitud}</p>}
         </div>
         <div>
           <FieldLabel required>Cantidad (galones)</FieldLabel>
-          <input
-            type="number" min="0" step="0.01" value={data.cantidad_combustible}
-            onChange={(e) => update("cantidad_combustible", e.target.value)}
-            placeholder="0.00" className={inputCls(!!errors.cantidad_combustible)}
-          />
-          {errors.cantidad_combustible && <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad_combustible}</p>}
+          <input type="number" min="0" step="0.01" value={data.cantidad}
+            onChange={(e) => update("cantidad", e.target.value)}
+            placeholder="0.00" className={inputCls(!!errors.cantidad)} />
+          {errors.cantidad && <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad}</p>}
         </div>
       </div>
 
@@ -283,21 +449,17 @@ function Step2({ data, update, errors }: {
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
-            <input
-              type="date" value={data.fecha_inicio_periodo}
+            <input type="date" value={data.fecha_inicio_periodo}
               onChange={(e) => update("fecha_inicio_periodo", e.target.value)}
-              className={inputCls(!!errors.fecha_inicio_periodo)}
-            />
+              className={inputCls(!!errors.fecha_inicio_periodo)} />
             {errors.fecha_inicio_periodo && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_inicio_periodo}</p>}
           </div>
           <div>
             <FieldLabel>Fecha fin</FieldLabel>
-            <input
-              type="date" value={data.fecha_fin_periodo}
+            <input type="date" value={data.fecha_fin_periodo}
               onChange={(e) => update("fecha_fin_periodo", e.target.value)}
               min={data.fecha_inicio_periodo || undefined}
-              className={inputCls(!!errors.fecha_fin_periodo)}
-            />
+              className={inputCls(!!errors.fecha_fin_periodo)} />
             {errors.fecha_fin_periodo && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_fin_periodo}</p>}
           </div>
         </div>
@@ -315,12 +477,10 @@ function Step2({ data, update, errors }: {
 
       <div>
         <FieldLabel>Observaciones adicionales</FieldLabel>
-        <textarea
-          value={data.observaciones} onChange={(e) => update("observaciones", e.target.value)}
+        <textarea value={data.observaciones} onChange={(e) => update("observaciones", e.target.value)}
           rows={3} maxLength={2000}
           placeholder="Información adicional relevante (opcional)..."
-          className={inputCls() + " resize-none"}
-        />
+          className={inputCls() + " resize-none"} />
         <p className="mt-1 text-right text-[10px] font-semibold text-slate-400">{data.observaciones.length}/2000</p>
       </div>
     </div>
@@ -332,6 +492,7 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
   const vehiculo  = catalogos.vehiculos.find((v) => String(v.id) === data.vehiculo_id)?.label ?? "";
   const motorista = catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.label ?? "Sin asignar";
   const prioCfg   = data.prioridad ? prioridadConfig[data.prioridad as Prioridad] : null;
+  const solTransporte = catalogos.solicitudesTransporte.find((s) => String(s.id) === data.solicitud_transporte_id);
 
   return (
     <div className="space-y-5">
@@ -354,11 +515,12 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
           )}
         </div>
         <div>
+          {solTransporte && <ReviewRow label="Solicitud transporte" value={solTransporte.codigo} />}
           <ReviewRow label="Vehículo"       value={vehiculo} />
           <ReviewRow label="Motorista"       value={motorista} />
           <ReviewRow label="Destino"         value={data.destino_actividad} />
           <ReviewRow label="Fecha solicitud" value={data.fecha_solicitud} />
-          <ReviewRow label="Cantidad"        value={data.cantidad_combustible ? `${parseFloat(data.cantidad_combustible).toFixed(2)} gal` : ""} />
+          <ReviewRow label="Cantidad"        value={data.cantidad ? `${parseFloat(data.cantidad).toFixed(2)} gal` : ""} />
           {data.fecha_inicio_periodo && <ReviewRow label="Período inicio" value={data.fecha_inicio_periodo} />}
           {data.fecha_fin_periodo    && <ReviewRow label="Período fin"    value={data.fecha_fin_periodo} />}
           {data.observaciones        && <ReviewRow label="Observaciones"  value={data.observaciones} />}
@@ -386,8 +548,8 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
   if (step === 2) {
     if (!data.destino_actividad.trim()) e.destino_actividad = "El destino o actividad es requerido.";
     if (!data.fecha_solicitud)          e.fecha_solicitud   = "La fecha de solicitud es requerida.";
-    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
-      e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
+    if (!data.cantidad || isNaN(Number(data.cantidad)) || Number(data.cantidad) <= 0)
+      e.cantidad = "Ingrese una cantidad válida mayor a 0.";
     if (!data.prioridad) e.prioridad = "Seleccione una prioridad.";
     if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
       e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
@@ -406,42 +568,47 @@ export default function NuevaSolicitudCombustible() {
   const [apiError, setApiError]   = useState<string | null>(null);
 
   const [catalogos, setCatalogos] = useState<CatalogosState>({
-    vehiculos: [], vehiculosRaw: [], motoristas: [], loading: true, error: null,
+    vehiculos: [], vehiculosRaw: [], motoristas: [],
+    solicitudesTransporte: [], loadingSolicitudes: true,
+    loading: true, error: null,
   });
 
   const fetchCatalogos = useCallback(async () => {
-    setCatalogos((p) => ({ ...p, loading: true, error: null }));
+    setCatalogos((p) => ({ ...p, loading: true, loadingSolicitudes: true, error: null }));
     try {
       const headers = authHeaders();
-      const [resV, resM] = await Promise.all([
+      const [resV, resM, resT] = await Promise.all([
         fetch(`${API_BASE}/api/catalogos/vehiculos`,  { headers }),
         fetch(`${API_BASE}/api/catalogos/motoristas`, { headers }),
+        fetch(`${API_BASE}/api/solicitudes-transporte?per_page=100`, { headers }),
       ]);
+
       if (!resV.ok || !resM.ok) throw new Error("Error al obtener los catálogos del servidor.");
-      const [jV, jM] = await Promise.all([resV.json(), resM.json()]);
+
+      const [jV, jM, jT] = await Promise.all([resV.json(), resM.json(), resT.json()]);
 
       const rawVehiculos = Array.isArray(jV) ? jV : jV.data ?? [];
 
       const vehiculos: Catalogo[] = rawVehiculos.map((v: any) => ({
         id: String(v.id), label: v.label ?? v.nombre ?? String(v.id),
       }));
-
       const vehiculosRaw: VehiculoRaw[] = rawVehiculos.map((v: any) => ({
-        id:     v.id,
-        placa:  v.placa  ?? "",
-        marca:  v.marca  ?? "",
-        modelo: v.modelo ?? "",
-        tipo:   v.tipo   ?? "",
-        label:  v.label  ?? "",
+        id: v.id, placa: v.placa ?? "", marca: v.marca ?? "",
+        modelo: v.modelo ?? "", tipo: v.tipo ?? "", label: v.label ?? "",
       }));
-
       const motoristas: Catalogo[] = (Array.isArray(jM) ? jM : jM.data ?? []).map((m: any) => ({
         id: String(m.id), label: m.nombre ?? m.label ?? String(m.id),
       }));
 
-      setCatalogos({ vehiculos, vehiculosRaw, motoristas, loading: false, error: null });
+      // Filtra solo APROBADAS y PROGRAMADAS
+      const todasTransporte: SolicitudTransporte[] = (Array.isArray(jT) ? jT : jT.data ?? []);
+      const solicitudesTransporte = todasTransporte.filter((s) =>
+        ["aprobada", "programada"].includes(s.estado?.toLowerCase?.() ?? "")
+      );
+
+      setCatalogos({ vehiculos, vehiculosRaw, motoristas, solicitudesTransporte, loadingSolicitudes: false, loading: false, error: null });
     } catch (err: any) {
-      setCatalogos((p) => ({ ...p, loading: false, error: err?.message ?? "No se pudieron cargar los catálogos." }));
+      setCatalogos((p) => ({ ...p, loading: false, loadingSolicitudes: false, error: err?.message ?? "No se pudieron cargar los catálogos." }));
     }
   }, []);
 
@@ -450,6 +617,15 @@ export default function NuevaSolicitudCombustible() {
   const update = useCallback((key: keyof FormData, value: string) => {
     setData((p) => ({ ...p, [key]: value }));
     setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
+  }, []);
+
+  const updateMultiple = useCallback((fields: Partial<FormData>) => {
+    setData((p) => ({ ...p, ...fields }));
+    setErrors((p) => {
+      const n = { ...p };
+      Object.keys(fields).forEach((k) => delete n[k as keyof FormData]);
+      return n;
+    });
   }, []);
 
   const handleNext = () => {
@@ -469,13 +645,14 @@ export default function NuevaSolicitudCombustible() {
         vehiculo_id:       parseInt(data.vehiculo_id),
         destino_actividad: data.destino_actividad,
         fecha_solicitud:   data.fecha_solicitud,
-        cantidad_combustible:          parseFloat(data.cantidad_combustible),
+        cantidad:          parseFloat(data.cantidad),
         prioridad:         data.prioridad,
       };
-      if (data.motorista_id)         body.motorista_id         = parseInt(data.motorista_id);
-      if (data.fecha_inicio_periodo) body.fecha_inicio_periodo = data.fecha_inicio_periodo;
-      if (data.fecha_fin_periodo)    body.fecha_fin_periodo    = data.fecha_fin_periodo;
-      if (data.observaciones.trim()) body.observaciones        = data.observaciones;
+      if (data.solicitud_transporte_id) body.solicitud_transporte_id = parseInt(data.solicitud_transporte_id);
+      if (data.motorista_id)            body.motorista_id            = parseInt(data.motorista_id);
+      if (data.fecha_inicio_periodo)    body.fecha_inicio_periodo    = data.fecha_inicio_periodo;
+      if (data.fecha_fin_periodo)       body.fecha_fin_periodo       = data.fecha_fin_periodo;
+      if (data.observaciones.trim())    body.observaciones           = data.observaciones;
 
       const res = await fetch(`${API_BASE}/api/solicitudes-combustible`, {
         method: "POST",
@@ -493,7 +670,6 @@ export default function NuevaSolicitudCombustible() {
           : json?.message || json?.exception || `Error ${res.status}`;
         throw new Error(detail);
       }
-
       setSubmitted(true);
     } catch (e: any) {
       setApiError(e?.message || "No se pudo conectar con el servidor.");
@@ -519,16 +695,12 @@ export default function NuevaSolicitudCombustible() {
               Tu solicitud de combustible fue enviada correctamente y está pendiente de aprobación.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button
-                onClick={() => navigate("/mis-solicitudes")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
-              >
+              <button onClick={() => navigate("/mis-solicitudes")}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95">
                 Ver mis solicitudes
               </button>
-              <button
-                onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-              >
+              <button onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95">
                 Nueva solicitud
               </button>
             </div>
@@ -551,10 +723,8 @@ export default function NuevaSolicitudCombustible() {
             </div>
             <h2 className="text-lg font-black text-slate-900">Error al cargar datos</h2>
             <p className="mt-2 text-sm font-semibold text-slate-400">{catalogos.error}</p>
-            <button
-              onClick={fetchCatalogos}
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
-            >
+            <button onClick={fetchCatalogos}
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95">
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
               </svg>
@@ -572,7 +742,6 @@ export default function NuevaSolicitudCombustible() {
       <div className="rounded-3xl border border-slate-200 bg-white">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
 
-          {/* Header */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-600">
@@ -582,10 +751,8 @@ export default function NuevaSolicitudCombustible() {
               <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Nueva Solicitud</h1>
               <p className="mt-1 text-sm font-semibold text-slate-400">Complete los datos para registrar la carga de combustible.</p>
             </div>
-            <button
-              onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-            >
+            <button onClick={() => navigate(-1)}
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95">
               <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
@@ -593,7 +760,6 @@ export default function NuevaSolicitudCombustible() {
             </button>
           </div>
 
-          {/* API error */}
           {apiError && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
               <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -613,7 +779,6 @@ export default function NuevaSolicitudCombustible() {
 
           <StepperHeader current={step} />
 
-          {/* Card */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-black text-white">
@@ -625,11 +790,10 @@ export default function NuevaSolicitudCombustible() {
               </div>
             </div>
 
-            {step === 1 && <Step1 data={data} update={update} errors={errors} catalogos={catalogos} />}
+            {step === 1 && <Step1 data={data} update={update} updateMultiple={updateMultiple} errors={errors} catalogos={catalogos} />}
             {step === 2 && <Step2 data={data} update={update} errors={errors} />}
             {step === 3 && <Step3 data={data} catalogos={catalogos} />}
 
-            {/* Navigation */}
             <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
               {step > 1 ? (
                 <button onClick={handleBack} disabled={loading}
@@ -653,8 +817,7 @@ export default function NuevaSolicitudCombustible() {
                       Cargando...
                     </>
                   ) : (
-                    <>
-                      Siguiente
+                    <>Siguiente
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
@@ -692,4 +855,4 @@ export default function NuevaSolicitudCombustible() {
       </div>
     </div>
   );
-}//Solicitud de combsutible
+}
