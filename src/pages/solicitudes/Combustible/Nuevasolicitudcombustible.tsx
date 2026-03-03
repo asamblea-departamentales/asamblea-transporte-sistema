@@ -35,7 +35,7 @@ interface FormData {
   fecha_solicitud: string;
   fecha_inicio_periodo: string;
   fecha_fin_periodo: string;
-  cantidad: string;
+  cantidad_combustible: string;
   prioridad: Prioridad | "";
   observaciones: string;
 }
@@ -47,7 +47,7 @@ const INITIAL: FormData = {
   fecha_solicitud: new Date().toISOString().split("T")[0],
   fecha_inicio_periodo: "",
   fecha_fin_periodo: "",
-  cantidad: "",
+  cantidad_combustible: "",
   prioridad: "",
   observaciones: "",
 };
@@ -268,11 +268,11 @@ function Step2({ data, update, errors }: {
         <div>
           <FieldLabel required>Cantidad (galones)</FieldLabel>
           <input
-            type="number" min="0" step="0.01" value={data.cantidad}
-            onChange={(e) => update("cantidad", e.target.value)}
-            placeholder="0.00" className={inputCls(!!errors.cantidad)}
+            type="number" min="0" step="0.01" value={data.cantidad_combustible}
+            onChange={(e) => update("cantidad_combustible", e.target.value)}
+            placeholder="0.00" className={inputCls(!!errors.cantidad_combustible)}
           />
-          {errors.cantidad && <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad}</p>}
+          {errors.cantidad_combustible && <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad_combustible}</p>}
         </div>
       </div>
 
@@ -358,7 +358,7 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
           <ReviewRow label="Motorista"       value={motorista} />
           <ReviewRow label="Destino"         value={data.destino_actividad} />
           <ReviewRow label="Fecha solicitud" value={data.fecha_solicitud} />
-          <ReviewRow label="Cantidad"        value={data.cantidad ? `${parseFloat(data.cantidad).toFixed(2)} gal` : ""} />
+          <ReviewRow label="Cantidad"        value={data.cantidad_combustible ? `${parseFloat(data.cantidad_combustible).toFixed(2)} gal` : ""} />
           {data.fecha_inicio_periodo && <ReviewRow label="Período inicio" value={data.fecha_inicio_periodo} />}
           {data.fecha_fin_periodo    && <ReviewRow label="Período fin"    value={data.fecha_fin_periodo} />}
           {data.observaciones        && <ReviewRow label="Observaciones"  value={data.observaciones} />}
@@ -386,8 +386,8 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
   if (step === 2) {
     if (!data.destino_actividad.trim()) e.destino_actividad = "El destino o actividad es requerido.";
     if (!data.fecha_solicitud)          e.fecha_solicitud   = "La fecha de solicitud es requerida.";
-    if (!data.cantidad || isNaN(Number(data.cantidad)) || Number(data.cantidad) <= 0)
-      e.cantidad = "Ingrese una cantidad válida mayor a 0.";
+    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
+      e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
     if (!data.prioridad) e.prioridad = "Seleccione una prioridad.";
     if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
       e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
@@ -469,7 +469,7 @@ export default function NuevaSolicitudCombustible() {
         vehiculo_id:       parseInt(data.vehiculo_id),
         destino_actividad: data.destino_actividad,
         fecha_solicitud:   data.fecha_solicitud,
-        cantidad:          parseFloat(data.cantidad),
+        cantidad_combustible:          parseFloat(data.cantidad_combustible),
         prioridad:         data.prioridad,
       };
       if (data.motorista_id)         body.motorista_id         = parseInt(data.motorista_id);
