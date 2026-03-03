@@ -1,630 +1,799 @@
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/asamble.png";
 import { useAuth } from "../auth/AuthContext";
-import { useEffect, useMemo, useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 
+// ─── Types ──────────────────────────────────────────────────────────────────
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 
-// ─── Icons ────────────────────────────────────────────────────────────────────
-const IconDashboard = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={18} height={18} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <rect x="3" y="3" width="7.5" height="7.5" rx="2" />
-    <rect x="13.5" y="3" width="7.5" height="7.5" rx="2" />
-    <rect x="3" y="13.5" width="7.5" height="7.5" rx="2" />
-    <rect x="13.5" y="13.5" width="7.5" height="7.5" rx="2" />
-  </svg>
-);
+type NavItem = {
+  to: string;
+  label: string;
+  icon: () => React.ReactElement;
+  badge?: number;
+};
 
-const IconPlus = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={18} height={18} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-    <path d="M12 5v14M5 12h14" />
-  </svg>
-);
+// ─── Icons ───────────────────────────────────────────────────────────────────
+const Icons = {
+  Dashboard: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="8" height="8" rx="2" />
+      <rect x="13" y="3" width="8" height="8" rx="2" />
+      <rect x="3" y="13" width="8" height="8" rx="2" />
+      <rect x="13" y="13" width="8" height="8" rx="2" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 8v8M8 12h8" />
+    </svg>
+  ),
+  List: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <path d="M9 6h11M9 12h11M9 18h6" />
+      <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="18" r="1.5" fill="currentColor" stroke="none" />
+    </svg>
+  ),
+  Search: () => (
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <circle cx="11" cy="11" r="7" />
+      <path d="M16.5 16.5L21 21" />
+    </svg>
+  ),
+  Menu: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <path d="M4 7h16M4 12h10M4 17h13" />
+    </svg>
+  ),
+  X: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <path d="M18 6L6 18M6 6l12 12" />
+    </svg>
+  ),
+  Logout: () => (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
+      <path d="M16 17l5-5-5-5M21 12H9" />
+    </svg>
+  ),
+  ChevronDown: ({ open }: { open: boolean }) => (
+    <svg
+      width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      style={{ transition: "transform 200ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+    >
+      <path d="M4 6l4 4 4-4" />
+    </svg>
+  ),
+  Bell: () => (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" />
+      <path d="M13.73 21a2 2 0 01-3.46 0" />
+    </svg>
+  ),
+};
 
-const IconList = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={18} height={18} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 6h11M9 12h11M9 18h6" />
-    <circle cx="4.5" cy="6" r="1.2" fill="currentColor" stroke="none" />
-    <circle cx="4.5" cy="12" r="1.2" fill="currentColor" stroke="none" />
-    <circle cx="4.5" cy="18" r="1.2" fill="currentColor" stroke="none" />
-  </svg>
-);
-
-const IconSearch = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={16} height={16} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-    <circle cx="10.5" cy="10.5" r="6.5" />
-    <path d="M15.5 15.5L20 20" />
-  </svg>
-);
-
-const IconMenu = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={22} height={22} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-    <path d="M4 6h16M4 12h12M4 18h8" />
-  </svg>
-);
-
-const IconX = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={22} height={22} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round">
-    <path d="M18 6L6 18M6 6l12 12" />
-  </svg>
-);
-
-const IconLogout = () => (
-  <svg viewBox="0 0 24 24" fill="none" width={17} height={17} stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
-    <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" />
-    <path d="M16 17l5-5-5-5M21 12H9" />
-  </svg>
-);
-
-const IconChevron = ({ open }: { open: boolean }) => (
-  <svg viewBox="0 0 16 16" fill="none" width={14} height={14}
-    style={{ transition: "transform 220ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
-    stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-    <path d="M4 6l4 4 4-4" />
-  </svg>
-);
-
-// ─── Avatar ───────────────────────────────────────────────────────────────────
+// ─── Avatar ──────────────────────────────────────────────────────────────────
 function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
-  const s = { sm: 32, md: 38, lg: 44 }[size];
-  const fs = { sm: 13, md: 15, lg: 17 }[size];
+  const dim = { sm: 30, md: 36, lg: 42 };
+  const fs = { sm: 12, md: 14, lg: 16 };
   return (
-    <div style={{
-      width: s, height: s, borderRadius: 10,
-      background: "linear-gradient(135deg, #1e3a5f 0%, #0f2744 100%)",
-      border: "1.5px solid rgba(99,102,241,0.35)",
-      display: "flex", alignItems: "center", justifyContent: "center",
-      color: "#a5b4fc", fontWeight: 700, fontSize: fs,
-      flexShrink: 0, userSelect: "none",
-      fontFamily: "'DM Sans', system-ui, sans-serif",
-      boxShadow: "0 2px 8px rgba(99,102,241,0.2)",
-    }}>
+    <div
+      style={{
+        width: dim[size],
+        height: dim[size],
+        fontSize: fs[size],
+        background: "linear-gradient(135deg, #1D4ED8 0%, #1E3A8A 100%)",
+        borderRadius: size === "lg" ? 12 : 8,
+        border: "1.5px solid rgba(96,165,250,0.3)",
+        boxShadow: "0 2px 8px rgba(29,78,216,0.3)",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        fontWeight: 700,
+        color: "#BFDBFE",
+        fontFamily: "'Sora', sans-serif",
+        flexShrink: 0,
+      }}
+    >
       {initial}
     </div>
   );
 }
 
+// ─── Status Badge ─────────────────────────────────────────────────────────────
+function StatusDot() {
+  return (
+    <span style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 5,
+      background: "rgba(16,185,129,0.1)",
+      border: "1px solid rgba(16,185,129,0.25)",
+      borderRadius: 20,
+      padding: "2px 8px",
+      fontSize: 10,
+      fontWeight: 600,
+      color: "#6EE7B7",
+      letterSpacing: "0.04em",
+    }}>
+      <span style={{
+        width: 5, height: 5, borderRadius: "50%",
+        background: "#10B981",
+        boxShadow: "0 0 4px #10B981",
+        animation: "pulse 2s infinite",
+      }} />
+      En línea
+    </span>
+  );
+}
+
+// ─── NavItem Component ────────────────────────────────────────────────────────
+function NavLinkItem({
+  item,
+  onClick,
+  variant,
+  pathname,
+}: {
+  item: NavItem;
+  onClick?: () => void;
+  variant: "desktop" | "drawer" | "bottom";
+  pathname: string;
+}) {
+  const { to, label, icon: Icon, badge } = item;
+  const isSpecialActive = to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/");
+
+  if (variant === "bottom") {
+    return (
+      <NavLink
+        to={to}
+        end
+        onClick={onClick}
+        style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 8px", gap: 4, textDecoration: "none", position: "relative", transition: "all 150ms" }}
+        className={({ isActive }) => (isActive || isSpecialActive) ? "nav-bottom-active" : "nav-bottom"}
+      >
+        {({ isActive }) => {
+          const active = isActive || isSpecialActive;
+          return (
+            <>
+              <span style={{ color: active ? "#60A5FA" : "rgba(255,255,255,0.3)", transition: "color 150ms" }}>
+                <Icon />
+              </span>
+              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "#60A5FA" : "rgba(255,255,255,0.3)", transition: "color 150ms", letterSpacing: "0.01em" }}>
+                {label}
+              </span>
+              {badge && (
+                <span style={{
+                  position: "absolute", top: 8, right: "calc(50% - 14px)",
+                  width: 7, height: 7, borderRadius: "50%", background: "#3B82F6",
+                  border: "1.5px solid #0A0F1E",
+                }} />
+              )}
+              {active && (
+                <span style={{
+                  position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)",
+                  width: 24, height: 2, background: "#3B82F6", borderRadius: "2px 2px 0 0",
+                }} />
+              )}
+            </>
+          );
+        }}
+      </NavLink>
+    );
+  }
+
+  if (variant === "drawer") {
+    return (
+      <NavLink
+        to={to}
+        end
+        onClick={onClick}
+        style={{ display: "flex", alignItems: "center", gap: 12, padding: "10px 14px", borderRadius: 10, textDecoration: "none", transition: "all 150ms", marginBottom: 2 }}
+        className={({ isActive }) => (isActive || isSpecialActive) ? "nav-drawer-active" : "nav-drawer"}
+      >
+        {({ isActive }) => {
+          const active = isActive || isSpecialActive;
+          return (
+            <>
+              <span style={{
+                width: 34, height: 34, borderRadius: 9,
+                display: "flex", alignItems: "center", justifyContent: "center",
+                background: active ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.04)",
+                color: active ? "#60A5FA" : "rgba(255,255,255,0.4)",
+                border: active ? "1px solid rgba(59,130,246,0.25)" : "1px solid transparent",
+                transition: "all 150ms",
+              }}>
+                <Icon />
+              </span>
+              <span style={{ fontSize: 14, fontWeight: active ? 600 : 500, color: active ? "#F0F6FF" : "rgba(255,255,255,0.45)", transition: "color 150ms", flex: 1 }}>
+                {label}
+              </span>
+              {badge && (
+                <span style={{
+                  background: "rgba(59,130,246,0.2)", color: "#93C5FD",
+                  fontSize: 11, fontWeight: 700, padding: "1px 7px",
+                  borderRadius: 20, border: "1px solid rgba(59,130,246,0.2)",
+                  fontFamily: "'JetBrains Mono', monospace",
+                }}>
+                  {badge}
+                </span>
+              )}
+            </>
+          );
+        }}
+      </NavLink>
+    );
+  }
+
+  // Desktop
+  return (
+    <NavLink
+      to={to}
+      end
+      onClick={onClick}
+      style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 8, textDecoration: "none", transition: "all 150ms", position: "relative", whiteSpace: "nowrap" }}
+      className={({ isActive }) => (isActive || isSpecialActive) ? "nav-desktop-active" : "nav-desktop"}
+    >
+      {({ isActive }) => {
+        const active = isActive || isSpecialActive;
+        return (
+          <>
+            <span style={{ color: active ? "#60A5FA" : "rgba(255,255,255,0.4)", transition: "color 150ms" }}>
+              <Icon />
+            </span>
+            <span style={{ fontSize: 13.5, fontWeight: active ? 600 : 500, color: active ? "#EFF6FF" : "rgba(255,255,255,0.45)", transition: "color 150ms", letterSpacing: "-0.01em" }}>
+              {label}
+            </span>
+            {badge && (
+              <span style={{
+                background: "rgba(59,130,246,0.2)", color: "#93C5FD",
+                fontSize: 10, fontWeight: 700, padding: "1px 6px",
+                borderRadius: 20, border: "1px solid rgba(59,130,246,0.2)",
+                fontFamily: "'JetBrains Mono', monospace",
+                letterSpacing: "0.02em",
+              }}>
+                {badge}
+              </span>
+            )}
+          </>
+        );
+      }}
+    </NavLink>
+  );
+}
+
+// ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [userMenu, setUserMenu] = useState(false);
-  const [pending] = useState(3);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+  const pending = 3;
 
-  const isNew =
-    location.pathname === "/nueva-solicitud" ||
-    location.pathname.startsWith("/solicitudes/");
+  const initial = (user?.name?.trim()?.[0] || "U").toUpperCase();
 
-  const initial = useMemo(
-    () => (user?.name?.trim()?.[0] || "U").toUpperCase(),
-    [user?.name]
-  );
+  const navItems: NavItem[] = [
+    { to: "/dashboard", label: "Dashboard", icon: Icons.Dashboard },
+    { to: "/nueva-solicitud", label: "Nueva solicitud", icon: Icons.Plus },
+    { to: "/mis-solicitudes", label: "Mis solicitudes", icon: Icons.List, badge: pending },
+  ];
 
   const handleLogout = async () => {
-    onClose(); setUserMenu(false);
+    onClose();
+    setUserMenuOpen(false);
     await logout();
     navigate("/login", { replace: true });
   };
 
-  useEffect(() => { onClose(); setUserMenu(false); }, [location.pathname]);
+  useEffect(() => {
+    onClose();
+    setUserMenuOpen(false);
+  }, [location.pathname]);
 
   useEffect(() => {
-    const h = (e: KeyboardEvent) => { if (e.key === "Escape") { onClose(); setUserMenu(false); } };
-    window.addEventListener("keydown", h);
-    return () => window.removeEventListener("keydown", h);
+    const handleKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); setUserMenuOpen(false); }
+    };
+    window.addEventListener("keydown", handleKey);
+    return () => window.removeEventListener("keydown", handleKey);
   }, [onClose]);
 
   useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(e.target as Node)) setUserMenu(false);
+    const handleClick = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false);
+      }
     };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
   }, []);
-
-  const nav = [
-    { to: "/dashboard", label: "Dashboard", icon: <IconDashboard /> },
-    { to: "/nueva-solicitud", label: "Nueva solicitud", icon: <IconPlus />, forceActive: isNew },
-    { to: "/mis-solicitudes", label: "Mis solicitudes", icon: <IconList />, badge: pending },
-  ];
-
-  const NAV_BG = "#0b1120";
-  const NAV_H = 72;
-  const FONT = "'DM Sans', system-ui, sans-serif";
-  const ACCENT = "#6366f1";
 
   return (
     <>
+      {/* ── Global Styles ─────────────────────────────────────────────────── */}
       <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700&family=DM+Mono:wght@400;500&display=swap');
-        *, *::before, *::after { box-sizing: border-box; }
+        @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap');
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-          margin: 0;
-          font-family: ${FONT};
-          padding-top: ${NAV_H}px;
-        }
-        @media (max-width: 1023px) { body { padding-bottom: 70px; } }
-        button { font-family: inherit; cursor: pointer; }
-
-        .snav-desktop { display: none !important; }
-        @media (min-width: 1024px) { .snav-desktop { display: flex !important; } }
-
-        .snav-mobile { display: flex !important; }
-        @media (min-width: 1024px) { .snav-mobile { display: none !important; } }
-
-        /* Desktop nav link */
-        a.snav-link {
-          position: relative;
-          display: inline-flex;
-          align-items: center;
-          gap: 8px;
-          padding: 8px 16px;
-          border-radius: 10px;
-          font-size: 14.5px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.42);
-          text-decoration: none;
-          transition: color 150ms, background 150ms;
-          letter-spacing: -0.01em;
-          white-space: nowrap;
-        }
-        a.snav-link:hover {
-          color: rgba(255,255,255,0.85) !important;
-          background: rgba(255,255,255,0.06) !important;
-        }
-        a.snav-link.active {
-          color: #fff !important;
-          background: rgba(99,102,241,0.12) !important;
-        }
-        a.snav-link.active::before {
-          content: '';
-          position: absolute;
-          bottom: -1px;
-          left: 50%;
-          transform: translateX(-50%);
-          width: 20px;
-          height: 2px;
-          background: ${ACCENT};
-          border-radius: 2px;
+          background: #070C18;
+          color: white;
+          font-family: 'Sora', system-ui, sans-serif;
+          -webkit-font-smoothing: antialiased;
         }
 
-        /* Drawer link */
-        a.drawer-link {
-          display: flex;
-          align-items: center;
-          gap: 13px;
-          padding: 12px 16px;
-          border-radius: 12px;
-          font-size: 15px;
-          font-weight: 500;
-          color: rgba(255,255,255,0.38);
-          text-decoration: none;
-          transition: all 150ms;
-          letter-spacing: -0.01em;
+        button { font-family: inherit; cursor: pointer; border: none; background: none; }
+
+        @keyframes pulse {
+          0%, 100% { opacity: 1; box-shadow: 0 0 4px #10B981; }
+          50% { opacity: 0.6; box-shadow: 0 0 8px #10B981; }
         }
-        a.drawer-link:hover {
-          color: rgba(255,255,255,0.85) !important;
-          background: rgba(255,255,255,0.05) !important;
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-6px); }
+          to { opacity: 1; transform: translateY(0); }
         }
-        a.drawer-link.active {
-          color: #fff !important;
-          background: rgba(99,102,241,0.14) !important;
-          box-shadow: inset 3px 0 0 ${ACCENT};
+        @keyframes fadeIn {
+          from { opacity: 0; } to { opacity: 1; }
         }
 
-        /* Bottom nav */
-        a.bottom-link {
-          flex: 1;
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          justify-content: center;
-          gap: 5px;
-          min-height: 66px;
-          text-decoration: none;
-          padding: 8px 4px;
-          transition: all 150ms;
+        /* Desktop nav states */
+        .nav-desktop {
+          background: transparent;
         }
-        a.bottom-link.active .bl-icon { color: ${ACCENT} !important; }
-        a.bottom-link.active .bl-label { color: ${ACCENT} !important; }
-        a.bottom-link:hover .bl-icon { color: rgba(255,255,255,0.65) !important; }
-        a.bottom-link:hover .bl-label { color: rgba(255,255,255,0.65) !important; }
+        .nav-desktop:hover {
+          background: rgba(255,255,255,0.04);
+        }
+        .nav-desktop-active {
+          background: rgba(59,130,246,0.1);
+          box-shadow: inset 0 0 0 1px rgba(59,130,246,0.18);
+        }
 
-        /* User btn */
-        button.user-btn:hover { background: rgba(255,255,255,0.06) !important; }
+        /* Drawer nav states */
+        .nav-drawer { background: transparent; }
+        .nav-drawer:hover { background: rgba(255,255,255,0.04); }
+        .nav-drawer-active { background: rgba(59,130,246,0.08); }
 
-        /* Logout btn */
-        button.logout-btn:hover {
-          color: #fca5a5 !important;
-          background: rgba(239,68,68,0.1) !important;
+        /* Custom scrollbar */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius: 4px; }
+
+        /* Mobile page offset */
+        @media (min-width: 1024px) {
+          .page-content { padding-top: 68px; }
+        }
+        @media (max-width: 1023px) {
+          .page-content { padding-top: 64px; padding-bottom: 72px; }
         }
 
         /* Search input */
-        .search-box:focus-within {
-          border-color: rgba(99,102,241,0.5) !important;
-          box-shadow: 0 0 0 3px rgba(99,102,241,0.12) !important;
-        }
-        .search-box input {
-          outline: none;
-          background: transparent;
-          border: none;
-          color: #fff;
-          font-size: 14px;
-          width: 100%;
-          font-family: ${FONT};
-        }
-        .search-box input::placeholder { color: rgba(255,255,255,0.22); }
-
-        /* Badge pill */
-        .badge-pill {
-          display: inline-flex;
-          align-items: center;
-          justify-content: center;
-          min-width: 20px;
-          height: 20px;
-          padding: 0 6px;
-          border-radius: 20px;
-          background: rgba(99,102,241,0.2);
-          color: #a5b4fc;
-          font-size: 11.5px;
-          font-weight: 600;
-          font-family: 'DM Mono', monospace;
-        }
+        input[type="search"]::-webkit-search-cancel-button { display: none; }
+        input[type="search"] { -webkit-appearance: none; }
       `}</style>
 
-      {/* ═══════════════════════════════════════
-          DESKTOP NAVBAR (≥1024px)
-      ═══════════════════════════════════════ */}
-      <header
-        className="snav-desktop"
-        style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-          height: NAV_H,
-          background: `linear-gradient(180deg, ${NAV_BG} 0%, #0d1526 100%)`,
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-          alignItems: "center",
-          backdropFilter: "blur(12px)",
-        }}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  DESKTOP HEADER                                                     */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      <header style={{
+        display: "none",
+        position: "fixed",
+        top: 0, left: 0, right: 0,
+        zIndex: 100,
+        height: 64,
+        background: "rgba(7,12,24,0.95)",
+        backdropFilter: "blur(20px)",
+        borderBottom: "1px solid rgba(255,255,255,0.07)",
+      }}
+        className="lg-flex"
       >
-        {/* Subtle top accent line */}
+        {/* Accent line */}
         <div style={{
-          position: "absolute", top: 0, left: 0, right: 0, height: 2,
-          background: `linear-gradient(90deg, transparent 0%, ${ACCENT} 30%, #818cf8 60%, transparent 100%)`,
-          opacity: 0.6,
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 40%, rgba(99,102,241,0.4) 70%, transparent 100%)",
         }} />
 
         <div style={{
-          width: "100%", maxWidth: 1480, margin: "0 auto",
-          padding: "0 32px", display: "flex", alignItems: "center", gap: 0,
+          maxWidth: 1280, margin: "0 auto", width: "100%",
+          height: "100%", display: "flex", alignItems: "center",
+          padding: "0 28px", gap: 20,
         }}>
-
-          {/* Brand */}
-          <button type="button" onClick={() => navigate("/dashboard")} style={{
-            display: "flex", alignItems: "center", gap: 12,
-            background: "none", border: "none",
-            padding: "6px 14px 6px 0px", borderRadius: 10, flexShrink: 0,
-            marginRight: 32,
-          }}>
+          {/* Logo */}
+          <button
+            onClick={() => navigate("/dashboard")}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              padding: "6px 10px", borderRadius: 10,
+              transition: "background 150ms",
+              flexShrink: 0,
+            }}
+            onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
             <div style={{
-              width: 38, height: 38, borderRadius: 10,
-              background: "linear-gradient(135deg, rgba(99,102,241,0.2) 0%, rgba(99,102,241,0.08) 100%)",
-              border: "1px solid rgba(99,102,241,0.25)",
+              width: 34, height: 34, borderRadius: 9,
+              background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)",
+              border: "1px solid rgba(59,130,246,0.3)",
               display: "flex", alignItems: "center", justifyContent: "center",
-              boxShadow: "0 4px 12px rgba(99,102,241,0.15)",
+              boxShadow: "0 2px 10px rgba(29,78,216,0.25)",
             }}>
-              <img src={logo} alt="" style={{ height: 22, filter: "brightness(0) invert(1)", opacity: 0.92 }} />
+              <img src={logo} alt="Logo" style={{ height: 18, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
             </div>
-            <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-              <span style={{
-                fontSize: 10, fontWeight: 600,
-                color: "rgba(165,180,252,0.6)",
-                textTransform: "uppercase", letterSpacing: "0.1em",
-                lineHeight: 1, fontFamily: FONT,
-              }}>
-                Asamblea
-              </span>
-              <span style={{
-                fontSize: 16, fontWeight: 700,
-                color: "#fff", letterSpacing: "-0.03em",
-                lineHeight: 1.2, fontFamily: FONT,
-              }}>
-                Transporte
-              </span>
+            <div style={{ textAlign: "left" }}>
+              <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(147,197,253,0.5)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Asamblea</div>
+              <div style={{ fontSize: 14, fontWeight: 700, color: "white", lineHeight: 1, letterSpacing: "-0.02em" }}>Transporte</div>
             </div>
           </button>
 
           {/* Divider */}
-          <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.08)", marginRight: 28 }} />
+          <div style={{ width: 1, height: 28, background: "rgba(255,255,255,0.08)", flexShrink: 0 }} />
 
-          {/* Nav links */}
+          {/* Nav */}
           <nav style={{ display: "flex", alignItems: "center", gap: 2, flex: 1 }}>
-            {nav.map((n) => (
-              <NavLink
-                key={n.to} to={n.to} end
-                className={({ isActive }) => `snav-link${(n.forceActive || isActive) ? " active" : ""}`}
-              >
-                <span style={{ display: "flex", opacity: 0.7 }}>{n.icon}</span>
-                {n.label}
-                {n.badge ? <span className="badge-pill">{n.badge}</span> : null}
-              </NavLink>
+            {navItems.map(item => (
+              <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />
             ))}
           </nav>
 
-          {/* Right: search + user */}
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-
+          {/* Right side */}
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
             {/* Search */}
-            <div className="search-box" style={{
-              display: "flex", alignItems: "center", gap: 9,
-              height: 40, width: 230, padding: "0 14px",
+            <div style={{
+              display: "flex", alignItems: "center", gap: 8,
+              height: 36, width: 200, padding: "0 12px",
               background: "rgba(255,255,255,0.04)",
               border: "1px solid rgba(255,255,255,0.08)",
-              borderRadius: 10, transition: "border-color 150ms, box-shadow 150ms",
-            }}>
-              <span style={{ color: "rgba(255,255,255,0.22)", display: "flex", flexShrink: 0 }}>
-                <IconSearch />
+              borderRadius: 9,
+              transition: "all 150ms",
+            }}
+              onFocus={e => {
+                (e.currentTarget as HTMLDivElement).style.border = "1px solid rgba(59,130,246,0.4)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "0 0 0 3px rgba(59,130,246,0.08)";
+              }}
+              onBlur={e => {
+                (e.currentTarget as HTMLDivElement).style.border = "1px solid rgba(255,255,255,0.08)";
+                (e.currentTarget as HTMLDivElement).style.boxShadow = "none";
+              }}
+            >
+              <span style={{ color: "rgba(255,255,255,0.2)", display: "flex" }}>
+                <Icons.Search />
               </span>
-              <input placeholder="Buscar…" />
+              <input
+                type="search"
+                placeholder="Buscar solicitud..."
+                style={{
+                  background: "transparent", border: "none", outline: "none",
+                  fontSize: 12.5, color: "white", width: "100%",
+                  fontFamily: "'Sora', sans-serif",
+                }}
+              />
             </div>
 
-            {/* User menu */}
+            {/* Bell */}
+            <button style={{
+              width: 36, height: 36, borderRadius: 9,
+              background: "rgba(255,255,255,0.04)",
+              border: "1px solid rgba(255,255,255,0.08)",
+              display: "flex", alignItems: "center", justifyContent: "center",
+              color: "rgba(255,255,255,0.4)",
+              position: "relative",
+              transition: "all 150ms",
+            }}
+              onMouseEnter={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.07)";
+                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.7)";
+              }}
+              onMouseLeave={e => {
+                (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+                (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)";
+              }}
+            >
+              <Icons.Bell />
+              <span style={{
+                position: "absolute", top: 7, right: 7,
+                width: 6, height: 6, borderRadius: "50%",
+                background: "#3B82F6", border: "1.5px solid #070C18",
+              }} />
+            </button>
+
+            {/* User Menu */}
             <div ref={menuRef} style={{ position: "relative" }}>
-              <button type="button" className="user-btn" onClick={() => setUserMenu(v => !v)} style={{
-                display: "flex", alignItems: "center", gap: 10,
-                height: 44, padding: "0 12px 0 8px",
-                background: userMenu ? "rgba(255,255,255,0.06)" : "transparent",
-                border: `1px solid ${userMenu ? "rgba(99,102,241,0.3)" : "transparent"}`,
-                borderRadius: 12, transition: "all 180ms",
-              }}>
+              <button
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                style={{
+                  display: "flex", alignItems: "center", gap: 9,
+                  height: 40, padding: "0 10px 0 6px", borderRadius: 10,
+                  background: userMenuOpen ? "rgba(59,130,246,0.08)" : "transparent",
+                  border: userMenuOpen ? "1px solid rgba(59,130,246,0.2)" : "1px solid transparent",
+                  transition: "all 150ms",
+                  cursor: "pointer",
+                }}
+                onMouseEnter={e => {
+                  if (!userMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)";
+                }}
+                onMouseLeave={e => {
+                  if (!userMenuOpen) (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                }}
+              >
                 <Avatar initial={initial} />
-                <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-start" }}>
-                  <span style={{
-                    fontSize: 13.5, fontWeight: 600,
-                    color: "rgba(255,255,255,0.85)",
-                    maxWidth: 120, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap",
-                    fontFamily: FONT, lineHeight: 1.2,
-                  }}>
+                <div style={{ textAlign: "left" }}>
+                  <div style={{ fontSize: 13, fontWeight: 600, color: "rgba(255,255,255,0.9)", lineHeight: 1.3, maxWidth: 110, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
                     {user?.name || "Usuario"}
-                  </span>
-                  <span style={{ fontSize: 11.5, color: "rgba(165,180,252,0.5)", fontFamily: FONT, lineHeight: 1.2 }}>
-                    En línea
-                  </span>
+                  </div>
+                  <div style={{ fontSize: 10, color: "rgba(147,197,253,0.5)", lineHeight: 1.2 }}>Administrador</div>
                 </div>
-                <span style={{ color: "rgba(255,255,255,0.25)", display: "flex", marginLeft: 2 }}>
-                  <IconChevron open={userMenu} />
+                <span style={{ color: "rgba(255,255,255,0.25)", display: "flex" }}>
+                  <Icons.ChevronDown open={userMenuOpen} />
                 </span>
               </button>
 
               {/* Dropdown */}
-              <div style={{
-                position: "absolute", right: 0, top: "calc(100% + 8px)",
-                width: 230, borderRadius: 14,
-                background: "#0d1526",
-                border: "1px solid rgba(99,102,241,0.15)",
-                boxShadow: "0 24px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(255,255,255,0.03)",
-                padding: 8,
-                transition: "opacity 170ms ease, transform 170ms ease",
-                opacity: userMenu ? 1 : 0,
-                transform: userMenu ? "translateY(0) scale(1)" : "translateY(-6px) scale(0.97)",
-                transformOrigin: "top right",
-                pointerEvents: userMenu ? "auto" : "none",
-                zIndex: 10,
-              }}>
+              {userMenuOpen && (
                 <div style={{
-                  padding: "12px 14px 14px",
-                  borderBottom: "1px solid rgba(255,255,255,0.06)",
-                  marginBottom: 6,
+                  position: "absolute", right: 0, top: "calc(100% + 8px)",
+                  width: 260,
+                  background: "#0D1425",
+                  border: "1px solid rgba(255,255,255,0.08)",
+                  borderRadius: 14,
+                  boxShadow: "0 20px 60px rgba(0,0,0,0.6), 0 0 0 1px rgba(59,130,246,0.08)",
+                  padding: 6,
+                  zIndex: 200,
+                  animation: "slideDown 150ms ease",
                 }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
-                    <Avatar initial={initial} size="lg" />
-                    <div>
-                      <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fff", fontFamily: FONT }}>{user?.name || "Usuario"}</p>
-                      <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(165,180,252,0.45)", fontFamily: FONT }}>{user?.email || ""}</p>
-                    </div>
-                  </div>
+                  {/* User info */}
                   <div style={{
-                    display: "inline-flex", alignItems: "center", gap: 6,
-                    padding: "4px 10px", borderRadius: 20,
-                    background: "rgba(99,102,241,0.12)",
-                    border: "1px solid rgba(99,102,241,0.2)",
+                    padding: "12px 14px 14px",
+                    borderBottom: "1px solid rgba(255,255,255,0.06)",
+                    marginBottom: 4,
                   }}>
-                    <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#4ade80", display: "inline-block" }} />
-                    <span style={{ fontSize: 11.5, color: "#a5b4fc", fontWeight: 600, fontFamily: FONT }}>Sesión activa</span>
+                    <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 10 }}>
+                      <Avatar initial={initial} size="lg" />
+                      <div>
+                        <div style={{ fontSize: 14, fontWeight: 700, color: "white" }}>{user?.name || "Usuario"}</div>
+                        <div style={{ fontSize: 11, color: "rgba(147,197,253,0.5)", marginTop: 1 }}>{user?.email || ""}</div>
+                      </div>
+                    </div>
+                    <StatusDot />
                   </div>
-                </div>
-                <button type="button" onClick={handleLogout} className="logout-btn" style={{
-                  display: "flex", alignItems: "center", gap: 10, width: "100%",
-                  padding: "10px 14px", borderRadius: 9,
-                  fontSize: 14, fontWeight: 500,
-                  color: "rgba(255,255,255,0.38)",
-                  background: "none", border: "none", transition: "all 140ms",
-                  fontFamily: FONT,
-                }}>
-                  <IconLogout />
-                  Cerrar sesión
-                </button>
-              </div>
-            </div>
 
+                  {/* Logout */}
+                  <button
+                    onClick={handleLogout}
+                    style={{
+                      display: "flex", alignItems: "center", gap: 9,
+                      width: "100%", padding: "9px 12px", borderRadius: 9,
+                      fontSize: 13, color: "rgba(255,255,255,0.4)",
+                      transition: "all 150ms",
+                      cursor: "pointer",
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)";
+                      (e.currentTarget as HTMLButtonElement).style.color = "#FCA5A5";
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+                      (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)";
+                    }}
+                  >
+                    <Icons.Logout />
+                    Cerrar sesión
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </header>
 
-      {/* ═══════════════════════════════════════
-          MOBILE TOP BAR
-      ═══════════════════════════════════════ */}
+      {/* Helper CSS for desktop flex (Tailwind alternative) */}
+      <style>{`
+        @media (min-width: 1024px) {
+          .lg-flex { display: flex !important; }
+          .mobile-only { display: none !important; }
+        }
+        @media (max-width: 1023px) {
+          .lg-flex { display: none !important; }
+          .mobile-only { display: flex !important; }
+        }
+      `}</style>
+
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  MOBILE TOP BAR                                                      */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <header
-        className="snav-mobile"
+        className="mobile-only"
         style={{
-          position: "fixed", top: 0, left: 0, right: 0, zIndex: 50,
-          height: NAV_H, background: NAV_BG,
+          position: "fixed", top: 0, left: 0, right: 0,
+          zIndex: 100, height: 60,
+          background: "rgba(7,12,24,0.97)",
+          backdropFilter: "blur(20px)",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
-          alignItems: "center", justifyContent: "space-between",
-          padding: "0 20px",
+          alignItems: "center",
+          justifyContent: "space-between",
+          padding: "0 16px",
         }}
       >
-        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, transparent, ${ACCENT}, #818cf8, transparent)`, opacity: 0.6 }} />
+        {/* Accent line */}
+        <div style={{
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.5) 50%, transparent 100%)",
+        }} />
 
-        <button type="button" onClick={() => open ? onClose() : onOpen()} style={{
-          width: 40, height: 40,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          background: "rgba(255,255,255,0.05)",
-          border: "1px solid rgba(255,255,255,0.08)",
-          borderRadius: 10, color: "rgba(255,255,255,0.65)",
-          transition: "all 150ms",
-        }}>
-          {open ? <IconX /> : <IconMenu />}
+        {/* Hamburger */}
+        <button
+          onClick={open ? onClose : onOpen}
+          style={{
+            width: 38, height: 38, borderRadius: 9,
+            background: "rgba(255,255,255,0.05)",
+            border: "1px solid rgba(255,255,255,0.08)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            color: "rgba(255,255,255,0.6)",
+            transition: "all 150ms",
+          }}
+        >
+          {open ? <Icons.X /> : <Icons.Menu />}
         </button>
 
-        <button type="button" onClick={() => navigate("/dashboard")} style={{
-          display: "flex", alignItems: "center", gap: 10,
-          background: "none", border: "none",
-        }}>
+        {/* Logo center */}
+        <button
+          onClick={() => navigate("/dashboard")}
+          style={{ display: "flex", alignItems: "center", gap: 8 }}
+        >
           <div style={{
-            width: 34, height: 34, borderRadius: 9,
-            background: "rgba(99,102,241,0.12)",
-            border: "1px solid rgba(99,102,241,0.2)",
+            width: 30, height: 30, borderRadius: 8,
+            background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)",
+            border: "1px solid rgba(59,130,246,0.3)",
             display: "flex", alignItems: "center", justifyContent: "center",
           }}>
-            <img src={logo} alt="" style={{ height: 18, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
+            <img src={logo} alt="" style={{ height: 15, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
           </div>
-          <span style={{ fontSize: 16, fontWeight: 700, color: "#fff", fontFamily: FONT, letterSpacing: "-0.02em" }}>Transporte</span>
+          <span style={{ fontSize: 15, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>Transporte</span>
         </button>
 
-        <button type="button" onClick={() => open ? onClose() : onOpen()} style={{ background: "none", border: "none", padding: 2 }}>
+        {/* Avatar */}
+        <button onClick={open ? onClose : onOpen}>
           <Avatar initial={initial} size="sm" />
         </button>
       </header>
 
-      {/* ── Backdrop ── */}
-      <div
-        className="snav-mobile"
-        onClick={onClose}
-        aria-hidden="true"
-        style={{
-          position: "fixed", inset: 0, zIndex: 40,
-          background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)",
-          transition: "opacity 220ms",
-          opacity: open ? 1 : 0, pointerEvents: open ? "auto" : "none",
-        }}
-      />
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  MOBILE DRAWER                                                       */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
 
-      {/* ── Drawer ── */}
-      <aside
-        className="snav-mobile"
-        role="dialog" aria-modal="true" aria-label="Menú de navegación"
-        style={{
-          position: "fixed", top: 0, left: 0, zIndex: 50,
-          width: 280, height: "100%", flexDirection: "column",
-          background: NAV_BG,
-          borderRight: "1px solid rgba(99,102,241,0.1)",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 280ms cubic-bezier(0.32,0.72,0,1)",
-          fontFamily: FONT,
-        }}
-      >
-        {/* Top */}
+      {/* Backdrop */}
+      {open && (
+        <div
+          onClick={onClose}
+          style={{
+            position: "fixed", inset: 0, zIndex: 110,
+            background: "rgba(0,0,0,0.65)",
+            backdropFilter: "blur(4px)",
+            animation: "fadeIn 200ms ease",
+          }}
+        />
+      )}
+
+      {/* Drawer panel */}
+      <aside style={{
+        position: "fixed", top: 0, left: 0,
+        zIndex: 120, width: 280, height: "100%",
+        background: "#080E1E",
+        borderRight: "1px solid rgba(255,255,255,0.07)",
+        transform: open ? "translateX(0)" : "translateX(-100%)",
+        transition: "transform 280ms cubic-bezier(0.4, 0, 0.2, 1)",
+        display: "flex", flexDirection: "column",
+        overflow: "hidden",
+      }}>
+        {/* Drawer top accent */}
         <div style={{
-          height: NAV_H, flexShrink: 0,
-          display: "flex", alignItems: "center", gap: 12,
-          padding: "0 20px",
+          position: "absolute", top: 0, left: 0, right: 0, height: 1,
+          background: "linear-gradient(90deg, rgba(59,130,246,0.6) 0%, rgba(99,102,241,0.3) 100%)",
+        }} />
+
+        {/* Drawer header */}
+        <div style={{
+          height: 60, display: "flex", alignItems: "center", gap: 10, padding: "0 18px",
           borderBottom: "1px solid rgba(255,255,255,0.06)",
-          position: "relative",
+          flexShrink: 0,
         }}>
-          <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 2, background: `linear-gradient(90deg, ${ACCENT}, #818cf8)`, opacity: 0.7 }} />
-          <div style={{ width: 36, height: 36, borderRadius: 10, background: "rgba(99,102,241,0.12)", border: "1px solid rgba(99,102,241,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-            <img src={logo} alt="" style={{ height: 20, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
+          <div style={{
+            width: 32, height: 32, borderRadius: 9,
+            background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)",
+            border: "1px solid rgba(59,130,246,0.3)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+          }}>
+            <img src={logo} alt="" style={{ height: 17, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
           </div>
           <div>
-            <p style={{ margin: 0, fontSize: 10.5, color: "rgba(165,180,252,0.45)", textTransform: "uppercase", letterSpacing: "0.12em", fontWeight: 600 }}>Asamblea Legislativa</p>
-            <p style={{ margin: 0, fontSize: 15, fontWeight: 700, color: "#fff", letterSpacing: "-0.02em" }}>Transporte</p>
+            <div style={{ fontSize: 9, fontWeight: 700, color: "rgba(147,197,253,0.4)", textTransform: "uppercase", letterSpacing: "0.1em" }}>Asamblea</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: "white", lineHeight: 1, letterSpacing: "-0.02em" }}>Transporte</div>
           </div>
         </div>
 
         {/* User card */}
-        <div style={{ padding: "14px 16px", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div style={{ padding: "14px 14px 10px", flexShrink: 0 }}>
           <div style={{
-            display: "flex", alignItems: "center", gap: 12,
-            padding: "12px 14px", borderRadius: 12,
-            background: "rgba(99,102,241,0.06)",
-            border: "1px solid rgba(99,102,241,0.12)",
+            background: "rgba(255,255,255,0.03)",
+            border: "1px solid rgba(255,255,255,0.07)",
+            borderRadius: 12, padding: "12px 14px",
           }}>
-            <Avatar initial={initial} size="lg" />
-            <div style={{ minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: 14, fontWeight: 700, color: "#fff", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.name || "Usuario"}</p>
-              <p style={{ margin: "2px 0 0", fontSize: 12, color: "rgba(165,180,252,0.45)", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user?.email || ""}</p>
+            <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
+              <Avatar initial={initial} size="lg" />
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user?.name || "Usuario"}
+                </div>
+                <div style={{ fontSize: 10.5, color: "rgba(147,197,253,0.45)", marginTop: 1, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {user?.email || ""}
+                </div>
+              </div>
             </div>
+            <StatusDot />
           </div>
         </div>
 
-        {/* Nav */}
-        <nav style={{ flex: 1, overflowY: "auto", padding: "16px 12px" }}>
-          <p style={{ margin: "0 0 10px 12px", fontSize: 11, fontWeight: 600, color: "rgba(255,255,255,0.16)", textTransform: "uppercase", letterSpacing: "0.12em" }}>Navegación</p>
-          <div style={{ display: "flex", flexDirection: "column", gap: 2 }}>
-            {nav.map((n) => (
-              <NavLink
-                key={n.to} to={n.to} end onClick={onClose}
-                className={({ isActive }) => `drawer-link${(n.forceActive || isActive) ? " active" : ""}`}
-              >
-                <span style={{ display: "flex", opacity: 0.75 }}>{n.icon}</span>
-                <span style={{ flex: 1 }}>{n.label}</span>
-                {n.badge ? <span className="badge-pill">{n.badge}</span> : null}
-              </NavLink>
-            ))}
+        {/* Nav section */}
+        <nav style={{ padding: "6px 14px", flex: 1, overflowY: "auto" }}>
+          <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.18)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "6px 4px 8px" }}>
+            Menú principal
           </div>
+          {navItems.map(item => (
+            <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />
+          ))}
         </nav>
 
-        {/* Footer */}
-        <div style={{ padding: "12px", borderTop: "1px solid rgba(255,255,255,0.06)" }}>
-          <button type="button" onClick={handleLogout} className="logout-btn" style={{
-            display: "flex", alignItems: "center", gap: 10, width: "100%",
-            padding: "11px 16px", borderRadius: 12,
-            fontSize: 14, fontWeight: 500, color: "rgba(255,255,255,0.35)",
-            background: "none", border: "none", transition: "all 140ms", fontFamily: FONT,
-          }}>
-            <IconLogout /> Cerrar sesión
+        {/* Drawer footer */}
+        <div style={{
+          padding: "12px 14px",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          flexShrink: 0,
+        }}>
+          <button
+            onClick={handleLogout}
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              width: "100%", padding: "10px 14px", borderRadius: 10,
+              fontSize: 13, color: "rgba(255,255,255,0.35)",
+              transition: "all 150ms", cursor: "pointer",
+            }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#FCA5A5";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)";
+            }}
+          >
+            <Icons.Logout />
+            Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* ── Bottom bar ── */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
+      {/*  MOBILE BOTTOM NAV                                                   */}
+      {/* ═══════════════════════════════════════════════════════════════════ */}
       <nav
-        className="snav-mobile"
-        aria-label="Navegación principal"
+        className="mobile-only"
         style={{
-          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 40,
-          background: NAV_BG,
+          position: "fixed", bottom: 0, left: 0, right: 0,
+          zIndex: 90,
+          background: "rgba(7,12,24,0.97)",
+          backdropFilter: "blur(20px)",
           borderTop: "1px solid rgba(255,255,255,0.07)",
-          paddingBottom: "env(safe-area-inset-bottom)",
-          fontFamily: FONT,
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
         }}
       >
-        {nav.map((n) => (
-          <NavLink
-            key={n.to} to={n.to} end
-            className={({ isActive }) => `bottom-link${(n.forceActive || isActive) ? " active" : ""}`}
-            style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 5, minHeight: 66, textDecoration: "none", padding: "8px 4px" }}
-          >
-            {({ isActive }) => {
-              const active = (n.forceActive || isActive);
-              return (
-                <>
-                  <span className="bl-icon" style={{ display: "flex", position: "relative", color: active ? ACCENT : "rgba(255,255,255,0.25)" }}>
-                    {n.icon}
-                    {n.badge ? (
-                      <span style={{ position: "absolute", top: -3, right: -5, width: 8, height: 8, borderRadius: "50%", background: ACCENT, border: "2px solid #0b1120" }} />
-                    ) : null}
-                  </span>
-                  <span className="bl-label" style={{ fontSize: 11, fontWeight: 600, color: active ? ACCENT : "rgba(255,255,255,0.25)", letterSpacing: "-0.01em" }}>
-                    {n.label}
-                  </span>
-                </>
-              );
-            }}
-          </NavLink>
-        ))}
+        <div style={{ display: "flex", alignItems: "stretch" }}>
+          {navItems.map(item => (
+            <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />
+          ))}
+        </div>
       </nav>
     </>
   );
-}//HE
+}
