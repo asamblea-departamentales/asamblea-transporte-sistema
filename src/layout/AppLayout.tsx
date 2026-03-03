@@ -6,22 +6,14 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div style={{ minHeight: "100vh", background: "#fff" }}>
+    <div className="min-h-screen bg-slate-50">
       <Sidebar
         open={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         onOpen={() => setSidebarOpen(true)}
       />
-      <main style={{
-        paddingTop: 60,
-        paddingBottom: "calc(62px + env(safe-area-inset-bottom))",
-      }}>
-        <div style={{
-          margin: "0 auto",
-          width: "100%",
-          maxWidth: 1440,
-          padding: "24px 28px",
-        }}>
+      <main className="pt-[60px] pb-[calc(68px+env(safe-area-inset-bottom,0px))] lg:pt-[64px] lg:pb-6">
+        <div className="mx-auto w-full max-w-[1440px] px-4 py-4 sm:px-6 sm:py-5 lg:px-8 lg:py-7">
           <Outlet />
         </div>
       </main>
