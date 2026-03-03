@@ -11,8 +11,18 @@ type Prioridad = "baja" | "media" | "alta";
 
 interface Catalogo { id: string; label: string; }
 
+interface VehiculoRaw {
+  id: number;
+  placa: string;
+  marca: string;
+  modelo: string;
+  tipo: string;
+  label: string;
+}
+
 interface CatalogosState {
   vehiculos: Catalogo[];
+  vehiculosRaw: VehiculoRaw[];
   motoristas: Catalogo[];
   loading: boolean;
   error: string | null;
@@ -110,9 +120,9 @@ function FieldLabel({ children, required }: { children: React.ReactNode; require
 function inputCls(hasError = false) {
   return [
     "w-full rounded-xl border px-4 py-3 text-sm font-semibold text-slate-800",
-    "bg-white/80 backdrop-blur placeholder-slate-400 transition-all duration-200",
+    "bg-white placeholder-slate-400 transition-all duration-200",
     "focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400",
-    hasError ? "border-red-300 ring-2 ring-red-200/50" : "border-slate-200/80 hover:border-slate-300",
+    hasError ? "border-red-300 ring-2 ring-red-200/50" : "border-slate-200 hover:border-slate-300",
   ].join(" ");
 }
 
@@ -143,7 +153,7 @@ function PrioridadButton({ value, current, onClick }: { value: Prioridad; curren
           ? value === "baja"  ? "border-emerald-500 bg-emerald-50 text-emerald-700"
           : value === "media" ? "border-amber-500 bg-amber-50 text-amber-700"
           :                     "border-red-500 bg-red-50 text-red-700"
-          : "border-slate-200/80 bg-white/70 text-slate-500 hover:border-slate-300",
+          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300",
       ].join(" ")}
     >
       <span className={["h-2.5 w-2.5 rounded-full", cfg.dot].join(" ")} />
@@ -155,7 +165,7 @@ function PrioridadButton({ value, current, onClick }: { value: Prioridad; curren
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-3 last:border-0">
-      <span className="text-xs font-black uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
       <span className="max-w-[60%] text-right text-sm font-semibold text-slate-800">{value || "—"}</span>
     </div>
   );
@@ -166,6 +176,10 @@ function Step1({ data, update, errors, catalogos }: {
   data: FormData; update: (k: keyof FormData, v: string) => void;
   errors: Partial<Record<keyof FormData, string>>; catalogos: CatalogosState;
 }) {
+  const vehiculoSeleccionado = catalogos.vehiculosRaw.find(
+    (v) => String(v.id) === data.vehiculo_id
+  );
+
   return (
     <div className="space-y-5">
       <div>
@@ -179,6 +193,37 @@ function Step1({ data, update, errors, catalogos }: {
         {errors.vehiculo_id && <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>}
       </div>
 
+      {/* Card info vehículo seleccionado */}
+      {vehiculoSeleccionado && (
+        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+          <div className="mb-3 flex items-center gap-3">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
+              <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 17H3a2 2 0 01-2-2V9a2 2 0 012-2h14l4 4v4a2 2 0 01-2 2h-2" />
+                <circle cx="7" cy="17" r="2" /><circle cx="17" cy="17" r="2" />
+              </svg>
+            </div>
+            <div>
+              <p className="text-sm font-black text-slate-800">Vehículo seleccionado</p>
+              <p className="text-xs font-semibold text-slate-400">Información del activo</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+            {[
+              { label: "Placa",  value: vehiculoSeleccionado.placa  },
+              { label: "Marca",  value: vehiculoSeleccionado.marca  },
+              { label: "Modelo", value: vehiculoSeleccionado.modelo },
+              { label: "Tipo",   value: vehiculoSeleccionado.tipo   },
+            ].map((item) => (
+              <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+                <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
+                <p className="mt-0.5 text-sm font-bold text-slate-800 truncate">{item.value || "—"}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div>
         <FieldLabel>Motorista <span className="font-normal text-slate-400">(opcional)</span></FieldLabel>
         <SelectInput
@@ -187,15 +232,6 @@ function Step1({ data, update, errors, catalogos }: {
           placeholder={catalogos.loading ? "Cargando motoristas..." : "Sin motorista asignado"}
           disabled={catalogos.loading}
         />
-      </div>
-
-      <div className="flex items-start gap-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-4">
-        <svg className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <p className="text-xs font-semibold text-emerald-700">
-          Solo se muestran los vehículos activos. Si el vehículo no aparece, contacte a administración.
-        </p>
       </div>
     </div>
   );
@@ -240,7 +276,7 @@ function Step2({ data, update, errors }: {
         </div>
       </div>
 
-      <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50/60 p-4">
+      <div className="rounded-2xl border border-dashed border-slate-200 p-4">
         <p className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-400">
           Período de uso <span className="font-normal normal-case tracking-normal text-slate-400">(opcional)</span>
         </p>
@@ -299,16 +335,16 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/70 to-teal-50/50 p-5">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-500/10">
-            <svg className="h-5 w-5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
+            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
           <div>
             <p className="text-sm font-black text-slate-800">Resumen de solicitud</p>
-            <p className="text-xs font-semibold text-slate-500">Verifique los datos antes de enviar</p>
+            <p className="text-xs font-semibold text-slate-400">Verifique los datos antes de enviar</p>
           </div>
           {prioCfg && (
             <span className={["ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black ring-1", prioCfg.badge].join(" ")}>
@@ -329,8 +365,8 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
         </div>
       </div>
 
-      <div className="flex items-start gap-3 rounded-xl border border-amber-200/60 bg-amber-50/60 p-4">
-        <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+      <div className="flex items-start gap-3 rounded-xl border border-amber-200 bg-amber-50 p-4">
+        <svg className="mt-0.5 h-4 w-4 shrink-0 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
         </svg>
         <p className="text-xs font-semibold text-amber-700">
@@ -370,7 +406,7 @@ export default function NuevaSolicitudCombustible() {
   const [apiError, setApiError]   = useState<string | null>(null);
 
   const [catalogos, setCatalogos] = useState<CatalogosState>({
-    vehiculos: [], motoristas: [], loading: true, error: null,
+    vehiculos: [], vehiculosRaw: [], motoristas: [], loading: true, error: null,
   });
 
   const fetchCatalogos = useCallback(async () => {
@@ -383,9 +419,27 @@ export default function NuevaSolicitudCombustible() {
       ]);
       if (!resV.ok || !resM.ok) throw new Error("Error al obtener los catálogos del servidor.");
       const [jV, jM] = await Promise.all([resV.json(), resM.json()]);
-      const vehiculos:  Catalogo[] = (Array.isArray(jV) ? jV : jV.data ?? []).map((v: any) => ({ id: String(v.id), label: v.label ?? v.nombre ?? String(v.id) }));
-      const motoristas: Catalogo[] = (Array.isArray(jM) ? jM : jM.data ?? []).map((m: any) => ({ id: String(m.id), label: m.nombre ?? m.label ?? String(m.id) }));
-      setCatalogos({ vehiculos, motoristas, loading: false, error: null });
+
+      const rawVehiculos = Array.isArray(jV) ? jV : jV.data ?? [];
+
+      const vehiculos: Catalogo[] = rawVehiculos.map((v: any) => ({
+        id: String(v.id), label: v.label ?? v.nombre ?? String(v.id),
+      }));
+
+      const vehiculosRaw: VehiculoRaw[] = rawVehiculos.map((v: any) => ({
+        id:     v.id,
+        placa:  v.placa  ?? "",
+        marca:  v.marca  ?? "",
+        modelo: v.modelo ?? "",
+        tipo:   v.tipo   ?? "",
+        label:  v.label  ?? "",
+      }));
+
+      const motoristas: Catalogo[] = (Array.isArray(jM) ? jM : jM.data ?? []).map((m: any) => ({
+        id: String(m.id), label: m.nombre ?? m.label ?? String(m.id),
+      }));
+
+      setCatalogos({ vehiculos, vehiculosRaw, motoristas, loading: false, error: null });
     } catch (err: any) {
       setCatalogos((p) => ({ ...p, loading: false, error: err?.message ?? "No se pudieron cargar los catálogos." }));
     }
@@ -433,16 +487,13 @@ export default function NuevaSolicitudCombustible() {
       try { json = await res.json(); } catch { /* vacío */ }
 
       if (!res.ok) {
-  // Muestra TODO lo que devuelve el servidor
-  console.error("🔴 Error completo del servidor:", json);
-  console.error("🔴 Status:", res.status);
-  console.error("🔴 Headers:", Object.fromEntries(res.headers.entries()));
+        console.error("🔴 Error servidor:", json);
+        const detail = json?.errors
+          ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
+          : json?.message || json?.exception || `Error ${res.status}`;
+        throw new Error(detail);
+      }
 
-  const detail = json?.errors
-    ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
-    : json?.message || json?.exception || json?.trace?.[0]?.file || `Error ${res.status}`;
-  throw new Error(detail);
-}
       setSubmitted(true);
     } catch (e: any) {
       setApiError(e?.message || "No se pudo conectar con el servidor.");
@@ -456,15 +507,15 @@ export default function NuevaSolicitudCombustible() {
   if (submitted) {
     return (
       <div className="pb-10">
-        <div className="rounded-3xl border border-slate-200/60 bg-white">
+        <div className="rounded-3xl border border-slate-200 bg-white">
           <div className="mx-auto max-w-lg px-6 py-16 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.6)]">
+            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.5)]">
               <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </div>
             <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">¡Solicitud enviada!</h2>
-            <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-600">
+            <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-500">
               Tu solicitud de combustible fue enviada correctamente y está pendiente de aprobación.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
@@ -476,7 +527,7 @@ export default function NuevaSolicitudCombustible() {
               </button>
               <button
                 onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200/80 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
               >
                 Nueva solicitud
               </button>
@@ -491,18 +542,18 @@ export default function NuevaSolicitudCombustible() {
   if (!catalogos.loading && catalogos.error) {
     return (
       <div className="pb-10">
-        <div className="rounded-3xl border border-slate-200/60 bg-white">
+        <div className="rounded-3xl border border-slate-200 bg-white">
           <div className="mx-auto max-w-lg px-6 py-16 text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-red-50 ring-1 ring-red-200">
-              <svg className="h-8 w-8 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-100 bg-red-50">
+              <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               </svg>
             </div>
             <h2 className="text-lg font-black text-slate-900">Error al cargar datos</h2>
-            <p className="mt-2 text-sm font-semibold text-slate-500">{catalogos.error}</p>
+            <p className="mt-2 text-sm font-semibold text-slate-400">{catalogos.error}</p>
             <button
               onClick={fetchCatalogos}
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
             >
               <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -518,22 +569,22 @@ export default function NuevaSolicitudCombustible() {
   // ── Form ──────────────────────────────────────────────────────────────────
   return (
     <div className="pb-10">
-      <div className="rounded-3xl border border-slate-200/60 bg-white">
+      <div className="rounded-3xl border border-slate-200 bg-white">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
 
           {/* Header */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-black text-emerald-700 ring-1 ring-emerald-200/60">
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-600">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 Combustible Vehicular
               </div>
               <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Nueva Solicitud</h1>
-              <p className="mt-1 text-sm font-semibold text-slate-500">Complete los datos para registrar la carga de combustible.</p>
+              <p className="mt-1 text-sm font-semibold text-slate-400">Complete los datos para registrar la carga de combustible.</p>
             </div>
             <button
               onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 ring-1 ring-slate-200/70 shadow-sm transition-all hover:bg-slate-50 hover:shadow-md active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
             >
               <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
@@ -544,15 +595,15 @@ export default function NuevaSolicitudCombustible() {
 
           {/* API error */}
           {apiError && (
-            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200/80 bg-red-50 px-5 py-4">
-              <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
+              <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
               </svg>
               <div className="flex-1">
                 <p className="text-sm font-black text-red-800">No se pudo enviar la solicitud</p>
-                <p className="mt-1 whitespace-pre-line text-xs font-semibold text-red-700">{apiError}</p>
+                <p className="mt-1 whitespace-pre-line text-xs font-semibold text-red-600">{apiError}</p>
               </div>
-              <button onClick={() => setApiError(null)} className="text-red-400 hover:text-red-600">
+              <button onClick={() => setApiError(null)} className="text-red-300 hover:text-red-500">
                 <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
                 </svg>
@@ -563,14 +614,14 @@ export default function NuevaSolicitudCombustible() {
           <StepperHeader current={step} />
 
           {/* Card */}
-          <div className="overflow-hidden rounded-3xl border border-slate-200/60 bg-white p-6 shadow-[0_18px_40px_-28px_rgba(15,23,42,.12)] sm:p-8">
+          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-black text-white shadow-[0_6px_16px_-6px_rgba(16,185,129,.6)]">
+              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-black text-white">
                 {step}
               </div>
               <div>
                 <p className="text-base font-black text-slate-900">{STEPS[step - 1].title}</p>
-                <p className="text-xs font-semibold text-slate-500">{STEPS[step - 1].subtitle}</p>
+                <p className="text-xs font-semibold text-slate-400">{STEPS[step - 1].subtitle}</p>
               </div>
             </div>
 
@@ -582,7 +633,7 @@ export default function NuevaSolicitudCombustible() {
             <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
               {step > 1 ? (
                 <button onClick={handleBack} disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200/80 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50">
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50">
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
@@ -592,7 +643,7 @@ export default function NuevaSolicitudCombustible() {
 
               {step < 3 ? (
                 <button onClick={handleNext} disabled={catalogos.loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-[0_6px_18px_-8px_rgba(16,185,129,.7)] transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                   {catalogos.loading && step === 1 ? (
                     <>
                       <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -612,7 +663,7 @@ export default function NuevaSolicitudCombustible() {
                 </button>
               ) : (
                 <button onClick={handleSubmit} disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 py-2.5 text-sm font-extrabold text-white shadow-[0_6px_18px_-8px_rgba(16,185,129,.7)] transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
                   {loading ? (
                     <>
                       <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
