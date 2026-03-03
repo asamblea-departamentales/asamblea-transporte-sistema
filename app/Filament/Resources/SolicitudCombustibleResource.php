@@ -67,12 +67,29 @@ class SolicitudCombustibleResource extends Resource
                         ),
 
                     Forms\Components\Placeholder::make('transporte_ui')
-                        ->label('Asociado a solicitud de transporte')
-                        ->content(fn (SolicitudCombustible $record) =>
-                            $record->solicitudTransporte?->codigo
-                                ? "Sí: {$record->solicitudTransporte->codigo}"
-                                : 'No'
-                        ),
+    ->label('Asociado a solicitud de transporte')
+    ->content(function (SolicitudCombustible $record) {
+        $transporte = $record->solicitudTransporte;
+
+        if (!$transporte) {
+            return 'No';
+        }
+
+        // Preparamos la información del "globo"
+        $info = "📍 Origen: {$transporte->origen}\n" .
+                "🏁 Destino: {$transporte->destino}\n" .
+                "📝 Motivo: {$transporte->motivo_actividad}";
+
+        // Retornamos un HTML con el atributo tooltip
+        return new \Illuminate\Support\HtmlString("
+            <span 
+                class='cursor-help border-b border-dotted border-primary-500 text-primary-600 font-bold'
+                x-tooltip.raw=\"{$info}\"
+            >
+                Sí: {$transporte->codigo}
+            </span>
+        ");
+    }),
 
                     Forms\Components\Placeholder::make('estado_ui')
                         ->label('Estado')

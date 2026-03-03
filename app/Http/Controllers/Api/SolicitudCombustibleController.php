@@ -58,7 +58,7 @@ class SolicitudCombustibleController extends Controller
     ]);
 
     try {
-        // 3. Delegar la creación al Service (Usa el método 'crear' que definimos antes)
+        // 3. Delegar la creación al Service
         // Esto generará el código correlativo y asignará el motorista automáticamente si falta
         $solicitud = $this->service->crear($data, Auth::id());
 
