@@ -47,7 +47,7 @@ class SolicitudCombustibleController extends Controller
     $data = $request->validate([
         'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
         'motorista_id'            => ['nullable', 'exists:motoristas,id'],
-        'solicitud_transporte_id' => ['nullable', 'exists:solicitudes_transporte,id'],
+        'solicitud_transporte_id' => ['nullable', 'exists:solicitud_transportes,id'],
         'destino_actividad'       => ['required', 'string'],
         'fecha_solicitud'         => ['required', 'date'],
         'fecha_inicio_periodo'    => ['nullable', 'date'],
