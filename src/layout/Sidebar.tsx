@@ -4,23 +4,18 @@ import { useAuth } from "../auth/AuthContext";
 import React, { useState, useRef, useEffect } from "react";
 
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
-type NavItem = { to: string; label: string; icon: () => React.ReactElement; badge?: number; };
+type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number; };
 
-// ─── Notificaciones mock (reemplaza con tu API) ───────────────────────────────
 interface Notificacion {
-  id: number;
-  titulo: string;
-  mensaje: string;
-  tiempo: string;
-  leida: boolean;
-  tipo: "aprobada" | "rechazada" | "pendiente" | "info";
+  id: number; titulo: string; mensaje: string; tiempo: string;
+  leida: boolean; tipo: "aprobada" | "rechazada" | "pendiente" | "info";
 }
 
 const MOCK_NOTIFICACIONES: Notificacion[] = [
-  { id: 1, titulo: "Solicitud aprobada", mensaje: "Tu solicitud de combustible #SOL-0042 fue aprobada.", tiempo: "Hace 5 min", leida: false, tipo: "aprobada" },
-  { id: 2, titulo: "Solicitud rechazada", mensaje: "Tu solicitud de transporte #TRP-0018 fue rechazada.", tiempo: "Hace 1 hora", leida: false, tipo: "rechazada" },
-  { id: 3, titulo: "Nuevo comentario", mensaje: "El administrador comentó en tu solicitud #SOL-0039.", tiempo: "Hace 3 horas", leida: true, tipo: "info" },
-  { id: 4, titulo: "Pendiente de aprobación", mensaje: "Tu solicitud #SOL-0041 está en revisión.", tiempo: "Ayer", leida: true, tipo: "pendiente" },
+  { id: 1, titulo: "Solicitud aprobada",       mensaje: "Tu solicitud de combustible #SOL-0042 fue aprobada.",    tiempo: "Hace 5 min",   leida: false, tipo: "aprobada"  },
+  { id: 2, titulo: "Solicitud rechazada",       mensaje: "Tu solicitud de transporte #TRP-0018 fue rechazada.",   tiempo: "Hace 1 hora",  leida: false, tipo: "rechazada" },
+  { id: 3, titulo: "Nuevo comentario",          mensaje: "El administrador comentó en tu solicitud #SOL-0039.",   tiempo: "Hace 3 horas", leida: true,  tipo: "info"      },
+  { id: 4, titulo: "Pendiente de aprobación",   mensaje: "Tu solicitud #SOL-0041 está en revisión.",              tiempo: "Ayer",         leida: true,  tipo: "pendiente" },
 ];
 
 const notiColor = {
@@ -33,18 +28,18 @@ const notiColor = {
 // ─── Icons ────────────────────────────────────────────────────────────────────
 const Icons = {
   Dashboard: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" />
       <rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" />
     </svg>
   ),
   Plus: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
       <circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" />
     </svg>
   ),
   List: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
       <path d="M9 6h11M9 12h11M9 18h6" />
       <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
       <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
@@ -122,23 +117,64 @@ function NavLinkItem({ item, onClick, variant, pathname }: {
   item: NavItem; onClick?: () => void;
   variant: "desktop" | "drawer" | "bottom"; pathname: string;
 }) {
-  const { to, label, icon: Icon, badge } = item;
+  const { to, label, mobileLabel, icon: Icon, badge } = item;
   const isSpecialActive = to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/");
 
   if (variant === "bottom") {
     return (
       <NavLink to={to} end onClick={onClick}
-        style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", padding: "10px 4px 8px", gap: 4, textDecoration: "none", position: "relative", transition: "all 150ms" }}
+        style={{
+          flex: 1, display: "flex", flexDirection: "column",
+          alignItems: "center", justifyContent: "center",
+          padding: "10px 4px 8px", gap: 4,
+          textDecoration: "none", position: "relative",
+          transition: "all 150ms", minWidth: 0,
+        }}
         className={({ isActive }) => (isActive || isSpecialActive) ? "nav-bottom-active" : "nav-bottom"}
       >
         {({ isActive }) => {
           const active = isActive || isSpecialActive;
           return (
             <>
-              <span style={{ color: active ? "#60A5FA" : "rgba(255,255,255,0.3)", transition: "color 150ms" }}><Icon /></span>
-              <span style={{ fontSize: 10, fontWeight: 600, color: active ? "#60A5FA" : "rgba(255,255,255,0.3)", transition: "color 150ms" }}>{label}</span>
-              {badge && <span style={{ position: "absolute", top: 8, right: "calc(50% - 14px)", width: 7, height: 7, borderRadius: "50%", background: "#3B82F6", border: "1.5px solid #0A0F1E" }} />}
-              {active && <span style={{ position: "absolute", bottom: 0, left: "50%", transform: "translateX(-50%)", width: 24, height: 2, background: "#3B82F6", borderRadius: "2px 2px 0 0" }} />}
+              {/* Icono con fondo activo */}
+              <span style={{
+                display: "flex", alignItems: "center", justifyContent: "center",
+                width: 36, height: 28, borderRadius: 8,
+                background: active ? "rgba(59,130,246,0.15)" : "transparent",
+                color: active ? "#60A5FA" : "rgba(255,255,255,0.4)",
+                transition: "all 150ms",
+                position: "relative",
+              }}>
+                <Icon />
+                {badge && !active && (
+                  <span style={{
+                    position: "absolute", top: 2, right: 2,
+                    width: 7, height: 7, borderRadius: "50%",
+                    background: "#3B82F6", border: "1.5px solid #0A0F1E",
+                  }} />
+                )}
+              </span>
+              {/* Label */}
+              <span style={{
+                fontSize: 10, fontWeight: active ? 700 : 500,
+                color: active ? "#60A5FA" : "rgba(255,255,255,0.35)",
+                transition: "all 150ms",
+                whiteSpace: "nowrap",
+                letterSpacing: "0.01em",
+                lineHeight: 1,
+              }}>
+                {mobileLabel}
+              </span>
+              {/* Indicador activo */}
+              {active && (
+                <span style={{
+                  position: "absolute", bottom: 0, left: "50%",
+                  transform: "translateX(-50%)",
+                  width: 20, height: 2,
+                  background: "linear-gradient(90deg, #3B82F6, #60A5FA)",
+                  borderRadius: "2px 2px 0 0",
+                }} />
+              )}
             </>
           );
         }}
@@ -166,6 +202,7 @@ function NavLinkItem({ item, onClick, variant, pathname }: {
     );
   }
 
+  // Desktop
   return (
     <NavLink to={to} end onClick={onClick}
       style={{ display: "flex", alignItems: "center", gap: 7, padding: "7px 12px", borderRadius: 8, textDecoration: "none", transition: "all 150ms", whiteSpace: "nowrap" }}
@@ -185,23 +222,20 @@ function NavLinkItem({ item, onClick, variant, pathname }: {
   );
 }
 
-// ─── Panel de Notificaciones ──────────────────────────────────────────────────
+// ─── Panel Notificaciones ─────────────────────────────────────────────────────
 function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const [notifs, setNotifs] = useState<Notificacion[]>(MOCK_NOTIFICACIONES);
-
-  const marcarTodasLeidas = () => setNotifs(n => n.map(x => ({ ...x, leida: true })));
-  const marcarLeida = (id: number) => setNotifs(n => n.map(x => x.id === id ? { ...x, leida: true } : x));
-  const noLeidas = notifs.filter(n => !n.leida).length;
+  const marcarTodasLeidas   = () => setNotifs(n => n.map(x => ({ ...x, leida: true })));
+  const marcarLeida         = (id: number) => setNotifs(n => n.map(x => x.id === id ? { ...x, leida: true } : x));
+  const noLeidas            = notifs.filter(n => !n.leida).length;
 
   return (
     <div style={{
-      position: "absolute", right: 0, top: "calc(100% + 8px)",
-      width: 340, maxHeight: 480,
+      width: "100%", maxHeight: "70vh",
       background: "#0D1425",
       border: "1px solid rgba(255,255,255,0.08)",
       borderRadius: 16,
       boxShadow: "0 20px 60px rgba(0,0,0,0.7), 0 0 0 1px rgba(59,130,246,0.08)",
-      zIndex: 200,
       display: "flex", flexDirection: "column",
       animation: "slideDown 150ms ease",
       overflow: "hidden",
@@ -211,9 +245,7 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <span style={{ fontSize: 14, fontWeight: 700, color: "white" }}>Notificaciones</span>
           {noLeidas > 0 && (
-            <span style={{ background: "#3B82F6", color: "white", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 20 }}>
-              {noLeidas}
-            </span>
+            <span style={{ background: "#3B82F6", color: "white", fontSize: 10, fontWeight: 700, padding: "1px 7px", borderRadius: 20 }}>{noLeidas}</span>
           )}
         </div>
         {noLeidas > 0 && (
@@ -225,59 +257,33 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
 
       {/* Lista */}
       <div style={{ overflowY: "auto", flex: 1 }}>
-        {notifs.length === 0 ? (
-          <div style={{ padding: "32px 16px", textAlign: "center", color: "rgba(255,255,255,0.25)", fontSize: 13 }}>
-            Sin notificaciones
-          </div>
-        ) : (
-          notifs.map(n => {
-            const cfg = notiColor[n.tipo];
-            return (
-              <div
-                key={n.id}
-                onClick={() => marcarLeida(n.id)}
-                style={{
-                  padding: "12px 16px",
-                  borderBottom: "1px solid rgba(255,255,255,0.04)",
-                  display: "flex", gap: 12, alignItems: "flex-start",
-                  cursor: "pointer",
-                  background: n.leida ? "transparent" : "rgba(59,130,246,0.04)",
-                  transition: "background 150ms",
-                }}
-                onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
-                onMouseLeave={e => (e.currentTarget.style.background = n.leida ? "transparent" : "rgba(59,130,246,0.04)")}
-              >
-                {/* Tipo dot */}
-                <div style={{
-                  width: 34, height: 34, borderRadius: 9, flexShrink: 0,
-                  background: cfg.bg, border: `1px solid ${cfg.border}`,
-                  display: "flex", alignItems: "center", justifyContent: "center",
-                }}>
-                  <span style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot, display: "block" }} />
-                </div>
-
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
-                    <span style={{ fontSize: 12.5, fontWeight: n.leida ? 500 : 700, color: n.leida ? "rgba(255,255,255,0.6)" : "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                      {n.titulo}
-                    </span>
-                    {!n.leida && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />}
-                  </div>
-                  <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any }}>
-                    {n.mensaje}
-                  </p>
-                  <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 4, display: "block" }}>{n.tiempo}</span>
-                </div>
+        {notifs.map(n => {
+          const cfg = notiColor[n.tipo];
+          return (
+            <div key={n.id} onClick={() => marcarLeida(n.id)}
+              style={{ padding: "12px 16px", borderBottom: "1px solid rgba(255,255,255,0.04)", display: "flex", gap: 12, alignItems: "flex-start", cursor: "pointer", background: n.leida ? "transparent" : "rgba(59,130,246,0.04)", transition: "background 150ms" }}
+              onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.03)")}
+              onMouseLeave={e => (e.currentTarget.style.background = n.leida ? "transparent" : "rgba(59,130,246,0.04)")}
+            >
+              <div style={{ width: 34, height: 34, borderRadius: 9, flexShrink: 0, background: cfg.bg, border: `1px solid ${cfg.border}`, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <span style={{ width: 8, height: 8, borderRadius: "50%", background: cfg.dot, display: "block" }} />
               </div>
-            );
-          })
-        )}
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 8, marginBottom: 2 }}>
+                  <span style={{ fontSize: 12.5, fontWeight: n.leida ? 500 : 700, color: n.leida ? "rgba(255,255,255,0.6)" : "white", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{n.titulo}</span>
+                  {!n.leida && <span style={{ width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", flexShrink: 0 }} />}
+                </div>
+                <p style={{ fontSize: 11.5, color: "rgba(255,255,255,0.35)", margin: 0, lineHeight: 1.4, overflow: "hidden", display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical" as any }}>{n.mensaje}</p>
+                <span style={{ fontSize: 10, color: "rgba(255,255,255,0.2)", marginTop: 4, display: "block" }}>{n.tiempo}</span>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       {/* Footer */}
       <div style={{ padding: "10px 16px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
-        <button
-          onClick={onClose}
+        <button onClick={onClose}
           style={{ width: "100%", padding: "8px", borderRadius: 8, fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)", cursor: "pointer", transition: "all 150ms", textAlign: "center" }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.6)"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.35)"; }}
@@ -294,9 +300,9 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const [userMenuOpen, setUserMenuOpen]   = useState(false);
-  const [notiOpen,     setNotiOpen]       = useState(false);
-  const [notifs]               = useState<Notificacion[]>(MOCK_NOTIFICACIONES);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [notiOpen,     setNotiOpen]     = useState(false);
+  const [notifs]                        = useState<Notificacion[]>(MOCK_NOTIFICACIONES);
   const menuRef = useRef<HTMLDivElement>(null);
   const notiRef = useRef<HTMLDivElement>(null);
 
@@ -304,17 +310,23 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   const navItems: NavItem[] = [
-    { to: "/dashboard",       label: "Dashboard",       icon: Icons.Dashboard },
-    { to: "/nueva-solicitud", label: "Nueva solicitud", icon: Icons.Plus },
-    { to: "/mis-solicitudes", label: "Mis solicitudes", icon: Icons.List, badge: 3 },
+    { to: "/dashboard",       label: "Dashboard",       mobileLabel: "Inicio",        icon: Icons.Dashboard },
+    { to: "/nueva-solicitud", label: "Nueva solicitud", mobileLabel: "Nueva",         icon: Icons.Plus      },
+    { to: "/mis-solicitudes", label: "Mis solicitudes", mobileLabel: "Solicitudes",   icon: Icons.List, badge: 3 },
   ];
 
-  const handleLogout = async () => { onClose(); setUserMenuOpen(false); await logout(); navigate("/login", { replace: true }); };
+  const handleLogout = async () => {
+    onClose(); setUserMenuOpen(false);
+    await logout();
+    navigate("/login", { replace: true });
+  };
 
   useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname]);
 
   useEffect(() => {
-    const fn = (e: KeyboardEvent) => { if (e.key === "Escape") { onClose(); setUserMenuOpen(false); setNotiOpen(false); } };
+    const fn = (e: KeyboardEvent) => {
+      if (e.key === "Escape") { onClose(); setUserMenuOpen(false); setNotiOpen(false); }
+    };
     window.addEventListener("keydown", fn);
     return () => window.removeEventListener("keydown", fn);
   }, [onClose]);
@@ -330,15 +342,22 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   return (
     <>
-      {/* ── Desktop Header ──────────────────────────────────────────────── */}
-      <header style={{ display: "none", position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 64, background: "rgba(7,12,24,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }} className="lg-flex">
+      {/* ══════════════════════════════════════════════════════════════════
+          DESKTOP HEADER
+      ══════════════════════════════════════════════════════════════════ */}
+      <header
+        className="lg-flex"
+        style={{ display: "none", position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 64, background: "rgba(7,12,24,0.95)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
+      >
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 40%, rgba(99,102,241,0.4) 70%, transparent 100%)" }} />
         <div style={{ maxWidth: 1280, margin: "0 auto", width: "100%", height: "100%", display: "flex", alignItems: "center", padding: "0 28px", gap: 20 }}>
 
           {/* Logo */}
-          <button onClick={() => navigate("/dashboard")} style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 10, transition: "background 150ms", flexShrink: 0 }}
+          <button onClick={() => navigate("/dashboard")}
+            style={{ display: "flex", alignItems: "center", gap: 10, padding: "6px 10px", borderRadius: 10, transition: "background 150ms", flexShrink: 0 }}
             onMouseEnter={e => (e.currentTarget.style.background = "rgba(255,255,255,0.04)")}
-            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}>
+            onMouseLeave={e => (e.currentTarget.style.background = "transparent")}
+          >
             <div style={{ width: 34, height: 34, borderRadius: 9, background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 2px 10px rgba(29,78,216,0.25)" }}>
               <img src={logo} alt="Logo" style={{ height: 18, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
             </div>
@@ -358,7 +377,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           {/* Right */}
           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
 
-            {/* ── Bell con panel ── */}
+            {/* Bell */}
             <div ref={notiRef} style={{ position: "relative" }}>
               <button
                 onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
@@ -367,18 +386,16 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 onMouseLeave={e => { if (!notiOpen) { (e.currentTarget as HTMLButtonElement).style.background = "rgba(255,255,255,0.04)"; (e.currentTarget as HTMLButtonElement).style.color = "rgba(255,255,255,0.4)"; } }}
               >
                 <Icons.Bell />
-                {noLeidas > 0 && (
-                  <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", border: "1.5px solid #070C18" }} />
-                )}
+                {noLeidas > 0 && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", border: "1.5px solid #070C18" }} />}
               </button>
               {notiOpen && (
-                <NotificacionesPanel
-                  onClose={() => setNotiOpen(false)}
-                />
+                <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 340, zIndex: 200 }}>
+                  <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+                </div>
               )}
             </div>
 
-            {/* ── User menu ── */}
+            {/* User menu */}
             <div ref={menuRef} style={{ position: "relative" }}>
               <button
                 onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
@@ -393,7 +410,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 </div>
                 <span style={{ color: "rgba(255,255,255,0.25)", display: "flex" }}><Icons.ChevronDown open={userMenuOpen} /></span>
               </button>
-
               {userMenuOpen && (
                 <div style={{ position: "absolute", right: 0, top: "calc(100% + 8px)", width: 260, background: "#0D1425", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, boxShadow: "0 20px 60px rgba(0,0,0,0.6)", padding: 6, zIndex: 200, animation: "slideDown 150ms ease" }}>
                   <div style={{ padding: "12px 14px 14px", borderBottom: "1px solid rgba(255,255,255,0.06)", marginBottom: 4 }}>
@@ -420,14 +436,24 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </header>
 
-      {/* ── Mobile Top Bar ──────────────────────────────────────────────── */}
-      <header className="mobile-only" style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 60, background: "rgba(7,12,24,0.97)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}>
+      {/* ══════════════════════════════════════════════════════════════════
+          MOBILE TOP BAR
+      ══════════════════════════════════════════════════════════════════ */}
+      <header
+        className="mobile-only"
+        style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 100, height: 60, background: "rgba(7,12,24,0.97)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.07)", alignItems: "center", justifyContent: "space-between", padding: "0 16px" }}
+      >
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.5) 50%, transparent 100%)" }} />
 
-        <button onClick={open ? onClose : onOpen} style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)" }}>
+        {/* Hamburger */}
+        <button
+          onClick={open ? onClose : onOpen}
+          style={{ width: 38, height: 38, borderRadius: 9, background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "rgba(255,255,255,0.6)", flexShrink: 0 }}
+        >
           {open ? <Icons.X /> : <Icons.Menu />}
         </button>
 
+        {/* Logo */}
         <button onClick={() => navigate("/dashboard")} style={{ display: "flex", alignItems: "center", gap: 8 }}>
           <div style={{ width: 30, height: 30, borderRadius: 8, background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={logo} alt="" style={{ height: 15, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
@@ -435,8 +461,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           <span style={{ fontSize: 15, fontWeight: 700, color: "white", letterSpacing: "-0.02em" }}>Transporte</span>
         </button>
 
-        {/* Bell en mobile */}
-        <div ref={notiRef} style={{ position: "relative" }}>
+        {/* Bell mobile */}
+        <div ref={notiRef} style={{ position: "relative", flexShrink: 0 }}>
           <button
             onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
             style={{ width: 38, height: 38, borderRadius: 9, background: notiOpen ? "rgba(59,130,246,0.1)" : "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: notiOpen ? "#60A5FA" : "rgba(255,255,255,0.5)", position: "relative", cursor: "pointer" }}
@@ -444,22 +470,33 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             <Icons.Bell />
             {noLeidas > 0 && <span style={{ position: "absolute", top: 7, right: 7, width: 6, height: 6, borderRadius: "50%", background: "#3B82F6", border: "1.5px solid #0A0F1E" }} />}
           </button>
-          {notiOpen && (
-            <div style={{ position: "fixed", top: 68, right: 12, left: 12, zIndex: 200 }}>
-              <NotificacionesPanel onClose={() => setNotiOpen(false)} />
-            </div>
-          )}
         </div>
       </header>
 
-      {/* ── Backdrop ────────────────────────────────────────────────────── */}
-      {(open || notiOpen) && (
-        <div onClick={() => { onClose(); setNotiOpen(false); }} style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", animation: "fadeIn 200ms ease" }} />
+      {/* Panel notificaciones mobile — fuera del header para z-index correcto */}
+      {notiOpen && (
+        <div style={{ position: "fixed", top: 68, right: 12, left: 12, zIndex: 150 }}>
+          <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+        </div>
       )}
 
-      {/* ── Drawer ──────────────────────────────────────────────────────── */}
+      {/* ══════════════════════════════════════════════════════════════════
+          BACKDROP
+      ══════════════════════════════════════════════════════════════════ */}
+      {(open || notiOpen) && (
+        <div
+          onClick={() => { onClose(); setNotiOpen(false); }}
+          style={{ position: "fixed", inset: 0, zIndex: 110, background: "rgba(0,0,0,0.65)", backdropFilter: "blur(4px)", animation: "fadeIn 200ms ease" }}
+        />
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════════
+          DRAWER
+      ══════════════════════════════════════════════════════════════════ */}
       <aside style={{ position: "fixed", top: 0, left: 0, zIndex: 120, width: 280, height: "100%", background: "#080E1E", borderRight: "1px solid rgba(255,255,255,0.07)", transform: open ? "translateX(0)" : "translateX(-100%)", transition: "transform 280ms cubic-bezier(0.4, 0, 0.2, 1)", display: "flex", flexDirection: "column", overflow: "hidden" }}>
         <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, rgba(59,130,246,0.6) 0%, rgba(99,102,241,0.3) 100%)" }} />
+
+        {/* Header drawer */}
         <div style={{ height: 60, display: "flex", alignItems: "center", gap: 10, padding: "0 18px", borderBottom: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
           <div style={{ width: 32, height: 32, borderRadius: 9, background: "linear-gradient(135deg, rgba(29,78,216,0.5) 0%, rgba(30,58,138,0.8) 100%)", border: "1px solid rgba(59,130,246,0.3)", display: "flex", alignItems: "center", justifyContent: "center" }}>
             <img src={logo} alt="" style={{ height: 17, filter: "brightness(0) invert(1)", opacity: 0.9 }} />
@@ -469,6 +506,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             <div style={{ fontSize: 13, fontWeight: 700, color: "white", lineHeight: 1, letterSpacing: "-0.02em" }}>Transporte</div>
           </div>
         </div>
+
+        {/* User card */}
         <div style={{ padding: "14px 14px 10px", flexShrink: 0 }}>
           <div style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.07)", borderRadius: 12, padding: "12px 14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: 11, marginBottom: 10 }}>
@@ -481,10 +520,14 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             <StatusDot />
           </div>
         </div>
+
+        {/* Nav */}
         <nav style={{ padding: "6px 14px", flex: 1, overflowY: "auto" }}>
           <div style={{ fontSize: 10, fontWeight: 700, color: "rgba(255,255,255,0.18)", textTransform: "uppercase", letterSpacing: "0.1em", padding: "6px 4px 8px" }}>Menú principal</div>
           {navItems.map(item => <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />)}
         </nav>
+
+        {/* Footer */}
         <div style={{ padding: "12px 14px", borderTop: "1px solid rgba(255,255,255,0.06)", flexShrink: 0 }}>
           <button onClick={handleLogout}
             style={{ display: "flex", alignItems: "center", gap: 10, width: "100%", padding: "10px 14px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.35)", transition: "all 150ms", cursor: "pointer" }}
@@ -496,10 +539,25 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </aside>
 
-      {/* ── Bottom Nav ──────────────────────────────────────────────────── */}
-      <nav className="mobile-only" style={{ position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90, background: "rgba(7,12,24,0.97)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.07)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
-        <div style={{ display: "flex", alignItems: "stretch" }}>
-          {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
+      {/* ══════════════════════════════════════════════════════════════════
+          BOTTOM NAV
+      ══════════════════════════════════════════════════════════════════ */}
+      <nav
+        className="mobile-only"
+        style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, zIndex: 90,
+          background: "rgba(7,12,24,0.98)",
+          backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.07)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}
+      >
+        {/* Línea top accent */}
+        <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 1, background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.4) 50%, transparent 100%)" }} />
+        <div style={{ display: "flex", alignItems: "stretch", height: 58 }}>
+          {navItems.map(item => (
+            <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />
+          ))}
         </div>
       </nav>
     </>
