@@ -75,17 +75,19 @@ class VehMarcaResource extends Resource
                     ->button()
                     ->size('sm')
                     ->before(function ($record, $action) {
-                        //Verificar si la marca tiene modelos asociados antes de permitir eliminar
-                        if ($record->modelos()->count() > 0) {
-                            $action->cancel();
+    $conteoModelos = $record->modelos()->count();
+    $conteoVehiculos = $record->vehiculos()->count();
 
-                            \Filament\Notifications\Notification::make()
-                                ->title('No se puede eliminar la marca')
-                                ->body("Esta marca tiene {$record->modelos()->count()} modelos asociados. Elimina los modelos primero.")
-                                ->danger()
-                                ->send();
-                        }
-                    }),
+    if ($conteoModelos > 0 || $conteoVehiculos > 0) {
+        $action->cancel();
+
+        \Filament\Notifications\Notification::make()
+            ->title('No se puede eliminar la marca')
+            ->body("Esta marca está en uso: tiene {$conteoModelos} modelos y {$conteoVehiculos} vehículos asociados.")
+            ->danger()
+            ->send();
+    }
+}),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
