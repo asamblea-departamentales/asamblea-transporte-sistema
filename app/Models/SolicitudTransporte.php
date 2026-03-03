@@ -11,6 +11,8 @@ class SolicitudTransporte extends Model
 {
     use SoftDeletes;
 
+    protected $table = 'solicitud_transportes';
+
     protected $fillable = [
         'codigo', // ✅ Agregado al fillable
         'unidad_solicitante_id',
