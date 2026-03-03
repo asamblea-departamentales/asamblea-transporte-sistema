@@ -143,7 +143,7 @@ export default function NewRequestPage() {
           "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
         href: "/solicitudes/combustible/nueva",
         accent: "amber",
-        allowedRoles: ["admin", "supervisor", "jefe"],
+        allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
         icon: (
           <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
             <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
