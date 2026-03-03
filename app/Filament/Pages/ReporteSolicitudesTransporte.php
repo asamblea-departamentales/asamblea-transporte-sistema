@@ -83,42 +83,11 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     return Excel::download(new SolicitudesTransporteExport($query), $filename);
                 }),
 
-            Action::make('export_pdf')
+           Action::make('export_pdf')
     ->label('Exportar PDF')
     ->icon('heroicon-o-printer')
-    ->action(function () {
-        // 1. Obtenemos los datos y limpiamos caracteres extraños de una vez
-        $rows = $this->buildQuery()
-            ->with(['unidad', 'solicitante'])
-            ->orderBy('fecha_salida')
-            ->get()
-            ->map(function ($row) {
-                // Limpiamos campos propensos a errores de encoding (tildes de Word, etc)
-                $row->origen = mb_convert_encoding($row->origen, 'UTF-8', 'UTF-8');
-                $row->destino = mb_convert_encoding($row->destino, 'UTF-8', 'UTF-8');
-                if($row->motivo_actividad) {
-                    $row->motivo_actividad = mb_convert_encoding($row->motivo_actividad, 'UTF-8', 'UTF-8');
-                }
-                return $row;
-            });
-
-        // 2. Generamos el PDF con configuración segura
-        $pdf = Pdf::loadView('reports.solicitudes_transporte_pdf', [
-            'rows' => $rows,
-            'rangeLabel' => $this->rangeLabel(),
-        ])
-        ->setPaper('a4', 'landscape')
-        ->setWarnings(false); // Evita que warnings de fuentes rompan el stream
-
-        $filename = 'reporte_solicitudes_' . now()->format('Ymd_His') . '.pdf';
-
-        // 3. Retornamos como Stream para que Filament lo maneje correctamente
-        return response()->streamDownload(function () use ($pdf) {
-            echo $pdf->output();
-        }, $filename, [
-            'Content-Type' => 'application/pdf',
-        ]);
-    }),
+    ->url(fn () => route('reportes.solicitudes-transporte.pdf', $this->getFilterState()))
+    ->openUrlInNewTab(),
         ];
     }
     public function form(Form $form): Form
