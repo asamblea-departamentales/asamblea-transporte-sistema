@@ -692,4 +692,4 @@ export default function NuevaSolicitudCombustible() {
       </div>
     </div>
   );
-}
+}//Solicitud de combsutible
