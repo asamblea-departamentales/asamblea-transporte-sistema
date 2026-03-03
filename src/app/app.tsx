@@ -10,6 +10,7 @@ import Paso3 from "../pages/transport/paso-3";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import "leaflet/dist/leaflet.css";
 import NuevaSolicitudMantenimiento from "../pages/solicitudes/mantenimiento/NuevaSolicitudMantenimiento";
+import NuevaSolicitudCombustible from "../pages/solicitudes/Combustible/Nuevasolicitudcombustible";
 
 export default function App() {
   return (
@@ -34,6 +35,7 @@ export default function App() {
 
 
             <Route path="/solicitudes/mantenimiento/nueva" element={<NuevaSolicitudMantenimiento />} />
+            <Route path="/solicitudes/combustible/nueva" element={<NuevaSolicitudCombustible />} />
 
 
 
