@@ -260,9 +260,15 @@
 <body>
 <div class="email-container">
     <div class="email-header">
-        <div class="email-logo">
-            <img src="{{ asset('images/logo-blanco-fondo-transparente.png') }}" alt="Logo">
-        </div>
+        <div class="email-logo" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+    <img
+        src="{{ asset('images/logo-blanco-fondo-transparente.png') }}"
+        alt="Logo"
+        width="56"
+        height="56"
+        style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
+    >
+</div>
         <div class="email-header-text">
             <h1>{{ $subject }}</h1>
             <p>Sistema de Gestión de Solicitudes - Asamblea Legislativa de El Salvador</p>
