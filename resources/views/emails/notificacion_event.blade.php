@@ -412,7 +412,7 @@
                 $destinoAd = $payload['solicitud']['destino_adicional'] ?? null;
 
                 // Imagen estática del mapa en public/images
-                $mapUrl = asset('images/mapa-correo.png');
+                $mapUrl = asset('images/mapa_correo.png');
             @endphp
 
             @if($mapUrl)
