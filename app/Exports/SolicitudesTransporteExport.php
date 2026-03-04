@@ -12,9 +12,9 @@ use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
 use Maatwebsite\Excel\Concerns\WithEvents;
-use Maatwebsite\Excel\Concerns\WithAutoFilter;
 use Maatwebsite\Excel\Events\AfterSheet;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
 
 class SolicitudesTransporteExport implements
     FromCollection,
@@ -22,8 +22,7 @@ class SolicitudesTransporteExport implements
     WithMapping,
     ShouldAutoSize,
     WithStyles,
-    WithEvents,
-    WithAutoFilter
+    WithEvents
 {
     public function __construct(private Builder $query) {}
 
@@ -60,11 +59,9 @@ class SolicitudesTransporteExport implements
     {
         /** @var SolicitudTransporte $row */
 
-        // Enums seguros (por si viene string / null)
         $prioridad = $row->prioridad?->value ?? (string) $row->prioridad;
         $estado    = $row->estado?->value ?? (string) $row->estado;
 
-        // Limpieza ligera de texto
         $clean = fn ($v) => is_string($v) ? iconv('UTF-8', 'UTF-8//IGNORE', $v) : $v;
 
         return [
@@ -86,7 +83,7 @@ class SolicitudesTransporteExport implements
         ];
     }
 
-    //Header estilo “tabla”
+    // Header “bonito”
     public function styles(Worksheet $sheet)
     {
         return [
@@ -96,7 +93,7 @@ class SolicitudesTransporteExport implements
                     'color' => ['rgb' => 'FFFFFF'],
                 ],
                 'fill' => [
-                    'fillType' => 'solid',
+                    'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '1E3A8A'],
                 ],
                 'alignment' => [
@@ -106,27 +103,25 @@ class SolicitudesTransporteExport implements
         ];
     }
 
-    //  Autofiltro
-    public function autoFilter(): string
-    {
-        return 'A1:O1';
-    }
-
-    //Bordes + freeze header + alineaciones y formato fecha
     public function registerEvents(): array
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-
                 $sheet = $event->sheet->getDelegate();
 
                 $lastRow = $sheet->getHighestRow();
                 $lastColumn = $sheet->getHighestColumn();
 
-                $range = "A1:{$lastColumn}{$lastRow}";
+                $rangeAll = "A1:{$lastColumn}{$lastRow}";
 
-                // Bordes
-                $sheet->getStyle($range)->applyFromArray([
+                //  AutoFilter en encabezado (sin WithAutoFilter)
+                $sheet->setAutoFilter("A1:{$lastColumn}1");
+
+                //  Congelar encabezado
+                $sheet->freezePane('A2');
+
+                //  Bordes tipo tabla
+                $sheet->getStyle($rangeAll)->applyFromArray([
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => 'thin',
@@ -135,17 +130,39 @@ class SolicitudesTransporteExport implements
                     ],
                 ]);
 
-                // Congelar encabezado
-                $sheet->freezePane('A2');
+                //  Zebra rows (filas alternadas) desde la fila 2
+                if ($lastRow >= 2) {
+                    $sheet->getStyle("A2:{$lastColumn}{$lastRow}")->applyFromArray([
+                        'fill' => [
+                            'fillType' => Fill::FILL_SOLID,
+                            'startColor' => ['rgb' => 'FFFFFF'], // base
+                        ],
+                    ]);
 
-                // Altura del header
+                    for ($r = 2; $r <= $lastRow; $r++) {
+                        if ($r % 2 === 0) {
+                            $sheet->getStyle("A{$r}:{$lastColumn}{$r}")->applyFromArray([
+                                'fill' => [
+                                    'fillType' => Fill::FILL_SOLID,
+                                    'startColor' => ['rgb' => 'F8FAFC'], // gris suave
+                                ],
+                            ]);
+                        }
+                    }
+                }
+
+                //  Ajustes de alineación por columnas (opcional)
+                $sheet->getStyle("A:A")->getAlignment()->setHorizontal('center'); // Código
+                $sheet->getStyle("G:H")->getAlignment()->setHorizontal('center'); // Fechas
+                $sheet->getStyle("I:I")->getAlignment()->setHorizontal('center'); // Personas
+                $sheet->getStyle("J:K")->getAlignment()->setHorizontal('center'); // Prioridad/Estado
+
+                //  Wrap para columnas de texto largas
+                $sheet->getStyle("D:F")->getAlignment()->setWrapText(true); // motivo/origen/destino
+                $sheet->getStyle("N:N")->getAlignment()->setWrapText(true); // comentario jefe
+
+                // Altura header
                 $sheet->getRowDimension(1)->setRowHeight(18);
-
-                // Alineación por columnas (ajusta a tu gusto)
-                $sheet->getStyle("A:A")->getAlignment()->setHorizontal('center'); // código
-                $sheet->getStyle("G:H")->getAlignment()->setHorizontal('center'); // fechas
-                $sheet->getStyle("I:I")->getAlignment()->setHorizontal('center'); // personas
-                $sheet->getStyle("J:K")->getAlignment()->setHorizontal('center'); // prioridad/estado
             },
         ];
     }
