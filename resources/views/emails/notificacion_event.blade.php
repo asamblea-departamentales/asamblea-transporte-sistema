@@ -416,33 +416,32 @@
             @endphp
 
             @if($mapUrl)
-                <div class="map-section">
-                    <div class="map-header">
-                        Mapa de El Salvador - referencia de ruta
-                    </div>
-                    <div class="map-body">
-                        <div>
-                            Trayecto solicitado:
-                            <strong>{{ $origen }}</strong>
-                            →
-                            <strong>{{ $destino }}</strong>
-                            @if($destinoAd && $destinoAd !== 'Sin destino adicional')
-                                →
-                                <strong>{{ $destinoAd }}</strong>
-                            @else
-                                →
-                                <strong>Sin destino adicional</strong>
-                            @endif
-                        </div>
+               <div class="map-section">
+                <div class="map-header">
+                    Mapa aproximado de la ruta
+                </div>
+                <div class="map-body">
+                    <p>Esta visualización muestra una aproximación del recorrido de la solicitud.</p>
 
-                        <div class="map-image-wrapper">
-                            <img src="{{ $mapUrl }}" alt="Mapa de ruta en El Salvador">
-                        </div>
-                        <div class="map-note">
-                            Mapa de referencia general con base en los destinos indicados.
-                        </div>
-                    </div>
-                </div>
+                    <p style="font-size:10px; color:#999;">
+                        DEBUG map_url: {{ $map_url ?? 'NO VIENE' }}
+                    </p>
+
+                    <div class="map-image-wrapper">
+                        @if (!empty($map_url))
+                            <img src="{{ $map_url }}" alt="Mapa aproximado de la ruta">
+                        @else
+                            <p style="color:#888;">
+                                No se pudo generar el mapa para esta solicitud.
+                            </p>
+                        @endif
+                    </div>
+
+                    <p class="map-note">
+                        El mapa es ilustrativo y podría no reflejar el recorrido exacto.
+                    </p>
+                </div>
+            </div>
             @endif
 
         @elseif($tipo === 'combustible' && isset($payload['solicitud']))
