@@ -119,6 +119,31 @@ class ViewVehiculo extends ViewRecord
                 ])
                 ->collapsible()
                 ->compact(),
+            Section::make('Equipamiento y Herramientas')
+    ->icon('heroicon-o-wrench-screwdriver')
+    ->schema([
+        TextEntry::make('accesorios')
+            ->label('Inventario actual')
+            ->badge()
+            ->color('success')
+            ->listWithLineBreaks()
+            // Quitamos ->grid(3) porque no existe en TextEntry
+            ->formatStateUsing(fn (string $state): string => match ($state) {
+                'gato' => 'Gato Hidráulico',
+                'llanta_repuesto' => 'Llanta de Repuesto',
+                'triangulos' => 'Triángulos (2)',
+                'extintor' => 'Extintor Vigente',
+                'llave_cruz' => 'Llave de Cruz',
+                'botiquin' => 'Botiquín',
+                'cables_inicio' => 'Cables de Batería',
+                'herramientas' => 'Kit de Herramientas',
+                'chaleco' => 'Chaleco Reflectante',
+                default => $state,
+            })
+            ->placeholder('No se registraron accesorios'),
+    ])
+    ->collapsible()
+    ->compact(),
 
             Section::make('Identificación')
                 ->schema([

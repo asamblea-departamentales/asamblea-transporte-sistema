@@ -324,6 +324,14 @@ class VehiculoResource extends Resource
                                 ->formatStateUsing(fn ($state) => $state ? "{$state} personas" : null)
                                 ->size(TextColumnSize::Small)
                                 ->grow(false),
+
+                            Tables\Columns\TextColumn::make('accesorios')
+                                ->label('Equipo tangible')
+                                ->formatStateUsing(fn ($state) => count($state ?? []) . ' herramientas')    
+                                ->badge()
+                                ->color('success')
+                                ->icon('heroicon-o-briefcase')
+                                ->size(TextColumnSize::Small),
                         ]),
 
                         // Motorista
