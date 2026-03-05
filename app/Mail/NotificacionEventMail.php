@@ -23,15 +23,26 @@ class NotificacionEventMail extends Mailable
     }
 
     /**
-     * Build the message.
+     * Build the message. Cambios Henry
      */
     public function build()
     {
-        return $this->subject($this->subject)
-                    ->view('emails.notificacion_event')
-                    ->with([
-                        'subject' => $this->subject,
-                        'payload' => $this->payload,
-                    ]);
-    }
+        $payload = $this->payload;
+
+        $mapUrl = null;
+
+        if (($payload['tipo'] ?? null) === 'transporte' && isset($payload['solicitud'])) {
+            $mapService = app(\App\Services\MapImageService::class);
+            $mapUrl = $mapService->generateRouteImageUrl($payload['solicitud']);
+        }
+
+        return $this->subject($this->subjectText)
+            ->view('emails.notificacion_event')
+            ->with([
+                'payload' => $payload,   // sin tocar
+                'map_url' => $mapUrl,    // URL aparte
+                'subject' => $this->subjectText,
+            ]);
+    } 
+
 }

@@ -14,26 +14,34 @@ class SolicitudTransporte extends Model
     protected $table = 'solicitud_transportes';
 
     protected $fillable = [
-        'codigo', // ✅ Agregado al fillable
-        'unidad_solicitante_id',
-        'solicitante_id',
-        'motivo_actividad',
-        'origen',
-        'destino',
-        'fecha_salida',
-        'fecha_retorno',
-        'cantidad_personas',
-        'prioridad',
-        'estado',
-        'decidido_por',
-        'decidido_en',
-        'comentario_jefe',
-        'destino_adicional',
-        'vehiculo_id',
-        'motorista_id',
-        'tipo_vehiculo_id',
-        'tipo_vehiculo_nombre',
-    ];
+    'codigo',
+    'unidad_solicitante_id',
+    'solicitante_id',
+    'motivo_actividad',
+    'origen',
+    'destino',
+    'fecha_salida',
+    'fecha_retorno',
+    'cantidad_personas',
+    'prioridad',
+    'estado',
+    'decidido_por',
+    'decidido_en',
+    'comentario_jefe',
+    'destino_adicional',
+    'vehiculo_id',
+    'motorista_id',
+    'tipo_vehiculo_id',
+    'tipo_vehiculo_nombre',
+    
+    // --- CAMPOS DE GEOLOCALIZACIÓN PARA EL MAPA ---
+    'origen_lat',
+    'origen_lng',
+    'destino_lat',
+    'destino_lng',
+    'destino_adicional_lat',
+    'destino_adicional_lng',
+];
 
     protected $casts = [
         'prioridad' => PrioridadSolicitudEnum::class,

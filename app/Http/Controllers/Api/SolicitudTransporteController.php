@@ -49,7 +49,7 @@ class SolicitudTransporteController extends Controller
         'motivo_actividad'      => ['required', 'string'],
         'origen'                => ['required', 'string'],
         'destino_principal'     => ['required', 'string'], 
-        'destino_adicional'     => ['nullable', 'string'], // 1. Agregado a la validación
+        'destino_adicional'     => ['nullable', 'string'],
         'fecha_salida'          => ['required', 'date'],
         'fecha_retorno'         => ['nullable', 'date', 'after_or_equal:fecha_salida'],
         'hora_salida'           => ['required'], 
@@ -57,29 +57,38 @@ class SolicitudTransporteController extends Controller
         'prioridad'             => ['required', 'string'],
         'tipo_vehiculo'         => ['required', 'string'],
         'encargado'             => ['required', 'string'], 
-        'subencargado'          => ['nullable', 'string'], 
+        'subencargado'          => ['nullable', 'string'],
+        
+        // --- NUEVOS CAMPOS DE COORDENADAS ---
+        'origen_lat'            => ['nullable', 'numeric'],
+        'origen_lng'            => ['nullable', 'numeric'],
+        'destino_lat'           => ['nullable', 'numeric'],
+        'destino_lng'           => ['nullable', 'numeric'],
+        'destino_adicional_lat' => ['nullable', 'numeric'],
+        'destino_adicional_lng' => ['nullable', 'numeric'],
     ]);
 
     // --- MAPEO DE DATOS ---
     $tipoVehiculoNombre = $data['tipo_vehiculo'];
     $destinoReal = $data['destino_principal'];
-    
-    // 2. Extraemos el destino adicional si existe
     $destinoAdicional = $data['destino_adicional'] ?? null;
 
-    // Limpiamos el array
+    // Extraemos las coordenadas para que no estorben en el resto de la lógica si fuera necesario
+    // aunque al usar el spread operator (...) podemos dejarlas en $data si los nombres coinciden con la BD.
+    
+    // Limpiamos los campos que no van directo a columnas con el mismo nombre
     unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
 
     $solicitud = SolicitudTransporte::create([
-        ...$data,
-        'destino'              => $destinoReal,
-        'destino_adicional'    => $destinoAdicional, // 3. Se guarda en la columna correspondiente
-        'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
-        'solicitante_id'       => Auth::id(),
-        'estado'               => EstadoSolicitudEnum::BORRADOR,
+        ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
+        'destino'               => $destinoReal,
+        'destino_adicional'     => $destinoAdicional,
+        'tipo_vehiculo_nombre'  => $tipoVehiculoNombre,
+        'solicitante_id'        => Auth::id(),
+        'estado'                => EstadoSolicitudEnum::BORRADOR,
     ]);
 
-    // El service cambia el estado de BORRADOR a PENDIENTE y notifica
+    // El service cambia el estado de BORRADOR a PENDIENTE y notifica (aquí se enviará el correo)
     $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
     return response()->json(
