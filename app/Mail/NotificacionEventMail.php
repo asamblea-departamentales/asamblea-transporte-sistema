@@ -32,16 +32,16 @@ class NotificacionEventMail extends Mailable
         $mapUrl = null;
 
         if (($payload['tipo'] ?? null) === 'transporte' && isset($payload['solicitud'])) {
-            $mapService = app(\App\Services\MapImageService::class);
+            $mapService = app(\App\Domain\Solicitudes\Services\MapImageService::class);
             $mapUrl = $mapService->generateRouteImageUrl($payload['solicitud']);
         }
 
-        return $this->subject($this->subjectText)
+        return $this->subject($this->subject)
             ->view('emails.notificacion_event')
             ->with([
                 'payload' => $payload,   // sin tocar
                 'map_url' => $mapUrl,    // URL aparte
-                'subject' => $this->subjectText,
+                'subject' => $this->subject,
             ]);
     } 
 

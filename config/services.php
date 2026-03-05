@@ -38,6 +38,12 @@ return [
     // Configuración para MapTiler (NUEVO)
     'maptil' => [
         'api_key' => env('MAPTILER_API_KEY'),
-    ]
+    ],
+
+    //Para mapa de henry
+    'geoapify' => [
+        'api_key' => env('GEOAPIFY_API_KEY'),
+    ],
+
 
 ];
