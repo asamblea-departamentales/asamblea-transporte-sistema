@@ -1,0 +1,202 @@
+// src/pages/NotificationsPage.tsx
+import { useState } from "react";
+import { useNotifications, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
+
+// ─── Config visual ─────────────────────────────────────────────────────────────
+
+const TIPO_CONFIG: Record<NotiTipo, { label: string; dot: string; bg: string; border: string }> = {
+  aprobada:     { label: "Aprobada",     dot: "#10b981", bg: "rgba(16,185,129,.12)", border: "rgba(16,185,129,.25)" },
+  rechazada:    { label: "Rechazada",    dot: "#ef4444", bg: "rgba(239,68,68,.12)",  border: "rgba(239,68,68,.25)"  },
+  observada:    { label: "Observada",    dot: "#60a5fa", bg: "rgba(96,165,250,.12)", border: "rgba(96,165,250,.25)" },
+  finalizada:   { label: "Finalizada",   dot: "#94a3b8", bg: "rgba(148,163,184,.12)",border: "rgba(148,163,184,.25)"},
+  recordatorio: { label: "Recordatorio", dot: "#fbbf24", bg: "rgba(251,191,36,.12)", border: "rgba(251,191,36,.25)" },
+  info:         { label: "Info",         dot: "#93c5fd", bg: "rgba(147,197,253,.12)", border: "rgba(147,197,253,.2)"},
+};
+
+const MODULO_CONFIG: Record<NotiModulo, { label: string; icon: React.ReactNode }> = {
+  transporte: {
+    label: "Transporte",
+    icon: (
+      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 01-2 2h-.5a2 2 0 01-4 0h-4a2 2 0 01-4 0H5a2 2 0 01-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z" strokeLinejoin="round"/>
+        <path d="M6 11.5h12" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+  mantenimiento: {
+    label: "Mantenimiento",
+    icon: (
+      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round"/>
+        <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round"/>
+      </svg>
+    ),
+  },
+  combustible: {
+    label: "Combustible",
+    icon: (
+      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+        <path d="M7 3h8v18H7V3Z" strokeLinejoin="round"/>
+        <path d="M15 7h2l2 2v10a2 2 0 01-2 2h-2" strokeLinejoin="round"/>
+        <path d="M9 7h4" strokeLinecap="round"/>
+      </svg>
+    ),
+  },
+};
+
+function timeAgo(iso: string): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60)   return "Hace un momento";
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400)return `Hace ${Math.floor(diff / 3600)} h`;
+  return `Hace ${Math.floor(diff / 86400)} días`;
+}
+
+// ─── PÁGINA ────────────────────────────────────────────────────────────────────
+
+export default function NotificationsPage() {
+  const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
+  const [filter, setFilter] = useState<"todas" | "no_leidas" | NotiTipo>("todas");
+
+  const filtered = notifications.filter((n) => {
+    if (filter === "todas")      return true;
+    if (filter === "no_leidas")  return !n.leida;
+    return n.tipo === filter;
+  });
+
+  const FILTROS: { value: typeof filter; label: string }[] = [
+    { value: "todas",        label: "Todas" },
+    { value: "no_leidas",    label: "No leídas" },
+    { value: "aprobada",     label: "Aprobadas" },
+    { value: "rechazada",    label: "Rechazadas" },
+    { value: "recordatorio", label: "Recordatorios" },
+    { value: "observada",    label: "Observadas" },
+  ];
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-6 pb-10">
+
+      {/* Header */}
+      <div className="flex items-end justify-between">
+        <div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
+            Notificaciones
+          </h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {unreadCount > 0
+              ? `${unreadCount} sin leer`
+              : "Todo al día"}
+          </p>
+        </div>
+        {unreadCount > 0 && (
+          <button
+            onClick={markAllRead}
+            className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50"
+          >
+            <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+            Marcar todo leído
+          </button>
+        )}
+      </div>
+
+      {/* Filtros */}
+      <div className="flex gap-2 overflow-x-auto pb-1">
+        {FILTROS.map((f) => (
+          <button
+            key={f.value}
+            onClick={() => setFilter(f.value)}
+            className={`flex-shrink-0 rounded-full border px-4 py-1.5 text-xs font-semibold transition ${
+              filter === f.value
+                ? "border-slate-900 bg-slate-900 text-white"
+                : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+            }`}
+          >
+            {f.label}
+          </button>
+        ))}
+      </div>
+
+      {/* Lista */}
+      <div className="space-y-2">
+        {filtered.length === 0 ? (
+          <div className="flex flex-col items-center gap-3 py-20 text-center">
+            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-slate-200 bg-slate-50">
+              <svg className="h-6 w-6 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
+                  d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0" />
+              </svg>
+            </div>
+            <p className="text-sm font-semibold text-slate-700">Sin notificaciones</p>
+            <p className="text-xs text-slate-400">
+              {filter === "todas" ? "Cuando haya actividad en tus solicitudes aparecerá aquí." : "No hay notificaciones con este filtro."}
+            </p>
+          </div>
+        ) : (
+          filtered.map((n) => {
+            const cfg = TIPO_CONFIG[n.tipo];
+            const mod = MODULO_CONFIG[n.modulo];
+            return (
+              <button
+                key={n.id}
+                onClick={() => markAsRead(n.id)}
+                className={`group w-full rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md ${
+                  n.leida ? "border-slate-100 opacity-60" : "border-slate-200"
+                }`}
+              >
+                <div className="flex items-start gap-4 px-5 py-4">
+                  {/* Dot de tipo */}
+                  <div
+                    className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl"
+                    style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}
+                  >
+                    <span
+                      className="h-2.5 w-2.5 rounded-full"
+                      style={{ background: cfg.dot, boxShadow: `0 0 8px ${cfg.dot}` }}
+                    />
+                  </div>
+
+                  {/* Contenido */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className={`text-sm ${n.leida ? "font-medium text-slate-500" : "font-bold text-slate-900"}`}>
+                        {n.titulo}
+                      </span>
+                      {/* Badge módulo */}
+                      <span className="inline-flex items-center gap-1 rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[10px] font-bold text-slate-500">
+                        {mod.icon}
+                        {mod.label}
+                      </span>
+                      {/* Badge tipo */}
+                      <span
+                        className="rounded-full px-2 py-0.5 text-[10px] font-extrabold"
+                        style={{ background: cfg.bg, color: cfg.dot }}
+                      >
+                        {cfg.label}
+                      </span>
+                    </div>
+
+                    <p className="mt-1 text-xs leading-relaxed text-slate-500">{n.mensaje}</p>
+
+                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
+                      {timeAgo(n.createdAt)}
+                    </p>
+                  </div>
+
+                  {/* Indicador no leída */}
+                  {!n.leida && (
+                    <div
+                      className="mt-2 h-2 w-2 flex-shrink-0 rounded-full bg-blue-500"
+                      style={{ boxShadow: "0 0 8px rgba(59,130,246,0.7)" }}
+                    />
+                  )}
+                </div>
+              </button>
+            );
+          })
+        )}
+      </div>
+    </div>
+  );
+}
