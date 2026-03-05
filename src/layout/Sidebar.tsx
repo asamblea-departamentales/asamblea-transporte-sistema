@@ -78,11 +78,14 @@ const Icons = {
   ),
 };
 
+// --- Avatar Cuadrado y Serio ---
 function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
   const dim = { sm: 32, md: 36, lg: 44 };
   return (
-    <div className="flex items-center justify-center font-bold text-blue-200 bg-gradient-to-br from-blue-600 to-blue-900 rounded-xl border border-blue-400/30 shadow-md flex-shrink-0"
-      style={{ width: dim[size], height: dim[size], fontSize: size === 'lg' ? 16 : 13 }}>
+    <div 
+      className="flex items-center justify-center font-bold text-white bg-[#1e294b] border border-blue-400/20 rounded-none flex-shrink-0"
+      style={{ width: dim[size], height: dim[size] }}
+    >
       {initial}
     </div>
   );
@@ -97,31 +100,30 @@ function StatusDot() {
   );
 }
 
+// --- NavLinkItem Estilo Plano ---
 function NavLinkItem({ item, onClick, variant, pathname }: { item: NavItem; onClick?: () => void; variant: "desktop" | "drawer" | "bottom"; pathname: string; }) {
-  const { to, label, mobileLabel, icon: Icon, badge } = item;
-  const isSpecialActive = to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/");
+  const { to, label, mobileLabel, icon: Icon } = item;
+  const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
 
   if (variant === "bottom") {
     return (
-      <NavLink to={to} end onClick={onClick} className={({ isActive }) => `flex-1 flex flex-col items-center justify-center gap-1 transition-all ${isActive || isSpecialActive ? 'text-blue-400' : 'text-slate-500'}`}>
-        <div className={`p-1.5 rounded-lg transition-colors ${pathname === to || isSpecialActive ? 'bg-blue-500/10' : ''}`}><Icon /></div>
-        <span className="text-[10px] font-bold tracking-tight">{mobileLabel}</span>
-      </NavLink>
-    );
-  }
-
-  if (variant === "drawer") {
-    return (
-      <NavLink to={to} end onClick={onClick} className={({ isActive }) => `flex items-center gap-3 px-4 py-3 rounded-xl transition-all ${isActive || isSpecialActive ? 'bg-blue-500/10 text-blue-400 border border-blue-500/20' : 'text-slate-400 hover:bg-white/5'}`}>
+      <NavLink to={to} end onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-1 border-t-2 transition-all ${active ? 'border-blue-400 text-blue-400 bg-white/5' : 'border-transparent text-slate-400'}`}>
         <Icon />
-        <span className="text-sm font-bold flex-1">{label}</span>
-        {badge && <span className="text-[10px] bg-blue-500 text-white px-1.5 py-0.5 rounded-full">{badge}</span>}
+        <span className="text-[10px] font-bold uppercase tracking-tighter">{mobileLabel}</span>
       </NavLink>
     );
   }
 
   return (
-    <NavLink to={to} end className={({ isActive }) => `flex items-center gap-2 px-4 py-2 rounded-xl transition-all font-bold text-sm ${isActive || isSpecialActive ? 'bg-white/5 text-blue-400 border border-white/10' : 'text-slate-400 hover:text-slate-200'}`}>
+    <NavLink 
+      to={to} 
+      end 
+      className={`flex items-center gap-3 px-6 py-3 border-l-2 transition-all font-bold text-xs uppercase tracking-widest ${
+        active 
+          ? 'bg-white/10 text-white border-blue-400' 
+          : 'text-slate-300 border-transparent hover:bg-white/5 hover:text-white'
+      }`}
+    >
       <Icon />
       <span>{label}</span>
     </NavLink>
@@ -211,68 +213,118 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   return (
     <>
-      {/* DESKTOP HEADER */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-slate-900/95 backdrop-blur-md border-b border-white/5 items-center">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-        <div className="max-w-7xl mx-auto w-full px-8 flex items-center justify-between">
-          <div className="flex items-center gap-8">
-            <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3 group">
-              <div className="w-10 h-10 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center">
-                <img src={logo} alt="Asamblea" className="h-6 brightness-0 invert opacity-90" />
-              </div>
-              <div className="text-left">
-                <span className="text-[10px] font-bold text-blue-400/60 uppercase tracking-widest block leading-none">Asamblea</span>
-                <span className="text-lg font-extrabold text-white tracking-tight leading-none">Transporte</span>
-              </div>
-            </button>
-            <nav className="flex items-center gap-1">
-              {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />)}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            <div ref={notiRef} className="relative">
-              <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-                className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${notiOpen ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-slate-400 hover:bg-white/10'}`}>
-                <Icons.Bell />
-                {noLeidas > 0 && <span className="absolute top-2.5 right-2.5 w-2 h-2 bg-blue-500 rounded-full ring-2 ring-slate-900" />}
-              </button>
-              {notiOpen && <div className="absolute right-0 top-full mt-3 w-80"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
-            </div>
-
-            <div ref={menuRef} className="relative">
-              <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-                className={`flex items-center gap-3 pl-2 pr-3 py-1.5 rounded-xl transition-all border ${userMenuOpen ? 'bg-blue-500/10 border-blue-500/30' : 'border-transparent hover:bg-white/5'}`}>
-                <Avatar initial={initial} size="md" />
-                <div className="hidden xl:block text-left">
-                  <p className="text-sm font-bold text-slate-100 leading-tight">{user?.name || "Usuario"}</p>
-                  <p className="text-[10px] font-semibold text-blue-400/60 uppercase tracking-wider mt-0.5">Administrador</p>
-                </div>
-                <Icons.ChevronDown open={userMenuOpen} />
-              </button>
-              {userMenuOpen && (
-                <div className="absolute right-0 top-full mt-3 w-64 bg-slate-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-                  <div className="p-5 border-b border-white/5 bg-white/[0.02]">
-                    <div className="flex items-center gap-4 mb-4">
-                      <Avatar initial={initial} size="lg" />
-                      <div className="min-w-0">
-                        <p className="text-sm font-extrabold text-white truncate">{user?.name || "Usuario"}</p>
-                        <p className="text-[11px] font-medium text-slate-500 truncate">{user?.email || "correo@asamblea.gob.sv"}</p>
-                      </div>
-                    </div>
-                    <StatusDot />
-                  </div>
-                  <div className="p-2">
-                    <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-red-400 hover:bg-red-500/10 transition-all">
-                      <Icons.Logout /> Cerrar sesión
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+      {/* ══════════════════════════════════════════════════════════════════
+    DESKTOP HEADER - GLASS INSTITUCIONAL (BORDES RECTOS)
+    ══════════════════════════════════════════════════════════════════ */}
+<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#2d3a61]/85 backdrop-blur-md border-b border-white/10 items-center">
+  {/* Línea sutil de acento superior */}
+  <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-400/30" />
+  
+  <div className="max-w-7xl mx-auto w-full px-8 flex items-center justify-between h-full">
+    
+    <div className="flex items-center h-full gap-0">
+      {/* Logo sin bordes redondeados y con separador recto */}
+      <button 
+        onClick={() => navigate("/dashboard")}
+        className="flex items-center gap-4 h-16 px-4 hover:bg-white/5 transition-colors border-r border-white/10"
+      >
+        <img src={logo} alt="Asamblea" className="h-9 w-auto object-contain" />
+        <div className="text-left">
+          <span className="text-[9px] font-black text-blue-300 uppercase tracking-[0.25em] block leading-none">Asamblea Legislativa</span>
+          <span className="text-sm font-light text-white uppercase tracking-[0.15em] leading-tight">Transporte</span>
         </div>
-      </header>
+      </button>
+
+      {/* Navegación con indicadores rectos */}
+      <nav className="flex items-center h-full ml-4">
+        {navItems.map(item => (
+          <NavLinkItem 
+            key={item.to} 
+            item={item} 
+            variant="desktop" 
+            pathname={location.pathname} 
+          />
+        ))}
+      </nav>
+    </div>
+
+    <div className="flex items-center gap-0 h-full">
+      
+      {/* Notificaciones Estilo Plano */}
+      <div ref={notiRef} className="relative h-full flex items-center">
+        <button
+          onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
+          className={`w-14 h-full flex items-center justify-center transition-all border-l border-white/10 ${
+            notiOpen ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'
+          }`}
+        >
+          <div className="relative">
+            <Icons.Bell />
+            {noLeidas > 0 && (
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-none shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+            )}
+          </div>
+        </button>
+        {notiOpen && (
+          <div className="absolute right-0 top-16 w-80 shadow-2xl">
+            <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+          </div>
+        )}
+      </div>
+
+      {/* Usuario Estilo Corporativo */}
+      <div ref={menuRef} className="relative h-full flex items-center">
+        <button
+          onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
+          className={`flex items-center gap-4 px-6 h-full transition-all border-l border-white/10 ${
+            userMenuOpen ? 'bg-white/10' : 'hover:bg-white/5'
+          }`}
+        >
+          {/* Avatar Recto */}
+          <div className="w-9 h-9 bg-slate-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white uppercase">
+            {initial}
+          </div>
+          
+          <div className="hidden xl:block text-left">
+            <p className="text-[11px] font-bold text-white uppercase tracking-widest leading-none">
+              {user?.name || "Usuario"}
+            </p>
+            <p className="text-[9px] font-medium text-blue-300 uppercase tracking-tighter mt-1">
+              Administrador
+            </p>
+          </div>
+          <Icons.ChevronDown open={userMenuOpen} />
+        </button>
+
+        {/* Dropdown Recto */}
+        {userMenuOpen && (
+          <div className="absolute right-0 top-16 w-64 bg-[#1e294b] border border-white/10 shadow-2xl animate-in fade-in duration-200">
+            <div className="p-6 border-b border-white/5 bg-white/[0.02]">
+              <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-3">Perfil de Usuario</p>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-slate-800 border border-white/10 flex items-center justify-center text-lg font-bold text-white">
+                  {initial}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white uppercase truncate">{user?.name}</p>
+                  <p className="text-[10px] text-slate-400 truncate mt-1">{user?.email}</p>
+                </div>
+              </div>
+            </div>
+            <div className="p-2">
+              <button 
+                onClick={handleLogout}
+                className="w-full flex items-center justify-center gap-3 py-3 border border-red-500/30 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+              >
+                <Icons.Logout /> Cerrar Sesión
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</header>
 
       {/* MOBILE TOP BAR */}
       <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-slate-900/95 backdrop-blur-lg border-b border-white/5 flex items-center justify-between px-4">
