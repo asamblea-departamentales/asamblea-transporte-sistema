@@ -214,36 +214,33 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   return (
     <>
       {/* ══════════════════════════════════════════════════════════════════
-    DESKTOP HEADER - GLASS CORPORATIVO (BORDES RECTOS Y LOGO BLANCO)
+    DESKTOP HEADER - ULTRA-DARK GLASS (SQUARE & SHARP)
     ══════════════════════════════════════════════════════════════════ */}
-<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#2d3a61]/80 backdrop-blur-md border-b border-white/10 items-center">
-  {/* Acento superior lineal para mayor elegancia */}
-  <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-blue-400/30" />
+<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 items-center">
+  {/* Línea de acento superior: un azul eléctrico muy fino */}
+  <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500/40" />
   
   <div className="max-w-[1600px] mx-auto w-full px-6 flex items-center justify-between h-full">
     
     <div className="flex items-center h-full">
-      {/* Sección del Logo: Sin redondeos y con logo en blanco (invert) */}
+      {/* Logo: Cuadrado, Blanco y con Separador Técnico */}
       <button 
         onClick={() => navigate("/dashboard")}
-        className="flex items-center gap-4 h-16 pr-8 border-r border-white/10 hover:bg-white/5 transition-colors group"
+        className="flex items-center gap-5 h-16 pr-10 border-r border-white/5 hover:bg-white/[0.03] transition-all group"
       >
-        <div className="flex items-center justify-center">
-          {/* Aplicamos filter: brightness(0) invert(1) para que el logo sea blanco puro */}
-          <img 
-            src={logo} 
-            alt="Asamblea" 
-            className="h-10 w-auto object-contain filter brightness-0 invert" 
-          />
-        </div>
+        <img 
+          src={logo} 
+          alt="Asamblea" 
+          className="h-10 w-auto object-contain filter brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity" 
+        />
         <div className="text-left">
-          <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.25em] block leading-none">Asamblea Legislativa</span>
-          <span className="text-sm font-light text-white uppercase tracking-[0.15em] mt-1 block">Transporte</span>
+          <span className="text-[10px] font-black text-blue-400/70 uppercase tracking-[0.3em] block leading-none">Asamblea Legislativa</span>
+          <span className="text-sm font-light text-slate-200 uppercase tracking-[0.2em] mt-1.5 block leading-none">Transporte</span>
         </div>
       </button>
 
-      {/* Navegación: Estilo de pestañas técnicas planas */}
-      <nav className="flex items-center h-full ml-4">
+      {/* Navegación: Pestañas Planas con Indicador Inferior Recto */}
+      <nav className="flex items-center h-full ml-6">
         {navItems.map(item => (
           <NavLinkItem 
             key={item.to} 
@@ -255,68 +252,66 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       </nav>
     </div>
 
-    {/* Sección Derecha: Acciones con bordes rectos */}
     <div className="flex items-center h-full">
-      
-      {/* Notificaciones */}
+      {/* Notificaciones: Diseño Minimalista de 1px */}
       <div ref={notiRef} className="relative h-full flex items-center">
         <button
           onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-          className={`w-14 h-full flex items-center justify-center transition-all border-l border-white/10 ${
-            notiOpen ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'
+          className={`w-16 h-full flex items-center justify-center transition-all border-l border-white/5 ${
+            notiOpen ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-white hover:bg-white/[0.03]'
           }`}
         >
           <div className="relative">
             <Icons.Bell />
             {noLeidas > 0 && (
-              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 border border-[#2d3a61] shadow-sm" />
+              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-none shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
             )}
           </div>
         </button>
       </div>
 
-      {/* Usuario: Avatar y Dropdown Rectos */}
+      {/* Usuario: Panel de Identificación Recto */}
       <div ref={menuRef} className="relative h-full flex items-center">
         <button
           onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-          className={`flex items-center gap-4 px-6 h-full transition-all border-l border-white/10 border-r border-white/10 ${
-            userMenuOpen ? 'bg-white/10' : 'hover:bg-white/5'
+          className={`flex items-center gap-4 px-8 h-full transition-all border-l border-white/5 border-r border-white/5 ${
+            userMenuOpen ? 'bg-white/5' : 'hover:bg-white/[0.03]'
           }`}
         >
-          {/* Avatar Cuadrado */}
-          <div className="w-10 h-10 bg-slate-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white">
+          {/* Avatar Cuadrado Minimalista */}
+          <div className="w-9 h-9 bg-slate-800 border border-white/10 flex items-center justify-center text-[11px] font-bold text-slate-300">
             {initial}
           </div>
           
           <div className="hidden xl:block text-left">
-            <p className="text-[11px] font-bold text-white uppercase tracking-widest leading-none">
+            <p className="text-[11px] font-bold text-white uppercase tracking-[0.15em] leading-none">
               {user?.name || "Usuario"}
             </p>
-            <p className="text-[9px] font-medium text-blue-300 uppercase tracking-tighter mt-1">
-              Administrador
+            <p className="text-[9px] font-bold text-blue-500/80 uppercase tracking-tighter mt-1">
+              Auth: Admin
             </p>
           </div>
           <Icons.ChevronDown open={userMenuOpen} />
         </button>
 
-        {/* Dropdown 100% Recto */}
+        {/* Dropdown: Menú de Cristal Oscuro */}
         {userMenuOpen && (
-          <div className="absolute right-0 top-16 w-64 bg-[#1a243d]/95 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in duration-150">
-            <div className="p-6 border-b border-white/5 bg-white/[0.02]">
-              <div className="flex flex-col items-center text-center gap-4">
-                <div className="w-16 h-16 bg-slate-800 border border-white/10 flex items-center justify-center text-xl font-bold text-white">
+          <div className="absolute right-0 top-16 w-64 bg-[#0f172a]/95 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in duration-200">
+            <div className="p-6 border-b border-white/5 bg-white/[0.01]">
+              <div className="flex flex-col items-center gap-4 text-center">
+                <div className="w-14 h-14 bg-slate-800 border border-white/10 flex items-center justify-center text-xl font-bold text-white uppercase">
                   {initial}
                 </div>
-                <div>
-                  <p className="text-xs font-bold text-white uppercase tracking-widest">{user?.name}</p>
-                  <p className="text-[10px] text-slate-500 mt-1">{user?.email}</p>
+                <div className="min-w-0">
+                  <p className="text-[11px] font-black text-white uppercase tracking-widest truncate">{user?.name}</p>
+                  <p className="text-[10px] text-slate-500 mt-1 truncate">{user?.email}</p>
                 </div>
               </div>
             </div>
             <div className="p-2">
               <button 
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all"
+                className="w-full flex items-center justify-center gap-3 py-3 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all"
               >
                 <Icons.Logout /> Cerrar Sesión
               </button>
