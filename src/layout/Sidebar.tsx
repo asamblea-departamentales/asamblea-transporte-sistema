@@ -3,7 +3,6 @@ import logo from "../assets/asamble.png";
 import { useAuth } from "../auth/AuthContext";
 import React, { useState, useRef, useEffect } from "react";
 
-// --- Tipos y Mocks ---
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number; };
 
@@ -20,30 +19,30 @@ const MOCK_NOTIFICACIONES: Notificacion[] = [
 ];
 
 const notiColor = {
-  aprobada: { dot: "#10B981", bg: "rgba(16,185,129,0.12)", border: "rgba(16,185,129,0.25)" },
-  rechazada: { dot: "#EF4444", bg: "rgba(239,68,68,0.12)", border: "rgba(239,68,68,0.25)" },
-  pendiente: { dot: "#F59E0B", bg: "rgba(245,158,11,0.12)", border: "rgba(245,158,11,0.25)" },
-  info: { dot: "#3B82F6", bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.25)" },
+  aprobada: { dot: "#10B981", bg: "rgba(16,185,129,0.15)", border: "rgba(16,185,129,0.3)" },
+  rechazada: { dot: "#EF4444", bg: "rgba(239,68,68,0.15)", border: "rgba(239,68,68,0.3)" },
+  pendiente: { dot: "#F59E0B", bg: "rgba(245,158,11,0.15)", border: "rgba(245,158,11,0.3)" },
+  info: { dot: "#60A5FA", bg: "rgba(96,165,250,0.15)", border: "rgba(96,165,250,0.3)" },
 };
 
 const Icons = {
   Dashboard: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="8" height="8" rx="0" /><rect x="13" y="3" width="8" height="8" rx="0" />
-      <rect x="3" y="13" width="8" height="8" rx="0" /><rect x="13" y="13" width="8" height="8" rx="0" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="8" height="8" rx="2.5" /><rect x="13" y="3" width="8" height="8" rx="2.5" />
+      <rect x="3" y="13" width="8" height="8" rx="2.5" /><rect x="13" y="13" width="8" height="8" rx="2.5" />
     </svg>
   ),
   Plus: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
-      <rect x="3" y="3" width="18" height="18" rx="0" /><path d="M12 8v8M8 12h8" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+      <circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" />
     </svg>
   ),
   List: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
       <path d="M9 6h11M9 12h11M9 18h6" />
-      <rect x="4" y="5" width="2" height="2" fill="currentColor" />
-      <rect x="4" y="11" width="2" height="2" fill="currentColor" />
-      <rect x="4" y="17" width="2" height="2" fill="currentColor" />
+      <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
+      <circle cx="5" cy="18" r="1.5" fill="currentColor" stroke="none" />
     </svg>
   ),
   Menu: () => (
@@ -57,83 +56,113 @@ const Icons = {
     </svg>
   ),
   Logout: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5V5h4" /><path d="M16 17l5-5-5-5M21 12H9" />
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><path d="M16 17l5-5-5-5M21 12H9" />
     </svg>
   ),
   ChevronDown: ({ open }: { open: boolean }) => (
-    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-      style={{ transition: "transform 200ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      style={{ transition: "transform 250ms cubic-bezier(.34,1.56,.64,1)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
       <path d="M4 6l4 4 4-4" />
     </svg>
   ),
   Bell: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
     </svg>
   ),
   Check: () => (
-    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M5 13l4 4L19 7" />
     </svg>
   ),
 };
 
-// --- Componentes de Apoyo ---
+// --- Avatar orgánico con glow azul ---
 function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
-  const dim = { sm: 30, md: 32, lg: 50 };
+  const dim = { sm: 30, md: 36, lg: 46 };
+  const font = { sm: "11px", md: "13px", lg: "17px" };
   return (
-    <div 
-      className="flex items-center justify-center font-bold text-white bg-white/[0.03] border border-white/[0.08] rounded-none flex-shrink-0"
-      style={{ width: dim[size], height: dim[size], fontSize: size === 'lg' ? 18 : 11 }}
+    <div
+      style={{
+        width: dim[size],
+        height: dim[size],
+        fontSize: font[size],
+        background: "radial-gradient(135deg at 30% 30%, #2563eb 0%, #1e3a8a 60%, #0f172a 100%)",
+        boxShadow: "0 0 18px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.15)",
+        borderRadius: "50%",
+      }}
+      className="flex items-center justify-center font-bold text-white flex-shrink-0"
     >
       {initial}
     </div>
   );
 }
 
+// --- Punto de estado online ---
 function StatusDot() {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none bg-white/[0.03] border border-white/[0.05] text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em]">
-      <span className="w-1 h-1 bg-blue-500 shadow-[0_0_8px_#3b82f6]" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider"
+      style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "20px" }}>
+      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" style={{ boxShadow: "0 0 6px #10b981" }} />
       En línea
     </span>
   );
 }
 
+// --- NavLink con glow azul y forma orgánica ---
 function NavLinkItem({ item, onClick, variant, pathname }: { item: NavItem; onClick?: () => void; variant: "desktop" | "drawer" | "bottom"; pathname: string; }) {
-  const { to, label, mobileLabel, icon: Icon } = item;
+  const { to, label, mobileLabel, icon: Icon, badge } = item;
   const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
 
   if (variant === "bottom") {
     return (
-      <NavLink to={to} end onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative ${active ? 'text-white' : 'text-slate-500'}`}>
+      <NavLink to={to} end onClick={onClick}
+        className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
+        style={({ isActive }) => isActive ? { color: "#60a5fa" } : { color: "#64748b" }}>
         <Icon />
-        <span className="text-[9px] font-bold uppercase tracking-wider">{mobileLabel}</span>
-        {active && <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500" />}
+        <span className="text-[10px] font-bold uppercase tracking-tight">{mobileLabel}</span>
       </NavLink>
     );
   }
 
-  if (variant === "drawer") {
+  if (variant === "desktop") {
     return (
-      <NavLink to={to} end onClick={onClick} className={`flex items-center gap-4 px-6 py-4 transition-all border-l-2 ${active ? 'bg-white/[0.03] text-white border-blue-500' : 'text-slate-400 border-transparent hover:bg-white/[0.01]'}`}>
-        <Icon />
-        <span className="text-[11px] font-bold uppercase tracking-[0.2em]">{label}</span>
+      <NavLink to={to} end
+        style={active
+          ? { color: "#fff", background: "rgba(59,130,246,0.15)", borderRadius: "12px", boxShadow: "0 0 20px rgba(59,130,246,0.2)" }
+          : { color: "#64748b" }}
+        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest transition-all duration-200 hover:text-slate-200 mx-1"
+      >
+        <span style={active ? { color: "#60a5fa" } : {}}><Icon /></span>
+        <span>{label}</span>
+        {badge && <span className="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: "rgba(59,130,246,0.25)", color: "#93c5fd" }}>{badge}</span>}
       </NavLink>
     );
   }
 
+  // drawer
   return (
-    <NavLink to={to} end className={`flex items-center gap-3 px-8 h-16 transition-all font-bold text-[10px] uppercase tracking-[0.3em] relative ${active ? 'text-white' : 'text-slate-500 hover:text-slate-200'}`}>
-      <Icon />
-      <span>{label}</span>
-      {active && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />}
+    <NavLink to={to} end onClick={onClick}
+      className="flex items-center gap-3.5 px-4 py-3.5 transition-all duration-200 group"
+      style={active
+        ? { background: "rgba(59,130,246,0.12)", borderRadius: "16px", color: "#fff", boxShadow: "0 0 24px rgba(59,130,246,0.15)" }
+        : { color: "#64748b", borderRadius: "16px" }}
+    >
+      <div className="flex items-center justify-center w-9 h-9 rounded-xl transition-all"
+        style={active
+          ? { background: "rgba(59,130,246,0.2)", color: "#60a5fa", boxShadow: "0 0 14px rgba(59,130,246,0.3)" }
+          : { background: "rgba(255,255,255,0.04)", color: "#475569" }}>
+        <Icon />
+      </div>
+      <span className="text-sm font-semibold">{label}</span>
+      {badge && <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: "rgba(59,130,246,0.2)", color: "#93c5fd" }}>{badge}</span>}
+      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" style={{ boxShadow: "0 0 8px #60a5fa" }} />}
     </NavLink>
   );
 }
 
-// --- Panel de Notificaciones (Error TS6133 Solucionado) ---
+// --- Panel de notificaciones ---
 function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const [notifs, setNotifs] = useState<Notificacion[]>(MOCK_NOTIFICACIONES);
   const marcarTodasLeidas = () => setNotifs(n => n.map(x => ({ ...x, leida: true })));
@@ -141,41 +170,67 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="w-full max-h-[70vh] bg-[#1e293b]/90 backdrop-blur-3xl border border-white/[0.05] rounded-none shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
-      <div className="px-6 py-5 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
-        <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Notificaciones</span>
-        <div className="flex gap-4">
+    <div className="w-full max-h-[70vh] flex flex-col overflow-hidden"
+      style={{
+        background: "rgba(10,15,30,0.97)",
+        border: "1px solid rgba(255,255,255,0.08)",
+        borderRadius: "20px",
+        boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(59,130,246,0.08)",
+        backdropFilter: "blur(24px)",
+      }}>
+      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        <div className="flex items-center gap-2.5">
+          <span className="text-sm font-bold text-white">Notificaciones</span>
           {noLeidas > 0 && (
-            <button onClick={marcarTodasLeidas} className="text-[9px] font-bold text-blue-400 uppercase tracking-widest hover:text-white transition-colors">
-              Marcar todo
-            </button>
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white"
+              style={{ background: "linear-gradient(135deg,#3b82f6,#2563eb)", boxShadow: "0 0 12px rgba(59,130,246,0.4)" }}>
+              {noLeidas}
+            </span>
           )}
-          {/* Se utiliza onClose para solucionar el error de TypeScript */}
-          <button onClick={onClose} className="text-[9px] font-bold text-slate-500 uppercase hover:text-white transition-colors">
-            Cerrar
-          </button>
         </div>
+        {noLeidas > 0 && (
+          <button onClick={marcarTodasLeidas} className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors">
+            <Icons.Check /> Marcar todo
+          </button>
+        )}
       </div>
-      <div className="overflow-y-auto flex-1 custom-scrollbar">
+      <div className="overflow-y-auto flex-1">
         {notifs.map(n => {
           const cfg = notiColor[n.tipo];
           return (
-            <div key={n.id} onClick={() => marcarLeida(n.id)} className={`px-6 py-5 border-b border-white/[0.03] flex gap-5 items-start cursor-pointer transition-all ${n.leida ? 'opacity-40' : 'bg-white/[0.02]'}`}>
-              <div className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
+            <div key={n.id} onClick={() => marcarLeida(n.id)}
+              className="px-5 py-4 flex gap-3.5 items-start cursor-pointer transition-all"
+              style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", opacity: n.leida ? 0.5 : 1 }}>
+              <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center"
+                style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
+                <span className="w-2 h-2 rounded-full" style={{ background: cfg.dot, boxShadow: `0 0 8px ${cfg.dot}` }} />
+              </div>
               <div className="flex-1 min-w-0">
-                <p className={`text-[11px] uppercase tracking-wider mb-1 ${n.leida ? 'text-slate-400' : 'font-bold text-white'}`}>{n.titulo}</p>
-                <p className="text-[10px] text-slate-500 leading-relaxed truncate">{n.mensaje}</p>
-                <span className="text-[8px] text-slate-600 uppercase mt-2 block tracking-tighter">{n.tiempo}</span>
+                <div className="flex items-center justify-between gap-2 mb-1">
+                  <span className={`text-sm truncate ${n.leida ? 'font-medium text-slate-400' : 'font-bold text-white'}`}>{n.titulo}</span>
+                  {!n.leida && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" style={{ boxShadow: "0 0 8px #60a5fa" }} />}
+                </div>
+                <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{n.mensaje}</p>
+                <span className="text-[10px] font-medium text-slate-600 uppercase tracking-wider mt-1 block">{n.tiempo}</span>
               </div>
             </div>
           );
         })}
       </div>
+      <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+        <button onClick={onClose}
+          className="w-full py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-colors"
+          style={{ borderRadius: "12px" }}>
+          Cerrar
+        </button>
+      </div>
     </div>
   );
 }
 
-// --- Componente Principal ---
+// ══════════════════════════════════════════════════════
+// MAIN SIDEBAR COMPONENT
+// ══════════════════════════════════════════════════════
 export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -200,7 +255,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     navigate("/login", { replace: true });
   };
 
-  useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname, onClose]);
+  useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname]);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -211,67 +266,140 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
+  const headerStyle: React.CSSProperties = {
+    background: "rgba(7,11,22,0.85)",
+    backdropFilter: "blur(24px)",
+    WebkitBackdropFilter: "blur(24px)",
+    borderBottom: "1px solid rgba(255,255,255,0.06)",
+  };
+
   return (
     <>
-      {/* DESKTOP HEADER - DEEP BLUE GLASS */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#1e293b]/60 backdrop-blur-2xl border-b border-white/[0.05] items-center text-left">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500/20" />
-        <div className="max-w-[1600px] mx-auto w-full px-10 flex items-center justify-between h-full">
-          
-          <div className="flex items-center h-full">
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-6 h-16 pr-10 border-r border-white/[0.05] hover:bg-white/[0.02] transition-all"
-            >
-              <img src={logo} alt="Asamblea" className="h-10 w-auto object-contain brightness-0 invert opacity-80" />
+      {/* ══════════════════════════════════════
+          DESKTOP HEADER — ORGÁNICO & GLASSY
+      ══════════════════════════════════════ */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 items-center" style={headerStyle}>
+        {/* Línea superior con glow azul */}
+        <div className="absolute top-0 left-0 right-0 h-[1px]"
+          style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 40%, rgba(96,165,250,0.4) 60%, transparent 100%)" }} />
+
+        {/* Glow ambiental sutil */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-12 pointer-events-none"
+          style={{ background: "radial-gradient(ellipse at center top, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
+
+        <div className="max-w-[1600px] mx-auto w-full px-6 flex items-center justify-between h-full">
+
+          {/* Logo */}
+          <div className="flex items-center gap-6 h-full">
+            <button onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-4 h-full pr-8 transition-all group"
+              style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl"
+                style={{ background: "radial-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(37,99,235,0.15) 100%)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 20px rgba(59,130,246,0.2)" }}>
+                <img src={logo} alt="Asamblea" className="h-5 w-auto object-contain filter brightness-0 invert opacity-90" />
+              </div>
               <div className="text-left">
-                <span className="text-[9px] font-bold text-blue-400/40 uppercase tracking-[0.4em] block leading-none">Asamblea Legislativa</span>
-                <span className="text-sm font-light text-white uppercase tracking-[0.25em] mt-1.5 block leading-none">Transporte</span>
+                <span className="text-[9px] font-bold text-blue-400/60 uppercase tracking-[0.3em] block leading-none">Asamblea Legislativa</span>
+                <span className="text-sm font-semibold text-slate-200 tracking-wider mt-1.5 block leading-none">Transporte</span>
               </div>
             </button>
 
-            <nav className="flex items-center h-full ml-4">
-              {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />)}
+            {/* Nav links */}
+            <nav className="flex items-center gap-1 h-full">
+              {navItems.map(item => (
+                <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />
+              ))}
             </nav>
           </div>
 
-          <div className="flex items-center h-full text-left">
-            {/* Notificaciones */}
-            <div ref={notiRef} className="relative h-full flex items-center">
+          {/* Derecha: notificaciones + usuario */}
+          <div className="flex items-center gap-3">
+
+            {/* Campana */}
+            <div ref={notiRef} className="relative">
               <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-                className={`w-16 h-full flex items-center justify-center transition-all border-l border-white/[0.05] ${notiOpen ? 'bg-white/[0.05] text-white' : 'text-slate-500 hover:text-slate-200'}`}>
-                <div className="relative">
-                  <Icons.Bell />
-                  {noLeidas > 0 && <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-blue-500 shadow-[0_0_12px_#3b82f6]" />}
-                </div>
+                className="relative flex items-center justify-center w-10 h-10 transition-all"
+                style={{
+                  borderRadius: "12px",
+                  background: notiOpen ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.04)",
+                  border: notiOpen ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(255,255,255,0.06)",
+                  color: notiOpen ? "#60a5fa" : "#64748b",
+                  boxShadow: notiOpen ? "0 0 20px rgba(59,130,246,0.2)" : "none",
+                }}>
+                <Icons.Bell />
+                {noLeidas > 0 && (
+                  <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-blue-500"
+                    style={{ boxShadow: "0 0 8px rgba(59,130,246,0.8)" }} />
+                )}
               </button>
-              {notiOpen && <div className="absolute right-0 top-16 w-80 shadow-2xl z-[100] text-left"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
+
+              {/* Dropdown notificaciones desktop */}
+              {notiOpen && (
+                <div className="absolute right-0 top-12 w-80 z-50">
+                  <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+                </div>
+              )}
             </div>
 
             {/* Usuario */}
-            <div ref={menuRef} className="relative h-full flex items-center">
+            <div ref={menuRef} className="relative">
               <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-                className={`flex items-center gap-4 px-8 h-full transition-all border-l border-white/[0.05] border-r border-white/[0.05] ${userMenuOpen ? 'bg-white/[0.05]' : 'hover:bg-white/[0.02]'}`}>
-                <Avatar initial={initial} />
+                className="flex items-center gap-3 px-4 py-2 transition-all"
+                style={{
+                  borderRadius: "14px",
+                  background: userMenuOpen ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.04)",
+                  border: userMenuOpen ? "1px solid rgba(59,130,246,0.25)" : "1px solid rgba(255,255,255,0.07)",
+                  boxShadow: userMenuOpen ? "0 0 24px rgba(59,130,246,0.15)" : "none",
+                }}>
+                <Avatar initial={initial} size="sm" />
                 <div className="hidden xl:block text-left">
-                  <p className="text-[10px] font-bold text-slate-100 uppercase tracking-[0.2em] leading-none">{user?.name || "Usuario"}</p>
-                  <p className="text-[8px] font-bold text-blue-500/60 uppercase tracking-tighter mt-1.5">Administrador</p>
+                  <p className="text-[11px] font-bold text-white leading-none">{user?.name || "Usuario"}</p>
+                  <p className="text-[9px] font-semibold text-blue-400/70 uppercase tracking-tight mt-0.5">Admin</p>
                 </div>
-                <Icons.ChevronDown open={userMenuOpen} />
+                <span className="text-slate-500"><Icons.ChevronDown open={userMenuOpen} /></span>
               </button>
-              
+
+              {/* Dropdown usuario */}
               {userMenuOpen && (
-                <div className="absolute right-0 top-16 w-64 bg-[#1e293b]/90 backdrop-blur-3xl border border-white/[0.05] shadow-2xl animate-in fade-in zoom-in-95 duration-200 z-[100] text-left">
-                  <div className="p-10 border-b border-white/[0.05] flex flex-col items-center text-center gap-5">
-                    <Avatar initial={initial} size="lg" />
-                    <div>
-                      <p className="text-[11px] font-bold text-white uppercase tracking-[0.3em]">{user?.name}</p>
-                      <p className="text-[9px] text-slate-500 mt-2 tracking-tighter font-mono">{user?.email}</p>
+                <div className="absolute right-0 top-14 w-60 z-50"
+                  style={{
+                    background: "rgba(8,12,24,0.97)",
+                    border: "1px solid rgba(255,255,255,0.08)",
+                    borderRadius: "20px",
+                    boxShadow: "0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.07)",
+                    backdropFilter: "blur(24px)",
+                    overflow: "hidden",
+                  }}>
+                  <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+                    {/* Glow de fondo */}
+                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 pointer-events-none"
+                      style={{ background: "radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%)" }} />
+                    <div className="relative flex flex-col items-center gap-3 text-center">
+                      <Avatar initial={initial} size="lg" />
+                      <div>
+                        <p className="text-sm font-bold text-white">{user?.name}</p>
+                        <p className="text-[10px] text-slate-500 mt-0.5">{user?.email}</p>
+                      </div>
+                      <StatusDot />
                     </div>
-                    <StatusDot />
                   </div>
                   <div className="p-3">
-                    <button onClick={handleLogout} className="w-full py-4 border border-red-500/10 text-red-500/60 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all">
+                    <button onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2.5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all"
+                      style={{
+                        borderRadius: "12px",
+                        color: "#f87171",
+                        background: "rgba(239,68,68,0.07)",
+                        border: "1px solid rgba(239,68,68,0.15)",
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)";
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(239,68,68,0.1)";
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.07)";
+                        (e.currentTarget as HTMLButtonElement).style.boxShadow = "none";
+                      }}>
                       <Icons.Logout /> Cerrar sesión
                     </button>
                   </div>
@@ -282,50 +410,158 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </header>
 
-      {/* MOBILE HEADER */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#1e293b]/80 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-6">
-        <button onClick={onOpen} className="text-slate-400 active:scale-90 transition-transform"><Icons.Menu /></button>
-        <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2">
-          <img src={logo} alt="Logo" className="h-6 brightness-0 invert opacity-80" />
-          <span className="text-sm font-bold text-white uppercase tracking-widest">Transporte</span>
+      {/* ══════════════════════════════════════
+          MOBILE TOP BAR
+      ══════════════════════════════════════ */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4"
+        style={{ background: "rgba(7,11,22,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+        <div className="absolute top-0 left-0 right-0 h-[1px]"
+          style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.5) 50%, transparent 100%)" }} />
+
+        <button onClick={open ? onClose : onOpen}
+          className="w-10 h-10 flex items-center justify-center text-slate-400"
+          style={{ borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+          {open ? <Icons.X /> : <Icons.Menu />}
         </button>
+
+        <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2.5">
+          <div className="w-8 h-8 flex items-center justify-center"
+            style={{ borderRadius: "10px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 14px rgba(59,130,246,0.2)" }}>
+            <img src={logo} alt="Logo" className="h-4 brightness-0 invert opacity-90" />
+          </div>
+          <span className="text-base font-semibold text-white">Transporte</span>
+        </button>
+
         <div className="relative">
-          <button onClick={() => setNotiOpen(!notiOpen)} className="text-slate-400"><Icons.Bell /></button>
-          {notiOpen && <div className="absolute right-0 top-12 w-[calc(100vw-3rem)] z-[100] text-left"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
+          <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
+            className="w-10 h-10 flex items-center justify-center transition-all"
+            style={{
+              borderRadius: "12px",
+              background: notiOpen ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
+              border: notiOpen ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(255,255,255,0.08)",
+              color: notiOpen ? "#60a5fa" : "#64748b",
+            }}>
+            <Icons.Bell />
+            {noLeidas > 0 && <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-blue-500 border-2"
+              style={{ borderColor: "#070b16", boxShadow: "0 0 8px rgba(59,130,246,0.7)" }} />}
+          </button>
         </div>
       </header>
 
-      {/* MOBILE DRAWER */}
-      <aside className={`fixed top-0 left-0 z-[70] w-72 h-full bg-[#1e293b] border-r border-white/5 transition-transform duration-300 ease-out flex flex-col text-left ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-10 border-b border-white/[0.05] flex flex-col gap-8">
-          <img src={logo} alt="Logo" className="h-10 w-auto self-start brightness-0 invert opacity-80" />
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-4">
-              <Avatar initial={initial} />
-              <div className="min-w-0">
-                <p className="text-[10px] font-bold text-white uppercase tracking-widest truncate">{user?.name}</p>
-                <StatusDot />
-              </div>
+      {/* MOBILE NOTIFICATIONS PANEL */}
+      {notiOpen && (
+        <div className="lg:hidden fixed top-20 right-4 left-4 z-[100]"
+          style={{ animation: "slideDown 200ms cubic-bezier(.34,1.56,.64,1) both" }}>
+          <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+        </div>
+      )}
+
+      {/* BACKDROP */}
+      {(open || notiOpen) && (
+        <div onClick={() => { onClose(); setNotiOpen(false); }}
+          className="fixed inset-0 z-[60]"
+          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }} />
+      )}
+
+      {/* ══════════════════════════════════════
+          DRAWER MÓVIL — GLASS ORGÁNICO
+      ══════════════════════════════════════ */}
+      <aside
+        className="fixed top-0 left-0 z-[70] w-72 h-full flex flex-col"
+        style={{
+          background: "rgba(7,11,22,0.97)",
+          backdropFilter: "blur(32px)",
+          borderRight: "1px solid rgba(255,255,255,0.07)",
+          boxShadow: open ? "4px 0 40px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.06)" : "none",
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+          transition: "transform 300ms cubic-bezier(.34,1.56,.64,1)",
+          overflow: "hidden",
+        }}>
+        
+        {/* Glow decorativo interior */}
+        <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
+          style={{ background: "radial-gradient(circle at top right, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
+        <div className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none"
+          style={{ background: "radial-gradient(circle at bottom left, rgba(37,99,235,0.06) 0%, transparent 70%)" }} />
+
+        {/* Header del drawer */}
+        <div className="relative p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+          <div className="flex items-center gap-3 mb-4">
+            <div className="w-9 h-9 flex items-center justify-center"
+              style={{ borderRadius: "12px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 16px rgba(59,130,246,0.2)" }}>
+              <img src={logo} alt="Logo" className="h-5 brightness-0 invert opacity-90" />
+            </div>
+            <div>
+              <p className="text-[9px] font-bold text-blue-400/50 uppercase tracking-widest leading-none">Asamblea</p>
+              <p className="text-sm font-semibold text-white tracking-wide mt-0.5">Transporte</p>
             </div>
           </div>
+
+          {/* Tarjeta de usuario */}
+          <div className="p-3.5"
+            style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px" }}>
+            <div className="flex items-center gap-3 mb-2.5">
+              <Avatar initial={initial} size="md" />
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-white truncate">{user?.name || "Usuario"}</p>
+                <p className="text-[10px] text-slate-500 truncate mt-0.5">{user?.email || ""}</p>
+              </div>
+            </div>
+            <StatusDot />
+          </div>
         </div>
-        <nav className="flex-1 py-6 flex flex-col">
-          {navItems.map(item => <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />)}
+
+        {/* Nav */}
+        <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
+          <p className="px-4 py-2 text-[9px] font-bold text-slate-600 uppercase tracking-[0.25em]">Menú principal</p>
+          {navItems.map(item => (
+            <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />
+          ))}
         </nav>
-        <div className="p-6 border-t border-white/[0.05]">
-          <button onClick={handleLogout} className="w-full py-4 border border-white/[0.05] text-slate-500 text-[9px] font-bold uppercase tracking-[0.3em] hover:text-white transition-all text-left flex items-center gap-3">
+
+        {/* Footer */}
+        <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
+          <button onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all"
+            style={{ borderRadius: "14px", color: "#94a3b8" }}
+            onMouseEnter={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)";
+              (e.currentTarget as HTMLButtonElement).style.color = "#f87171";
+            }}
+            onMouseLeave={e => {
+              (e.currentTarget as HTMLButtonElement).style.background = "transparent";
+              (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8";
+            }}>
             <Icons.Logout /> Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* BACKDROP */}
-      {(open || notiOpen) && <div onClick={() => { onClose(); setNotiOpen(false); }} className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" />}
-
-      {/* MOBILE BOTTOM NAV */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-[#1e293b]/80 backdrop-blur-xl border-t border-white/[0.05] flex items-center justify-around pb-safe">
-        {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
+      {/* ══════════════════════════════════════
+          BOTTOM NAV MOBILE
+      ══════════════════════════════════════ */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
+        style={{
+          background: "rgba(7,11,22,0.95)",
+          backdropFilter: "blur(20px)",
+          borderTop: "1px solid rgba(255,255,255,0.06)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)",
+        }}>
+        <div className="absolute top-0 left-0 right-0 h-[1px]"
+          style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.25) 50%, transparent 100%)" }} />
+        <div className="flex items-center justify-around h-16 px-2">
+          {navItems.map(item => (
+            <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />
+          ))}
+        </div>
       </nav>
+
+      <style>{`
+        @keyframes slideDown {
+          from { opacity: 0; transform: translateY(-12px) scale(0.97); }
+          to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+      `}</style>
     </>
   );
 }
