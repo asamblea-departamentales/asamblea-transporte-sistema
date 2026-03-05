@@ -214,28 +214,35 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   return (
     <>
       {/* ══════════════════════════════════════════════════════════════════
-    DESKTOP HEADER - GLASS INSTITUCIONAL (BORDES RECTOS)
+    DESKTOP HEADER - GLASS CORPORATIVO (BORDES RECTOS Y LOGO BLANCO)
     ══════════════════════════════════════════════════════════════════ */}
-<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#2d3a61]/85 backdrop-blur-md border-b border-white/10 items-center">
-  {/* Línea sutil de acento superior */}
-  <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-400/30" />
+<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#2d3a61]/80 backdrop-blur-md border-b border-white/10 items-center">
+  {/* Acento superior lineal para mayor elegancia */}
+  <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-blue-400/30" />
   
-  <div className="max-w-7xl mx-auto w-full px-8 flex items-center justify-between h-full">
+  <div className="max-w-[1600px] mx-auto w-full px-6 flex items-center justify-between h-full">
     
-    <div className="flex items-center h-full gap-0">
-      {/* Logo sin bordes redondeados y con separador recto */}
+    <div className="flex items-center h-full">
+      {/* Sección del Logo: Sin redondeos y con logo en blanco (invert) */}
       <button 
         onClick={() => navigate("/dashboard")}
-        className="flex items-center gap-4 h-16 px-4 hover:bg-white/5 transition-colors border-r border-white/10"
+        className="flex items-center gap-4 h-16 pr-8 border-r border-white/10 hover:bg-white/5 transition-colors group"
       >
-        <img src={logo} alt="Asamblea" className="h-9 w-auto object-contain" />
+        <div className="flex items-center justify-center">
+          {/* Aplicamos filter: brightness(0) invert(1) para que el logo sea blanco puro */}
+          <img 
+            src={logo} 
+            alt="Asamblea" 
+            className="h-10 w-auto object-contain filter brightness-0 invert" 
+          />
+        </div>
         <div className="text-left">
-          <span className="text-[9px] font-black text-blue-300 uppercase tracking-[0.25em] block leading-none">Asamblea Legislativa</span>
-          <span className="text-sm font-light text-white uppercase tracking-[0.15em] leading-tight">Transporte</span>
+          <span className="text-[10px] font-black text-blue-300 uppercase tracking-[0.25em] block leading-none">Asamblea Legislativa</span>
+          <span className="text-sm font-light text-white uppercase tracking-[0.15em] mt-1 block">Transporte</span>
         </div>
       </button>
 
-      {/* Navegación con indicadores rectos */}
+      {/* Navegación: Estilo de pestañas técnicas planas */}
       <nav className="flex items-center h-full ml-4">
         {navItems.map(item => (
           <NavLinkItem 
@@ -248,9 +255,10 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       </nav>
     </div>
 
-    <div className="flex items-center gap-0 h-full">
+    {/* Sección Derecha: Acciones con bordes rectos */}
+    <div className="flex items-center h-full">
       
-      {/* Notificaciones Estilo Plano */}
+      {/* Notificaciones */}
       <div ref={notiRef} className="relative h-full flex items-center">
         <button
           onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
@@ -261,27 +269,22 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           <div className="relative">
             <Icons.Bell />
             {noLeidas > 0 && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-none shadow-[0_0_8px_rgba(239,68,68,0.5)]" />
+              <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-600 border border-[#2d3a61] shadow-sm" />
             )}
           </div>
         </button>
-        {notiOpen && (
-          <div className="absolute right-0 top-16 w-80 shadow-2xl">
-            <NotificacionesPanel onClose={() => setNotiOpen(false)} />
-          </div>
-        )}
       </div>
 
-      {/* Usuario Estilo Corporativo */}
+      {/* Usuario: Avatar y Dropdown Rectos */}
       <div ref={menuRef} className="relative h-full flex items-center">
         <button
           onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-          className={`flex items-center gap-4 px-6 h-full transition-all border-l border-white/10 ${
+          className={`flex items-center gap-4 px-6 h-full transition-all border-l border-white/10 border-r border-white/10 ${
             userMenuOpen ? 'bg-white/10' : 'hover:bg-white/5'
           }`}
         >
-          {/* Avatar Recto */}
-          <div className="w-9 h-9 bg-slate-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white uppercase">
+          {/* Avatar Cuadrado */}
+          <div className="w-10 h-10 bg-slate-800 border border-white/20 flex items-center justify-center text-xs font-bold text-white">
             {initial}
           </div>
           
@@ -296,25 +299,24 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           <Icons.ChevronDown open={userMenuOpen} />
         </button>
 
-        {/* Dropdown Recto */}
+        {/* Dropdown 100% Recto */}
         {userMenuOpen && (
-          <div className="absolute right-0 top-16 w-64 bg-[#1e294b] border border-white/10 shadow-2xl animate-in fade-in duration-200">
+          <div className="absolute right-0 top-16 w-64 bg-[#1a243d]/95 backdrop-blur-xl border border-white/10 shadow-2xl animate-in fade-in duration-150">
             <div className="p-6 border-b border-white/5 bg-white/[0.02]">
-              <p className="text-[10px] font-black text-blue-400 uppercase tracking-[0.2em] mb-3">Perfil de Usuario</p>
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-slate-800 border border-white/10 flex items-center justify-center text-lg font-bold text-white">
+              <div className="flex flex-col items-center text-center gap-4">
+                <div className="w-16 h-16 bg-slate-800 border border-white/10 flex items-center justify-center text-xl font-bold text-white">
                   {initial}
                 </div>
-                <div className="min-w-0">
-                  <p className="text-xs font-bold text-white uppercase truncate">{user?.name}</p>
-                  <p className="text-[10px] text-slate-400 truncate mt-1">{user?.email}</p>
+                <div>
+                  <p className="text-xs font-bold text-white uppercase tracking-widest">{user?.name}</p>
+                  <p className="text-[10px] text-slate-500 mt-1">{user?.email}</p>
                 </div>
               </div>
             </div>
             <div className="p-2">
               <button 
                 onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-red-500/30 text-red-400 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all"
+                className="w-full flex items-center justify-center gap-3 py-3 border border-red-900/40 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-600 hover:text-white transition-all"
               >
                 <Icons.Logout /> Cerrar Sesión
               </button>
