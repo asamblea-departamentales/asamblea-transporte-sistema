@@ -26,7 +26,7 @@ const notiColor = {
   info: { dot: "#3B82F6", bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.25)" },
 };
 
-// --- Iconos ---
+// --- Iconos Minimalistas ---
 const Icons = {
   Dashboard: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -126,7 +126,7 @@ function NavLinkItem({ item, onClick, variant, pathname }: { item: NavItem; onCl
   }
 
   return (
-    <NavLink to={to} end className={`flex items-center gap-3 px-8 h-16 transition-all font-bold text-[10px] uppercase tracking-[0.3em] relative ${active ? 'text-white' : 'text-slate-500 hover:text-slate-200'}`}>
+    <NavLink to={to} end className={`flex items-center gap-3 px-8 h-16 transition-all font-bold text-[10px] uppercase tracking-[0.3em] relative ${active ? 'text-white' : 'text-slate-400 hover:text-slate-200'}`}>
       <Icon />
       <span>{label}</span>
       {active && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />}
@@ -141,14 +141,19 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="w-full max-h-[70vh] bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/[0.05] rounded-none shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+    <div className="w-full max-h-[70vh] bg-[#1e293b]/90 backdrop-blur-3xl border border-white/[0.05] rounded-none shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
       <div className="px-6 py-5 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
         <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Notificaciones</span>
-        {noLeidas > 0 && (
-          <button onClick={marcarTodasLeidas} className="text-[9px] font-bold text-blue-400 uppercase tracking-widest hover:text-white transition-colors">
-            Marcar todo
+        <div className="flex gap-4">
+          {noLeidas > 0 && (
+            <button onClick={marcarTodasLeidas} className="text-[9px] font-bold text-blue-400 uppercase tracking-widest hover:text-white transition-colors">
+              Marcar todo
+            </button>
+          )}
+          <button onClick={onClose} className="text-[9px] font-bold text-slate-500 uppercase hover:text-white transition-colors">
+            Cerrar
           </button>
-        )}
+        </div>
       </div>
       <div className="overflow-y-auto flex-1 custom-scrollbar">
         {notifs.map(n => {
@@ -169,7 +174,6 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-// --- Componente Principal ---
 export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -194,7 +198,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     navigate("/login", { replace: true });
   };
 
-  useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname]);
+  useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname, onClose]);
 
   useEffect(() => {
     const fn = (e: MouseEvent) => {
@@ -207,19 +211,12 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   return (
     <>
-      {/* ══════════════════════════════════════════════════════════════════
-          DESKTOP HEADER - DEEP SMOKED GLASS (SQUARE)
-          ══════════════════════════════════════════════════════════════════ */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0f1e]/60 backdrop-blur-2xl border-b border-white/[0.05] items-center">
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#1e293b]/60 backdrop-blur-2xl border-b border-white/[0.05] items-center">
         <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500/20" />
         <div className="max-w-[1600px] mx-auto w-full px-10 flex items-center justify-between h-full">
           
           <div className="flex items-center h-full">
-            {/* Logo: Blanco Invertido y Cuadrado */}
-            <button 
-              onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-6 h-16 pr-10 border-r border-white/[0.05] hover:bg-white/[0.02] transition-all"
-            >
+            <button onClick={() => navigate("/dashboard")} className="flex items-center gap-6 h-16 pr-10 border-r border-white/[0.05] hover:bg-white/[0.02] transition-all">
               <img src={logo} alt="Asamblea" className="h-10 w-auto object-contain brightness-0 invert opacity-80" />
               <div className="text-left">
                 <span className="text-[9px] font-bold text-blue-400/40 uppercase tracking-[0.4em] block leading-none">Asamblea Legislativa</span>
@@ -233,7 +230,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           </div>
 
           <div className="flex items-center h-full">
-            {/* Notificaciones */}
             <div ref={notiRef} className="relative h-full flex items-center">
               <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
                 className={`w-16 h-full flex items-center justify-center transition-all border-l border-white/[0.05] ${notiOpen ? 'bg-white/[0.05] text-white' : 'text-slate-500 hover:text-slate-200'}`}>
@@ -242,10 +238,9 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                   {noLeidas > 0 && <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-blue-500 shadow-[0_0_12px_#3b82f6]" />}
                 </div>
               </button>
-              {notiOpen && <div className="absolute right-0 top-16 w-80"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
+              {notiOpen && <div className="absolute right-0 top-16 w-80 shadow-2xl"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
             </div>
 
-            {/* Usuario */}
             <div ref={menuRef} className="relative h-full flex items-center">
               <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
                 className={`flex items-center gap-4 px-8 h-full transition-all border-l border-white/[0.05] border-r border-white/[0.05] ${userMenuOpen ? 'bg-white/[0.05]' : 'hover:bg-white/[0.02]'}`}>
@@ -258,7 +253,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               </button>
               
               {userMenuOpen && (
-                <div className="absolute right-0 top-16 w-64 bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/[0.05] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                <div className="absolute right-0 top-16 w-64 bg-[#1e293b]/90 backdrop-blur-3xl border border-white/[0.05] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
                   <div className="p-10 border-b border-white/[0.05] flex flex-col items-center text-center gap-5">
                     <Avatar initial={initial} size="lg" />
                     <div>
@@ -279,21 +274,19 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </header>
 
-      {/* MOBILE HEADER */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0f1e]/80 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-6">
-        <button onClick={onOpen} className="text-slate-400 active:scale-90 transition-transform"><Icons.Menu /></button>
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#1e293b]/80 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-6">
+        <button onClick={onOpen} className="text-slate-400 active:scale-90 transition-transform"><Icons.X /></button>
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2">
           <img src={logo} alt="Logo" className="h-6 brightness-0 invert opacity-80" />
           <span className="text-sm font-bold text-white uppercase tracking-widest">Transporte</span>
         </button>
         <div className="relative">
           <button onClick={() => setNotiOpen(!notiOpen)} className="text-slate-400"><Icons.Bell /></button>
-          {notiOpen && <div className="absolute right-0 top-12 w-[calc(100vw-3rem)]"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
+          {notiOpen && <div className="absolute right-0 top-12 w-[calc(100vw-3rem)] z-[100]"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
         </div>
       </header>
 
-      {/* MOBILE DRAWER */}
-      <aside className={`fixed top-0 left-0 z-[70] w-72 h-full bg-[#0a0f1e] border-r border-white/5 transition-transform duration-300 ease-out flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
+      <aside className={`fixed top-0 left-0 z-[70] w-72 h-full bg-[#1e293b] border-r border-white/5 transition-transform duration-300 ease-out flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
         <div className="p-10 border-b border-white/[0.05] flex flex-col gap-8">
           <img src={logo} alt="Logo" className="h-10 w-auto self-start brightness-0 invert opacity-80" />
           <div className="flex items-center gap-4">
@@ -314,11 +307,9 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </aside>
 
-      {/* BACKDROP */}
       {(open || notiOpen) && <div onClick={() => { onClose(); setNotiOpen(false); }} className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" />}
 
-      {/* MOBILE BOTTOM NAV */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-[#0a0f1e]/80 backdrop-blur-xl border-t border-white/[0.05] flex items-center justify-around pb-safe">
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-[#1e293b]/80 backdrop-blur-xl border-t border-white/[0.05] flex items-center justify-around">
         {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
       </nav>
     </>
