@@ -2,13 +2,23 @@
 import { api } from "../lib/axios";
 import type { RequestStatus, Unidad, Solicitante, LaravelPaginatedResponse, RequestFilters } from "./requests.service";
 
+export type TipoMantenimiento = {
+  id: number;
+  nombre: string;
+  descripcion?: string | null;
+  activo?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type SolicitudMantenimiento = {
   id: number;
   codigo: string;
   unidad_solicitante_id: number;
   solicitante_id: number;
   descripcion: string;
-  tipo_mantenimiento?: string | null;
+  // La API puede devolver el tipo como objeto relacionado o como string
+  tipo_mantenimiento?: TipoMantenimiento | string | null;
   vehiculo_id?: number | null;
   fecha_sugerida: string;
   prioridad: string;
@@ -46,7 +56,9 @@ export async function getAllMantenimientos(filters?: MantenimientoFilters) {
       ...s,
       modulo:       "mantenimiento" as const,
       origen:       s.descripcion ?? "—",
-      destino:      s.tipo_mantenimiento ?? "Mantenimiento general",
+      destino:      (typeof s.tipo_mantenimiento === "object" && s.tipo_mantenimiento !== null)
+                      ? s.tipo_mantenimiento.nombre
+                      : (s.tipo_mantenimiento as string | null | undefined) ?? "Mantenimiento general",
       fecha_salida: s.fecha_sugerida,
     })),
     total:       data.total,

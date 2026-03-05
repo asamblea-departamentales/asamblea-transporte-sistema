@@ -2,13 +2,23 @@
 import { api } from "../lib/axios";
 import type { RequestStatus, Unidad, Solicitante, LaravelPaginatedResponse, RequestFilters } from "./requests.service";
 
+export type TipoCombustible = {
+  id: number;
+  nombre: string;
+  descripcion?: string | null;
+  activo?: boolean;
+  created_at?: string;
+  updated_at?: string;
+};
+
 export type SolicitudCombustible = {
   id: number;
   codigo: string;
   unidad_solicitante_id: number;
   solicitante_id: number;
   motivo: string;
-  tipo_combustible?: string | null;
+  // La API puede devolver el tipo como objeto relacionado o como string
+  tipo_combustible?: TipoCombustible | string | null;
   cantidad_solicitada?: number | null;
   vehiculo_placa?: string | null;
   fecha_solicitud: string;
@@ -47,7 +57,9 @@ export async function getAllCombustibles(filters?: CombustibleFilters) {
       ...s,
       modulo:       "combustible" as const,
       origen:       s.motivo ?? "—",
-      destino:      s.tipo_combustible ?? "Combustible general",
+      destino:      (typeof s.tipo_combustible === "object" && s.tipo_combustible !== null)
+                      ? s.tipo_combustible.nombre
+                      : (s.tipo_combustible as string | null | undefined) ?? "Combustible general",
       fecha_salida: s.fecha_solicitud,
     })),
     total:       data.total,
