@@ -3,6 +3,7 @@ import logo from "../assets/asamble.png";
 import { useAuth } from "../auth/AuthContext";
 import React, { useState, useRef, useEffect } from "react";
 
+// --- Tipos y Mocks ---
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number; };
 
@@ -25,24 +26,25 @@ const notiColor = {
   info: { dot: "#3B82F6", bg: "rgba(59,130,246,0.12)", border: "rgba(59,130,246,0.25)" },
 };
 
+// --- Iconos ---
 const Icons = {
   Dashboard: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="8" height="8" rx="2" /><rect x="13" y="3" width="8" height="8" rx="2" />
-      <rect x="3" y="13" width="8" height="8" rx="2" /><rect x="13" y="13" width="8" height="8" rx="2" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+      <rect x="3" y="3" width="8" height="8" rx="0" /><rect x="13" y="3" width="8" height="8" rx="0" />
+      <rect x="3" y="13" width="8" height="8" rx="0" /><rect x="13" y="13" width="8" height="8" rx="0" />
     </svg>
   ),
   Plus: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" />
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+      <rect x="3" y="3" width="18" height="18" rx="0" /><path d="M12 8v8M8 12h8" />
     </svg>
   ),
   List: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
       <path d="M9 6h11M9 12h11M9 18h6" />
-      <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="18" r="1.5" fill="currentColor" stroke="none" />
+      <rect x="4" y="5" width="2" height="2" fill="currentColor" />
+      <rect x="4" y="11" width="2" height="2" fill="currentColor" />
+      <rect x="4" y="17" width="2" height="2" fill="currentColor" />
     </svg>
   ),
   Menu: () => (
@@ -56,35 +58,35 @@ const Icons = {
     </svg>
   ),
   Logout: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><path d="M16 17l5-5-5-5M21 12H9" />
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5V5h4" /><path d="M16 17l5-5-5-5M21 12H9" />
     </svg>
   ),
   ChevronDown: ({ open }: { open: boolean }) => (
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
       style={{ transition: "transform 200ms ease", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
       <path d="M4 6l4 4 4-4" />
     </svg>
   ),
   Bell: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
     </svg>
   ),
   Check: () => (
-    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
       <path d="M5 13l4 4L19 7" />
     </svg>
   ),
 };
 
-// --- Avatar Cuadrado y Serio ---
+// --- Componentes de Apoyo ---
 function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
-  const dim = { sm: 32, md: 36, lg: 44 };
+  const dim = { sm: 30, md: 32, lg: 50 };
   return (
     <div 
-      className="flex items-center justify-center font-bold text-white bg-[#1e294b] border border-blue-400/20 rounded-none flex-shrink-0"
-      style={{ width: dim[size], height: dim[size] }}
+      className="flex items-center justify-center font-bold text-white bg-white/[0.03] border border-white/[0.08] rounded-none flex-shrink-0"
+      style={{ width: dim[size], height: dim[size], fontSize: size === 'lg' ? 18 : 11 }}
     >
       {initial}
     </div>
@@ -93,39 +95,41 @@ function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" 
 
 function StatusDot() {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-bold text-emerald-400 uppercase tracking-wider">
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_#10b981]" />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-none bg-white/[0.03] border border-white/[0.05] text-[9px] font-bold text-blue-400 uppercase tracking-[0.2em]">
+      <span className="w-1 h-1 bg-blue-500 shadow-[0_0_8px_#3b82f6]" />
       En línea
     </span>
   );
 }
 
-// --- NavLinkItem Estilo Plano ---
 function NavLinkItem({ item, onClick, variant, pathname }: { item: NavItem; onClick?: () => void; variant: "desktop" | "drawer" | "bottom"; pathname: string; }) {
   const { to, label, mobileLabel, icon: Icon } = item;
   const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
 
   if (variant === "bottom") {
     return (
-      <NavLink to={to} end onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-1 border-t-2 transition-all ${active ? 'border-blue-400 text-blue-400 bg-white/5' : 'border-transparent text-slate-400'}`}>
+      <NavLink to={to} end onClick={onClick} className={`flex-1 flex flex-col items-center justify-center gap-1 transition-all relative ${active ? 'text-white' : 'text-slate-500'}`}>
         <Icon />
-        <span className="text-[10px] font-bold uppercase tracking-tighter">{mobileLabel}</span>
+        <span className="text-[9px] font-bold uppercase tracking-wider">{mobileLabel}</span>
+        {active && <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500" />}
+      </NavLink>
+    );
+  }
+
+  if (variant === "drawer") {
+    return (
+      <NavLink to={to} end onClick={onClick} className={`flex items-center gap-4 px-6 py-4 transition-all border-l-2 ${active ? 'bg-white/[0.03] text-white border-blue-500' : 'text-slate-400 border-transparent hover:bg-white/[0.01]'}`}>
+        <Icon />
+        <span className="text-[11px] font-bold uppercase tracking-[0.2em]">{label}</span>
       </NavLink>
     );
   }
 
   return (
-    <NavLink 
-      to={to} 
-      end 
-      className={`flex items-center gap-3 px-6 py-3 border-l-2 transition-all font-bold text-xs uppercase tracking-widest ${
-        active 
-          ? 'bg-white/10 text-white border-blue-400' 
-          : 'text-slate-300 border-transparent hover:bg-white/5 hover:text-white'
-      }`}
-    >
+    <NavLink to={to} end className={`flex items-center gap-3 px-8 h-16 transition-all font-bold text-[10px] uppercase tracking-[0.3em] relative ${active ? 'text-white' : 'text-slate-500 hover:text-slate-200'}`}>
       <Icon />
       <span>{label}</span>
+      {active && <div className="absolute bottom-0 left-0 right-0 h-[2px] bg-blue-500 shadow-[0_0_15px_rgba(59,130,246,0.6)]" />}
     </NavLink>
   );
 }
@@ -137,45 +141,35 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const noLeidas = notifs.filter(n => !n.leida).length;
 
   return (
-    <div className="w-full max-h-[70vh] bg-slate-900 border border-white/10 rounded-2xl shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-200">
-      <div className="px-5 py-4 border-b border-white/5 flex items-center justify-between bg-white/[0.02]">
-        <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-white">Notificaciones</span>
-          {noLeidas > 0 && <span className="bg-blue-500 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full">{noLeidas}</span>}
-        </div>
+    <div className="w-full max-h-[70vh] bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/[0.05] rounded-none shadow-2xl flex flex-col overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+      <div className="px-6 py-5 border-b border-white/[0.05] flex items-center justify-between bg-white/[0.01]">
+        <span className="text-[10px] font-black text-white uppercase tracking-[0.3em]">Notificaciones</span>
         {noLeidas > 0 && (
-          <button onClick={marcarTodasLeidas} className="text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors flex items-center gap-1.5">
-            <Icons.Check /> Marcar todo
+          <button onClick={marcarTodasLeidas} className="text-[9px] font-bold text-blue-400 uppercase tracking-widest hover:text-white transition-colors">
+            Marcar todo
           </button>
         )}
       </div>
-      <div className="overflow-y-auto flex-1">
+      <div className="overflow-y-auto flex-1 custom-scrollbar">
         {notifs.map(n => {
           const cfg = notiColor[n.tipo];
           return (
-            <div key={n.id} onClick={() => marcarLeida(n.id)} className={`px-5 py-4 border-b border-white/5 flex gap-4 items-start cursor-pointer transition-all ${n.leida ? 'opacity-60 hover:bg-white/[0.02]' : 'bg-blue-500/5 hover:bg-blue-500/10'}`}>
-              <div className="w-10 h-10 rounded-xl flex-shrink-0 flex items-center justify-center border" style={{ backgroundColor: cfg.bg, borderColor: cfg.border }}>
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cfg.dot }} />
-              </div>
+            <div key={n.id} onClick={() => marcarLeida(n.id)} className={`px-6 py-5 border-b border-white/[0.03] flex gap-5 items-start cursor-pointer transition-all ${n.leida ? 'opacity-40' : 'bg-white/[0.02]'}`}>
+              <div className="w-1.5 h-1.5 mt-1.5 flex-shrink-0" style={{ backgroundColor: cfg.dot }} />
               <div className="flex-1 min-w-0">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className={`text-sm truncate ${n.leida ? 'font-medium text-slate-300' : 'font-bold text-white'}`}>{n.titulo}</span>
-                  {!n.leida && <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />}
-                </div>
-                <p className="text-xs text-slate-400 leading-relaxed line-clamp-2">{n.mensaje}</p>
-                <span className="text-[10px] font-medium text-slate-500 uppercase tracking-wider mt-1 block">{n.tiempo}</span>
+                <p className={`text-[11px] uppercase tracking-wider mb-1 ${n.leida ? 'text-slate-400' : 'font-bold text-white'}`}>{n.titulo}</p>
+                <p className="text-[10px] text-slate-500 leading-relaxed truncate">{n.mensaje}</p>
+                <span className="text-[8px] text-slate-600 uppercase mt-2 block tracking-tighter">{n.tiempo}</span>
               </div>
             </div>
           );
         })}
       </div>
-      <div className="p-3 border-t border-white/5">
-        <button onClick={onClose} className="w-full py-2.5 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-all">Cerrar</button>
-      </div>
     </div>
   );
 }
 
+// --- Componente Principal ---
 export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -214,189 +208,118 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   return (
     <>
       {/* ══════════════════════════════════════════════════════════════════
-    DESKTOP HEADER - ULTRA-DARK GLASS (SQUARE & SHARP)
-    ══════════════════════════════════════════════════════════════════ */}
-<header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#0f172a]/80 backdrop-blur-xl border-b border-white/5 items-center">
-  {/* Línea de acento superior: un azul eléctrico muy fino */}
-  <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500/40" />
-  
-  <div className="max-w-[1600px] mx-auto w-full px-6 flex items-center justify-between h-full">
-    
-    <div className="flex items-center h-full">
-      {/* Logo: Cuadrado, Blanco y con Separador Técnico */}
-      <button 
-        onClick={() => navigate("/dashboard")}
-        className="flex items-center gap-5 h-16 pr-10 border-r border-white/5 hover:bg-white/[0.03] transition-all group"
-      >
-        <img 
-          src={logo} 
-          alt="Asamblea" 
-          className="h-10 w-auto object-contain filter brightness-0 invert opacity-90 group-hover:opacity-100 transition-opacity" 
-        />
-        <div className="text-left">
-          <span className="text-[10px] font-black text-blue-400/70 uppercase tracking-[0.3em] block leading-none">Asamblea Legislativa</span>
-          <span className="text-sm font-light text-slate-200 uppercase tracking-[0.2em] mt-1.5 block leading-none">Transporte</span>
-        </div>
-      </button>
-
-      {/* Navegación: Pestañas Planas con Indicador Inferior Recto */}
-      <nav className="flex items-center h-full ml-6">
-        {navItems.map(item => (
-          <NavLinkItem 
-            key={item.to} 
-            item={item} 
-            variant="desktop" 
-            pathname={location.pathname} 
-          />
-        ))}
-      </nav>
-    </div>
-
-    <div className="flex items-center h-full">
-      {/* Notificaciones: Diseño Minimalista de 1px */}
-      <div ref={notiRef} className="relative h-full flex items-center">
-        <button
-          onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-          className={`w-16 h-full flex items-center justify-center transition-all border-l border-white/5 ${
-            notiOpen ? 'bg-white/5 text-white' : 'text-slate-500 hover:text-white hover:bg-white/[0.03]'
-          }`}
-        >
-          <div className="relative">
-            <Icons.Bell />
-            {noLeidas > 0 && (
-              <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-none shadow-[0_0_10px_rgba(59,130,246,0.6)]" />
-            )}
-          </div>
-        </button>
-      </div>
-
-      {/* Usuario: Panel de Identificación Recto */}
-      <div ref={menuRef} className="relative h-full flex items-center">
-        <button
-          onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-          className={`flex items-center gap-4 px-8 h-full transition-all border-l border-white/5 border-r border-white/5 ${
-            userMenuOpen ? 'bg-white/5' : 'hover:bg-white/[0.03]'
-          }`}
-        >
-          {/* Avatar Cuadrado Minimalista */}
-          <div className="w-9 h-9 bg-slate-800 border border-white/10 flex items-center justify-center text-[11px] font-bold text-slate-300">
-            {initial}
-          </div>
+          DESKTOP HEADER - DEEP SMOKED GLASS (SQUARE)
+          ══════════════════════════════════════════════════════════════════ */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0f1e]/60 backdrop-blur-2xl border-b border-white/[0.05] items-center">
+        <div className="absolute top-0 left-0 right-0 h-[1px] bg-blue-500/20" />
+        <div className="max-w-[1600px] mx-auto w-full px-10 flex items-center justify-between h-full">
           
-          <div className="hidden xl:block text-left">
-            <p className="text-[11px] font-bold text-white uppercase tracking-[0.15em] leading-none">
-              {user?.name || "Usuario"}
-            </p>
-            <p className="text-[9px] font-bold text-blue-500/80 uppercase tracking-tighter mt-1">
-              Auth: Admin
-            </p>
-          </div>
-          <Icons.ChevronDown open={userMenuOpen} />
-        </button>
-
-        {/* Dropdown: Menú de Cristal Oscuro */}
-        {userMenuOpen && (
-          <div className="absolute right-0 top-16 w-64 bg-[#0f172a]/95 backdrop-blur-2xl border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] animate-in fade-in duration-200">
-            <div className="p-6 border-b border-white/5 bg-white/[0.01]">
-              <div className="flex flex-col items-center gap-4 text-center">
-                <div className="w-14 h-14 bg-slate-800 border border-white/10 flex items-center justify-center text-xl font-bold text-white uppercase">
-                  {initial}
-                </div>
-                <div className="min-w-0">
-                  <p className="text-[11px] font-black text-white uppercase tracking-widest truncate">{user?.name}</p>
-                  <p className="text-[10px] text-slate-500 mt-1 truncate">{user?.email}</p>
-                </div>
+          <div className="flex items-center h-full">
+            {/* Logo: Blanco Invertido y Cuadrado */}
+            <button 
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-6 h-16 pr-10 border-r border-white/[0.05] hover:bg-white/[0.02] transition-all"
+            >
+              <img src={logo} alt="Asamblea" className="h-10 w-auto object-contain brightness-0 invert opacity-80" />
+              <div className="text-left">
+                <span className="text-[9px] font-bold text-blue-400/40 uppercase tracking-[0.4em] block leading-none">Asamblea Legislativa</span>
+                <span className="text-sm font-light text-slate-100 uppercase tracking-[0.25em] mt-1.5 block leading-none">Transporte</span>
               </div>
-            </div>
-            <div className="p-2">
-              <button 
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-3 py-3 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-[0.2em] hover:bg-red-500 hover:text-white transition-all"
-              >
-                <Icons.Logout /> Cerrar Sesión
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
-    </div>
-  </div>
-</header>
+            </button>
 
-      {/* MOBILE TOP BAR */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-slate-900/95 backdrop-blur-lg border-b border-white/5 flex items-center justify-between px-4">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent" />
-        <button onClick={open ? onClose : onOpen} className="w-10 h-10 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-slate-400 active:scale-95">
-          {open ? <Icons.X /> : <Icons.Menu />}
-        </button>
-        <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-            <img src={logo} alt="Logo" className="h-5 brightness-0 invert opacity-90" />
+            <nav className="flex items-center h-full ml-4">
+              {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />)}
+            </nav>
           </div>
-          <span className="text-base font-bold text-white tracking-tight">Transporte</span>
-        </button>
-        <div className="relative">
-          <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-            className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${notiOpen ? 'bg-blue-500/20 text-blue-400' : 'bg-white/5 text-slate-400'}`}>
-            <Icons.Bell />
-            {noLeidas > 0 && <span className="absolute top-3 right-3 w-2 h-2 bg-blue-500 rounded-full border-2 border-slate-900" />}
-          </button>
+
+          <div className="flex items-center h-full">
+            {/* Notificaciones */}
+            <div ref={notiRef} className="relative h-full flex items-center">
+              <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
+                className={`w-16 h-full flex items-center justify-center transition-all border-l border-white/[0.05] ${notiOpen ? 'bg-white/[0.05] text-white' : 'text-slate-500 hover:text-slate-200'}`}>
+                <div className="relative">
+                  <Icons.Bell />
+                  {noLeidas > 0 && <span className="absolute -top-1 -right-1 w-1.5 h-1.5 bg-blue-500 shadow-[0_0_12px_#3b82f6]" />}
+                </div>
+              </button>
+              {notiOpen && <div className="absolute right-0 top-16 w-80"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
+            </div>
+
+            {/* Usuario */}
+            <div ref={menuRef} className="relative h-full flex items-center">
+              <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
+                className={`flex items-center gap-4 px-8 h-full transition-all border-l border-white/[0.05] border-r border-white/[0.05] ${userMenuOpen ? 'bg-white/[0.05]' : 'hover:bg-white/[0.02]'}`}>
+                <Avatar initial={initial} />
+                <div className="hidden xl:block text-left">
+                  <p className="text-[10px] font-bold text-slate-100 uppercase tracking-[0.2em] leading-none">{user?.name || "Usuario"}</p>
+                  <p className="text-[8px] font-bold text-blue-500/60 uppercase tracking-tighter mt-1.5">Administrador</p>
+                </div>
+                <Icons.ChevronDown open={userMenuOpen} />
+              </button>
+              
+              {userMenuOpen && (
+                <div className="absolute right-0 top-16 w-64 bg-[#0a0f1e]/90 backdrop-blur-3xl border border-white/[0.05] shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+                  <div className="p-10 border-b border-white/[0.05] flex flex-col items-center text-center gap-5">
+                    <Avatar initial={initial} size="lg" />
+                    <div>
+                      <p className="text-[11px] font-bold text-white uppercase tracking-[0.3em]">{user?.name}</p>
+                      <p className="text-[9px] text-slate-500 mt-2 tracking-tighter font-mono">{user?.email}</p>
+                    </div>
+                    <StatusDot />
+                  </div>
+                  <div className="p-3">
+                    <button onClick={handleLogout} className="w-full py-4 border border-red-500/10 text-red-500/60 text-[9px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all">
+                      <Icons.Logout /> Cerrar sesión
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </div>
       </header>
 
-      {/* MOBILE NOTIFICATIONS PANEL */}
-      {notiOpen && (
-        <div className="lg:hidden fixed top-20 right-4 left-4 z-[100] animate-in fade-in slide-in-from-top-4 duration-200">
-          <NotificacionesPanel onClose={() => setNotiOpen(false)} />
+      {/* MOBILE HEADER */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 bg-[#0a0f1e]/80 backdrop-blur-xl border-b border-white/[0.05] flex items-center justify-between px-6">
+        <button onClick={onOpen} className="text-slate-400 active:scale-90 transition-transform"><Icons.Menu /></button>
+        <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2">
+          <img src={logo} alt="Logo" className="h-6 brightness-0 invert opacity-80" />
+          <span className="text-sm font-bold text-white uppercase tracking-widest">Transporte</span>
+        </button>
+        <div className="relative">
+          <button onClick={() => setNotiOpen(!notiOpen)} className="text-slate-400"><Icons.Bell /></button>
+          {notiOpen && <div className="absolute right-0 top-12 w-[calc(100vw-3rem)]"><NotificacionesPanel onClose={() => setNotiOpen(false)} /></div>}
         </div>
-      )}
+      </header>
 
-      {/* BACKDROP */}
-      {(open || notiOpen) && (
-        <div onClick={() => { onClose(); setNotiOpen(false); }} className="fixed inset-0 z-[60] bg-slate-950/60 backdrop-blur-sm animate-in fade-in duration-300" />
-      )}
-
-      {/* DRAWER */}
-      <aside className={`fixed top-0 left-0 z-[70] w-72 h-full bg-slate-900 border-r border-white/5 shadow-2xl transition-transform duration-300 ease-out flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
-        <div className="p-6 border-b border-white/5 bg-white/[0.02] flex flex-col gap-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-blue-500/20 border border-blue-500/30 flex items-center justify-center">
-              <img src={logo} alt="Logo" className="h-6 brightness-0 invert opacity-90" />
-            </div>
-            <div>
-              <p className="text-[10px] font-bold text-blue-400/50 uppercase tracking-widest leading-none">Asamblea</p>
-              <p className="text-sm font-extrabold text-white tracking-tight">Transporte</p>
+      {/* MOBILE DRAWER */}
+      <aside className={`fixed top-0 left-0 z-[70] w-72 h-full bg-[#0a0f1e] border-r border-white/5 transition-transform duration-300 ease-out flex flex-col ${open ? "translate-x-0" : "-translate-x-full"}`}>
+        <div className="p-10 border-b border-white/[0.05] flex flex-col gap-8">
+          <img src={logo} alt="Logo" className="h-10 w-auto self-start brightness-0 invert opacity-80" />
+          <div className="flex items-center gap-4">
+            <Avatar initial={initial} />
+            <div className="min-w-0">
+              <p className="text-[10px] font-bold text-white uppercase tracking-widest truncate">{user?.name}</p>
+              <StatusDot />
             </div>
           </div>
-          <div className="p-3 bg-white/5 rounded-2xl border border-white/5">
-            <div className="flex items-center gap-3 mb-3">
-              <Avatar initial={initial} size="md" />
-              <div className="min-w-0">
-                <p className="text-sm font-bold text-white truncate">{user?.name || "Usuario"}</p>
-                <p className="text-[10px] font-medium text-slate-500 truncate">{user?.email || ""}</p>
-              </div>
-            </div>
-            <StatusDot />
-          </div>
         </div>
-        <nav className="flex-1 overflow-y-auto p-4 space-y-1">
-          <p className="px-3 py-2 text-[10px] font-bold text-slate-600 uppercase tracking-[0.2em]">Menú principal</p>
+        <nav className="flex-1 py-6 flex flex-col">
           {navItems.map(item => <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />)}
         </nav>
-        <div className="p-4 border-t border-white/5 bg-white/[0.01]">
-          <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:bg-red-500/10 hover:text-red-400 transition-all group">
-            <div className="text-slate-500 group-hover:text-red-400 transition-colors"><Icons.Logout /></div>
+        <div className="p-6 border-t border-white/[0.05]">
+          <button onClick={handleLogout} className="w-full py-4 border border-white/[0.05] text-slate-500 text-[9px] font-bold uppercase tracking-[0.3em] hover:text-white transition-all">
             Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* BOTTOM NAV */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-slate-900/95 backdrop-blur-xl border-t border-white/5 pb-[env(safe-area-inset-bottom,0px)]">
-        <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/20 to-transparent" />
-        <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
-        </div>
+      {/* BACKDROP */}
+      {(open || notiOpen) && <div onClick={() => { onClose(); setNotiOpen(false); }} className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm animate-in fade-in duration-300" />}
+
+      {/* MOBILE BOTTOM NAV */}
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 h-16 bg-[#0a0f1e]/80 backdrop-blur-xl border-t border-white/[0.05] flex items-center justify-around pb-safe">
+        {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
       </nav>
     </>
   );
