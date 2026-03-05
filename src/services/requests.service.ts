@@ -1,3 +1,5 @@
+//"services/requests.service.ts"
+
 import { api } from "../lib/axios";
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
@@ -27,15 +29,15 @@ export type Solicitante = {
 export type Vehiculo = {
   id: number;
   placa: string;
-  marca: string;       // campo string directo en la tabla
-  modelo: string;      // campo string directo en la tabla
+  marca: string;
+  modelo: string;
   tipo?: string;
-  fotografia_url: string | null; // accessor getFotografiaUrlAttribute en Vehiculo.php
+  fotografia_url: string | null;
 };
 
 export type Motorista = {
   id: number;
-  nombre: string;      // campo real en tabla motoristas (NO 'name')
+  nombre: string;
   telefono?: string | null;
   dui?: string;
 };
@@ -48,6 +50,7 @@ export type Request = {
   motivo_actividad: string;
   origen: string;
   destino: string;
+  destino_adicional?: string | null;
   fecha_salida: string;
   fecha_retorno: string | null;
   cantidad_personas: number;
@@ -57,8 +60,8 @@ export type Request = {
   updated_at: string;
   unidad?: Unidad;
   solicitante?: Solicitante;
-  vehiculo?: Vehiculo | null;   // ← nuevo
-  motorista?: Motorista | null; // ← nuevo
+  vehiculo?: Vehiculo | null;
+  motorista?: Motorista | null;
 };
 
 export type LaravelPaginatedResponse = {
@@ -92,6 +95,28 @@ export type RequestFilters = {
   per_page?: number;
 };
 
+// Payload tipado para crear solicitud de transporte
+export type CreateRequestPayload = {
+  unidad_solicitante_id: number;
+  motivo_actividad: string;
+  origen: string;
+  destino_principal: string;
+  destino_adicional?: string | null;
+  fecha_salida: string;
+  fecha_retorno?: string | null;
+  hora_salida: string;
+  cantidad_personas: number;
+  prioridad: string;
+  tipo_vehiculo: string;
+  encargado: string;
+  subencargado?: string | null;
+};
+
+export type CreateRequestResponse = {
+  solicitudId?: string | number;
+  message?: string;
+};
+
 // ─── FUNCIONES API ────────────────────────────────────────────────────────────
 
 export async function getAllRequests(filters?: RequestFilters): Promise<RequestsResponse> {
@@ -118,6 +143,19 @@ export async function getAllRequests(filters?: RequestFilters): Promise<Requests
 export async function getRequestById(id: string | number): Promise<Request> {
   const { data } = await api.get<Request>(`/api/solicitudes-transporte/${id}`);
   return data;
+}
+
+export async function createRequest(
+  payload: CreateRequestPayload
+): Promise<CreateRequestResponse> {
+  const { data } = await api.post<{ codigo?: string; id?: number; data?: Request; message?: string }>(
+    "/api/solicitudes-transporte",
+    payload
+  );
+  return {
+    solicitudId: data?.codigo ?? data?.data?.codigo ?? data?.id,
+    message:     data?.message,
+  };
 }
 
 export async function deleteRequest(id: string | number): Promise<void> {

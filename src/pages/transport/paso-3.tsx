@@ -3,6 +3,8 @@ import { useNavigate } from "react-router-dom";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 
+import { createRequest } from "../../services/requests.service";
+
 type VehiculoId = "sedan" | "microbus" | "camion";
 
 type DestinationPoint = {
@@ -42,24 +44,12 @@ function safeParse(json: string | null): any {
   }
 }
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8000";
-
-type ApiSubmitResponse = {
-  ok: boolean;
-  solicitudId?: string;
-  message?: string;
-};
-
 type RouteInfo = {
-  distance: number;  // km
-  duration: number;  // minutos
-  isReal: boolean;   // true = OSRM, false = Haversine fallback
+  distance: number;
+  duration: number;
+  isReal: boolean;
 };
 
-// Geocodifica dirección sin logs
 async function geocodeAddress(address: string): Promise<{ lat: number; lng: number } | null> {
   try {
     const res = await fetch(
@@ -77,7 +67,6 @@ async function geocodeAddress(address: string): Promise<{ lat: number; lng: numb
   }
 }
 
-// Haversine como fallback
 function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): number {
   const R = 6371;
   const dLat = ((lat2 - lat1) * Math.PI) / 180;
@@ -90,7 +79,6 @@ function haversineKm(lat1: number, lon1: number, lat2: number, lon2: number): nu
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 }
 
-// OSRM: ruta real por carretera — devuelve geometría, distancia y tiempo
 async function getOSRMRoute(points: { lat: number; lng: number }[]): Promise<{
   distanceKm: number;
   durationMin: number;
@@ -154,7 +142,6 @@ export default function TransportStep3Page() {
     popupAnchor: [0, -32],
   });
 
-  // Cargar datos desde localStorage
   useEffect(() => {
     const saved = safeParse(localStorage.getItem(STORAGE_KEY)) as WizardData;
     const hasBasics =
@@ -176,7 +163,6 @@ export default function TransportStep3Page() {
     setLoading(false);
   }, [navigate]);
 
-  // Inicializar mapa
   useEffect(() => {
     if (loading) return;
     if (!mapRef.current) {
@@ -201,14 +187,12 @@ export default function TransportStep3Page() {
     };
   }, [loading]);
 
-  // Renderizar mapa con OSRM
   useEffect(() => {
     if (!mapRef.current || !data.origen) return;
 
     async function renderMap() {
       setIsLoadingRoute(true);
 
-      // Limpiar capas anteriores
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       if (routeLayerRef.current) {
@@ -218,7 +202,6 @@ export default function TransportStep3Page() {
 
       const bounds: [number, number][] = [];
 
-      // Coordenadas de origen
       let origenCoords: { lat: number; lng: number } | null = null;
       if (data.origenLat && data.origenLng) {
         origenCoords = { lat: data.origenLat, lng: data.origenLng };
@@ -234,7 +217,6 @@ export default function TransportStep3Page() {
         bounds.push([origenCoords.lat, origenCoords.lng]);
       }
 
-      // Coordenadas de destinos
       const destinosCoords: { address: string; lat: number; lng: number }[] = [];
       for (const [idx, dest] of (data.destinos || []).entries()) {
         if (!dest.address?.trim()) continue;
@@ -254,13 +236,11 @@ export default function TransportStep3Page() {
         }
       }
 
-      // Ruta OSRM
       if (origenCoords && destinosCoords.length > 0) {
         const allPoints = [origenCoords, ...destinosCoords];
         const osrm = await getOSRMRoute(allPoints);
 
         if (osrm && osrm.geometry.length > 0) {
-          // Ruta real por calles — línea sólida
           routeLayerRef.current = L.polyline(osrm.geometry, {
             color: "#4F46E5",
             weight: 5,
@@ -273,7 +253,6 @@ export default function TransportStep3Page() {
             isReal: true,
           });
         } else {
-          // Fallback Haversine — línea punteada
           const routePoints: L.LatLngExpression[] = allPoints.map(
             (p) => [p.lat, p.lng] as L.LatLngExpression
           );
@@ -319,72 +298,44 @@ export default function TransportStep3Page() {
     navigate("/solicitudes/transporte/paso-2");
   }
 
-  async function submitToBackend(payload: WizardData): Promise<ApiSubmitResponse> {
-    const token = localStorage.getItem("auth_token");
-    const rawDestinos = payload.destinos || [];
-    const destinosVal = rawDestinos.filter((d) => d.address && d.address.trim().length > 0);
-    const destinoPrincipal =
-      destinosVal.length > 0 ? destinosVal[0].address : "Destino pendiente de asignar";
-    const destinosExtras = destinosVal.slice(1).map((d) => d.address.trim()).join(" - ");
-
-    let infoExtra = `Encargado: ${payload.encargado}`;
-    if (payload.subencargado) infoExtra += ` / Sub: ${payload.subencargado}`;
-    if (destinosExtras.length > 0) infoExtra += ` / Ruta Extra: ${destinosExtras}`;
-    const motivoFinal = `Actividad de transporte. ${infoExtra}`;
-
-    const fechaStr = payload.fecha || new Date().toISOString().split("T")[0];
-    const horaStr = payload.hora || "08:00";
-    const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
-
-    const res = await fetch(`${API_BASE}/api/transport-requests`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Accept: "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        "ngrok-skip-browser-warning": "true",
-      },
-      body: JSON.stringify({
-        destino_principal: destinoPrincipal,
-        encargado: payload.encargado || "Sin encargado",
-        tipo_vehiculo: payload.tipoVehiculo || "sedan",
-        fecha_salida: `${fechaStr}T${horaFinal}`,
-        hora_salida: horaStr,
-        fecha_retorno: `${fechaStr}T23:59:59`,
-        destino_adicional: destinosExtras.length > 0 ? destinosExtras : null,
-        motivo_actividad: motivoFinal,
-        cantidad_personas: parseInt(payload.pasajeros || "1"),
-        origen: payload.origen || "Sin origen",
-        subencargado: payload.subencargado,
-        unidad_solicitante_id: 1,
-        prioridad: "media",
-      }),
-    });
-
-    let json: any = null;
-    try { json = await res.json(); } catch { /* silencioso */ }
-
-    if (!res.ok) {
-      const errorDetail = json?.errors
-        ? Object.entries(json.errors).map(([k, v]: any) => `${k}: ${v[0]}`).join("\n")
-        : json?.message;
-      throw new Error(errorDetail || "No se pudo enviar la solicitud.");
-    }
-
-    return {
-      ok: true,
-      solicitudId: json?.codigo || json?.data?.codigo || json?.id,
-      message: json?.message,
-    };
-  }
-
   async function handleSubmit() {
     setErrorMsg(null);
     setSubmitting(true);
     try {
-      const resp = await submitToBackend(data);
+      const rawDestinos = data.destinos || [];
+      const destinosVal = rawDestinos.filter((d) => d.address?.trim());
+      const destinoPrincipal =
+        destinosVal.length > 0 ? destinosVal[0].address : "Destino pendiente de asignar";
+      const destinosExtras = destinosVal.slice(1).map((d) => d.address.trim()).join(" - ");
+
+      let infoExtra = `Encargado: ${data.encargado}`;
+      if (data.subencargado) infoExtra += ` / Sub: ${data.subencargado}`;
+      if (destinosExtras.length > 0) infoExtra += ` / Ruta Extra: ${destinosExtras}`;
+      const motivoFinal = `Actividad de transporte. ${infoExtra}`;
+
+      const fechaStr = data.fecha || new Date().toISOString().split("T")[0];
+      const horaStr = data.hora || "08:00";
+      const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
+
+      const resp = await createRequest({
+        destino_principal:      destinoPrincipal,
+        encargado:              data.encargado || "Sin encargado",
+        tipo_vehiculo:          data.tipoVehiculo || "sedan",
+        fecha_salida:           `${fechaStr}T${horaFinal}`,
+        hora_salida:            horaStr,
+        fecha_retorno:          `${fechaStr}T23:59:59`,
+        destino_adicional:      destinosExtras.length > 0 ? destinosExtras : null,
+        motivo_actividad:       motivoFinal,
+        cantidad_personas:      parseInt(data.pasajeros || "1"),
+        origen:                 data.origen || "Sin origen",
+        subencargado:           data.subencargado,
+        unidad_solicitante_id:  1,
+        prioridad:              "media",
+      });
+
       localStorage.removeItem(STORAGE_KEY);
-      setSuccess({ open: true, solicitudId: resp.solicitudId });
+      // ✅ FIX: convert solicitudId to string to satisfy type `string | undefined`
+      setSuccess({ open: true, solicitudId: resp.solicitudId?.toString() });
     } catch (e: any) {
       setErrorMsg(e?.message || "Ocurrió un error al enviar la solicitud.");
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -466,10 +417,6 @@ export default function TransportStep3Page() {
               <div>
                 <p className="font-bold text-red-900">No se pudo enviar</p>
                 <p className="mt-0.5">{errorMsg}</p>
-                <p className="mt-2 text-xs text-red-700/80">
-                  Si aún no tienes backend conectado, es normal. Cuando tu API
-                  esté lista, este botón enviará la solicitud.
-                </p>
               </div>
             </div>
           </div>
@@ -578,12 +525,6 @@ export default function TransportStep3Page() {
                     )}
                   </button>
                 </div>
-
-                <p className="text-xs text-slate-500">
-                  Al enviar, esta pantalla intentará registrar la solicitud en tu
-                  API de Laravel. Si tu API aún no está lista, verás un mensaje
-                  de error (normal en esta etapa).
-                </p>
               </div>
             </div>
           </div>
@@ -599,7 +540,6 @@ export default function TransportStep3Page() {
                   </p>
                 </div>
 
-                {/* Mapa con overlay de carga */}
                 <div className="relative">
                   <div id="map-resumen" className="h-[500px] bg-slate-50" />
                   {isLoadingRoute && (
@@ -615,7 +555,6 @@ export default function TransportStep3Page() {
                   )}
                 </div>
 
-                {/* Distancia y tiempo */}
                 {routeInfo && !isLoadingRoute && (
                   <div className="border-t border-slate-200 bg-white px-6 py-4">
                     <div className="flex items-center gap-6 text-sm text-slate-700">
@@ -646,7 +585,6 @@ export default function TransportStep3Page() {
                   </div>
                 )}
 
-                {/* Leyenda */}
                 <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
                   <div className="space-y-1.5 text-xs text-slate-600">
                     <p className="font-semibold text-slate-700">Resumen de ruta:</p>
