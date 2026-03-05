@@ -55,6 +55,7 @@ class Vehiculo extends Model
         'num_llantas'         => 'integer',
         'activo'              => 'boolean',
         'vencimiento_tarjeta' => 'date',
+        'accesorios' => 'array',
     ];
 
     protected $appends = ['fotografia_url'];

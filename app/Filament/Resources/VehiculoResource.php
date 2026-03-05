@@ -178,6 +178,31 @@ class VehiculoResource extends Resource
                     ->label('Vencimiento Tarjeta de Circulación'),
             ])->columns(2),
 
+
+            //Para las herramientas
+            Forms\Components\Section::make('Equipamiento y Herramientas')
+    ->icon('heroicon-o-wrench-screwdriver')
+    ->description('Marque los elementos que se encuentran físicamente en el vehículo')
+    ->collapsible()
+    ->schema([
+        Forms\Components\CheckboxList::make('accesorios')
+            ->label('') // Quitamos el label para que use el del Section
+            ->options([
+                'gato' => 'Gato Hidráulico',
+                'llanta_repuesto' => 'Llanta de Repuesto',
+                'triangulos' => 'Triángulos (2)',
+                'extintor' => 'Extintor Vigente',
+                'llave_cruz' => 'Llave de Cruz',
+                'botiquin' => 'Botiquín',
+                'cables_inicio' => 'Cables de Batería',
+                'herramientas' => 'Kit de Herramientas',
+                'chaleco' => 'Chaleco Reflectante',
+            ])
+            ->columns(3) // Se organiza en 3 columnas para ahorrar espacio
+            ->bulkToggleable() // Botón para marcar/desmarcar todo rápido
+            ->gridDirection('column'),
+    ]),
+
         Forms\Components\Section::make('Fotografía y Observaciones')
             ->icon('heroicon-o-camera')
             ->schema([
@@ -197,6 +222,8 @@ class VehiculoResource extends Resource
                     ->maxLength(1000)
                     ->columnSpanFull(),
             ]),
+
+            
 
     ]);
 }
