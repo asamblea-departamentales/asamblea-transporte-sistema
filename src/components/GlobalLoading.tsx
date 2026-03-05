@@ -17,7 +17,7 @@ export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing }) => {
             
             {/* Logo Principal de la Asamblea (Asegúrate de tenerlo en public/) */}
             <img 
-              src="/assets/logo-asamblea.png" 
+              src="/assets/asamblea.png" 
               alt="Asamblea Legislativa"
               className="h-full w-full object-contain backface-hidden"
             />
