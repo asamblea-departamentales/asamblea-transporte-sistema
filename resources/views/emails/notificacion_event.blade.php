@@ -423,10 +423,6 @@
                 <div class="map-body">
                     <p>Esta visualización muestra una aproximación del recorrido de la solicitud.</p>
 
-                    <p style="font-size:10px; color:#999;">
-                        DEBUG map_url: {{ $map_url ?? 'NO VIENE' }}
-                    </p>
-
                     <div class="map-image-wrapper">
                         @if (!empty($map_url))
                             <img src="{{ $map_url }}" alt="Mapa aproximado de la ruta">
