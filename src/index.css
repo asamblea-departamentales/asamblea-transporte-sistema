@@ -62,3 +62,22 @@ button {
 /* ── Search input ────────────────────────────────────────── */
 input[type="search"]::-webkit-search-cancel-button { display: none; }
 input[type="search"] { -webkit-appearance: none; }
+
+/* ── Clases Utilitarias para Carga Institucional ─────────── */
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+
+.backface-hidden {
+  backface-visibility: hidden;
+}
+
+/* ── Ajustes de Renderizado de Imagen ────────────────────── */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
