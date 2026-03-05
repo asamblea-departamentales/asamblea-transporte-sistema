@@ -100,6 +100,7 @@ export default function TransportStep3Page() {
   const mapRef        = useRef<L.Map | null>(null);
   const markersRef    = useRef<L.Marker[]>([]);
   const routeLayerRef = useRef<L.Polyline | null>(null);
+  const submittedRef  = useRef(false);
 
   const [wizardData,    setWizardData]    = useState<WizardData>({});
   const [loading,       setLoading]       = useState(true);
@@ -204,6 +205,8 @@ export default function TransportStep3Page() {
 
   // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit() {
+    if (submittedRef.current || submitting) return;
+    submittedRef.current = true;
     setErrorMsg(null);
     setSubmitting(true);
     try {
@@ -239,6 +242,7 @@ export default function TransportStep3Page() {
       setSuccessId(resp.solicitudId?.toString());
       setShowSuccess(true);
     } catch (e: unknown) {
+      submittedRef.current = false; // permite reintentar si hubo error
       setErrorMsg((e as Error)?.message || "Ocurrió un error al enviar la solicitud.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
@@ -271,7 +275,6 @@ export default function TransportStep3Page() {
       {showSuccess && (
         <SuccessScreen
           solicitudId={successId}
-          onClose={() => setShowSuccess(false)}
         />
       )}
 
