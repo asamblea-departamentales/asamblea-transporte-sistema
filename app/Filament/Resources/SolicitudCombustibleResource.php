@@ -214,137 +214,97 @@ class SolicitudCombustibleResource extends Resource
 {
     return $table
         ->defaultSort('created_at', 'desc')
-        ->contentGrid([
-            'default' => 1,
-            'md' => 2,
-            'xl' => 3,
-        ])
+        ->striped()
         ->recordUrl(fn (SolicitudCombustible $record) => static::getUrl('view', ['record' => $record]))
         ->columns([
-            Tables\Columns\Layout\Stack::make([
+            Tables\Columns\TextColumn::make('codigo')
+                ->label('Solicitud')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->fontFamily('mono')
+                ->color('primary')
+                ->description(fn ($record) => $record->vehiculo?->placa
+                    ? 'Vehículo: ' . $record->vehiculo->placa
+                    : 'Sin vehículo'
+                ),
 
-                // Header
-                Tables\Columns\Layout\Split::make([
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\TextColumn::make('codigo')
-                            ->label('')
-                            ->weight('bold')
-                            ->fontFamily('mono')
-                            ->size(Tables\Columns\TextColumn\TextColumnSize::Large)
-                            ->color('primary')
-                            ->searchable(),
+            Tables\Columns\TextColumn::make('vehiculo.marca.nombre')
+                ->label('Vehículo')
+                ->formatStateUsing(function ($state, $record) {
+                    return trim(
+                        ($record->vehiculo?->marca?->nombre ?? '') . ' ' .
+                        ($record->vehiculo?->modelo?->nombre ?? '')
+                    ) ?: 'Sin información';
+                })
+                ->description(fn ($record) => 'Placa: ' . ($record->vehiculo?->placa ?? 'N/A'))
+                ->toggleable(),
 
-                        Tables\Columns\TextColumn::make('created_at')
-                            ->label('')
-                            ->since()
-                            ->icon('heroicon-m-clock')
-                            ->color('gray')
-                            ->size(Tables\Columns\TextColumn\TextColumnSize::Small),
-                    ])->space(1),
+            Tables\Columns\TextColumn::make('solicitante.name')
+                ->label('Solicitante')
+                ->icon('heroicon-m-user')
+                ->searchable()
+                ->sortable()
+                ->limit(30),
 
-                    Tables\Columns\Layout\Stack::make([
-                        Tables\Columns\TextColumn::make('estado')
-                            ->label('')
-                            ->badge()
-                            ->formatStateUsing(fn (EstadoSolicitudEnum $state) => match ($state) {
-                                EstadoSolicitudEnum::BORRADOR     => 'Borrador',
-                                EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
-                                EstadoSolicitudEnum::EN_REVISION  => 'En revisión',
-                                EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada',
-                                EstadoSolicitudEnum::APROBADA     => 'Aprobada',
-                                EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
-                                EstadoSolicitudEnum::EN_EJECUCION => 'En ejecución',
-                                EstadoSolicitudEnum::COMPLETADA   => 'Completada',
-                                EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
-                                default => $state->value,
-                            })
-                            ->color(fn (EstadoSolicitudEnum $state) => match ($state) {
-                                EstadoSolicitudEnum::PENDIENTE    => 'warning',
-                                EstadoSolicitudEnum::EN_REVISION  => 'info',
-                                EstadoSolicitudEnum::PRE_APROBADA => 'warning',
-                                EstadoSolicitudEnum::APROBADA     => 'success',
-                                EstadoSolicitudEnum::RECHAZADA    => 'danger',
-                                EstadoSolicitudEnum::EN_EJECUCION => 'primary',
-                                EstadoSolicitudEnum::COMPLETADA   => 'success',
-                                EstadoSolicitudEnum::CANCELADA    => 'gray',
-                                default                           => 'gray',
-                            })
-                            ->alignEnd(),
+            Tables\Columns\TextColumn::make('fecha_solicitud')
+                ->label('Fecha')
+                ->date('d/m/Y')
+                ->sortable()
+                ->description(fn ($record) => optional($record->created_at)?->diffForHumans()),
 
-                        Tables\Columns\IconColumn::make('tiene_adjuntos')
-                            ->label('')
-                            ->getStateUsing(fn ($record) => ! empty($record->adjuntos))
-                            ->boolean()
-                            ->trueIcon('heroicon-m-paper-clip')
-                            ->falseIcon('heroicon-m-minus')
-                            ->trueColor('info')
-                            ->falseColor('gray')
-                            ->alignEnd(),
-                    ])->space(2)->grow(false),
-                ]),
+            Tables\Columns\TextColumn::make('cantidad_combustible')
+                ->label('Combustible')
+                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
+                ->badge()
+                ->color('info')
+                ->sortable(),
 
-                // Vehículo principal
-                Tables\Columns\TextColumn::make('vehiculo.placa')
-                    ->label('')
-                    ->weight('black')
-                    ->size(Tables\Columns\TextColumn\TextColumnSize::Large)                    ->icon('heroicon-s-truck')
-                    ->iconColor('primary')
-                    ->description(fn ($record) =>
-                        collect([
-                            $record->vehiculo?->marca?->nombre,
-                            $record->vehiculo?->modelo?->nombre,
-                        ])->filter()->implode(' ')
-                    )
-                    ->searchable(),
+            Tables\Columns\TextColumn::make('valor_total')
+                ->label('Valor total')
+                ->money('USD')
+                ->sortable()
+                ->weight('bold')
+                ->color(fn ($record) => match ($record->estado) {
+                    EstadoSolicitudEnum::RECHAZADA => 'danger',
+                    EstadoSolicitudEnum::APROBADA  => 'success',
+                    default                        => 'gray',
+                }),
 
-                // Metadatos
-                Tables\Columns\Layout\Grid::make([
-                    'default' => 1,
-                    'sm' => 2,
-                ])->schema([
-                    Tables\Columns\TextColumn::make('solicitante.name')
-                        ->label('Solicitante')
-                        ->icon('heroicon-m-user')
-                        ->color('gray')
-                        ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
-                        ->limit(28),
+            Tables\Columns\TextColumn::make('estado')
+                ->badge()
+                ->sortable()
+                ->formatStateUsing(fn (EstadoSolicitudEnum $state) => match ($state) {
+                    EstadoSolicitudEnum::BORRADOR     => 'Borrador',
+                    EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
+                    EstadoSolicitudEnum::EN_REVISION  => 'En revisión',
+                    EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada',
+                    EstadoSolicitudEnum::APROBADA     => 'Aprobada',
+                    EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
+                    EstadoSolicitudEnum::EN_EJECUCION => 'En ejecución',
+                    EstadoSolicitudEnum::COMPLETADA   => 'Completada',
+                    EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
+                    default                           => $state->value,
+                })
+                ->color(fn (EstadoSolicitudEnum $state) => match ($state) {
+                    EstadoSolicitudEnum::PENDIENTE    => 'warning',
+                    EstadoSolicitudEnum::EN_REVISION  => 'info',
+                    EstadoSolicitudEnum::PRE_APROBADA => 'warning',
+                    EstadoSolicitudEnum::APROBADA     => 'success',
+                    EstadoSolicitudEnum::RECHAZADA    => 'danger',
+                    EstadoSolicitudEnum::EN_EJECUCION => 'primary',
+                    EstadoSolicitudEnum::COMPLETADA   => 'success',
+                    default                           => 'gray',
+                }),
 
-                    Tables\Columns\TextColumn::make('fecha_solicitud')
-                        ->label('Fecha solicitud')
-                        ->date('d/m/Y')
-                        ->icon('heroicon-m-calendar')
-                        ->color('gray')
-                        ->size(Tables\Columns\TextColumn\TextColumnSize::Small),
-                ]),
-
-                // KPIs del card
-                Tables\Columns\Layout\Grid::make(2)
-                    ->schema([
-                        Tables\Columns\TextColumn::make('cantidad_combustible')
-                            ->label('Combustible')
-                            ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
-                            ->badge()
-                            ->color('info'),
-
-                        Tables\Columns\TextColumn::make('valor_total')
-                            ->label('Valor total')
-                            ->money('USD')
-                            ->badge()
-                            ->color(fn ($record) => match ($record->estado) {
-                                EstadoSolicitudEnum::RECHAZADA => 'danger',
-                                EstadoSolicitudEnum::APROBADA  => 'success',
-                                default                        => 'primary',
-                            })
-                            ->weight('bold'),
-                    ])
-                    ->extraAttributes([
-                        'class' => 'pt-3 mt-2 border-t border-gray-200 dark:border-gray-700',
-                    ]),
-            ])
-                ->space(4)
-                ->extraAttributes([
-                    'class' => 'p-5 rounded-2xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 hover:shadow-md hover:ring-primary-400 transition duration-200',
-                ]),
+            Tables\Columns\IconColumn::make('tiene_adjuntos')
+                ->label('Adj.')
+                ->getStateUsing(fn ($record) => ! empty($record->adjuntos))
+                ->boolean()
+                ->trueIcon('heroicon-m-paper-clip')
+                ->falseIcon('heroicon-m-minus')
+                ->trueColor('info')
+                ->falseColor('gray'),
         ])
         ->filters([
             Tables\Filters\SelectFilter::make('estado')
@@ -368,7 +328,6 @@ class SolicitudCombustibleResource extends Resource
         ->actions([
             Tables\Actions\ActionGroup::make([
                 Tables\Actions\ViewAction::make(),
-
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE),
 
@@ -410,9 +369,7 @@ class SolicitudCombustibleResource extends Resource
                     ->requiresConfirmation()
                     ->action(function (SolicitudCombustible $record) {
                         $estadoAnterior = $record->estado;
-                        $record->update([
-                            'estado' => EstadoSolicitudEnum::PRE_APROBADA,
-                        ]);
+                        $record->update(['estado' => EstadoSolicitudEnum::PRE_APROBADA]);
 
                         HistorialEstado::create([
                             'entidad_tipo' => 'solicitud_combustible',
