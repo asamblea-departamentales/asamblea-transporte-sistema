@@ -221,571 +221,172 @@ class SolicitudMantenimientoResource extends Resource
     // ── TABLE ───────────────────────────────────────────────
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('created_at', 'desc')
-            ->contentGrid([
-                'default' => 1,
-                'md'      => 2,
-                'xl'      => 3,
+{
+    return $table
+        ->defaultSort('created_at', 'desc')
+        ->striped()
+        ->recordUrl(fn (SolicitudMantenimiento $record) => static::getUrl('view', ['record' => $record]))
+        ->columns([
+            Tables\Columns\TextColumn::make('codigo')
+                ->label('Solicitud')
+                ->searchable()
+                ->sortable()
+                ->weight('bold')
+                ->fontFamily('mono')
+                ->color('primary')
+                ->copyable()
+                ->wrap()
+                ->description(function (SolicitudMantenimiento $record) {
+                    $placa = $record->vehiculo?->placa ?? 'Sin vehículo';
+                    $vehiculo = trim(($record->vehiculo?->marca?->nombre ?? '') . ' ' . ($record->vehiculo?->modelo?->nombre ?? ''));
+                    $tipo = $record->tipoMantenimiento?->nombre ?? 'Sin tipo';
+
+                    return "Vehículo: {$placa}" .
+                        ($vehiculo ? " · {$vehiculo}" : '') .
+                        " · {$tipo}";
+                }),
+
+            Tables\Columns\TextColumn::make('estado')
+                ->label('Estado')
+                ->badge()
+                ->sortable()
+                ->formatStateUsing(fn (EstadoSolicitudEnum $state): string => match ($state) {
+                    EstadoSolicitudEnum::BORRADOR     => 'Borrador',
+                    EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
+                    EstadoSolicitudEnum::EN_REVISION  => 'En revisión',
+                    EstadoSolicitudEnum::PRE_APROBADA => 'Pre-aprobada',
+                    EstadoSolicitudEnum::APROBADA     => 'Aprobada',
+                    EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
+                    EstadoSolicitudEnum::EN_EJECUCION => 'En ejecución',
+                    EstadoSolicitudEnum::COMPLETADA   => 'Completada',
+                    EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
+                    default                           => $state->value,
+                })
+                ->color(fn (EstadoSolicitudEnum $state): string => match ($state) {
+                    EstadoSolicitudEnum::BORRADOR     => 'gray',
+                    EstadoSolicitudEnum::PENDIENTE    => 'warning',
+                    EstadoSolicitudEnum::EN_REVISION  => 'info',
+                    EstadoSolicitudEnum::PRE_APROBADA => 'warning',
+                    EstadoSolicitudEnum::APROBADA     => 'success',
+                    EstadoSolicitudEnum::RECHAZADA    => 'danger',
+                    EstadoSolicitudEnum::EN_EJECUCION => 'primary',
+                    EstadoSolicitudEnum::COMPLETADA   => 'success',
+                    EstadoSolicitudEnum::CANCELADA    => 'gray',
+                    default                           => 'gray',
+                }),
+
+            Tables\Columns\TextColumn::make('prioridad')
+                ->label('Prioridad')
+                ->badge()
+                ->sortable()
+                ->formatStateUsing(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                    PrioridadSolicitudEnum::ALTA  => 'Alta',
+                    PrioridadSolicitudEnum::MEDIA => 'Media',
+                    PrioridadSolicitudEnum::BAJA  => 'Baja',
+                })
+                ->color(fn (PrioridadSolicitudEnum $state): string => match ($state) {
+                    PrioridadSolicitudEnum::ALTA  => 'danger',
+                    PrioridadSolicitudEnum::MEDIA => 'warning',
+                    PrioridadSolicitudEnum::BAJA  => 'success',
+                }),
+
+            Tables\Columns\TextColumn::make('fecha_sugerida')
+                ->label('Fecha sugerida')
+                ->date('d/m/Y')
+                ->sortable()
+                ->description(fn (SolicitudMantenimiento $record) => optional($record->created_at)?->diffForHumans()),
+
+            Tables\Columns\TextColumn::make('tipoMantenimiento.nombre')
+                ->label('Tipo mantenimiento')
+                ->badge()
+                ->color('info')
+                ->visibleFrom('md'),
+
+            Tables\Columns\TextColumn::make('tipo_solicitud')
+                ->label('Solicitud')
+                ->badge()
+                ->color(fn (string $state): string => match ($state) {
+                    'taller'  => 'warning',
+                    'llantas' => 'info',
+                    default   => 'gray',
+                })
+                ->formatStateUsing(fn (string $state): string => match ($state) {
+                    'taller'  => 'Taller',
+                    'llantas' => 'Llantas',
+                    default   => $state,
+                })
+                ->visibleFrom('md'),
+
+            Tables\Columns\TextColumn::make('solicitante.name')
+                ->label('Solicitante')
+                ->searchable()
+                ->limit(28)
+                ->visibleFrom('lg'),
+
+            Tables\Columns\TextColumn::make('costo_estimado')
+                ->label('Estimado')
+                ->money('USD')
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->visibleFrom('lg'),
+
+            Tables\Columns\TextColumn::make('costo_real')
+                ->label('Costo real')
+                ->money('USD')
+                ->sortable()
+                ->toggleable(isToggledHiddenByDefault: true)
+                ->visibleFrom('xl'),
+
+            Tables\Columns\IconColumn::make('tiene_adjuntos')
+                ->label('Adj.')
+                ->boolean()
+                ->getStateUsing(fn ($record) => $record->tieneAdjuntos())
+                ->trueIcon('heroicon-o-paper-clip')
+                ->falseIcon('heroicon-o-minus')
+                ->trueColor('success')
+                ->falseColor('gray')
+                ->visibleFrom('md'),
+        ])
+        ->filters([
+            Tables\Filters\SelectFilter::make('estado')
+                ->multiple()
+                ->options([
+                    EstadoSolicitudEnum::BORRADOR->value     => 'Borrador',
+                    EstadoSolicitudEnum::PENDIENTE->value    => 'Pendiente',
+                    EstadoSolicitudEnum::EN_REVISION->value  => 'En revisión',
+                    EstadoSolicitudEnum::PRE_APROBADA->value => 'Pre-aprobada',
+                    EstadoSolicitudEnum::APROBADA->value     => 'Aprobada',
+                    EstadoSolicitudEnum::RECHAZADA->value    => 'Rechazada',
+                    EstadoSolicitudEnum::EN_EJECUCION->value => 'En ejecución',
+                    EstadoSolicitudEnum::COMPLETADA->value   => 'Completada',
+                    EstadoSolicitudEnum::CANCELADA->value    => 'Cancelada',
+                ]),
+
+            Tables\Filters\SelectFilter::make('prioridad')
+                ->options([
+                    PrioridadSolicitudEnum::BAJA->value  => 'Baja',
+                    PrioridadSolicitudEnum::MEDIA->value => 'Media',
+                    PrioridadSolicitudEnum::ALTA->value  => 'Alta',
+                ]),
+
+            Tables\Filters\SelectFilter::make('tipo_solicitud')
+                ->label('Tipo')
+                ->options([
+                    'taller'  => 'Taller',
+                    'llantas' => 'Llantas',
+                ]),
+        ])
+        ->actions([
+            Tables\Actions\ViewAction::make(),
+
+            Tables\Actions\ActionGroup::make([
+                // aquí dejas tus acciones tal como las tenés
             ])
-            ->recordUrl(fn (SolicitudMantenimiento $record) => static::getUrl('view', ['record' => $record]))
-            ->columns([
-                Tables\Columns\TextColumn::make('codigo')
-                    ->label('Código')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->fontFamily('mono')
-                    ->copyable(),
-
-                Tables\Columns\TextColumn::make('vehiculo.placa')
-                    ->label('Vehículo')
-                    ->description(fn ($record) =>
-                        trim("{$record->vehiculo?->marca?->nombre} {$record->vehiculo?->modelo?->nombre}")
-                    )
-                    ->searchable()
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('tipoMantenimiento.nombre')
-                    ->label('Tipo')
-                    ->badge()
-                    ->color('info'),
-
-                Tables\Columns\TextColumn::make('tipo_solicitud')
-                    ->label('Solicitud')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'taller'  => 'warning',
-                        'llantas' => 'info',
-                        default   => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => match ($state) {
-                        'taller'  => 'Taller',
-                        'llantas' => 'Llantas',
-                        default   => $state,
-                    }),
-
-                Tables\Columns\TextColumn::make('prioridad')
-                    ->label('Prioridad')
-                    ->badge()
-                    ->formatStateUsing(fn (PrioridadSolicitudEnum $state): string => match ($state) {
-                        PrioridadSolicitudEnum::ALTA  => 'ALTA',
-                        PrioridadSolicitudEnum::MEDIA => 'MEDIA',
-                        PrioridadSolicitudEnum::BAJA  => 'BAJA',
-                    })
-                    ->color(fn (PrioridadSolicitudEnum $state): string => match ($state) {
-                        PrioridadSolicitudEnum::ALTA  => 'danger',
-                        PrioridadSolicitudEnum::MEDIA => 'warning',
-                        PrioridadSolicitudEnum::BAJA  => 'success',
-                    }),
-
-                Tables\Columns\TextColumn::make('fecha_sugerida')
-                    ->label('Fecha Sugerida')
-                    ->date('d/m/Y')
-                    ->sortable(),
-
-                Tables\Columns\TextColumn::make('solicitante.name')
-                    ->label('Solicitante')
-                    ->searchable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('costo_estimado')
-                    ->label('Estimado')
-                    ->money('USD')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('costo_real')
-                    ->label('Costo Real')
-                    ->money('USD')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-
-                Tables\Columns\TextColumn::make('estado')
-                    ->label('Estado')
-                    ->badge()
-                    ->formatStateUsing(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                        EstadoSolicitudEnum::BORRADOR     => 'Borrador',
-                        EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
-                        EstadoSolicitudEnum::EN_REVISION  => 'En Revisión',
-                        EstadoSolicitudEnum::PRE_APROBADA => 'Pre-Aprobada',
-                        EstadoSolicitudEnum::APROBADA     => 'Aprobada',
-                        EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
-                        EstadoSolicitudEnum::EN_EJECUCION => 'En Ejecución',
-                        EstadoSolicitudEnum::COMPLETADA   => 'Completada',
-                        EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
-                        default                           => $state->value,
-                    })
-                    ->color(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                        EstadoSolicitudEnum::BORRADOR     => 'gray',
-                        EstadoSolicitudEnum::PENDIENTE    => 'warning',
-                        EstadoSolicitudEnum::EN_REVISION  => 'info',
-                        EstadoSolicitudEnum::PRE_APROBADA => 'warning',
-                        EstadoSolicitudEnum::APROBADA     => 'success',
-                        EstadoSolicitudEnum::RECHAZADA    => 'danger',
-                        EstadoSolicitudEnum::EN_EJECUCION => 'primary',
-                        EstadoSolicitudEnum::COMPLETADA   => 'success',
-                        EstadoSolicitudEnum::CANCELADA    => 'gray',
-                        default                           => 'gray',
-                    })
-                    ->sortable(),
-
-                Tables\Columns\IconColumn::make('tiene_adjuntos')
-                    ->label('Adjuntos')
-                    ->boolean()
-                    ->getStateUsing(fn ($record) => $record->tieneAdjuntos())
-                    ->trueIcon('heroicon-o-paper-clip')
-                    ->falseIcon('heroicon-o-minus')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
-
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Creada')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-            ])
-            ->filters([
-                Tables\Filters\SelectFilter::make('estado')
-                    ->multiple()
-                    ->options([
-                        EstadoSolicitudEnum::BORRADOR->value     => 'Borrador',
-                        EstadoSolicitudEnum::PENDIENTE->value    => 'Pendiente',
-                        EstadoSolicitudEnum::EN_REVISION->value  => 'En Revisión',
-                        EstadoSolicitudEnum::APROBADA->value     => 'Aprobada',
-                        EstadoSolicitudEnum::RECHAZADA->value    => 'Rechazada',
-                        EstadoSolicitudEnum::EN_EJECUCION->value => 'En Ejecución',
-                        EstadoSolicitudEnum::COMPLETADA->value   => 'Completada',
-                        EstadoSolicitudEnum::CANCELADA->value    => 'Cancelada',
-                    ]),
-
-                Tables\Filters\SelectFilter::make('prioridad')
-                    ->options([
-                        PrioridadSolicitudEnum::BAJA->value  => 'Baja',
-                        PrioridadSolicitudEnum::MEDIA->value => 'Media',
-                        PrioridadSolicitudEnum::ALTA->value  => 'Alta',
-                    ]),
-
-                Tables\Filters\SelectFilter::make('tipo_solicitud')
-                    ->label('Tipo')
-                    ->options([
-                        'taller'  => 'Taller',
-                        'llantas' => 'Llantas',
-                    ]),
-            ])
-            ->actions([
-                Tables\Actions\ViewAction::make(),
-
-                Tables\Actions\ActionGroup::make([
-
-                    // Observación
-                    Tables\Actions\Action::make('observacion')
-                        ->label('Observación')
-                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                        ->modalHeading('Agregar Observación')
-                        ->modalSubmitActionLabel('Guardar Observación')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Observación')
-                                ->rows(4)
-                                ->required()
-                                ->maxLength(2000),
-                        ])
-                        ->action(function (SolicitudMantenimiento $record, array $data) {
-                            $estadoAnterior = $record->estado;
-                            $record->observaciones = $data['observaciones'];
-                            if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                                $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                            }
-                            $record->save();
-
-                            if ($estadoAnterior !== $record->estado) {
-                                HistorialEstado::create([
-                                    'entidad_tipo'    => 'solicitud_mantenimiento',
-                                    'entidad_id'      => $record->id,
-                                    'estado_anterior' => $estadoAnterior?->value,
-                                    'estado_nuevo'    => $record->estado?->value,
-                                    'user_id'         => auth()->id(),
-                                    'comentario'      => $data['observaciones'],
-                                ]);
-                            }
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::OBSERVAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['comentario' => $data['observaciones']],
-                            ]);
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                            ], true)
-                        ),
-
-                    // Pre-Aprobar
-                    Tables\Actions\Action::make('pre_aprobar')
-                        ->label('Pre-Aprobar')
-                        ->color('warning')
-                        ->icon('heroicon-o-clock')
-                        ->requiresConfirmation()
-                        ->modalHeading('Pre-aprobar Solicitud de Mantenimiento')
-                        ->action(function (SolicitudMantenimiento $record) {
-                            $estadoAnterior = $record->estado;
-                            $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
-                            $record->save();
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => $record->estado?->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Solicitud pre-aprobada.',
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => 'PRE_APROBAR',
-                                'user_id'      => auth()->id(),
-                            ]);
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                            ], true)
-                        ),
-
-                    // Aprobar
-                    Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar')
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->modalHeading('Aprobar Solicitud de Mantenimiento')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Observaciones de aprobación')
-                                ->rows(3)
-                                ->required()
-                                ->maxLength(2000)
-                                ->columnSpanFull(),
-                        ])
-                        ->action(function (SolicitudMantenimiento $record, array $data) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado'           => EstadoSolicitudEnum::APROBADA,
-                                'observaciones'    => $data['observaciones'],
-                                'aprobador_id'     => auth()->id(),
-                                'fecha_aprobacion' => now(),
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::APROBADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['observaciones'],
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::APROBAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['observaciones' => $data['observaciones']],
-                            ]);
-
-                            try {
-                                $payload = [
-                                    'tipo'    => 'mantenimiento',
-                                    'evento'  => 'solicitud_aprobada',
-                                    'mensaje' => 'Tu solicitud de mantenimiento ha sido APROBADA.',
-                                    'solicitud' => [
-                                        'codigo'            => $record->codigo,
-                                        'estado'            => 'aprobada',
-                                        'tipo_mantenimiento'=> $record->tipoMantenimiento?->nombre,
-                                        'tipo_solicitud'    => $record->tipo_solicitud,
-                                        'vehiculo_placa'    => $record->vehiculo?->placa,
-                                        'fecha_sugerida'    => optional($record->fecha_sugerida)?->format('d/m/Y'),
-                                        'detalle'           => $record->detalle,
-                                    ],
-                                    'solicitante' => [
-                                        'name'  => $record->solicitante?->name,
-                                        'email' => $record->solicitante?->email,
-                                    ],
-                                    'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                                ];
-
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('✅ Solicitud de Mantenimiento APROBADA', $payload)
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error enviando correo de aprobación mantenimiento: ' . $e->getMessage());
-                            }
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
-
-                    // Rechazar
-                    Tables\Actions\Action::make('rechazar')
-                        ->label('Rechazar')
-                        ->color('danger')
-                        ->icon('heroicon-o-x-circle')
-                        ->form([
-                            Forms\Components\Textarea::make('motivo_rechazo')
-                                ->label('Motivo del rechazo')
-                                ->rows(3)
-                                ->required(),
-                        ])
-                        ->action(function (SolicitudMantenimiento $record, array $data) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado'           => EstadoSolicitudEnum::RECHAZADA,
-                                'motivo_rechazo'   => $data['motivo_rechazo'],
-                                'aprobador_id'     => auth()->id(),
-                                'fecha_aprobacion' => now(),
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::RECHAZADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['motivo_rechazo'],
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::RECHAZAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['motivo' => $data['motivo_rechazo']],
-                            ]);
-
-                            try {
-                                $payload = [
-                                    'tipo'    => 'mantenimiento',
-                                    'evento'  => 'solicitud_rechazada',
-                                    'mensaje' => 'Tu solicitud de mantenimiento ha sido RECHAZADA.',
-                                    'solicitud' => [
-                                        'codigo'         => $record->codigo,
-                                        'estado'         => 'rechazada',
-                                        'vehiculo_placa' => $record->vehiculo?->placa,
-                                        'motivo_rechazo' => $data['motivo_rechazo'],
-                                    ],
-                                    'solicitante' => [
-                                        'name'  => $record->solicitante?->name,
-                                        'email' => $record->solicitante?->email,
-                                    ],
-                                    'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                                ];
-
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('❌ Solicitud de Mantenimiento RECHAZADA', $payload)
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error enviando correo de rechazo mantenimiento: ' . $e->getMessage());
-                            }
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                                EstadoSolicitudEnum::PRE_APROBADA,
-                            ], true)
-                        ),
-
-                    // Iniciar ejecución
-                    Tables\Actions\Action::make('en_ejecucion')
-                        ->label('Iniciar Ejecución')
-                        ->color('warning')
-                        ->icon('heroicon-o-play-circle')
-                        ->requiresConfirmation()
-                        ->modalHeading('¿Marcar como En Ejecución?')
-                        ->action(function (SolicitudMantenimiento $record) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update(['estado' => EstadoSolicitudEnum::EN_EJECUCION]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::EN_EJECUCION->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Mantenimiento iniciado.',
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => 'EN_EJECUCION',
-                                'user_id'      => auth()->id(),
-                            ]);
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::APROBADA
-                        ),
-
-                    // Completar (requiere adjuntos)
-                    Tables\Actions\Action::make('completar')
-                        ->label('Completar')
-                        ->color('success')
-                        ->icon('heroicon-o-check-badge')
-                        ->modalHeading('Completar Solicitud de Mantenimiento')
-                        ->modalDescription('Asegúrate de haber subido la factura antes de completar.')
-                        ->form([
-                            Forms\Components\DatePicker::make('fecha_realizada')
-                                ->label('Fecha Realizada')
-                                ->required()
-                                ->default(now()),
-
-                            Forms\Components\TextInput::make('costo_real')
-                                ->label('Costo Real')
-                                ->numeric()
-                                ->prefix('$')
-                                ->required(),
-
-                            Forms\Components\FileUpload::make('adjuntos')
-                                ->label('Adjuntos (Facturas, Fotos)')
-                                ->multiple()
-                                ->disk('public')
-                                ->directory('mantenimiento/adjuntos')
-                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'application/pdf'])
-                                ->maxSize(5120)
-                                ->columnSpanFull(),
-                        ])
-                        ->action(function (SolicitudMantenimiento $record, array $data) {
-                            // Validar que se subieron adjuntos
-                            if (empty($data['adjuntos']) && !$record->tieneAdjuntos()) {
-                                \Filament\Notifications\Notification::make()
-                                    ->title('No se puede completar')
-                                    ->body('Debes subir al menos una factura o foto antes de completar.')
-                                    ->danger()
-                                    ->send();
-                                return;
-                            }
-
-                            $estadoAnterior = $record->estado;
-
-                            $adjuntosExistentes = $record->adjuntos ?? [];
-                            $nuevosAdjuntos     = $data['adjuntos'] ?? [];
-                            $todosAdjuntos      = array_merge($adjuntosExistentes, $nuevosAdjuntos);
-
-                            $record->update([
-                                'estado'          => EstadoSolicitudEnum::COMPLETADA,
-                                'fecha_realizada' => $data['fecha_realizada'],
-                                'costo_real'      => $data['costo_real'],
-                                'adjuntos'        => $todosAdjuntos,
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Mantenimiento completado. Costo real: $' . number_format($data['costo_real'], 2),
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::COMPLETAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => [
-                                    'costo_real'      => $data['costo_real'],
-                                    'fecha_realizada' => $data['fecha_realizada'],
-                                ],
-                            ]);
-
-                            try {
-                                $payload = [
-                                    'tipo'    => 'mantenimiento',
-                                    'evento'  => 'solicitud_completada',
-                                    'mensaje' => 'Tu solicitud de mantenimiento ha sido COMPLETADA.',
-                                    'solicitud' => [
-                                        'codigo'          => $record->codigo,
-                                        'estado'          => 'completada',
-                                        'vehiculo_placa'  => $record->vehiculo?->placa,
-                                        'fecha_realizada' => optional($record->fecha_realizada)?->format('d/m/Y'),
-                                        'costo_real'      => '$' . number_format($data['costo_real'], 2),
-                                    ],
-                                    'solicitante' => [
-                                        'name'  => $record->solicitante?->name,
-                                        'email' => $record->solicitante?->email,
-                                    ],
-                                    'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                                ];
-
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('✅ Solicitud de Mantenimiento COMPLETADA', $payload)
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error enviando correo de completado mantenimiento: ' . $e->getMessage());
-                            }
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::EN_EJECUCION
-                        ),
-
-                    // Cancelar
-                    Tables\Actions\Action::make('cancelar')
-                        ->label('Cancelar')
-                        ->color('gray')
-                        ->icon('heroicon-o-trash')
-                        ->requiresConfirmation()
-                        ->modalHeading('¿Cancelar esta solicitud?')
-                        ->action(function (SolicitudMantenimiento $record) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update(['estado' => EstadoSolicitudEnum::CANCELADA]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_mantenimiento',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::CANCELADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Solicitud cancelada.',
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_mantenimiento',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::CANCELAR->value,
-                                'user_id'      => auth()->id(),
-                            ]);
-                        })
-                        ->visible(fn (SolicitudMantenimiento $record) =>
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::BORRADOR,
-                                EstadoSolicitudEnum::PENDIENTE,
-                            ], true)
-                        ),
-
-                ])
                 ->label('Más')
                 ->icon('heroicon-m-ellipsis-vertical'),
-            ])
-            ->bulkActions([]);
-    }
+        ])
+        ->bulkActions([]);
+}
 
     public static function getEloquentQuery(): Builder
     {
