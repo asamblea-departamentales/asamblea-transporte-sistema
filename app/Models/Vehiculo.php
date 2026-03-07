@@ -25,6 +25,7 @@ class Vehiculo extends Model
         'capacidad_personas',
         'estado',
         'activo',
+        'accesorios',
 
         // Nuevos catálogos
         'veh_marca_id',
