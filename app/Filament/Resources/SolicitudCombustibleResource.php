@@ -210,20 +210,27 @@ class SolicitudCombustibleResource extends Resource
         ]);
     }
 
-    public static function table(Table $table): Table
+   public static function table(Table $table): Table
 {
     return $table
         ->defaultSort('created_at', 'desc')
         ->contentGrid([
             'default' => 1,
-            'lg'      => 2,
+            'md'      => 2,
+            'xl'      => 3,
         ])
         ->recordUrl(fn (SolicitudCombustible $record) => static::getUrl('view', ['record' => $record]))
         ->columns([
-            Tables\Columns\Layout\Split::make([
-
-                // Izquierda — estado + código + fecha
-                Tables\Columns\Layout\Stack::make([
+            Tables\Columns\Layout\Stack::make([
+                // --- CABECERA: Código y Estado ---
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('codigo')
+                        ->weight('bold')
+                        ->fontFamily('mono')
+                        ->size(Tables\Columns\TextColumn\TextColumnSize::Large)
+                        ->color('primary')
+                        ->searchable(),
+                    
                     Tables\Columns\TextColumn::make('estado')
                         ->badge()
                         ->formatStateUsing(fn (EstadoSolicitudEnum $state) => match ($state) {
@@ -247,69 +254,77 @@ class SolicitudCombustibleResource extends Resource
                             EstadoSolicitudEnum::EN_EJECUCION => 'primary',
                             EstadoSolicitudEnum::COMPLETADA   => 'success',
                             default                           => 'gray',
-                        }),
+                        })
+                        ->grow(false),
+                ]),
 
-                    Tables\Columns\TextColumn::make('codigo')
-                        ->weight('bold')
-                        ->size(TextColumnSize::Large)
-                        ->fontFamily('mono')
-                        ->copyable()
-                        ->searchable(),
-
-                    Tables\Columns\TextColumn::make('fecha_solicitud')
-                        ->date('d M Y')
-                        ->color('gray')
-                        ->size(TextColumnSize::Small)
-                        ->icon('heroicon-m-calendar'),
-                ])->space(2),
-
-                // Centro — vehículo + solicitante
+                // --- CUERPO: Información del Vehículo ---
                 Tables\Columns\Layout\Stack::make([
                     Tables\Columns\TextColumn::make('vehiculo.placa')
-                        ->weight('semibold')
-                        ->icon('heroicon-m-truck')
-                        ->description(fn ($record) =>
+                        ->weight('black')
+                        ->size(Tables\Columns\TextColumn\TextColumnSize::Large)
+                        ->icon('heroicon-s-truck')
+                        ->iconColor('gray')
+                        ->description(fn ($record) => 
                             trim("{$record->vehiculo?->marca?->nombre} {$record->vehiculo?->modelo?->nombre}")
                         )
                         ->searchable(),
+                ])->space(1),
 
-                    Tables\Columns\TextColumn::make('solicitante.name')
-                        ->icon('heroicon-m-user')
-                        ->color('gray')
-                        ->size(TextColumnSize::Small)
-                        ->searchable(),
-                ])->space(2),
+                // --- DETALLES SECUNDARIOS: Usuario y Fecha ---
+                Tables\Columns\Layout\Grid::make(2)
+                    ->schema([
+                        Tables\Columns\TextColumn::make('solicitante.name')
+                            ->label('Solicitante')
+                            ->icon('heroicon-m-user')
+                            ->color('gray')
+                            ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
+                            ->limit(20),
 
-                // Derecha — monto destacado + galones + adjunto
-                Tables\Columns\Layout\Stack::make([
+                        Tables\Columns\TextColumn::make('fecha_solicitud')
+                            ->label('Fecha')
+                            ->date('d M, Y')
+                            ->icon('heroicon-m-calendar')
+                            ->color('gray')
+                            ->size(Tables\Columns\TextColumn\TextColumnSize::Small)
+                            ->alignment(\Filament\Support\Enums\Alignment::End),
+                    ]),
+
+                // --- FOOTER: Galones y Precio Total ---
+                Tables\Columns\Layout\Split::make([
+                    Tables\Columns\TextColumn::make('cantidad_combustible')
+                        ->suffix(' galones')
+                        ->weight('medium')
+                        ->icon('heroicon-m-funnel')
+                        ->color('info'),
+
                     Tables\Columns\TextColumn::make('valor_total')
                         ->money('USD')
-                        ->weight('bold')
-                        ->size(TextColumnSize::Large)
-                        ->color(fn ($record) => match (true) {
-                            $record->estado === EstadoSolicitudEnum::RECHAZADA => 'danger',
-                            $record->estado === EstadoSolicitudEnum::APROBADA  => 'success',
-                            default                                             => 'primary',
-                        })
-                        ->alignment(\Filament\Support\Enums\Alignment::End),
+                        ->weight('black')
+                        ->size(Tables\Columns\TextColumn\TextColumnSize::Large)
+                        ->alignment(\Filament\Support\Enums\Alignment::End)
+                        ->color(fn ($record) => match ($record->estado) {
+                            EstadoSolicitudEnum::RECHAZADA => 'danger',
+                            EstadoSolicitudEnum::APROBADA  => 'success',
+                            default                        => 'primary',
+                        }),
+                ])->extraAttributes([
+                    'class' => 'mt-3 pt-3 border-t border-gray-200 dark:border-gray-700'
+                ]),
 
-                    Tables\Columns\TextColumn::make('cantidad_combustible')
-                        ->suffix(' gal')
-                        ->color('gray')
-                        ->size(TextColumnSize::Small)
-                        ->icon('heroicon-m-fire')
-                        ->alignment(\Filament\Support\Enums\Alignment::End),
+                // --- INDICADOR DE ADJUNTOS ---
+                Tables\Columns\IconColumn::make('tiene_adjuntos')
+                    ->getStateUsing(fn ($record) => !empty($record->adjuntos))
+                    ->boolean()
+                    ->trueIcon('heroicon-m-paper-clip')
+                    ->falseIcon('')
+                    ->trueColor('info')
+                    ->label('')
+                    ->size(Tables\Columns\IconColumn\IconColumnSize::Small),
 
-                    Tables\Columns\IconColumn::make('tiene_adjuntos')
-                        ->boolean()
-                        ->getStateUsing(fn ($record) => !empty($record->adjuntos))
-                        ->trueIcon('heroicon-o-paper-clip')
-                        ->falseIcon('')
-                        ->trueColor('info')
-                        ->alignment(\Filament\Support\Enums\Alignment::End),
-                ])->space(1)->grow(false),
-
-            ])->extraAttributes(['class' => 'p-4 gap-6']),
+            ])->space(3)->extraAttributes([
+                'class' => 'p-5 rounded-xl bg-white dark:bg-gray-900 shadow-sm ring-1 ring-gray-200 dark:ring-gray-800 hover:ring-primary-500 transition'
+            ]),
         ])
         ->filters([
             Tables\Filters\SelectFilter::make('estado')
@@ -318,198 +333,122 @@ class SolicitudCombustibleResource extends Resource
                     ->mapWithKeys(fn ($e) => [$e->value => ucfirst(str_replace('_', ' ', $e->value))])
                 ),
             Tables\Filters\Filter::make('pendientes')
-                ->label('Pendientes de revisión')
+                ->label('Solo Pendientes')
                 ->query(fn (Builder $q) => $q->whereIn('estado', [
                     EstadoSolicitudEnum::PENDIENTE->value,
                     EstadoSolicitudEnum::EN_REVISION->value,
                 ])),
+            Tables\Filters\SelectFilter::make('vehiculo_id')
+                ->label('Vehículo')
+                ->relationship('vehiculo', 'placa'),
         ])
-            ->actions([
-                Tables\Actions\ViewAction::make()
-                ->button()
-                ->size('sm'),
+        ->actions([
+            Tables\Actions\ActionGroup::make([
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\EditAction::make()
+                    ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE),
+                
+                // --- ACCIÓN: OBSERVACIÓN ---
+                Tables\Actions\Action::make('observacion')
+                    ->label('Observación')
+                    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+                    ->modalHeading('Agregar Observación')
+                    ->form([
+                        Forms\Components\Textarea::make('observaciones')
+                            ->label('Comentario Técnico')
+                            ->rows(4)
+                            ->required(),
+                    ])
+                    ->action(function (SolicitudCombustible $record, array $data) {
+                        $estadoAnterior = $record->estado;
+                        $record->observaciones = $data['observaciones'];
+                        if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
+                            $record->estado = EstadoSolicitudEnum::EN_REVISION;
+                        }
+                        $record->save();
 
-                Tables\Actions\ActionGroup::make([
+                        HistorialEstado::create([
+                            'entidad_tipo' => 'solicitud_combustible',
+                            'entidad_id' => $record->id,
+                            'estado_anterior' => $estadoAnterior?->value,
+                            'estado_nuevo' => $record->estado?->value,
+                            'user_id' => auth()->id(),
+                            'comentario' => $data['observaciones'],
+                        ]);
+                    })
+                    ->visible(fn ($record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti'])),
 
-                    Tables\Actions\Action::make('observacion')
-                        ->label('Observación')
-                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                        ->modalHeading('Agregar Observación')
-                        ->modalSubmitActionLabel('Guardar Observación')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Observación')
-                                ->rows(4)
-                                ->required()
-                                ->maxLength(2000),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            $estadoAnterior = $record->estado;
+                // --- ACCIÓN: PRE-APROBAR ---
+                Tables\Actions\Action::make('pre_aprobar')
+                    ->label('Pre-Aprobar')
+                    ->color('warning')
+                    ->icon('heroicon-o-clock')
+                    ->requiresConfirmation()
+                    ->action(function (SolicitudCombustible $record) {
+                        $estadoAnterior = $record->estado;
+                        $record->update(['estado' => EstadoSolicitudEnum::PRE_APROBADA]);
 
-                            $record->observaciones = $data['observaciones'];
+                        HistorialEstado::create([
+                            'entidad_tipo' => 'solicitud_combustible',
+                            'entidad_id' => $record->id,
+                            'estado_anterior' => $estadoAnterior?->value,
+                            'estado_nuevo' => $record->estado->value,
+                            'user_id' => auth()->id(),
+                            'comentario' => 'Solicitud pre-aprobada.',
+                        ]);
+                    })
+                    ->visible(fn ($record) => 
+                        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) && 
+                        in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION])
+                    ),
 
-                            if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                                $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                            }
+                // --- ACCIÓN: APROBAR ---
+                Tables\Actions\Action::make('aprobar')
+                    ->label('Aprobar Final')
+                    ->color('success')
+                    ->icon('heroicon-o-check-circle')
+                    ->form([
+                        Forms\Components\Textarea::make('observaciones')
+                            ->label('Notas de aprobación')
+                            ->required(),
+                    ])
+                    ->action(function (SolicitudCombustible $record, array $data) {
+                        $estadoAnterior = $record->estado;
+                        $record->update([
+                            'estado' => EstadoSolicitudEnum::APROBADA,
+                            'observaciones' => $data['observaciones'],
+                            'aprobador_id' => auth()->id(),
+                            'fecha_aprobacion' => now(),
+                        ]);
 
-                            $record->save();
-
-                            if ($estadoAnterior !== $record->estado) {
-                                HistorialEstado::create([
-                                    'entidad_tipo'    => 'solicitud_combustible',
-                                    'entidad_id'      => $record->id,
-                                    'estado_anterior' => $estadoAnterior?->value,
-                                    'estado_nuevo'    => $record->estado?->value,
-                                    'user_id'         => auth()->id(),
-                                    'comentario'      => $data['observaciones'],
-                                ]);
-                            }
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_combustible',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::OBSERVAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['comentario' => $data['observaciones']],
-                            ]);
-                        })
-                        ->visible(fn (SolicitudCombustible $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                        ),
-
-                    Tables\Actions\Action::make('pre_aprobar')
-                        ->label('Pre-Aprobar')
-                        ->color('warning')
-                        ->icon('heroicon-o-clock')
-                        ->requiresConfirmation()
-                        ->modalHeading('Pre-aprobar Solicitud de Combustible')
-                        ->action(function (SolicitudCombustible $record) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
-                            $record->save();
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => $record->estado?->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Solicitud pre-aprobada.',
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_combustible',
-                                'entidad_id'   => $record->id,
-                                'accion'       => 'PRE_APROBAR',
-                                'user_id'      => auth()->id(),
-                            ]);
-                        })
-                        ->visible(fn (SolicitudCombustible $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                        ),
-
-                    Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar')
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->modalHeading('Aprobar Solicitud de Combustible')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Observaciones de aprobación')
-                                ->rows(3)
-                                ->required()
-                                ->maxLength(2000)
-                                ->columnSpanFull(),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado'           => EstadoSolicitudEnum::APROBADA,
-                                'observaciones'    => $data['observaciones'],
-                                'aprobador_id'     => auth()->id(),
-                                'fecha_aprobacion' => now(),
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::APROBADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['observaciones'],
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_combustible',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::APROBAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['observaciones' => $data['observaciones']],
-                            ]);
-                        })
-                        ->visible(fn (SolicitudCombustible $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
-
-                    Tables\Actions\Action::make('rechazar')
-                        ->label('Rechazar')
-                        ->color('danger')
-                        ->icon('heroicon-o-x-circle')
-                        ->modalHeading('Rechazar Solicitud de Combustible')
-                        ->form([
-                            Forms\Components\Textarea::make('motivo_rechazo')
-                                ->label('Motivo del rechazo')
-                                ->rows(3)
-                                ->required()
-                                ->maxLength(2000),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado'           => EstadoSolicitudEnum::RECHAZADA,
-                                'motivo_rechazo'   => $data['motivo_rechazo'],
-                                'aprobador_id'     => auth()->id(),
-                                'fecha_aprobacion' => now(),
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::RECHAZADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['motivo_rechazo'],
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_combustible',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::RECHAZAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => ['motivo' => $data['motivo_rechazo']],
-                            ]);
-                        })
-                        ->visible(fn (SolicitudCombustible $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                                EstadoSolicitudEnum::PRE_APROBADA,
-                            ], true)
-                        ),
-
-                ])
-                ->label('Más')
-                ->icon('heroicon-m-ellipsis-vertical'),
+                        HistorialEstado::create([
+                            'entidad_tipo' => 'solicitud_combustible',
+                            'entidad_id' => $record->id,
+                            'estado_anterior' => $estadoAnterior?->value,
+                            'estado_nuevo' => EstadoSolicitudEnum::APROBADA->value,
+                            'user_id' => auth()->id(),
+                            'comentario' => $data['observaciones'],
+                        ]);
+                    })
+                    ->visible(fn ($record) => 
+                        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) && 
+                        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+                    ),
+                
+                Tables\Actions\DeleteAction::make()
+                    ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE),
             ])
-            ->bulkActions([]);
-    }
+            ->label('Gestionar')
+            ->icon('heroicon-m-cog-6-tooth')
+            ->button()
+            ->color('gray'),
+        ])
+        ->bulkActions([
+            Tables\Actions\BulkActionGroup::make([
+                Tables\Actions\DeleteBulkAction::make(),
+            ]),
+        ]);
+}
 
     public static function getEloquentQuery(): Builder
     {
