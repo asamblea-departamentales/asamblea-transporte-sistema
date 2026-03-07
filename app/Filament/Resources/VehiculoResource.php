@@ -326,12 +326,15 @@ class VehiculoResource extends Resource
                                 ->grow(false),
 
                             Tables\Columns\TextColumn::make('accesorios')
-                                ->label('Equipo tangible')
-                                ->formatStateUsing(fn ($state) => count($state ?? []) . ' herramientas')    
-                                ->badge()
-                                ->color('success')
-                                ->icon('heroicon-o-briefcase')
-                                ->size(TextColumnSize::Small),
+    ->label('Equipo tangible')
+    ->formatStateUsing(function ($state) {
+        $items = is_array($state) ? $state : json_decode($state ?? '[]', true);
+        return count($items ?? []) . ' herramientas';
+    })
+    ->badge()
+    ->color('success')
+    ->icon('heroicon-o-briefcase')
+    ->size(TextColumnSize::Small),
                         ]),
 
                         // Motorista
