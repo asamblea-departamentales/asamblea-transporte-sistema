@@ -126,8 +126,7 @@ class ViewVehiculo extends ViewRecord
             ->label('Inventario actual')
             ->badge()
             ->color('success')
-            ->listWithLineBreaks()
-            // Quitamos ->grid(3) porque no existe en TextEntry
+            ->separator(',')
             ->formatStateUsing(fn (string $state): string => match ($state) {
                 'gato' => 'Gato Hidráulico',
                 'llanta_repuesto' => 'Llanta de Repuesto',
