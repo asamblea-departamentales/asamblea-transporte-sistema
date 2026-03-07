@@ -15,7 +15,8 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-
+use Filament\Tables\Columns\TextColumn\TextColumnSize;
+use Filament\Support\Enums\Alignment;
 class SolicitudCombustibleResource extends Resource
 {
     protected static ?string $model = SolicitudCombustible::class;
@@ -210,95 +211,123 @@ class SolicitudCombustibleResource extends Resource
     }
 
     public static function table(Table $table): Table
-    {
-        return $table
-            ->defaultSort('created_at', 'desc')
-            ->contentGrid([
-                'default' => 1,
-                'md'      => 2,
-                'xl'      => 3,
-            ])
-            ->recordUrl(fn (SolicitudCombustible $record) => static::getUrl('view', ['record' => $record]))
-            ->columns([
+{
+    return $table
+        ->defaultSort('created_at', 'desc')
+        ->contentGrid([
+            'default' => 1,
+            'lg'      => 2,
+        ])
+        ->recordUrl(fn (SolicitudCombustible $record) => static::getUrl('view', ['record' => $record]))
+        ->columns([
+            Tables\Columns\Layout\Split::make([
 
-                Tables\Columns\TextColumn::make('codigo')
-                    ->label('Código')
-                    ->searchable()
-                    ->sortable()
-                    ->weight('bold')
-                    ->fontFamily('mono')
-                    ->copyable(),
+                // Izquierda — estado + código + fecha
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('estado')
+                        ->badge()
+                        ->formatStateUsing(fn (EstadoSolicitudEnum $state) => match ($state) {
+                            EstadoSolicitudEnum::BORRADOR     => 'Borrador',
+                            EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
+                            EstadoSolicitudEnum::EN_REVISION  => 'En Revisión',
+                            EstadoSolicitudEnum::PRE_APROBADA => 'Pre-Aprobada',
+                            EstadoSolicitudEnum::APROBADA     => 'Aprobada',
+                            EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
+                            EstadoSolicitudEnum::EN_EJECUCION => 'En Ejecución',
+                            EstadoSolicitudEnum::COMPLETADA   => 'Completada',
+                            EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
+                            default                           => $state->value,
+                        })
+                        ->color(fn (EstadoSolicitudEnum $state) => match ($state) {
+                            EstadoSolicitudEnum::PENDIENTE    => 'warning',
+                            EstadoSolicitudEnum::EN_REVISION  => 'info',
+                            EstadoSolicitudEnum::PRE_APROBADA => 'warning',
+                            EstadoSolicitudEnum::APROBADA     => 'success',
+                            EstadoSolicitudEnum::RECHAZADA    => 'danger',
+                            EstadoSolicitudEnum::EN_EJECUCION => 'primary',
+                            EstadoSolicitudEnum::COMPLETADA   => 'success',
+                            default                           => 'gray',
+                        }),
 
-                Tables\Columns\TextColumn::make('vehiculo.placa')
-                    ->label('Vehículo')
-                    ->description(fn ($record) =>
-                        trim("{$record->vehiculo?->marca?->nombre} {$record->vehiculo?->modelo?->nombre}")
-                    )
-                    ->searchable()
-                    ->sortable(),
+                    Tables\Columns\TextColumn::make('codigo')
+                        ->weight('bold')
+                        ->size(TextColumnSize::Large)
+                        ->fontFamily('mono')
+                        ->copyable()
+                        ->searchable(),
 
-                Tables\Columns\TextColumn::make('fecha_solicitud')
-                    ->label('Fecha')
-                    ->date('d/m/Y')
-                    ->sortable(),
+                    Tables\Columns\TextColumn::make('fecha_solicitud')
+                        ->date('d M Y')
+                        ->color('gray')
+                        ->size(TextColumnSize::Small)
+                        ->icon('heroicon-m-calendar'),
+                ])->space(2),
 
-                Tables\Columns\TextColumn::make('valor_total')
-                    ->label('Total')
-                    ->money('USD')
-                    ->sortable(),
+                // Centro — vehículo + solicitante
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('vehiculo.placa')
+                        ->weight('semibold')
+                        ->icon('heroicon-m-truck')
+                        ->description(fn ($record) =>
+                            trim("{$record->vehiculo?->marca?->nombre} {$record->vehiculo?->modelo?->nombre}")
+                        )
+                        ->searchable(),
 
-                Tables\Columns\TextColumn::make('estado')
-                    ->label('Estado')
-                    ->badge()
-                    ->formatStateUsing(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                        EstadoSolicitudEnum::BORRADOR     => 'Borrador',
-                        EstadoSolicitudEnum::PENDIENTE    => 'Pendiente',
-                        EstadoSolicitudEnum::EN_REVISION  => 'En Revisión',
-                        EstadoSolicitudEnum::PRE_APROBADA => 'Pre-Aprobada',
-                        EstadoSolicitudEnum::APROBADA     => 'Aprobada',
-                        EstadoSolicitudEnum::RECHAZADA    => 'Rechazada',
-                        EstadoSolicitudEnum::EN_EJECUCION => 'En Ejecución',
-                        EstadoSolicitudEnum::COMPLETADA   => 'Completada',
-                        EstadoSolicitudEnum::CANCELADA    => 'Cancelada',
-                        default                           => $state->value,
-                    })
-                    ->color(fn (EstadoSolicitudEnum $state): string => match ($state) {
-                        EstadoSolicitudEnum::BORRADOR     => 'gray',
-                        EstadoSolicitudEnum::PENDIENTE    => 'warning',
-                        EstadoSolicitudEnum::EN_REVISION  => 'info',
-                        EstadoSolicitudEnum::PRE_APROBADA => 'warning',
-                        EstadoSolicitudEnum::APROBADA     => 'success',
-                        EstadoSolicitudEnum::RECHAZADA    => 'danger',
-                        EstadoSolicitudEnum::EN_EJECUCION => 'primary',
-                        EstadoSolicitudEnum::COMPLETADA   => 'success',
-                        EstadoSolicitudEnum::CANCELADA    => 'gray',
-                        default                           => 'gray',
-                    })
-                    ->sortable(),
+                    Tables\Columns\TextColumn::make('solicitante.name')
+                        ->icon('heroicon-m-user')
+                        ->color('gray')
+                        ->size(TextColumnSize::Small)
+                        ->searchable(),
+                ])->space(2),
 
-                Tables\Columns\IconColumn::make('tiene_adjuntos')
-                    ->label('Adjuntos')
-                    ->boolean()
-                    ->getStateUsing(fn ($record) => ! empty($record->adjuntos))
-                    ->trueIcon('heroicon-o-paper-clip')
-                    ->falseIcon('heroicon-o-minus')
-                    ->trueColor('success')
-                    ->falseColor('gray'),
+                // Derecha — monto destacado + galones + adjunto
+                Tables\Columns\Layout\Stack::make([
+                    Tables\Columns\TextColumn::make('valor_total')
+                        ->money('USD')
+                        ->weight('bold')
+                        ->size(TextColumnSize::Large)
+                        ->color(fn ($record) => match (true) {
+                            $record->estado === EstadoSolicitudEnum::RECHAZADA => 'danger',
+                            $record->estado === EstadoSolicitudEnum::APROBADA  => 'success',
+                            default                                             => 'primary',
+                        })
+                        ->alignment(\Filament\Support\Enums\Alignment::End),
 
-                Tables\Columns\TextColumn::make('solicitante.name')
-                    ->label('Solicitante')
-                    ->toggleable(isToggledHiddenByDefault: true)
-                    ->searchable(),
+                    Tables\Columns\TextColumn::make('cantidad_combustible')
+                        ->suffix(' gal')
+                        ->color('gray')
+                        ->size(TextColumnSize::Small)
+                        ->icon('heroicon-m-fire')
+                        ->alignment(\Filament\Support\Enums\Alignment::End),
 
-                Tables\Columns\TextColumn::make('created_at')
-                    ->label('Creada')
-                    ->dateTime('d/m/Y H:i')
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    Tables\Columns\IconColumn::make('tiene_adjuntos')
+                        ->boolean()
+                        ->getStateUsing(fn ($record) => !empty($record->adjuntos))
+                        ->trueIcon('heroicon-o-paper-clip')
+                        ->falseIcon('')
+                        ->trueColor('info')
+                        ->alignment(\Filament\Support\Enums\Alignment::End),
+                ])->space(1)->grow(false),
 
-            ])
+            ])->extraAttributes(['class' => 'p-4 gap-6']),
+        ])
+        ->filters([
+            Tables\Filters\SelectFilter::make('estado')
+                ->label('Estado')
+                ->options(collect(EstadoSolicitudEnum::cases())
+                    ->mapWithKeys(fn ($e) => [$e->value => ucfirst(str_replace('_', ' ', $e->value))])
+                ),
+            Tables\Filters\Filter::make('pendientes')
+                ->label('Pendientes de revisión')
+                ->query(fn (Builder $q) => $q->whereIn('estado', [
+                    EstadoSolicitudEnum::PENDIENTE->value,
+                    EstadoSolicitudEnum::EN_REVISION->value,
+                ])),
+        ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                ->button()
+                ->size('sm'),
 
                 Tables\Actions\ActionGroup::make([
 
