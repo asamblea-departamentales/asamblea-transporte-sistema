@@ -210,7 +210,7 @@ class SolicitudCombustibleResource extends Resource
         ]);
     }
 
-   public static function table(Table $table): Table
+public static function table(Table $table): Table
 {
     return $table
         ->defaultSort('created_at', 'desc')
@@ -224,12 +224,18 @@ class SolicitudCombustibleResource extends Resource
                 ->weight('bold')
                 ->fontFamily('mono')
                 ->color('primary')
-                ->description(fn ($record) => $record->vehiculo?->placa
-                    ? 'Vehículo: ' . $record->vehiculo->placa
-                    : 'Sin vehículo'
-                ),
+                ->wrap()
+                ->description(function ($record) {
+                    $placa = $record->vehiculo?->placa ?? 'Sin vehículo';
+                    $solicitante = $record->solicitante?->name ?? 'Sin solicitante';
+                    $fecha = $record->fecha_solicitud
+                        ? \Carbon\Carbon::parse($record->fecha_solicitud)->format('d/m/Y')
+                        : 'Sin fecha';
 
-            Tables\Columns\TextColumn::make('vehiculo.marca.nombre')
+                    return "Vehículo: {$placa} • {$solicitante} • {$fecha}";
+                }),
+
+            Tables\Columns\TextColumn::make('vehiculo')
                 ->label('Vehículo')
                 ->formatStateUsing(function ($state, $record) {
                     return trim(
@@ -238,30 +244,37 @@ class SolicitudCombustibleResource extends Resource
                     ) ?: 'Sin información';
                 })
                 ->description(fn ($record) => 'Placa: ' . ($record->vehiculo?->placa ?? 'N/A'))
-                ->toggleable(),
+                ->toggleable()
+                ->visibleFrom('md'),
 
             Tables\Columns\TextColumn::make('solicitante.name')
                 ->label('Solicitante')
                 ->icon('heroicon-m-user')
                 ->searchable()
                 ->sortable()
-                ->limit(30),
+                ->limit(30)
+                ->toggleable()
+                ->visibleFrom('lg'),
 
             Tables\Columns\TextColumn::make('fecha_solicitud')
                 ->label('Fecha')
                 ->date('d/m/Y')
                 ->sortable()
-                ->description(fn ($record) => optional($record->created_at)?->diffForHumans()),
+                ->description(fn ($record) => optional($record->created_at)?->diffForHumans())
+                ->toggleable()
+                ->visibleFrom('md'),
 
             Tables\Columns\TextColumn::make('cantidad_combustible')
                 ->label('Combustible')
                 ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
                 ->badge()
                 ->color('info')
-                ->sortable(),
+                ->sortable()
+                ->toggleable()
+                ->visibleFrom('sm'),
 
             Tables\Columns\TextColumn::make('valor_total')
-                ->label('Valor total')
+                ->label('Valor')
                 ->money('USD')
                 ->sortable()
                 ->weight('bold')
@@ -304,7 +317,8 @@ class SolicitudCombustibleResource extends Resource
                 ->trueIcon('heroicon-m-paper-clip')
                 ->falseIcon('heroicon-m-minus')
                 ->trueColor('info')
-                ->falseColor('gray'),
+                ->falseColor('gray')
+                ->visibleFrom('md'),
         ])
         ->filters([
             Tables\Filters\SelectFilter::make('estado')
@@ -328,6 +342,7 @@ class SolicitudCombustibleResource extends Resource
         ->actions([
             Tables\Actions\ActionGroup::make([
                 Tables\Actions\ViewAction::make(),
+
                 Tables\Actions\EditAction::make()
                     ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE),
 
