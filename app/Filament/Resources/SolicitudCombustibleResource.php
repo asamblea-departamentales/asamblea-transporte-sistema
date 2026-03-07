@@ -287,8 +287,7 @@ class SolicitudCombustibleResource extends Resource
                 Tables\Columns\TextColumn::make('vehiculo.placa')
                     ->label('')
                     ->weight('black')
-                    ->size(Tables\Columns\TextColumn\TextColumnSize::ExtraLarge)
-                    ->icon('heroicon-s-truck')
+                    ->size(Tables\Columns\TextColumn\TextColumnSize::Large)                    ->icon('heroicon-s-truck')
                     ->iconColor('primary')
                     ->description(fn ($record) =>
                         collect([
