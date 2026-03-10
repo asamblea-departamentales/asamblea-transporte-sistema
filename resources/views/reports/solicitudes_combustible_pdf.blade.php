@@ -3,97 +3,104 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Reporte Solicitudes de Combustible</title>
-    <style>
-        body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10px;
-            color: #1f2937;
-            margin: 0;
-            padding: 0;
-        }
-        .header {
-            width: 100%;
-            margin-bottom: 16px;
-            border-bottom: 2px solid #92400e;
-            padding-bottom: 10px;
-        }
-        .logo { width: 150px; float: left; }
-        .title-container { float: right; text-align: right; width: 70%; }
-        h2 { margin: 0; color: #92400e; font-size: 17px; text-transform: uppercase; }
-        .clearfix { clear: both; }
+ <style>
+    body {
+        font-family: 'DejaVu Sans', sans-serif;
+        font-size: 10px;
+        color: #1f2937;
+        margin: 0;
+        padding: 0;
+    }
+    .header {
+        width: 100%;
+        margin-bottom: 16px;
+        /* Cambio a Cyan oscuro */
+        border-bottom: 2px solid #0891b2; 
+        padding-bottom: 10px;
+    }
+    .logo { width: 150px; float: left; }
+    .title-container { float: right; text-align: right; width: 70%; }
+    
+    /* Títulos en Cyan */
+    h2 { margin: 0; color: #0891b2; font-size: 17px; text-transform: uppercase; }
+    .clearfix { clear: both; }
 
-        /* KPIs */
-        .kpis { width: 100%; margin-bottom: 12px; }
-        .kpi-box { background-color: #fffbeb; border: 1px solid #fde68a; border-radius: 4px; padding: 6px; text-align: center; }
-        .kpi-box.success { background-color: #d1fae5; border-color: #6ee7b7; }
-        .kpi-box.danger  { background-color: #fef2f2; border-color: #fecaca; }
-        .kpi-box.info    { background-color: #eff6ff; border-color: #bfdbfe; }
-        .kpi-box.gray    { background-color: #f9fafb; border-color: #e5e7eb; }
-        .kpi-label { font-size: 8px; color: #6b7280; text-transform: uppercase; display: block; margin-bottom: 2px; }
-        .kpi-value { font-size: 16px; font-weight: bold; color: #92400e; }
-        .kpi-box.success .kpi-value { color: #065f46; }
-        .kpi-box.danger  .kpi-value { color: #991b1b; }
-        .kpi-box.info    .kpi-value { color: #1e40af; }
-        .kpi-box.gray    .kpi-value { color: #374151; }
+    /* KPIs con estilo Cyan */
+    .kpis { width: 100%; margin-bottom: 12px; }
+    .kpi-box { 
+        background-color: #ecfeff; /* cyan-50 */
+        border: 1px solid #a5f3fc; /* cyan-200 */
+        border-radius: 4px; 
+        padding: 6px; 
+        text-align: center; 
+    }
+    .kpi-box.success { background-color: #d1fae5; border-color: #6ee7b7; }
+    .kpi-box.danger  { background-color: #fef2f2; border-color: #fecaca; }
+    .kpi-box.info    { background-color: #e0f2fe; border-color: #bae6fd; }
+    .kpi-box.gray    { background-color: #f9fafb; border-color: #e5e7eb; }
+    
+    .kpi-label { font-size: 8px; color: #6b7280; text-transform: uppercase; display: block; margin-bottom: 2px; }
+    .kpi-value { font-size: 16px; font-weight: bold; color: #0891b2; } /* Valor en Cyan */
+    
+    .kpi-box.success .kpi-value { color: #065f46; }
+    .kpi-box.danger  .kpi-value { color: #991b1b; }
+    .kpi-box.info    .kpi-value { color: #0369a1; }
+    .kpi-box.gray    .kpi-value { color: #374151; }
 
-        /* Meta */
-        .meta {
-            margin-bottom: 12px;
-            padding: 7px 10px;
-            background-color: #fffbeb;
-            border-left: 3px solid #92400e;
-        }
-        .meta table { border: none; width: 100%; }
-        .meta td { border: none; padding: 2px 0; }
+    /* Meta / Filtros */
+    .meta {
+        margin-bottom: 12px;
+        padding: 7px 10px;
+        background-color: #ecfeff;
+        border-left: 3px solid #0891b2;
+    }
+    .meta table { border: none; width: 100%; }
+    .meta td { border: none; padding: 2px 0; }
 
-        /* Tabla */
-        table.main { width: 100%; border-collapse: collapse; margin-top: 8px; }
-        table.main th, table.main td {
-            border: 0.5px solid #d1d5db;
-            padding: 5px 6px;
-            text-align: left;
-            word-wrap: break-word;
-        }
-        table.main th {
-            background: #92400e;
-            color: #ffffff;
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 8px;
-        }
-        table.main tr:nth-child(even) { background: #fffbeb; }
+    /* Tabla Principal */
+    table.main { width: 100%; border-collapse: collapse; margin-top: 8px; }
+    table.main th, table.main td {
+        border: 0.5px solid #d1d5db;
+        padding: 5px 6px;
+        text-align: left;
+        word-wrap: break-word;
+    }
+    table.main th {
+        background: #0891b2; /* Encabezado Cyan */
+        color: #ffffff;
+        font-weight: bold;
+        text-transform: uppercase;
+        font-size: 8px;
+    }
+    /* Filas alternas en cyan muy suave */
+    table.main tr:nth-child(even) { background: #f5fdff; }
 
-        /* Badges */
-        .badge {
-            padding: 2px 5px;
-            border-radius: 3px;
-            font-size: 8px;
-            font-weight: bold;
-            text-transform: uppercase;
-        }
-        .s-pendiente    { background-color: #fef3c7; color: #92400e; }
-        .s-en_revision  { background-color: #dbeafe; color: #1e40af; }
-        .s-pre_aprobada { background-color: #fef3c7; color: #92400e; }
-        .s-aprobada     { background-color: #d1fae5; color: #065f46; }
-        .s-rechazada    { background-color: #fee2e2; color: #991b1b; }
-        .s-en_ejecucion { background-color: #ede9fe; color: #5b21b6; }
-        .s-completada   { background-color: #d1fae5; color: #065f46; }
-        .s-cancelada    { background-color: #f3f4f6; color: #6b7280; }
-        .p-alta  { background-color: #fee2e2; color: #991b1b; }
-        .p-media { background-color: #fef3c7; color: #92400e; }
-        .p-baja  { background-color: #d1fae5; color: #065f46; }
-
-        .footer {
-            position: fixed;
-            bottom: -30px;
-            left: 0; right: 0;
-            height: 30px;
-            text-align: center;
-            font-size: 8px;
-            color: #9ca3af;
-            border-top: 1px solid #e5e7eb;
-        }
-    </style>
+    /* Badges de Estados */
+    .badge {
+        padding: 2px 5px;
+        border-radius: 3px;
+        font-size: 8px;
+        font-weight: bold;
+        text-transform: uppercase;
+    }
+    /* Mantenemos colores semánticos para estados, pero ajustamos el naranja a cyan donde aplique */
+    .s-pendiente    { background-color: #ecfeff; color: #0891b2; }
+    .s-en_revision  { background-color: #dbeafe; color: #1e40af; }
+    .s-pre_aprobada { background-color: #fff7ed; color: #9a3412; }
+    .s-aprobada     { background-color: #d1fae5; color: #065f46; }
+    .s-rechazada    { background-color: #fee2e2; color: #991b1b; }
+    
+    .footer {
+        position: fixed;
+        bottom: -30px;
+        left: 0; right: 0;
+        height: 30px;
+        text-align: center;
+        font-size: 8px;
+        color: #9ca3af;
+        border-top: 1px solid #e5e7eb;
+    }
+</style>
 </head>
 <body>
 
