@@ -35,7 +35,8 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     public ?int $vehiculo_id = null;
     public ?string $estado = null;
 
-    public int $kpi_galones = 0;
+    public float $kpi_galones = 0;
+    public float $kpi_valor_total = 0;
     public int $kpi_total = 0;
     public int $kpi_pendientes = 0;
     public int $kpi_aprobadas = 0;
@@ -229,24 +230,30 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     }
 
     private function refreshKpis(): void
-    {
-        $base = SolicitudCombustible::query();
-        $column = $this->date_field ?? 'fecha_solicitud';
+{
+    $base = SolicitudCombustible::query();
+    $column = $this->date_field ?? 'fecha_solicitud';
 
-        if ($this->date_from) $base->where($column, '>=', $this->date_from);
-        if ($this->date_to)   $base->where($column, '<=', $this->date_to);
-        if ($this->vehiculo_id) $base->where('vehiculo_id', $this->vehiculo_id);
+    if ($this->date_from) $base->where($column, '>=', $this->date_from);
+    if ($this->date_to)   $base->where($column, '<=', $this->date_to);
+    if ($this->vehiculo_id) $base->where('vehiculo_id', $this->vehiculo_id);
 
-        $this->kpi_total = (clone $base)->count();
-        $this->kpi_pendientes = (clone $base)->whereIn('estado', [
-            EstadoSolicitudEnum::PENDIENTE,
-            EstadoSolicitudEnum::EN_REVISION,
-            EstadoSolicitudEnum::PRE_APROBADA,
-        ])->count();
-        $this->kpi_aprobadas = (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA)->count();
-        $this->kpi_rechazadas = (clone $base)->where('estado', EstadoSolicitudEnum::RECHAZADA)->count();
-    }
+    $this->kpi_total = (clone $base)->count();
 
+    $this->kpi_pendientes = (clone $base)->whereIn('estado', [
+        EstadoSolicitudEnum::PENDIENTE,
+        EstadoSolicitudEnum::EN_REVISION,
+        EstadoSolicitudEnum::PRE_APROBADA,
+    ])->count();
+
+    $this->kpi_aprobadas = (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA)->count();
+
+    $this->kpi_rechazadas = (clone $base)->where('estado', EstadoSolicitudEnum::RECHAZADA)->count();
+
+    $this->kpi_galones = (float) ((clone $base)->sum('cantidad_combustible') ?? 0);
+
+    $this->kpi_valor_total = (float) ((clone $base)->sum('valor_total') ?? 0);
+}
     private function getFilterState(): array
     {
         return [
