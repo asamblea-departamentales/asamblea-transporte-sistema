@@ -2,342 +2,302 @@
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
+import { cn } from "../lib/utils"; 
 
-type ModuleCard = {
-  key: "transporte" | "combustible" | "mantenimiento";
-  title: string;
-  description: string;
-  href: string;
-  accent: "blue" | "amber" | "emerald";
-  icon: React.ReactNode;
+
+
+export type ModuleKey   = "transporte" | "combustible" | "mantenimiento";
+export type AccentColor = "blue" | "amber" | "emerald";
+
+export type ModuleCard = {
+  key:          ModuleKey;
+  title:        string;
+  description:  string;
+  href:         string;
+  accent:       AccentColor;
+  icon:         React.ReactNode;
   allowedRoles: string[];
 };
 
-function AccentIcon({
-  accent,
-  icon,
-}: {
-  accent: ModuleCard["accent"];
-  icon: React.ReactNode;
-}) {
-  const styles =
-    accent === "blue"
-      ? "bg-gradient-to-br from-blue-600 to-cyan-500 text-white shadow-[0_14px_35px_-18px_rgba(37,99,235,.75)]"
-      : accent === "amber"
-      ? "bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-[0_14px_35px_-18px_rgba(245,158,11,.75)]"
-      : "bg-gradient-to-br from-emerald-500 to-teal-500 text-white shadow-[0_14px_35px_-18px_rgba(16,185,129,.75)]";
+// ─── Accent config ────────────────────────────────────────────────────────────
+// Un solo objeto en lugar de ternarios repetidos en 3 componentes
+// Mueve esto a src/config/accent.config.ts cuando el proyecto crezca
+
+const accent = {
+  blue: {
+    icon:         "bg-blue-50 border border-blue-100 text-blue-600",
+    badge:        "bg-blue-50 border border-blue-100 text-blue-800",
+    dot:          "bg-blue-400",
+    cta:          "text-blue-700",
+    ctaArrow:     "bg-blue-100 text-blue-600",
+    cardHover:    "hover:border-blue-200",
+    topLine:      "from-blue-400 to-blue-200",
+  },
+  amber: {
+    icon:         "bg-amber-50 border border-amber-100 text-amber-600",
+    badge:        "bg-amber-50 border border-amber-100 text-amber-800",
+    dot:          "bg-amber-400",
+    cta:          "text-amber-800",
+    ctaArrow:     "bg-amber-100 text-amber-700",
+    cardHover:    "hover:border-amber-200",
+    topLine:      "from-amber-400 to-amber-200",
+  },
+  emerald: {
+    icon:         "bg-emerald-50 border border-emerald-100 text-emerald-600",
+    badge:        "bg-emerald-50 border border-emerald-100 text-emerald-800",
+    dot:          "bg-emerald-400",
+    cta:          "text-emerald-800",
+    ctaArrow:     "bg-emerald-100 text-emerald-700",
+    cardHover:    "hover:border-emerald-200",
+    topLine:      "from-emerald-400 to-emerald-200",
+  },
+} satisfies Record<AccentColor, Record<string, string>>;
+
+// ─── Module definitions ───────────────────────────────────────────────────────
+// Datos estáticos → fuera del componente, sin useMemo
+// Mueve a src/config/modules.config.tsx cuando el proyecto crezca
+
+const MODULE_DEFINITIONS: ModuleCard[] = [
+  {
+    key:         "transporte",
+    title:       "Transporte",
+    description: "Solicitudes de transporte institucional, asignación de vehículos y seguimiento en tiempo real.",
+    href:        "/solicitudes/transporte/paso-1",
+    accent:      "blue",
+    allowedRoles: ["solicitante", "admin", "supervisor", "jefe"],
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <path d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 0 1-2 2h-.5a2 2 0 0 1-4 0h-4a2 2 0 0 1-4 0H5a2 2 0 0 1-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z" strokeLinejoin="round" />
+        <path d="M6 11.5h12" strokeLinecap="round" />
+      </svg>
+    ),
+  },
+  {
+    key:         "combustible",
+    title:       "Combustible",
+    description: "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
+    href:        "/solicitudes/combustible/nueva",
+    accent:      "amber",
+    allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
+        <path d="M15 7h2l2 2v10a2 2 0 0 1-2 2h-2" strokeLinejoin="round" />
+        <path d="M9 7h4" strokeLinecap="round" />
+        <path d="M9 11h4" strokeLinecap="round" opacity="0.7" />
+      </svg>
+    ),
+  },
+  {
+    key:         "mantenimiento",
+    title:       "Mantenimiento",
+    description: "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
+    href:        "/solicitudes/mantenimiento/nueva",
+    accent:      "emerald",
+    allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
+    icon: (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
+        <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
+        <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round" />
+        <path d="M14 6l4 4" strokeLinecap="round" opacity="0.75" />
+      </svg>
+    ),
+  },
+];
+
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+function ModuleCardItem({ card, index }: { card: ModuleCard; index: number }) {
+  const navigate = useNavigate();
+  const cfg = accent[card.accent];
 
   return (
-    <div
-      className={[
-        "inline-flex rounded-2xl p-3 sm:p-4",
+    <button
+      onClick={() => navigate(card.href)}
+      className={cn(
+        // Base
+        "group relative w-full text-left",
+        "bg-white rounded-2xl border border-slate-200",
+        "p-5 sm:p-6",
+        "shadow-[0_2px_8px_rgba(15,23,42,.05),0_0_0_1px_rgba(15,23,42,.03)]",
+        // Hover
         "transition-all duration-300",
-        "group-hover:scale-[1.07] group-hover:-rotate-1",
-        styles,
-      ].join(" ")}
+        "hover:-translate-y-0.5",
+        "hover:shadow-[0_12px_32px_rgba(15,23,42,.09),0_2px_8px_rgba(15,23,42,.04)]",
+        cfg.cardHover,
+        // Focus
+        "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/40 focus-visible:ring-offset-2",
+        // Active
+        "active:scale-[0.99]",
+      )}
+      // Entrada escalonada con animation-delay
+      style={{ animationDelay: `${index * 70}ms` }}
     >
-      <span className="grid h-7 w-7 place-items-center sm:h-8 sm:w-8">{icon}</span>
+      {/* Línea superior de color — solo visible en hover */}
+      <div
+        className={cn(
+          "absolute top-0 left-6 right-6 h-[2px] rounded-b-sm",
+          "bg-gradient-to-r opacity-0 group-hover:opacity-100",
+          "transition-opacity duration-300",
+          cfg.topLine,
+        )}
+      />
+
+      {/* Top row: icono + badge */}
+      <div className="flex items-start justify-between mb-5">
+        <div className={cn("flex items-center justify-center w-11 h-11 rounded-xl transition-transform duration-300 group-hover:scale-[1.05] group-hover:-rotate-1", cfg.icon)}>
+          {card.icon}
+        </div>
+        <span className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-bold", cfg.badge)}>
+          <span className={cn("w-1.5 h-1.5 rounded-full", cfg.dot)} />
+          Disponible
+        </span>
+      </div>
+
+      {/* Título */}
+      <h3 className="text-[1.05rem] font-bold tracking-tight text-slate-900 mb-2 leading-snug">
+        {card.title}
+      </h3>
+
+      {/* Descripción */}
+      <p className="text-[0.8rem] text-slate-500 leading-relaxed font-normal mb-5">
+        {card.description}
+      </p>
+
+      {/* Divider */}
+      <div className="h-px bg-slate-100 mb-4" />
+
+      {/* Footer */}
+      <div className="flex items-center justify-between">
+        <span className={cn("inline-flex items-center gap-2 text-[0.78rem] font-bold transition-all duration-200", cfg.cta)}>
+          Iniciar solicitud
+          <span className={cn("flex items-center justify-center w-5 h-5 rounded-md transition-transform duration-200 group-hover:translate-x-0.5", cfg.ctaArrow)}>
+            <svg width="10" height="10" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 12h14M13 6l6 6-6 6" />
+            </svg>
+          </span>
+        </span>
+        <span className="text-[0.68rem] font-semibold text-slate-300 uppercase tracking-wider">
+          Por rol
+        </span>
+      </div>
+    </button>
+  );
+}
+
+// ─── Empty state ──────────────────────────────────────────────────────────────
+
+function EmptyState() {
+  const navigate = useNavigate();
+  return (
+    <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-slate-50 border border-slate-100 mb-4">
+        <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+        </svg>
+      </div>
+      <h3 className="text-base font-bold text-slate-900 mb-1">Sin módulos disponibles</h3>
+      <p className="text-sm text-slate-500 mb-6 max-w-xs mx-auto leading-relaxed">
+        No tienes permisos para acceder a ningún módulo. Contacta al administrador del sistema.
+      </p>
+      <button
+        onClick={() => navigate("/dashboard")}
+        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-slate-900 text-white text-sm font-semibold shadow-sm hover:opacity-90 active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-900/40"
+      >
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+        Volver al Dashboard
+      </button>
     </div>
   );
 }
 
-function ActionLink({ accent }: { accent: ModuleCard["accent"] }) {
-  const styles =
-    accent === "blue"
-      ? "text-blue-700 group-hover:text-blue-800"
-      : accent === "amber"
-      ? "text-amber-700 group-hover:text-amber-800"
-      : "text-emerald-700 group-hover:text-emerald-800";
-
-  return (
-    <span
-      className={[
-        "inline-flex items-center gap-2",
-        "text-[12px] sm:text-sm font-extrabold tracking-tight",
-        "transition-all",
-        styles,
-      ].join(" ")}
-    >
-      Iniciar solicitud
-      <svg
-        width="14"
-        height="14"
-        viewBox="0 0 24 24"
-        fill="none"
-        className="transition-transform group-hover:translate-x-1.5"
-      >
-        <path d="M5 12h12" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" />
-        <path
-          d="M13 6l6 6-6 6"
-          stroke="currentColor"
-          strokeWidth="2.5"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
-      </svg>
-    </span>
-  );
-}
-
-function StatusBadge({ accent }: { accent: ModuleCard["accent"] }) {
-  const dot =
-    accent === "blue"
-      ? "bg-blue-500"
-      : accent === "amber"
-      ? "bg-amber-500"
-      : "bg-emerald-500";
-
-  const pill =
-    accent === "blue"
-      ? "bg-blue-50 text-blue-700 ring-blue-200/70"
-      : accent === "amber"
-      ? "bg-amber-50 text-amber-700 ring-amber-200/70"
-      : "bg-emerald-50 text-emerald-700 ring-emerald-200/70";
-
-  return (
-    <span
-      className={[
-        "inline-flex items-center gap-2",
-        "rounded-full px-3 py-1",
-        "text-[11px] font-extrabold",
-        "ring-1",
-        pill,
-      ].join(" ")}
-    >
-      <span className={["h-2 w-2 rounded-full", dot].join(" ")} />
-      Disponible
-    </span>
-  );
-}
+// ─── PAGE ─────────────────────────────────────────────────────────────────────
 
 export default function NewRequestPage() {
-  const navigate = useNavigate();
-  const { user } = useAuth();
+  const navigate    = useNavigate();
+  const { user }    = useAuth();
+  const userRoles   = user?.roles ?? [];
 
-  const userRoles = user?.roles ?? [];
-
-  const modules: ModuleCard[] = useMemo(
-    () => [
-      {
-        key: "transporte",
-        title: "Transporte",
-        description:
-          "Solicitudes de transporte institucional, asignación de vehículos y seguimiento en tiempo real.",
-        href: "/solicitudes/transporte/paso-1",
-        accent: "blue",
-        allowedRoles: ["solicitante", "admin", "supervisor", "jefe"],
-        icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path
-              d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 0 1-2 2h-.5a2 2 0 0 1-4 0h-4a2 2 0 0 1-4 0H5a2 2 0 0 1-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z"
-              strokeLinejoin="round"
-            />
-            <path d="M6 11.5h12" strokeLinecap="round" />
-          </svg>
-        ),
-      },
-      {
-        key: "combustible",
-        title: "Combustible",
-        description:
-          "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
-        href: "/solicitudes/combustible/nueva",
-        accent: "amber",
-        allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
-        icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
-            <path d="M15 7h2l2 2v10a2 2 0 0 1-2 2h-2" strokeLinejoin="round" />
-            <path d="M9 7h4" strokeLinecap="round" />
-            <path d="M9 11h4" strokeLinecap="round" opacity="0.7" />
-          </svg>
-        ),
-      },
-      {
-        key: "mantenimiento",
-        title: "Mantenimiento",
-        description:
-          "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
-        href: "/solicitudes/mantenimiento/nueva",
-        accent: "emerald",
-        allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
-        icon: (
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-            <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
-            <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round" />
-            <path d="M14 6l4 4" strokeLinecap="round" opacity="0.75" />
-          </svg>
-        ),
-      },
-    ],
-    []
+  // Solo filtra — no memoiza datos estáticos
+  const visibleModules = useMemo(
+    () => MODULE_DEFINITIONS.filter(m => m.allowedRoles.some(r => userRoles.includes(r))),
+    [userRoles],
   );
 
-  const visibleModules = useMemo(() => {
-    if (!user || userRoles.length === 0) return [];
-    return modules.filter((m) => m.allowedRoles.some((r) => userRoles.includes(r)));
-  }, [modules, user, userRoles]);
+  const gridCols =
+    visibleModules.length === 1 ? "grid-cols-1 max-w-sm mx-auto" :
+    visibleModules.length === 2 ? "grid-cols-1 sm:grid-cols-2" :
+                                  "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3";
 
   return (
-    <div className="mx-auto max-w-6xl space-y-7 pb-10 sm:space-y-10">
-      {/* Header */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-4xl">
+    <div className="mx-auto max-w-5xl space-y-6 pb-12 animate-fade-in">
+
+      {/* ── Header ── */}
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="space-y-1.5">
+          {/* Eyebrow */}
+          <div className="flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-widest text-blue-600">
+            <span className="inline-block w-4 h-[2px] bg-blue-600 rounded-full" />
+            Sistema de Gestión
+          </div>
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
             Nueva Solicitud
           </h1>
-          <p className="mt-1.5 max-w-2xl text-sm font-medium leading-relaxed text-slate-600 sm:text-base">
-            Seleccione el módulo que desea utilizar para crear su solicitud.
+          <p className="text-sm text-slate-500 leading-relaxed max-w-md">
+            Seleccione el módulo correspondiente para iniciar su solicitud institucional.
           </p>
         </div>
 
         <button
           onClick={() => navigate("/dashboard")}
-          className={[
-            "group inline-flex items-center justify-center gap-2",
-            "rounded-2xl bg-white/80 px-4 py-2.5 text-sm font-extrabold text-slate-700",
-            "ring-1 ring-slate-200/70 shadow-sm backdrop-blur",
-            "transition-all hover:bg-white hover:shadow-md active:scale-95",
-            "focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20",
-          ].join(" ")}
+          className="group inline-flex items-center gap-2 self-start px-4 py-2.5 rounded-xl bg-white border border-slate-200 text-sm font-semibold text-slate-600 shadow-sm hover:bg-slate-50 hover:text-slate-900 hover:shadow-md active:scale-95 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/30"
         >
-          <svg
-            className="h-4 w-4 transition-transform group-hover:-translate-x-1"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth="2.5"
-          >
+          <svg className="h-4 w-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
           </svg>
-          <span className="hidden sm:inline">Volver al inicio</span>
-          <span className="sm:hidden">Volver</span>
+          Volver al inicio
         </button>
       </div>
 
-      {/* Info banner */}
-      <div className="overflow-hidden rounded-3xl border border-blue-200/60 bg-white/70 backdrop-blur shadow-sm">
-        <div className="flex items-start gap-4 p-5 sm:p-6">
-          <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-blue-100/80 ring-1 ring-blue-200/60">
-            <svg className="h-6 w-6 text-blue-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-black text-slate-900 sm:text-base">Información importante</h3>
-            <p className="mt-1 text-xs font-semibold leading-relaxed text-slate-600 sm:text-sm">
-              Cada solicitud requiere aprobación del supervisor correspondiente. Complete todos los datos requeridos
-              para agilizar el proceso.
-            </p>
-          </div>
+      {/* ── Banner ── */}
+      <div className="flex items-start gap-3.5 px-4 py-3.5 rounded-xl bg-blue-50 border border-blue-100 border-l-[3px] border-l-blue-500">
+        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600">
+          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
         </div>
-      </div>
-
-      {/* Cards grid */}
-      <div
-        className={[
-          "grid gap-4 sm:gap-6",
-          visibleModules.length === 1
-            ? "grid-cols-1 place-items-center"
-            : visibleModules.length === 2
-            ? "grid-cols-1 sm:grid-cols-2"
-            : "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3",
-        ].join(" ")}
-      >
-        {visibleModules.map((m) => (
-          <button
-            key={m.key}
-            onClick={() => navigate(m.href)}
-            className={[
-              "group relative w-full text-left",
-              "overflow-hidden rounded-3xl",
-              "border border-slate-200/60 bg-white/75 backdrop-blur",
-              "p-5 sm:p-7",
-              "shadow-[0_18px_40px_-28px_rgba(15,23,42,.45)]",
-              "transition-all duration-300",
-              "hover:-translate-y-1 hover:bg-white/90 hover:shadow-[0_26px_60px_-38px_rgba(15,23,42,.55)]",
-              "focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20",
-              "active:scale-[0.99]",
-              visibleModules.length === 1 ? "max-w-xl" : "",
-            ].join(" ")}
-          >
-            {/* Glow por accent */}
-            <div
-              className={[
-                "pointer-events-none absolute -right-10 -top-10 h-40 w-40 rounded-full blur-3xl opacity-0 transition-opacity duration-500 group-hover:opacity-25",
-                m.accent === "blue"
-                  ? "bg-blue-500"
-                  : m.accent === "amber"
-                  ? "bg-amber-500"
-                  : "bg-emerald-500",
-              ].join(" ")}
-            />
-
-            {/* borde interior sutil */}
-            <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/40" />
-
-            <div className="relative">
-              <div className="flex items-start justify-between gap-4">
-                <AccentIcon accent={m.accent} icon={m.icon} />
-                <StatusBadge accent={m.accent} />
-              </div>
-
-              <h3 className="mt-4 text-lg font-black tracking-tight text-slate-900 sm:mt-6 sm:text-xl">
-                {m.title}
-              </h3>
-
-              <p className="mt-2 text-xs font-semibold leading-relaxed text-slate-600 sm:text-sm">
-                {m.description}
-              </p>
-
-              <div className="mt-5 flex items-center justify-between sm:mt-7">
-                <ActionLink accent={m.accent} />
-                <span className="text-[11px] font-extrabold text-slate-400">
-                  Acceso según rol
-                </span>
-              </div>
-            </div>
-          </button>
-        ))}
-      </div>
-
-      {/* Empty state */}
-      {visibleModules.length === 0 && (
-        <div className="rounded-3xl border border-slate-200/70 bg-white/80 p-10 text-center shadow-sm backdrop-blur">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-slate-100 ring-1 ring-slate-200/70">
-            <svg className="h-8 w-8 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-              />
-            </svg>
-          </div>
-          <h3 className="mt-4 text-lg font-black text-slate-900">No hay módulos disponibles</h3>
-          <p className="mt-2 text-sm font-medium text-slate-600">
-            No tienes permisos para acceder a ningún módulo. Contacta al administrador del sistema.
+        <div>
+          <p className="text-[0.78rem] font-bold text-blue-900 mb-0.5">Información importante</p>
+          <p className="text-[0.75rem] text-blue-700 leading-relaxed">
+            Cada solicitud requiere aprobación del supervisor correspondiente. Complete todos los campos requeridos para agilizar el proceso.
           </p>
-
-          <button
-            onClick={() => navigate("/dashboard")}
-            className={[
-              "mt-6 inline-flex items-center gap-2",
-              "rounded-2xl bg-slate-900 px-5 py-3 text-sm font-extrabold text-white",
-              "shadow-sm transition-all hover:opacity-95 active:scale-95",
-              "focus:outline-none focus-visible:ring-4 focus-visible:ring-blue-500/20",
-            ].join(" ")}
-          >
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-            </svg>
-            Volver al Dashboard
-          </button>
         </div>
+      </div>
+
+      {/* ── Section label ── */}
+      <div className="flex items-center gap-3">
+        <span className="text-[0.68rem] font-bold uppercase tracking-widest text-slate-400">
+          Módulos disponibles
+        </span>
+        <div className="flex-1 h-px bg-slate-200" />
+        <span className="text-[0.68rem] font-semibold text-slate-400">
+          {visibleModules.length} módulo{visibleModules.length !== 1 ? "s" : ""}
+        </span>
+      </div>
+
+      {/* ── Cards ── */}
+      {visibleModules.length > 0 ? (
+        <div className={cn("grid gap-4", gridCols)}>
+          {visibleModules.map((m, i) => (
+            <ModuleCardItem key={m.key} card={m} index={i} />
+          ))}
+        </div>
+      ) : (
+        <EmptyState />
       )}
+
     </div>
   );
 }
