@@ -8,18 +8,19 @@ import { useNotifications, type Notification, type NotiTipo } from "../notificat
 type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number };
 
-// ─── Colores por tipo ──────────────────────────────────────────────────────────
-
-const notiColor: Record<NotiTipo, { dot: string; bg: string; border: string }> = {
-  aprobada:     { dot: "#10B981", bg: "rgba(16,185,129,0.15)",  border: "rgba(16,185,129,0.3)"  },
-  rechazada:    { dot: "#EF4444", bg: "rgba(239,68,68,0.15)",   border: "rgba(239,68,68,0.3)"   },
-  observada:    { dot: "#60A5FA", bg: "rgba(96,165,250,0.15)",  border: "rgba(96,165,250,0.3)"  },
-  finalizada:   { dot: "#94a3b8", bg: "rgba(148,163,184,0.15)", border: "rgba(148,163,184,0.3)" },
-  recordatorio: { dot: "#FBBF24", bg: "rgba(251,191,36,0.15)",  border: "rgba(251,191,36,0.3)"  },
-  info:         { dot: "#60A5FA", bg: "rgba(96,165,250,0.15)",  border: "rgba(96,165,250,0.3)"  },
+// ─── Mapa de clases Tailwind por tipo de notificación ─────────────────────────
+// Antes: objeto con strings rgba hardcodeados en el componente
+// Ahora: clases de Tailwind usando los tokens del config
+const notiClasses: Record<NotiTipo, { dot: string; bg: string; border: string }> = {
+  aprobada:     { dot: "bg-noti-approved-dot",  bg: "bg-noti-approved-bg",  border: "border-noti-approved-border"  },
+  rechazada:    { dot: "bg-noti-rejected-dot",  bg: "bg-noti-rejected-bg",  border: "border-noti-rejected-border"  },
+  observada:    { dot: "bg-noti-info-dot",      bg: "bg-noti-info-bg",      border: "border-noti-info-border"      },
+  finalizada:   { dot: "bg-noti-done-dot",      bg: "bg-noti-done-bg",      border: "border-noti-done-border"      },
+  recordatorio: { dot: "bg-noti-reminder-dot",  bg: "bg-noti-reminder-bg",  border: "border-noti-reminder-border"  },
+  info:         { dot: "bg-noti-info-dot",      bg: "bg-noti-info-bg",      border: "border-noti-info-border"      },
 };
 
-// ─── Icons (igual que el original) ────────────────────────────────────────────
+// ─── Icons ────────────────────────────────────────────────────────────────────
 
 const Icons = {
   Dashboard: () => (
@@ -57,8 +58,13 @@ const Icons = {
     </svg>
   ),
   ChevronDown: ({ open }: { open: boolean }) => (
-    <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"
-      style={{ transition: "transform 250ms cubic-bezier(.34,1.56,.64,1)", transform: open ? "rotate(180deg)" : "rotate(0deg)" }}>
+    <svg
+      width="13" height="13" viewBox="0 0 16 16" fill="none"
+      stroke="currentColor" strokeWidth="2" strokeLinecap="round"
+      // Solo este transform inline es inevitable — es un valor dinámico en runtime
+      className="transition-transform duration-250"
+      style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+    >
       <path d="M4 6l4 4 4-4" />
     </svg>
   ),
@@ -76,84 +82,131 @@ const Icons = {
 
 // ─── Avatar ────────────────────────────────────────────────────────────────────
 
+const avatarSize = {
+  sm: "w-[30px] h-[30px] text-[11px]",
+  md: "w-[36px] h-[36px] text-[13px]",
+  lg: "w-[46px] h-[46px] text-[17px]",
+};
+
 function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
-  const dim  = { sm: 30, md: 36, lg: 46 };
-  const font = { sm: "11px", md: "13px", lg: "17px" };
   return (
     <div
-      style={{ width: dim[size], height: dim[size], fontSize: font[size],
+      className={`
+        ${avatarSize[size]}
+        flex items-center justify-center font-bold text-white flex-shrink-0 rounded-full
+        shadow-avatar
+      `}
+      style={{
+        // Gradiente radial complejo — no existe en Tailwind sin plugin
         background: "radial-gradient(135deg at 30% 30%, #2563eb 0%, #1e3a8a 60%, #0f172a 100%)",
-        boxShadow: "0 0 18px rgba(59,130,246,0.35), inset 0 1px 0 rgba(255,255,255,0.15)", borderRadius: "50%" }}
-      className="flex items-center justify-center font-bold text-white flex-shrink-0"
+      }}
     >
       {initial}
     </div>
   );
 }
 
+// ─── StatusDot ────────────────────────────────────────────────────────────────
+
 function StatusDot() {
   return (
-    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider"
-      style={{ background: "rgba(16,185,129,0.08)", border: "1px solid rgba(16,185,129,0.2)", borderRadius: "20px" }}>
-      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" style={{ boxShadow: "0 0 6px #10b981" }} />
+    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold text-emerald-400 uppercase tracking-wider bg-online-bg border border-online-border rounded-badge">
+      <span className="w-1.5 h-1.5 rounded-full bg-online-dot animate-pulse shadow-online-dot" />
       En línea
     </span>
   );
 }
 
-// ─── NavLink ───────────────────────────────────────────────────────────────────
+// ─── NavLinkBottom ────────────────────────────────────────────────────────────
+// Separado en su propia función — antes era un if dentro de NavLinkItem
 
-function NavLinkItem({ item, onClick, variant, pathname }: { item: NavItem; onClick?: () => void; variant: "desktop" | "drawer" | "bottom"; pathname: string }) {
-  const { to, label, mobileLabel, icon: Icon, badge } = item;
-  const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
-
-  if (variant === "bottom") {
-    return (
-      <NavLink to={to} end onClick={onClick}
-        className="flex-1 flex flex-col items-center justify-center gap-1 transition-all"
-        style={({ isActive }) => isActive ? { color: "#60a5fa" } : { color: "#64748b" }}>
-        <Icon />
-        <span className="text-[10px] font-bold uppercase tracking-tight">{mobileLabel}</span>
-      </NavLink>
-    );
-  }
-
-  if (variant === "desktop") {
-    return (
-      <NavLink to={to} end
-        style={active
-          ? { color: "#fff", background: "rgba(59,130,246,0.15)", borderRadius: "12px", boxShadow: "0 0 20px rgba(59,130,246,0.2)" }
-          : { color: "#64748b" }}
-        className="flex items-center gap-2.5 px-4 py-2.5 text-xs font-semibold uppercase tracking-widest transition-all duration-200 hover:text-slate-200 mx-1"
-      >
-        <span style={active ? { color: "#60a5fa" } : {}}><Icon /></span>
-        <span>{label}</span>
-        {badge && <span className="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full" style={{ background: "rgba(59,130,246,0.25)", color: "#93c5fd" }}>{badge}</span>}
-      </NavLink>
-    );
-  }
-
+function NavLinkBottom({ item, onClick }: { item: NavItem; onClick?: () => void }) {
+  const { to, mobileLabel, icon: Icon } = item;
   return (
-    <NavLink to={to} end onClick={onClick}
-      className="flex items-center gap-3.5 px-4 py-3.5 transition-all duration-200 group"
-      style={active
-        ? { background: "rgba(59,130,246,0.12)", borderRadius: "16px", color: "#fff", boxShadow: "0 0 24px rgba(59,130,246,0.15)" }
-        : { color: "#64748b", borderRadius: "16px" }}
+    <NavLink
+      to={to} end onClick={onClick}
+      className={({ isActive }) =>
+        `flex-1 flex flex-col items-center justify-center gap-1 transition-all
+        ${isActive ? "text-blue-light" : "text-ink-muted"}`
+      }
     >
-      <div className="flex items-center justify-center w-9 h-9 rounded-xl transition-all"
-        style={active
-          ? { background: "rgba(59,130,246,0.2)", color: "#60a5fa", boxShadow: "0 0 14px rgba(59,130,246,0.3)" }
-          : { background: "rgba(255,255,255,0.04)", color: "#475569" }}>
-        <Icon />
-      </div>
-      <span className="text-sm font-semibold">{label}</span>
-      {badge && <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full" style={{ background: "rgba(59,130,246,0.2)", color: "#93c5fd" }}>{badge}</span>}
-      {active && <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-400" style={{ boxShadow: "0 0 8px #60a5fa" }} />}
+      <Icon />
+      <span className="text-[10px] font-bold uppercase tracking-tight">{mobileLabel}</span>
     </NavLink>
   );
 }
 
-// ─── timeAgo helper ────────────────────────────────────────────────────────────
+// ─── NavLinkDesktop ───────────────────────────────────────────────────────────
+
+function NavLinkDesktop({ item, pathname }: { item: NavItem; pathname: string }) {
+  const { to, label, icon: Icon, badge } = item;
+  const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
+
+  return (
+    <NavLink
+      to={to} end
+      className={`
+        flex items-center gap-2.5 px-4 py-2.5 mx-1
+        text-xs font-semibold uppercase tracking-widest
+        transition-all duration-200 rounded-nav
+        ${active
+          ? "text-white bg-blue-glass shadow-nav-active"
+          : "text-ink-muted hover:text-slate-200"
+        }
+      `}
+    >
+      <span className={active ? "text-blue-light" : ""}><Icon /></span>
+      <span>{label}</span>
+      {badge && (
+        <span className="ml-1 text-[9px] font-black px-1.5 py-0.5 rounded-full bg-blue-badge text-blue-300">
+          {badge}
+        </span>
+      )}
+    </NavLink>
+  );
+}
+
+// ─── NavLinkDrawer ────────────────────────────────────────────────────────────
+
+function NavLinkDrawer({ item, onClick, pathname }: { item: NavItem; onClick?: () => void; pathname: string }) {
+  const { to, label, icon: Icon, badge } = item;
+  const active = pathname === to || (to === "/nueva-solicitud" && pathname.startsWith("/solicitudes/"));
+
+  return (
+    <NavLink
+      to={to} end onClick={onClick}
+      className={`
+        flex items-center gap-3.5 px-4 py-3.5
+        transition-all duration-200 rounded-2xl group
+        ${active
+          ? "bg-blue-glass text-white shadow-blue-glow-lg"
+          : "text-ink-muted"
+        }
+      `}
+    >
+      <div className={`
+        flex items-center justify-center w-9 h-9 rounded-xl transition-all
+        ${active
+          ? "bg-blue-muted text-blue-light shadow-blue-glow"
+          : "bg-surface-subtle text-ink-disabled"
+        }
+      `}>
+        <Icon />
+      </div>
+      <span className="text-sm font-semibold">{label}</span>
+      {badge && (
+        <span className="ml-auto text-[10px] font-black px-2 py-0.5 rounded-full bg-blue-glass text-blue-300">
+          {badge}
+        </span>
+      )}
+      {active && (
+        <div className="ml-auto w-1.5 h-1.5 rounded-full bg-blue-light shadow-blue-dot" />
+      )}
+    </NavLink>
+  );
+}
+
+// ─── timeAgo ──────────────────────────────────────────────────────────────────
 
 function timeAgo(iso: string): string {
   const diff = (Date.now() - new Date(iso).getTime()) / 1000;
@@ -163,7 +216,10 @@ function timeAgo(iso: string): string {
   return `Hace ${Math.floor(diff / 86400)} días`;
 }
 
-// ─── Panel notificaciones — misma estructura que el original ───────────────────
+// ─── NotificacionesPanel ──────────────────────────────────────────────────────
+// Antes: vivía dentro de Sidebar.tsx
+// Ahora: debería moverse a src/notifications/NotificacionesPanel.tsx
+// pero lo dejamos aquí como paso intermedio
 
 function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
@@ -171,26 +227,24 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   const recientes = notifications.slice(0, 10);
 
   return (
-    <div className="w-full max-h-[70vh] flex flex-col overflow-hidden"
-      style={{
-        background: "rgba(10,15,30,0.97)", border: "1px solid rgba(255,255,255,0.08)",
-        borderRadius: "20px", boxShadow: "0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(59,130,246,0.08)",
-        backdropFilter: "blur(24px)",
-      }}>
+    <div className="w-full max-h-[70vh] flex flex-col overflow-hidden rounded-card bg-surface-card border border-surface-border-strong shadow-dropdown-lg backdrop-blur-card">
 
       {/* Header */}
-      <div className="px-5 py-4 flex items-center justify-between" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+      <div className="px-5 py-4 flex items-center justify-between border-b border-surface-border">
         <div className="flex items-center gap-2.5">
-          <span className="text-sm font-bold text-white">Notificaciones</span>
+          <span className="text-sm font-bold text-ink-primary">Notificaciones</span>
           {unreadCount > 0 && (
-            <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white"
-              style={{ background: "linear-gradient(135deg,#3b82f6,#2563eb)", boxShadow: "0 0 12px rgba(59,130,246,0.4)" }}>
+            <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white shadow-blue-badge"
+              style={{ background: "linear-gradient(135deg,#3b82f6,#2563eb)" }}>
               {unreadCount}
             </span>
           )}
         </div>
         {unreadCount > 0 && (
-          <button onClick={markAllRead} className="text-xs font-semibold text-blue-400 hover:text-blue-300 flex items-center gap-1.5 transition-colors">
+          <button
+            onClick={markAllRead}
+            className="text-xs font-semibold text-blue-light hover:text-blue-300 flex items-center gap-1.5 transition-colors"
+          >
             <Icons.Check /> Marcar todo
           </button>
         )}
@@ -200,31 +254,42 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
       <div className="overflow-y-auto flex-1">
         {recientes.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-12 text-center px-6">
-            <div className="grid h-12 w-12 place-items-center rounded-2xl"
-              style={{ background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.07)" }}>
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-surface-subtle border border-surface-border">
               <Icons.Bell />
             </div>
-            <p className="text-sm font-semibold text-slate-400">Sin notificaciones</p>
-            <p className="text-xs text-slate-600">Cuando haya actividad en tus solicitudes aparecerá aquí.</p>
+            <p className="text-sm font-semibold text-ink-secondary">Sin notificaciones</p>
+            <p className="text-xs text-ink-muted">Cuando haya actividad en tus solicitudes aparecerá aquí.</p>
           </div>
         ) : (
           recientes.map((n: Notification) => {
-            const cfg = notiColor[n.tipo];
+            const cfg = notiClasses[n.tipo];
             return (
-              <div key={n.id} onClick={() => markAsRead(n.id)}
-                className="px-5 py-4 flex gap-3.5 items-start cursor-pointer transition-all hover:bg-white/5"
-                style={{ borderBottom: "1px solid rgba(255,255,255,0.04)", opacity: n.leida ? 0.5 : 1 }}>
-                <div className="w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center"
-                  style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}>
-                  <span className="w-2 h-2 rounded-full" style={{ background: cfg.dot, boxShadow: `0 0 8px ${cfg.dot}` }} />
+              <div
+                key={n.id}
+                onClick={() => markAsRead(n.id)}
+                className={`
+                  px-5 py-4 flex gap-3.5 items-start cursor-pointer
+                  transition-all hover:bg-surface-subtle
+                  border-b border-surface-border
+                  ${n.leida ? "opacity-50" : "opacity-100"}
+                `}
+              >
+                <div className={`w-9 h-9 rounded-xl flex-shrink-0 flex items-center justify-center border ${cfg.bg} ${cfg.border}`}>
+                  <span className={`w-2 h-2 rounded-full ${cfg.dot}`} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2 mb-1">
-                    <span className={`text-sm truncate ${n.leida ? "font-medium text-slate-400" : "font-bold text-white"}`}>{n.titulo}</span>
-                    {!n.leida && <span className="w-1.5 h-1.5 rounded-full bg-blue-400 flex-shrink-0" style={{ boxShadow: "0 0 8px #60a5fa" }} />}
+                    <span className={`text-sm truncate ${n.leida ? "font-medium text-ink-secondary" : "font-bold text-ink-primary"}`}>
+                      {n.titulo}
+                    </span>
+                    {!n.leida && (
+                      <span className="w-1.5 h-1.5 rounded-full bg-blue-light flex-shrink-0 shadow-blue-dot" />
+                    )}
                   </div>
-                  <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{n.mensaje}</p>
-                  <span className="text-[10px] font-medium text-slate-600 uppercase tracking-wider mt-1 block">{timeAgo(n.createdAt)}</span>
+                  <p className="text-xs text-ink-muted leading-relaxed line-clamp-2">{n.mensaje}</p>
+                  <span className="text-[10px] font-medium text-ink-disabled uppercase tracking-wider mt-1 block">
+                    {timeAgo(n.createdAt)}
+                  </span>
                 </div>
               </div>
             );
@@ -233,15 +298,17 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
       </div>
 
       {/* Footer */}
-      <div className="p-3 flex gap-2" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-        <button onClick={() => { onClose(); navigate("/notificaciones"); }}
-          className="flex-1 py-2.5 text-xs font-semibold text-blue-400 hover:text-blue-300 transition-colors"
-          style={{ borderRadius: "12px", background: "rgba(59,130,246,0.07)" }}>
+      <div className="p-3 flex gap-2 border-t border-surface-border">
+        <button
+          onClick={() => { onClose(); navigate("/notificaciones"); }}
+          className="flex-1 py-2.5 text-xs font-semibold text-blue-light hover:text-blue-300 transition-colors rounded-nav bg-blue-glass"
+        >
           Ver todas
         </button>
-        <button onClick={onClose}
-          className="flex-1 py-2.5 text-xs font-semibold text-slate-500 hover:text-slate-300 transition-colors"
-          style={{ borderRadius: "12px" }}>
+        <button
+          onClick={onClose}
+          className="flex-1 py-2.5 text-xs font-semibold text-ink-muted hover:text-slate-300 transition-colors rounded-nav"
+        >
           Cerrar
         </button>
       </div>
@@ -249,13 +316,13 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
   );
 }
 
-// ─── MAIN ──────────────────────────────────────────────────────────────────────
+// ─── MAIN SIDEBAR ─────────────────────────────────────────────────────────────
 
 export default function Sidebar({ open, onClose, onOpen }: Props) {
-  const navigate   = useNavigate();
-  const location   = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
-  const { unreadCount }  = useNotifications();        // ← real, no mock
+  const { unreadCount }  = useNotifications();
 
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [notiOpen,     setNotiOpen]     = useState(false);
@@ -266,8 +333,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   const navItems: NavItem[] = [
     { to: "/dashboard",       label: "Dashboard",       mobileLabel: "Inicio",      icon: Icons.Dashboard },
-    { to: "/nueva-solicitud", label: "Nueva solicitud", mobileLabel: "Nueva",       icon: Icons.Plus },
-    { to: "/mis-solicitudes", label: "Mis solicitudes", mobileLabel: "Solicitudes", icon: Icons.List },
+    { to: "/nueva-solicitud", label: "Nueva solicitud", mobileLabel: "Nueva",       icon: Icons.Plus      },
+    { to: "/mis-solicitudes", label: "Mis solicitudes", mobileLabel: "Solicitudes", icon: Icons.List      },
   ];
 
   const handleLogout = async () => {
@@ -276,8 +343,15 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     navigate("/login", { replace: true });
   };
 
-  useEffect(() => { onClose(); setUserMenuOpen(false); setNotiOpen(false); }, [location.pathname]);
+  // Cierra todo al cambiar de ruta
+  useEffect(() => {
+    onClose();
+    setUserMenuOpen(false);
+    setNotiOpen(false);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
+  // Click fuera cierra dropdowns
   useEffect(() => {
     const fn = (e: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(e.target as Node)) setUserMenuOpen(false);
@@ -287,59 +361,70 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     return () => document.removeEventListener("mousedown", fn);
   }, []);
 
-  const headerStyle: React.CSSProperties = {
-    background: "rgba(7,11,22,0.85)", backdropFilter: "blur(24px)",
-    WebkitBackdropFilter: "blur(24px)", borderBottom: "1px solid rgba(255,255,255,0.06)",
-  };
-
   return (
     <>
-      {/* ── DESKTOP HEADER ── */}
-      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 items-center" style={headerStyle}>
+      {/* ── DESKTOP HEADER ────────────────────────────────────────────────── */}
+      <header className="hidden lg:flex fixed top-0 left-0 right-0 z-50 h-16 items-center bg-surface-overlay backdrop-blur-card border-b border-surface-border">
+
+        {/* Línea superior decorativa */}
         <div className="absolute top-0 left-0 right-0 h-[1px]"
           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.6) 40%, rgba(96,165,250,0.4) 60%, transparent 100%)" }} />
+
+        {/* Glow central */}
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-12 pointer-events-none"
           style={{ background: "radial-gradient(ellipse at center top, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
 
         <div className="max-w-[1600px] mx-auto w-full px-6 flex items-center justify-between h-full">
+
+          {/* Logo + Nav */}
           <div className="flex items-center gap-6 h-full">
-            <button onClick={() => navigate("/dashboard")}
-              className="flex items-center gap-4 h-full pr-8 transition-all group"
-              style={{ borderRight: "1px solid rgba(255,255,255,0.05)" }}>
-              <div className="flex items-center justify-center w-9 h-9 rounded-xl"
-                style={{ background: "radial-gradient(135deg, rgba(59,130,246,0.3) 0%, rgba(37,99,235,0.15) 100%)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 20px rgba(59,130,246,0.2)" }}>
-                <img src={logo} alt="Asamblea" className="h-5 w-auto object-contain filter brightness-0 invert opacity-90" />
+            <button
+              onClick={() => navigate("/dashboard")}
+              className="flex items-center gap-4 h-full pr-8 transition-all group border-r border-surface-border"
+            >
+              <div className="flex items-center justify-center w-9 h-9 rounded-xl bg-blue-glass border border-blue-border shadow-blue-glow">
+                <img src={logo} alt="Asamblea" className="h-5 w-auto object-contain brightness-0 invert opacity-90" />
               </div>
               <div className="text-left">
-                <span className="text-[9px] font-bold text-blue-400/60 uppercase tracking-[0.3em] block leading-none">Asamblea Legislativa</span>
-                <span className="text-sm font-semibold text-slate-200 tracking-wider mt-1.5 block leading-none">Transporte</span>
+                <span className="text-[9px] font-bold text-blue-400/60 uppercase tracking-ultrawide block leading-none">
+                  Asamblea Legislativa
+                </span>
+                <span className="text-sm font-semibold text-slate-200 tracking-wider mt-1.5 block leading-none">
+                  Transporte
+                </span>
               </div>
             </button>
+
             <nav className="flex items-center gap-1 h-full">
-              {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="desktop" pathname={location.pathname} />)}
+              {navItems.map(item => (
+                <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />
+              ))}
             </nav>
           </div>
 
+          {/* Acciones derecha */}
           <div className="flex items-center gap-3">
-            {/* Campana */}
+
+            {/* ── Campana ── */}
             <div ref={notiRef} className="relative">
-              <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-                className="relative flex items-center justify-center w-10 h-10 transition-all"
-                style={{
-                  borderRadius: "12px",
-                  background: notiOpen ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.04)",
-                  border: notiOpen ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(255,255,255,0.06)",
-                  color: notiOpen ? "#60a5fa" : "#64748b",
-                  boxShadow: notiOpen ? "0 0 20px rgba(59,130,246,0.2)" : "none",
-                }}>
+              <button
+                onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
+                className={`
+                  relative flex items-center justify-center w-10 h-10 rounded-nav transition-all
+                  ${notiOpen
+                    ? "bg-blue-glass border border-blue-border text-blue-light shadow-blue-glow"
+                    : "bg-surface-subtle border border-surface-border text-ink-muted"
+                  }
+                `}
+              >
                 <Icons.Bell />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white"
-                    style={{ background: "#3b82f6", boxShadow: "0 0 10px rgba(59,130,246,0.7)", border: "2px solid rgba(7,11,22,1)" }}>
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white bg-blue-solid shadow-blue-badge border-2 border-surface-base">
                     {unreadCount > 9 ? "9+" : unreadCount}
                   </span>
                 )}
               </button>
+
               {notiOpen && (
                 <div className="absolute right-0 top-12 w-80 z-50">
                   <NotificacionesPanel onClose={() => setNotiOpen(false)} />
@@ -347,45 +432,49 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               )}
             </div>
 
-            {/* Usuario */}
+            {/* ── Usuario ── */}
             <div ref={menuRef} className="relative">
-              <button onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
-                className="flex items-center gap-3 px-4 py-2 transition-all"
-                style={{
-                  borderRadius: "14px",
-                  background: userMenuOpen ? "rgba(59,130,246,0.12)" : "rgba(255,255,255,0.04)",
-                  border: userMenuOpen ? "1px solid rgba(59,130,246,0.25)" : "1px solid rgba(255,255,255,0.07)",
-                  boxShadow: userMenuOpen ? "0 0 24px rgba(59,130,246,0.15)" : "none",
-                }}>
+              <button
+                onClick={() => { setUserMenuOpen(!userMenuOpen); setNotiOpen(false); }}
+                className={`
+                  flex items-center gap-3 px-4 py-2 rounded-[14px] transition-all
+                  ${userMenuOpen
+                    ? "bg-blue-glass border border-blue-border shadow-blue-glow-lg"
+                    : "bg-surface-subtle border border-surface-border"
+                  }
+                `}
+              >
                 <Avatar initial={initial} size="sm" />
                 <div className="hidden xl:block text-left">
-                  <p className="text-[11px] font-bold text-white leading-none">{user?.name || "Usuario"}</p>
+                  <p className="text-[11px] font-bold text-ink-primary leading-none">{user?.name || "Usuario"}</p>
                   <p className="text-[9px] font-semibold text-blue-400/70 uppercase tracking-tight mt-0.5">Admin</p>
                 </div>
-                <span className="text-slate-500"><Icons.ChevronDown open={userMenuOpen} /></span>
+                <span className="text-ink-muted">
+                  <Icons.ChevronDown open={userMenuOpen} />
+                </span>
               </button>
 
+              {/* Dropdown usuario */}
               {userMenuOpen && (
-                <div className="absolute right-0 top-14 w-60 z-50 overflow-hidden"
-                  style={{ background: "rgba(8,12,24,0.97)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: "20px", boxShadow: "0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.07)", backdropFilter: "blur(24px)" }}>
-                  <div className="p-5 relative" style={{ borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
-                    <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 pointer-events-none"
-                      style={{ background: "radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%)" }} />
-                    <div className="relative flex flex-col items-center gap-3 text-center">
-                      <Avatar initial={initial} size="lg" />
-                      <div>
-                        <p className="text-sm font-bold text-white">{user?.name}</p>
-                        <p className="text-[10px] text-slate-500 mt-0.5">{user?.email}</p>
-                      </div>
-                      <StatusDot />
+                <div className="absolute right-0 top-14 w-60 z-50 overflow-hidden rounded-card bg-surface-card border border-surface-border-strong shadow-dropdown backdrop-blur-card">
+                  {/* Glow top */}
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-16 pointer-events-none"
+                    style={{ background: "radial-gradient(ellipse, rgba(59,130,246,0.12) 0%, transparent 70%)" }} />
+
+                  <div className="relative p-5 border-b border-surface-border flex flex-col items-center gap-3 text-center">
+                    <Avatar initial={initial} size="lg" />
+                    <div>
+                      <p className="text-sm font-bold text-ink-primary">{user?.name}</p>
+                      <p className="text-[10px] text-ink-muted mt-0.5">{user?.email}</p>
                     </div>
+                    <StatusDot />
                   </div>
+
                   <div className="p-3">
-                    <button onClick={handleLogout}
-                      className="w-full flex items-center justify-center gap-2.5 py-2.5 text-[11px] font-bold uppercase tracking-widest transition-all"
-                      style={{ borderRadius: "12px", color: "#f87171", background: "rgba(239,68,68,0.07)", border: "1px solid rgba(239,68,68,0.15)" }}
-                      onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.15)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "0 0 20px rgba(239,68,68,0.1)"; }}
-                      onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.07)"; (e.currentTarget as HTMLButtonElement).style.boxShadow = "none"; }}>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center justify-center gap-2.5 py-2.5 text-[11px] font-bold uppercase tracking-widest rounded-nav text-danger-text bg-danger-glass border border-danger-border hover:bg-danger-glass-hover transition-colors"
+                    >
                       <Icons.Logout /> Cerrar sesión
                     </button>
                   </div>
@@ -396,127 +485,145 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </div>
       </header>
 
-      {/* ── MOBILE TOP BAR ── */}
-      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4"
-        style={{ background: "rgba(7,11,22,0.92)", backdropFilter: "blur(20px)", borderBottom: "1px solid rgba(255,255,255,0.06)" }}>
+      {/* ── MOBILE TOP BAR ────────────────────────────────────────────────── */}
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-16 flex items-center justify-between px-4 bg-surface-base/90 backdrop-blur-card border-b border-surface-border">
         <div className="absolute top-0 left-0 right-0 h-[1px]"
           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.5) 50%, transparent 100%)" }} />
-        <button onClick={open ? onClose : onOpen}
-          className="w-10 h-10 flex items-center justify-center text-slate-400"
-          style={{ borderRadius: "12px", background: "rgba(255,255,255,0.05)", border: "1px solid rgba(255,255,255,0.08)" }}>
+
+        {/* Hamburguesa */}
+        <button
+          onClick={open ? onClose : onOpen}
+          className="w-10 h-10 flex items-center justify-center text-ink-secondary rounded-nav bg-surface-subtle border border-surface-border"
+        >
           {open ? <Icons.X /> : <Icons.Menu />}
         </button>
+
+        {/* Logo */}
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2.5">
-          <div className="w-8 h-8 flex items-center justify-center"
-            style={{ borderRadius: "10px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 14px rgba(59,130,246,0.2)" }}>
+          <div className="w-8 h-8 flex items-center justify-center rounded-[10px] bg-blue-glass border border-blue-border shadow-blue-glow">
             <img src={logo} alt="Logo" className="h-4 brightness-0 invert opacity-90" />
           </div>
-          <span className="text-base font-semibold text-white">Transporte</span>
+          <span className="text-base font-semibold text-ink-primary">Transporte</span>
         </button>
-        <div className="relative">
-          <button onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
-            className="relative w-10 h-10 flex items-center justify-center transition-all"
-            style={{
-              borderRadius: "12px",
-              background: notiOpen ? "rgba(59,130,246,0.15)" : "rgba(255,255,255,0.05)",
-              border: notiOpen ? "1px solid rgba(59,130,246,0.3)" : "1px solid rgba(255,255,255,0.08)",
-              color: notiOpen ? "#60a5fa" : "#64748b",
-            }}>
-            <Icons.Bell />
-            {unreadCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white"
-                style={{ background: "#3b82f6", boxShadow: "0 0 10px rgba(59,130,246,0.7)", border: "2px solid rgba(7,11,22,1)" }}>
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
-          </button>
-        </div>
+
+        {/* Campana móvil */}
+        <button
+          onClick={() => { setNotiOpen(!notiOpen); setUserMenuOpen(false); }}
+          className={`
+            relative w-10 h-10 flex items-center justify-center rounded-nav transition-all
+            ${notiOpen
+              ? "bg-blue-glass border border-blue-border text-blue-light"
+              : "bg-surface-subtle border border-surface-border text-ink-muted"
+            }
+          `}
+        >
+          <Icons.Bell />
+          {unreadCount > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white bg-blue-solid shadow-blue-badge border-2 border-surface-base">
+              {unreadCount > 9 ? "9+" : unreadCount}
+            </span>
+          )}
+        </button>
       </header>
 
-      {/* MOBILE NOTIFICATIONS */}
+      {/* ── NOTIFICACIONES MÓVIL ──────────────────────────────────────────── */}
       {notiOpen && (
-        <div className="lg:hidden fixed top-20 right-4 left-4 z-[100]"
-          style={{ animation: "slideDown 200ms cubic-bezier(.34,1.56,.64,1) both" }}>
+        <div className="lg:hidden fixed top-20 right-4 left-4 z-[100] animate-slide-down">
           <NotificacionesPanel onClose={() => setNotiOpen(false)} />
         </div>
       )}
 
-      {/* BACKDROP */}
-      {(open || notiOpen) && (
-        <div onClick={() => { onClose(); setNotiOpen(false); }}
-          className="fixed inset-0 z-[60]"
-          style={{ background: "rgba(0,0,0,0.5)", backdropFilter: "blur(8px)" }} />
+      {/* ── BACKDROP ──────────────────────────────────────────────────────── */}
+      {/* Separado: drawer backdrop vs noti backdrop para no acoplar lógica */}
+      {open && (
+        <div
+          onClick={onClose}
+          className="fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs"
+        />
+      )}
+      {notiOpen && (
+        <div
+          onClick={() => setNotiOpen(false)}
+          className="lg:hidden fixed inset-0 z-[60] bg-black/50 backdrop-blur-xs"
+        />
       )}
 
-      {/* ── DRAWER MÓVIL ── */}
-      <aside className="fixed top-0 left-0 z-[70] w-72 h-full flex flex-col"
-        style={{
-          background: "rgba(7,11,22,0.97)", backdropFilter: "blur(32px)",
-          borderRight: "1px solid rgba(255,255,255,0.07)",
-          boxShadow: open ? "4px 0 40px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.06)" : "none",
-          transform: open ? "translateX(0)" : "translateX(-100%)",
-          transition: "transform 300ms cubic-bezier(.34,1.56,.64,1)", overflow: "hidden",
-        }}>
+      {/* ── DRAWER MÓVIL ──────────────────────────────────────────────────── */}
+      <aside
+        className={`
+          fixed top-0 left-0 z-[70] w-72 h-full flex flex-col
+          bg-surface-base backdrop-blur-drawer
+          border-r border-surface-border
+          transition-transform duration-300
+          ${open ? "translate-x-0 shadow-drawer" : "-translate-x-full"}
+        `}
+        style={{ transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)" }}
+      >
+        {/* Destellos de fondo */}
         <div className="absolute top-0 right-0 w-32 h-32 pointer-events-none"
           style={{ background: "radial-gradient(circle at top right, rgba(59,130,246,0.08) 0%, transparent 70%)" }} />
         <div className="absolute bottom-0 left-0 w-24 h-24 pointer-events-none"
           style={{ background: "radial-gradient(circle at bottom left, rgba(37,99,235,0.06) 0%, transparent 70%)" }} />
 
-        <div className="relative p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
+        {/* Header del drawer */}
+        <div className="relative p-5 border-b border-surface-border">
           <div className="flex items-center gap-3 mb-4">
-            <div className="w-9 h-9 flex items-center justify-center"
-              style={{ borderRadius: "12px", background: "rgba(59,130,246,0.15)", border: "1px solid rgba(59,130,246,0.3)", boxShadow: "0 0 16px rgba(59,130,246,0.2)" }}>
+            <div className="w-9 h-9 flex items-center justify-center rounded-xl bg-blue-glass border border-blue-border shadow-blue-glow">
               <img src={logo} alt="Logo" className="h-5 brightness-0 invert opacity-90" />
             </div>
             <div>
               <p className="text-[9px] font-bold text-blue-400/50 uppercase tracking-widest leading-none">Asamblea</p>
-              <p className="text-sm font-semibold text-white tracking-wide mt-0.5">Transporte</p>
+              <p className="text-sm font-semibold text-ink-primary tracking-wide mt-0.5">Transporte</p>
             </div>
           </div>
-          <div className="p-3.5" style={{ background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.06)", borderRadius: "16px" }}>
+
+          {/* User card */}
+          <div className="p-3.5 bg-surface-subtle border border-surface-border rounded-2xl">
             <div className="flex items-center gap-3 mb-2.5">
               <Avatar initial={initial} size="md" />
               <div className="min-w-0">
-                <p className="text-sm font-semibold text-white truncate">{user?.name || "Usuario"}</p>
-                <p className="text-[10px] text-slate-500 truncate mt-0.5">{user?.email || ""}</p>
+                <p className="text-sm font-semibold text-ink-primary truncate">{user?.name || "Usuario"}</p>
+                <p className="text-[10px] text-ink-muted truncate mt-0.5">{user?.email || ""}</p>
               </div>
             </div>
             <StatusDot />
           </div>
         </div>
 
+        {/* Nav */}
         <nav className="flex-1 overflow-y-auto px-3 py-4 space-y-1">
-          <p className="px-4 py-2 text-[9px] font-bold text-slate-600 uppercase tracking-[0.25em]">Menú principal</p>
-          {navItems.map(item => <NavLinkItem key={item.to} item={item} onClick={onClose} variant="drawer" pathname={location.pathname} />)}
+          <p className="px-4 py-2 text-[9px] font-bold text-ink-disabled uppercase tracking-megawide">
+            Menú principal
+          </p>
+          {navItems.map(item => (
+            <NavLinkDrawer key={item.to} item={item} onClick={onClose} pathname={location.pathname} />
+          ))}
         </nav>
 
-        <div className="p-3" style={{ borderTop: "1px solid rgba(255,255,255,0.05)" }}>
-          <button onClick={handleLogout}
-            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold transition-all"
-            style={{ borderRadius: "14px", color: "#94a3b8" }}
-            onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.background = "rgba(239,68,68,0.08)"; (e.currentTarget as HTMLButtonElement).style.color = "#f87171"; }}
-            onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.background = "transparent"; (e.currentTarget as HTMLButtonElement).style.color = "#94a3b8"; }}>
+        {/* Logout */}
+        <div className="p-3 border-t border-surface-border">
+          <button
+            onClick={handleLogout}
+            className="w-full flex items-center gap-3 px-4 py-3 text-sm font-semibold rounded-[14px] text-ink-secondary hover:bg-danger-glass hover:text-danger-text transition-all"
+          >
             <Icons.Logout /> Cerrar sesión
           </button>
         </div>
       </aside>
 
-      {/* ── BOTTOM NAV ── */}
-      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40"
-        style={{ background: "rgba(7,11,22,0.95)", backdropFilter: "blur(20px)", borderTop: "1px solid rgba(255,255,255,0.06)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
+      {/* ── BOTTOM NAV ────────────────────────────────────────────────────── */}
+      <nav
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-base/95 backdrop-blur-card border-t border-surface-border"
+        style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      >
         <div className="absolute top-0 left-0 right-0 h-[1px]"
           style={{ background: "linear-gradient(90deg, transparent 0%, rgba(59,130,246,0.25) 50%, transparent 100%)" }} />
         <div className="flex items-center justify-around h-16 px-2">
-          {navItems.map(item => <NavLinkItem key={item.to} item={item} variant="bottom" pathname={location.pathname} />)}
+          {navItems.map(item => (
+            <NavLinkBottom key={item.to} item={item} />
+          ))}
         </div>
       </nav>
-
-      <style>{`
-        @keyframes slideDown {
-          from { opacity: 0; transform: translateY(-12px) scale(0.97); }
-          to   { opacity: 1; transform: translateY(0) scale(1); }
-        }
-      `}</style>
     </>
   );
 }
