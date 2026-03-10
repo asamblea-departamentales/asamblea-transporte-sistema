@@ -6,6 +6,10 @@ use App\Models\SolicitudTransporte;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
+use App\Exports\SolicitudesCombustibleExport;
+use App\Exports\SolicitudesMantenimientoExport;
+use App\Exports\SolicitudesTransporteExport;
+use Maatwebsite\Excel\Facades\Excel;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -153,3 +157,13 @@ Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) 
         ['Content-Type' => 'application/pdf']
     );
 })->name('reportes.solicitudes-combustible.pdf');
+
+// Excel Combustible
+Route::get('/reportes/solicitudes-combustible/excel', function (Request $request) {
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']), 403);
+
+    $filename = 'reporte_combustible_' . now()->format('Ymd_His') . '.xlsx';
+
+    // Se pasa todo el $request para que el Export pueda filtrar igual que la tabla
+    return Excel::download(new SolicitudesCombustibleExport($request->all()), $filename);
+})->name('reportes.solicitudes-combustible.excel');
