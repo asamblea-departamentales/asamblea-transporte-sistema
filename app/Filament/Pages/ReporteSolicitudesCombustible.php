@@ -23,7 +23,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
-    protected static ?string $navigationLabel = 'Reporte Combustible';
+    protected static ?string $navigationLabel = 'Reporte Solicitudes Combustible';
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
     protected static ?int $navigationSort = 4;
 

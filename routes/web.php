@@ -167,3 +167,24 @@ Route::get('/reportes/solicitudes-combustible/excel', function (Request $request
     // Se pasa todo el $request para que el Export pueda filtrar igual que la tabla
     return Excel::download(new SolicitudesCombustibleExport($request->all()), $filename);
 })->name('reportes.solicitudes-combustible.excel');
+
+//Excel Mantenimiento
+Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $request) {
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']), 403);
+
+    $q = SolicitudMantenimiento::query();
+
+    $dateField = $request->string('date_field', 'fecha_sugerida')->toString();
+
+    if ($request->filled('date_from')) $q->where($dateField, '>=', $request->input('date_from'));
+    if ($request->filled('date_to'))   $q->where($dateField, '<=', $request->input('date_to'));
+
+    if ($request->filled('vehiculo_id')) $q->where('vehiculo_id', $request->input('vehiculo_id'));
+    if ($request->filled('estado')) $q->where('estado', $request->input('estado'));
+    if ($request->filled('prioridad')) $q->where('prioridad', $request->input('prioridad'));
+    if ($request->filled('tipo_solicitud')) $q->where('tipo_solicitud', $request->input('tipo_solicitud'));
+
+    $filename = 'reporte_mantenimiento_' . now()->format('Ymd_His') . '.xlsx';
+
+    return Excel::download(new SolicitudesMantenimientoExport($q), $filename);
+})->name('reportes.solicitudes-mantenimiento.excel');
