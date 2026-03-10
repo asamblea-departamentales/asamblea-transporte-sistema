@@ -35,6 +35,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     public ?int $vehiculo_id = null;
     public ?string $estado = null;
 
+    public int $kpi_galones = 0;
     public int $kpi_total = 0;
     public int $kpi_pendientes = 0;
     public int $kpi_aprobadas = 0;
