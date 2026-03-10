@@ -201,7 +201,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
 
                 Tables\Columns\TextColumn::make('vehiculo.placa')
                     ->label('Vehículo')
-                    ->description(fn ($r) => trim("{$r->vehiculo?->marca?->nombre} {$r->vehiculo?->modelo?->nombre}"))
+                    ->description(fn ($record) => trim("{$record->vehiculo?->marca?->nombre} {$record->vehiculo?->modelo?->nombre}"))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('tipoMantenimiento.nombre')
