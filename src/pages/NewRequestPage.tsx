@@ -261,17 +261,7 @@ export default function NewRequestPage() {
         </button>
       </div>
 
-      {/* ── Banner ── */}
-      <div className="flex items-start gap-3.5 px-4 py-3.5 rounded-xl bg-blue-50 border border-blue-100 border-l-[3px] border-l-blue-500">
-        <div className="flex-shrink-0 flex items-center justify-center w-8 h-8 rounded-lg bg-blue-100 text-blue-600">
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
-        <div>
-          
-        </div>
-      </div>
+      
 
       {/* ── Section label ── */}
       <div className="flex items-center gap-3">
