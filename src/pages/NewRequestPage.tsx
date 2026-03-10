@@ -240,7 +240,6 @@ export default function NewRequestPage() {
           {/* Eyebrow */}
           <div className="flex items-center gap-2 text-[0.68rem] font-bold uppercase tracking-widest text-blue-600">
             <span className="inline-block w-4 h-[2px] bg-blue-600 rounded-full" />
-            Sistema de Gestión
           </div>
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 leading-tight">
             Nueva Solicitud
