@@ -141,67 +141,67 @@ class SolicitudMantenimientoService
     }
 
     // Iniciar ejecución: APROBADA -> EN_EJECUCION
-    public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
-    {
-        if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-            throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
-        }
+    //public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
+  //  {
+       // if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+          //  throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
+        //}
 
-        return DB::transaction(function () use ($solicitud, $userId) {
-            $anterior = $solicitud->estado;
+        //return DB::transaction(function () use ($solicitud, $userId) {
+            //$anterior = $solicitud->estado;
 
-            $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
-            $solicitud->save();
+           // $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
+            //$solicitud->save();
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Mantenimiento iniciado.');
-            $this->registrarEvento($solicitud, 'EN_EJECUCION', $userId, null);
+          //  $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Mantenimiento iniciado.');
+         //   $this->registrarEvento($solicitud, 'EN_EJECUCION', $userId, null);
 
-            return $solicitud;
-        });
+       //     return $solicitud;
+     //   });
+   // }
+
+    // Completar: APROBADA -> COMPLETADA (desde frontend, con adjuntos / atestado)
+public function completar(SolicitudMantenimiento $solicitud, int $userId, array $data): SolicitudMantenimiento
+{
+    if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+        throw new \DomainException('Solo se puede completar una solicitud Aprobada.');
     }
 
-    // Completar: EN_EJECUCION -> COMPLETADA (desde frontend, con adjuntos)
-    public function completar(SolicitudMantenimiento $solicitud, int $userId, array $data): SolicitudMantenimiento
-    {
-        if ($solicitud->estado !== EstadoSolicitudEnum::EN_EJECUCION) {
-            throw new \DomainException('Solo se puede completar una solicitud En Ejecución.');
-        }
+    $adjuntosExistentes = $solicitud->adjuntos ?? [];
+    $nuevosAdjuntos = $data['adjuntos'] ?? [];
 
-        $adjuntosExistentes = $solicitud->adjuntos ?? [];
-        $nuevosAdjuntos     = $data['adjuntos'] ?? [];
+    $todosAdjuntos = array_values(array_filter(array_merge($adjuntosExistentes, $nuevosAdjuntos)));
 
-        // Limpio y reindexado
-        $todosAdjuntos = array_values(array_filter(array_merge($adjuntosExistentes, $nuevosAdjuntos)));
-
-        if (empty($todosAdjuntos)) {
-            throw new \DomainException('Debes subir al menos un adjunto (factura o foto) antes de completar.');
-        }
-
-        return DB::transaction(function () use ($solicitud, $userId, $data, $todosAdjuntos) {
-            $anterior = $solicitud->estado;
-
-            $solicitud->estado          = EstadoSolicitudEnum::COMPLETADA;
-            $solicitud->fecha_realizada = $data['fecha_realizada']; // el controller debe validarlo como required
-            $solicitud->costo_real      = $data['costo_real'];
-            $solicitud->adjuntos        = $todosAdjuntos;
-            $solicitud->save();
-
-            $this->registrarCambioEstado(
-                $solicitud,
-                $anterior,
-                $solicitud->estado,
-                $userId,
-                'Completado por usuario. Costo real: $' . number_format((float) $data['costo_real'], 2)
-            );
-
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
-                'costo_real'      => $data['costo_real'],
-                'fecha_realizada' => $data['fecha_realizada'],
-            ]);
-
-            return $solicitud;
-        });
+    if (empty($todosAdjuntos)) {
+        throw new \DomainException('Debes subir al menos un adjunto o atestado antes de completar.');
     }
+
+    return DB::transaction(function () use ($solicitud, $userId, $data, $todosAdjuntos) {
+        $anterior = $solicitud->estado;
+
+        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
+        $solicitud->fecha_realizada = $data['fecha_realizada'];
+        $solicitud->costo_real = $data['costo_real'];
+        $solicitud->adjuntos = $todosAdjuntos;
+        $solicitud->save();
+
+        $this->registrarCambioEstado(
+            $solicitud,
+            $anterior,
+            $solicitud->estado,
+            $userId,
+            'Completado desde frontend. Costo real: $' . number_format((float) $data['costo_real'], 2)
+        );
+
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
+            'costo_real' => $data['costo_real'],
+            'fecha_realizada' => $data['fecha_realizada'],
+            'origen' => 'frontend',
+        ]);
+
+        return $solicitud;
+    });
+}
 
     // Cancelar: BORRADOR/PENDIENTE -> CANCELADA
     public function cancelar(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
