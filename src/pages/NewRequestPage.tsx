@@ -269,10 +269,7 @@ export default function NewRequestPage() {
           </svg>
         </div>
         <div>
-          <p className="text-[0.78rem] font-bold text-blue-900 mb-0.5">Información importante</p>
-          <p className="text-[0.75rem] text-blue-700 leading-relaxed">
-            Cada solicitud requiere aprobación del supervisor correspondiente. Complete todos los campos requeridos para agilizar el proceso.
-          </p>
+          
         </div>
       </div>
 
