@@ -142,19 +142,7 @@ class MapImageService
             'red'
         );
 
-        // puntos extra de contexto “dummy” alrededor de la ruta
-        $markers[] = sprintf(
-            'lonlat:%.6f,%.6f;color:%s;size:small;icon:marker',
-            $lngOrigen + 0.05,
-            $latOrigen + 0.02,
-            'gray'
-        );
-        $markers[] = sprintf(
-            'lonlat:%.6f,%.6f;color:%s;size:small;icon:marker',
-            $lngDestino - 0.05,
-            $latDestino - 0.02,
-            'gray'
-        );
+        
 
         $params['marker'] = $markers;
 
