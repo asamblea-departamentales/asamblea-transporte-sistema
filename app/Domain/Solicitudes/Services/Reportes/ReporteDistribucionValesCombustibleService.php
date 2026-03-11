@@ -40,14 +40,14 @@ class ReporteDistribucionValesCombustibleService
         ];
     }
 
-    public function correlativo($r)
+    public function correlativo($record)
     {
-        if(!$r->correlativo_inicio) return '—';
+        if(!$record->correlativo_inicio) return '—';
 
-        if($r->correlativo_inicio == $r->correlativo_fin)
-            return $r->correlativo_inicio;
+        if($record->correlativo_inicio == $record->correlativo_fin)
+            return $record->correlativo_inicio;
 
-        return $r->correlativo_inicio.'-'.$r->correlativo_fin;
+        return $record->correlativo_inicio.'-'.$record->correlativo_fin;
     }
 
     public function comprobantes($r)
