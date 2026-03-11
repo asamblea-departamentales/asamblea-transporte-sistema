@@ -9,6 +9,7 @@ class ContratoCombustible extends Model
     protected $table = 'contrato_combustibles';
 
     protected $fillable = [
+        'proveedor_id',
         'numero_contrato',
         'nombre',
         'monto_inicial',
@@ -35,5 +36,10 @@ class ContratoCombustible extends Model
     public function solicitudes()
     {
         return $this->hasMany(SolicitudCombustible::class, 'contrato_id');
+    }
+
+    public function proveedor()
+    {
+        return $this->belongsTo(\App\Models\Proveedor::class, 'proveedor_id');
     }
 }
