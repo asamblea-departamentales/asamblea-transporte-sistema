@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Reportes;
 
-use App\Domain\Reportes\Services\ReporteFlotaVehicularService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteFlotaVehicularService;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
