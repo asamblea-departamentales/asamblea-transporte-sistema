@@ -50,8 +50,8 @@ class ReporteDistribucionValesCombustibleService
         return $record->correlativo_inicio.'-'.$record->correlativo_fin;
     }
 
-    public function comprobantes($r)
+    public function comprobantes($record)
     {
-        return $r->comprobantes ? 'Sí' : 'No';
+        return $record->comprobantes ? 'Sí' : 'No';
     }
 }

@@ -133,7 +133,7 @@ implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 
                 Tables\Columns\TextColumn::make('comprobantes')
                     ->label('Comprobantes')
-                    ->getStateUsing(fn($r)=>app(ReporteDistribucionValesCombustibleService::class)->comprobantes($r))
+                    ->getStateUsing(fn($record)=>app(ReporteDistribucionValesCombustibleService::class)->comprobantes($record))
                     ->badge()
 
             ])
