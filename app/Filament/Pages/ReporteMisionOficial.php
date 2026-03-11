@@ -37,7 +37,7 @@ class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tab
     public ?int $solicitante_id = null;
 
     public int $kpi_total = 0;
-    public int $kpi_aprobadas = 0;
+    public int $kpi_programadas = 0;
     public int $kpi_completadas = 0;
 
     public function mount(): void
@@ -217,14 +217,14 @@ class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tab
     }
 
     private function refreshKpis(): void
-    {
-        $kpis = app(ReporteMisionOficialService::class)
-            ->getKpis($this->getFilterState());
+{
+    $kpis = app(ReporteMisionOficialService::class)
+        ->getKpis($this->getFilterState());
 
-        $this->kpi_total = $kpis['total'];
-        $this->kpi_aprobadas = $kpis['aprobadas'];
-        $this->kpi_completadas = $kpis['completadas'];
-    }
+    $this->kpi_total = $kpis['total'];
+    $this->kpi_programadas = $kpis['programadas'];
+    $this->kpi_completadas = $kpis['completadas'];
+}
 
     private function getFilterState(): array
     {

@@ -570,6 +570,24 @@ class SolicitudTransporteResource extends Resource
                             $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                         ),
 
+                     Tables\Actions\Action::make('mision_oficial')
+    ->label('Misión Oficial')
+    ->icon('heroicon-o-document-text')
+    ->color('info')
+    ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', [
+        'solicitud_id' => $record->id,
+    ]))
+    ->openUrlInNewTab()
+    ->visible(fn (SolicitudTransporte $record) =>
+        in_array($record->estado, [
+            EstadoSolicitudEnum::PROGRAMADA,
+            EstadoSolicitudEnum::COMPLETADA,
+        ], true)
+        && !empty($record->vehiculo_id)
+        && !empty($record->motorista_id)
+        && !empty($record->decidido_por)
+    ),   
+
                     Tables\Actions\Action::make('rechazar')
                         ->label('Rechazar')
                         ->color('danger')

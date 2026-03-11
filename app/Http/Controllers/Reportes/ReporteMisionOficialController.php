@@ -25,6 +25,10 @@ class ReporteMisionOficialController extends Controller
             ->orderBy('fecha_salida', 'asc')
             ->get();
 
+        if ($rows->isEmpty()) {
+            abort(404, 'No se encontró una solicitud válida para generar la misión oficial.');
+}    
+
         $kpis = $service->getKpis($filters);
 
         $pdf = Pdf::loadView('reports.reporte_mision_oficial_pdf', [

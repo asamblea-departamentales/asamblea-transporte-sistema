@@ -9,54 +9,55 @@ use Illuminate\Database\Eloquent\Builder;
 class ReporteMisionOficialService
 {
     public function buildQuery(array $filters = []): Builder
-    {
-        return SolicitudTransporte::query()
-            ->with([
-                'solicitante',
-                'autorizador',
-                'vehiculo' => fn ($q) => $q->with([
-                'marca:id,nombre',
-                'modelo:id,nombre',
-                'color:id,nombre',
-                'clasificacion:id,nombre',
-    ]),
-    'tipoVehiculo',
-    'motorista',
-])
-            ->whereIn('estado', [
-                EstadoSolicitudEnum::APROBADA,
-                EstadoSolicitudEnum::COMPLETADA,
-            ])
-            ->when($filters['date_from'] ?? null, function ($query, $value) {
-                $query->where('fecha_salida', '>=', $value);
-            })
-            ->when($filters['date_to'] ?? null, function ($query, $value) {
-                $query->where('fecha_salida', '<=', $value);
-            })
-            ->when($filters['vehiculo_id'] ?? null, function ($query, $value) {
-                $query->where('vehiculo_id', $value);
-            })
-            ->when($filters['motorista_id'] ?? null, function ($query, $value) {
-                $query->where('motorista_id', $value);
-            })
-            ->when($filters['tipo_vehiculo_id'] ?? null, function ($query, $value) {
-                $query->where('tipo_vehiculo_id', $value);
-            })
-            ->when($filters['solicitante_id'] ?? null, function ($query, $value) {
-                $query->where('solicitante_id', $value);
-            });
-    }
+{
+    return SolicitudTransporte::query()
+        ->with([
+            'solicitante',
+            'autorizador',
+            'vehiculo.marca',
+            'vehiculo.modelo',
+            'vehiculo.color',
+            'vehiculo.clasificacion',
+            'tipoVehiculo',
+            'motorista',
+        ])
+        ->whereIn('estado', [
+            EstadoSolicitudEnum::PROGRAMADA,
+            EstadoSolicitudEnum::COMPLETADA,
+        ])
+        ->when($filters['solicitud_id'] ?? null, function ($query, $value) {
+            $query->where('id', $value);
+        })
+        ->when($filters['date_from'] ?? null, function ($query, $value) {
+            $query->where('fecha_salida', '>=', $value);
+        })
+        ->when($filters['date_to'] ?? null, function ($query, $value) {
+            $query->where('fecha_salida', '<=', $value);
+        })
+        ->when($filters['vehiculo_id'] ?? null, function ($query, $value) {
+            $query->where('vehiculo_id', $value);
+        })
+        ->when($filters['motorista_id'] ?? null, function ($query, $value) {
+            $query->where('motorista_id', $value);
+        })
+        ->when($filters['tipo_vehiculo_id'] ?? null, function ($query, $value) {
+            $query->where('tipo_vehiculo_id', $value);
+        })
+        ->when($filters['solicitante_id'] ?? null, function ($query, $value) {
+            $query->where('solicitante_id', $value);
+        });
+}
 
     public function getKpis(array $filters = []): array
-    {
-        $base = $this->buildQuery($filters);
+{
+    $base = $this->buildQuery($filters);
 
-        return [
-            'total' => (clone $base)->count(),
-            'aprobadas' => (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA)->count(),
-            'completadas' => (clone $base)->where('estado', EstadoSolicitudEnum::COMPLETADA)->count(),
-        ];
-    }
+    return [
+        'total' => (clone $base)->count(),
+        'programadas' => (clone $base)->where('estado', EstadoSolicitudEnum::PROGRAMADA)->count(),
+        'completadas' => (clone $base)->where('estado', EstadoSolicitudEnum::COMPLETADA)->count(),
+    ];
+}
 
     public function resolverClaseVehiculo(SolicitudTransporte $solicitud): string
     {
