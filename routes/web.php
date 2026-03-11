@@ -11,6 +11,9 @@ use App\Exports\SolicitudesMantenimientoExport;
 use App\Exports\SolicitudesTransporteExport;
 use Maatwebsite\Excel\Facades\Excel;
 
+use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
+
+
 use App\Http\Controllers\Reportes\ReporteFlotaVehicularController;
 
 
@@ -195,3 +198,6 @@ Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $reque
 // ---------------------- REPORTES -------------------------------------------------------------------------------------------------------//
 Route::get('/reportes/flota-vehicular/pdf', [ReporteFlotaVehicularController::class, 'pdf'])
     ->name('reportes.flota-vehicular.pdf');
+
+Route::get('/reportes/consumo-mensual-combustible/pdf', [ReporteControlMensualCombustibleController::class, 'pdf'])
+    ->name('reportes.consumo-mensual-combustible.pdf');    
