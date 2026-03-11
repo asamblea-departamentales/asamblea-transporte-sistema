@@ -18,16 +18,14 @@ class ReporteMisionOficialController extends Controller
             'vehiculo_id',
             'motorista_id',
             'tipo_vehiculo_id',
-            'solicitante_id',
+            //'solicitante_id',
         ]);
 
         $rows = $service->buildQuery($filters)
             ->orderBy('fecha_salida', 'asc')
             ->get();
 
-        if ($rows->isEmpty()) {
-            abort(404, 'No se encontró una solicitud válida para generar la misión oficial.');
-}    
+        
 
         $kpis = $service->getKpis($filters);
 
