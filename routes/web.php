@@ -194,4 +194,4 @@ Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $reque
 
 // ---------------------- REPORTES -------------------------------------------------------------------------------------------------------//
 Route::get('/reportes/flota-vehicular/pdf', [ReporteFlotaVehicularController::class, 'pdf'])
-    ->name('reportss.flota-vehicular.pdf');
+    ->name('reportes.flota-vehicular.pdf');
