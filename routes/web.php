@@ -11,6 +11,9 @@ use App\Exports\SolicitudesMantenimientoExport;
 use App\Exports\SolicitudesTransporteExport;
 use Maatwebsite\Excel\Facades\Excel;
 
+use App\Http\Controllers\Reportes\ReporteFlotaVehicularController;
+
+
 Route::get('/', function () {
     return redirect('/admin');
 });
@@ -188,3 +191,7 @@ Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $reque
 
     return Excel::download(new SolicitudesMantenimientoExport($q), $filename);
 })->name('reportes.solicitudes-mantenimiento.excel');
+
+// ---------------------- REPORTES -------------------------------------------------------------------------------------------------------//
+Route::get('/reportes/flota-vehicular/pdf', [ReporteFlotaVehicularController::class, 'pdf'])
+    ->name('reportes.flota-vehicular.pdf');
