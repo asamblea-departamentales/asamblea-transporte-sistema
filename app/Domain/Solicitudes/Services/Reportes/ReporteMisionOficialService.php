@@ -14,13 +14,15 @@ class ReporteMisionOficialService
             ->with([
                 'solicitante',
                 'autorizador',
-                'vehiculo.marca',
-                'vehiculo.modelo',
-                'vehiculo.color',
-                'vehiculo.clasificacion',
-                'tipoVehiculo',
-                'motorista',
-            ])
+                'vehiculo' => fn ($q) => $q->with([
+                'marca:id,nombre',
+                'modelo:id,nombre',
+                'color:id,nombre',
+                'clasificacion:id,nombre',
+    ]),
+    'tipoVehiculo',
+    'motorista',
+])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::APROBADA,
                 EstadoSolicitudEnum::COMPLETADA,
@@ -65,16 +67,23 @@ class ReporteMisionOficialService
     }
 
     public function resolverMarca(SolicitudTransporte $solicitud): string
-    {
-        return $solicitud->vehiculo?->marca?->nombre
-            ?? $solicitud->vehiculo?->getAttribute('marca')
-            ?? '—';
-    }
+{
+    $vehiculo = $solicitud->vehiculo;
+    if (!$vehiculo) return '—';
+
+    // getRelation() evita el conflicto con el campo de texto 'marca'
+    return $vehiculo->getRelation('marca')?->nombre
+        ?? $vehiculo->getRawOriginal('marca')
+        ?? '—';
+}
 
     public function resolverModelo(SolicitudTransporte $solicitud): string
     {
-        return $solicitud->vehiculo?->modelo?->nombre
-            ?? $solicitud->vehiculo?->getAttribute('modelo')
+        $vehiculo = $solicitud->vehiculo;
+        if (!$vehiculo) return '—';
+
+        return $vehiculo->getRelation('modelo')?->nombre
+         ?? $vehiculo->getRawOriginal('modelo')
             ?? '—';
     }
 
