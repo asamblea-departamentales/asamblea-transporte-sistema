@@ -41,18 +41,23 @@ class ReporteFlotaVehicularService
             ->when($filtros['veh_estado_catalogo_id'] ?? null, function ($query, $estadoCatalogoId) {
                 $query->where('veh_estado_catalogo_id', $estadoCatalogoId);
             })
-            ->when($filtros['activo'] !== null && $filtros['activo'] !== '' ?? false, function ($query) use ($filtros) {
-                $query->where('activo', filter_var($filtros['activo'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) ?? $filtros['activo']);
+            // Corrección para la llave 'activo'
+            ->when(isset($filtros['activo']) && $filtros['activo'] !== '', function ($query) use ($filtros) {
+                $valor = filter_var($filtros['activo'], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+                if ($valor !== null) {
+                    $query->where('activo', $valor);
+                }
             });
     }
 
     public function getKpis(array $filtros = []): array
     {
+        // Clonamos para que los filtros de un KPI no afecten al siguiente
         $base = $this->buildQuery($filtros);
 
         return [
-            'total' => (clone $base)->count(),
-            'activos' => (clone $base)->where('activo', true)->count(),
+            'total'          => (clone $base)->count(),
+            'activos'        => (clone $base)->where('activo', true)->count(),
             'con_asignacion' => (clone $base)->whereHas('asignacionVigenteMotorista')->count(),
             'sin_asignacion' => (clone $base)->whereDoesntHave('asignacionVigenteMotorista')->count(),
         ];
