@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Domain\Services\Reportes\ReporteControlMensualCombustibleService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\ContratoCombustible;
 use App\Models\Motorista;

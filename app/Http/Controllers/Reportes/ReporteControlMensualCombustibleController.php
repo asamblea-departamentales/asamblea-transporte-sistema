@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Reportes;
 
-use App\Domain\Services\Reportes\ReporteControlMensualCombustibleService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
