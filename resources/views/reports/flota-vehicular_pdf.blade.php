@@ -131,8 +131,8 @@
                 <tr>
                     <td>{{ $index + 1 }}</td>
                     <td>{{ $r->placa }}</td>
-                    <td>{{ $r->marca?->nombre ?? $r->getAttribute('marca') ?? 'N/A' }}</td>
-                    <td>{{ $r->modelo?->nombre ?? $r->getAttribute('modelo') ?? 'N/A' }}</td>
+                    <td>{{ $r->getRelation('marca')?->nombre ?? $r->getRawOriginal('marca') ?? 'N/A' }}</td>
+                    <td>{{ $r->getRelation('modelo')?->nombre ?? $r->getRawOriginal('modelo') ?? 'N/A' }}</td>
                     <td>{{ $r->clasificacion?->nombre ?? 'N/A' }}</td>
                     <td>{{ $r->color?->nombre ?? 'N/A' }}</td>
                     <td>{{ $r->anio ?? 'N/A' }}</td>

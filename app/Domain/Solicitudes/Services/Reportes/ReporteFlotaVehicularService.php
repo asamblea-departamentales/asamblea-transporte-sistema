@@ -12,8 +12,8 @@ class ReporteFlotaVehicularService
         return Vehiculo::query()
             ->with([
                 'tipo',
-                'marca',
-                'modelo',
+                'marca:id,nombre',
+                'modelo:id,nombre',
                 'color',
                 'tipoCombustible',
                 'clasificacion',
