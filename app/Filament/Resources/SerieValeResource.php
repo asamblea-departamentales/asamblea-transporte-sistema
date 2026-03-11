@@ -26,6 +26,20 @@ class SerieValeResource extends Resource
     {
         return $form->schema([
             Forms\Components\Section::make('Información de la Serie')->schema([
+                Forms\Components\Select::make('contrato_id')
+        ->label('Contrato')
+        ->options(
+            \App\Models\ContratoCombustible::where('activo', true)
+                ->get()
+                ->mapWithKeys(fn ($c) => [
+                    $c->id => "{$c->numero_contrato} — {$c->nombre}"
+                ])
+        )
+        ->searchable()
+        ->nullable()
+        ->placeholder('Sin contrato asociado')
+        ->columnSpan(2),
+                    
                 Forms\Components\TextInput::make('nombre')
                     ->label('Nombre')->required()->maxLength(100)->columnSpan(2),
                 Forms\Components\TextInput::make('valor')
@@ -67,6 +81,14 @@ class SerieValeResource extends Resource
                 ->sortable()
                 ->weight('bold')
                 ->description(fn ($record) => "Rango: {$record->correlativo_inicio} - {$record->correlativo_fin}"),
+
+            Tables\Columns\TextColumn::make('contrato.numero_contrato')
+    ->label('Contrato')
+    ->searchable()
+    ->placeholder('Sin contrato')
+    ->badge()
+    ->color('primary')
+    ->description(fn ($record) => $record->contrato?->nombre),    
 
             // Información Financiera
             Tables\Columns\TextColumn::make('valor')
