@@ -11,6 +11,7 @@ use App\Exports\SolicitudesMantenimientoExport;
 use App\Exports\SolicitudesTransporteExport;
 use Maatwebsite\Excel\Facades\Excel;
 
+use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
 use App\Http\Controllers\Reportes\ReporteGeneralServiciosController;
 
@@ -207,4 +208,7 @@ Route::get('/reportes/distribucion-vales/pdf', [ReporteDistribucionValesCombusti
         ->name('reportes.distribucion-vales.pdf');   
 
 Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController::class, 'pdf'])
-    ->name('reportes.general-servicios.pdf');        
+    ->name('reportes.general-servicios.pdf');   
+    
+Route::get('/reportes/mision-oficial/pdf', action:[ReporteMisionOficialController::class, 'pdf']) 
+    ->name('reportes.mision-oficial.pdf');
