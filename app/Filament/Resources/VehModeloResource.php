@@ -41,7 +41,7 @@ class VehModeloResource extends Resource
                     ->maxLength(100)
                     ->unique(ignoreRecord: true),
 
-                Forms\Components\Select::make('marca_id')
+                Forms\Components\Select::make('veh_marca_id')
                     ->label('Marca')
                     ->options(function () {
                         return \App\Models\VehMarca::where('activo', true)->pluck('nombre', 'id');
