@@ -26,7 +26,7 @@ class ReporteFlotaVehicularController extends Controller
             ->orderBy('placa')
             ->get();
 
-        $pdf = Pdf::loadView('reports.flota-vehicular', [
+        $pdf = Pdf::loadView('reports.flota-vehicular_pdf', [
             'rows' => $rows,
             'filtros' => $filtros,
             'service' => $service,
