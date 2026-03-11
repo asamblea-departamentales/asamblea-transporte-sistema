@@ -26,7 +26,7 @@ class ReporteControlMensualCombustibleController extends Controller
             ->orderBy('fecha_solicitud')
             ->get();
 
-        $pdf = Pdf::loadView('reports.control-mensual-combustible', [
+        $pdf = Pdf::loadView('reports.control-mensual-combustible_pdf', [
             'rows' => $rows,
             'filtros' => $filtros,
             'service' => $service,
