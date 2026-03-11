@@ -5,61 +5,60 @@ namespace App\Domain\Solicitudes\Services;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
+use App\Models\ContratoCombustible;
 use App\Models\HistorialEstado;
+use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
 
 class SolicitudCombustibleService
 {
-// BORRADOR (Creación inicial)
-public function crear(array $data, int $userId): SolicitudCombustible
-{
-    return DB::transaction(function () use ($data, $userId) {
-        // 1. Lógica Automática para Motorista
-        if (!isset($data['motorista_id'])) {
-            $asignacion = \App\Models\AsignacionVehiculoMotorista::where('vehiculo_id', $data['vehiculo_id'])
-                ->where('vigente', true)
-                ->first();
+    // ── BORRADOR (Creación inicial) ─────────────────────────
 
-            // Si no hay motorista asignado al vehículo, lanzamos excepción clara
-            if (!$asignacion) {
-                throw new \DomainException('No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.');
+    public function crear(array $data, int $userId): SolicitudCombustible
+    {
+        return DB::transaction(function () use ($data, $userId) {
+            // Lógica automática para motorista
+            if (!isset($data['motorista_id'])) {
+                $asignacion = \App\Models\AsignacionVehiculoMotorista::where('vehiculo_id', $data['vehiculo_id'])
+                    ->where('vigente', true)
+                    ->first();
+
+                if (!$asignacion) {
+                    throw new \DomainException('No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.');
+                }
+
+                $data['motorista_id'] = $asignacion->motorista_id;
             }
 
-            $data['motorista_id'] = $asignacion->motorista_id;
-        }
+            $data['solicitante_id']       = $userId;
+            $data['estado']               = EstadoSolicitudEnum::BORRADOR;
+            $data['cantidad_combustible'] = $data['cantidad_combustible'] ?? 0;
+            $data['valor_unitario']       = $data['valor_unitario'] ?? 0;
+            $data['valor_total']          = $data['valor_total'] ?? 0;
 
-        // 2. Valores por defecto para evitar errores de base de datos (Error 1364)
-        $data['solicitante_id'] = $userId;
-        $data['estado'] = EstadoSolicitudEnum::BORRADOR;
-        $data['cantidad_combustible'] = $data['cantidad_combustible'] ?? 0;
-        $data['valor_unitario'] = $data['valor_unitario'] ?? 0;
-        $data['valor_total'] = $data['valor_total'] ?? 0;
-        
-        // 3. Generar código único (ej: CB-2026-0001) si no viene en el data
-        if (!isset($data['codigo'])) {
-            $data['codigo'] = $this->generarCodigoCorrelativo();
-        }
+            if (!isset($data['codigo'])) {
+                $data['codigo'] = $this->generarCodigoCorrelativo();
+            }
 
-        $solicitud = SolicitudCombustible::create($data);
+            $solicitud = SolicitudCombustible::create($data);
 
-        // 4. Bitácora inicial
-        $this->registrarCambioEstado($solicitud, null, $solicitud->estado, $userId, 'Creación inicial de borrador.');
-        $this->registrarEvento($solicitud, 'CREAR_BORRADOR', $userId, null);
+            $this->registrarCambioEstado($solicitud, null, $solicitud->estado, $userId, 'Creación inicial de borrador.');
+            $this->registrarEvento($solicitud, 'CREAR_BORRADOR', $userId, null);
 
-        return $solicitud;
-    });
-}
+            return $solicitud;
+        });
+    }
 
-// Helper para el código correlativo
-private function generarCodigoCorrelativo(): string
-{
-    $anio = now()->year;
-    $ultimo = SolicitudCombustible::whereYear('created_at', $anio)->count();
-    return "CB-{$anio}-" . str_pad($ultimo + 1, 6, '0', STR_PAD_LEFT);
-}
+    private function generarCodigoCorrelativo(): string
+    {
+        $anio   = now()->year;
+        $ultimo = SolicitudCombustible::whereYear('created_at', $anio)->count();
+        return "CB-{$anio}-" . str_pad($ultimo + 1, 6, '0', STR_PAD_LEFT);
+    }
 
-    // BORRADOR → PENDIENTE
+    // ── BORRADOR → PENDIENTE ────────────────────────────────
+
     public function enviarSolicitud(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible
     {
         if ($solicitud->estado !== EstadoSolicitudEnum::BORRADOR) {
@@ -79,7 +78,8 @@ private function generarCodigoCorrelativo(): string
         });
     }
 
-    // PENDIENTE / EN_REVISION → EN_REVISION
+    // ── PENDIENTE / EN_REVISION → EN_REVISION ───────────────
+
     public function observar(SolicitudCombustible $solicitud, int $jefeId, ?string $comentario): SolicitudCombustible
     {
         if (!in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)) {
@@ -107,7 +107,8 @@ private function generarCodigoCorrelativo(): string
         });
     }
 
-    // PENDIENTE / EN_REVISION → PRE_APROBADA
+    // ── PENDIENTE / EN_REVISION → PRE_APROBADA ──────────────
+
     public function preAprobar(SolicitudCombustible $solicitud, int $jefeId): SolicitudCombustible
     {
         if (!in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)) {
@@ -127,7 +128,8 @@ private function generarCodigoCorrelativo(): string
         });
     }
 
-    // PRE_APROBADA → APROBADA
+    // ── PRE_APROBADA → APROBADA ─────────────────────────────
+
     public function aprobar(SolicitudCombustible $solicitud, int $jefeId, ?string $observaciones): SolicitudCombustible
     {
         if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
@@ -150,7 +152,139 @@ private function generarCodigoCorrelativo(): string
         });
     }
 
-    // PENDIENTE / EN_REVISION / PRE_APROBADA → RECHAZADA
+    // ── APROBADA → ASIGNADA ─────────────────────────────────
+
+    public function asignarVales(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
+    {
+        if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+            throw new \DomainException('Solo se pueden asignar vales a una solicitud Aprobada.');
+        }
+
+        $contrato = ContratoCombustible::findOrFail($data['contrato_id']);
+        $serie    = SerieVale::findOrFail($data['serie_vale_id']);
+
+        if ((int) $serie->contrato_id !== (int) $contrato->id) {
+            throw new \DomainException('La serie seleccionada no pertenece al contrato indicado.');
+        }
+
+        if (!$contrato->activo) {
+            throw new \DomainException('El contrato seleccionado no está activo.');
+        }
+
+        if (!$serie->activo) {
+            throw new \DomainException('La serie seleccionada no está activa.');
+        }
+
+        $cantidadVales = (int) ($data['cantidad_vales'] ?? 0);
+
+        if ($cantidadVales <= 0) {
+            throw new \DomainException('La cantidad de vales debe ser mayor a cero.');
+        }
+
+        $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
+        $fin    = $inicio + $cantidadVales - 1;
+
+        if ($fin > $serie->correlativo_fin) {
+            throw new \DomainException('La serie no tiene suficientes vales disponibles.');
+        }
+
+        $valorUnitario = (float) $serie->valor;
+        $montoAsignado = $cantidadVales * $valorUnitario;
+
+        if ((float) $contrato->monto_disponible < $montoAsignado) {
+            throw new \DomainException('El contrato no tiene presupuesto suficiente para esta asignación.');
+        }
+
+        return DB::transaction(function () use (
+            $solicitud, $userId, $contrato, $serie,
+            $cantidadVales, $inicio, $fin, $valorUnitario, $montoAsignado
+        ) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->contrato_id        = $contrato->id;
+            $solicitud->serie_vale_id      = $serie->id;
+            $solicitud->correlativo_inicio = $inicio;
+            $solicitud->correlativo_fin    = $fin;
+            $solicitud->cantidad_vales     = $cantidadVales;
+            $solicitud->valor_unitario_vale = $valorUnitario;
+            $solicitud->monto_asignado     = $montoAsignado;
+            $solicitud->fecha_asignacion   = now();
+            $solicitud->asignado_por       = $userId;
+            $solicitud->estado             = EstadoSolicitudEnum::ASIGNADA;
+            $solicitud->save();
+
+            // Avanzar correlativo en la serie
+            $serie->correlativo_actual = $fin + 1;
+            $serie->save();
+
+            // Descontar del contrato
+            $contrato->monto_disponible = (float) $contrato->monto_disponible - $montoAsignado;
+            $contrato->save();
+
+            $this->registrarCambioEstado(
+                $solicitud, $anterior, $solicitud->estado, $userId,
+                "Asignación de {$cantidadVales} vales. Serie {$serie->nombre}. Rango {$inicio}-{$fin}. Monto: $" . number_format($montoAsignado, 2)
+            );
+
+            $this->registrarEvento($solicitud, 'ASIGNAR_VALES', $userId, [
+                'contrato_id'       => $contrato->id,
+                'serie_vale_id'     => $serie->id,
+                'serie'             => $serie->nombre,
+                'cantidad_vales'    => $cantidadVales,
+                'correlativo_inicio'=> $inicio,
+                'correlativo_fin'   => $fin,
+                'valor_unitario_vale'=> $valorUnitario,
+                'monto_asignado'    => $montoAsignado,
+            ]);
+
+            return $solicitud;
+        });
+    }
+
+    // ── ASIGNADA → COMPLETADA ───────────────────────────────
+
+    public function completar(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
+    {
+        if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
+            throw new \DomainException('Solo se puede completar una solicitud con vales ya asignados.');
+        }
+
+        $comprobantesExistentes = $solicitud->comprobantes ?? [];
+        $nuevosComprobantes     = $data['comprobantes'] ?? [];
+        $todosComprobantes      = array_values(array_filter(array_merge($comprobantesExistentes, $nuevosComprobantes)));
+
+        if (empty($todosComprobantes)) {
+            throw new \DomainException('Debes subir al menos un comprobante antes de completar.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $data, $todosComprobantes) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado             = EstadoSolicitudEnum::COMPLETADA;
+            $solicitud->forma_pago         = $data['forma_pago'] ?? null;
+            $solicitud->numero_vale_ticket = $data['numero_vale_ticket'] ?? null;
+            $solicitud->valor_unitario     = $data['valor_unitario'] ?? $solicitud->valor_unitario;
+            $solicitud->valor_total        = $data['valor_total'] ?? $solicitud->valor_total;
+            $solicitud->comprobantes       = $todosComprobantes;
+            $solicitud->save();
+
+            $this->registrarCambioEstado(
+                $solicitud, $anterior, $solicitud->estado, $userId,
+                'Completado por usuario. Forma de pago: ' . ($data['forma_pago'] ?? 'N/A')
+            );
+
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
+                'forma_pago'         => $data['forma_pago'] ?? null,
+                'numero_vale_ticket' => $data['numero_vale_ticket'] ?? null,
+                'valor_total'        => $data['valor_total'] ?? null,
+            ]);
+
+            return $solicitud;
+        });
+    }
+
+    // ── PENDIENTE / EN_REVISION / PRE_APROBADA → RECHAZADA ──
+
     public function rechazar(SolicitudCombustible $solicitud, int $jefeId, string $motivo): SolicitudCombustible
     {
         if (!in_array($solicitud->estado, [
@@ -177,47 +311,8 @@ private function generarCodigoCorrelativo(): string
         });
     }
 
-    // APROBADA → COMPLETADA (desde frontend con comprobante)
-    public function completar(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
-    {
-        if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-            throw new \DomainException('Solo se puede completar una solicitud Aprobada.');
-        }
+    // ── BORRADOR / PENDIENTE → CANCELADA ────────────────────
 
-        $comprobantesExistentes = $solicitud->comprobantes ?? [];
-        $nuevosComprobantes     = $data['comprobantes'] ?? [];
-        $todosComprobantes      = array_merge($comprobantesExistentes, $nuevosComprobantes);
-
-        if (empty($todosComprobantes)) {
-            throw new \DomainException('Debes subir al menos un comprobante antes de completar.');
-        }
-
-        return DB::transaction(function () use ($solicitud, $userId, $data, $todosComprobantes) {
-            $anterior = $solicitud->estado;
-
-            $solicitud->estado              = EstadoSolicitudEnum::COMPLETADA;
-            $solicitud->forma_pago          = $data['forma_pago'] ?? null;
-            $solicitud->numero_vale_ticket  = $data['numero_vale_ticket'] ?? null;
-            $solicitud->valor_unitario      = $data['valor_unitario'] ?? null;
-            $solicitud->valor_total         = $data['valor_total'] ?? null;
-            $solicitud->comprobantes        = $todosComprobantes;
-            $solicitud->save();
-
-            $this->registrarCambioEstado(
-                $solicitud, $anterior, $solicitud->estado, $userId,
-                'Completado por usuario. Forma de pago: ' . ($data['forma_pago'] ?? 'N/A')
-            );
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
-                'forma_pago'         => $data['forma_pago'] ?? null,
-                'numero_vale_ticket' => $data['numero_vale_ticket'] ?? null,
-                'valor_total'        => $data['valor_total'] ?? null,
-            ]);
-
-            return $solicitud;
-        });
-    }
-
-    // BORRADOR / PENDIENTE → CANCELADA
     public function cancelar(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible
     {
         if (!in_array($solicitud->estado, [
@@ -248,7 +343,7 @@ private function generarCodigoCorrelativo(): string
             'entidad_tipo'    => 'solicitud_combustible',
             'entidad_id'      => $solicitud->id,
             'estado_anterior' => $anterior?->value ?? (string) $anterior,
-            'estado_nuevo'    => $nuevo?->value ?? (string) $nuevo,
+            'estado_nuevo'    => $nuevo?->value    ?? (string) $nuevo,
             'user_id'         => $userId,
             'comentario'      => $comentario,
         ]);

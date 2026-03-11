@@ -10,7 +10,7 @@ class SerieVale extends Model
         'nombre', 'valor', 'valor_compra',
         'fecha_emision', 'fecha_vencimiento', 'fecha_recibido',
         'correlativo_inicio', 'correlativo_fin', 'cantidad',
-        'observaciones', 'activo',
+        'observaciones', 'activo', 'contrato_id', 'correlativo_actual',
     ];
     protected $casts = [
         'activo'            => 'boolean',
@@ -25,4 +25,9 @@ class SerieVale extends Model
     {
         return $this->activo && $this->fecha_vencimiento >= now()->toDateString();
     }
+
+    public function contrato()
+{
+    return $this->belongsTo(ContratoCombustible::class, 'contrato_id');
+}
 }

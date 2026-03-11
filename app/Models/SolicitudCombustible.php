@@ -35,6 +35,16 @@ class SolicitudCombustible extends Model
         'fecha_aprobacion',
         'motivo_rechazo',
         'observaciones',
+        //Campos para contratos
+        'contrato_id',
+        'serie_vale_id',
+        'correlativo_inicio',
+        'correlativo_fin',
+        'cantidad_vales',
+        'valor_unitario_vale',
+        'monto_asignado',
+        'fecha_asignacion',
+        'asignado_por',
     ];
 
     protected $casts = [
@@ -48,6 +58,11 @@ class SolicitudCombustible extends Model
         'comprobantes'         => 'array',
         'estado'               => EstadoSolicitudEnum::class,
         'prioridad'            => PrioridadSolicitudEnum::class,
+
+        //Casts para lo de contratos y vales
+        'valor_unitario_vale' => 'decimal:2',
+        'monto_asignado' => 'decimal:2',
+        'fecha_asignacion' => 'datetime',
     ];
 
     // ── Booted ──────────────────────────────────────────────
@@ -91,6 +106,21 @@ class SolicitudCombustible extends Model
     public function aprobador()
     {
         return $this->belongsTo(User::class, 'aprobador_id');
+    }
+
+    public function contrato()
+    {
+        return $this->belongsTo(ContratoCombustible::class, 'contrato_id');
+    }
+
+    public function serieVale()
+    {
+        return $this->belongsTo(SerieVale::class, 'serie_vale_id');
+    }
+
+    public function asignador()
+    {
+        return $this->belongsTo(User::class, 'asignado_por');
     }
 
     // ── Helpers ─────────────────────────────────────────────
