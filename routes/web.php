@@ -199,5 +199,5 @@ Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $reque
 Route::get('/reportes/flota-vehicular/pdf', [ReporteFlotaVehicularController::class, 'pdf'])
     ->name('reportes.flota-vehicular.pdf');
 
-Route::get('/reportes/consumo-mensual-combustible/pdf', [ReporteControlMensualCombustibleController::class, 'pdf'])
-    ->name('reportes.consumo-mensual-combustible.pdf');    
+Route::get('/reportes/control-mensual-combustible/pdf', [ReporteControlMensualCombustibleController::class, 'pdf'])
+    ->name('reportes.control-mensual-combustible.pdf');    
