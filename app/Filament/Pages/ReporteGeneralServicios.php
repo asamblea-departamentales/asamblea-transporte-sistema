@@ -5,7 +5,7 @@ namespace App\Filament\Pages;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Models\Vehiculo;
-use App\Services\Reportes\ReporteGeneralServiciosService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteGeneralServiciosService;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Form;
