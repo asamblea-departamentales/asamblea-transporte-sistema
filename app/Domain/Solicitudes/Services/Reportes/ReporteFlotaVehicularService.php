@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Reportes\Services;
+namespace App\Domain\Solicitudes\Services\Reportes;
 
 use App\Models\Vehiculo;
 use Illuminate\Database\Eloquent\Builder;
