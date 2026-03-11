@@ -30,14 +30,14 @@ class ContratoCombustibleResource extends Resource
             Forms\Components\Section::make('Identificación del Contrato')
                 ->icon('heroicon-o-document-text')
                 ->schema([
-                    Forms\Components\TextInput::make('numero_contrato')
-                        ->label('Número de Contrato')
-                        ->required()
-                        ->maxLength(100)
-                        ->unique(ignoreRecord: true)
-                        ->placeholder('Ej: CONT-2026-001')
-                        ->fontFamily('mono'),
-
+                  Forms\Components\TextInput::make('numero_contrato')
+    ->label('Número de Contrato')
+    ->required()
+    ->maxLength(100)
+    ->unique(ignoreRecord: true)
+    ->placeholder('Ej: CONT-2026-001')
+    // Reemplaza ->fontFamily('mono') por esto:
+    ->extraInputAttributes(['class' => 'font-mono text-cyan-700 font-bold']),
                     Forms\Components\TextInput::make('nombre')
                         ->label('Nombre / Descripción')
                         ->required()
