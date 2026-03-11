@@ -2,7 +2,7 @@
 
 namespace App\Filament\Pages;
 
-use App\Domain\Reportes\Services\ReporteFlotaVehicularService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteFlotaVehicularService;
 use App\Models\TipoVehiculo;
 use App\Models\VehClasificacion;
 use App\Models\VehEstadoCatalogo;
