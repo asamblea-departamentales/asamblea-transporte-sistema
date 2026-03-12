@@ -322,6 +322,11 @@ export default function RequestDetailPage() {
         </section>
       )}
 
+      {/* ── Datos de Finalización ────────────────────────────────────── */}
+      {["completada", "finalizada"].includes(data.estado) && (
+        <FinalizacionDataSection data={data} modulo={modulo!} />
+      )}
+
       {/* Confirmación inline Transporte */}
       {showConfirmTransporte && (
         <div className="overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50 shadow-xl">
@@ -407,6 +412,184 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">{label}</p>
         <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{safe(value)}</p>
       </div>
+    </div>
+  );
+}
+
+// ── Sección de datos de finalización ────────────────────────────────────────
+
+const FORMA_PAGO_LABELS: Record<string, string> = {
+  vale: "🧾 Vale",
+  ticket: "🎫 Ticket",
+  tarjeta: "💳 Tarjeta",
+  efectivo: "💵 Efectivo",
+  otro: "📄 Otro",
+};
+
+function storageUrl(path: string): string {
+  const base = import.meta.env.VITE_API_BASE_URL || "";
+  return `${base}/storage/${path}`;
+}
+
+function isImage(path: string): boolean {
+  return /\.(jpg|jpeg|png|gif|webp)$/i.test(path);
+}
+
+function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }) {
+  const isCombustible = modulo === "combustible";
+  const isMantenimiento = modulo === "mantenimiento";
+  const isTransporte = modulo === "transporte";
+
+  // Si no hay ningún dato de finalización relevante, no mostrar
+  const hasData =
+    (isCombustible && (data.forma_pago || data.valor_total || data.comprobantes?.length)) ||
+    (isMantenimiento && (data.fecha_realizada || data.costo_real != null || data.adjuntos?.length)) ||
+    isTransporte;
+
+  if (!hasData) return null;
+
+  const colorMap = {
+    combustible: { bg: "from-amber-50 to-orange-50", border: "border-amber-200", icon: "bg-amber-500", shadow: "shadow-amber-200" },
+    mantenimiento: { bg: "from-violet-50 to-purple-50", border: "border-violet-200", icon: "bg-violet-500", shadow: "shadow-violet-200" },
+    transporte: { bg: "from-blue-50 to-sky-50", border: "border-blue-200", icon: "bg-blue-500", shadow: "shadow-blue-200" },
+  };
+  const colors = colorMap[modulo as keyof typeof colorMap] ?? colorMap.transporte;
+
+  const archivos: string[] = isCombustible
+    ? (data.comprobantes ?? [])
+    : isMantenimiento
+      ? (data.adjuntos ?? [])
+      : [];
+
+  return (
+    <section className="animate-fade-in-up">
+      <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-black uppercase tracking-widest text-slate-400">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+        Datos de Finalización
+      </h2>
+
+      <div className={`overflow-hidden rounded-3xl border ${colors.border} bg-gradient-to-br ${colors.bg} shadow-xl`}>
+        <div className="p-6 md:p-8">
+
+          {/* Header */}
+          <div className="mb-6 flex items-center gap-3">
+            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colors.icon} shadow-lg ${colors.shadow}`}>
+              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-black text-slate-900">
+                {isCombustible ? "Carga Finalizada" : isMantenimiento ? "Mantenimiento Finalizado" : "Viaje Finalizado"}
+              </h3>
+              <p className="text-xs font-medium text-slate-500">
+                Datos registrados al completar la solicitud
+              </p>
+            </div>
+          </div>
+
+          {/* Datos según módulo */}
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            {/* Combustible */}
+            {isCombustible && (
+              <>
+                {data.forma_pago && (
+                  <InfoChip label="Forma de Pago" value={FORMA_PAGO_LABELS[data.forma_pago] ?? data.forma_pago} />
+                )}
+                {data.valor_total != null && (
+                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} />
+                )}
+                {data.numero_vale_ticket && (
+                  <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} />
+                )}
+              </>
+            )}
+
+            {/* Mantenimiento */}
+            {isMantenimiento && (
+              <>
+                {data.fecha_realizada && (
+                  <InfoChip
+                    label="Fecha Realizada"
+                    value={new Date(data.fecha_realizada).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                  />
+                )}
+                {data.costo_real != null && (
+                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} />
+                )}
+              </>
+            )}
+
+            {/* Transporte */}
+            {isTransporte && data.updated_at && (
+              <InfoChip
+                label="Fecha Finalización"
+                value={new Date(data.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+              />
+            )}
+          </div>
+
+          {/* Comprobantes / Adjuntos */}
+          {archivos.length > 0 && (
+            <div className="mt-6">
+              <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
+                {isCombustible ? "Comprobantes" : "Adjuntos"}
+              </p>
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                {archivos.map((path: string, i: number) => {
+                  const url = storageUrl(path);
+                  const name = path.split("/").pop() ?? `archivo-${i + 1}`;
+                  return (
+                    <a
+                      key={i}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="group flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-slate-200/70 transition hover:shadow-md hover:ring-slate-300"
+                    >
+                      {isImage(path) ? (
+                        <img
+                          src={url}
+                          alt={name}
+                          className="h-14 w-14 flex-shrink-0 rounded-xl object-cover ring-1 ring-slate-100"
+                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
+                        />
+                      ) : (
+                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-red-50 text-2xl ring-1 ring-red-100">
+                          📄
+                        </div>
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-xs font-bold text-slate-700 group-hover:text-slate-900">
+                          {name}
+                        </p>
+                        <p className="text-[10px] font-medium text-slate-400">
+                          {isImage(path) ? "Imagen" : "PDF"} • clic para ver
+                        </p>
+                      </div>
+                      <svg className="h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                      </svg>
+                    </a>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function InfoChip({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-slate-200/50 backdrop-blur-sm">
+      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
+      <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
     </div>
   );
 }
