@@ -404,13 +404,13 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
     return String(v);
   };
   return (
-    <div className="flex items-start gap-4">
-      <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200/50">
+    <div className="group relative flex items-start gap-3 rounded-2xl bg-slate-50/60 p-4 transition hover:bg-slate-100/80">
+      <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/60">
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">{label}</p>
-        <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{safe(value)}</p>
+        <p className="text-[11px] font-semibold uppercase tracking-wide text-slate-400">{label}</p>
+        <p className="mt-0.5 text-[13px] font-bold leading-snug text-slate-800">{safe(value)}</p>
       </div>
     </div>
   );
@@ -418,12 +418,12 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
 
 // ── Sección de datos de finalización ────────────────────────────────────────
 
-const FORMA_PAGO_LABELS: Record<string, string> = {
-  vale: "🧾 Vale",
-  ticket: "🎫 Ticket",
-  tarjeta: "💳 Tarjeta",
-  efectivo: "💵 Efectivo",
-  otro: "📄 Otro",
+const FORMA_PAGO_LABELS: Record<string, { label: string; icon: string }> = {
+  vale:     { label: "Vale",     icon: "🧾" },
+  ticket:   { label: "Ticket",   icon: "🎫" },
+  tarjeta:  { label: "Tarjeta",  icon: "💳" },
+  efectivo: { label: "Efectivo", icon: "💵" },
+  otro:     { label: "Otro",     icon: "📄" },
 };
 
 function storageUrl(path: string): string {
@@ -440,7 +440,6 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
   const isMantenimiento = modulo === "mantenimiento";
   const isTransporte = modulo === "transporte";
 
-  // Si no hay ningún dato de finalización relevante, no mostrar
   const hasData =
     (isCombustible && (data.forma_pago || data.valor_total || data.comprobantes?.length)) ||
     (isMantenimiento && (data.fecha_realizada || data.costo_real != null || data.adjuntos?.length)) ||
@@ -448,131 +447,146 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
 
   if (!hasData) return null;
 
-  const colorMap = {
-    combustible: { bg: "from-amber-50 to-orange-50", border: "border-amber-200", icon: "bg-amber-500", shadow: "shadow-amber-200" },
-    mantenimiento: { bg: "from-violet-50 to-purple-50", border: "border-violet-200", icon: "bg-violet-500", shadow: "shadow-violet-200" },
-    transporte: { bg: "from-blue-50 to-sky-50", border: "border-blue-200", icon: "bg-blue-500", shadow: "shadow-blue-200" },
-  };
-  const colors = colorMap[modulo as keyof typeof colorMap] ?? colorMap.transporte;
-
   const archivos: string[] = isCombustible
     ? (data.comprobantes ?? [])
     : isMantenimiento
       ? (data.adjuntos ?? [])
       : [];
 
+  const accentColor =
+    isCombustible ? "bg-amber-500" :
+    isMantenimiento ? "bg-emerald-500" :
+    "bg-blue-500";
+
   return (
     <section className="animate-fade-in-up">
-      <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-black uppercase tracking-widest text-slate-400">
-        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+      <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-bold uppercase tracking-widest text-slate-400">
+        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
         </svg>
         Datos de Finalización
       </h2>
 
-      <div className={`overflow-hidden rounded-3xl border ${colors.border} bg-gradient-to-br ${colors.bg} shadow-xl`}>
+      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+        {/* Accent strip */}
+        <div className={`h-1.5 w-full ${accentColor}`} />
+
         <div className="p-6 md:p-8">
+          {/* Info chips */}
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
 
-          {/* Header */}
-          <div className="mb-6 flex items-center gap-3">
-            <div className={`flex h-10 w-10 items-center justify-center rounded-2xl ${colors.icon} shadow-lg ${colors.shadow}`}>
-              <svg className="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <div>
-              <h3 className="text-base font-black text-slate-900">
-                {isCombustible ? "Carga Finalizada" : isMantenimiento ? "Mantenimiento Finalizado" : "Viaje Finalizado"}
-              </h3>
-              <p className="text-xs font-medium text-slate-500">
-                Datos registrados al completar la solicitud
-              </p>
-            </div>
-          </div>
-
-          {/* Datos según módulo */}
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-
-            {/* Combustible */}
+            {/* Combustible fields */}
             {isCombustible && (
               <>
                 {data.forma_pago && (
-                  <InfoChip label="Forma de Pago" value={FORMA_PAGO_LABELS[data.forma_pago] ?? data.forma_pago} />
+                  <InfoChip
+                    label="Forma de Pago"
+                    value={FORMA_PAGO_LABELS[data.forma_pago]?.label ?? data.forma_pago}
+                    icon={FORMA_PAGO_LABELS[data.forma_pago]?.icon ?? "📋"}
+                  />
                 )}
                 {data.valor_total != null && (
-                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} />
+                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} icon="💰" />
                 )}
                 {data.numero_vale_ticket && (
-                  <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} />
+                  <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} icon="#️⃣" />
                 )}
               </>
             )}
 
-            {/* Mantenimiento */}
+            {/* Mantenimiento fields */}
             {isMantenimiento && (
               <>
                 {data.fecha_realizada && (
                   <InfoChip
                     label="Fecha Realizada"
-                    value={new Date(data.fecha_realizada).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" })}
+                    value={new Date(data.fecha_realizada).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}
+                    icon="📅"
                   />
                 )}
                 {data.costo_real != null && (
-                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} />
+                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} icon="💰" />
                 )}
               </>
             )}
 
-            {/* Transporte */}
+            {/* Transporte fields */}
             {isTransporte && data.updated_at && (
               <InfoChip
                 label="Fecha Finalización"
-                value={new Date(data.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                value={new Date(data.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
+                icon="📅"
               />
             )}
           </div>
 
-          {/* Comprobantes / Adjuntos */}
+          {/* ── Galería de archivos ─────────────────────────── */}
           {archivos.length > 0 && (
-            <div className="mt-6">
-              <p className="mb-3 text-[10px] font-black uppercase tracking-widest text-slate-400">
-                {isCombustible ? "Comprobantes" : "Adjuntos"}
+            <div className="mt-8">
+              <p className="mb-4 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+                {isCombustible ? "Comprobantes adjuntos" : "Archivos adjuntos"}
+                <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-100 text-[10px] font-black text-slate-500">
+                  {archivos.length}
+                </span>
               </p>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+
+              {/* Image gallery */}
+              <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {archivos.map((path: string, i: number) => {
                   const url = storageUrl(path);
                   const name = path.split("/").pop() ?? `archivo-${i + 1}`;
+
+                  if (isImage(path)) {
+                    return (
+                      <a
+                        key={i}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="group relative overflow-hidden rounded-xl shadow-sm ring-1 ring-slate-200/80 transition-all hover:shadow-lg hover:ring-slate-300"
+                      >
+                        <div className="aspect-square bg-slate-100">
+                          <img
+                            src={url}
+                            alt={name}
+                            className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+                            onError={(e) => {
+                              const el = e.target as HTMLImageElement;
+                              el.parentElement!.innerHTML = `<div class="flex h-full w-full flex-col items-center justify-center gap-2 text-slate-400"><svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg><span class="text-xs font-medium">No disponible</span></div>`;
+                            }}
+                          />
+                        </div>
+                        {/* Hover overlay */}
+                        <div className="absolute inset-0 flex items-end bg-gradient-to-t from-slate-900/60 via-transparent to-transparent opacity-0 transition-opacity group-hover:opacity-100">
+                          <div className="flex w-full items-center justify-between p-3">
+                            <span className="truncate text-xs font-semibold text-white/90">{name}</span>
+                            <svg className="h-4 w-4 flex-shrink-0 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                            </svg>
+                          </div>
+                        </div>
+                      </a>
+                    );
+                  }
+
+                  // PDF / non-image file
                   return (
                     <a
                       key={i}
                       href={url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="group flex items-center gap-3 rounded-2xl bg-white p-3 ring-1 ring-slate-200/70 transition hover:shadow-md hover:ring-slate-300"
+                      className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl bg-slate-50 ring-1 ring-slate-200/80 transition-all hover:bg-slate-100 hover:shadow-md hover:ring-slate-300"
                     >
-                      {isImage(path) ? (
-                        <img
-                          src={url}
-                          alt={name}
-                          className="h-14 w-14 flex-shrink-0 rounded-xl object-cover ring-1 ring-slate-100"
-                          onError={(e) => { (e.target as HTMLImageElement).style.display = "none"; }}
-                        />
-                      ) : (
-                        <div className="flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-xl bg-red-50 text-2xl ring-1 ring-red-100">
-                          📄
-                        </div>
-                      )}
-                      <div className="min-w-0 flex-1">
-                        <p className="truncate text-xs font-bold text-slate-700 group-hover:text-slate-900">
-                          {name}
-                        </p>
-                        <p className="text-[10px] font-medium text-slate-400">
-                          {isImage(path) ? "Imagen" : "PDF"} • clic para ver
-                        </p>
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/60 transition group-hover:shadow-md">
+                        <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
+                        </svg>
                       </div>
-                      <svg className="h-4 w-4 flex-shrink-0 text-slate-300 transition group-hover:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                      </svg>
+                      <div className="w-full px-3 text-center">
+                        <p className="truncate text-xs font-bold text-slate-600 group-hover:text-slate-800">{name}</p>
+                        <p className="mt-0.5 text-[10px] text-slate-400">PDF • Abrir ↗</p>
+                      </div>
                     </a>
                   );
                 })}
@@ -585,11 +599,14 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
   );
 }
 
-function InfoChip({ label, value }: { label: string; value: string }) {
+function InfoChip({ label, value, icon }: { label: string; value: string; icon?: string }) {
   return (
-    <div className="rounded-2xl bg-white/80 px-4 py-3 ring-1 ring-slate-200/50 backdrop-blur-sm">
-      <p className="text-[10px] font-black uppercase tracking-widest text-slate-400">{label}</p>
-      <p className="mt-1 text-sm font-bold text-slate-900">{value}</p>
+    <div className="flex items-center gap-3 rounded-xl bg-slate-50/80 px-4 py-3.5 ring-1 ring-slate-100">
+      {icon && <span className="text-lg">{icon}</span>}
+      <div className="min-w-0 flex-1">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
+        <p className="mt-0.5 text-sm font-bold text-slate-800">{value}</p>
+      </div>
     </div>
   );
 }
