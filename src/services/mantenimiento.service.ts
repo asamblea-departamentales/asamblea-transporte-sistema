@@ -80,3 +80,31 @@ export async function getMantenimientoById(id: string | number): Promise<Solicit
     fecha_salida: data.fecha_sugerida,
   };
 }
+
+// ── Finalización ────────────────────────────────────────────────────────────
+
+export type FinalizarMantenimientoPayload = {
+  fecha_realizada: string;
+  costo_real: number;
+  adjuntos: File[];
+};
+
+export async function finalizarMantenimiento(
+  id: number,
+  payload: FinalizarMantenimientoPayload
+): Promise<{ message: string; data: SolicitudMantenimiento }> {
+  const form = new FormData();
+  form.append("fecha_realizada", payload.fecha_realizada);
+  form.append("costo_real", String(payload.costo_real));
+
+  payload.adjuntos.forEach((file) => {
+    form.append("adjuntos[]", file);
+  });
+
+  const { data } = await api.post<{ message: string; data: SolicitudMantenimiento }>(
+    `/api/solicitudes-mantenimiento/${id}/completar`,
+    form,
+    { headers: { "Content-Type": "multipart/form-data" } }
+  );
+  return data;
+}

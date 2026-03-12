@@ -14,6 +14,7 @@ import { getStatusStyle } from "../../lib/format";
 import AsignacionBloque from "../../components/ui/AsignacionBloque";
 import { Spinner } from "./Combustible/components/FormUI";
 import FinalizarCombustibleModal from "./Combustible/components/FinalizarCombustibleModal";
+import FinalizarMantenimientoModal from "./mantenimiento/components/FinalizarMantenimientoModal";
 import { useAuth } from "../../auth/AuthContext";
 
 type GenericRequest = any;
@@ -34,6 +35,7 @@ export default function RequestDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GenericRequest | null>(null);
   const [isFinalizarModalOpen, setIsFinalizarModalOpen] = useState(false);
+  const [isFinalizarMantenimientoOpen, setIsFinalizarMantenimientoOpen] = useState(false);
   const [showConfirmTransporte, setShowConfirmTransporte] = useState(false);
   const [finalizandoTransporte, setFinalizandoTransporte] = useState(false);
 
@@ -87,6 +89,7 @@ export default function RequestDetailPage() {
 
   const isCombustible = modulo === "combustible";
   const isTransporte = modulo === "transporte";
+  const isMantenimiento = modulo === "mantenimiento";
   const isOwner = Number(data.solicitante_id) === Number(user?.id);
 
   // ✅ Combustible: finalizar cuando está "asignada"
@@ -99,13 +102,11 @@ export default function RequestDetailPage() {
     ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
     isOwner;
 
-  // 🔍 DEBUG — quitar después de verificar
-  console.log("🔍 DEBUG finalizar:", {
-    modulo, isTransporte, isCombustible,
-    estado: data.estado,
-    solicitante_id: data.solicitante_id, userId: user?.id,
-    isOwner, canFinalizarTransporte, canFinalizarCombustible,
-  });
+  // ✅ Mantenimiento: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
+  const canFinalizarMantenimiento =
+    isMantenimiento &&
+    ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
+    isOwner;
 
   const handleFinalizarTransporte = async () => {
     setFinalizandoTransporte(true);
@@ -122,15 +123,6 @@ export default function RequestDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
-      {/* 🔍 DEBUG VISUAL — QUITAR DESPUÉS */}
-      <div className="rounded-xl bg-yellow-50 border border-yellow-300 p-4 text-xs font-mono text-yellow-900">
-        <strong>DEBUG:</strong>{" "}
-        modulo={modulo} | isTransporte={String(isTransporte)} | estado={data.estado} |
-        solicitante_id={data.solicitante_id} (type:{typeof data.solicitante_id}) |
-        userId={String(user?.id)} (type:{typeof user?.id}) |
-        isOwner={String(isOwner)} | canFinalizar={String(canFinalizarTransporte)}
-      </div>
-
       {/* Header / Navigation */}
       <div className="flex items-center justify-between">
         <button
@@ -202,6 +194,19 @@ export default function RequestDetailPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                 </svg>
                 Finalizar Viaje
+              </button>
+            )}
+
+            {/* Botón Finalizar Mantenimiento */}
+            {canFinalizarMantenimiento && (
+              <button
+                onClick={() => setIsFinalizarMantenimientoOpen(true)}
+                className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-700 active:translate-y-0"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Finalizar Mantenimiento
               </button>
             )}
           </div>
@@ -365,6 +370,19 @@ export default function RequestDetailPage() {
           solicitudId={data.id}
           onSuccess={() => {
             setIsFinalizarModalOpen(false);
+            fetchData();
+          }}
+        />
+      )}
+
+      {/* Modal de Finalización Mantenimiento */}
+      {isMantenimiento && (
+        <FinalizarMantenimientoModal
+          isOpen={isFinalizarMantenimientoOpen}
+          onClose={() => setIsFinalizarMantenimientoOpen(false)}
+          solicitudId={data.id}
+          onSuccess={() => {
+            setIsFinalizarMantenimientoOpen(false);
             fetchData();
           }}
         />
