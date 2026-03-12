@@ -108,14 +108,20 @@
             <td>{{ $movimiento->vehiculo?->placa ?? '—' }}</td>
         </tr>
         <tr>
-            <td>Marca</td>
-            <td>{{ $movimiento->vehiculo->marca->nombre ?? $movimiento->vehiculo->marca ?? '—' }}</td>
-        </tr>
-        <tr>
-            <td>Modelo</td>
-            <td>{{ $movimiento->vehiculo->modelo->nombre ?? $movimiento->vehiculo->modelo ?? '—' }}</td>
-        </tr>
-        <tr>
+         <tr>
+    <td>Marca</td>
+    <td>
+        {{-- Forzamos la relación con el método marca() y luego el nombre --}}
+        {{ $movimiento->vehiculo->marca()->first()?->nombre ?? $movimiento->vehiculo->marca ?? '—' }}
+    </td>
+</tr>
+<tr>
+    <td>Modelo</td>
+    <td>
+        {{-- Forzamos la relación con el método modelo() --}}
+        {{ $movimiento->vehiculo->modelo()->first()?->nombre ?? $movimiento->vehiculo->modelo ?? '—' }}
+    </td>
+</tr>
             <td>Color</td>
             <td>{{ $movimiento->vehiculo?->color?->nombre ?? '—' }}</td>
         </tr>
