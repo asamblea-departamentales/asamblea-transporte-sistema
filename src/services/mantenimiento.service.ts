@@ -67,3 +67,16 @@ export async function getAllMantenimientos(filters?: MantenimientoFilters) {
     total_pages: data.last_page,
   };
 }
+
+export async function getMantenimientoById(id: string | number): Promise<SolicitudMantenimiento> {
+  const { data } = await api.get<SolicitudMantenimiento>(`/api/solicitudes-mantenimiento/${id}`);
+  return {
+    ...data,
+    modulo: "mantenimiento",
+    origen: data.descripcion ?? "—",
+    destino: (typeof data.tipo_mantenimiento === "object" && data.tipo_mantenimiento !== null)
+      ? data.tipo_mantenimiento.nombre
+      : (data.tipo_mantenimiento as string | null | undefined) ?? "Mantenimiento general",
+    fecha_salida: data.fecha_sugerida,
+  };
+}
