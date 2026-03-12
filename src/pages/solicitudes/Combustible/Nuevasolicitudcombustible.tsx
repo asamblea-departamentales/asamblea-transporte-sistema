@@ -1,39 +1,35 @@
 // src/pages/solicitudes/combustible/NuevaSolicitudCombustible.tsx
+//
+// Refactorizado: toda la lógica de API vive en combustible.service.ts
+// El componente solo maneja UI + estado local del formulario.
+// ─────────────────────────────────────────────────────────────────────────────
+
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8000";
+import {
+  getVehiculos,
+  getMotoristas,
+  getSolicitudesTransporteAsociables,
+  crearSolicitudCombustible,
+  PRIORIDAD_CONFIG,
+  type VehiculoCatalogo,
+  type MotoristaCatalogo,
+  type SolicitudTransporteRef,
+  type Prioridad,
+  type CrearSolicitudCombustiblePayload,
+} from "../../../services/combustible.service";
 
-type Prioridad = "baja" | "media" | "alta";
-
-interface Catalogo { id: string; label: string; }
-
-interface VehiculoRaw {
-  id: number; placa: string; marca: string; modelo: string; tipo: string; label: string;
-}
-
-interface SolicitudTransporte {
-  id: number;
-  codigo: string;
-  estado: string;
-  destino: string;
-  motivo_actividad: string;
-  fecha_salida: string;
-  fecha_retorno: string | null;
-  vehiculo:  { id: number; placa: string; marca?: any; modelo?: any } | null;
-  motorista: { id: number; nombre: string } | null;
-}
+// ══════════════════════════════════════════════════════════════════════════════
+// TIPOS LOCALES
+// ══════════════════════════════════════════════════════════════════════════════
 
 interface CatalogosState {
-  vehiculos: Catalogo[];
-  vehiculosRaw: VehiculoRaw[];
-  motoristas: Catalogo[];
-  solicitudesTransporte: SolicitudTransporte[];
-  loadingSolicitudes: boolean;
+  vehiculos: VehiculoCatalogo[];
+  motoristas: MotoristaCatalogo[];
+  solicitudesTransporte: SolicitudTransporteRef[];
   loading: boolean;
+  loadingSolicitudes: boolean;
   error: string | null;
 }
 
@@ -49,6 +45,10 @@ interface FormData {
   prioridad: Prioridad | "";
   observaciones: string;
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// CONSTANTES
+// ══════════════════════════════════════════════════════════════════════════════
 
 const INITIAL: FormData = {
   solicitud_transporte_id: "",
@@ -69,23 +69,41 @@ const STEPS = [
   { id: 3, title: "Revisión",  subtitle: "Confirmar y enviar"      },
 ];
 
-const prioridadConfig = {
-  baja:  { label: "Baja",  dot: "bg-emerald-400", badge: "bg-emerald-50 text-emerald-700 ring-emerald-200/70" },
-  media: { label: "Media", dot: "bg-amber-400",   badge: "bg-amber-50 text-amber-700 ring-amber-200/70"       },
-  alta:  { label: "Alta",  dot: "bg-red-400",     badge: "bg-red-50 text-red-700 ring-red-200/70"             },
-};
-
 const estadoTransporteColor: Record<string, string> = {
   aprobada:   "bg-emerald-50 text-emerald-700 ring-emerald-200/70",
   programada: "bg-blue-50 text-blue-700 ring-blue-200/70",
 };
 
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem("auth_token");
-  return { Accept: "application/json", ...(token ? { Authorization: `Bearer ${token}` } : {}) };
+// ══════════════════════════════════════════════════════════════════════════════
+// VALIDACIÓN POR STEP
+// ══════════════════════════════════════════════════════════════════════════════
+
+function validate(step: number, data: FormData): Partial<Record<keyof FormData, string>> {
+  const e: Partial<Record<keyof FormData, string>> = {};
+
+  if (step === 1) {
+    if (!data.vehiculo_id) e.vehiculo_id = "Seleccione un vehículo.";
+  }
+
+  if (step === 2) {
+    if (!data.destino_actividad.trim())
+      e.destino_actividad = "El destino o actividad es requerido.";
+    if (!data.fecha_solicitud)
+      e.fecha_solicitud = "La fecha de solicitud es requerida.";
+    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
+      e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
+    if (!data.prioridad)
+      e.prioridad = "Seleccione una prioridad.";
+    if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
+      e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
+  }
+
+  return e;
 }
 
-// ─── Shared UI ────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENTES UI COMPARTIDOS
+// ══════════════════════════════════════════════════════════════════════════════
 
 function StepperHeader({ current }: { current: number }) {
   return (
@@ -102,9 +120,11 @@ function StepperHeader({ current }: { current: number }) {
           <div key={step.id} className="relative z-10 flex flex-col items-center gap-1.5">
             <div className={[
               "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-black transition-all duration-300",
-              done   ? "border-emerald-500 bg-emerald-500 text-white shadow-[0_0_0_4px_rgba(16,185,129,.15)]"
-              : active ? "border-emerald-500 bg-white text-emerald-600 shadow-[0_0_0_4px_rgba(16,185,129,.15)] scale-110"
-              :          "border-slate-200 bg-white text-slate-400",
+              done
+                ? "border-emerald-500 bg-emerald-500 text-white shadow-[0_0_0_4px_rgba(16,185,129,.15)]"
+                : active
+                ? "border-emerald-500 bg-white text-emerald-600 shadow-[0_0_0_4px_rgba(16,185,129,.15)] scale-110"
+                : "border-slate-200 bg-white text-slate-400",
             ].join(" ")}>
               {done ? (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -113,7 +133,9 @@ function StepperHeader({ current }: { current: number }) {
               ) : step.id}
             </div>
             <div className="text-center">
-              <p className={["text-[11px] font-black tracking-tight", active ? "text-emerald-700" : done ? "text-slate-700" : "text-slate-400"].join(" ")}>
+              <p className={["text-[11px] font-black tracking-tight",
+                active ? "text-emerald-700" : done ? "text-slate-700" : "text-slate-400",
+              ].join(" ")}>
                 {step.title}
               </p>
               <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">{step.subtitle}</p>
@@ -128,7 +150,8 @@ function StepperHeader({ current }: { current: number }) {
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
     <label className="mb-1.5 block text-xs font-black tracking-wide text-slate-700">
-      {children}{required && <span className="ml-1 text-emerald-500">*</span>}
+      {children}
+      {required && <span className="ml-1 text-emerald-500">*</span>}
     </label>
   );
 }
@@ -142,27 +165,49 @@ function inputCls(hasError = false) {
   ].join(" ");
 }
 
-function SelectInput({ value, onChange, options, placeholder, error, disabled }: {
-  value: string; onChange: (v: string) => void; options: Catalogo[];
-  placeholder?: string; error?: boolean; disabled?: boolean;
+function SelectInput({
+  value, onChange, options, placeholder, error, disabled,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  options: { id: string | number; label: string }[];
+  placeholder?: string;
+  error?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <select
-      value={value} onChange={(e) => onChange(e.target.value)} disabled={disabled}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      disabled={disabled}
       className={inputCls(error) + " cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"}
-      style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
+      style={{
+        backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
+        backgroundRepeat: "no-repeat",
+        backgroundPosition: "right 14px center",
+      }}
     >
       {placeholder && <option value="">{placeholder}</option>}
-      {options.map((o) => <option key={o.id} value={String(o.id)}>{o.label}</option>)}
+      {options.map((o) => (
+        <option key={o.id} value={String(o.id)}>{o.label}</option>
+      ))}
     </select>
   );
 }
 
-function PrioridadButton({ value, current, onClick }: { value: Prioridad; current: Prioridad | ""; onClick: () => void }) {
-  const cfg = prioridadConfig[value];
+function PrioridadButton({
+  value, current, onClick,
+}: {
+  value: Prioridad;
+  current: Prioridad | "";
+  onClick: () => void;
+}) {
+  const cfg = PRIORIDAD_CONFIG[value];
   const sel = current === value;
   return (
-    <button type="button" onClick={onClick}
+    <button
+      type="button"
+      onClick={onClick}
       className={[
         "flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-black transition-all focus:outline-none",
         sel
@@ -187,8 +232,22 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
-// ─── Step 1 ───────────────────────────────────────────────────────────────────
-function Step1({ data, update, updateMultiple, errors, catalogos }: {
+function Spinner({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg className={`animate-spin ${className}`} fill="none" viewBox="0 0 24 24">
+      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+    </svg>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// STEP 1 — Vehículo + asociación a transporte
+// ══════════════════════════════════════════════════════════════════════════════
+
+function Step1({
+  data, update, updateMultiple, errors, catalogos,
+}: {
   data: FormData;
   update: (k: keyof FormData, v: string) => void;
   updateMultiple: (fields: Partial<FormData>) => void;
@@ -197,7 +256,7 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
 }) {
   const [asociarTransporte, setAsociarTransporte] = useState(!!data.solicitud_transporte_id);
 
-  const vehiculoSeleccionado = catalogos.vehiculosRaw.find(
+  const vehiculoSeleccionado = catalogos.vehiculos.find(
     (v) => String(v.id) === data.vehiculo_id
   );
 
@@ -205,33 +264,23 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
     (s) => String(s.id) === data.solicitud_transporte_id
   );
 
-  // Al seleccionar una solicitud de transporte, pre-carga los campos
+  // Pre-carga campos al seleccionar una solicitud de transporte
   const handleSelectTransporte = (solicitudId: string) => {
-    update("solicitud_transporte_id", solicitudId);
-    if (!solicitudId) return;
+    if (!solicitudId) {
+      updateMultiple({ solicitud_transporte_id: "" });
+      return;
+    }
 
     const sol = catalogos.solicitudesTransporte.find((s) => String(s.id) === solicitudId);
     if (!sol) return;
 
-    const fields: Partial<FormData> = {
-      solicitud_transporte_id: solicitudId,
-    };
+    const fields: Partial<FormData> = { solicitud_transporte_id: solicitudId };
 
-    if (sol.vehiculo?.id) {
-      fields.vehiculo_id = String(sol.vehiculo.id);
-    }
-    if (sol.motorista?.id) {
-      fields.motorista_id = String(sol.motorista.id);
-    }
-    if (sol.destino) {
-      fields.destino_actividad = sol.destino;
-    }
-    if (sol.fecha_salida) {
-      fields.fecha_inicio_periodo = sol.fecha_salida.split("T")[0].split(" ")[0];
-    }
-    if (sol.fecha_retorno) {
-      fields.fecha_fin_periodo = sol.fecha_retorno.split("T")[0].split(" ")[0];
-    }
+    if (sol.vehiculo?.id)   fields.vehiculo_id        = String(sol.vehiculo.id);
+    if (sol.motorista?.id)  fields.motorista_id       = String(sol.motorista.id);
+    if (sol.destino)         fields.destino_actividad  = sol.destino;
+    if (sol.fecha_salida)    fields.fecha_inicio_periodo = sol.fecha_salida.split("T")[0].split(" ")[0];
+    if (sol.fecha_retorno)   fields.fecha_fin_periodo    = sol.fecha_retorno.split("T")[0].split(" ")[0];
 
     updateMultiple(fields);
   };
@@ -239,7 +288,6 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
   const handleToggleAsociar = (val: boolean) => {
     setAsociarTransporte(val);
     if (!val) {
-      // Limpia la asociación y los campos pre-cargados
       updateMultiple({
         solicitud_transporte_id: "",
         vehiculo_id: "",
@@ -251,10 +299,14 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
     }
   };
 
+  // Adaptar VehiculoCatalogo al shape { id, label } que espera SelectInput
+  const vehiculosOpts = catalogos.vehiculos.map((v) => ({ id: v.id, label: v.label }));
+  const motoristasOpts = catalogos.motoristas.map((m) => ({ id: m.id, label: m.nombre }));
+
   return (
     <div className="space-y-5">
 
-      {/* Toggle asociar transporte */}
+      {/* ── Toggle asociar transporte ─────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200 bg-white p-4">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -268,7 +320,6 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
               <p className="text-xs font-semibold text-slate-400">Opcional — pre-carga vehículo, motorista y destino</p>
             </div>
           </div>
-          {/* Toggle switch */}
           <button
             type="button"
             onClick={() => handleToggleAsociar(!asociarTransporte)}
@@ -288,42 +339,39 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
         {asociarTransporte && (
           <div className="mt-4 border-t border-slate-100 pt-4">
             <FieldLabel>Solicitud de transporte</FieldLabel>
+
             {catalogos.loadingSolicitudes ? (
               <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                <svg className="h-4 w-4 animate-spin text-slate-400" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                </svg>
+                <Spinner className="h-4 w-4 text-slate-400" />
                 <span className="text-sm font-semibold text-slate-400">Cargando solicitudes...</span>
               </div>
             ) : catalogos.solicitudesTransporte.length === 0 ? (
               <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
-                <p className="text-sm font-semibold text-slate-400">No tienes solicitudes de transporte aprobadas o programadas.</p>
+                <p className="text-sm font-semibold text-slate-400">
+                  No tienes solicitudes de transporte aprobadas o programadas.
+                </p>
               </div>
             ) : (
-              <select
+              <SelectInput
                 value={data.solicitud_transporte_id}
-                onChange={(e) => handleSelectTransporte(e.target.value)}
-                className={inputCls() + " cursor-pointer appearance-none"}
-                style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`, backgroundRepeat: "no-repeat", backgroundPosition: "right 14px center" }}
-              >
-                <option value="">Seleccione una solicitud...</option>
-                {catalogos.solicitudesTransporte.map((s) => (
-                  <option key={s.id} value={String(s.id)}>
-                    {s.codigo} — {s.destino}
-                  </option>
-                ))}
-              </select>
+                onChange={handleSelectTransporte}
+                options={catalogos.solicitudesTransporte.map((s) => ({
+                  id: s.id,
+                  label: `${s.codigo} — ${s.destino}`,
+                }))}
+                placeholder="Seleccione una solicitud..."
+              />
             )}
 
-            {/* Card resumen solicitud de transporte seleccionada */}
+            {/* Card resumen solicitud seleccionada */}
             {solicitudTransporteSeleccionada && (
               <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
-                <div className="flex items-center justify-between gap-2 mb-2">
+                <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="text-xs font-black text-slate-700">{solicitudTransporteSeleccionada.codigo}</p>
                   <span className={[
                     "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ring-1",
-                    estadoTransporteColor[solicitudTransporteSeleccionada.estado] ?? "bg-slate-50 text-slate-600 ring-slate-200",
+                    estadoTransporteColor[solicitudTransporteSeleccionada.estado]
+                      ?? "bg-slate-50 text-slate-600 ring-slate-200",
                   ].join(" ")}>
                     {solicitudTransporteSeleccionada.estado}
                   </span>
@@ -337,7 +385,7 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
                   ].map((item) => (
                     <div key={item.label} className="rounded-lg border border-slate-100 bg-white px-2.5 py-2">
                       <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
-                      <p className="mt-0.5 text-xs font-bold text-slate-700 truncate">{item.value}</p>
+                      <p className="mt-0.5 truncate text-xs font-bold text-slate-700">{item.value}</p>
                     </div>
                   ))}
                 </div>
@@ -350,16 +398,20 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
         )}
       </div>
 
-      {/* Selector de vehículo */}
+      {/* ── Selector de vehículo ──────────────────────────────────────── */}
       <div>
         <FieldLabel required>Vehículo</FieldLabel>
         <SelectInput
-          value={data.vehiculo_id} onChange={(v) => update("vehiculo_id", v)}
-          options={catalogos.vehiculos}
+          value={data.vehiculo_id}
+          onChange={(v) => update("vehiculo_id", v)}
+          options={vehiculosOpts}
           placeholder={catalogos.loading ? "Cargando vehículos..." : "Seleccione un vehículo..."}
-          error={!!errors.vehiculo_id} disabled={catalogos.loading}
+          error={!!errors.vehiculo_id}
+          disabled={catalogos.loading}
         />
-        {errors.vehiculo_id && <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>}
+        {errors.vehiculo_id && (
+          <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>
+        )}
       </div>
 
       {/* Card info vehículo seleccionado */}
@@ -386,19 +438,22 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
             ].map((item) => (
               <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
-                <p className="mt-0.5 text-sm font-bold text-slate-800 truncate">{item.value || "—"}</p>
+                <p className="mt-0.5 truncate text-sm font-bold text-slate-800">{item.value || "—"}</p>
               </div>
             ))}
           </div>
         </div>
       )}
 
-      {/* Motorista */}
+      {/* ── Motorista ─────────────────────────────────────────────────── */}
       <div>
-        <FieldLabel>Motorista <span className="font-normal text-slate-400">(opcional)</span></FieldLabel>
+        <FieldLabel>
+          Motorista <span className="font-normal text-slate-400">(opcional)</span>
+        </FieldLabel>
         <SelectInput
-          value={data.motorista_id} onChange={(v) => update("motorista_id", v)}
-          options={catalogos.motoristas}
+          value={data.motorista_id}
+          onChange={(v) => update("motorista_id", v)}
+          options={motoristasOpts}
           placeholder={catalogos.loading ? "Cargando motoristas..." : "Sin motorista asignado"}
           disabled={catalogos.loading}
         />
@@ -407,92 +462,147 @@ function Step1({ data, update, updateMultiple, errors, catalogos }: {
   );
 }
 
-// ─── Step 2 ───────────────────────────────────────────────────────────────────
-function Step2({ data, update, errors }: {
-  data: FormData; update: (k: keyof FormData, v: string) => void;
+// ══════════════════════════════════════════════════════════════════════════════
+// STEP 2 — Detalles de la carga
+// ══════════════════════════════════════════════════════════════════════════════
+
+function Step2({
+  data, update, errors,
+}: {
+  data: FormData;
+  update: (k: keyof FormData, v: string) => void;
   errors: Partial<Record<keyof FormData, string>>;
 }) {
   return (
     <div className="space-y-5">
+
       <div>
         <FieldLabel required>Destino / Actividad</FieldLabel>
         <input
-          type="text" value={data.destino_actividad}
+          type="text"
+          value={data.destino_actividad}
           onChange={(e) => update("destino_actividad", e.target.value)}
           placeholder="Ej: Visita a sede central, reparto zona norte..."
           className={inputCls(!!errors.destino_actividad)}
         />
-        {errors.destino_actividad && <p className="mt-1 text-xs font-semibold text-red-500">{errors.destino_actividad}</p>}
+        {errors.destino_actividad && (
+          <p className="mt-1 text-xs font-semibold text-red-500">{errors.destino_actividad}</p>
+        )}
       </div>
 
       <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
         <div>
           <FieldLabel required>Fecha de solicitud</FieldLabel>
-          <input type="date" value={data.fecha_solicitud}
+          <input
+            type="date"
+            value={data.fecha_solicitud}
             onChange={(e) => update("fecha_solicitud", e.target.value)}
-            className={inputCls(!!errors.fecha_solicitud)} />
-          {errors.fecha_solicitud && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_solicitud}</p>}
+            className={inputCls(!!errors.fecha_solicitud)}
+          />
+          {errors.fecha_solicitud && (
+            <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_solicitud}</p>
+          )}
         </div>
         <div>
           <FieldLabel required>Cantidad (galones)</FieldLabel>
-          <input type="number" min="0" step="0.01" value={data.cantidad_combustible}
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={data.cantidad_combustible}
             onChange={(e) => update("cantidad_combustible", e.target.value)}
-            placeholder="0.00" className={inputCls(!!errors.cantidad_combustible)} />
-          {errors.cantidad_combustible && <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad_combustible}</p>}
+            placeholder="0.00"
+            className={inputCls(!!errors.cantidad_combustible)}
+          />
+          {errors.cantidad_combustible && (
+            <p className="mt-1 text-xs font-semibold text-red-500">{errors.cantidad_combustible}</p>
+          )}
         </div>
       </div>
 
+      {/* Período de uso (opcional) */}
       <div className="rounded-2xl border border-dashed border-slate-200 p-4">
         <p className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-400">
-          Período de uso <span className="font-normal normal-case tracking-normal text-slate-400">(opcional)</span>
+          Período de uso{" "}
+          <span className="font-normal normal-case tracking-normal text-slate-400">(opcional)</span>
         </p>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
-            <input type="date" value={data.fecha_inicio_periodo}
+            <input
+              type="date"
+              value={data.fecha_inicio_periodo}
               onChange={(e) => update("fecha_inicio_periodo", e.target.value)}
-              className={inputCls(!!errors.fecha_inicio_periodo)} />
-            {errors.fecha_inicio_periodo && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_inicio_periodo}</p>}
+              className={inputCls(!!errors.fecha_inicio_periodo)}
+            />
+            {errors.fecha_inicio_periodo && (
+              <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_inicio_periodo}</p>
+            )}
           </div>
           <div>
             <FieldLabel>Fecha fin</FieldLabel>
-            <input type="date" value={data.fecha_fin_periodo}
+            <input
+              type="date"
+              value={data.fecha_fin_periodo}
               onChange={(e) => update("fecha_fin_periodo", e.target.value)}
               min={data.fecha_inicio_periodo || undefined}
-              className={inputCls(!!errors.fecha_fin_periodo)} />
-            {errors.fecha_fin_periodo && <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_fin_periodo}</p>}
+              className={inputCls(!!errors.fecha_fin_periodo)}
+            />
+            {errors.fecha_fin_periodo && (
+              <p className="mt-1 text-xs font-semibold text-red-500">{errors.fecha_fin_periodo}</p>
+            )}
           </div>
         </div>
       </div>
 
+      {/* Prioridad */}
       <div>
         <FieldLabel required>Prioridad</FieldLabel>
         <div className="flex flex-wrap gap-3">
           {(["baja", "media", "alta"] as Prioridad[]).map((p) => (
-            <PrioridadButton key={p} value={p} current={data.prioridad} onClick={() => update("prioridad", p)} />
+            <PrioridadButton
+              key={p}
+              value={p}
+              current={data.prioridad}
+              onClick={() => update("prioridad", p)}
+            />
           ))}
         </div>
-        {errors.prioridad && <p className="mt-1 text-xs font-semibold text-red-500">{errors.prioridad}</p>}
+        {errors.prioridad && (
+          <p className="mt-1 text-xs font-semibold text-red-500">{errors.prioridad}</p>
+        )}
       </div>
 
+      {/* Observaciones */}
       <div>
         <FieldLabel>Observaciones adicionales</FieldLabel>
-        <textarea value={data.observaciones} onChange={(e) => update("observaciones", e.target.value)}
-          rows={3} maxLength={2000}
+        <textarea
+          value={data.observaciones}
+          onChange={(e) => update("observaciones", e.target.value)}
+          rows={3}
+          maxLength={2000}
           placeholder="Información adicional relevante (opcional)..."
-          className={inputCls() + " resize-none"} />
-        <p className="mt-1 text-right text-[10px] font-semibold text-slate-400">{data.observaciones.length}/2000</p>
+          className={inputCls() + " resize-none"}
+        />
+        <p className="mt-1 text-right text-[10px] font-semibold text-slate-400">
+          {data.observaciones.length}/2000
+        </p>
       </div>
     </div>
   );
 }
 
-// ─── Step 3 ───────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// STEP 3 — Revisión + confirmación
+// ══════════════════════════════════════════════════════════════════════════════
+
 function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState }) {
   const vehiculo  = catalogos.vehiculos.find((v) => String(v.id) === data.vehiculo_id)?.label ?? "";
-  const motorista = catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.label ?? "Sin asignar";
-  const prioCfg   = data.prioridad ? prioridadConfig[data.prioridad as Prioridad] : null;
-  const solTransporte = catalogos.solicitudesTransporte.find((s) => String(s.id) === data.solicitud_transporte_id);
+  const motorista = catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.nombre ?? "Sin asignar";
+  const prioCfg   = data.prioridad ? PRIORIDAD_CONFIG[data.prioridad as Prioridad] : null;
+  const solTransporte = catalogos.solicitudesTransporte.find(
+    (s) => String(s.id) === data.solicitud_transporte_id
+  );
 
   return (
     <div className="space-y-5">
@@ -508,22 +618,37 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
             <p className="text-xs font-semibold text-slate-400">Verifique los datos antes de enviar</p>
           </div>
           {prioCfg && (
-            <span className={["ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black ring-1", prioCfg.badge].join(" ")}>
+            <span className={[
+              "ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black ring-1",
+              prioCfg.badge,
+            ].join(" ")}>
               <span className={["h-2 w-2 rounded-full", prioCfg.dot].join(" ")} />
               {prioCfg.label}
             </span>
           )}
         </div>
+
         <div>
           {solTransporte && <ReviewRow label="Solicitud transporte" value={solTransporte.codigo} />}
           <ReviewRow label="Vehículo"       value={vehiculo} />
           <ReviewRow label="Motorista"       value={motorista} />
           <ReviewRow label="Destino"         value={data.destino_actividad} />
           <ReviewRow label="Fecha solicitud" value={data.fecha_solicitud} />
-          <ReviewRow label="Cantidad"        value={data.cantidad_combustible ? `${parseFloat(data.cantidad_combustible).toFixed(2)} gal` : ""} />
-          {data.fecha_inicio_periodo && <ReviewRow label="Período inicio" value={data.fecha_inicio_periodo} />}
-          {data.fecha_fin_periodo    && <ReviewRow label="Período fin"    value={data.fecha_fin_periodo} />}
-          {data.observaciones        && <ReviewRow label="Observaciones"  value={data.observaciones} />}
+          <ReviewRow
+            label="Cantidad"
+            value={data.cantidad_combustible
+              ? `${parseFloat(data.cantidad_combustible).toFixed(2)} gal`
+              : ""}
+          />
+          {data.fecha_inicio_periodo && (
+            <ReviewRow label="Período inicio" value={data.fecha_inicio_periodo} />
+          )}
+          {data.fecha_fin_periodo && (
+            <ReviewRow label="Período fin" value={data.fecha_fin_periodo} />
+          )}
+          {data.observaciones && (
+            <ReviewRow label="Observaciones" value={data.observaciones} />
+          )}
         </div>
       </div>
 
@@ -532,34 +657,92 @@ function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState 
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
         </svg>
         <p className="text-xs font-semibold text-amber-700">
-          Al confirmar, la solicitud será enviada automáticamente para aprobación. No podrá editarse una vez enviada.
+          Al confirmar, la solicitud será enviada automáticamente para aprobación.
+          No podrá editarse una vez enviada.
         </p>
       </div>
     </div>
   );
 }
 
-// ─── Validation ───────────────────────────────────────────────────────────────
-function validate(step: number, data: FormData): Partial<Record<keyof FormData, string>> {
-  const e: Partial<Record<keyof FormData, string>> = {};
-  if (step === 1) {
-    if (!data.vehiculo_id) e.vehiculo_id = "Seleccione un vehículo.";
-  }
-  if (step === 2) {
-    if (!data.destino_actividad.trim()) e.destino_actividad = "El destino o actividad es requerido.";
-    if (!data.fecha_solicitud)          e.fecha_solicitud   = "La fecha de solicitud es requerida.";
-    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
-      e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
-    if (!data.prioridad) e.prioridad = "Seleccione una prioridad.";
-    if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
-      e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
-  }
-  return e;
+// ══════════════════════════════════════════════════════════════════════════════
+// PANTALLA DE ÉXITO
+// ══════════════════════════════════════════════════════════════════════════════
+
+function SuccessScreen({ onReset }: { onReset: () => void }) {
+  const navigate = useNavigate();
+  return (
+    <div className="pb-10">
+      <div className="rounded-3xl border border-slate-200 bg-white">
+        <div className="mx-auto max-w-lg px-6 py-16 text-center">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.5)]">
+            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+            </svg>
+          </div>
+          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">¡Solicitud enviada!</h2>
+          <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-500">
+            Tu solicitud de combustible fue enviada correctamente y está pendiente de aprobación.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => navigate("/solicitudes/combustible")}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+            >
+              Ver mis solicitudes
+            </button>
+            <button
+              onClick={onReset}
+              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+            >
+              Nueva solicitud
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
-// ─── Main ─────────────────────────────────────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// PANTALLA DE ERROR EN CATÁLOGOS
+// ══════════════════════════════════════════════════════════════════════════════
+
+function ErrorCatalogos({ message, onRetry }: { message: string; onRetry: () => void }) {
+  return (
+    <div className="pb-10">
+      <div className="rounded-3xl border border-slate-200 bg-white">
+        <div className="mx-auto max-w-lg px-6 py-16 text-center">
+          <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-100 bg-red-50">
+            <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
+            </svg>
+          </div>
+          <h2 className="text-lg font-black text-slate-900">Error al cargar datos</h2>
+          <p className="mt-2 text-sm font-semibold text-slate-400">{message}</p>
+          <button
+            onClick={onRetry}
+            className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            Reintentar
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENTE PRINCIPAL
+// ══════════════════════════════════════════════════════════════════════════════
+
 export default function NuevaSolicitudCombustible() {
   const navigate = useNavigate();
+
+  // ── Estado del stepper ────────────────────────────────────────────────────
   const [step, setStep]           = useState(1);
   const [data, setData]           = useState<FormData>(INITIAL);
   const [errors, setErrors]       = useState<Partial<Record<keyof FormData, string>>>({});
@@ -567,67 +750,65 @@ export default function NuevaSolicitudCombustible() {
   const [submitted, setSubmitted] = useState(false);
   const [apiError, setApiError]   = useState<string | null>(null);
 
+  // ── Estado de catálogos ───────────────────────────────────────────────────
   const [catalogos, setCatalogos] = useState<CatalogosState>({
-    vehiculos: [], vehiculosRaw: [], motoristas: [],
-    solicitudesTransporte: [], loadingSolicitudes: true,
-    loading: true, error: null,
+    vehiculos: [],
+    motoristas: [],
+    solicitudesTransporte: [],
+    loading: true,
+    loadingSolicitudes: true,
+    error: null,
   });
 
+  // ── Carga inicial de catálogos desde el servicio ──────────────────────────
   const fetchCatalogos = useCallback(async () => {
-    setCatalogos((p) => ({ ...p, loading: true, loadingSolicitudes: true, error: null }));
+    setCatalogos((prev) => ({ ...prev, loading: true, loadingSolicitudes: true, error: null }));
     try {
-      const headers = authHeaders();
-      const [resV, resM, resT] = await Promise.all([
-        fetch(`${API_BASE}/api/catalogos/vehiculos`,  { headers }),
-        fetch(`${API_BASE}/api/catalogos/motoristas`, { headers }),
-        fetch(`${API_BASE}/api/solicitudes-transporte?per_page=100`, { headers }),
+      // Las tres llamadas en paralelo — el servicio ya maneja el token vía axios
+      const [vehiculos, motoristas, solicitudesTransporte] = await Promise.all([
+        getVehiculos(),
+        getMotoristas(),
+        getSolicitudesTransporteAsociables(),
       ]);
 
-      if (!resV.ok || !resM.ok) throw new Error("Error al obtener los catálogos del servidor.");
-
-      const [jV, jM, jT] = await Promise.all([resV.json(), resM.json(), resT.json()]);
-
-      const rawVehiculos = Array.isArray(jV) ? jV : jV.data ?? [];
-
-      const vehiculos: Catalogo[] = rawVehiculos.map((v: any) => ({
-        id: String(v.id), label: v.label ?? v.nombre ?? String(v.id),
+      setCatalogos({
+        vehiculos,
+        motoristas,
+        solicitudesTransporte,
+        loading: false,
+        loadingSolicitudes: false,
+        error: null,
+      });
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error ? err.message : "No se pudieron cargar los catálogos.";
+      setCatalogos((prev) => ({
+        ...prev,
+        loading: false,
+        loadingSolicitudes: false,
+        error: message,
       }));
-      const vehiculosRaw: VehiculoRaw[] = rawVehiculos.map((v: any) => ({
-        id: v.id, placa: v.placa ?? "", marca: v.marca ?? "",
-        modelo: v.modelo ?? "", tipo: v.tipo ?? "", label: v.label ?? "",
-      }));
-      const motoristas: Catalogo[] = (Array.isArray(jM) ? jM : jM.data ?? []).map((m: any) => ({
-        id: String(m.id), label: m.nombre ?? m.label ?? String(m.id),
-      }));
-
-      // Filtra solo APROBADAS y PROGRAMADAS
-      const todasTransporte: SolicitudTransporte[] = (Array.isArray(jT) ? jT : jT.data ?? []);
-      const solicitudesTransporte = todasTransporte.filter((s) =>
-        ["aprobada", "programada"].includes(s.estado?.toLowerCase?.() ?? "")
-      );
-
-      setCatalogos({ vehiculos, vehiculosRaw, motoristas, solicitudesTransporte, loadingSolicitudes: false, loading: false, error: null });
-    } catch (err: any) {
-      setCatalogos((p) => ({ ...p, loading: false, loadingSolicitudes: false, error: err?.message ?? "No se pudieron cargar los catálogos." }));
     }
   }, []);
 
   useEffect(() => { fetchCatalogos(); }, [fetchCatalogos]);
 
+  // ── Helpers de estado del formulario ─────────────────────────────────────
   const update = useCallback((key: keyof FormData, value: string) => {
-    setData((p) => ({ ...p, [key]: value }));
-    setErrors((p) => { const n = { ...p }; delete n[key]; return n; });
+    setData((prev) => ({ ...prev, [key]: value }));
+    setErrors((prev) => { const n = { ...prev }; delete n[key]; return n; });
   }, []);
 
   const updateMultiple = useCallback((fields: Partial<FormData>) => {
-    setData((p) => ({ ...p, ...fields }));
-    setErrors((p) => {
-      const n = { ...p };
+    setData((prev) => ({ ...prev, ...fields }));
+    setErrors((prev) => {
+      const n = { ...prev };
       Object.keys(fields).forEach((k) => delete n[k as keyof FormData]);
       return n;
     });
   }, []);
 
+  // ── Navegación entre steps ────────────────────────────────────────────────
   const handleNext = () => {
     const errs = validate(step, data);
     if (Object.keys(errs).length > 0) { setErrors(errs); return; }
@@ -635,124 +816,103 @@ export default function NuevaSolicitudCombustible() {
     setStep((s) => s + 1);
   };
 
-  const handleBack = () => { setErrors({}); setStep((s) => s - 1); };
+  const handleBack = () => {
+    setErrors({});
+    setStep((s) => s - 1);
+  };
 
+  // ── Submit: usa el servicio en lugar de fetch directo ─────────────────────
   const handleSubmit = async () => {
     setApiError(null);
     setLoading(true);
+
     try {
-      const body: Record<string, any> = {
-        vehiculo_id:       parseInt(data.vehiculo_id),
-        destino_actividad: data.destino_actividad,
-        fecha_solicitud:   data.fecha_solicitud,
-        cantidad_combustible:          parseFloat(data.cantidad_combustible),
-        prioridad:         data.prioridad,
+      // Construir el payload tipado — solo incluir campos con valor
+      const payload: CrearSolicitudCombustiblePayload = {
+        vehiculo_id:          parseInt(data.vehiculo_id),
+        destino_actividad:    data.destino_actividad,
+        fecha_solicitud:      data.fecha_solicitud,
+        cantidad_combustible: parseFloat(data.cantidad_combustible),
+        prioridad:            data.prioridad as Prioridad,
       };
-      if (data.solicitud_transporte_id) body.solicitud_transporte_id = parseInt(data.solicitud_transporte_id);
-      if (data.motorista_id)            body.motorista_id            = parseInt(data.motorista_id);
-      if (data.fecha_inicio_periodo)    body.fecha_inicio_periodo    = data.fecha_inicio_periodo;
-      if (data.fecha_fin_periodo)       body.fecha_fin_periodo       = data.fecha_fin_periodo;
-      if (data.observaciones.trim())    body.observaciones           = data.observaciones;
 
-      const res = await fetch(`${API_BASE}/api/solicitudes-combustible`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...authHeaders() },
-        body: JSON.stringify(body),
-      });
+      if (data.solicitud_transporte_id)
+        payload.solicitud_transporte_id = parseInt(data.solicitud_transporte_id);
+      if (data.motorista_id)
+        payload.motorista_id = parseInt(data.motorista_id);
+      if (data.fecha_inicio_periodo)
+        payload.fecha_inicio_periodo = data.fecha_inicio_periodo;
+      if (data.fecha_fin_periodo)
+        payload.fecha_fin_periodo = data.fecha_fin_periodo;
+      if (data.observaciones.trim())
+        payload.observaciones = data.observaciones.trim();
 
-      let json: any = null;
-      try { json = await res.json(); } catch { /* vacío */ }
+      // Una sola línea — sin fetch, sin headers, sin JSON.stringify manual
+      await crearSolicitudCombustible(payload);
 
-      if (!res.ok) {
-        console.error("🔴 Error servidor:", json);
-        const detail = json?.errors
-          ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
-          : json?.message || json?.exception || `Error ${res.status}`;
-        throw new Error(detail);
-      }
       setSubmitted(true);
-    } catch (e: any) {
-      setApiError(e?.message || "No se pudo conectar con el servidor.");
+    } catch (err: unknown) {
+      // Axios lanza un AxiosError con err.response.data
+      let message = "No se pudo conectar con el servidor.";
+
+      if (err && typeof err === "object" && "response" in err) {
+        const res = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
+        if (res?.data?.errors) {
+          message = Object.entries(res.data.errors)
+            .map(([k, v]) => `${k}: ${v[0]}`)
+            .join("\n");
+        } else if (res?.data?.message) {
+          message = res.data.message;
+        }
+      } else if (err instanceof Error) {
+        message = err.message;
+      }
+
+      setApiError(message);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);
     }
   };
 
-  // ── Success ───────────────────────────────────────────────────────────────
-  if (submitted) {
-    return (
-      <div className="pb-10">
-        <div className="rounded-3xl border border-slate-200 bg-white">
-          <div className="mx-auto max-w-lg px-6 py-16 text-center">
-            <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.5)]">
-              <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">¡Solicitud enviada!</h2>
-            <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-500">
-              Tu solicitud de combustible fue enviada correctamente y está pendiente de aprobación.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-              <button onClick={() => navigate("/mis-solicitudes")}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95">
-                Ver mis solicitudes
-              </button>
-              <button onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
-                className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95">
-                Nueva solicitud
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const handleReset = () => {
+    setData(INITIAL);
+    setStep(1);
+    setSubmitted(false);
+    setApiError(null);
+  };
 
-  // ── Error catálogos ───────────────────────────────────────────────────────
+  // ── Renders condicionales ─────────────────────────────────────────────────
+  if (submitted) return <SuccessScreen onReset={handleReset} />;
+
   if (!catalogos.loading && catalogos.error) {
-    return (
-      <div className="pb-10">
-        <div className="rounded-3xl border border-slate-200 bg-white">
-          <div className="mx-auto max-w-lg px-6 py-16 text-center">
-            <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full border border-red-100 bg-red-50">
-              <svg className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v4m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z" />
-              </svg>
-            </div>
-            <h2 className="text-lg font-black text-slate-900">Error al cargar datos</h2>
-            <p className="mt-2 text-sm font-semibold text-slate-400">{catalogos.error}</p>
-            <button onClick={fetchCatalogos}
-              className="mt-6 inline-flex items-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95">
-              <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Reintentar
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    return <ErrorCatalogos message={catalogos.error} onRetry={fetchCatalogos} />;
   }
 
-  // ── Form ──────────────────────────────────────────────────────────────────
+  // ── Render principal ──────────────────────────────────────────────────────
   return (
     <div className="pb-10">
       <div className="rounded-3xl border border-slate-200 bg-white">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
 
+          {/* Header */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-600">
                 <span className="h-2 w-2 rounded-full bg-emerald-500" />
                 Combustible Vehicular
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">Nueva Solicitud</h1>
-              <p className="mt-1 text-sm font-semibold text-slate-400">Complete los datos para registrar la carga de combustible.</p>
+              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+                Nueva Solicitud
+              </h1>
+              <p className="mt-1 text-sm font-semibold text-slate-400">
+                Complete los datos para registrar la carga de combustible.
+              </p>
             </div>
-            <button onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95">
+            <button
+              onClick={() => navigate(-1)}
+              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+            >
               <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
@@ -760,6 +920,7 @@ export default function NuevaSolicitudCombustible() {
             </button>
           </div>
 
+          {/* Banner de error de API */}
           {apiError && (
             <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">
               <svg className="mt-0.5 h-5 w-5 shrink-0 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
@@ -779,6 +940,7 @@ export default function NuevaSolicitudCombustible() {
 
           <StepperHeader current={step} />
 
+          {/* Contenedor del step activo */}
           <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-black text-white">
@@ -790,14 +952,26 @@ export default function NuevaSolicitudCombustible() {
               </div>
             </div>
 
-            {step === 1 && <Step1 data={data} update={update} updateMultiple={updateMultiple} errors={errors} catalogos={catalogos} />}
+            {step === 1 && (
+              <Step1
+                data={data}
+                update={update}
+                updateMultiple={updateMultiple}
+                errors={errors}
+                catalogos={catalogos}
+              />
+            )}
             {step === 2 && <Step2 data={data} update={update} errors={errors} />}
             {step === 3 && <Step3 data={data} catalogos={catalogos} />}
 
+            {/* Navegación inferior */}
             <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
               {step > 1 ? (
-                <button onClick={handleBack} disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50">
+                <button
+                  onClick={handleBack}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+                >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
@@ -806,18 +980,16 @@ export default function NuevaSolicitudCombustible() {
               ) : <span />}
 
               {step < 3 ? (
-                <button onClick={handleNext} disabled={catalogos.loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                <button
+                  onClick={handleNext}
+                  disabled={catalogos.loading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                >
                   {catalogos.loading && step === 1 ? (
-                    <>
-                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Cargando...
-                    </>
+                    <><Spinner /> Cargando...</>
                   ) : (
-                    <>Siguiente
+                    <>
+                      Siguiente
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
@@ -825,16 +997,13 @@ export default function NuevaSolicitudCombustible() {
                   )}
                 </button>
               ) : (
-                <button onClick={handleSubmit} disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:opacity-60 disabled:cursor-not-allowed">
+                <button
+                  onClick={handleSubmit}
+                  disabled={loading}
+                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                >
                   {loading ? (
-                    <>
-                      <svg className="h-4 w-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                      </svg>
-                      Enviando...
-                    </>
+                    <><Spinner /> Enviando...</>
                   ) : (
                     <>
                       <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
