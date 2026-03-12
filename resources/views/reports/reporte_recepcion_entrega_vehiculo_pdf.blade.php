@@ -109,11 +109,11 @@
         </tr>
         <tr>
             <td>Marca</td>
-            <td>{{ $movimiento->vehiculo?->marca?->nombre ?? $movimiento->vehiculo?->getAttribute('marca') ?? '—' }}</td>
+            <td>{{ $movimiento->vehiculo->marca->nombre ?? $movimiento->vehiculo->marca ?? '—' }}</td>
         </tr>
         <tr>
             <td>Modelo</td>
-            <td>{{ $movimiento->vehiculo?->modelo?->nombre ?? $movimiento->vehiculo?->getAttribute('modelo') ?? '—' }}</td>
+            <td>{{ $movimiento->vehiculo->modelo->nombre ?? $movimiento->vehiculo->modelo ?? '—' }}</td>
         </tr>
         <tr>
             <td>Color</td>
