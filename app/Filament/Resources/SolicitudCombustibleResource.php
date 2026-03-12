@@ -145,13 +145,22 @@ class SolicitudCombustibleResource extends Resource
                 if (empty($record->comprobantes)) {
                     return 'Sin comprobantes registrados.';
                 }
-                $links = collect($record->comprobantes)->map(function ($path) {
-                    $url  = asset('storage/' . $path);
-                    $name = basename($path);
-                    return "<a href='{$url}' target='_blank' class='text-primary-600 underline'>{$name}</a>";
-                })->join('<br>');
 
-                return new \Illuminate\Support\HtmlString($links);
+                $images = collect($record->comprobantes)->map(function ($path) {
+                    $url = asset('storage/' . $path);
+                    
+                    // Retornamos un contenedor con la imagen y un estilo básico
+                    return "
+                        <div style='margin-bottom: 15px;'>
+                            <img src='{$url}' 
+                                 style='max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' 
+                                 alt='Comprobante'>
+                            <br>
+                            <a href='{$url}' target='_blank' class='text-xs text-primary-600 underline'>Ver en tamaño completo</a>
+                        </div>";
+                })->join('');
+
+                return new \Illuminate\Support\HtmlString($images);
             }),
     ])
     ->collapsible()
