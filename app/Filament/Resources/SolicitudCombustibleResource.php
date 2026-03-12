@@ -137,26 +137,26 @@ class SolicitudCombustibleResource extends Resource
                 ->collapsed(false)
                 ->compact(),
 
-            Forms\Components\Section::make('Adjuntos')
-                ->schema([
-                    Forms\Components\Placeholder::make('adjuntos_ui')
-                        ->label('')
-                        ->content(function (SolicitudCombustible $record) {
-                            if (empty($record->adjuntos)) {
-                                return 'Sin adjuntos registrados.';
-                            }
-                            $links = collect($record->adjuntos)->map(function ($path) {
-                                $url  = asset('storage/' . $path);
-                                $name = basename($path);
-                                return "<a href='{$url}' target='_blank' class='text-primary-600 underline'>{$name}</a>";
-                            })->join('<br>');
+            Forms\Components\Section::make('Comprobantes')
+    ->schema([
+        Forms\Components\Placeholder::make('comprobantes_ui')
+            ->label('')
+            ->content(function (SolicitudCombustible $record) {
+                if (empty($record->comprobantes)) {
+                    return 'Sin comprobantes registrados.';
+                }
+                $links = collect($record->comprobantes)->map(function ($path) {
+                    $url  = asset('storage/' . $path);
+                    $name = basename($path);
+                    return "<a href='{$url}' target='_blank' class='text-primary-600 underline'>{$name}</a>";
+                })->join('<br>');
 
-                            return new \Illuminate\Support\HtmlString($links);
-                        }),
-                ])
-                ->collapsible()
-                ->collapsed()
-                ->compact(),
+                return new \Illuminate\Support\HtmlString($links);
+            }),
+    ])
+    ->collapsible()
+    ->collapsed()
+    ->compact(),
 
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
