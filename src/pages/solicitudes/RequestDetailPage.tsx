@@ -99,6 +99,14 @@ export default function RequestDetailPage() {
     ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
     isOwner;
 
+  // 🔍 DEBUG — quitar después de verificar
+  console.log("🔍 DEBUG finalizar:", {
+    modulo, isTransporte, isCombustible,
+    estado: data.estado,
+    solicitante_id: data.solicitante_id, userId: user?.id,
+    isOwner, canFinalizarTransporte, canFinalizarCombustible,
+  });
+
   const handleFinalizarTransporte = async () => {
     setFinalizandoTransporte(true);
     try {
@@ -114,6 +122,15 @@ export default function RequestDetailPage() {
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
+      {/* 🔍 DEBUG VISUAL — QUITAR DESPUÉS */}
+      <div className="rounded-xl bg-yellow-50 border border-yellow-300 p-4 text-xs font-mono text-yellow-900">
+        <strong>DEBUG:</strong>{" "}
+        modulo={modulo} | isTransporte={String(isTransporte)} | estado={data.estado} |
+        solicitante_id={data.solicitante_id} (type:{typeof data.solicitante_id}) |
+        userId={String(user?.id)} (type:{typeof user?.id}) |
+        isOwner={String(isOwner)} | canFinalizar={String(canFinalizarTransporte)}
+      </div>
+
       {/* Header / Navigation */}
       <div className="flex items-center justify-between">
         <button
