@@ -14,10 +14,12 @@ use Maatwebsite\Excel\Facades\Excel;
 use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
 use App\Http\Controllers\Reportes\ReporteGeneralServiciosController;
+use App\Http\Controllers\Reportes\ReporteOrdenTrabajoController;
+
 
 use App\Http\Controllers\Reportes\ReporteDistribucionValesCombustibleController; // Asegúrate de que el controlador exista
 use App\Http\Controllers\Reportes\ReporteFlotaVehicularController;
-
+use FontLib\Table\Type\name;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -212,3 +214,6 @@ Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController
     
 Route::get('/reportes/mision-oficial/pdf', action:[ReporteMisionOficialController::class, 'pdf']) 
     ->name('reportes.mision-oficial.pdf');
+
+Route::get('/reportes/orden-trabajo/pdf', action:[ReporteOrdenTrabajoController::class])
+    ->name('reportes.orden-trabajo.pdf');    
