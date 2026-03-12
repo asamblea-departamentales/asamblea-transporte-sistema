@@ -135,9 +135,9 @@ class SolicitudTransporteController extends Controller
     {
         $this->authorizeOwner($solicitud);
 
-        if ($solicitud->estado !== EstadoSolicitudEnum::PROGRAMADA && $solicitud->estado !== EstadoSolicitudEnum::EN_EJECUCION) {
+        if ($solicitud->estado !== EstadoSolicitudEnum::PROGRAMADA && $solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
             return response()->json([
-                'error' => 'Solo se pueden finalizar solicitudes que estén en ejecución o programada.'
+                'error' => 'Solo se pueden finalizar solicitudes que estén en ejecución o aprobada.'
             ], 422);
         }
 
