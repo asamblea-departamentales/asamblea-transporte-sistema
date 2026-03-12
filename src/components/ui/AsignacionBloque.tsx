@@ -5,6 +5,14 @@ interface AsignacionBloqueProps {
   request: Request;
 }
 
+// ─── HELPER ───────────────────────────────────────────────────────────────────
+/** Convierte cualquier valor (objeto, string, número, null) a string seguro */
+function str(value: any): string {
+  if (value === null || value === undefined) return "";
+  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
+  return String(value);
+}
+
 /**
  * Muestra el vehículo y motorista asignados a una solicitud.
  * Solo se renderiza para estados: aprobada, en_ejecucion, completada, finalizada.
@@ -33,7 +41,7 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
           {vehiculo?.fotografia_url && !imgError ? (
             <img
               src={vehiculo.fotografia_url}
-              alt={`${vehiculo.marca} ${vehiculo.modelo}`}
+              alt={`${str(vehiculo.marca)} ${str(vehiculo.modelo)}`}
               onError={() => setImgError(true)}
               className="h-32 w-full rounded-xl object-cover shadow ring-2 ring-white sm:h-24 sm:w-44"
             />
@@ -57,7 +65,7 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
             {vehiculo ? (
               <div className="space-y-1">
                 <p className="text-sm font-bold text-slate-900">
-                  {vehiculo.marca} {vehiculo.modelo}
+                  {str(vehiculo.marca)} {str(vehiculo.modelo)}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   <span className="inline-flex items-center gap-1 rounded-md bg-white px-2 py-0.5 text-xs font-bold text-slate-700 shadow-sm ring-1 ring-slate-200">
@@ -66,11 +74,11 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
                         d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
                       />
                     </svg>
-                    {vehiculo.placa}
+                    {str(vehiculo.placa)}
                   </span>
                   {vehiculo.tipo && (
                     <span className="inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                      {typeof vehiculo.tipo === "object" ? vehiculo.tipo.nombre : vehiculo.tipo}
+                      {str(vehiculo.tipo)}
                     </span>
                   )}
                 </div>
@@ -92,15 +100,15 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
             {motorista ? (
               <div className="flex items-center gap-3">
                 <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-emerald-600 text-sm font-bold text-white shadow">
-                  {motorista.nombre?.charAt(0).toUpperCase() ?? "?"}
+                  {str(motorista.nombre).charAt(0).toUpperCase() || "?"}
                 </div>
                 <div>
                   <p className="text-sm font-bold text-slate-900">
-                    {motorista.nombre ?? "Sin nombre"}
+                    {str(motorista.nombre) || "Sin nombre"}
                   </p>
                   {motorista.telefono ? (
                     <a
-                      href={`tel:${motorista.telefono}`}
+                      href={`tel:${str(motorista.telefono)}`}
                       className="flex items-center gap-1 text-xs font-medium text-emerald-600 hover:underline"
                     >
                       <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -108,7 +116,7 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
                           d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.948V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z"
                         />
                       </svg>
-                      {motorista.telefono}
+                      {str(motorista.telefono)}
                     </a>
                   ) : (
                     <p className="text-xs text-slate-400">Sin teléfono registrado</p>

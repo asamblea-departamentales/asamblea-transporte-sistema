@@ -17,6 +17,14 @@ import { useAuth } from "../../auth/AuthContext";
 
 type GenericRequest = any;
 
+// ─── HELPER ───────────────────────────────────────────────────────────────────
+/** Convierte cualquier valor (objeto, string, número, null) a string seguro */
+function str(value: any): string {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
+  return String(value);
+}
+
 export default function RequestDetailPage() {
   const { modulo, id } = useParams<{ modulo: string; id: string }>();
   const navigate = useNavigate();
@@ -118,13 +126,13 @@ export default function RequestDetailPage() {
               </div>
               <h1 className="text-2xl font-black tracking-tight text-slate-900 md:text-3xl">
                 {isCombustible ? "Solicitud de Combustible" :
-                  modulo === "mantenimiento" ? data.descripcion :
-                    data.motivo_actividad}
+                  modulo === "mantenimiento" ? str(data.descripcion) :
+                    str(data.motivo_actividad)}
               </h1>
               <p className="mt-2 text-slate-500">
                 {modulo === "transporte" ? "Servicio de transporte institucional" :
-                  isCombustible ? data.destino_actividad :
-                    modulo === "mantenimiento" ? (typeof data.tipo_mantenimiento === 'object' ? data.tipo_mantenimiento.nombre : data.tipo_mantenimiento) :
+                  isCombustible ? str(data.destino_actividad) :
+                    modulo === "mantenimiento" ? str(data.tipo_mantenimiento) :
                       "Detalle de solicitud"}
               </p>
             </div>
@@ -147,12 +155,12 @@ export default function RequestDetailPage() {
             <DetailItem
               icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
               label="Solicitante"
-              value={data.solicitante?.name || "—"}
+              value={str(data.solicitante?.name ?? data.solicitante)}
             />
             <DetailItem
               icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
               label="Unidad"
-              value={data.unidad?.nombre || "—"}
+              value={str(data.unidad?.nombre ?? data.unidad)}
             />
             <DetailItem
               icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
@@ -171,7 +179,7 @@ export default function RequestDetailPage() {
                 <DetailItem
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                   label="Prioridad"
-                  value={data.prioridad}
+                  value={str(data.prioridad)}
                 />
               </>
             )}
@@ -187,12 +195,12 @@ export default function RequestDetailPage() {
                 <DetailItem
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                   label="Origen"
-                  value={data.origen}
+                  value={str(data.origen)}
                 />
                 <DetailItem
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                   label="Destino"
-                  value={data.destino}
+                  value={str(data.destino)}
                 />
               </>
             )}
@@ -203,12 +211,12 @@ export default function RequestDetailPage() {
                 <DetailItem
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
                   label="Tipo de Mantenimiento"
-                  value={typeof data.tipo_mantenimiento === 'object' ? data.tipo_mantenimiento.nombre : (data.tipo_mantenimiento || "General")}
+                  value={str(data.tipo_mantenimiento)}
                 />
                 <DetailItem
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
                   label="Prioridad"
-                  value={data.prioridad}
+                  value={str(data.prioridad)}
                 />
               </>
             )}
@@ -221,7 +229,7 @@ export default function RequestDetailPage() {
                 Observaciones / Motivo
               </h3>
               <p className="text-sm leading-relaxed text-slate-600">
-                {data.observaciones || data.motivo_actividad}
+                {str(data.observaciones || data.motivo_actividad)}
               </p>
             </div>
           )}
@@ -255,14 +263,14 @@ export default function RequestDetailPage() {
   );
 }
 
-// Función helper para resolver cualquier valor (objeto, string, número)
-function resolveValue(value: any): string | number {
-  if (value === null || value === undefined) return "—";
-  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
-  return value;
-}
+function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: any }) {
+  // Helper local para asegurar que value nunca sea un objeto al renderizar
+  const safe = (v: any): string => {
+    if (v === null || v === undefined) return "—";
+    if (typeof v === "object") return v.nombre ?? v.name ?? String(v);
+    return String(v);
+  };
 
-function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: string, value: any }) {
   return (
     <div className="flex items-start gap-4">
       <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200/50">
@@ -270,7 +278,7 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: stri
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">{label}</p>
-        <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{resolveValue(value)}</p>
+        <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{safe(value)}</p>
       </div>
     </div>
   );
