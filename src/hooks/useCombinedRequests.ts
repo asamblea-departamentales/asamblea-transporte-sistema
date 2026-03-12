@@ -4,6 +4,7 @@ import { getAllRequests } from "../services/requests.service";
 import { getAllMantenimientos } from "../services/mantenimiento.service";
 import { getAllCombustibles } from "../services/combustible.service";
 import type { RequestStatus } from "../services/requests.service";
+import type { SolicitudCombustibleNormalizada } from "../services/combustible.service";
 
 // ─── Tipo unificado ────────────────────────────────────────────────────────────
 
@@ -118,11 +119,12 @@ export function useCombinedRequests() {
       }
 
       if (combustible.status === "fulfilled") {
-        combustible.value.data.forEach((s) => {
+        // Tipo explícito para evitar TS7006 (parameter implicitly has 'any' type)
+        combustible.value.data.forEach((s: SolicitudCombustibleNormalizada) => {
           combined.push({
             id:          s.id,
             codigo:      s.codigo,
-            estado:      s.estado,
+            estado:      s.estado as RequestStatus,
             prioridad:   s.prioridad,
             created_at:  s.created_at,
             updated_at:  s.updated_at,
@@ -130,7 +132,9 @@ export function useCombinedRequests() {
             origen:      s.origen,
             destino:     s.destino,
             unidad:      s.unidad,
-            solicitante: s.solicitante,
+            solicitante: s.solicitante
+              ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email }
+              : undefined,
             modulo:      "combustible",
             _raw:        s as unknown as Record<string, unknown>,
           });

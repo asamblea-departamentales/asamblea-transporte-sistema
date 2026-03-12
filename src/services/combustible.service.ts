@@ -556,3 +556,56 @@ export function getComprobantUrl(ruta: string): string {
     "http://localhost:8000";
   return `${base}/storage/${ruta}`;
 }
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── COMPATIBILIDAD CON useCombinedRequests / NotificationContext ──────────────
+//
+// El hook useCombinedRequests y NotificationContext esperan un shape
+// normalizado con campos: origen, destino, fecha_salida, unidad.
+// Esta función adapta la respuesta real del backend a ese contrato
+// sin tener que modificar los archivos que ya consumen este shape.
+// ══════════════════════════════════════════════════════════════════════════════
+
+/** Shape normalizado que espera useCombinedRequests */
+export type SolicitudCombustibleNormalizada = SolicitudCombustible & {
+  modulo: "combustible";
+  origen: string;      // mapeado desde solicitante?.name
+  destino: string;     // mapeado desde destino_actividad
+  fecha_salida: string; // mapeado desde fecha_solicitud
+  unidad: undefined;   // combustible no tiene unidad_solicitante
+};
+
+/**
+ * GET /api/solicitudes-combustible (versión normalizada)
+ *
+ * Misma firma que el servicio viejo de combustible para mantener
+ * compatibilidad con useCombinedRequests y NotificationContext.
+ * Mapea los campos reales del backend al shape unificado del hook.
+ */
+export async function getAllCombustibles(
+  filters?: CombustibleFilters
+): Promise<{
+  data: SolicitudCombustibleNormalizada[];
+  total: number;
+  page: number;
+  per_page: number;
+  total_pages: number;
+}> {
+  const result = await getSolicitudesCombustible(filters);
+
+  return {
+    ...result,
+    data: result.data.map((s) => ({
+      ...s,
+      modulo:      "combustible" as const,
+      // origen: quién lo solicitó (nombre del solicitante o código)
+      origen:      s.solicitante?.name ?? s.codigo,
+      // destino: a dónde va / qué actividad
+      destino:     s.destino_actividad,
+      // fecha_salida: fecha de la solicitud (campo más cercano semánticamente)
+      fecha_salida: s.fecha_inicio_periodo ?? s.fecha_solicitud,
+      // combustible no tiene unidad_solicitante
+      unidad:      undefined,
+    })),
+  };
+}
