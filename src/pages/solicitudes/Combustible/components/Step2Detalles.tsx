@@ -60,7 +60,7 @@ export function Step2({
       </div>
 
       {/* Período de uso (opcional) */}
-      <div className="rounded-2xl border border-dashed border-slate-200 p-4">
+      <div className="bg-transparent py-2">
         <p className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-400">
           Período de uso{" "}
           <span className="font-normal normal-case tracking-normal text-slate-400">(opcional)</span>

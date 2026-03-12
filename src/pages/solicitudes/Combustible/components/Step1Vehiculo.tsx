@@ -68,7 +68,7 @@ export function Step1({
   return (
     <div className="space-y-5">
       {/* ── Toggle asociar transporte ─────────────────────────────────── */}
-      <div className="rounded-2xl border border-slate-200 bg-white p-4">
+      <div className="bg-transparent">
         <div className="flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
@@ -102,12 +102,12 @@ export function Step1({
             <FieldLabel>Solicitud de transporte</FieldLabel>
 
             {catalogos.loadingSolicitudes ? (
-              <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
+              <div className="flex items-center gap-2 py-3">
                 <Spinner className="h-4 w-4 text-slate-400" />
                 <span className="text-sm font-semibold text-slate-400">Cargando solicitudes...</span>
               </div>
             ) : catalogos.solicitudesTransporte.length === 0 ? (
-              <div className="rounded-xl border border-slate-200 bg-slate-50 px-4 py-3">
+              <div className="bg-transparent py-3">
                 <p className="text-sm font-semibold text-slate-400">
                   No tienes solicitudes de transporte aprobadas o programadas.
                 </p>
@@ -126,7 +126,7 @@ export function Step1({
 
             {/* Card resumen solicitud seleccionada */}
             {solicitudTransporteSeleccionada && (
-              <div className="mt-3 rounded-xl border border-slate-200 bg-slate-50 p-3">
+              <div className="mt-3 bg-transparent p-3">
                 <div className="mb-2 flex items-center justify-between gap-2">
                   <p className="text-xs font-black text-slate-700">{solicitudTransporteSeleccionada.codigo}</p>
                   <span className={[
@@ -144,7 +144,7 @@ export function Step1({
                     { label: "Salida",    value: solicitudTransporteSeleccionada.fecha_salida?.split("T")[0] ?? "" },
                     { label: "Retorno",   value: solicitudTransporteSeleccionada.fecha_retorno?.split("T")[0] ?? "—" },
                   ].map((item) => (
-                    <div key={item.label} className="rounded-lg border border-slate-100 bg-white px-2.5 py-2">
+                    <div key={item.label} className="bg-transparent py-2">
                       <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
                       <p className="mt-0.5 truncate text-xs font-bold text-slate-700">{item.value}</p>
                     </div>
@@ -177,7 +177,7 @@ export function Step1({
 
       {/* Card info vehículo seleccionado */}
       {vehiculoSeleccionado && (
-        <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+        <div className="bg-transparent py-4">
           <div className="mb-3 flex items-center gap-3">
             <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
               <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
@@ -197,7 +197,7 @@ export function Step1({
               { label: "Modelo", value: vehiculoSeleccionado.modelo },
               { label: "Tipo",   value: vehiculoSeleccionado.tipo   },
             ].map((item) => (
-              <div key={item.label} className="rounded-xl border border-slate-100 bg-slate-50 px-3 py-2.5">
+              <div key={item.label} className="bg-transparent py-2.5">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
                 <p className="mt-0.5 truncate text-sm font-bold text-slate-800">{item.value || "—"}</p>
               </div>

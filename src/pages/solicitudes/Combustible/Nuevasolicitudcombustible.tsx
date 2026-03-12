@@ -165,7 +165,7 @@ export default function NuevaSolicitudCombustible() {
   // ── Render principal ──────────────────────────────────────────────────────
   return (
     <div className="pb-10">
-      <div className="rounded-2xl border border-slate-200 bg-white">
+      <div className="bg-transparent">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
 
           {/* Header */}
@@ -214,7 +214,7 @@ export default function NuevaSolicitudCombustible() {
           <StepperHeader current={step} />
 
           {/* Contenedor del step activo */}
-          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
+          <div className="py-6 sm:py-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white shadow-sm">
                 {step}
@@ -237,7 +237,7 @@ export default function NuevaSolicitudCombustible() {
                 <button
                   onClick={handleBack}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg border-transparent text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all active:scale-95 disabled:opacity-50"
                 >
                   <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
