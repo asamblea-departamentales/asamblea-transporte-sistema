@@ -137,7 +137,7 @@ class SolicitudCombustibleResource extends Resource
                 ->collapsed(false)
                 ->compact(),
 
-            Forms\Components\Section::make('Comprobantes')
+           Forms\Components\Section::make('Comprobantes')
     ->schema([
         Forms\Components\Placeholder::make('comprobantes_ui')
             ->label('')
@@ -149,11 +149,11 @@ class SolicitudCombustibleResource extends Resource
                 $images = collect($record->comprobantes)->map(function ($path) {
                     $url = asset('storage/' . $path);
                     
-                    // Retornamos un contenedor con la imagen y un estilo básico
+                    // Ajustamos estilos para que la imagen sea más pequeña
                     return "
-                        <div style='margin-bottom: 15px;'>
+                        <div style='margin-bottom: 15px; text-align: left;'>
                             <img src='{$url}' 
-                                 style='max-width: 100%; height: auto; border-radius: 8px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' 
+                                 style='max-width: 350px; height: auto; border-radius: 8px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' 
                                  alt='Comprobante'>
                             <br>
                             <a href='{$url}' target='_blank' class='text-xs text-primary-600 underline'>Ver en tamaño completo</a>
