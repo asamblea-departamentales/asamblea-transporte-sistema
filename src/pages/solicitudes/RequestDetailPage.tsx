@@ -102,10 +102,11 @@ export default function RequestDetailPage() {
     ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
     isOwner;
 
-  // ✅ Mantenimiento: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
+  // ✅ Mantenimiento: finalizar cuando está "en_ejecucion" o "programada"
+  //    (no "aprobada" porque el mantenimiento aún no ha iniciado)
   const canFinalizarMantenimiento =
     isMantenimiento &&
-    ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
+    ["programada", "en_ejecucion"].includes(data.estado) &&
     isOwner;
 
   const handleFinalizarTransporte = async () => {
