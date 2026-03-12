@@ -148,19 +148,38 @@ class SolicitudCombustibleResource extends Resource
 
                 $images = collect($record->comprobantes)->map(function ($path) {
                     $url = asset('storage/' . $path);
+                    $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                    $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'];
                     
-                    // Ajustamos estilos para que la imagen sea más pequeña
+                    // Si es una imagen, mostramos la miniatura
+                    if (in_array($extension, $imageExtensions)) {
+                        return "
+                            <div style='margin-bottom: 20px; border: 1px solid #e5e7eb; padding: 10px; border-radius: 8px; display: inline-block;'>
+                                <img src='{$url}' 
+                                     style='max-width: 250px; height: auto; border-radius: 4px;' 
+                                     alt='Comprobante'>
+                                <br>
+                                <a href='{$url}' target='_blank' style='font-size: 0.75rem; color: #0284c7; text-decoration: underline; margin-top: 5px; display: block;'>
+                                    Ver imagen completa ({$extension})
+                                </a>
+                            </div>";
+                    }
+                    
+                    // Si es un PDF u otro archivo, mostramos un icono de documento
+                    $icon = ($extension === 'pdf') ? '📄 PDF' : '📁 Archivo';
                     return "
-                        <div style='margin-bottom: 15px; text-align: left;'>
-                            <img src='{$url}' 
-                                 style='max-width: 350px; height: auto; border-radius: 8px; border: 1px solid #d1d5db; box-shadow: 0 1px 3px rgba(0,0,0,0.1);' 
-                                 alt='Comprobante'>
-                            <br>
-                            <a href='{$url}' target='_blank' class='text-xs text-primary-600 underline'>Ver en tamaño completo</a>
+                        <div style='margin-bottom: 20px; border: 1px solid #e5e7eb; padding: 15px; border-radius: 8px; background: #f9fafb; display: flex; align-items: center; gap: 10px; max-width: 350px;'>
+                            <span style='font-size: 1.5rem;'>{$icon}</span>
+                            <div>
+                                <p style='font-weight: bold; margin: 0; font-size: 0.85rem;'>Documento Adjunto</p>
+                                <a href='{$url}' target='_blank' style='font-size: 0.75rem; color: #0284c7; text-decoration: underline;'>
+                                    Abrir / Descargar {$extension}
+                                </a>
+                            </div>
                         </div>";
                 })->join('');
 
-                return new \Illuminate\Support\HtmlString($images);
+                return new \Illuminate\Support\HtmlString("<div style='display: flex; flex-wrap: wrap; gap: 15px;'>{$images}</div>");
             }),
     ])
     ->collapsible()
