@@ -125,7 +125,7 @@ export default function RequestDetailPage() {
                 {modulo === "transporte" ? "Servicio de transporte institucional" :
                   isCombustible ? data.destino_actividad :
                     modulo === "mantenimiento" ? (typeof data.tipo_mantenimiento === 'object' ? data.tipo_mantenimiento.nombre : data.tipo_mantenimiento) :
-                    "Detalle de solicitud"}
+                      "Detalle de solicitud"}
               </p>
             </div>
 
@@ -255,7 +255,14 @@ export default function RequestDetailPage() {
   );
 }
 
-function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
+// Función helper para resolver cualquier valor (objeto, string, número)
+function resolveValue(value: any): string | number {
+  if (value === null || value === undefined) return "—";
+  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
+  return value;
+}
+
+function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: string, value: any }) {
   return (
     <div className="flex items-start gap-4">
       <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200/50">
@@ -263,7 +270,7 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode, label: stri
       </div>
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-black uppercase tracking-[0.15em] text-slate-400">{label}</p>
-        <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{value}</p>
+        <p className="mt-0.5 truncate text-sm font-bold text-slate-900">{resolveValue(value)}</p>
       </div>
     </div>
   );
