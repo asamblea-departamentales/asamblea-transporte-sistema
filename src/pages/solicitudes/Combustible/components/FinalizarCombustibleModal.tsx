@@ -25,6 +25,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
   const [numVale, setNumVale] = useState("");
   const [archivos, setArchivos] = useState<File[]>([]);
   const [dragOver, setDragOver] = useState(false);
+  //Probando
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -164,8 +165,8 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                     type="button"
                     onClick={() => setFormaPago(value)}
                     className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 text-center transition ${formaPago === value
-                        ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
-                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                      ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
                       }`}
                   >
                     <span className="text-xl">{icon}</span>
@@ -229,8 +230,8 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
                 className={`mt-2 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition ${dragOver
-                    ? "border-emerald-400 bg-emerald-50"
-                    : "border-slate-200 bg-slate-50/50 hover:border-emerald-400 hover:bg-emerald-50/20"
+                  ? "border-emerald-400 bg-emerald-50"
+                  : "border-slate-200 bg-slate-50/50 hover:border-emerald-400 hover:bg-emerald-50/20"
                   }`}
               >
                 <div className={`mb-3 flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ring-1 transition ${dragOver ? "bg-emerald-100 ring-emerald-200 text-emerald-600" : "bg-white ring-slate-100 text-slate-400"}`}>
