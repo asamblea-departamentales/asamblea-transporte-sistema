@@ -14,9 +14,6 @@ import Paso3 from "../pages/transport/paso-3";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import NuevaSolicitudMantenimiento from "../pages/solicitudes/mantenimiento/NuevaSolicitudMantenimiento";
 import NuevaSolicitudCombustible from "../pages/solicitudes/Combustible/Nuevasolicitudcombustible";
-import Nuevasolipaso1 from "../pages/solicitudes/Combustible/paso-1-combustible";
-import Nuevasolipaso2 from "../pages/solicitudes/Combustible/paso-2-combustible";
-import Nuevasolipaso3 from "../pages/solicitudes/Combustible/paso-3-combustible";
 import "leaflet/dist/leaflet.css";
 
 export default function App() {
@@ -65,9 +62,6 @@ export default function App() {
               {/* Otros Módulos */}
               <Route path="/solicitudes/mantenimiento/nueva" element={<NuevaSolicitudMantenimiento />} />
               <Route path="/solicitudes/combustible/nueva" element={<NuevaSolicitudCombustible />} />
-              <Route path="/solicitudes/combustible/paso-1" element={<Nuevasolipaso1 />} />
-              <Route path="/solicitudes/combustible/paso-2" element={<Nuevasolipaso2 />} />
-              <Route path="/solicitudes/combustible/paso-3" element={<Nuevasolipaso3 />} />
             </Route>
           </Route>
 

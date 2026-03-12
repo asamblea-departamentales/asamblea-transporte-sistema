@@ -164,32 +164,35 @@ export default function NuevaSolicitudCombustible() {
 
   // ── Render principal ──────────────────────────────────────────────────────
   return (
-    <div className="pb-10">
-      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
-        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-
+    <div className="min-h-screen bg-slate-50/50 pb-12 pt-4 sm:pt-10">
+      {/* Contenedor centralizado con un ancho máximo óptimo para formularios */}
+      <div className="mx-auto max-w-3xl px-4 sm:px-6">
+        
+        {/* Contenedor tipo tarjeta */}
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          
           {/* Header */}
-          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-600">
                 <span className="h-2 w-2 rounded-full bg-slate-900" />
                 Combustible Vehicular
               </div>
-              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
                 Nueva Solicitud
               </h1>
-              <p className="mt-1 text-sm font-medium text-slate-500">
+              <p className="mt-1.5 text-sm font-medium text-slate-500">
                 Complete los datos para registrar la carga de combustible.
               </p>
             </div>
             <button
               onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
             >
               <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
-              <span className="hidden sm:inline">Volver</span>
+              Volver
             </button>
           </div>
 
