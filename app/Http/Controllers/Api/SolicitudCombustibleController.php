@@ -106,8 +106,8 @@ class SolicitudCombustibleController extends Controller
 {
     $this->authorizeOwner($solicitud);
 
-    if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-        return response()->json(['error' => 'Solo se pueden finalizar solicitudes que ya han sido aprobadas.'], 422);
+    if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
+        return response()->json(['error' => 'Solo se pueden finalizar solicitudes que ya tengan cupones asignados.'], 422);
     }
 
     $request->validate([
