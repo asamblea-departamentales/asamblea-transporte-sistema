@@ -337,15 +337,16 @@ class SolicitudMantenimientoResource extends Resource
                 ->toggleable(isToggledHiddenByDefault: true)
                 ->visibleFrom('xl'),
 
-            Tables\Columns\IconColumn::make('tiene_adjuntos')
-                ->label('Adj.')
-                ->boolean()
-                ->getStateUsing(fn ($record) => $record->tieneAdjuntos())
-                ->trueIcon('heroicon-o-paper-clip')
-                ->falseIcon('heroicon-o-minus')
-                ->trueColor('success')
-                ->falseColor('gray')
-                ->visibleFrom('md'),
+           Tables\Columns\IconColumn::make('tiene_adjuntos')
+    ->label('Adjuntos')
+    ->getStateUsing(fn ($record) => $record->tieneAdjuntos()) // Tu método que devuelve boolean
+    ->boolean()
+    ->trueIcon('heroicon-o-paper-clip')
+    ->falseIcon('heroicon-o-x-mark') // Un icono de "no hay" más claro
+    ->trueColor('primary') // Azul para resaltar que hay archivos por revisar
+    ->falseColor('gray')
+    ->tooltip(fn ($record) => $record->tieneAdjuntos() ? 'Contiene comprobantes' : 'Sin documentos')
+    ->visibleFrom('md'),
         ])
         ->filters([
             Tables\Filters\SelectFilter::make('estado')
