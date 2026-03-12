@@ -3,6 +3,7 @@
 const STATUS_STYLES: Record<string, string> = {
   pendiente:    "bg-amber-100 text-amber-700 border-amber-200",
   aprobada:     "bg-emerald-100 text-emerald-700 border-emerald-200",
+  asignada:     "bg-cyan-100 text-cyan-700 border-cyan-200",
   en_ejecucion: "bg-purple-100 text-purple-700 border-purple-200",
   completada:   "bg-slate-800 text-white border-slate-600",
   finalizada:   "bg-slate-800 text-white border-slate-600",

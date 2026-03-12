@@ -89,7 +89,7 @@ export default function RequestDetailPage() {
   const canFinalizar =
     isCombustible &&
     data.estado === "asignada" &&
-    data.solicitante_id === user?.id;
+    Number(data.solicitante_id) === Number(user?.id);
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
