@@ -298,14 +298,14 @@ public static function table(Table $table): Table
                 ->toggleable()
                 ->visibleFrom('md'),
 
-            Tables\Columns\TextColumn::make('cantidad_combustible')
-                ->label('Combustible')
-                ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
-                ->badge()
-                ->color('info')
-                ->sortable()
-                ->toggleable()
-                ->visibleFrom('sm'),
+          Tables\Columns\TextColumn::make('cantidad_combustible')
+    ->label('Combustible')
+    ->formatStateUsing(fn ($state) => '$' . number_format((float) $state, 2))
+    ->badge()
+    ->color('success') // Cambié a 'success' (verde) porque suele asociarse mejor a dinero/pagos
+    ->sortable()
+    ->toggleable()
+    ->visibleFrom('sm'),
 
             Tables\Columns\TextColumn::make('valor_total')
                 ->label('Valor')
