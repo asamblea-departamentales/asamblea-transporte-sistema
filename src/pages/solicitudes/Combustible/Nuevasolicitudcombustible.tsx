@@ -108,23 +108,23 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
 function StepperHeader({ current }: { current: number }) {
   return (
     <div className="relative mb-8 flex items-center justify-between">
-      <div className="absolute left-0 right-0 top-5 h-px bg-slate-200/80" />
+      <div className="absolute left-0 right-0 top-5 h-[2px] bg-slate-100" />
       <div
-        className="absolute left-0 top-5 h-px bg-gradient-to-r from-emerald-500 to-teal-500 transition-all duration-700"
+        className="absolute left-0 top-5 h-[2px] bg-slate-900 transition-all duration-700"
         style={{ width: `${((current - 1) / (STEPS.length - 1)) * 100}%` }}
       />
       {STEPS.map((step) => {
         const done   = step.id < current;
         const active = step.id === current;
         return (
-          <div key={step.id} className="relative z-10 flex flex-col items-center gap-1.5">
+          <div key={step.id} className="relative z-10 flex flex-col items-center gap-2">
             <div className={[
-              "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-black transition-all duration-300",
+              "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300",
               done
-                ? "border-emerald-500 bg-emerald-500 text-white shadow-[0_0_0_4px_rgba(16,185,129,.15)]"
+                ? "border-slate-900 bg-slate-900 text-white"
                 : active
-                ? "border-emerald-500 bg-white text-emerald-600 shadow-[0_0_0_4px_rgba(16,185,129,.15)] scale-110"
-                : "border-slate-200 bg-white text-slate-400",
+                ? "border-slate-900 bg-white text-slate-900 ring-4 ring-slate-100"
+                : "border-slate-200 bg-white text-slate-400 font-medium",
             ].join(" ")}>
               {done ? (
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
@@ -133,12 +133,12 @@ function StepperHeader({ current }: { current: number }) {
               ) : step.id}
             </div>
             <div className="text-center">
-              <p className={["text-[11px] font-black tracking-tight",
-                active ? "text-emerald-700" : done ? "text-slate-700" : "text-slate-400",
+              <p className={["text-xs tracking-tight",
+                active ? "text-slate-900 font-bold" : done ? "text-slate-700 font-bold" : "text-slate-500 font-semibold",
               ].join(" ")}>
                 {step.title}
               </p>
-              <p className="hidden text-[10px] font-semibold text-slate-400 sm:block">{step.subtitle}</p>
+              <p className="hidden text-[11px] font-medium text-slate-400 sm:block">{step.subtitle}</p>
             </div>
           </div>
         );
@@ -149,19 +149,19 @@ function StepperHeader({ current }: { current: number }) {
 
 function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="mb-1.5 block text-xs font-black tracking-wide text-slate-700">
+    <label className="mb-2 block text-sm font-semibold tracking-tight text-slate-800">
       {children}
-      {required && <span className="ml-1 text-emerald-500">*</span>}
+      {required && <span className="ml-1 text-red-500">*</span>}
     </label>
   );
 }
 
 function inputCls(hasError = false) {
   return [
-    "w-full rounded-xl border px-4 py-3 text-sm font-semibold text-slate-800",
-    "bg-white placeholder-slate-400 transition-all duration-200",
-    "focus:outline-none focus:ring-2 focus:ring-emerald-400/60 focus:border-emerald-400",
-    hasError ? "border-red-300 ring-2 ring-red-200/50" : "border-slate-200 hover:border-slate-300",
+    "w-full rounded-lg border px-4 py-3 text-sm font-medium text-slate-800",
+    "bg-white placeholder-slate-400 transition-all duration-200 outline-none",
+    "focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900",
+    hasError ? "border-red-300 ring-2 ring-red-100" : "border-slate-200 hover:border-slate-300 shadow-sm",
   ].join(" ");
 }
 
@@ -209,12 +209,12 @@ function PrioridadButton({
       type="button"
       onClick={onClick}
       className={[
-        "flex items-center gap-2 rounded-xl border-2 px-4 py-2.5 text-sm font-black transition-all focus:outline-none",
+        "flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all focus:outline-none",
         sel
-          ? value === "baja"  ? "border-emerald-500 bg-emerald-50 text-emerald-700"
-          : value === "media" ? "border-amber-500 bg-amber-50 text-amber-700"
-          :                     "border-red-500 bg-red-50 text-red-700"
-          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300",
+          ? value === "baja"  ? "border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500/50"
+          : value === "media" ? "border-amber-500 bg-amber-50 text-amber-800 ring-1 ring-amber-500/50"
+          :                     "border-red-500 bg-red-50 text-red-800 ring-1 ring-red-500/50"
+          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50",
       ].join(" ")}
     >
       <span className={["h-2.5 w-2.5 rounded-full", cfg.dot].join(" ")} />
@@ -225,9 +225,9 @@ function PrioridadButton({
 
 function ReviewRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-3 last:border-0">
-      <span className="text-xs font-black uppercase tracking-wide text-slate-400">{label}</span>
-      <span className="max-w-[60%] text-right text-sm font-semibold text-slate-800">{value || "—"}</span>
+    <div className="flex items-start justify-between gap-4 border-b border-slate-100 py-3.5 last:border-0">
+      <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
+      <span className="max-w-[60%] text-right text-sm font-medium text-slate-900">{value || "—"}</span>
     </div>
   );
 }
@@ -325,7 +325,7 @@ function Step1({
             onClick={() => handleToggleAsociar(!asociarTransporte)}
             className={[
               "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 focus:outline-none",
-              asociarTransporte ? "bg-emerald-500" : "bg-slate-200",
+              asociarTransporte ? "bg-slate-900" : "bg-slate-200",
             ].join(" ")}
           >
             <span className={[
@@ -673,27 +673,27 @@ function SuccessScreen({ onReset }: { onReset: () => void }) {
   const navigate = useNavigate();
   return (
     <div className="pb-10">
-      <div className="rounded-3xl border border-slate-200 bg-white">
+      <div className="rounded-2xl border border-slate-200 bg-white">
         <div className="mx-auto max-w-lg px-6 py-16 text-center">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-br from-emerald-500 to-teal-500 shadow-[0_14px_35px_-10px_rgba(16,185,129,.5)]">
-            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-slate-900 shadow-xl shadow-slate-900/10">
+            <svg className="h-10 w-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
               <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
             </svg>
           </div>
-          <h2 className="text-2xl font-black text-slate-900 sm:text-3xl">¡Solicitud enviada!</h2>
-          <p className="mt-3 text-sm font-semibold leading-relaxed text-slate-500">
+          <h2 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">¡Solicitud enviada!</h2>
+          <p className="mt-3 text-sm font-medium leading-relaxed text-slate-500">
             Tu solicitud de combustible fue enviada correctamente y está pendiente de aprobación.
           </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
             <button
               onClick={() => navigate("/solicitudes/combustible")}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl bg-slate-900 px-6 py-3 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95"
+              className="inline-flex items-center justify-center gap-2 rounded-xl bg-slate-900 px-6 py-3 text-sm font-semibold text-white shadow-sm transition-all hover:bg-slate-800 active:scale-95"
             >
               Ver mis solicitudes
             </button>
             <button
               onClick={onReset}
-              className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-6 py-3 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-6 py-3 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
             >
               Nueva solicitud
             </button>
@@ -892,28 +892,28 @@ export default function NuevaSolicitudCombustible() {
   // ── Render principal ──────────────────────────────────────────────────────
   return (
     <div className="pb-10">
-      <div className="rounded-3xl border border-slate-200 bg-white">
+      <div className="rounded-2xl border border-slate-200 bg-white">
         <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
 
           {/* Header */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-black text-slate-600">
-                <span className="h-2 w-2 rounded-full bg-emerald-500" />
+              <div className="mb-2 inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white px-3 py-1 text-[11px] font-semibold text-slate-600">
+                <span className="h-2 w-2 rounded-full bg-slate-900" />
                 Combustible Vehicular
               </div>
-              <h1 className="text-2xl font-black tracking-tight text-slate-900 sm:text-3xl">
+              <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
                 Nueva Solicitud
               </h1>
-              <p className="mt-1 text-sm font-semibold text-slate-400">
+              <p className="mt-1 text-sm font-medium text-slate-500">
                 Complete los datos para registrar la carga de combustible.
               </p>
             </div>
             <button
               onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
+              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
             >
-              <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+              <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
               </svg>
               <span className="hidden sm:inline">Volver</span>
@@ -941,14 +941,14 @@ export default function NuevaSolicitudCombustible() {
           <StepperHeader current={step} />
 
           {/* Contenedor del step activo */}
-          <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div className="rounded-2xl border border-slate-100 bg-white p-6 shadow-sm sm:p-8">
             <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 text-xs font-black text-white">
+              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white shadow-sm">
                 {step}
               </div>
               <div>
-                <p className="text-base font-black text-slate-900">{STEPS[step - 1].title}</p>
-                <p className="text-xs font-semibold text-slate-400">{STEPS[step - 1].subtitle}</p>
+                <p className="text-base font-bold tracking-tight text-slate-900">{STEPS[step - 1].title}</p>
+                <p className="text-sm font-medium text-slate-500">{STEPS[step - 1].subtitle}</p>
               </div>
             </div>
 
@@ -970,9 +970,9 @@ export default function NuevaSolicitudCombustible() {
                 <button
                   onClick={handleBack}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-extrabold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95 disabled:opacity-50"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
                   </svg>
                   Anterior
@@ -983,14 +983,14 @@ export default function NuevaSolicitudCombustible() {
                 <button
                   onClick={handleNext}
                   disabled={catalogos.loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {catalogos.loading && step === 1 ? (
                     <><Spinner /> Cargando...</>
                   ) : (
                     <>
                       Siguiente
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                       </svg>
                     </>
@@ -1000,13 +1000,13 @@ export default function NuevaSolicitudCombustible() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 px-7 py-2.5 text-sm font-extrabold text-white shadow-sm transition-all hover:opacity-90 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-7 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   {loading ? (
                     <><Spinner /> Enviando...</>
                   ) : (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
                       Confirmar y enviar
