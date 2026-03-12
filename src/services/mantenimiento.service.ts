@@ -102,7 +102,7 @@ export async function finalizarMantenimiento(
   });
 
   const { data } = await api.post<{ message: string; data: SolicitudMantenimiento }>(
-    `/api/solicitudes-mantenimiento/${id}/completar`,
+    `/api/solicitudes-mantenimiento/${id}/finalizar`,
     form,
     { headers: { "Content-Type": "multipart/form-data" } }
   );
