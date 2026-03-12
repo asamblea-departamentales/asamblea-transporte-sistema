@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getRequestById,
+  completeRequest,
 } from "../../services/requests.service";
 import {
   getMantenimientoById,
@@ -33,6 +34,8 @@ export default function RequestDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GenericRequest | null>(null);
   const [isFinalizarModalOpen, setIsFinalizarModalOpen] = useState(false);
+  const [showConfirmTransporte, setShowConfirmTransporte] = useState(false);
+  const [finalizandoTransporte, setFinalizandoTransporte] = useState(false);
 
   const fetchData = async () => {
     if (!modulo || !id) return;
@@ -83,13 +86,31 @@ export default function RequestDetailPage() {
   }
 
   const isCombustible = modulo === "combustible";
+  const isTransporte = modulo === "transporte";
+  const isOwner = Number(data.solicitante_id) === Number(user?.id);
 
-  // ✅ El solicitante puede finalizar cuando el estado es "asignada"
-  //    (significa que el jefe ya aprobó y asignó vehículo + vales)
-  const canFinalizar =
-    isCombustible &&
-    data.estado === "asignada" &&
-    Number(data.solicitante_id) === Number(user?.id);
+  // ✅ Combustible: finalizar cuando está "asignada"
+  const canFinalizarCombustible =
+    isCombustible && data.estado === "asignada" && isOwner;
+
+  // ✅ Transporte: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
+  const canFinalizarTransporte =
+    isTransporte &&
+    ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
+    isOwner;
+
+  const handleFinalizarTransporte = async () => {
+    setFinalizandoTransporte(true);
+    try {
+      await completeRequest(data.id);
+      setShowConfirmTransporte(false);
+      fetchData();
+    } catch (err: any) {
+      alert(err.response?.data?.error || err.response?.data?.message || "Error al finalizar el viaje.");
+    } finally {
+      setFinalizandoTransporte(false);
+    }
+  };
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
@@ -141,8 +162,8 @@ export default function RequestDetailPage() {
               </p>
             </div>
 
-            {/* Botón Finalizar — solo visible en estado "asignada" para el solicitante */}
-            {canFinalizar && (
+            {/* Botón Finalizar Combustible */}
+            {canFinalizarCombustible && (
               <button
                 onClick={() => setIsFinalizarModalOpen(true)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700 active:translate-y-0"
@@ -151,6 +172,19 @@ export default function RequestDetailPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 Finalizar Carga
+              </button>
+            )}
+
+            {/* Botón Finalizar Transporte */}
+            {canFinalizarTransporte && !showConfirmTransporte && (
+              <button
+                onClick={() => setShowConfirmTransporte(true)}
+                className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 active:translate-y-0"
+              >
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                Finalizar Viaje
               </button>
             )}
           </div>
@@ -265,7 +299,48 @@ export default function RequestDetailPage() {
         </section>
       )}
 
-      {/* Modal de Finalización */}
+      {/* Confirmación inline Transporte */}
+      {showConfirmTransporte && (
+        <div className="overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50 shadow-xl">
+          <div className="p-6 md:p-8">
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500 shadow-lg shadow-blue-200">
+                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-black text-slate-900">¿Finalizar este viaje?</h3>
+                <p className="mt-1 text-sm text-slate-600">
+                  Al confirmar, la solicitud <strong>{data.codigo}</strong> pasará a estado <strong>Completada</strong>. Esta acción no se puede deshacer.
+                </p>
+                <div className="mt-5 flex gap-3">
+                  <button
+                    onClick={() => setShowConfirmTransporte(false)}
+                    disabled={finalizandoTransporte}
+                    className="rounded-2xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    onClick={handleFinalizarTransporte}
+                    disabled={finalizandoTransporte}
+                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:opacity-50"
+                  >
+                    {finalizandoTransporte
+                      ? <Spinner className="h-4 w-4 text-white" />
+                      : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                    }
+                    {finalizandoTransporte ? "Finalizando..." : "Sí, finalizar viaje"}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Finalización Combustible */}
       {isCombustible && (
         <FinalizarCombustibleModal
           isOpen={isFinalizarModalOpen}
