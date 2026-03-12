@@ -17,7 +17,7 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
 
   return (
     <div className="space-y-5">
-      <div className="bg-transparent py-2">
+      <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
         <div className="mb-4 flex items-center gap-3">
           <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
             <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">

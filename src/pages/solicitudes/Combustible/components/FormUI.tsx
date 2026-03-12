@@ -60,10 +60,10 @@ export function FieldLabel({ children, required }: { children: React.ReactNode; 
 
 export function inputCls(hasError = false) {
   return [
-        "w-full border-b border-slate-200 bg-transparent px-2 py-3 text-sm font-medium text-slate-800",
-        "placeholder-slate-400 outline-none transition-all duration-200",
-        "focus:border-slate-900",
-        hasError ? "border-red-400" : "hover:border-slate-300",
+    "w-full rounded-lg border px-4 py-3 text-sm font-medium text-slate-800",
+    "bg-white placeholder-slate-400 transition-all duration-200 outline-none",
+    "focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900",
+    hasError ? "border-red-300 ring-2 ring-red-100" : "border-slate-200 hover:border-slate-300 shadow-sm",
   ].join(" ");
 }
 
@@ -82,7 +82,7 @@ export function SelectInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
-      className={inputCls(error) + " cursor-pointer appearance-none rounded-none disabled:opacity-50 disabled:cursor-not-allowed"}
+      className={inputCls(error) + " cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"}
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat",

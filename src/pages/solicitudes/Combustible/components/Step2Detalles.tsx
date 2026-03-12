@@ -60,12 +60,12 @@ export function Step2({
       </div>
 
       {/* Período de uso (opcional) */}
-      <div className="bg-transparent py-2">
+      <div className="rounded-2xl border border-dashed border-slate-200 p-4">
         <p className="mb-3 text-[11px] font-black uppercase tracking-wider text-slate-400">
           Período de uso{" "}
           <span className="font-normal normal-case tracking-normal text-slate-400">(opcional)</span>
         </p>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+        <div className="rounded-xl border border-emerald-100 bg-emerald-50 p-4 shadow-sm grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
             <input

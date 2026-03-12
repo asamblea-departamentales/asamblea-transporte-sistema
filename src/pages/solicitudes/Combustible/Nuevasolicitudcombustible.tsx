@@ -165,8 +165,8 @@ export default function NuevaSolicitudCombustible() {
   // ── Render principal ──────────────────────────────────────────────────────
   return (
     <div className="pb-10">
-      <div className="bg-transparent">
-        <div className="mx-auto max-w-2xl px-4 py-8 sm:px-8 sm:py-10">
+      <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-10">
+        <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
 
           {/* Header */}
           <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -214,7 +214,7 @@ export default function NuevaSolicitudCombustible() {
           <StepperHeader current={step} />
 
           {/* Contenedor del step activo */}
-          <div className="py-6 sm:py-8">
+          <div className="mt-8">
             <div className="mb-6 flex items-center gap-3">
               <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white shadow-sm">
                 {step}
