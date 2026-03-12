@@ -337,15 +337,31 @@ class SolicitudMantenimientoResource extends Resource
                 ->toggleable(isToggledHiddenByDefault: true)
                 ->visibleFrom('xl'),
 
-           Tables\Columns\IconColumn::make('tiene_adjuntos')
+     Tables\Columns\TextColumn::make('comprobantes')
     ->label('Adjuntos')
-    ->getStateUsing(fn ($record) => $record->tieneAdjuntos()) // Tu método que devuelve boolean
-    ->boolean()
-    ->trueIcon('heroicon-o-paper-clip')
-    ->falseIcon('heroicon-o-x-mark') // Un icono de "no hay" más claro
-    ->trueColor('primary') // Azul para resaltar que hay archivos por revisar
-    ->falseColor('gray')
-    ->tooltip(fn ($record) => $record->tieneAdjuntos() ? 'Contiene comprobantes' : 'Sin documentos')
+    ->html() // Habilita el renderizado de HTML
+    ->getStateUsing(function ($record) {
+        if (empty($record->comprobantes)) {
+            return '<span class="text-gray-400 text-xs italic">Sin archivos</span>';
+        }
+
+        return collect($record->comprobantes)->take(3)->map(function ($path) {
+            $url = asset('storage/' . $path);
+            $extension = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+            $imageExtensions = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+            // Si es imagen, mostramos miniatura circular
+            if (in_array($extension, $imageExtensions)) {
+                return "<img src='{$url}' style='width: 32px; height: 32px; border-radius: 9999px; display: inline-block; border: 1px solid #d1d5db; object-fit: cover; margin-right: -8px;'>";
+            }
+
+            // Si es PDF u otro, un icono pequeño
+            $bgColor = ($extension === 'pdf') ? '#fee2e2' : '#f3f4f6';
+            $textColor = ($extension === 'pdf') ? '#ef4444' : '#6b7280';
+            return "<span style='width: 32px; height: 32px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; background: {$bgColor}; color: {$textColor}; font-size: 10px; font-weight: bold; border: 1px solid #d1d5db; margin-right: -8px;' title='Archivo {$extension}'>".strtoupper($extension)."</span>";
+        })->implode('');
+    })
+    ->description(fn ($record) => count($record->comprobantes ?? []) > 3 ? '+' . (count($record->comprobantes) - 3) . ' más' : '')
     ->visibleFrom('md'),
         ])
         ->filters([
