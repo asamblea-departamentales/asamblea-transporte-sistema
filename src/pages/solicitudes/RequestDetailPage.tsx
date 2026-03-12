@@ -124,7 +124,8 @@ export default function RequestDetailPage() {
               <p className="mt-2 text-slate-500">
                 {modulo === "transporte" ? "Servicio de transporte institucional" :
                   isCombustible ? data.destino_actividad :
-                    "Mantenimiento de vehículo"}
+                    modulo === "mantenimiento" ? (typeof data.tipo_mantenimiento === 'object' ? data.tipo_mantenimiento.nombre : data.tipo_mantenimiento) :
+                    "Detalle de solicitud"}
               </p>
             </div>
 
@@ -192,6 +193,22 @@ export default function RequestDetailPage() {
                   icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
                   label="Destino"
                   value={data.destino}
+                />
+              </>
+            )}
+
+            {/* Especiales Mantenimiento */}
+            {modulo === 'mantenimiento' && (
+              <>
+                <DetailItem
+                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+                  label="Tipo de Mantenimiento"
+                  value={typeof data.tipo_mantenimiento === 'object' ? data.tipo_mantenimiento.nombre : (data.tipo_mantenimiento || "General")}
+                />
+                <DetailItem
+                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+                  label="Prioridad"
+                  value={data.prioridad}
                 />
               </>
             )}

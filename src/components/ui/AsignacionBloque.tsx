@@ -70,7 +70,7 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
                   </span>
                   {vehiculo.tipo && (
                     <span className="inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
-                      {vehiculo.tipo}
+                      {typeof vehiculo.tipo === "object" ? vehiculo.tipo.nombre : vehiculo.tipo}
                     </span>
                   )}
                 </div>

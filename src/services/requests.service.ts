@@ -31,7 +31,7 @@ export type Vehiculo = {
   placa: string;
   marca: string;
   modelo: string;
-  tipo?: string;
+  tipo?: string | { id: number; nombre: string } | null;
   fotografia_url: string | null;
 };
 
