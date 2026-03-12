@@ -108,10 +108,12 @@ class SolicitudCombustibleResource extends Resource
             Forms\Components\Section::make('Detalle de combustible')
                 ->schema([
                     Forms\Components\Placeholder::make('cantidad_ui')
-                        ->label('Cantidad de combustible')
-                        ->content(fn (SolicitudCombustible $record) =>
-                            $record->cantidad_combustible !== null ? (string) $record->cantidad_combustible : '-'
-                        ),
+    ->label('Cantidad de combustible')
+    ->content(fn (SolicitudCombustible $record) => 
+        $record->cantidad_combustible !== null 
+            ? '$' . number_format((float) $record->cantidad_combustible, 2) 
+            : '-'
+    ),
 
                     Forms\Components\Placeholder::make('valor_unitario_ui')
                         ->label('Valor unitario')
@@ -438,11 +440,11 @@ public static function table(Table $table): Table
                     ),
 
                 Tables\Actions\Action::make('asignar_vales')
-                    ->label('Asignar Vales')
+                    ->label('Asignar Cupones')
                     ->color('primary')
                     ->icon('heroicon-o-ticket')
-                    ->modalHeading('Asignar Vales de Combustible')
-                    ->modalDescription('Selecciona el contrato, la serie y la cantidad de vales a asignar.')
+                    ->modalHeading('Asignar Cupones de Combustible')
+                    ->modalDescription('Selecciona el contrato, la serie y la cantidad de cupones a asignar.')
                     ->modalWidth('xl')
                     ->form([
                         Forms\Components\Select::make('contrato_id')
