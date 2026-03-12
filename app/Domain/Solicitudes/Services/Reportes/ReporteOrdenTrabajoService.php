@@ -58,18 +58,20 @@ class ReporteOrdenTrabajoService
     }
 
     public function resolverMarca(SolicitudMantenimiento $solicitud): string
-    {
-        return $solicitud->vehiculo?->marca?->nombre
-            ?? $solicitud->vehiculo?->getAttribute('marca')
-            ?? '—';
-    }
+{
+    // Usamos marca() con paréntesis para forzar la relación BelongsTo
+    return $solicitud->vehiculo?->marca()->first()?->nombre 
+        ?? $solicitud->vehiculo?->getAttribute('marca') 
+        ?? '—';
+}
 
-    public function resolverModelo(SolicitudMantenimiento $solicitud): string
-    {
-        return $solicitud->vehiculo?->modelo?->nombre
-            ?? $solicitud->vehiculo?->getAttribute('modelo')
-            ?? '—';
-    }
+public function resolverModelo(SolicitudMantenimiento $solicitud): string
+{
+    // Usamos modelo() con paréntesis para forzar la relación BelongsTo
+    return $solicitud->vehiculo?->modelo()->first()?->nombre 
+        ?? $solicitud->vehiculo?->getAttribute('modelo') 
+        ?? '—';
+}
 
     public function resolverColor(SolicitudMantenimiento $solicitud): string
     {
