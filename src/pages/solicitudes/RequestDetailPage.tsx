@@ -18,7 +18,6 @@ import { useAuth } from "../../auth/AuthContext";
 type GenericRequest = any;
 
 // ─── HELPER ───────────────────────────────────────────────────────────────────
-/** Convierte cualquier valor (objeto, string, número, null) a string seguro */
 function str(value: any): string {
   if (value === null || value === undefined) return "—";
   if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
@@ -84,7 +83,13 @@ export default function RequestDetailPage() {
   }
 
   const isCombustible = modulo === "combustible";
-  const canFinalizar = isCombustible && data.estado === "aprobada" && data.solicitante_id === user?.id;
+
+  // ✅ El solicitante puede finalizar cuando el estado es "asignada"
+  //    (significa que el jefe ya aprobó y asignó vehículo + vales)
+  const canFinalizar =
+    isCombustible &&
+    data.estado === "asignada" &&
+    data.solicitante_id === user?.id;
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12">
@@ -112,7 +117,6 @@ export default function RequestDetailPage() {
 
       {/* Main Content Card */}
       <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
-        {/* Banner de Color según Módulo */}
         <div className={`h-2 w-full ${modulo === 'transporte' ? 'bg-blue-500' : modulo === 'combustible' ? 'bg-amber-500' : 'bg-emerald-500'}`} />
 
         <div className="p-6 md:p-8">
@@ -137,10 +141,11 @@ export default function RequestDetailPage() {
               </p>
             </div>
 
+            {/* Botón Finalizar — solo visible en estado "asignada" para el solicitante */}
             {canFinalizar && (
               <button
                 onClick={() => setIsFinalizarModalOpen(true)}
-                className="inline-flex items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:bg-emerald-700 hover:-translate-y-0.5 active:translate-y-0"
+                className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700 active:translate-y-0"
               >
                 <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -181,6 +186,20 @@ export default function RequestDetailPage() {
                   label="Prioridad"
                   value={str(data.prioridad)}
                 />
+                {data.cantidad_vales != null && (
+                  <DetailItem
+                    icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+                    label="Cantidad de Vales"
+                    value={`${data.cantidad_vales} vales`}
+                  />
+                )}
+                {data.correlativo_inicio != null && (
+                  <DetailItem
+                    icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>}
+                    label="Correlativos"
+                    value={`${data.correlativo_inicio} — ${data.correlativo_fin}`}
+                  />
+                )}
               </>
             )}
 
@@ -222,7 +241,6 @@ export default function RequestDetailPage() {
             )}
           </div>
 
-          {/* Información Adicional / Observaciones */}
           {(data.observaciones || data.motivo_actividad) && (
             <div className="mt-10 rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-100">
               <h3 className="mb-3 text-xs font-black uppercase tracking-widest text-slate-400">
@@ -236,7 +254,7 @@ export default function RequestDetailPage() {
         </div>
       </div>
 
-      {/* Bloque de Asignación (Si aplica) */}
+      {/* Bloque de Asignación */}
       {(data.vehiculo || data.motorista) && (
         <section className="animate-fade-in-up">
           <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-black uppercase tracking-widest text-slate-400">
@@ -264,13 +282,11 @@ export default function RequestDetailPage() {
 }
 
 function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: any }) {
-  // Helper local para asegurar que value nunca sea un objeto al renderizar
   const safe = (v: any): string => {
     if (v === null || v === undefined) return "—";
     if (typeof v === "object") return v.nombre ?? v.name ?? String(v);
     return String(v);
   };
-
   return (
     <div className="flex items-start gap-4">
       <div className="mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100 text-slate-500 ring-1 ring-slate-200/50">
