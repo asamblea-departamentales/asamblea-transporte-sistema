@@ -108,12 +108,13 @@ type Ctx = {
   toast:         Notification | null;
   markAsRead:    (id: string) => void;
   markAllRead:   () => void;
+  deleteNotification: (id: string) => void;
   clearToast:    () => void;
 };
 
 const NotifCtx = createContext<Ctx>({
   notifications: [], unreadCount: 0, toast: null,
-  markAsRead: () => {}, markAllRead: () => {}, clearToast: () => {},
+  markAsRead: () => {}, markAllRead: () => {}, deleteNotification: () => {}, clearToast: () => {},
 });
 
 export function useNotifications() { return useContext(NotifCtx); }
@@ -185,10 +186,11 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const markAsRead  = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
   const markAllRead = useCallback(() => setNotifications(p => p.map(n => ({ ...n, leida: true }))), []);
+  const deleteNotification = useCallback((id: string) => setNotifications(p => p.filter(n => n.id !== id)), []);
   const clearToast  = useCallback(() => setToast(null), []);
 
   return (
-    <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, clearToast }}>
+    <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast }}>
       {children}
     </NotifCtx.Provider>
   );
