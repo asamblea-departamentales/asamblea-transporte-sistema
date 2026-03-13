@@ -83,17 +83,17 @@ export default {
 
       // ─── BOX SHADOWS ────────────────────────────────────────────────────────
       boxShadow: {
-        card:           "0 30px 90px rgba(20,28,60,0.18)",
-        dropdown:       "0 30px 60px rgba(0,0,0,0.5), 0 0 40px rgba(59,130,246,0.07)",
-        "dropdown-lg":  "0 30px 80px rgba(0,0,0,0.6), 0 0 40px rgba(59,130,246,0.08)",
-        "blue-glow":    "0 0 20px rgba(59,130,246,0.20)",
+        card:           "0 10px 40px rgba(0,0,0,0.1), 0 0 20px rgba(59,130,246,0.05)",
+        dropdown:       "0 20px 40px rgba(0,0,0,0.3), 0 0 30px rgba(59,130,246,0.05)",
+        "dropdown-lg":  "0 30px 60px rgba(0,0,0,0.4), 0 0 40px rgba(59,130,246,0.05)",
+        "blue-glow":    "0 0 20px rgba(59,130,246,0.15)",
         "blue-glow-lg": "0 0 24px rgba(59,130,246,0.15)",
-        "blue-badge":   "0 0 10px rgba(59,130,246,0.70)",
+        "blue-badge":   "0 0 10px rgba(59,130,246,0.5)",
         "blue-dot":     "0 0 8px #60a5fa",
-        "nav-active":   "0 0 20px rgba(59,130,246,0.20)",
-        "avatar":       "0 0 18px rgba(59,130,246,0.35)",
+        "nav-active":   "0 10px 20px rgba(59,130,246,0.1)",
+        "avatar":       "0 0 16px rgba(59,130,246,0.25)",
         "online-dot":   "0 0 6px #10b981",
-        drawer:         "4px 0 40px rgba(0,0,0,0.4), 0 0 60px rgba(59,130,246,0.06)",
+        drawer:         "10px 0 40px rgba(0,0,0,0.3), 0 0 40px rgba(59,130,246,0.05)",
       },
 
       // ─── BORDER RADIUS ──────────────────────────────────────────────────────
@@ -117,7 +117,7 @@ export default {
 
       // ─── FONT FAMILIES ──────────────────────────────────────────────────────
       fontFamily: {
-        display: ['"Cormorant Garamond"', "serif"],
+        display: ['"Plus Jakarta Sans"', "sans-serif"],
         sans:    ['"Plus Jakarta Sans"', "sans-serif"],
       },
 

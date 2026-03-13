@@ -16,6 +16,12 @@ import { Spinner } from "./Combustible/components/FormUI";
 import FinalizarCombustibleModal from "./Combustible/components/FinalizarCombustibleModal";
 import FinalizarMantenimientoModal from "./mantenimiento/components/FinalizarMantenimientoModal";
 import { useAuth } from "../../auth/AuthContext";
+import {
+  ChevronLeft, CheckCircle2, Check, User, Building2, Calendar,
+  Fuel, Clock, ClipboardList, Hash, Users, MapPin, Wrench,
+  Receipt, CreditCard, DollarSign, Ticket, CalendarCheck,
+  FileText,
+} from "lucide-react";
 
 type GenericRequest = any;
 
@@ -131,9 +137,7 @@ export default function RequestDetailPage() {
           className="group flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-slate-900"
         >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 bg-white shadow-sm transition group-hover:bg-slate-50">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
-            </svg>
+            <ChevronLeft className="h-4 w-4" />
           </div>
           Volver
         </button>
@@ -178,9 +182,7 @@ export default function RequestDetailPage() {
                 onClick={() => setIsFinalizarModalOpen(true)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-emerald-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-emerald-200 transition hover:-translate-y-0.5 hover:bg-emerald-700 active:translate-y-0"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle2 className="h-5 w-5" />
                 Finalizar Carga
               </button>
             )}
@@ -191,9 +193,7 @@ export default function RequestDetailPage() {
                 onClick={() => setShowConfirmTransporte(true)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-blue-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:-translate-y-0.5 hover:bg-blue-700 active:translate-y-0"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+                <Check className="h-5 w-5" />
                 Finalizar Viaje
               </button>
             )}
@@ -204,58 +204,28 @@ export default function RequestDetailPage() {
                 onClick={() => setIsFinalizarMantenimientoOpen(true)}
                 className="inline-flex shrink-0 items-center gap-2 rounded-2xl bg-violet-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-violet-200 transition hover:-translate-y-0.5 hover:bg-violet-700 active:translate-y-0"
               >
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
+                <CheckCircle2 className="h-5 w-5" />
                 Finalizar Mantenimiento
               </button>
             )}
           </div>
 
-          <div className="mt-10 grid gap-8 md:grid-cols-2 lg:grid-cols-3">
+          <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {/* Detalles Comunes */}
-            <DetailItem
-              icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" /></svg>}
-              label="Solicitante"
-              value={str(data.solicitante?.name ?? data.solicitante)}
-            />
-            <DetailItem
-              icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" /></svg>}
-              label="Unidad"
-              value={str(data.unidad?.nombre ?? data.unidad)}
-            />
-            <DetailItem
-              icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>}
-              label="Fecha"
-              value={new Date(data.fecha_salida || data.fecha_solicitud || data.fecha_sugerida).toLocaleDateString()}
-            />
+            <DetailItem icon={<User className="h-4 w-4" />} label="Solicitante" value={str(data.solicitante?.name ?? data.solicitante)} />
+            <DetailItem icon={<Building2 className="h-4 w-4" />} label="Unidad" value={str(data.unidad?.nombre ?? data.unidad)} />
+            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={new Date(data.fecha_salida || data.fecha_solicitud || data.fecha_sugerida).toLocaleDateString()} />
 
             {/* Especiales Combustible */}
             {isCombustible && (
               <>
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M13 10V3L4 14h7v7l9-11h-7z" /></svg>}
-                  label="Cantidad Solicitada"
-                  value={`${data.cantidad_combustible} Galones`}
-                />
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                  label="Prioridad"
-                  value={str(data.prioridad)}
-                />
+                <DetailItem icon={<Fuel className="h-4 w-4" />} label="Cantidad Solicitada" value={`${data.cantidad_combustible} Galones`} />
+                <DetailItem icon={<Clock className="h-4 w-4" />} label="Prioridad" value={str(data.prioridad)} />
                 {data.cantidad_vales != null && (
-                  <DetailItem
-                    icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
-                    label="Cantidad de Vales"
-                    value={`${data.cantidad_vales} vales`}
-                  />
+                  <DetailItem icon={<ClipboardList className="h-4 w-4" />} label="Cantidad de Vales" value={`${data.cantidad_vales} vales`} />
                 )}
                 {data.correlativo_inicio != null && (
-                  <DetailItem
-                    icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" /></svg>}
-                    label="Correlativos"
-                    value={`${data.correlativo_inicio} — ${data.correlativo_fin}`}
-                  />
+                  <DetailItem icon={<Hash className="h-4 w-4" />} label="Correlativos" value={`${data.correlativo_inicio} — ${data.correlativo_fin}`} />
                 )}
               </>
             )}
@@ -263,37 +233,17 @@ export default function RequestDetailPage() {
             {/* Especiales Transporte */}
             {modulo === 'transporte' && (
               <>
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>}
-                  label="Pasajeros"
-                  value={`${data.cantidad_personas} Personas`}
-                />
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
-                  label="Origen"
-                  value={str(data.origen)}
-                />
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /><path d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" /></svg>}
-                  label="Destino"
-                  value={str(data.destino)}
-                />
+                <DetailItem icon={<Users className="h-4 w-4" />} label="Pasajeros" value={`${data.cantidad_personas} Personas`} />
+                <DetailItem icon={<MapPin className="h-4 w-4" />} label="Origen" value={str(data.origen)} />
+                <DetailItem icon={<MapPin className="h-4 w-4" />} label="Destino" value={str(data.destino)} />
               </>
             )}
 
             {/* Especiales Mantenimiento */}
             {modulo === 'mantenimiento' && (
               <>
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
-                  label="Tipo de Mantenimiento"
-                  value={str(data.tipo_mantenimiento)}
-                />
-                <DetailItem
-                  icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
-                  label="Prioridad"
-                  value={str(data.prioridad)}
-                />
+                <DetailItem icon={<Wrench className="h-4 w-4" />} label="Tipo de Mantenimiento" value={str(data.tipo_mantenimiento)} />
+                <DetailItem icon={<Clock className="h-4 w-4" />} label="Prioridad" value={str(data.prioridad)} />
               </>
             )}
           </div>
@@ -314,8 +264,8 @@ export default function RequestDetailPage() {
       {/* Bloque de Asignación */}
       {(data.vehiculo || data.motorista) && (
         <section className="animate-fade-in-up">
-          <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-black uppercase tracking-widest text-slate-400">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path d="M9 17a2 2 0 11-4 0 2 2 0 014 0zM19 17a2 2 0 11-4 0 2 2 0 014 0z" /><path d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 01-1 1H9m4-1V8a1 1 0 011-1h2.586a1 1 0 01.707.293l3.414 3.414a1 1 0 01.293.707V16a1 1 0 01-1 1h-1m-6-1a1 1 0 001 1h1M5 17a2 2 0 104 0m-4 0a2 2 0 114 0m6 0a2 2 0 104 0m-4 0a2 2 0 114 0" /></svg>
+          <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-bold uppercase tracking-widest text-slate-400">
+            <Wrench className="h-4 w-4" />
             Asignación de recursos
           </h2>
           <AsignacionBloque request={data} />
@@ -329,35 +279,34 @@ export default function RequestDetailPage() {
 
       {/* Confirmación inline Transporte */}
       {showConfirmTransporte && (
-        <div className="overflow-hidden rounded-3xl border border-blue-200 bg-gradient-to-br from-blue-50 to-sky-50 shadow-xl">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+          <div className="h-1.5 w-full bg-blue-500" />
           <div className="p-6 md:p-8">
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-500 shadow-lg shadow-blue-200">
-                <svg className="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-blue-50 text-blue-600">
+                <Check className="h-6 w-6" strokeWidth={2.5} />
               </div>
               <div className="flex-1">
-                <h3 className="text-lg font-black text-slate-900">¿Finalizar este viaje?</h3>
-                <p className="mt-1 text-sm text-slate-600">
-                  Al confirmar, la solicitud <strong>{data.codigo}</strong> pasará a estado <strong>Completada</strong>. Esta acción no se puede deshacer.
+                <h3 className="text-lg font-bold text-slate-900">¿Finalizar este viaje?</h3>
+                <p className="mt-1 text-sm text-slate-500">
+                  La solicitud <strong className="text-slate-700">{data.codigo}</strong> pasará a estado <strong className="text-slate-700">Completada</strong>. Esta acción no se puede deshacer.
                 </p>
                 <div className="mt-5 flex gap-3">
                   <button
                     onClick={() => setShowConfirmTransporte(false)}
                     disabled={finalizandoTransporte}
-                    className="rounded-2xl border border-slate-200 bg-white px-6 py-2.5 text-sm font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
                   >
                     Cancelar
                   </button>
                   <button
                     onClick={handleFinalizarTransporte}
                     disabled={finalizandoTransporte}
-                    className="inline-flex items-center gap-2 rounded-2xl bg-blue-600 px-6 py-2.5 text-sm font-bold text-white shadow-lg shadow-blue-200 transition hover:bg-blue-700 disabled:opacity-50"
+                    className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-blue-700 disabled:opacity-50"
                   >
                     {finalizandoTransporte
                       ? <Spinner className="h-4 w-4 text-white" />
-                      : <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
+                      : <Check className="h-4 w-4" strokeWidth={2.5} />
                     }
                     {finalizandoTransporte ? "Finalizando..." : "Sí, finalizar viaje"}
                   </button>
@@ -418,12 +367,12 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
 
 // ── Sección de datos de finalización ────────────────────────────────────────
 
-const FORMA_PAGO_LABELS: Record<string, { label: string; icon: string }> = {
-  vale:     { label: "Vale",     icon: "🧾" },
-  ticket:   { label: "Ticket",   icon: "🎫" },
-  tarjeta:  { label: "Tarjeta",  icon: "💳" },
-  efectivo: { label: "Efectivo", icon: "💵" },
-  otro:     { label: "Otro",     icon: "📄" },
+const FORMA_PAGO_MAP: Record<string, { label: string; Icon: typeof Receipt }> = {
+  vale:     { label: "Vale",     Icon: Receipt },
+  ticket:   { label: "Ticket",   Icon: Ticket },
+  tarjeta:  { label: "Tarjeta",  Icon: CreditCard },
+  efectivo: { label: "Efectivo", Icon: DollarSign },
+  otro:     { label: "Otro",     Icon: FileText },
 };
 
 function storageUrl(path: string): string {
@@ -478,18 +427,21 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
             {/* Combustible fields */}
             {isCombustible && (
               <>
-                {data.forma_pago && (
-                  <InfoChip
-                    label="Forma de Pago"
-                    value={FORMA_PAGO_LABELS[data.forma_pago]?.label ?? data.forma_pago}
-                    icon={FORMA_PAGO_LABELS[data.forma_pago]?.icon ?? "📋"}
-                  />
-                )}
+                {data.forma_pago && (() => {
+                  const PayIcon = FORMA_PAGO_MAP[data.forma_pago]?.Icon ?? Receipt;
+                  return (
+                    <InfoChip
+                      label="Forma de Pago"
+                      value={FORMA_PAGO_MAP[data.forma_pago]?.label ?? data.forma_pago}
+                      icon={<PayIcon className="h-4 w-4" />}
+                    />
+                  );
+                })()}
                 {data.valor_total != null && (
-                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} icon="💰" />
+                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
                 )}
                 {data.numero_vale_ticket && (
-                  <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} icon="#️⃣" />
+                  <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} icon={<Hash className="h-4 w-4" />} />
                 )}
               </>
             )}
@@ -501,11 +453,11 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
                   <InfoChip
                     label="Fecha Realizada"
                     value={new Date(data.fecha_realizada).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })}
-                    icon="📅"
+                    icon={<CalendarCheck className="h-4 w-4" />}
                   />
                 )}
                 {data.costo_real != null && (
-                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} icon="💰" />
+                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
                 )}
               </>
             )}
@@ -515,7 +467,7 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
               <InfoChip
                 label="Fecha Finalización"
                 value={new Date(data.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })}
-                icon="📅"
+                icon={<CalendarCheck className="h-4 w-4" />}
               />
             )}
           </div>
@@ -579,9 +531,7 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
                       className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl bg-slate-50 ring-1 ring-slate-200/80 transition-all hover:bg-slate-100 hover:shadow-md hover:ring-slate-300"
                     >
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/60 transition group-hover:shadow-md">
-                        <svg className="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                          <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m2.25 0H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-                        </svg>
+                        <FileText className="h-6 w-6 text-red-500" />
                       </div>
                       <div className="w-full px-3 text-center">
                         <p className="truncate text-xs font-bold text-slate-600 group-hover:text-slate-800">{name}</p>
@@ -599,10 +549,10 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
   );
 }
 
-function InfoChip({ label, value, icon }: { label: string; value: string; icon?: string }) {
+function InfoChip({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-slate-50/80 px-4 py-3.5 ring-1 ring-slate-100">
-      {icon && <span className="text-lg">{icon}</span>}
+      {icon && <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/50">{icon}</div>}
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
         <p className="mt-0.5 text-sm font-bold text-slate-800">{value}</p>

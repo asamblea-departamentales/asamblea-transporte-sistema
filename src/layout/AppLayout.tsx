@@ -1,12 +1,14 @@
 // src/layouts/AppLayout.tsx
 import { useState } from "react";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
+import { AnimatePresence, motion } from "framer-motion";
 import Sidebar from "../layout/Sidebar";
 import { NotificationProvider } from "../notifications/NotificationContext";
 import NotificationToast from "../notifications/NotificationToast";
 
 export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const location = useLocation();
 
   return (
     <NotificationProvider>
@@ -23,14 +25,23 @@ export default function AppLayout() {
           pb-[76px]  → compensa bottom nav 60px + safe area en móvil
           lg:pb-0    → en desktop no hay bottom nav
         */}
-        <main className="flex-1 pt-[60px] pb-[76px] lg:pb-0 animate-fade-in">
-          <div className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-            <Outlet />
-          </div>
+        <main className="flex-1 pt-[60px] pb-[76px] lg:pb-0">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={location.pathname}
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -15 }}
+              transition={{ duration: 0.25, ease: "easeInOut" }}
+              className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8"
+            >
+              <Outlet />
+            </motion.div>
+          </AnimatePresence>
         </main>
 
         {/* Footer solo desktop */}
-        <footer className="hidden lg:block py-5 border-t border-slate-200 bg-white">
+        <footer className="hidden lg:block py-5 border-t border-slate-200 bg-white z-10 relative">
           <div className="max-w-7xl mx-auto px-8 flex justify-between items-center">
             <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-widest">
               © 2026 Asamblea Legislativa de El Salvador
