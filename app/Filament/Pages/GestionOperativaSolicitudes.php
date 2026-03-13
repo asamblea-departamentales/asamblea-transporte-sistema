@@ -13,23 +13,23 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Forms\Concerns\InteractsWithForms;
-use Filament\Actions\Concerns\InteractsWithActions;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Actions\Action;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
-class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasForms, HasActions
+class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasForms
 {
-    use InteractsWithForms, InteractsWithActions, WithPagination;
+    use InteractsWithForms;
+    use WithPagination;
 
     protected static ?string $navigationGroup = 'Gestión Operativa';
-    protected static ?string $navigationLabel = 'Gestión Operativa';
-    protected static ?string $navigationIcon = 'heroicon-o-queue-list';
+    protected static ?string $navigationLabel = 'Gestión Operativa de Solicitudes';
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 1;
+
     protected static string $view = 'filament.pages.gestion-operativa-solicitudes';
 
     public string $etapa = 'bandeja';
+
     public ?string $date_from = null;
     public ?string $date_to = null;
     public ?string $tipo = null;
@@ -40,6 +40,9 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public int $kpi_a = 0;
     public int $kpi_b = 0;
     public int $kpi_c = 0;
+    public string $kpi_a_label = 'A';
+    public string $kpi_b_label = 'B';
+    public string $kpi_c_label = 'C';
 
     public static function canAccess(): bool
     {
@@ -48,137 +51,25 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public function mount(): void
     {
-        $this->date_from = now()->startOfMonth()->toDateTimeString();
-        $this->date_to = now()->endOfMonth()->toDateTimeString();
+        $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
+        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
     }
 
     public function updated($propertyName): void
     {
-        if (in_array($propertyName, ['date_from', 'date_to', 'tipo', 'prioridad', 'estado'])) {
+        if (in_array($propertyName, [
+            'date_from',
+            'date_to',
+            'tipo',
+            'prioridad',
+            'estado',
+        ], true)) {
             $this->resetPage();
             $this->refreshKpis();
         }
-    }
-
-    public function form(Form $form): Form
-    {
-        return $form->schema([
-            Forms\Components\Grid::make(5)->schema([
-                Forms\Components\Select::make('tipo')
-                    ->options(['transporte' => 'Transporte', 'combustible' => 'Combustible', 'mantenimiento' => 'Mantenimiento'])
-                    ->native(false)->live()->placeholder('Todos'),
-                Forms\Components\Select::make('prioridad')
-                    ->options(collect(PrioridadSolicitudEnum::cases())->mapWithKeys(fn($c) => [$c->value => strtoupper($c->value)]))
-                    ->native(false)->live()->placeholder('Todas'),
-                Forms\Components\Select::make('estado')
-                    ->options($this->estadosOptions())->native(false)->live()->placeholder('Todos'),
-                Forms\Components\DatePicker::make('date_from')->label('Desde')->native(false)->live(),
-                Forms\Components\DatePicker::make('date_to')->label('Hasta')->native(false)->live(),
-            ]),
-        ])->statePath('');
-    }
-
-    // --- ACCIÓN DE BANDEJA ---
-    public function tomarParaRevision(string $tipo, int $id): void
-    {
-        try {
-            // Llamamos al método correcto del Service según el código que enviaste
-            app(BandejaOperativaService::class)->tomarParaRevision(
-                tipo: $tipo,
-                id: $id,
-                userId: auth()->id()
-            );
-
-            $this->refreshKpis();
-            Notification::make()->title('Solicitud tomada para revisión').success()->send();
-
-        } catch (\Exception $e) {
-            Notification::make()->title('Error')->body($e->getMessage())->danger()->send();
-        }
-    }
-
-    // --- ACCIONES DE MODAL ---
-    public function validarAction(): Action
-    {
-        return Action::make('validar')
-            ->label('Validar')
-            ->color('success')
-            ->icon('heroicon-m-check-circle')
-            ->form([
-                Forms\Components\CheckboxList::make('check')
-                    ->label('Revisiones Técnicas')
-                    ->options([
-                        'datos_completos' => 'Datos completos',
-                        'fechas_validas' => 'Fechas válidas',
-                        'recursos_disponibles' => 'Recursos disponibles',
-                    ])->columns(2)->required(),
-                Forms\Components\Textarea::make('comentario')->required(),
-            ])
-            ->action(function (array $data, array $arguments) {
-                app(RevisionOperativaService::class)->validarYPreaprobar(
-                    $arguments['tipo'], $arguments['id'], auth()->id(), $data['comentario'], $data
-                );
-                $this->refreshKpis();
-                Notification::make()->title('Solicitud validada').success()->send();
-            });
-    }
-
-    public function derivarAction(): Action
-    {
-        return Action::make('derivar')
-            ->label('Derivar')
-            ->color('warning')
-            ->icon('heroicon-m-arrow-right-circle')
-            ->form([
-                Forms\Components\Select::make('derivado_a')
-                    ->label('Asignar a')
-                    ->options(User::pluck('name', 'id'))
-                    ->required()->searchable(),
-                Forms\Components\Textarea::make('comentario')->required(),
-            ])
-            ->action(function (array $data, array $arguments) {
-                app(RevisionOperativaService::class)->derivar(
-                    $arguments['tipo'], $arguments['id'], auth()->id(), (int)$data['derivado_a'], $data['comentario'], []
-                );
-                $this->refreshKpis();
-                Notification::make()->title('Derivación completada').success()->send();
-            });
-    }
-
-    public function aprobarAction(): Action
-    {
-        return Action::make('aprobar')
-            ->label('Aprobación Final')
-            ->color('success')
-            ->icon('heroicon-m-check-badge')
-            ->form([Forms\Components\Textarea::make('comentario')->required()])
-            ->requiresConfirmation()
-            ->action(function (array $data, array $arguments) {
-                app(AprobacionesService::class)->aprobar($arguments['tipo'], $arguments['id'], auth()->id(), $data['comentario']);
-                $this->refreshKpis();
-                Notification::make()->title('Solicitud Aprobada').success()->send();
-            });
-    }
-
-    public function getRowsProperty(): Collection
-    {
-        return match ($this->etapa) {
-            'bandeja' => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterState()),
-            'revision' => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterState()),
-            'aprobaciones' => app(AprobacionesService::class)->obtenerSolicitudes($this->getFilterState()),
-            default => collect(),
-        };
-    }
-
-    public function getPaginatedRowsProperty()
-    {
-        $perPage = 8;
-        return new \Illuminate\Pagination\LengthAwarePaginator(
-            $this->rows->forPage($this->getPage(), $perPage)->values(),
-            $this->rows->count(), $perPage, $this->getPage(), ['path' => request()->url()]
-        );
     }
 
     public function cambiarEtapa(string $etapa): void
@@ -189,37 +80,340 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $this->refreshKpis();
     }
 
+    public function form(Form $form): Form
+    {
+        return $form->schema([
+            Forms\Components\Grid::make(12)->schema([
+                Forms\Components\Select::make('tipo')
+                    ->label('Tipo')
+                    ->options([
+                        'transporte' => 'Transporte',
+                        'combustible' => 'Combustible',
+                        'mantenimiento' => 'Mantenimiento',
+                    ])
+                    ->native(false)
+                    ->searchable()
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
+
+                Forms\Components\Select::make('prioridad')
+                    ->label('Prioridad')
+                    ->options(
+                        collect(PrioridadSolicitudEnum::cases())
+                            ->mapWithKeys(fn ($c) => [$c->value => strtoupper($c->value)])
+                    )
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
+
+                Forms\Components\Select::make('estado')
+                    ->label('Estado')
+                    ->options($this->estadosOptions())
+                    ->native(false)
+                    ->searchable()
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
+
+                Forms\Components\DateTimePicker::make('date_from')
+                    ->label('Desde')
+                    ->seconds(false)
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 3]),
+
+                Forms\Components\DateTimePicker::make('date_to')
+                    ->label('Hasta')
+                    ->seconds(false)
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 3]),
+            ]),
+        ])->statePath('');
+    }
+
+    public function getRowsProperty(): Collection
+    {
+        return match ($this->etapa) {
+            'bandeja' => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'revision' => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'aprobaciones' => app(AprobacionesService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            default => collect(),
+        };
+    }
+
+    public function getPaginatedRowsProperty()
+    {
+        $perPage = 8;
+        $page = $this->getPage();
+
+        return new \Illuminate\Pagination\LengthAwarePaginator(
+            $this->rows->forPage($page, $perPage)->values(),
+            $this->rows->count(),
+            $perPage,
+            $page,
+            ['path' => request()->url(), 'pageName' => 'page']
+        );
+    }
+
+    public function tomarParaRevision(string $tipo, int $id): void
+    {
+        app(BandejaOperativaService::class)
+            ->tomarParaRevision($tipo, $id, auth()->id(), 'Tomada desde flujo operativo.');
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud enviada a revisión')
+            ->success()
+            ->send();
+    }
+
+    public function cambiarPrioridad(string $tipo, int $id, string $prioridad): void
+    {
+        app(BandejaOperativaService::class)
+            ->actualizarPrioridad($tipo, $id, $prioridad, auth()->id());
+
+        Notification::make()
+            ->title('Prioridad actualizada')
+            ->success()
+            ->send();
+
+        $this->refreshKpis();
+    }
+
+    public function derivar(string $tipo, int $id, array $data): void
+    {
+        app(RevisionOperativaService::class)->derivar(
+            $tipo,
+            $id,
+            auth()->id(),
+            (int) $data['derivado_a'],
+            $data['comentario'],
+            $this->armarValidaciones($data),
+        );
+
+        Notification::make()
+            ->title('Solicitud derivada')
+            ->success()
+            ->send();
+    }
+
+    public function observarRevision(string $tipo, int $id, array $data): void
+    {
+        app(RevisionOperativaService::class)->observar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario'],
+            $this->armarValidaciones($data),
+        );
+
+        Notification::make()
+            ->title('Observación registrada')
+            ->success()
+            ->send();
+    }
+
+    public function validar(string $tipo, int $id, array $data): void
+    {
+        app(RevisionOperativaService::class)->validarYPreaprobar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario'],
+            $this->armarValidaciones($data),
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud enviada a preaprobación')
+            ->success()
+            ->send();
+    }
+
+    public function aprobar(string $tipo, int $id, array $data): void
+    {
+        app(AprobacionesService::class)->aprobar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario']
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud aprobada')
+            ->success()
+            ->send();
+    }
+
+    public function rechazar(string $tipo, int $id, array $data): void
+    {
+        app(AprobacionesService::class)->rechazar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario']
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud rechazada')
+            ->success()
+            ->send();
+    }
+
+    public function condicionar(string $tipo, int $id, array $data): void
+    {
+        app(AprobacionesService::class)->condicionar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario']
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud condicionada')
+            ->success()
+            ->send();
+    }
+
+    public function reabrir(string $tipo, int $id, array $data): void
+    {
+        app(AprobacionesService::class)->reabrir(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario']
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        Notification::make()
+            ->title('Solicitud reabierta')
+            ->success()
+            ->send();
+    }
+
+    public function usuariosOptions(): array
+    {
+        return User::orderBy('name')->pluck('name', 'id')->toArray();
+    }
+
+    public function limpiarFiltros(): void
+    {
+        $this->date_from = null;
+        $this->date_to = null;
+        $this->tipo = null;
+        $this->prioridad = null;
+        $this->estado = null;
+
+        $this->form->fill($this->getFilterState());
+        $this->resetPage();
+        $this->refreshKpis();
+    }
+
+    public function setMesActual(): void
+    {
+        $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
+        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+
+        $this->form->fill($this->getFilterState());
+        $this->resetPage();
+        $this->refreshKpis();
+    }
+
     private function refreshKpis(): void
     {
-        $service = match ($this->etapa) {
-            'bandeja' => app(BandejaOperativaService::class),
-            'revision' => app(RevisionOperativaService::class),
-            'aprobaciones' => app(AprobacionesService::class),
+        $kpis = match ($this->etapa) {
+            'bandeja' => app(BandejaOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'revision' => app(RevisionOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'aprobaciones' => app(AprobacionesService::class)->getKpis($this->getFilterStateWithStage()),
+            default => ['total' => 0, 'transporte' => 0, 'combustible' => 0, 'mantenimiento' => 0],
         };
-        $kpis = $service->getKpis($this->getFilterState());
+
         $this->kpi_total = $kpis['total'] ?? 0;
         $this->kpi_a = $kpis['transporte'] ?? 0;
         $this->kpi_b = $kpis['combustible'] ?? 0;
         $this->kpi_c = $kpis['mantenimiento'] ?? 0;
+
+        $this->kpi_a_label = 'Transporte';
+        $this->kpi_b_label = 'Combustible';
+        $this->kpi_c_label = 'Mantenimiento';
     }
 
-    public function limpiarFiltros(): void { $this->fill(['tipo' => null, 'prioridad' => null, 'estado' => null]); $this->refreshKpis(); }
-    public function setMesActual(): void { $this->date_from = now()->startOfMonth()->toDateTimeString(); $this->refreshKpis(); }
+    private function armarValidaciones(array $data): array
+    {
+        return [
+            'datos_completos' => (bool) ($data['datos_completos'] ?? false),
+            'fechas_validas' => (bool) ($data['fechas_validas'] ?? false),
+            'recursos_disponibles' => (bool) ($data['recursos_disponibles'] ?? false),
+            'reglas_minimas' => (bool) ($data['reglas_minimas'] ?? false),
+            'hallazgos' => $data['hallazgos'] ?? null,
+        ];
+    }
 
-    private function estadosOptions(): array {
+    private function estadosOptions(): array
+    {
         return match ($this->etapa) {
-            'bandeja' => [EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente'],
-            'revision' => [EstadoSolicitudEnum::EN_REVISION->value => 'En revisión'],
-            'aprobaciones' => [EstadoSolicitudEnum::PRE_APROBADA->value => 'Pre-aprobada'],
+            'bandeja' => [
+                EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
+                EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
+            ],
+            'revision' => [
+                EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
+            ],
+            'aprobaciones' => [
+                EstadoSolicitudEnum::PRE_APROBADA->value => 'Pre-aprobada',
+            ],
             default => [],
         };
     }
 
-    private function getFilterState(): array {
-        return ['date_from' => $this->date_from, 'date_to' => $this->date_to, 'tipo' => $this->tipo, 'prioridad' => $this->prioridad, 'estado' => $this->estado];
+    private function getFilterState(): array
+    {
+        return [
+            'date_from' => $this->date_from,
+            'date_to' => $this->date_to,
+            'tipo' => $this->tipo,
+            'prioridad' => $this->prioridad,
+            'estado' => $this->estado,
+        ];
     }
 
-    public function etapaLabel(): string {
-        return match($this->etapa) { 'bandeja' => 'Recepción y Clasificación', 'revision' => 'Validación Técnica', 'aprobaciones' => 'Resolución Final', default => '' };
+    private function getFilterStateWithStage(): array
+    {
+        return $this->getFilterState();
+    }
+
+    public function etapaLabel(): string
+    {
+        return match ($this->etapa) {
+            'bandeja' => 'Recepción, clasificación y priorización inicial.',
+            'revision' => 'Validación técnica, observaciones y derivación.',
+            'aprobaciones' => 'Resolución administrativa y cierre de decisión.',
+            default => '',
+        };
+    }
+
+    public function etapaColor(): string
+    {
+        return match ($this->etapa) {
+            'bandeja' => 'primary',
+            'revision' => 'warning',
+            'aprobaciones' => 'success',
+            default => 'gray',
+        };
     }
 }
