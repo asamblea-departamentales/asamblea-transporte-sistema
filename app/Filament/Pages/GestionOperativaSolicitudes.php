@@ -16,6 +16,8 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
+use App\Filament\Resources\SolicitudCombustibleResource;
+
 class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasForms
 {
     use InteractsWithForms;
@@ -235,22 +237,45 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     }
 
     public function aprobar(string $tipo, int $id, array $data): void
-    {
-        app(AprobacionesService::class)->aprobar(
-            $tipo,
-            $id,
-            auth()->id(),
-            $data['comentario']
-        );
-
-        $this->refreshKpis();
-        $this->resetPage();
-
+{
+    app(AprobacionesService::class)->aprobar(
+        $tipo,
+        $id,
+        auth()->id(),
+        $data['comentario']
+    );
+ 
+    $this->refreshKpis();
+    $this->resetPage();
+ 
+    // Notificación base para todos los tipos
+    if ($tipo !== 'combustible') {
         Notification::make()
             ->title('Solicitud aprobada')
             ->success()
             ->send();
+ 
+        return;
     }
+ 
+    // ── Notificación enriquecida para combustible ─────────────────────────
+    // Construimos el link directo al view del record en el Resource
+    $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
+ 
+    Notification::make()
+        ->title('Solicitud de combustible aprobada')
+        ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+        ->success()
+        ->actions([
+            \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                ->label('Asignar vales ahora →')
+                ->url($urlAsignacion)
+                ->button()
+                ->color('primary'),
+        ])
+        ->persistent()   // no se cierra sola, el usuario debe hacer clic o cerrarla
+        ->send();
+}
 
     public function rechazar(string $tipo, int $id, array $data): void
     {
