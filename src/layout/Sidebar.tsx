@@ -16,7 +16,7 @@ type NavItem = { to: string; label: string; mobileLabel: string; icon: () => Rea
 const T = {
   headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
   bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
-  goldenLine:  "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
+  goldenLine:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
   drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
 };
 
@@ -128,8 +128,8 @@ function NavLinkDesktop({ item, pathname }: { item: NavItem; pathname: string })
       )}
     >
       <div className={cn(
-        "flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all",
-        active ? "bg-blue-500/20 text-blue-400" : "text-white/30 group-hover:text-white/70"
+        "flex items-center justify-center w-8 h-8 flex-shrink-0 transition-all",
+        active ? "text-blue-400" : "text-white/30 group-hover:text-white/70"
       )}>
         <Icon />
       </div>
@@ -176,8 +176,8 @@ function NavLinkDrawer({ item, onClick, pathname }: { item: NavItem; onClick?: (
       )}
     >
       <div className={cn(
-        "flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0",
-        active ? "bg-white/20 text-white" : "text-white/40",
+        "flex items-center justify-center w-8 h-8 flex-shrink-0",
+        active ? "text-white" : "text-white/40",
       )}>
         <Icon />
       </div>
@@ -358,8 +358,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const iconBtnClass = (active: boolean) => cn(
     "relative flex items-center justify-center w-10 h-10 rounded-xl transition-all",
     active
-      ? "bg-white/20 border border-white/25 text-white"
-      : "bg-white/5 border border-white/10 text-white/60 hover:bg-white/15 hover:text-white",
+      ? "bg-white/10 text-white"
+      : "text-white/60 hover:bg-white/5 hover:text-white",
   );
 
   return (
@@ -374,12 +374,9 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
 
         {/* Brand / Logo Area */}
-        <div className="flex flex-col gap-4 px-6 pt-8 pb-6 border-b border-white/5 mx-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 4px 12px rgba(0,0,0,0.12)" }}>
-              <img src={logo} alt="Asamblea" className="h-6 brightness-0 invert opacity-90 drop-shadow-sm" />
-            </div>
+        <div className="flex flex-col gap-4 px-6 pt-8 pb-6 border-b border-white/5">
+          <div className="flex items-center gap-3.5 px-2">
+            <img src={logo} alt="Asamblea" className="h-8 brightness-0 invert opacity-100 drop-shadow-md" />
             <div>
               <span className="block text-[9.5px] font-black uppercase tracking-[.18em] text-[#86a8e7] leading-tight">
                 Asamblea Legislativa
@@ -402,8 +399,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </nav>
 
         {/* Bottom Section: Profile & Logout */}
-        <div className="p-4 mt-auto">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-5 shadow-inner">
+        <div className="px-6 py-6 mt-auto flex flex-col gap-5 border-t border-white/5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar initial={initial} size="md" />
@@ -429,11 +425,10 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 bg-white/5 hover:bg-red-500/20 border border-transparent hover:border-red-500/30 transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 hover:bg-white/5 transition-all duration-200 border border-transparent"
             >
               <Icons.Logout /> Cerrar Sesión
             </button>
-          </div>
         </div>
       </aside>
 
@@ -449,9 +444,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </button>
 
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center w-[32px] h-[32px] rounded-lg shadow-sm" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}>
-            <img src={logo} alt="Logo" className="h-[16px] brightness-0 invert opacity-90" />
-          </div>
+          <img src={logo} alt="Logo" className="h-[22px] brightness-0 invert opacity-100 drop-shadow-md" />
           <span className="text-[15px] font-extrabold text-white tracking-wide">Transporte</span>
         </button>
 
@@ -479,10 +472,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <div className="absolute top-0 right-0 bottom-0 w-[2px]" style={{ background: T.drawerGlow }} />
 
         <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <div className="flex items-center gap-3 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}>
-              <img src={logo} alt="Logo" className="h-[22px] brightness-0 invert opacity-90" />
-            </div>
+          <div className="flex items-center gap-3.5 mb-5 px-1">
+            <img src={logo} alt="Logo" className="h-[26px] brightness-0 invert opacity-100 drop-shadow-md" />
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
               <p className="text-[15px] font-extrabold text-white leading-none">Transporte</p>
