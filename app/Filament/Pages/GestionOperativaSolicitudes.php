@@ -80,27 +80,26 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         ])->statePath('');
     }
 
-    // --- ACCIÓN DE BANDEJA (TOMAR SOLICITUD) ---
-
+    // --- ACCIÓN DE BANDEJA ---
     public function tomarParaRevision(string $tipo, int $id): void
     {
         try {
-            app(BandejaOperativaService::class)->asignarARevision(
+            // Llamamos al método correcto del Service según el código que enviaste
+            app(BandejaOperativaService::class)->tomarParaRevision(
                 tipo: $tipo,
                 id: $id,
-                usuarioId: auth()->id()
+                userId: auth()->id()
             );
 
             $this->refreshKpis();
-            Notification::make()->title('Solicitud asignada correctamente')->success()->send();
+            Notification::make()->title('Solicitud tomada para revisión').success()->send();
 
         } catch (\Exception $e) {
             Notification::make()->title('Error')->body($e->getMessage())->danger()->send();
         }
     }
 
-    // --- ACCIONES DE MODAL (ETAPA REVISIÓN Y APROBACIÓN) ---
-
+    // --- ACCIONES DE MODAL ---
     public function validarAction(): Action
     {
         return Action::make('validar')
@@ -162,8 +161,6 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 Notification::make()->title('Solicitud Aprobada').success()->send();
             });
     }
-
-    // --- LÓGICA DE DATOS ---
 
     public function getRowsProperty(): Collection
     {
