@@ -374,25 +374,23 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
 
         {/* Brand / Logo Area */}
-        <div className="flex flex-col gap-4 px-5 pt-8 pb-6 border-b border-white/5 relative">
-          <div className="flex items-center gap-3.5 px-2">
-            <div className="relative flex items-center justify-center w-[46px] h-[46px] rounded-xl overflow-hidden flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                boxShadow: "0 8px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
-              }}>
-              <div className="absolute inset-0 bg-blue-600/10 blur-[2px]" />
-              <img src={logo} alt="Asamblea" className="relative h-7 brightness-0 invert opacity-100 drop-shadow-md z-10" />
-            </div>
-            <div className="flex flex-col">
-              <span className="block text-[9.5px] font-black uppercase tracking-[.18em] text-[#86a8e7] leading-tight">
-                Asamblea Legislativa
-              </span>
-              <span className="block text-[17px] font-extrabold text-white leading-tight mt-0.5">
-                Transporte
-              </span>
-            </div>
+        <div className="flex flex-col items-center justify-center gap-4 px-5 pt-10 pb-8 border-b border-white/5 relative text-center">
+          <div className="relative flex items-center justify-center w-[64px] h-[64px] rounded-2xl overflow-hidden flex-shrink-0 mb-1"
+            style={{
+              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%)",
+              border: "1px solid rgba(255,255,255,0.2)",
+              boxShadow: "0 8px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
+            }}>
+            <div className="absolute inset-0 bg-blue-600/10 blur-[2px]" />
+            <img src={logo} alt="Asamblea" className="relative h-10 brightness-0 invert opacity-100 drop-shadow-md z-10" />
+          </div>
+          <div className="flex flex-col items-center">
+            <span className="block text-[10px] font-black uppercase tracking-[.2em] text-[#86a8e7] leading-tight mb-0.5">
+              Asamblea Legislativa
+            </span>
+            <span className="block text-[18px] font-extrabold text-white leading-tight">
+              Transporte
+            </span>
           </div>
         </div>
 
