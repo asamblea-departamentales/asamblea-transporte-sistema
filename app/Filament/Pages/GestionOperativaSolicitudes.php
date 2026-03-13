@@ -80,13 +80,33 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         ])->statePath('');
     }
 
-    // --- ACCIONES (MODALES PROFESIONALES) ---
+    // --- ACCIÓN DE BANDEJA (TOMAR SOLICITUD) ---
+
+    public function tomarParaRevision(string $tipo, int $id): void
+    {
+        try {
+            app(BandejaOperativaService::class)->asignarARevision(
+                tipo: $tipo,
+                id: $id,
+                usuarioId: auth()->id()
+            );
+
+            $this->refreshKpis();
+            Notification::make()->title('Solicitud asignada correctamente')->success()->send();
+
+        } catch (\Exception $e) {
+            Notification::make()->title('Error')->body($e->getMessage())->danger()->send();
+        }
+    }
+
+    // --- ACCIONES DE MODAL (ETAPA REVISIÓN Y APROBACIÓN) ---
 
     public function validarAction(): Action
     {
         return Action::make('validar')
-            ->label('Validar Solicitud')
+            ->label('Validar')
             ->color('success')
+            ->icon('heroicon-m-check-circle')
             ->form([
                 Forms\Components\CheckboxList::make('check')
                     ->label('Revisiones Técnicas')
@@ -94,15 +114,12 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                         'datos_completos' => 'Datos completos',
                         'fechas_validas' => 'Fechas válidas',
                         'recursos_disponibles' => 'Recursos disponibles',
-                        'reglas_minimas' => 'Reglas mínimas',
                     ])->columns(2)->required(),
-                Forms\Components\Textarea::make('hallazgos')->rows(2),
                 Forms\Components\Textarea::make('comentario')->required(),
             ])
             ->action(function (array $data, array $arguments) {
                 app(RevisionOperativaService::class)->validarYPreaprobar(
-                    $arguments['tipo'], $arguments['id'], auth()->id(), $data['comentario'], 
-                    array_merge($data, ['datos_completos' => in_array('datos_completos', $data['check'])])
+                    $arguments['tipo'], $arguments['id'], auth()->id(), $data['comentario'], $data
                 );
                 $this->refreshKpis();
                 Notification::make()->title('Solicitud validada').success()->send();
@@ -114,6 +131,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         return Action::make('derivar')
             ->label('Derivar')
             ->color('warning')
+            ->icon('heroicon-m-arrow-right-circle')
             ->form([
                 Forms\Components\Select::make('derivado_a')
                     ->label('Asignar a')
@@ -135,6 +153,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         return Action::make('aprobar')
             ->label('Aprobación Final')
             ->color('success')
+            ->icon('heroicon-m-check-badge')
             ->form([Forms\Components\Textarea::make('comentario')->required()])
             ->requiresConfirmation()
             ->action(function (array $data, array $arguments) {
@@ -144,7 +163,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             });
     }
 
-    // --- LOGICA DE SOPORTE ---
+    // --- LÓGICA DE DATOS ---
 
     public function getRowsProperty(): Collection
     {
