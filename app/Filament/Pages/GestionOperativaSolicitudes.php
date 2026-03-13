@@ -84,87 +84,49 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         return $form->schema([
             Forms\Components\Grid::make(12)->schema([
-                Forms\Components\Section::make('Filtros')
-                    ->description('Trabaja el flujo completo desde una sola pantalla.')
-                    ->icon('heroicon-o-funnel')
-                    ->collapsible()
-                    ->columnSpan(12)
-                    ->schema([
-                        Forms\Components\Grid::make(12)->schema([
-                            Forms\Components\DateTimePicker::make('date_from')
-                                ->label('Desde')
-                                ->seconds(false)
-                                ->native(false)
-                                ->live()
-                                ->columnSpan(['default' => 12, 'md' => 3]),
+                Forms\Components\Select::make('tipo')
+                    ->label('Tipo')
+                    ->options([
+                        'transporte' => 'Transporte',
+                        'combustible' => 'Combustible',
+                        'mantenimiento' => 'Mantenimiento',
+                    ])
+                    ->native(false)
+                    ->searchable()
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
 
-                            Forms\Components\DateTimePicker::make('date_to')
-                                ->label('Hasta')
-                                ->seconds(false)
-                                ->native(false)
-                                ->live()
-                                ->columnSpan(['default' => 12, 'md' => 3]),
+                Forms\Components\Select::make('prioridad')
+                    ->label('Prioridad')
+                    ->options(
+                        collect(PrioridadSolicitudEnum::cases())
+                            ->mapWithKeys(fn ($c) => [$c->value => strtoupper($c->value)])
+                    )
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
 
-                            Forms\Components\Select::make('tipo')
-                                ->label('Tipo')
-                                ->options([
-                                    'transporte' => 'Transporte',
-                                    'combustible' => 'Combustible',
-                                    'mantenimiento' => 'Mantenimiento',
-                                ])
-                                ->native(false)
-                                ->searchable()
-                                ->live()
-                                ->columnSpan(['default' => 12, 'md' => 2]),
+                Forms\Components\Select::make('estado')
+                    ->label('Estado')
+                    ->options($this->estadosOptions())
+                    ->native(false)
+                    ->searchable()
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
 
-                            Forms\Components\Select::make('prioridad')
-                                ->label('Prioridad')
-                                ->options(
-                                    collect(PrioridadSolicitudEnum::cases())
-                                        ->mapWithKeys(fn ($c) => [$c->value => strtoupper($c->value)])
-                                )
-                                ->native(false)
-                                ->live()
-                                ->columnSpan(['default' => 12, 'md' => 2]),
+                Forms\Components\DateTimePicker::make('date_from')
+                    ->label('Desde')
+                    ->seconds(false)
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 3]),
 
-                            Forms\Components\Select::make('estado')
-                                ->label('Estado')
-                                ->options($this->estadosOptions())
-                                ->native(false)
-                                ->searchable()
-                                ->live()
-                                ->columnSpan(['default' => 12, 'md' => 2]),
-
-                            Forms\Components\Actions::make([
-                                Forms\Components\Actions\Action::make('mes_actual')
-                                    ->label('Mes actual')
-                                    ->action(function () {
-                                        $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
-                                        $this->form->fill($this->getFilterState());
-                                        $this->resetPage();
-                                        $this->refreshKpis();
-                                    }),
-
-                                Forms\Components\Actions\Action::make('limpiar')
-                                    ->label('Limpiar')
-                                    ->color('gray')
-                                    ->action(function () {
-                                        $this->date_from = null;
-                                        $this->date_to = null;
-                                        $this->tipo = null;
-                                        $this->prioridad = null;
-                                        $this->estado = null;
-
-                                        $this->form->fill($this->getFilterState());
-                                        $this->resetPage();
-                                        $this->refreshKpis();
-                                    }),
-                            ])
-                                ->columnSpan(12)
-                                ->alignEnd(),
-                        ]),
-                    ]),
+                Forms\Components\DateTimePicker::make('date_to')
+                    ->label('Hasta')
+                    ->seconds(false)
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 3]),
             ]),
         ])->statePath('');
     }
@@ -181,7 +143,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public function getPaginatedRowsProperty()
     {
-        $perPage = 10;
+        $perPage = 8;
         $page = $this->getPage();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
@@ -349,6 +311,29 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         return User::orderBy('name')->pluck('name', 'id')->toArray();
     }
 
+    public function limpiarFiltros(): void
+    {
+        $this->date_from = null;
+        $this->date_to = null;
+        $this->tipo = null;
+        $this->prioridad = null;
+        $this->estado = null;
+
+        $this->form->fill($this->getFilterState());
+        $this->resetPage();
+        $this->refreshKpis();
+    }
+
+    public function setMesActual(): void
+    {
+        $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
+        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+
+        $this->form->fill($this->getFilterState());
+        $this->resetPage();
+        $this->refreshKpis();
+    }
+
     private function refreshKpis(): void
     {
         $kpis = match ($this->etapa) {
@@ -415,10 +400,20 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function etapaLabel(): string
     {
         return match ($this->etapa) {
-            'bandeja' => 'Recepción y clasificación inicial',
-            'revision' => 'Validación técnica y operativa',
-            'aprobaciones' => 'Decisión administrativa final',
+            'bandeja' => 'Recepción, clasificación y priorización inicial.',
+            'revision' => 'Validación técnica, observaciones y derivación.',
+            'aprobaciones' => 'Resolución administrativa y cierre de decisión.',
             default => '',
+        };
+    }
+
+    public function etapaColor(): string
+    {
+        return match ($this->etapa) {
+            'bandeja' => 'primary',
+            'revision' => 'warning',
+            'aprobaciones' => 'success',
+            default => 'gray',
         };
     }
 }
