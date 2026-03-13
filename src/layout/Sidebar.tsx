@@ -375,15 +375,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
         {/* Brand / Logo Area */}
         <div className="flex flex-col items-center justify-center gap-4 px-5 pt-10 pb-8 border-b border-white/5 relative text-center">
-          <div className="relative flex items-center justify-center w-[64px] h-[64px] rounded-2xl overflow-hidden flex-shrink-0 mb-1"
-            style={{
-              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              boxShadow: "0 8px 16px rgba(0,0,0,0.2), inset 0 1px 0 rgba(255,255,255,0.1)"
-            }}>
-            <div className="absolute inset-0 bg-blue-600/10 blur-[2px]" />
-            <img src={logo} alt="Asamblea" className="relative h-10 brightness-0 invert opacity-100 drop-shadow-md z-10" />
-          </div>
+          <img src={logo} alt="Asamblea" className="h-[80px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" />
           <div className="flex flex-col items-center">
             <span className="block text-[10px] font-black uppercase tracking-[.2em] text-[#86a8e7] leading-tight mb-0.5">
               Asamblea Legislativa
@@ -450,15 +442,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </button>
 
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3">
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-lg overflow-hidden flex-shrink-0"
-            style={{
-              background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%)",
-              border: "1px solid rgba(255,255,255,0.2)",
-              boxShadow: "0 4px 10px rgba(0,0,0,0.15)"
-            }}>
-            <img src={logo} alt="Logo" className="h-[18px] brightness-0 invert opacity-100 drop-shadow-sm" />
-          </div>
-          <span className="text-[15px] font-extrabold text-white tracking-wide">Transporte</span>
+          <img src={logo} alt="Logo" className="h-[28px] brightness-0 invert opacity-100 drop-shadow-md" />
+          <span className="text-[16px] font-extrabold text-white tracking-wide">Transporte</span>
         </button>
 
         <div className="relative">
@@ -485,15 +470,8 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <div className="absolute top-0 right-0 bottom-0 w-[2px]" style={{ background: T.drawerGlow }} />
 
         <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
-          <div className="flex items-center gap-3 mb-5 px-1">
-            <div className="relative flex items-center justify-center w-[40px] h-[40px] rounded-[10px] overflow-hidden flex-shrink-0"
-              style={{
-                background: "linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0.03) 100%)",
-                border: "1px solid rgba(255,255,255,0.2)",
-                boxShadow: "0 6px 12px rgba(0,0,0,0.15)"
-              }}>
-              <img src={logo} alt="Logo" className="h-[20px] brightness-0 invert opacity-100 drop-shadow-md" />
-            </div>
+          <div className="flex flex-col items-center gap-3 mb-6 px-1 pt-4 text-center">
+            <img src={logo} alt="Logo" className="h-[60px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" />
             <div className="flex flex-col justify-center">
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
               <p className="text-[15px] font-extrabold text-white leading-none">Transporte</p>
