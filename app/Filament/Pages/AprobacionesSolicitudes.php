@@ -17,6 +17,7 @@ class AprobacionesSolicitudes extends Page implements Forms\Contracts\HasForms
     use InteractsWithForms;
     use WithPagination;
 
+    protected static bool $shouldRegisterNavigation = false;
     protected static ?string $navigationGroup = 'Gestión Operativa';
     protected static ?string $navigationLabel = 'Aprobaciones';
     protected static ?string $navigationIcon = 'heroicon-o-check-badge';
