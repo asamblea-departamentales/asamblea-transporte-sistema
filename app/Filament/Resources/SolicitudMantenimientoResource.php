@@ -25,7 +25,7 @@ use Illuminate\Database\Eloquent\Builder;
 class SolicitudMantenimientoResource extends Resource
 {
     protected static ?string $model           = SolicitudMantenimiento::class;
-    protected static ?string $navigationGroup = 'Aprobaciones';
+    protected static ?string $navigationGroup = 'Asignaciones';
     protected static ?string $navigationLabel = 'Solicitudes de Mantenimiento';
     protected static ?string $navigationIcon  = 'heroicon-o-wrench-screwdriver';
     protected static ?string $modelLabel      = 'Solicitud de Mantenimiento';

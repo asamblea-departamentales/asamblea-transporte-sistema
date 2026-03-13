@@ -25,7 +25,7 @@ class SolicitudCombustibleResource extends Resource
 {
     protected static ?string $model = SolicitudCombustible::class;
 
-    protected static ?string $navigationGroup = 'Aprobaciones';
+    protected static ?string $navigationGroup = 'Asignaciones';
     protected static ?string $navigationLabel = 'Solicitudes de Combustible';
     protected static ?string $navigationIcon  = 'heroicon-o-banknotes'; // si te da error, cambia a 'heroicon-o-document-text'
     protected static ?int $navigationSort = 3;
