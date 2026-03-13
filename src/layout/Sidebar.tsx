@@ -14,10 +14,9 @@ type NavItem = { to: string; label: string; mobileLabel: string; icon: () => Rea
 // ─── Design tokens ────────────────────────────────────────────────────────────
 
 const T = {
-  headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
-  bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
-  goldenLine:  "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
-  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
+  headerBg:    "#0A0F1C", // Dark slate/navy muy profundo y plano
+  bottomNavBg: "#0A0F1C",
+  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(255,255,255,0.05) 40%, rgba(255,255,255,0.05) 60%, transparent 100%)",
 };
 
 // ─── Notification config ──────────────────────────────────────────────────────
@@ -205,53 +204,67 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="w-full max-h-[72vh] flex flex-col overflow-hidden rounded-2xl bg-white border border-slate-200 shadow-dropdown-lg">
-      <div className="px-4 py-3 flex items-center justify-between"
-        style={{ background: "linear-gradient(180deg, #f0f6ff 0%, #ffffff 100%)", borderBottom: "1px solid #e8f0fe" }}>
-        <div className="flex items-center gap-2">
-          <span className="text-[13px] font-bold text-slate-900 tracking-wide">Notificaciones</span>
+      
+      {/* Header Minimalista */}
+      <div className="px-5 py-4 flex items-center justify-between border-b border-slate-100 bg-white">
+        <div className="flex items-center gap-2.5">
+          <span className="text-[14px] font-bold text-slate-800 tracking-wide">Notificaciones</span>
           {unreadCount > 0 && (
-            <span className="text-[10px] font-black px-2 py-0.5 rounded-full text-white"
-              style={{ background: "linear-gradient(135deg, #1e44be, #0f2548)" }}>
-              {unreadCount}
+            <span className="flex h-5 items-center justify-center rounded-full bg-blue-600 px-2 text-[10px] font-bold text-white shadow-sm">
+              {unreadCount} nuevas
             </span>
           )}
         </div>
         {unreadCount > 0 && (
           <button onClick={markAllRead}
-            className="flex items-center gap-1.5 text-[11px] font-semibold text-blue-600 hover:text-blue-800 transition-colors">
-            <Icons.Check /> Marcar todo
+            className="flex items-center gap-1.5 text-[12px] font-semibold text-slate-500 hover:text-slate-800 transition-colors">
+            <Icons.Check /> Marcar leído
           </button>
         )}
       </div>
 
-      <div className="overflow-y-auto flex-1 divide-y divide-slate-50">
+      <div className="overflow-y-auto flex-1 bg-white">
         {recientes.length === 0 ? (
-          <div className="flex flex-col items-center gap-3 py-10 px-6 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-slate-50 border border-slate-100 grid place-items-center text-slate-300">
+          <div className="flex flex-col items-center gap-3 py-12 px-6 text-center">
+            <div className="w-12 h-12 rounded-full bg-slate-50 flex items-center justify-center text-slate-400">
               <Icons.Bell />
             </div>
             <div>
-              <p className="text-sm font-semibold text-slate-600">Sin notificaciones</p>
-              <p className="text-[12px] text-slate-400 mt-0.5">La actividad aparecerá aquí.</p>
+              <p className="text-[13px] font-semibold text-slate-600">No hay notificaciones</p>
+              <p className="text-[11px] text-slate-400 mt-1">Estás al día con tus solicitudes.</p>
             </div>
           </div>
         ) : (
           recientes.map((n: Notification) => {
             const cfg = notiCfg[n.tipo];
+            const isUnread = !n.leida;
             return (
               <button key={n.id} onClick={() => markAsRead(n.id)}
-                className={cn("w-full flex gap-3 px-4 py-3 border-l-2 text-left transition-colors hover:bg-slate-50", n.leida ? "opacity-50 border-transparent" : "border-blue-500 bg-blue-50/30")}>
-                <div className={cn("w-8 h-8 rounded-lg flex-shrink-0 grid place-items-center ring-1 mt-0.5", cfg.iconBg, cfg.iconBorder)}>
-                  <span className={cn("w-2 h-2 rounded-full", cfg.dot)} />
+                className={cn(
+                  "relative w-full flex items-start gap-4 px-5 py-4 text-left transition-colors border-b border-slate-50 hover:bg-slate-50/80 group",
+                  !isUnread && "opacity-60"
+                )}>
+                
+                {/* Punto Azul de No Leído */}
+                {isUnread && (
+                  <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
+                )}
+
+                {/* Icono de Estado */}
+                <div className={cn("flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 mt-0.5", cfg.iconBg, cfg.dot.replace('bg-', 'text-'))}>
+                   {/* Simula un icono usando el color de texto derivado de bg- para dar un toque semántico. Lo ideal es mapear un SVG real */}
+                   <span className={cn("w-2 h-2 rounded-full block", cfg.dot)} />
                 </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-start justify-between gap-2">
-                    <span className={cn("text-[13px] leading-snug tracking-wide", n.leida ? "text-slate-600 font-medium" : "text-slate-900 font-bold")}>
-                      {n.titulo}
-                    </span>
-                  </div>
-                  <p className="text-[12px] text-slate-500 leading-relaxed mt-0.5 line-clamp-2">{n.mensaje}</p>
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1.5 block">
+                
+                <div className="flex-1 min-w-0 pr-2">
+                  <span className={cn(
+                    "block text-[13px] leading-tight tracking-wide mb-1 transition-colors", 
+                    isUnread ? "text-slate-900 font-bold group-hover:text-blue-600" : "text-slate-600 font-semibold"
+                  )}>
+                    {n.titulo}
+                  </span>
+                  <p className="text-[12px] text-slate-500 leading-relaxed mb-1.5 line-clamp-2">{n.mensaje}</p>
+                  <span className="text-[11px] font-medium text-slate-400">
                     {timeAgo(n.createdAt)}
                   </span>
                 </div>
@@ -261,14 +274,10 @@ function NotificacionesPanel({ onClose }: { onClose: () => void }) {
         )}
       </div>
 
-      <div className="p-2 flex gap-1.5 border-t border-slate-100 bg-slate-50/50">
+      <div className="p-3 border-t border-slate-100 bg-slate-50/50 flex items-center justify-center">
         <button onClick={() => { onClose(); navigate("/notificaciones"); }}
-          className="flex-1 py-2 text-[12px] font-bold text-blue-700 hover:bg-blue-100 rounded-lg transition-colors">
-          Ver todas
-        </button>
-        <button onClick={onClose}
-          className="flex-1 py-2 text-[12px] font-bold text-slate-500 hover:bg-slate-200 rounded-lg transition-colors">
-          Cerrar
+          className="text-[12px] font-bold text-blue-600 hover:text-blue-800 transition-colors py-1 px-4">
+          Ver todas las notificaciones
         </button>
       </div>
     </div>
@@ -324,23 +333,22 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
     <>
       {/* ── DESKTOP SIDEBAR (Permanent Left) ────────────────────────────────── */}
       <aside
-        className="hidden lg:flex fixed top-0 left-0 z-50 w-[280px] h-screen flex-col border-r border-[#1a2d54]"
-        style={{ background: T.headerBg, boxShadow: "4px 0 30px rgba(15,37,72,0.15)" }}
+        className="hidden lg:flex fixed top-0 left-0 z-50 w-[280px] h-screen flex-col border-r border-white/5"
+        style={{ background: T.headerBg }}
       >
-        <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
+        <div className="absolute right-0 top-0 bottom-0 w-[1px]" style={{ background: T.drawerGlow }} />
 
         {/* Brand / Logo Area */}
-        <div className="flex flex-col gap-4 px-6 pt-8 pb-6 border-b border-white/5 mx-2">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center justify-center w-11 h-11 rounded-xl"
-              style={{ background: "rgba(255,255,255,0.08)", border: "1px solid rgba(255,255,255,0.15)", boxShadow: "0 4px 12px rgba(0,0,0,0.12)" }}>
-              <img src={logo} alt="Asamblea" className="h-6 brightness-0 invert opacity-90 drop-shadow-sm" />
+        <div className="flex flex-col gap-4 px-6 pt-8 pb-6 border-b border-white/5">
+          <div className="flex items-center gap-3.5">
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10 shadow-sm">
+              <img src={logo} alt="Asamblea" className="h-5 brightness-0 invert opacity-100" />
             </div>
             <div>
-              <span className="block text-[9.5px] font-black uppercase tracking-[.18em] text-[#86a8e7] leading-tight">
-                Asamblea Legislativa
+              <span className="block text-[10px] font-bold uppercase tracking-[.2em] text-white/50 leading-tight">
+                Asamblea
               </span>
-              <span className="block text-[17px] font-extrabold text-white leading-tight mt-0.5">
+              <span className="block text-[16px] font-bold text-white leading-tight mt-0.5 tracking-wide">
                 Transporte
               </span>
             </div>
@@ -349,7 +357,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
         {/* Navigation Links */}
         <nav className="flex-1 px-4 pt-6 space-y-1.5 overflow-y-auto">
-          <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-white/30">
+          <p className="px-4 pb-2 text-[10px] font-bold uppercase tracking-[.2em] text-white/30">
             Menú Principal
           </p>
           {navItems.map(item => (
@@ -359,13 +367,13 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
         {/* Bottom Section: Profile & Logout */}
         <div className="p-4 mt-auto">
-          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-5 shadow-inner">
+          <div className="p-4 rounded-2xl bg-white/5 border border-white/10 flex flex-col gap-5">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar initial={initial} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold text-white truncate leading-tight tracking-wide">{user?.name || "Usuario"}</p>
-                  <p className="text-[11px] font-medium text-[#86a8e7] truncate mt-0.5">
+                  <p className="text-[11px] text-white/50 truncate mt-0.5">
                     {(user as any)?.role || "Administrador"}
                   </p>
                 </div>
@@ -375,7 +383,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 <button onClick={() => setNotiOpen(v => !v)} className={iconBtnClass(notiOpen)} title="Notificaciones">
                   <Icons.Bell />
                   {unreadCount > 0 && (
-                    <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548] shadow-sm">
+                    <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white bg-blue-500 shadow-sm">
                       {unreadCount > 9 ? "9+" : unreadCount}
                     </span>
                   )}
@@ -390,7 +398,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
             <button
               onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 bg-white/5 hover:bg-red-500/20 border border-transparent hover:border-red-500/30 transition-all duration-200"
+              className="w-full flex items-center justify-center gap-2 py-3 rounded-xl text-[12.5px] font-semibold text-white/60 hover:text-white bg-white/5 hover:bg-white/10 transition-all duration-200"
             >
               <Icons.Logout /> Cerrar Sesión
             </button>
@@ -403,7 +411,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         className="lg:hidden fixed top-0 left-0 right-0 z-50 h-[60px] flex items-center justify-between px-4"
         style={{ background: T.headerBg, boxShadow: "0 2px 10px rgba(15,37,72,0.22)" }}
       >
-        <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: T.goldenLine }} />
+        <div className="absolute bottom-0 left-0 right-0 h-[1px]" style={{ background: "rgba(255,255,255,0.05)" }} />
 
         <button onClick={open ? onClose : onOpen} className="flex items-center justify-center w-10 h-10 rounded-xl text-white/70 hover:text-white bg-white/10 hover:bg-white/20 transition-all" aria-label="Menú">
           {open ? <Icons.X /> : <Icons.Menu />}
@@ -420,7 +428,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           <button onClick={() => setNotiOpen(v => !v)} className={iconBtnClass(notiOpen)}>
             <Icons.Bell />
             {unreadCount > 0 && (
-              <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548]">
+              <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full text-[9px] font-black text-white bg-blue-500 shadow-sm">
                 {unreadCount > 9 ? "9+" : unreadCount}
               </span>
             )}
@@ -438,18 +446,18 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           "transition-transform duration-300",
           open ? "translate-x-0" : "-translate-x-full",
         )}
-        style={{ background: T.headerBg, borderColor: "rgba(255,255,255,0.08)", boxShadow: open ? "6px 0 32px rgba(15,37,72,0.35)" : "none", transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)" }}
+        style={{ background: T.headerBg, borderColor: "rgba(255,255,255,0.08)", boxShadow: open ? "6px 0 32px rgba(0,0,0,0.4)" : "none", transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)" }}
       >
-        <div className="absolute top-0 right-0 bottom-0 w-[2px]" style={{ background: T.drawerGlow }} />
+        <div className="absolute top-0 right-0 bottom-0 w-[1px]" style={{ background: T.drawerGlow }} />
 
-        <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
+        <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.05)" }}>
           <div className="flex items-center gap-3 mb-5">
-            <div className="flex items-center justify-center w-10 h-10 rounded-xl" style={{ background: "rgba(255,255,255,0.12)", border: "1px solid rgba(255,255,255,0.18)" }}>
-              <img src={logo} alt="Logo" className="h-[22px] brightness-0 invert opacity-90" />
+            <div className="flex items-center justify-center w-10 h-10 rounded-xl bg-white/5 border border-white/10">
+              <img src={logo} alt="Logo" className="h-[22px] brightness-0 invert opacity-100" />
             </div>
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
-              <p className="text-[15px] font-extrabold text-white leading-none">Transporte</p>
+              <p className="text-[10px] font-bold uppercase tracking-[.2em] text-white/50 leading-none mb-1">Asamblea</p>
+              <p className="text-[15px] font-bold text-white leading-none">Transporte</p>
             </div>
           </div>
 
@@ -482,9 +490,9 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       {/* ── BOTTOM NAV (Mobile) ───────────────────────────────────────────── */}
       <nav
         className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2"
-        style={{ height: "64px", background: T.bottomNavBg, borderTop: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 -4px 20px rgba(15,37,72,0.28)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+        style={{ height: "64px", background: T.bottomNavBg, borderTop: "1px solid rgba(255,255,255,0.05)", boxShadow: "0 -4px 20px rgba(0,0,0,0.3)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
       >
-        <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.35) 50%, transparent 100%)" }} />
+        <div className="absolute top-0 left-0 right-0 h-[1px]" style={{ background: "rgba(255,255,255,0.05)" }} />
         {navItems.map(item => <NavLinkBottom key={item.to} item={item} />)}
         <button className="flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all text-white/50" onClick={onOpen}>
           <Icons.User />
