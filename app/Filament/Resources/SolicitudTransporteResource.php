@@ -409,6 +409,86 @@ class SolicitudTransporteResource extends Resource
                             auth()->user()->hasRole('operativo') &&
                             $record->estado === EstadoSolicitudEnum::EN_REVISION
                         ),
+                        Tables\Actions\Action::make('asignar_transporte')
+    ->label('Asignar transporte')
+    ->icon('heroicon-o-truck')
+    ->color('info')
+    ->modalHeading('Asignar Vehículo y Motorista')
+    ->visible(fn ($record) =>
+        auth()->check()
+        && auth()->user()->hasRole('jefe')
+        && $record->estado === EstadoSolicitudEnum::APROBADA
+    )
+    ->form([
+
+        Forms\Components\Select::make('vehiculo_id')
+            ->label('Vehículo')
+            ->options(
+                \App\Models\Vehiculo::where('activo', true)
+                    ->get()
+                    ->mapWithKeys(fn ($v) => [
+                        $v->id => "{$v->placa} - {$v->tipo->nombre}"
+                    ])
+            )
+            ->searchable()
+            ->required()
+            ->live()
+            ->afterStateUpdated(function ($state, callable $set) {
+
+                $vehiculo = \App\Models\Vehiculo::find($state);
+
+                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+
+                $set('motorista_nombre', $motorista
+                    ? "{$motorista->nombre} — DUI: {$motorista->dui}"
+                    : 'Sin motorista asignado'
+                );
+
+                $set('motorista_id', $motorista?->id);
+            }),
+
+        Forms\Components\Hidden::make('motorista_id'),
+
+        Forms\Components\Placeholder::make('motorista_nombre')
+            ->label('Motorista asignado')
+            ->content(fn ($get) =>
+                $get('motorista_nombre') ?? 'Selecciona un vehículo'
+            ),
+
+    ]),
+    ->action(function (SolicitudTransporte $record, array $data) {
+
+    $estadoAnterior = $record->estado;
+
+    $record->update([
+        'vehiculo_id' => $data['vehiculo_id'],
+        'motorista_id' => $data['motorista_id'],
+        'estado' => EstadoSolicitudEnum::ASIGNADA,
+    ]);
+
+    HistorialEstado::create([
+        'entidad_tipo' => 'solicitud_transporte',
+        'entidad_id' => $record->id,
+        'estado_anterior' => $estadoAnterior->value,
+        'estado_nuevo' => EstadoSolicitudEnum::ASIGNADA->value,
+        'user_id' => auth()->id(),
+        'comentario' => 'Vehículo y motorista asignados.',
+    ]);
+
+    BitacoraEvento::create([
+        'entidad_tipo' => 'solicitud_transporte',
+        'entidad_id' => $record->id,
+        'accion' => AccionBitacoraEnum::ASIGNAR->value,
+        'user_id' => auth()->id(),
+        'datos_extras' => [
+            'vehiculo_id' => $data['vehiculo_id'],
+            'motorista_id' => $data['motorista_id'],
+        ],
+    ]);
+
+}),
+
+
 
                     Tables\Actions\Action::make('aprobar')
                         ->label('Aprobar')
@@ -484,7 +564,7 @@ class SolicitudTransporteResource extends Resource
                         ->action(function (SolicitudTransporte $record, array $data) {
                             $estadoAnterior = $record->estado;
 
-                            $record->estado        = EstadoSolicitudEnum::PROGRAMADA;
+                            $record->estado        = EstadoSolicitudEnum::APROBADA;
                             $record->comentario_jefe = $data['comentario_jefe'];
                             $record->decidido_por  = auth()->id();
                             $record->decidido_en   = now();
