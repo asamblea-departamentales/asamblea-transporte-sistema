@@ -455,7 +455,7 @@ class SolicitudTransporteResource extends Resource
                 $get('motorista_nombre') ?? 'Selecciona un vehículo'
             ),
 
-    ]),
+    ])
     ->action(function (SolicitudTransporte $record, array $data) {
 
     $estadoAnterior = $record->estado;
