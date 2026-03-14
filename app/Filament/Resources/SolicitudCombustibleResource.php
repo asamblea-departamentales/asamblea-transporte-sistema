@@ -373,171 +373,95 @@ public static function table(Table $table): Table
                 ->label('Vehículo')
                 ->relationship('vehiculo', 'placa'),
         ])
-        ->actions([
-    Tables\Actions\ViewAction::make(),
+        ->form([
+                        Forms\Components\Select::make('contrato_id')
+                            ->label('Contrato')
+                            ->options(
+                                ContratoCombustible::where('activo', true)
+                                    ->get()
+                                    ->mapWithKeys(fn ($c) => [
+                                        $c->id => "{$c->numero_contrato} — {$c->nombre} (Disponible: $" . number_format($c->monto_disponible, 2) . ")"
+                                    ])
+                            )
+                            ->required()
+                            ->searchable()
+                            ->live()
+                            ->afterStateUpdated(fn ($set) => $set('serie_vale_id', null)),
 
-    Tables\Actions\ActionGroup::make([
+                        Forms\Components\Select::make('serie_vale_id')
+                            ->label('Serie de Vales')
+                            ->options(fn ($get) =>
+                                SerieVale::where('contrato_id', $get('contrato_id'))
+                                    ->where('activo', true)
+                                    ->get()
+                                    ->mapWithKeys(fn ($s) => [
+                                        $s->id => "{$s->nombre} — Val: $" . number_format($s->valor, 2) .
+                                                  " | Correlativo: {$s->correlativo_inicio}-{$s->correlativo_fin}" .
+                                                  " | Siguiente: " . ($s->correlativo_actual ?: $s->correlativo_inicio)
+                                    ])
+                            )
+                            ->required()
+                            ->searchable()
+                            ->live()
+                            ->disabled(fn ($get) => !$get('contrato_id'))
+                            ->helperText('Primero selecciona un contrato.'),
 
-        Tables\Actions\EditAction::make()
-            ->visible(fn ($record) =>
-                $record->estado === EstadoSolicitudEnum::PENDIENTE
-            ),
+                        Forms\Components\TextInput::make('cantidad_vales')
+                            ->label('Cantidad de Vales')
+                            ->numeric()
+                            ->required()
+                            ->minValue(1)
+                            ->live(debounce: 500)
+                            ->helperText(function ($get) {
+                                $serieId = $get('serie_vale_id');
+                                $cantidad = (int) ($get('cantidad_vales') ?? 0);
 
-        Tables\Actions\Action::make('observacion')
-            ->label('Observación')
-            ->icon('heroicon-o-chat-bubble-left-ellipsis')
-            ->modalHeading('Agregar observación')
-            ->form([
-                Forms\Components\Textarea::make('observaciones')
-                    ->label('Comentario técnico')
-                    ->rows(4)
-                    ->required(),
-            ])
-            ->action(function (SolicitudCombustible $record, array $data) {
+                                if (!$serieId || $cantidad <= 0) return null;
 
-                $estadoAnterior = $record->estado;
+                                $serie = SerieVale::find($serieId);
+                                if (!$serie) return null;
 
-                $record->observaciones = $data['observaciones'];
+                                $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
+                                $fin    = $inicio + $cantidad - 1;
+                                $monto  = $cantidad * (float) $serie->valor;
 
-                if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                    $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                }
+                                return "Rango: {$inicio} – {$fin} | Monto total: $" . number_format($monto, 2);
+                            }),
 
-                $record->save();
+                        Forms\Components\Placeholder::make('resumen_asignacion')
+                            ->label('Resumen')
+                            ->content(function ($get) {
+                                $serieId  = $get('serie_vale_id');
+                                $cantidad = (int) ($get('cantidad_vales') ?? 0);
 
-                HistorialEstado::create([
-                    'entidad_tipo' => 'solicitud_combustible',
-                    'entidad_id' => $record->id,
-                    'estado_anterior' => $estadoAnterior?->value,
-                    'estado_nuevo' => $record->estado?->value,
-                    'user_id' => auth()->id(),
-                    'comentario' => $data['observaciones'],
-                ]);
-            })
-            ->visible(fn ($record) =>
-                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
-                in_array($record->estado, [
-                    EstadoSolicitudEnum::PENDIENTE,
-                    EstadoSolicitudEnum::EN_REVISION
-                ])
-            ),
+                                if (!$serieId || $cantidad <= 0) {
+                                    return new \Illuminate\Support\HtmlString('<span class="text-gray-400 text-sm">Selecciona una serie y cantidad para ver el resumen.</span>');
+                                }
 
-        Tables\Actions\Action::make('pre_aprobar')
-            ->label('Pre-aprobar')
-            ->color('warning')
-            ->icon('heroicon-o-clock')
-            ->requiresConfirmation()
-            ->action(function (SolicitudCombustible $record) {
+                                $serie = SerieVale::find($serieId);
+                                if (!$serie) return '-';
 
-                $estadoAnterior = $record->estado;
+                                $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
+                                $fin    = $inicio + $cantidad - 1;
+                                $monto  = $cantidad * (float) $serie->valor;
 
-                $record->update([
-                    'estado' => EstadoSolicitudEnum::PRE_APROBADA
-                ]);
+                                $disponibles = $serie->correlativo_fin - $inicio + 1;
+                                $alerta      = $fin > $serie->correlativo_fin
+                                    ? '<span class="text-red-600 font-bold">⚠ Sin suficientes vales en esta serie.</span>'
+                                    : '<span class="text-green-600">✓ Vales disponibles suficientes.</span>';
 
-                HistorialEstado::create([
-                    'entidad_tipo' => 'solicitud_combustible',
-                    'entidad_id' => $record->id,
-                    'estado_anterior' => $estadoAnterior?->value,
-                    'estado_nuevo' => EstadoSolicitudEnum::PRE_APROBADA->value,
-                    'user_id' => auth()->id(),
-                    'comentario' => 'Solicitud pre-aprobada.',
-                ]);
-            })
-            ->visible(fn ($record) =>
-                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
-                in_array($record->estado, [
-                    EstadoSolicitudEnum::PENDIENTE,
-                    EstadoSolicitudEnum::EN_REVISION
-                ])
-            ),
-
-        Tables\Actions\Action::make('aprobar')
-            ->label('Aprobar final')
-            ->color('success')
-            ->icon('heroicon-o-check-circle')
-            ->form([
-                Forms\Components\Textarea::make('observaciones')
-                    ->label('Notas de aprobación')
-                    ->required(),
-            ])
-            ->action(function (SolicitudCombustible $record, array $data) {
-
-                $estadoAnterior = $record->estado;
-
-                $record->update([
-                    'estado' => EstadoSolicitudEnum::APROBADA,
-                    'observaciones' => $data['observaciones'],
-                    'aprobador_id' => auth()->id(),
-                    'fecha_aprobacion' => now(),
-                ]);
-
-                HistorialEstado::create([
-                    'entidad_tipo' => 'solicitud_combustible',
-                    'entidad_id' => $record->id,
-                    'estado_anterior' => $estadoAnterior?->value,
-                    'estado_nuevo' => EstadoSolicitudEnum::APROBADA->value,
-                    'user_id' => auth()->id(),
-                    'comentario' => $data['observaciones'],
-                ]);
-            })
-            ->visible(fn ($record) =>
-                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
-                $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-            ),
-
-        Tables\Actions\Action::make('asignar_vales')
-            ->label('Asignar Cupones')
-            ->color('primary')
-            ->icon('heroicon-o-ticket')
-            ->modalHeading('Asignar Cupones de Combustible')
-            ->modalWidth('xl')
-            ->form([
-                // FORM QUE YA TIENES (contrato, serie, cantidad)
-            ])
-            ->action(function (SolicitudCombustible $record, array $data) {
-
-                try {
-
-                    app(SolicitudCombustibleService::class)->asignarVales(
-                        $record,
-                        auth()->id(),
-                        [
-                            'contrato_id' => $data['contrato_id'],
-                            'serie_vale_id' => $data['serie_vale_id'],
-                            'cantidad_vales' => $data['cantidad_vales'],
-                        ]
-                    );
-
-                    Notification::make()
-                        ->title('Vales asignados correctamente')
-                        ->body("Se asignaron {$data['cantidad_vales']} vales a la solicitud {$record->codigo}.")
-                        ->success()
-                        ->send();
-
-                } catch (\DomainException $e) {
-
-                    Notification::make()
-                        ->title('No se pudo asignar')
-                        ->body($e->getMessage())
-                        ->danger()
-                        ->send();
-                }
-            })
-            ->visible(fn ($record) =>
-                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
-                $record->estado === EstadoSolicitudEnum::APROBADA
-            ),
-
-        Tables\Actions\DeleteAction::make()
-            ->visible(fn ($record) =>
-                $record->estado === EstadoSolicitudEnum::PENDIENTE
-            ),
-
-    ])
-    ->label('Gestionar')
-    ->icon('heroicon-m-cog-6-tooth')
-])
+                                return new \Illuminate\Support\HtmlString("
+                                    <div class='text-sm space-y-1'>
+                                        <div><span class='font-medium'>Serie:</span> {$serie->nombre}</div>
+                                        <div><span class='font-medium'>Valor por vale:</span> \$" . number_format($serie->valor, 2) . "</div>
+                                        <div><span class='font-medium'>Correlativo:</span> {$inicio} → {$fin}</div>
+                                        <div><span class='font-medium'>Monto total:</span> <strong>\$" . number_format($monto, 2) . "</strong></div>
+                                        <div><span class='font-medium'>Vales disponibles en serie:</span> {$disponibles}</div>
+                                        <div>{$alerta}</div>
+                                    </div>
+                                ");
+                            }),
+                    ])
 
         ->bulkActions([
             Tables\Actions\BulkActionGroup::make([
