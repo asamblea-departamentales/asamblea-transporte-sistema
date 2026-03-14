@@ -373,7 +373,126 @@ public static function table(Table $table): Table
                 ->label('Vehículo')
                 ->relationship('vehiculo', 'placa'),
         ])
-        ->form([
+        ->actions([
+    Tables\Actions\ViewAction::make(),
+
+    Tables\Actions\ActionGroup::make([
+
+        Tables\Actions\EditAction::make()
+            ->visible(fn ($record) =>
+                $record->estado === EstadoSolicitudEnum::PENDIENTE
+            ),
+
+        Tables\Actions\Action::make('observacion')
+            ->label('Observación')
+            ->icon('heroicon-o-chat-bubble-left-ellipsis')
+            ->modalHeading('Agregar observación')
+            ->form([
+                Forms\Components\Textarea::make('observaciones')
+                    ->label('Comentario técnico')
+                    ->rows(4)
+                    ->required(),
+            ])
+            ->action(function (SolicitudCombustible $record, array $data) {
+
+                $estadoAnterior = $record->estado;
+
+                $record->observaciones = $data['observaciones'];
+
+                if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
+                    $record->estado = EstadoSolicitudEnum::EN_REVISION;
+                }
+
+                $record->save();
+
+                HistorialEstado::create([
+                    'entidad_tipo' => 'solicitud_combustible',
+                    'entidad_id' => $record->id,
+                    'estado_anterior' => $estadoAnterior?->value,
+                    'estado_nuevo' => $record->estado?->value,
+                    'user_id' => auth()->id(),
+                    'comentario' => $data['observaciones'],
+                ]);
+            })
+            ->visible(fn ($record) =>
+                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
+                in_array($record->estado, [
+                    EstadoSolicitudEnum::PENDIENTE,
+                    EstadoSolicitudEnum::EN_REVISION
+                ])
+            ),
+
+        Tables\Actions\Action::make('pre_aprobar')
+            ->label('Pre-aprobar')
+            ->color('warning')
+            ->icon('heroicon-o-clock')
+            ->requiresConfirmation()
+            ->action(function (SolicitudCombustible $record) {
+
+                $estadoAnterior = $record->estado;
+
+                $record->update([
+                    'estado' => EstadoSolicitudEnum::PRE_APROBADA
+                ]);
+
+                HistorialEstado::create([
+                    'entidad_tipo' => 'solicitud_combustible',
+                    'entidad_id' => $record->id,
+                    'estado_anterior' => $estadoAnterior?->value,
+                    'estado_nuevo' => EstadoSolicitudEnum::PRE_APROBADA->value,
+                    'user_id' => auth()->id(),
+                    'comentario' => 'Solicitud pre-aprobada.',
+                ]);
+            })
+            ->visible(fn ($record) =>
+                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
+                in_array($record->estado, [
+                    EstadoSolicitudEnum::PENDIENTE,
+                    EstadoSolicitudEnum::EN_REVISION
+                ])
+            ),
+
+        Tables\Actions\Action::make('aprobar')
+            ->label('Aprobar final')
+            ->color('success')
+            ->icon('heroicon-o-check-circle')
+            ->form([
+                Forms\Components\Textarea::make('observaciones')
+                    ->label('Notas de aprobación')
+                    ->required(),
+            ])
+            ->action(function (SolicitudCombustible $record, array $data) {
+
+                $estadoAnterior = $record->estado;
+
+                $record->update([
+                    'estado' => EstadoSolicitudEnum::APROBADA,
+                    'observaciones' => $data['observaciones'],
+                    'aprobador_id' => auth()->id(),
+                    'fecha_aprobacion' => now(),
+                ]);
+
+                HistorialEstado::create([
+                    'entidad_tipo' => 'solicitud_combustible',
+                    'entidad_id' => $record->id,
+                    'estado_anterior' => $estadoAnterior?->value,
+                    'estado_nuevo' => EstadoSolicitudEnum::APROBADA->value,
+                    'user_id' => auth()->id(),
+                    'comentario' => $data['observaciones'],
+                ]);
+            })
+            ->visible(fn ($record) =>
+                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
+                $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+            ),
+
+        Tables\Actions\Action::make('asignar_vales')
+            ->label('Asignar Cupones')
+            ->color('primary')
+            ->icon('heroicon-o-ticket')
+            ->modalHeading('Asignar Cupones de Combustible')
+            ->modalWidth('xl')
+            ->form([
                         Forms\Components\Select::make('contrato_id')
                             ->label('Contrato')
                             ->options(
@@ -462,6 +581,51 @@ public static function table(Table $table): Table
                                 ");
                             }),
                     ])
+
+            ])
+            ->action(function (SolicitudCombustible $record, array $data) {
+
+                try {
+
+                    app(SolicitudCombustibleService::class)->asignarVales(
+                        $record,
+                        auth()->id(),
+                        [
+                            'contrato_id' => $data['contrato_id'],
+                            'serie_vale_id' => $data['serie_vale_id'],
+                            'cantidad_vales' => $data['cantidad_vales'],
+                        ]
+                    );
+
+                    Notification::make()
+                        ->title('Vales asignados correctamente')
+                        ->body("Se asignaron {$data['cantidad_vales']} vales a la solicitud {$record->codigo}.")
+                        ->success()
+                        ->send();
+
+                } catch (\DomainException $e) {
+
+                    Notification::make()
+                        ->title('No se pudo asignar')
+                        ->body($e->getMessage())
+                        ->danger()
+                        ->send();
+                }
+            })
+            ->visible(fn ($record) =>
+                auth()->user()->hasAnyRole(['jefe','admin','ti']) &&
+                $record->estado === EstadoSolicitudEnum::APROBADA
+            ),
+
+        Tables\Actions\DeleteAction::make()
+            ->visible(fn ($record) =>
+                $record->estado === EstadoSolicitudEnum::PENDIENTE
+            ),
+
+    ])
+    ->label('Gestionar')
+    ->icon('heroicon-m-cog-6-tooth')
+])
 
         ->bulkActions([
             Tables\Actions\BulkActionGroup::make([
