@@ -165,11 +165,12 @@ export default function TransportStep3Page() {
         origenCoords = { lat: wizardData.origenLat, lng: wizardData.origenLng };
       } else if (wizardData.origen) {
         origenCoords = await geocodeAddress(wizardData.origen);
+        if (!mapRef.current) return;
       }
 
       if (origenCoords) {
         const m = L.marker([origenCoords.lat, origenCoords.lng], { icon: makeIcon("#0f2548") })
-          .addTo(mapRef.current!).bindPopup(`<b>Origen:</b><br>${wizardData.origen}`);
+          .addTo(mapRef.current).bindPopup(`<b>Origen:</b><br>${wizardData.origen}`);
         markersRef.current.push(m);
         bounds.push([origenCoords.lat, origenCoords.lng]);
       }
@@ -178,10 +179,11 @@ export default function TransportStep3Page() {
       for (const [idx, dest] of (wizardData.destinos || []).entries()) {
         if (!dest.address?.trim()) continue;
         const coords = dest.lat && dest.lng ? { lat: dest.lat, lng: dest.lng } : await geocodeAddress(dest.address);
+        if (!mapRef.current) return;
         if (coords) {
           destinosCoords.push({ address: dest.address, ...coords });
           const m = L.marker([coords.lat, coords.lng], { icon: makeIcon("#ef4444") })
-            .addTo(mapRef.current!).bindPopup(`<b>Destino ${idx + 1}:</b><br>${dest.address}`);
+            .addTo(mapRef.current).bindPopup(`<b>Destino ${idx + 1}:</b><br>${dest.address}`);
           markersRef.current.push(m);
           bounds.push([coords.lat, coords.lng]);
         }
@@ -190,12 +192,13 @@ export default function TransportStep3Page() {
       if (origenCoords && destinosCoords.length > 0) {
         const allPoints = [origenCoords, ...destinosCoords];
         const osrm = await getOSRMRoute(allPoints);
+        if (!mapRef.current) return;
         if (osrm?.geometry?.length) {
-          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.85 }).addTo(mapRef.current!);
+          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.85 }).addTo(mapRef.current);
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin, isReal: true });
         } else {
           const pts: L.LatLngExpression[] = allPoints.map((p) => [p.lat, p.lng]);
-          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current!);
+          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current);
           let km = 0, prev = origenCoords;
           destinosCoords.forEach((d) => { km += haversineKm(prev.lat, prev.lng, d.lat, d.lng); prev = d; });
           if (km > 0) setRouteInfo({ distance: km, duration: (km / 45) * 60, isReal: false });
