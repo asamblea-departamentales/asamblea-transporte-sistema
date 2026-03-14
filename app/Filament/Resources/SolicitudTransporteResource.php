@@ -341,7 +341,14 @@ class SolicitudTransporteResource extends Resource
                     ->relationship('unidad', 'nombre'),
             ])
             ->actions([
-                Tables\Actions\ViewAction::make(),
+                Tables\Actions\ViewAction::make()
+                ->visible(fn () => auth()->user()->hasAnyRole([
+        'operativo',
+        'jefe',
+        'liquidador',
+        'ti',
+        'super_admin'
+    ])),
 
                 //  Agrupar acciones para que no se vea saturado en móvil
                 Tables\Actions\ActionGroup::make([
@@ -385,7 +392,11 @@ class SolicitudTransporteResource extends Resource
                             ]);
                         })
                         ->visible(fn (SolicitudTransporte $record) =>
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
+                            auth()->user()->hasRole('operativo') &&
+                            in_array($record->estado, [
+                            EstadoSolicitudEnum::PENDIENTE,
+                            EstadoSolicitudEnum::EN_REVISION
+                            ], true)
                         ),
 
                     Tables\Actions\Action::make('pre_aprobar')
@@ -416,9 +427,10 @@ class SolicitudTransporteResource extends Resource
                             ]);
                         })
                         ->visible(fn (SolicitudTransporte $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                        ),
+                        auth()->user()->hasRole('operativo') &&
+                        $record->estado === EstadoSolicitudEnum::EN_REVISION
+                    ),
+
 
                     // APROBAR (PROGRAMAR)
                     Tables\Actions\Action::make('aprobar')
@@ -566,9 +578,10 @@ class SolicitudTransporteResource extends Resource
                             }
                         })
                         ->visible(fn (SolicitudTransporte $record) =>
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
+                        auth()->user()->hasRole('jefe') &&
+                        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+                    ),
+
 
                      Tables\Actions\Action::make('mision_oficial')
     ->label('Misión Oficial')
@@ -579,6 +592,7 @@ class SolicitudTransporteResource extends Resource
     ]))
     ->openUrlInNewTab()
     ->visible(fn (SolicitudTransporte $record) =>
+        auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin']) &&
         in_array($record->estado, [
             EstadoSolicitudEnum::PROGRAMADA,
             EstadoSolicitudEnum::COMPLETADA,
@@ -616,8 +630,20 @@ class SolicitudTransporteResource extends Resource
                             ]);
                         })
                         ->visible(fn (SolicitudTransporte $record) =>
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)
-                        ),
+    (
+        auth()->user()->hasRole('operativo') &&
+        in_array($record->estado, [
+            EstadoSolicitudEnum::PENDIENTE,
+            EstadoSolicitudEnum::EN_REVISION
+        ])
+    )
+    ||
+    (
+        auth()->user()->hasRole('jefe') &&
+        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+    )
+)
+
                 ])
                 ->label('Más')
                 ->icon('heroicon-m-ellipsis-vertical'),
@@ -629,6 +655,37 @@ class SolicitudTransporteResource extends Resource
     {
      return parent::getEloquentQuery()
         ->with(['solicitante', 'unidad', 'autorizador', 'vehiculo.tipo', 'motorista']);
+        $user = auth()->user();
+
+        //TI y super_admin ven todo
+        if ($user->hasAnyRole(['super_admin', 'ti'])){
+            return $query;
+        }
+
+        //operativo revisa solicitudes
+        if ($user->hasAnyRole('operativo')){
+            $query->whereIn('estado', [
+                EstadoSolicitudEnum::PENDIENTE,
+                EstadoSolicitudEnum::EN_REVISION,
+            ]);
+        }
+
+        //Jefe aprueba y asigna
+        if ($user->hasRole('jefe')) {
+        $query->whereIn('estado', [
+            EstadoSolicitudEnum::PRE_APROBADA,
+            EstadoSolicitudEnum::APROBADA,
+        ]);
+    }
+
+    // Liquidador solo ve finalizadas o asignadas
+    if ($user->hasRole('liquidador')) {
+        $query->whereIn('estado', [
+            EstadoSolicitudEnum::ASIGNADA,
+            EstadoSolicitudEnum::COMPLETADA,
+        ]);
+    }
+    
     }
 
     public static function getRelations(): array

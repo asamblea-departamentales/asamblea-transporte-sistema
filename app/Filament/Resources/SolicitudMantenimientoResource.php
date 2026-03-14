@@ -416,12 +416,37 @@ class SolicitudMantenimientoResource extends Resource
                 'aprobador',
             ]);
 
-           if (auth()->check() && auth()->user()->hasRole('solicitante')) {
-                $query->where('solicitante_id', auth()->id());
+           $user = auth()->user();
+
+        //TI y super_admin ven todo
+        if ($user->hasAnyRole(['super_admin', 'ti'])){
+            return $query;
         }
 
-        return $query;     
+        //operativo revisa solicitudes
+        if ($user->hasAnyRole('operativo')){
+            $query->whereIn('estado', [
+                EstadoSolicitudEnum::PENDIENTE,
+                EstadoSolicitudEnum::EN_REVISION,
+            ]);
+        }
+
+        //Jefe aprueba y asigna
+        if ($user->hasRole('jefe')) {
+        $query->whereIn('estado', [
+            EstadoSolicitudEnum::PRE_APROBADA,
+            EstadoSolicitudEnum::APROBADA,
+        ]);
     }
+
+    // Liquidador solo ve finalizadas o asignadas
+    if ($user->hasRole('liquidador')) {
+        $query->whereIn('estado', [
+            EstadoSolicitudEnum::ASIGNADA,
+            EstadoSolicitudEnum::COMPLETADA,
+        ]);
+    }
+    }     
 
     public static function getPages(): array
     {
