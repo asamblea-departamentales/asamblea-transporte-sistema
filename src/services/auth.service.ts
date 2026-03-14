@@ -1,5 +1,5 @@
 // src/services/auth.service.ts
-import { api } from "../lib/axios";
+import { api } from "../lib/api";
 
 export type LoginPayload = { email: string; password: string };
 

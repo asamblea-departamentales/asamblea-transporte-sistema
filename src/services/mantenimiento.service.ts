@@ -1,5 +1,5 @@
 // services/mantenimiento.service.ts
-import { api } from "../lib/axios";
+import { api } from "../lib/api";
 import type { RequestStatus, Unidad, Solicitante, LaravelPaginatedResponse, RequestFilters } from "./requests.service";
 
 export type TipoMantenimiento = {

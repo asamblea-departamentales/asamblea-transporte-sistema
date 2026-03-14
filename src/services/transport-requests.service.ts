@@ -1,5 +1,5 @@
 // src/services/transport-requests.service.ts
-import { api } from "../lib/axios";
+import { api } from "../lib/api";
 
 export type EstadoSolicitud =
   | "BORRADOR"

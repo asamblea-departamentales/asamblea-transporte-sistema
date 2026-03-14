@@ -4,13 +4,21 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./app/app";
 import { AuthProvider } from "./auth/AuthContext";
-import { api } from "./lib/axios";
+import { api } from "./lib/api";
 import "leaflet/dist/leaflet.css";
 
 declare global {
   interface Window {
     api: typeof api;
   }
+}
+
+if (import.meta.env.PROD) {
+  console.log = () => {};
+  console.debug = () => {};
+  console.info = () => {};
+  console.warn = () => {};
+  console.error = () => {};
 }
 
 if (import.meta.env.DEV) {

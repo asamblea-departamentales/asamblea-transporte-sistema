@@ -351,13 +351,26 @@ function RequestCard({ req, isExpanded, onToggle }: {
         </div>
 
         {/* Ver detalles */}
-        <div className="mt-3.5 flex justify-end">
-          <span className={`flex items-center gap-1 text-xs font-semibold transition-colors
-            ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
+        <div className="mt-3.5 flex items-center justify-between">
+          {isExpanded && (
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                window.location.href = `/solicitudes/${req.modulo}/${req.id}`;
+              }}
+              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
+            >
+              Ver detalle completo
+              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+              </svg>
+            </button>
+          )}
+          <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
           >
             {isExpanded ? "Ocultar detalles" : "Ver detalles"}
             <svg
-              className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+              className={`ml-auto h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
               fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
             >
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />

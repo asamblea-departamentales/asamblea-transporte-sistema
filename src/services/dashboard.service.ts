@@ -1,5 +1,5 @@
 // src/services/dashboard.service.ts
-import { api } from "../lib/axios";
+import { api } from "../lib/api";
 
 export type DashboardSummary = {
   pending: number;

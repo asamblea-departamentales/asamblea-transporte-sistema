@@ -1,6 +1,6 @@
 //"services/requests.service.ts"
 
-import { api } from "../lib/axios";
+import { api } from "../lib/api";
 
 // ─── TIPOS ────────────────────────────────────────────────────────────────────
 
