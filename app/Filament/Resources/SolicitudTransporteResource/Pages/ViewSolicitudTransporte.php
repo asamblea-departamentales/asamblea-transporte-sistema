@@ -102,7 +102,6 @@ class ViewSolicitudTransporte extends ViewRecord
                         'comentario'      => 'Solicitud pre-aprobada en revisión inicial.',
                     ]);
 
-                    // FIX #3: Usar Enum en lugar de string literal
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
                         'entidad_id'   => $record->id,
@@ -119,30 +118,86 @@ class ViewSolicitudTransporte extends ViewRecord
                     ], true)
                 ),
 
-            // ── APROBAR / PROGRAMAR ───────────────────────────────────────
+            // ── APROBAR / PROGRAMAR ── modal mejorado ─────────────────────
             Actions\Action::make('aprobar')
                 ->button()
                 ->size('lg')
                 ->label('Programar y Aprobar')
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
-                ->modalHeading('Programar Solicitud')
-                ->modalSubmitActionLabel('Programar')
+                ->modalHeading('Programar Solicitud de Transporte')
+                ->modalDescription(fn (SolicitudTransporte $record) =>
+                    "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
+                )
+                ->modalSubmitActionLabel('✔ Confirmar programación')
                 ->modalWidth('2xl')
                 ->form([
-                    Forms\Components\Textarea::make('comentario_jefe')
-                        ->label('Motivo de la programación')
-                        ->rows(4)
-                        ->required()
-                        ->maxLength(2000)
-                        ->columnSpanFull(),
+                    // Resumen visual de la solicitud en verde
+                    Forms\Components\Section::make('')
+                        ->schema([
+                            Forms\Components\Placeholder::make('resumen_aprobar')
+                                ->label('')
+                                ->content(function () {
+                                    $record  = $this->record;
+                                    $salida  = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
+                                    $retorno = optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '—';
+                                    $vehiculo = $record->tipo_vehiculo_nombre ?? 'No especificado';
 
-                    Forms\Components\Section::make('Asignación de Vehículo y Motorista')
+                                    return new \Illuminate\Support\HtmlString("
+                                        <div style='background:linear-gradient(135deg,#f0fdf4 0%,#dcfce7 100%);border:1.5px solid #bbf7d0;border-radius:14px;padding:16px 20px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px 24px;font-size:13px;'>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Solicitante</div>
+                                                <div style='font-weight:600;color:#111827;'>{$record->solicitante?->name}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Personas</div>
+                                                <div style='font-weight:600;color:#111827;'>{$record->cantidad_personas}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Salida</div>
+                                                <div style='font-weight:600;color:#111827;'>📅 {$salida}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Retorno estimado</div>
+                                                <div style='font-weight:600;color:#111827;'>📅 {$retorno}</div>
+                                            </div>
+                                            <div style='grid-column:span 2;'>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Ruta</div>
+                                                <div style='font-weight:600;color:#111827;'>📍 {$record->origen} → {$record->destino}</div>
+                                            </div>
+                                            <div style='grid-column:span 2;'>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Vehículo solicitado</div>
+                                                <div style='font-weight:600;color:#0369a1;'>🚗 {$vehiculo}</div>
+                                            </div>
+                                        </div>
+                                    ");
+                                }),
+                        ])
+                        ->compact(),
+
+                    // Comentario de decisión
+                    Forms\Components\Section::make('Decisión')
+                        ->description('El comentario quedará registrado en el historial de la solicitud.')
+                        ->icon('heroicon-o-document-text')
+                        ->schema([
+                            Forms\Components\Textarea::make('comentario_jefe')
+                                ->label('Motivo de la programación')
+                                ->placeholder('Ej: Solicitud validada, recursos disponibles para la fecha indicada...')
+                                ->rows(3)
+                                ->required()
+                                ->maxLength(2000)
+                                ->columnSpanFull(),
+                        ])
+                        ->compact(),
+
+                    // Asignación de vehículo y motorista
+                    Forms\Components\Section::make('Asignación de Vehículo')
+                        ->description('Solo se muestran vehículos sin conflicto de horario para las fechas de esta solicitud.')
+                        ->icon('heroicon-o-truck')
                         ->schema([
                             Forms\Components\Select::make('vehiculo_id')
-                                ->label('Vehículo a Asignar')
+                                ->label('Vehículo disponible')
                                 ->options(function () {
-                                    // FIX #4: filtra vehículos ocupados por solapamiento de fechas
                                     $record = $this->record;
 
                                     $ocupados = SolicitudTransporte::query()
@@ -167,7 +222,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                         ->with('tipo')
                                         ->get()
                                         ->mapWithKeys(fn ($v) => [
-                                            $v->id => "{$v->placa} - {$v->tipo->nombre}"
+                                            $v->id => "{$v->placa} — {$v->tipo->nombre}"
                                         ]);
                                 })
                                 ->hint('Solicitó: ' . ($this->record->tipo_vehiculo_nombre ?? 'N/A'))
@@ -177,7 +232,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                 ->live()
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (!$state) {
-                                        $set('motorista_nombre', 'Sin motorista asignado');
+                                        $set('motorista_nombre', null);
                                         $set('motorista_id', null);
                                         return;
                                     }
@@ -185,25 +240,36 @@ class ViewSolicitudTransporte extends ViewRecord
                                     $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
                                     $set('motorista_nombre', $motorista
                                         ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                        : 'Sin motorista asignado');
+                                        : 'sin_motorista');
                                     $set('motorista_id', $motorista?->id);
-                                }),
+                                })
+                                ->columnSpan(1),
 
                             Forms\Components\Hidden::make('motorista_id'),
 
-                            // FIX #6: hint de advertencia si el vehículo no tiene motorista
                             Forms\Components\Placeholder::make('motorista_nombre')
-                                ->label('Motorista Asignado')
-                                ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
-                                ->hint(fn ($get) => ! $get('motorista_id') ? '⚠ Este vehículo no tiene motorista asignado' : null)
-                                ->hintColor('danger'),
+                                ->label('Motorista del vehículo')
+                                ->content(function ($get) {
+                                    $nombre = $get('motorista_nombre');
+
+                                    if (! $nombre) {
+                                        return new \Illuminate\Support\HtmlString("<div style='background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:12px;padding:14px 18px;color:#9ca3af;font-size:13px;display:flex;align-items:center;gap:8px;'>👤 Selecciona un vehículo para ver el motorista</div>");
+                                    }
+
+                                    if ($nombre === 'sin_motorista') {
+                                        return new \Illuminate\Support\HtmlString("<div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>⚠️ Este vehículo no tiene motorista asignado</div>");
+                                    }
+
+                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>✅ {$nombre}</div>");
+                                })
+                                ->columnSpan(1),
                         ])
-                        ->columns(['default' => 1, 'md' => 2]),
+                        ->columns(2)
+                        ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
 
-                    // FIX #2: estado unificado — guarda PROGRAMADA igual que el resource
                     $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
                     $record->vehiculo_id     = $data['vehiculo_id'];
                     $record->motorista_id    = $data['motorista_id'];
@@ -278,8 +344,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
-            // ── ASIGNAR TRANSPORTE ────────────────────────────────────────
-            // FIX #1: action agregado — aparece cuando la solicitud ya está APROBADA
+            // ── ASIGNAR TRANSPORTE ── modal mejorado ──────────────────────
             Actions\Action::make('asignar_transporte')
                 ->button()
                 ->size('lg')
@@ -287,58 +352,123 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->color('info')
                 ->icon('heroicon-o-truck')
                 ->modalHeading('Asignar Vehículo y Motorista')
-                ->modalSubmitActionLabel('Asignar')
+                ->modalDescription(fn (SolicitudTransporte $record) =>
+                    "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
+                )
+                ->modalSubmitActionLabel('🚗 Confirmar asignación')
+                ->modalWidth('2xl')
                 ->form([
-                    Forms\Components\Select::make('vehiculo_id')
-                        ->label('Vehículo')
-                        ->options(function () {
-                            // Mismo filtro de solapamiento que en 'aprobar'
-                            $record = $this->record;
+                    // Resumen visual en azul
+                    Forms\Components\Section::make('')
+                        ->schema([
+                            Forms\Components\Placeholder::make('resumen_asignacion')
+                                ->label('')
+                                ->content(function () {
+                                    $record  = $this->record;
+                                    $salida  = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
+                                    $retorno = optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '—';
+                                    $vehiculo = $record->tipo_vehiculo_nombre ?? 'No especificado';
 
-                            $ocupados = SolicitudTransporte::query()
-                                ->where('id', '!=', $record->id)
-                                ->whereIn('estado', [
-                                    EstadoSolicitudEnum::PROGRAMADA,
-                                    EstadoSolicitudEnum::APROBADA,
-                                    EstadoSolicitudEnum::EN_EJECUCION,
-                                ])
-                                ->where(function ($query) use ($record) {
-                                    $query->where(function ($q) use ($record) {
-                                        $q->where('fecha_salida', '<=', $record->fecha_retorno)
-                                          ->where('fecha_retorno', '>=', $record->fecha_salida);
-                                    });
+                                    return new \Illuminate\Support\HtmlString("
+                                        <div style='background:linear-gradient(135deg,#eff6ff 0%,#dbeafe 100%);border:1.5px solid #bfdbfe;border-radius:14px;padding:16px 20px;display:grid;grid-template-columns:repeat(2,1fr);gap:12px 24px;font-size:13px;'>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Solicitante</div>
+                                                <div style='font-weight:600;color:#111827;'>{$record->solicitante?->name}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Personas</div>
+                                                <div style='font-weight:600;color:#111827;'>{$record->cantidad_personas}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Salida</div>
+                                                <div style='font-weight:600;color:#111827;'>📅 {$salida}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Retorno estimado</div>
+                                                <div style='font-weight:600;color:#111827;'>📅 {$retorno}</div>
+                                            </div>
+                                            <div style='grid-column:span 2;'>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Ruta</div>
+                                                <div style='font-weight:600;color:#111827;'>📍 {$record->origen} → {$record->destino}</div>
+                                            </div>
+                                            <div style='grid-column:span 2;'>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#6b7280;font-weight:600;margin-bottom:3px;'>Vehículo solicitado</div>
+                                                <div style='font-weight:600;color:#0369a1;'>🚗 {$vehiculo}</div>
+                                            </div>
+                                        </div>
+                                    ");
+                                }),
+                        ])
+                        ->compact(),
+
+                    Forms\Components\Section::make('Selección de Vehículo')
+                        ->description('Solo se muestran vehículos sin conflicto de horario para esta solicitud.')
+                        ->icon('heroicon-o-truck')
+                        ->schema([
+                            Forms\Components\Select::make('vehiculo_id')
+                                ->label('Vehículo disponible')
+                                ->options(function () {
+                                    $record = $this->record;
+
+                                    $ocupados = SolicitudTransporte::query()
+                                        ->where('id', '!=', $record->id)
+                                        ->whereIn('estado', [
+                                            EstadoSolicitudEnum::PROGRAMADA,
+                                            EstadoSolicitudEnum::APROBADA,
+                                            EstadoSolicitudEnum::EN_EJECUCION,
+                                        ])
+                                        ->where(function ($query) use ($record) {
+                                            $query->where(function ($q) use ($record) {
+                                                $q->where('fecha_salida', '<=', $record->fecha_retorno)
+                                                  ->where('fecha_retorno', '>=', $record->fecha_salida);
+                                            });
+                                        })
+                                        ->pluck('vehiculo_id')
+                                        ->filter()
+                                        ->unique();
+
+                                    return \App\Models\Vehiculo::where('activo', true)
+                                        ->whereNotIn('id', $ocupados)
+                                        ->with('tipo')
+                                        ->get()
+                                        ->mapWithKeys(fn ($v) => [
+                                            $v->id => "{$v->placa} — {$v->tipo->nombre}"
+                                        ]);
                                 })
-                                ->pluck('vehiculo_id')
-                                ->filter()
-                                ->unique();
+                                ->searchable()
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    $vehiculo  = \App\Models\Vehiculo::find($state);
+                                    $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                                    $set('motorista_nombre', $motorista
+                                        ? "{$motorista->nombre} — DUI: {$motorista->dui}"
+                                        : 'sin_motorista');
+                                    $set('motorista_id', $motorista?->id);
+                                })
+                                ->columnSpan(1),
 
-                            return \App\Models\Vehiculo::where('activo', true)
-                                ->whereNotIn('id', $ocupados)
-                                ->with('tipo')
-                                ->get()
-                                ->mapWithKeys(fn ($v) => [
-                                    $v->id => "{$v->placa} - {$v->tipo->nombre}"
-                                ]);
-                        })
-                        ->searchable()
-                        ->required()
-                        ->live()
-                        ->afterStateUpdated(function ($state, callable $set) {
-                            $vehiculo  = \App\Models\Vehiculo::find($state);
-                            $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                            $set('motorista_nombre', $motorista
-                                ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                : 'Sin motorista asignado');
-                            $set('motorista_id', $motorista?->id);
-                        }),
+                            Forms\Components\Hidden::make('motorista_id'),
 
-                    Forms\Components\Hidden::make('motorista_id'),
+                            Forms\Components\Placeholder::make('motorista_nombre')
+                                ->label('Motorista del vehículo')
+                                ->content(function ($get) {
+                                    $nombre = $get('motorista_nombre');
 
-                    Forms\Components\Placeholder::make('motorista_nombre')
-                        ->label('Motorista asignado')
-                        ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo')
-                        ->hint(fn ($get) => ! $get('motorista_id') ? '⚠ Este vehículo no tiene motorista asignado' : null)
-                        ->hintColor('danger'),
+                                    if (! $nombre) {
+                                        return new \Illuminate\Support\HtmlString("<div style='background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:12px;padding:14px 18px;color:#9ca3af;font-size:13px;display:flex;align-items:center;gap:8px;'>👤 Selecciona un vehículo para ver el motorista</div>");
+                                    }
+
+                                    if ($nombre === 'sin_motorista') {
+                                        return new \Illuminate\Support\HtmlString("<div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>⚠️ Este vehículo no tiene motorista asignado</div>");
+                                    }
+
+                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>✅ {$nombre}</div>");
+                                })
+                                ->columnSpan(1),
+                        ])
+                        ->columns(2)
+                        ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
@@ -375,7 +505,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::APROBADA
                 ),
 
-            // ── RECHAZAR ──────────────────────────────────────────────────
+            // ── RECHAZAR ── modal mejorado ────────────────────────────────
             Actions\Action::make('rechazar')
                 ->button()
                 ->size('lg')
@@ -383,13 +513,53 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')
                 ->modalHeading('Rechazar Solicitud')
-                ->modalSubmitActionLabel('Rechazar')
+                ->modalDescription(fn (SolicitudTransporte $record) =>
+                    "Solicitud {$record->codigo} — esta acción quedará registrada en el historial."
+                )
+                ->modalSubmitActionLabel('✕ Confirmar rechazo')
+                ->modalWidth('lg')
                 ->form([
-                    Forms\Components\Textarea::make('comentario_jefe')
-                        ->label('Motivo del rechazo')
-                        ->rows(4)
-                        ->required()
-                        ->maxLength(2000),
+                    // Resumen compacto en rojo
+                    Forms\Components\Section::make('')
+                        ->schema([
+                            Forms\Components\Placeholder::make('resumen_rechazo')
+                                ->label('')
+                                ->content(function () {
+                                    $record = $this->record;
+
+                                    return new \Illuminate\Support\HtmlString("
+                                        <div style='background:linear-gradient(135deg,#fff1f2 0%,#ffe4e6 100%);border:1.5px solid #fecdd3;border-radius:14px;padding:14px 18px;display:grid;grid-template-columns:repeat(2,1fr);gap:10px 20px;font-size:13px;'>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#9ca3af;font-weight:600;margin-bottom:3px;'>Código</div>
+                                                <div style='font-weight:700;color:#111827;font-family:monospace;'>{$record->codigo}</div>
+                                            </div>
+                                            <div>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#9ca3af;font-weight:600;margin-bottom:3px;'>Solicitante</div>
+                                                <div style='font-weight:600;color:#111827;'>{$record->solicitante?->name}</div>
+                                            </div>
+                                            <div style='grid-column:span 2;'>
+                                                <div style='font-size:10px;text-transform:uppercase;letter-spacing:.07em;color:#9ca3af;font-weight:600;margin-bottom:3px;'>Ruta</div>
+                                                <div style='font-weight:600;color:#111827;'>📍 {$record->origen} → {$record->destino}</div>
+                                            </div>
+                                        </div>
+                                    ");
+                                }),
+                        ])
+                        ->compact(),
+
+                    Forms\Components\Section::make('Motivo del rechazo')
+                        ->description('El motivo será enviado al solicitante por correo electrónico.')
+                        ->icon('heroicon-o-exclamation-triangle')
+                        ->schema([
+                            Forms\Components\Textarea::make('comentario_jefe')
+                                ->label('Escribe el motivo')
+                                ->placeholder('Ej: No hay disponibilidad de vehículos para esa fecha...')
+                                ->rows(4)
+                                ->required()
+                                ->maxLength(2000)
+                                ->columnSpanFull(),
+                        ])
+                        ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
@@ -451,7 +621,6 @@ class ViewSolicitudTransporte extends ViewRecord
                         Log::error('Error enviando correo de rechazo: ' . $e->getMessage());
                     }
                 })
-                // FIX #5: verificar rol además de estado
                 ->visible(fn (SolicitudTransporte $record) =>
                     auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
