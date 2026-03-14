@@ -29,6 +29,13 @@
     }
     .gos-step:hover { background: #f9fafb; }
 
+    /* Etapa bloqueada (no disponible para el rol actual) */
+    .gos-step.locked {
+        opacity: .45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+
     .gos-step.active-bandeja  { border-color: #6366f1; background: #eef2ff; box-shadow: 0 0 0 3px #e0e7ff; }
     .gos-step.active-bandeja::before  { background: #6366f1; }
 
@@ -54,16 +61,6 @@
     .step-num-revision     { background:#f59e0b; color:#fff; }
     .step-num-aprobaciones { background:#10b981; color:#fff; }
     .step-num-inactive     { background:#e5e7eb; color:#9ca3af; }
-
-    /* ── Conectores entre pasos ──────────────────────────────── */
-    .step-connector {
-        flex: 1;
-        height: 2px;
-        background: #e5e7eb;
-        margin: 0 -4px;
-        align-self: center;
-        margin-top: -14px;
-    }
 
     /* ── KPI cards ───────────────────────────────────────────── */
     .kpi-card {
@@ -124,6 +121,29 @@
     .badge-alta   { background: #fee2e2; color: #b91c1c; }
     .badge-media  { background: #fef3c7; color: #b45309; }
     .badge-baja   { background: #d1fae5; color: #065f46; }
+
+    /* ── Asignado chip ───────────────────────────────────────── */
+    .asignado-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        font-size: 11px; font-weight: 600;
+        padding: 3px 10px; border-radius: 999px;
+        background: #f0f9ff; color: #0369a1;
+        border: 1px solid #bae6fd;
+        max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .asignado-chip.sin-asignar {
+        background: #f9fafb; color: #9ca3af;
+        border-color: #e5e7eb;
+    }
+
+    /* ── Edad de solicitud ───────────────────────────────────── */
+    .edad-chip {
+        display: inline-flex; align-items: center; gap: 4px;
+        font-size: 11px; font-weight: 500; color: #6b7280;
+        white-space: nowrap;
+    }
+    .edad-chip.urgente { color: #dc2626; font-weight: 700; }
+    .edad-chip.atencion { color: #d97706; font-weight: 600; }
 
     /* ── Meta grid ───────────────────────────────────────────── */
     .meta-grid { display: grid; grid-template-columns: repeat(2,1fr); gap: 12px 20px; }
@@ -270,37 +290,67 @@
             </div>
         </div>
 
-        {{-- Stepper --}}
+        {{-- Stepper — solo muestra las etapas disponibles para el rol actual --}}
+        @php $etapasDisponibles = $this->etapasDisponibles(); @endphp
         <div class="mt-6 grid grid-cols-3 gap-3">
-            <button wire:click="cambiarEtapa('bandeja')"
-                class="gos-step text-left {{ $etapa === 'bandeja' ? 'active-bandeja' : '' }}">
+
+            {{-- Bandeja --}}
+            <button
+                wire:click="cambiarEtapa('bandeja')"
+                class="gos-step text-left
+                    {{ $etapa === 'bandeja' ? 'active-bandeja' : '' }}
+                    {{ !in_array('bandeja', $etapasDisponibles) ? 'locked' : '' }}"
+            >
                 <div class="step-num {{ $etapa === 'bandeja' ? 'step-num-bandeja' : 'step-num-inactive' }}">1</div>
-                <div class="text-sm font-700 text-gray-900 font-bold">Bandeja Operativa</div>
+                <div class="text-sm font-bold text-gray-900">Bandeja Operativa</div>
                 <div class="text-xs text-gray-400 mt-0.5 leading-snug">Recepción, clasificación y prioridad inicial.</div>
-                <div class="mt-3 text-xs font-semibold {{ $etapa === 'bandeja' ? 'text-indigo-600' : 'text-gray-300' }}">
-                    {{ $etapa === 'bandeja' ? '● Activo' : '○ Ir a bandeja' }}
-                </div>
+                @if(!in_array('bandeja', $etapasDisponibles))
+                    <div class="mt-3 text-xs font-semibold text-gray-300">🔒 Sin acceso</div>
+                @else
+                    <div class="mt-3 text-xs font-semibold {{ $etapa === 'bandeja' ? 'text-indigo-600' : 'text-gray-300' }}">
+                        {{ $etapa === 'bandeja' ? '● Activo' : '○ Ir a bandeja' }}
+                    </div>
+                @endif
             </button>
 
-            <button wire:click="cambiarEtapa('revision')"
-                class="gos-step text-left {{ $etapa === 'revision' ? 'active-revision' : '' }}">
+            {{-- Revisión --}}
+            <button
+                wire:click="cambiarEtapa('revision')"
+                class="gos-step text-left
+                    {{ $etapa === 'revision' ? 'active-revision' : '' }}
+                    {{ !in_array('revision', $etapasDisponibles) ? 'locked' : '' }}"
+            >
                 <div class="step-num {{ $etapa === 'revision' ? 'step-num-revision' : 'step-num-inactive' }}">2</div>
                 <div class="text-sm font-bold text-gray-900">Revisión Operativa</div>
                 <div class="text-xs text-gray-400 mt-0.5 leading-snug">Validación técnica, observaciones y derivación.</div>
-                <div class="mt-3 text-xs font-semibold {{ $etapa === 'revision' ? 'text-amber-600' : 'text-gray-300' }}">
-                    {{ $etapa === 'revision' ? '● Activo' : '○ Ir a revisión' }}
-                </div>
+                @if(!in_array('revision', $etapasDisponibles))
+                    <div class="mt-3 text-xs font-semibold text-gray-300">🔒 Sin acceso</div>
+                @else
+                    <div class="mt-3 text-xs font-semibold {{ $etapa === 'revision' ? 'text-amber-600' : 'text-gray-300' }}">
+                        {{ $etapa === 'revision' ? '● Activo' : '○ Ir a revisión' }}
+                    </div>
+                @endif
             </button>
 
-            <button wire:click="cambiarEtapa('aprobaciones')"
-                class="gos-step text-left {{ $etapa === 'aprobaciones' ? 'active-aprobaciones' : '' }}">
+            {{-- Aprobaciones --}}
+            <button
+                wire:click="cambiarEtapa('aprobaciones')"
+                class="gos-step text-left
+                    {{ $etapa === 'aprobaciones' ? 'active-aprobaciones' : '' }}
+                    {{ !in_array('aprobaciones', $etapasDisponibles) ? 'locked' : '' }}"
+            >
                 <div class="step-num {{ $etapa === 'aprobaciones' ? 'step-num-aprobaciones' : 'step-num-inactive' }}">3</div>
                 <div class="text-sm font-bold text-gray-900">Aprobaciones</div>
                 <div class="text-xs text-gray-400 mt-0.5 leading-snug">Resolución administrativa y cierre de decisión.</div>
-                <div class="mt-3 text-xs font-semibold {{ $etapa === 'aprobaciones' ? 'text-emerald-600' : 'text-gray-300' }}">
-                    {{ $etapa === 'aprobaciones' ? '● Activo' : '○ Ir a aprobaciones' }}
-                </div>
+                @if(!in_array('aprobaciones', $etapasDisponibles))
+                    <div class="mt-3 text-xs font-semibold text-gray-300">🔒 Sin acceso</div>
+                @else
+                    <div class="mt-3 text-xs font-semibold {{ $etapa === 'aprobaciones' ? 'text-emerald-600' : 'text-gray-300' }}">
+                        {{ $etapa === 'aprobaciones' ? '● Activo' : '○ Ir a aprobaciones' }}
+                    </div>
+                @endif
             </button>
+
         </div>
 
         {{-- Banner de contexto de etapa --}}
@@ -388,6 +438,21 @@
                     default => 'badge-default',
                 };
                 $uid = $row['tipo'] . $row['id'];
+
+                // ── Edad de la solicitud ──────────────────────────────
+                $fechaIngreso = !empty($row['fecha_ingreso'])
+                    ? \Carbon\Carbon::parse($row['fecha_ingreso'])
+                    : null;
+                $edadHumana   = $fechaIngreso ? $fechaIngreso->diffForHumans() : null;
+                $edadHoras    = $fechaIngreso ? $fechaIngreso->diffInHours(now()) : 0;
+                $edadClase    = match(true) {
+                    $edadHoras >= 48 => 'urgente',
+                    $edadHoras >= 24 => 'atencion',
+                    default          => '',
+                };
+
+                // ── Asignado a ───────────────────────────────────────
+                $asignadoNombre = $row['asignado'] ?? null;   // el service debe proveer este campo
             @endphp
 
             <div class="sol-card" wire:key="row-{{ $uid }}">
@@ -405,9 +470,23 @@
 
                     <span class="sep text-xs">•</span>
 
+                    {{-- Fecha de ingreso --}}
                     <span class="text-xs text-gray-400">
-                        {{ $row['fecha_ingreso'] ? \Carbon\Carbon::parse($row['fecha_ingreso'])->format('d/m/Y H:i') : '—' }}
+                        {{ $fechaIngreso ? $fechaIngreso->format('d/m/Y H:i') : '—' }}
                     </span>
+
+                    {{-- ── NUEVO: Edad de la solicitud ── --}}
+                    @if($edadHumana)
+                        <span class="edad-chip {{ $edadClase }}" title="Ingresó {{ $fechaIngreso->format('d/m/Y H:i') }}">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                            {{ $edadHumana }}
+                            @if($edadClase === 'urgente') ⚠️
+                            @elseif($edadClase === 'atencion') ⏳
+                            @endif
+                        </span>
+                    @endif
 
                     <span class="ml-auto flex items-center gap-2">
                         <span class="badge {{ $prioBadgeClass }}">{{ strtoupper($prioridadKey ?: '—') }}</span>
@@ -430,10 +509,29 @@
                             <div class="meta-label">ID</div>
                             <div class="meta-value mono">{{ $row['id'] }}</div>
                         </div>
+
+                        {{-- ── NUEVO: Asignado a ── --}}
                         <div>
-                            <div class="meta-label">Etapa actual</div>
-                            <div class="meta-value capitalize">{{ $etapa }}</div>
+                            <div class="meta-label">Asignado a</div>
+                            <div class="meta-value mt-1">
+                                @if($asignadoNombre)
+                                    <span class="asignado-chip">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        {{ $asignadoNombre }}
+                                    </span>
+                                @else
+                                    <span class="asignado-chip sin-asignar">
+                                        <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+                                        </svg>
+                                        Sin asignar
+                                    </span>
+                                @endif
+                            </div>
                         </div>
+
                     </div>
 
                     @if(!empty($row['detalle']))
