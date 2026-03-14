@@ -139,7 +139,7 @@ export default function LocationInput({
 
       {/* Dropdown */}
       {open && suggestions.length > 0 && (
-        <ul className="absolute z-50 mt-1.5 w-full overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-xl shadow-slate-200/60">
+        <ul className="absolute left-0 right-0 z-[100] mt-1.5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/60 ring-1 ring-black/5">
           {suggestions.map((sug, i) => {
             if (sug.type === "sede") {
               const esCentral = sug.data.tipo === "central";

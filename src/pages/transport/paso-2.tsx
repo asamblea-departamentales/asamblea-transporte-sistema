@@ -236,7 +236,7 @@ export default function TransportStep2Page() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden divide-y divide-slate-100 mx-0">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100 mx-0">
         <div className="p-4 sm:p-6">
           <SectionTitle 
             label="Punto de Salida"
@@ -268,7 +268,7 @@ export default function TransportStep2Page() {
 
           <div className="space-y-6">
             {destinos.map((dest, i) => (
-              <div key={dest.id} className="group relative">
+              <div key={dest.id} className="relative group">
                 <div className="mb-2 flex items-center justify-between px-1">
                   <Label required={i === 0}>Parada {i + 1}</Label>
                   {destinos.length > 1 && (
