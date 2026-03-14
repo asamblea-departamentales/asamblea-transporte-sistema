@@ -187,6 +187,14 @@ function Label({ children, required }: { children: React.ReactNode; required?: b
 
 // ─── PAGE ─────────────────────────────────────────────────────────────────────
 
+import TransportWizard from "../../components/ui/TransportWizard";
+
+const WIZARD_STEPS = [
+  { id: 1, label: "Datos"     },
+  { id: 2, label: "Ruta"      },
+  { id: 3, label: "Confirmar" },
+];
+
 export default function TransportStep1Page() {
   const navigate = useNavigate();
   const today    = getTodayStr();
@@ -233,54 +241,10 @@ export default function TransportStep1Page() {
   const minTime    = form.fecha === today ? calcMinTime() : undefined;
 
   return (
-    <div className="mx-auto max-w-2xl space-y-5 pb-8">
+    <div className="mx-auto max-w-2xl space-y-6 pb-8">
 
       {/* ── Wizard stepper ─────────────────────────────────────────────── */}
-      <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
-        {/* Progress bar */}
-        <div className="h-[3px] w-full bg-slate-100">
-          <div
-            className="h-full w-1/3 rounded-full"
-            style={{ background: "linear-gradient(90deg, #0f2548, #2563eb)" }}
-          />
-        </div>
-        <div className="flex items-center justify-between px-5 py-3.5">
-          <div className="flex items-center gap-2.5">
-            {[
-              { n: 1, label: "Datos"     },
-              { n: 2, label: "Ruta"      },
-              { n: 3, label: "Confirmar" },
-            ].map(({ n, label }, i, arr) => (
-              <div key={n} className="flex items-center gap-2">
-                <div className="flex items-center gap-1.5">
-                  <div
-                    className={cn(
-                      "flex h-6 w-6 items-center justify-center rounded-full text-[11px] font-black",
-                      n === 1 ? "text-white" : "bg-slate-100 text-slate-400",
-                    )}
-                    style={n === 1 ? { background: "linear-gradient(135deg,#0f2548,#2563eb)" } : {}}
-                  >
-                    {n}
-                  </div>
-                  <span className={cn(
-                    "hidden sm:block text-[11px] font-semibold",
-                    n === 1 ? "text-slate-800" : "text-slate-400",
-                  )}>
-                    {label}
-                  </span>
-                </div>
-                {i < arr.length - 1 && <div className="w-4 h-px bg-slate-200" />}
-              </div>
-            ))}
-          </div>
-          <span
-            className="text-[10px] font-black uppercase tracking-widest px-2.5 py-1 rounded-full text-white"
-            style={{ background: "linear-gradient(135deg,#0f2548,#2563eb)" }}
-          >
-            1 / 3
-          </span>
-        </div>
-      </div>
+      <TransportWizard steps={WIZARD_STEPS} currentStep={1} />
 
       {/* ── Page heading ───────────────────────────────────────────────── */}
       <div>

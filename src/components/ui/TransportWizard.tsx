@@ -5,51 +5,62 @@ type Step = { id: number; label: string };
 type Props = { steps: Step[]; currentStep: number };
 
 export default function TransportWizard({ steps, currentStep }: Props) {
-  // Progreso = fracción de pasos completados (paso 1 → 33%, paso 2 → 66%, paso 3 → 100%)
   const progress = (currentStep / steps.length) * 100;
 
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white px-8 py-5 shadow-sm">
-
+    <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-xl shadow-slate-200/50">
       {/* Barra de progreso */}
-      <div className="relative mb-6 h-1 w-full rounded-full bg-slate-200">
+      <div className="relative mb-8 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
         <motion.div
-          className="absolute h-1 rounded-full bg-blue-600"
+          className="absolute h-full rounded-full"
+          style={{ background: "linear-gradient(90deg, #0f2548, #2563eb)" }}
           initial={{ width: 0 }}
           animate={{ width: `${progress}%` }}
-          transition={{ duration: 0.5, ease: "easeInOut" }}
+          transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
         />
       </div>
 
-      {/* Pasos — texto DEBAJO del número para no romper en móvil */}
-      <div className="flex justify-between">
+      {/* Pasos */}
+      <div className="flex justify-between px-2">
         {steps.map((step) => {
           const completed = step.id < currentStep;
           const active    = step.id === currentStep;
 
           return (
-            <div key={step.id} className="flex flex-col items-center gap-1.5">
+            <div key={step.id} className="flex flex-col items-center gap-2.5">
               {/* Círculo numerado */}
-              <div
+              <motion.div
+                initial={false}
+                animate={{
+                  scale: active ? 1.1 : 1,
+                  backgroundColor: completed ? "#0f2548" : active ? "#eff6ff" : "#f1f5f9",
+                }}
                 className={`
-                  flex h-8 w-8 items-center justify-center rounded-full text-sm font-semibold
-                  ${completed ? "bg-blue-600 text-white"
-                    : active   ? "bg-blue-100 text-blue-700 ring-2 ring-blue-500"
-                               : "bg-slate-200 text-slate-500"}
+                  flex h-10 w-10 items-center justify-center rounded-full text-sm font-black shadow-sm transition-all
+                  ${completed ? "text-white" : active ? "text-[#0f2548] ring-2 ring-[#0f2548]/20" : "text-slate-400"}
                 `}
+                style={completed ? { background: "linear-gradient(135deg, #0f2548, #1e3a8a)" } : {}}
               >
-                {completed
-                  ? <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  : step.id
-                }
-              </div>
+                {completed ? (
+                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <motion.path
+                      initial={{ pathLength: 0 }}
+                      animate={{ pathLength: 1 }}
+                      transition={{ duration: 0.4 }}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                ) : (
+                  step.id
+                )}
+              </motion.div>
 
-              {/* Etiqueta debajo */}
+              {/* Etiqueta */}
               <span className={`
-                text-[11px] font-medium text-center leading-tight
-                ${active ? "text-blue-700" : completed ? "text-slate-700" : "text-slate-400"}
+                text-[10px] font-black uppercase tracking-widest text-center transition-colors
+                ${active ? "text-[#0f2548]" : completed ? "text-slate-600" : "text-slate-400"}
               `}>
                 {step.label}
               </span>
@@ -57,7 +68,6 @@ export default function TransportWizard({ steps, currentStep }: Props) {
           );
         })}
       </div>
-
     </div>
   );
-}
+}

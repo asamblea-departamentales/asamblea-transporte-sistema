@@ -6,6 +6,7 @@ import "leaflet/dist/leaflet.css";
 
 import { createRequest } from "../../services/requests.service";
 import SuccessScreen from "../../components/transport/SuccessScreen";
+import TransportWizard from "../../components/ui/TransportWizard";
 
 // ─── Tipos ─────────────────────────────────────────────────────────────────────
 
@@ -107,11 +108,10 @@ export default function TransportStep3Page() {
   const [submitting,    setSubmitting]    = useState(false);
   const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
   const [routeInfo,     setRouteInfo]     = useState<{ distance: number; duration: number; isReal: boolean } | null>(null);
-  const [isLoadingRoute,setIsLoadingRoute]= useState(false);
+
   const [successId,     setSuccessId]     = useState<string | undefined>(undefined);
   const [showSuccess,   setShowSuccess]   = useState(false);
 
-  // ── Cargar storage ──────────────────────────────────────────────────────────
   useEffect(() => {
     const saved = safeParse(localStorage.getItem(STORAGE_KEY));
     const ok = !!saved.tipoVehiculo && !!saved.fecha && !!saved.hora && !!saved.encargado
@@ -122,11 +122,12 @@ export default function TransportStep3Page() {
     setLoading(false);
   }, [navigate]);
 
-  // ── Mapa ────────────────────────────────────────────────────────────────────
   useEffect(() => {
     if (loading) return;
     if (!mapRef.current) {
-      const map = L.map("map-resumen", { zoomControl: true, dragging: true, scrollWheelZoom: false })
+      const mapDiv = document.getElementById("map-resumen");
+      if (!mapDiv) return;
+      const map = L.map(mapDiv, { zoomControl: true, dragging: true, scrollWheelZoom: false })
         .setView([13.7942, -88.8965], 9);
       L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
         attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
@@ -137,17 +138,16 @@ export default function TransportStep3Page() {
     return () => { mapRef.current?.remove(); mapRef.current = null; };
   }, [loading]);
 
-  // ── Render marcadores + ruta ────────────────────────────────────────────────
   useEffect(() => {
     if (!mapRef.current || !wizardData.origen) return;
 
     async function renderMap() {
-      setIsLoadingRoute(true);
+      if (!mapRef.current) return;
+      if (!mapRef.current) return;
       markersRef.current.forEach((m) => m.remove()); markersRef.current = [];
       routeLayerRef.current?.remove(); routeLayerRef.current = null;
 
       const bounds: [number, number][] = [];
-
       let origenCoords: { lat: number; lng: number } | null = null;
       if (wizardData.origenLat && wizardData.origenLng) {
         origenCoords = { lat: wizardData.origenLat, lng: wizardData.origenLng };
@@ -156,7 +156,7 @@ export default function TransportStep3Page() {
       }
 
       if (origenCoords) {
-        const m = L.marker([origenCoords.lat, origenCoords.lng], { icon: makeIcon("#4F46E5") })
+        const m = L.marker([origenCoords.lat, origenCoords.lng], { icon: makeIcon("#0f2548") })
           .addTo(mapRef.current!).bindPopup(`<b>Origen:</b><br>${wizardData.origen}`);
         markersRef.current.push(m);
         bounds.push([origenCoords.lat, origenCoords.lng]);
@@ -168,7 +168,7 @@ export default function TransportStep3Page() {
         const coords = dest.lat && dest.lng ? { lat: dest.lat, lng: dest.lng } : await geocodeAddress(dest.address);
         if (coords) {
           destinosCoords.push({ address: dest.address, ...coords });
-          const m = L.marker([coords.lat, coords.lng], { icon: makeIcon("#DC2626") })
+          const m = L.marker([coords.lat, coords.lng], { icon: makeIcon("#ef4444") })
             .addTo(mapRef.current!).bindPopup(`<b>Destino ${idx + 1}:</b><br>${dest.address}`);
           markersRef.current.push(m);
           bounds.push([coords.lat, coords.lng]);
@@ -178,59 +178,44 @@ export default function TransportStep3Page() {
       if (origenCoords && destinosCoords.length > 0) {
         const allPoints = [origenCoords, ...destinosCoords];
         const osrm = await getOSRMRoute(allPoints);
-
         if (osrm?.geometry?.length) {
-          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#4F46E5", weight: 5, opacity: 0.85 }).addTo(mapRef.current!);
+          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.85 }).addTo(mapRef.current!);
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin, isReal: true });
         } else {
           const pts: L.LatLngExpression[] = allPoints.map((p) => [p.lat, p.lng]);
-          routeLayerRef.current = L.polyline(pts, { color: "#4F46E5", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current!);
+          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current!);
           let km = 0, prev = origenCoords;
           destinosCoords.forEach((d) => { km += haversineKm(prev.lat, prev.lng, d.lat, d.lng); prev = d; });
           if (km > 0) setRouteInfo({ distance: km, duration: (km / 45) * 60, isReal: false });
         }
       }
-
       if (bounds.length > 0) mapRef.current!.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
-      setIsLoadingRoute(false);
+      if (bounds.length > 0) mapRef.current!.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
     }
-
     renderMap();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [wizardData]);
+  }, [wizardData, loading]);
 
   const destinosValidos = useMemo(() => (wizardData.destinos || []).filter((d) => d.address?.trim()), [wizardData.destinos]);
-  const mainDestino     = destinosValidos[0]?.address || "";
-  const extraDestinos   = destinosValidos.slice(1);
 
-  // ── Submit ──────────────────────────────────────────────────────────────────
   async function handleSubmit() {
     if (submittedRef.current || submitting) return;
     submittedRef.current = true;
     setErrorMsg(null);
     setSubmitting(true);
     try {
-      const destinosVal     = (wizardData.destinos || []).filter((d) => d.address?.trim());
-      const destinoPrincipal = destinosVal[0]?.address || "Destino pendiente";
-      const destinosExtras  = destinosVal.slice(1).map((d) => d.address.trim()).join(" - ");
-
-      let infoExtra = `Encargado: ${wizardData.encargado}`;
-      if (wizardData.subencargado) infoExtra += ` / Sub: ${wizardData.subencargado}`;
-      if (destinosExtras) infoExtra += ` / Ruta Extra: ${destinosExtras}`;
-
       const fechaStr = wizardData.fecha || new Date().toISOString().split("T")[0];
       const horaStr  = wizardData.hora || "08:00";
       const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
 
       const resp = await createRequest({
-        destino_principal:     destinoPrincipal,
+        destino_principal:     destinosValidos[0]?.address || "Sin destino",
         encargado:             wizardData.encargado || "Sin encargado",
         tipo_vehiculo:         wizardData.tipoVehiculo || "sedan",
         fecha_salida:          `${fechaStr}T${horaFinal}`,
         hora_salida:           horaStr,
         fecha_retorno:         `${fechaStr}T23:59:59`,
-        destino_adicional:     destinosExtras || null,
-        motivo_actividad:      `Actividad de transporte. ${infoExtra}`,
+        destino_adicional:     destinosValidos.slice(1).map(d => d.address).join(" | ") || null,
+        motivo_actividad:      `Soli. Transporte - ${wizardData.encargado}`,
         cantidad_personas:     parseInt(wizardData.pasajeros || "1"),
         origen:                wizardData.origen || "Sin origen",
         subencargado:          wizardData.subencargado,
@@ -241,254 +226,126 @@ export default function TransportStep3Page() {
       localStorage.removeItem(STORAGE_KEY);
       setSuccessId(resp.solicitudId?.toString());
       setShowSuccess(true);
-    } catch (e: unknown) {
-      submittedRef.current = false; // permite reintentar si hubo error
-      setErrorMsg((e as Error)?.message || "Ocurrió un error al enviar la solicitud.");
-      window.scrollTo({ top: 0, behavior: "smooth" });
+    } catch (e: any) {
+      submittedRef.current = false;
+      setErrorMsg(e.message || "Error al enviar la solicitud.");
     } finally {
       setSubmitting(false);
     }
   }
 
-  // ── Cancelar → siempre al dashboard ─────────────────────────────────────────
-  function handleCancel() { navigate("/dashboard"); }
-
-  // ── Loading skeleton ────────────────────────────────────────────────────────
-  if (loading) {
-    return (
-      <div className="mx-auto max-w-7xl py-10">
-        <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-          <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-          <div className="mt-5 h-2 w-full animate-pulse rounded bg-slate-100" />
-          <div className="mt-8 grid gap-4 lg:grid-cols-2">
-            <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
-            <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
-          </div>
+  if (loading) return (
+    <div className="mx-auto max-w-7xl py-10">
+      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
+        <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
+        <div className="mt-8 grid gap-4 lg:grid-cols-2">
+          <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
+          <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
         </div>
       </div>
-    );
-  }
+    </div>
+  );
+
+  if (showSuccess) return <SuccessScreen solicitudId={successId} />;
 
   return (
-    <>
-      {/* ── Pantalla de éxito (full-screen overlay) ── */}
-      {showSuccess && (
-        <SuccessScreen
-          solicitudId={successId}
-        />
+    <div className="mx-auto max-w-7xl space-y-8 pb-12">
+      <TransportWizard steps={[{id:1,label:"Datos"},{id:2,label:"Ruta"},{id:3,label:"Confirmar"}]} currentStep={3} />
+
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div className="space-y-2">
+          <h1 className="text-4xl font-black tracking-tight text-slate-900">Confirmación</h1>
+          <p className="text-sm font-medium text-slate-500">Revisa los datos antes de enviar la solicitud institucional</p>
+        </div>
+        <div className="flex h-10 items-center gap-2 rounded-full bg-blue-50 px-4 text-[10px] font-bold uppercase tracking-widest text-[#0f2548] ring-1 ring-blue-100">
+          <div className="h-2 w-2 animate-pulse rounded-full bg-[#0f2548]" />
+          Paso Final
+        </div>
+      </div>
+
+      {errorMsg && (
+        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+          {errorMsg}
+        </div>
       )}
 
-      <div className="mx-auto max-w-7xl space-y-7 pb-10">
+      <div className="grid gap-8 lg:grid-cols-5">
+        <div className="lg:col-span-3 space-y-8">
+          <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/30">
+            <h2 className="mb-8 text-xl font-black text-slate-900">Resumen del Viaje</h2>
+            
+            <div className="grid gap-6 sm:grid-cols-2">
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Vehículo</span>
+                <p className="font-bold text-slate-700">{wizardData.tipoVehiculo ? VEHICULO_LABELS[wizardData.tipoVehiculo] : "—"}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha y Hora</span>
+                <p className="font-bold text-slate-700">{wizardData.fecha} a las {wizardData.hora}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Encargado</span>
+                <p className="font-bold text-slate-700">{wizardData.encargado}</p>
+              </div>
+              <div className="space-y-1">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pasajeros</span>
+                <p className="font-bold text-slate-700">{wizardData.pasajeros} personas</p>
+              </div>
+            </div>
 
-        {/* Progreso */}
-        <div className="rounded-2xl border border-slate-200 bg-white px-6 py-5 shadow-sm sm:px-7">
-          <div className="flex items-center justify-between gap-4">
-            <h3 className="text-base font-bold text-slate-900">Progreso de la Solicitud</h3>
-            <span className="inline-flex items-center gap-2 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-700 ring-1 ring-indigo-100">
-              <span className="h-1.5 w-1.5 rounded-full bg-indigo-600" />
-              Paso 3 de 3
-            </span>
-          </div>
-          <div className="mt-4 h-2 w-full overflow-hidden rounded-full bg-slate-100">
-            <div className="h-full w-full rounded-full bg-indigo-600" />
-          </div>
-          <div className="mt-3 flex items-center justify-between text-sm">
-            <span className="text-slate-600">Actual: <span className="font-semibold text-indigo-700">Confirmación</span></span>
-            <span className="italic text-slate-400">Listo para enviar</span>
+            <div className="my-10 h-px w-full bg-slate-100" />
+
+            <div className="space-y-6">
+              <div className="flex items-start gap-4">
+                <div className="mt-1 h-3 w-3 rounded-full bg-[#0f2548] shadow-lg shadow-[#0f2548]/40" />
+                <div className="space-y-1">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Punto de Origen</span>
+                  <p className="text-sm font-bold text-slate-700">{wizardData.origen}</p>
+                </div>
+              </div>
+
+              {destinosValidos.map((d, i) => (
+                <div key={d.id} className="flex items-start gap-4">
+                  <div className="mt-1 h-3 w-3 rounded-full bg-red-500 shadow-lg shadow-red-500/40" />
+                  <div className="space-y-1">
+                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Destino {i + 1}</span>
+                    <p className="text-sm font-medium text-slate-600">{d.address}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="mt-12 flex items-center justify-between gap-4 border-t border-slate-100 pt-8">
+              <button onClick={() => navigate("/solicitudes/transporte/paso-2")} className="flex h-12 items-center gap-2 px-6 text-sm font-black text-slate-400 transition hover:text-slate-900">
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
+                Corregir
+              </button>
+              <button onClick={handleSubmit} disabled={submitting} className="flex h-14 items-center gap-2 rounded-2xl bg-[#0f2548] px-10 text-sm font-black text-white shadow-xl shadow-[#0f2548]/20 transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">
+                {submitting ? "Enviando..." : "Enviar Solicitud"}
+                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              </button>
+            </div>
           </div>
         </div>
 
-        {/* Título */}
-        <div className="space-y-1">
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-[34px]">
-            Confirmación de Solicitud
-          </h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-slate-600">
-            Verifique la información antes de enviar. Si algo está incorrecto, regrese al paso anterior.
-          </p>
-        </div>
-
-        {/* Error */}
-        {errorMsg && (
-          <div className="flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">
-            <svg className="mt-0.5 h-5 w-5 flex-shrink-0 text-red-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
-            <div>
-              <p className="font-bold text-red-900">No se pudo enviar</p>
-              <p className="mt-0.5">{errorMsg}</p>
-            </div>
-          </div>
-        )}
-
-        {/* Grid */}
-        <div className="grid gap-6 lg:grid-cols-5">
-
-          {/* Resumen */}
-          <div className="lg:col-span-3">
-            <div className="space-y-6 rounded-3xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
-
-              {/* Datos del viaje */}
-              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Datos del viaje</p>
-                <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                  <p className="text-slate-700 sm:col-span-2">
-                    <span className="font-semibold text-slate-900">Tipo de vehículo:</span>{" "}
-                    {wizardData.tipoVehiculo ? VEHICULO_LABELS[wizardData.tipoVehiculo] : "—"}
-                  </p>
-                  <p className="text-slate-700"><span className="font-semibold text-slate-900">Fecha:</span> {wizardData.fecha}</p>
-                  <p className="text-slate-700"><span className="font-semibold text-slate-900">Hora:</span> {wizardData.hora}</p>
-                  <p className="text-slate-700"><span className="font-semibold text-slate-900">Pasajeros:</span> {wizardData.pasajeros}</p>
-                </div>
-              </section>
-
-              {/* Encargados */}
-              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Encargados</p>
-                <div className="mt-4 grid grid-cols-1 gap-3 text-sm sm:grid-cols-2">
-                  <p className="text-slate-700"><span className="font-semibold text-slate-900">Encargado:</span> {wizardData.encargado}</p>
-                  <p className="text-slate-700"><span className="font-semibold text-slate-900">Subencargado:</span> {wizardData.subencargado?.trim() || "—"}</p>
-                </div>
-              </section>
-
-              {/* Ruta */}
-              <section className="rounded-2xl border border-slate-200 bg-slate-50 p-5">
-                <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Ruta</p>
-                <div className="mt-4 space-y-2 text-sm text-slate-700">
-                  <p><span className="font-semibold text-slate-900">Origen:</span> {wizardData.origen}</p>
-                  <p><span className="font-semibold text-slate-900">Destino 1:</span> {mainDestino}</p>
-                  {extraDestinos.length > 0 && (
-                    <div className="pt-2">
-                      <p className="mb-2 text-[10px] font-bold uppercase tracking-widest text-slate-400">Destinos adicionales</p>
-                      <ul className="space-y-2">
-                        {extraDestinos.map((d, idx) => (
-                          <li key={d.id} className="flex items-start gap-2 rounded-xl border border-slate-200 bg-white px-4 py-3">
-                            <span className="mt-0.5 inline-flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-indigo-50 text-[11px] font-extrabold text-indigo-700 ring-1 ring-indigo-100">
-                              {idx + 2}
-                            </span>
-                            <span>{d.address}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              </section>
-
-              {/* Acciones */}
-              <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-                {/* Cancelar → siempre al dashboard */}
-                <button
-                  onClick={handleCancel}
-                  disabled={submitting}
-                  className="inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 text-sm font-semibold text-slate-500 transition hover:bg-slate-100 hover:text-slate-800 disabled:opacity-50"
-                >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                  </svg>
-                  Cancelar
-                </button>
-
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => navigate("/solicitudes/transporte/paso-2")}
-                    disabled={submitting}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
-                  >
-                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                    </svg>
-                    Anterior
-                  </button>
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={submitting}
-                    className="inline-flex items-center justify-center gap-2 rounded-2xl bg-indigo-600 px-6 py-3 text-sm font-bold text-white shadow-lg shadow-indigo-500/20 transition hover:bg-indigo-700 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-70"
-                  >
-                    {submitting ? (
-                      <>
-                        <svg className="h-5 w-5 animate-spin" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
-                        Enviando...
-                      </>
-                    ) : (
-                      <>
-                        Enviar solicitud
-                        <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </>
-                    )}
-                  </button>
-                </div>
+        <div className="lg:col-span-2">
+          <div className="sticky top-24 space-y-4">
+            <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/40">
+              <div className="border-b border-slate-100 px-6 py-4">
+                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Mapa de Confirmación</h3>
+                <p className="mt-0.5 text-[11px] font-medium text-slate-400">Ruta calculada para el vehículo</p>
               </div>
-            </div>
-          </div>
-
-          {/* Mapa */}
-          <div className="lg:col-span-2">
-            <div className="sticky top-24">
-              <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
-                <div className="border-b border-slate-200 px-6 py-4">
-                  <h3 className="text-sm font-bold text-slate-900">Vista previa del mapa</h3>
-                  <p className="mt-0.5 text-xs text-slate-500">Ruta real por carretera con todos los puntos del viaje.</p>
+              <div id="map-resumen" className="h-[400px] bg-slate-50" />
+              {routeInfo && (
+                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
+                   <div className="text-xs font-bold text-slate-700">Distancia: {routeInfo.distance.toFixed(1)} km</div>
+                   <div className="text-xs font-bold text-slate-700">Tiempo: {routeInfo.duration.toFixed(0)} min</div>
                 </div>
-
-                <div className="relative">
-                  <div id="map-resumen" className="h-[400px] bg-slate-50" />
-                  {isLoadingRoute && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-white/70 backdrop-blur-sm">
-                      <div className="flex items-center gap-3 rounded-2xl bg-white px-5 py-3 shadow-md ring-1 ring-slate-200">
-                        <svg className="h-5 w-5 animate-spin text-indigo-600" viewBox="0 0 24 24" fill="none">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
-                        </svg>
-                        <span className="text-sm font-semibold text-slate-700">Calculando ruta...</span>
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                {routeInfo && !isLoadingRoute && (
-                  <div className="border-t border-slate-200 px-6 py-4">
-                    <div className="flex items-center gap-6 text-sm text-slate-700">
-                      <div className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                        </svg>
-                        <span><span className="font-semibold">Distancia:</span> {routeInfo.distance.toFixed(1)} km</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <svg className="h-4 w-4 text-indigo-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
-                        <span><span className="font-semibold">Tiempo aprox.:</span> {Math.round(routeInfo.duration)} min</span>
-                      </div>
-                    </div>
-                    <p className="mt-1.5 text-xs text-slate-400">
-                      {routeInfo.isReal ? "* Ruta real por carretera." : "* Estimación en línea recta."} Sin considerar tráfico.
-                    </p>
-                  </div>
-                )}
-
-                <div className="border-t border-slate-200 bg-slate-50 px-6 py-4">
-                  <p className="mb-1.5 text-xs font-semibold text-slate-700">Resumen de ruta:</p>
-                  <div className="space-y-1 text-xs text-slate-600">
-                    <p><span className="font-semibold">📍 Origen:</span> {wizardData.origen}</p>
-                    <p><span className="font-semibold">🔴 Destino 1:</span> {mainDestino}</p>
-                    {extraDestinos.map((d, idx) => (
-                      <p key={d.id}><span className="font-semibold">🔴 Destino {idx + 2}:</span> {d.address}</p>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
           </div>
         </div>
       </div>
-    </>
+    </div>
   );
 }
