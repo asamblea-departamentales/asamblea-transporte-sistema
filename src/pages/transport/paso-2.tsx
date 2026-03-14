@@ -204,17 +204,17 @@ export default function TransportStep2Page() {
   const hasErrors = submitted && (!origen.trim() || !destinos[0]?.address.trim());
 
   return (
-    <div className="mx-auto max-w-2xl space-y-6 pb-8">
+    <div className="mx-auto max-w-2xl space-y-6 px-4 pb-8 sm:px-0">
       <TransportWizard steps={WIZARD_STEPS} currentStep={2} />
 
-      <div>
+      <div className="px-1">
         <div className="flex items-center gap-2 mb-1.5">
           <span className="inline-block h-[2px] w-5 rounded-full bg-blue-700" />
           <span className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">
             Ruta del Viaje
           </span>
         </div>
-        <h1 className="text-[28px] font-bold tracking-tight text-slate-900 leading-none">
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none sm:text-[28px]">
           Ubicaciones
         </h1>
         <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
@@ -236,8 +236,8 @@ export default function TransportStep2Page() {
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden divide-y divide-slate-100">
-        <div className="p-5 sm:p-6">
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden divide-y divide-slate-100 mx-0">
+        <div className="p-4 sm:p-6">
           <SectionTitle 
             label="Punto de Salida"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>}
@@ -260,7 +260,7 @@ export default function TransportStep2Page() {
           </div>
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div className="p-4 sm:p-6">
           <SectionTitle 
             label="Detinos de la Ruta"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>}
@@ -296,7 +296,7 @@ export default function TransportStep2Page() {
           </div>
         </div>
 
-        <div className="p-5 sm:p-6">
+        <div className="p-4 sm:p-6">
           <SectionTitle 
             label="Vista Previa de Ruta"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
@@ -309,7 +309,7 @@ export default function TransportStep2Page() {
           </p>
         </div>
 
-        <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between px-5 py-4 bg-slate-50/50">
+        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-4 bg-slate-50/50">
           <button
             onClick={() => { save(); navigate("/solicitudes/transporte/paso-1"); }}
             className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:bg-white hover:text-slate-700 border border-transparent hover:border-slate-200 hover:shadow-sm focus:outline-none"

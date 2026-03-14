@@ -125,11 +125,11 @@ export default function LocationInput({
           onChange={(e) => onChange(e.target.value)}
           placeholder={placeholder}
           autoComplete="off"
-          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+          className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100/60"
         />
         {loading && (
           <div className="absolute right-3 top-1/2 -translate-y-1/2">
-            <svg className="h-4 w-4 animate-spin text-indigo-400" fill="none" viewBox="0 0 24 24">
+            <svg className="h-4 w-4 animate-spin text-blue-500" fill="none" viewBox="0 0 24 24">
               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
             </svg>
@@ -148,11 +148,11 @@ export default function LocationInput({
                   <button
                     type="button"
                     onMouseDown={() => handleSelect(sug)}
-                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition hover:bg-indigo-50"
+                    className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition hover:bg-blue-50"
                   >
                     {/* Ícono */}
-                    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl ${esCentral ? "bg-indigo-600" : "bg-indigo-100"}`}>
-                      <svg className={`h-4 w-4 ${esCentral ? "text-white" : "text-indigo-600"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                    <div className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl ${esCentral ? "bg-[#0f2548]" : "bg-blue-50"}`}>
+                      <svg className={`h-4 w-4 ${esCentral ? "text-white" : "text-[#0f2548]"}`} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
                       </svg>
                     </div>
@@ -162,7 +162,7 @@ export default function LocationInput({
                       <p className="truncate text-xs text-slate-400">{sug.data.direccion}</p>
                     </div>
 
-                    <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${esCentral ? "bg-indigo-100 text-indigo-700" : "bg-slate-100 text-slate-500"}`}>
+                    <span className={`flex-shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold ${esCentral ? "bg-blue-100 text-[#0f2548]" : "bg-slate-100 text-slate-500"}`}>
                       {esCentral ? "Central" : "Departamental"}
                     </span>
                   </button>
