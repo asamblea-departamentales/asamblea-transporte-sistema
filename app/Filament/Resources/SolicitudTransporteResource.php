@@ -29,7 +29,6 @@ class SolicitudTransporteResource extends Resource
     protected static ?string $navigationLabel = 'Solicitudes de Transporte';
     protected static ?string $navigationIcon  = 'heroicon-o-clipboard-document-check';
 
-    // FIX #2: Verificar que el usuario esté autenticado antes de llamar hasAnyRole
     public static function canViewAny(): bool
     {
         return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']);
@@ -279,7 +278,6 @@ class SolicitudTransporteResource extends Resource
                     })
                     ->sortable(),
 
-                // FIX #7: Cambiado a ->date() ya que la hora se muestra en description por separado
                 Tables\Columns\TextColumn::make('fecha_salida')
                     ->label('Fecha Salida')
                     ->date('d/m/Y')
@@ -319,7 +317,6 @@ class SolicitudTransporteResource extends Resource
                     ->relationship('unidad', 'nombre'),
             ])
             ->actions([
-                // FIX #5: ViewAction sin ->visible() redundante — canViewAny() ya controla el acceso
                 Tables\Actions\ViewAction::make(),
 
                 Tables\Actions\ActionGroup::make([
@@ -365,7 +362,6 @@ class SolicitudTransporteResource extends Resource
                                 'datos_extras' => ['comentario' => $data['comentario_jefe']],
                             ]);
                         })
-                        // FIX #4: auth()->check() antes de hasRole()
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() &&
                             auth()->user()->hasRole('operativo') &&
@@ -395,7 +391,6 @@ class SolicitudTransporteResource extends Resource
                                 'comentario'      => 'Solicitud pre-aprobada en revisión inicial.',
                             ]);
 
-                            // FIX #8: Usar el Enum en lugar de string literal
                             BitacoraEvento::create([
                                 'entidad_tipo' => 'solicitud_transporte',
                                 'entidad_id'   => $record->id,
@@ -403,92 +398,102 @@ class SolicitudTransporteResource extends Resource
                                 'user_id'      => auth()->id(),
                             ]);
                         })
-                        // FIX #4: auth()->check() antes de hasRole()
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() &&
                             auth()->user()->hasRole('operativo') &&
                             $record->estado === EstadoSolicitudEnum::EN_REVISION
                         ),
-                        Tables\Actions\Action::make('asignar_transporte')
-    ->label('Asignar transporte')
-    ->icon('heroicon-o-truck')
-    ->color('info')
-    ->modalHeading('Asignar Vehículo y Motorista')
-    ->visible(fn ($record) =>
-        auth()->check()
-        && auth()->user()->hasRole('jefe')
-        && $record->estado === EstadoSolicitudEnum::APROBADA
-    )
-    ->form([
 
-        Forms\Components\Select::make('vehiculo_id')
-            ->label('Vehículo')
-            ->options(
-                \App\Models\Vehiculo::where('activo', true)
-                    ->get()
-                    ->mapWithKeys(fn ($v) => [
-                        $v->id => "{$v->placa} - {$v->tipo->nombre}"
-                    ])
-            )
-            ->searchable()
-            ->required()
-            ->live()
-            ->afterStateUpdated(function ($state, callable $set) {
+                    // FIX #1: correctamente indentado dentro del ActionGroup
+                    // FIX #4: ahora filtra vehículos ocupados por solapamiento de fechas
+                    Tables\Actions\Action::make('asignar_transporte')
+                        ->label('Asignar transporte')
+                        ->icon('heroicon-o-truck')
+                        ->color('info')
+                        ->modalHeading('Asignar Vehículo y Motorista')
+                        ->visible(fn (SolicitudTransporte $record) =>
+                            auth()->check() &&
+                            auth()->user()->hasRole('jefe') &&
+                            $record->estado === EstadoSolicitudEnum::APROBADA
+                        )
+                        ->form([
+                            Forms\Components\Select::make('vehiculo_id')
+                                ->label('Vehículo')
+                                ->options(function (SolicitudTransporte $record) {
+                                    $ocupados = SolicitudTransporte::query()
+                                        ->where('id', '!=', $record->id)
+                                        ->whereIn('estado', [
+                                            EstadoSolicitudEnum::PROGRAMADA,
+                                            EstadoSolicitudEnum::APROBADA,
+                                            EstadoSolicitudEnum::EN_EJECUCION,
+                                        ])
+                                        ->where(function ($query) use ($record) {
+                                            $query->where(function ($q) use ($record) {
+                                                $q->where('fecha_salida', '<=', $record->fecha_retorno)
+                                                  ->where('fecha_retorno', '>=', $record->fecha_salida);
+                                            });
+                                        })
+                                        ->pluck('vehiculo_id')
+                                        ->filter()
+                                        ->unique();
 
-                $vehiculo = \App\Models\Vehiculo::find($state);
+                                    return \App\Models\Vehiculo::where('activo', true)
+                                        ->whereNotIn('id', $ocupados)
+                                        ->get()
+                                        ->mapWithKeys(fn ($v) => [
+                                            $v->id => "{$v->placa} - {$v->tipo->nombre}"
+                                        ]);
+                                })
+                                ->searchable()
+                                ->required()
+                                ->live()
+                                ->afterStateUpdated(function ($state, callable $set) {
+                                    $vehiculo  = \App\Models\Vehiculo::find($state);
+                                    $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                                    $set('motorista_nombre', $motorista
+                                        ? "{$motorista->nombre} — DUI: {$motorista->dui}"
+                                        : 'Sin motorista asignado');
+                                    $set('motorista_id', $motorista?->id);
+                                }),
 
-                $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                            Forms\Components\Hidden::make('motorista_id'),
 
-                $set('motorista_nombre', $motorista
-                    ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                    : 'Sin motorista asignado'
-                );
+                            // FIX #2: advertencia visible si el vehículo no tiene motorista
+                            Forms\Components\Placeholder::make('motorista_nombre')
+                                ->label('Motorista asignado')
+                                ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo')
+                                ->hint(fn ($get) => ! $get('motorista_id') ? '⚠ Este vehículo no tiene motorista asignado' : null)
+                                ->hintColor('danger'),
+                        ])
+                        ->action(function (SolicitudTransporte $record, array $data) {
+                            $estadoAnterior = $record->estado;
 
-                $set('motorista_id', $motorista?->id);
-            }),
+                            $record->update([
+                                'vehiculo_id'  => $data['vehiculo_id'],
+                                'motorista_id' => $data['motorista_id'],
+                                'estado'       => EstadoSolicitudEnum::ASIGNADA,
+                            ]);
 
-        Forms\Components\Hidden::make('motorista_id'),
+                            HistorialEstado::create([
+                                'entidad_tipo'    => 'solicitud_transporte',
+                                'entidad_id'      => $record->id,
+                                'estado_anterior' => $estadoAnterior->value,
+                                'estado_nuevo'    => EstadoSolicitudEnum::ASIGNADA->value,
+                                'user_id'         => auth()->id(),
+                                'comentario'      => 'Vehículo y motorista asignados.',
+                            ]);
 
-        Forms\Components\Placeholder::make('motorista_nombre')
-            ->label('Motorista asignado')
-            ->content(fn ($get) =>
-                $get('motorista_nombre') ?? 'Selecciona un vehículo'
-            ),
-
-    ])
-    ->action(function (SolicitudTransporte $record, array $data) {
-
-    $estadoAnterior = $record->estado;
-
-    $record->update([
-        'vehiculo_id' => $data['vehiculo_id'],
-        'motorista_id' => $data['motorista_id'],
-        'estado' => EstadoSolicitudEnum::ASIGNADA,
-    ]);
-
-    HistorialEstado::create([
-        'entidad_tipo' => 'solicitud_transporte',
-        'entidad_id' => $record->id,
-        'estado_anterior' => $estadoAnterior->value,
-        'estado_nuevo' => EstadoSolicitudEnum::ASIGNADA->value,
-        'user_id' => auth()->id(),
-        'comentario' => 'Vehículo y motorista asignados.',
-    ]);
-
-    BitacoraEvento::create([
-        'entidad_tipo' => 'solicitud_transporte',
-        'entidad_id' => $record->id,
-        'accion' => AccionBitacoraEnum::ASIGNAR->value,
-        'user_id' => auth()->id(),
-        'datos_extras' => [
-            'vehiculo_id' => $data['vehiculo_id'],
-            'motorista_id' => $data['motorista_id'],
-        ],
-    ]);
-
-}),
-
-
+                            BitacoraEvento::create([
+                                'entidad_tipo' => 'solicitud_transporte',
+                                'entidad_id'   => $record->id,
+                                'accion'       => AccionBitacoraEnum::ASIGNAR->value,
+                                'user_id'      => auth()->id(),
+                                'datos_extras' => [
+                                    'vehiculo_id'  => $data['vehiculo_id'],
+                                    'motorista_id' => $data['motorista_id'],
+                                ],
+                            ]);
+                        }),
 
                     Tables\Actions\Action::make('aprobar')
                         ->label('Aprobar')
@@ -537,7 +542,6 @@ class SolicitudTransporteResource extends Resource
                                         ->required()
                                         ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
                                         ->hintColor('warning')
-                                        // FIX #3: ->reactive() reemplazado por ->live() (Filament v3)
                                         ->live()
                                         ->afterStateUpdated(function ($state, callable $set) {
                                             if (!$state) {
@@ -555,21 +559,25 @@ class SolicitudTransporteResource extends Resource
 
                                     Forms\Components\Hidden::make('motorista_id'),
 
+                                    // FIX #2: advertencia visible si el vehículo no tiene motorista
                                     Forms\Components\Placeholder::make('motorista_nombre')
                                         ->label('Motorista Asignado')
-                                        ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero'),
+                                        ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
+                                        ->hint(fn ($get) => ! $get('motorista_id') ? '⚠ Este vehículo no tiene motorista asignado' : null)
+                                        ->hintColor('danger'),
                                 ])
                                 ->columns(2),
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
                             $estadoAnterior = $record->estado;
 
-                            $record->estado        = EstadoSolicitudEnum::APROBADA;
+                            // FIX #3: estado unificado — record y historial usan PROGRAMADA
+                            $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
                             $record->comentario_jefe = $data['comentario_jefe'];
-                            $record->decidido_por  = auth()->id();
-                            $record->decidido_en   = now();
-                            $record->vehiculo_id   = $data['vehiculo_id'];
-                            $record->motorista_id  = $data['motorista_id'];
+                            $record->decidido_por    = auth()->id();
+                            $record->decidido_en     = now();
+                            $record->vehiculo_id     = $data['vehiculo_id'];
+                            $record->motorista_id    = $data['motorista_id'];
                             $record->save();
 
                             $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
@@ -632,7 +640,6 @@ class SolicitudTransporteResource extends Resource
                                 Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
                             }
                         })
-                        // FIX #4: auth()->check() antes de hasRole()
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() &&
                             auth()->user()->hasRole('jefe') &&
@@ -647,7 +654,6 @@ class SolicitudTransporteResource extends Resource
                             'solicitud_id' => $record->id,
                         ]))
                         ->openUrlInNewTab()
-                        // FIX #4: auth()->check() antes de hasAnyRole()
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() &&
                             auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin']) &&
@@ -688,7 +694,6 @@ class SolicitudTransporteResource extends Resource
                                 'comentario'      => $data['comentario_jefe'],
                             ]);
                         })
-                        // FIX #4: auth()->check() antes de hasRole()
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() && (
                                 (
@@ -711,8 +716,6 @@ class SolicitudTransporteResource extends Resource
             ->bulkActions([]);
     }
 
-    // FIX #1: Corregido getEloquentQuery() — el return prematuro dejaba todos los filtros por rol sin ejecutar.
-    // Se extrae el query base a una variable, se aplican los filtros y se retorna al final.
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
@@ -720,12 +723,10 @@ class SolicitudTransporteResource extends Resource
 
         $user = auth()->user();
 
-        // Super admin y TI ven todo
         if ($user->hasAnyRole(['super_admin', 'ti'])) {
             return $query;
         }
 
-        // Operativo: solo ve pendientes y en revisión
         if ($user->hasAnyRole('operativo')) {
             $query->whereIn('estado', [
                 EstadoSolicitudEnum::PENDIENTE->value,
@@ -733,7 +734,6 @@ class SolicitudTransporteResource extends Resource
             ]);
         }
 
-        // Jefe: ve pre-aprobadas y aprobadas
         if ($user->hasRole('jefe')) {
             $query->whereIn('estado', [
                 EstadoSolicitudEnum::PRE_APROBADA->value,
@@ -741,7 +741,6 @@ class SolicitudTransporteResource extends Resource
             ]);
         }
 
-        // Liquidador: solo ve asignadas y completadas
         if ($user->hasRole('liquidador')) {
             $query->whereIn('estado', [
                 EstadoSolicitudEnum::ASIGNADA->value,
