@@ -493,97 +493,88 @@ public static function table(Table $table): Table
             ->modalHeading('Asignar Cupones de Combustible')
             ->modalWidth('xl')
             ->form([
-                        Forms\Components\Select::make('contrato_id')
-                            ->label('Contrato')
-                            ->options(
-                                ContratoCombustible::where('activo', true)
-                                    ->get()
-                                    ->mapWithKeys(fn ($c) => [
-                                        $c->id => "{$c->numero_contrato} — {$c->nombre} (Disponible: $" . number_format($c->monto_disponible, 2) . ")"
-                                    ])
-                            )
-                            ->required()
-                            ->searchable()
-                            ->live()
-                            ->afterStateUpdated(fn ($set) => $set('serie_vale_id', null)),
+                Forms\Components\Select::make('contrato_id')
+                    ->label('Contrato')
+                    ->options(
+                        ContratoCombustible::where('activo', true)
+                            ->get()
+                            ->mapWithKeys(fn ($c) => [
+                                $c->id => "{$c->numero_contrato} — {$c->nombre} (Disponible: $" . number_format($c->monto_disponible, 2) . ")"
+                            ])
+                    )
+                    ->required()
+                    ->searchable()
+                    ->live()
+                    ->afterStateUpdated(fn ($set) => $set('serie_vale_id', null)),
 
-                        Forms\Components\Select::make('serie_vale_id')
-                            ->label('Serie de Vales')
-                            ->options(fn ($get) =>
-                                SerieVale::where('contrato_id', $get('contrato_id'))
-                                    ->where('activo', true)
-                                    ->get()
-                                    ->mapWithKeys(fn ($s) => [
-                                        $s->id => "{$s->nombre} — Val: $" . number_format($s->valor, 2) .
-                                                  " | Correlativo: {$s->correlativo_inicio}-{$s->correlativo_fin}" .
-                                                  " | Siguiente: " . ($s->correlativo_actual ?: $s->correlativo_inicio)
-                                    ])
-                            )
-                            ->required()
-                            ->searchable()
-                            ->live()
-                            ->disabled(fn ($get) => !$get('contrato_id'))
-                            ->helperText('Primero selecciona un contrato.'),
+                Forms\Components\Select::make('serie_vale_id')
+                    ->label('Serie de Vales')
+                    ->options(fn ($get) =>
+                        SerieVale::where('contrato_id', $get('contrato_id'))
+                            ->where('activo', true)
+                            ->get()
+                            ->mapWithKeys(fn ($s) => [
+                                $s->id => "{$s->nombre} — Val: $" . number_format($s->valor, 2) .
+                                          " | Correlativo: {$s->correlativo_inicio}-{$s->correlativo_fin}" .
+                                          " | Siguiente: " . ($s->correlativo_actual ?: $s->correlativo_inicio)
+                            ])
+                    )
+                    ->required()
+                    ->searchable()
+                    ->live()
+                    ->disabled(fn ($get) => !$get('contrato_id'))
+                    ->helperText('Primero selecciona un contrato.'),
 
-                        Forms\Components\TextInput::make('cantidad_vales')
-                            ->label('Cantidad de Vales')
-                            ->numeric()
-                            ->required()
-                            ->minValue(1)
-                            ->live(debounce: 500)
-                            ->helperText(function ($get) {
-                                $serieId = $get('serie_vale_id');
-                                $cantidad = (int) ($get('cantidad_vales') ?? 0);
+                Forms\Components\TextInput::make('cantidad_vales')
+                    ->label('Cantidad de Vales')
+                    ->numeric()
+                    ->required()
+                    ->minValue(1)
+                    ->live(debounce: 500)
+                    ->helperText(function ($get) {
+                        $serieId = $get('serie_vale_id');
+                        $cantidad = (int) ($get('cantidad_vales') ?? 0);
+                        if (!$serieId || $cantidad <= 0) return null;
+                        $serie = SerieVale::find($serieId);
+                        if (!$serie) return null;
+                        $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
+                        $fin = $inicio + $cantidad - 1;
+                        $monto = $cantidad * (float) $serie->valor;
+                        return "Rango: {$inicio} – {$fin} | Monto total: $" . number_format($monto, 2);
+                    }),
 
-                                if (!$serieId || $cantidad <= 0) return null;
+                Forms\Components\Placeholder::make('resumen_asignacion')
+                    ->label('Resumen')
+                    ->content(function ($get) {
+                        $serieId = $get('serie_vale_id');
+                        $cantidad = (int) ($get('cantidad_vales') ?? 0);
+                        if (!$serieId || $cantidad <= 0) {
+                            return new \Illuminate\Support\HtmlString('<span class="text-gray-400 text-sm">Selecciona una serie y cantidad para ver el resumen.</span>');
+                        }
+                        $serie = SerieVale::find($serieId);
+                        if (!$serie) return '-';
+                        $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
+                        $fin = $inicio + $cantidad - 1;
+                        $monto = $cantidad * (float) $serie->valor;
+                        $disponibles = $serie->correlativo_fin - $inicio + 1;
+                        $alerta = $fin > $serie->correlativo_fin
+                            ? '<span class="text-red-600 font-bold">⚠ Sin suficientes vales en esta serie.</span>'
+                            : '<span class="text-green-600">✓ Vales disponibles suficientes.</span>';
 
-                                $serie = SerieVale::find($serieId);
-                                if (!$serie) return null;
-
-                                $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
-                                $fin    = $inicio + $cantidad - 1;
-                                $monto  = $cantidad * (float) $serie->valor;
-
-                                return "Rango: {$inicio} – {$fin} | Monto total: $" . number_format($monto, 2);
-                            }),
-
-                        Forms\Components\Placeholder::make('resumen_asignacion')
-                            ->label('Resumen')
-                            ->content(function ($get) {
-                                $serieId  = $get('serie_vale_id');
-                                $cantidad = (int) ($get('cantidad_vales') ?? 0);
-
-                                if (!$serieId || $cantidad <= 0) {
-                                    return new \Illuminate\Support\HtmlString('<span class="text-gray-400 text-sm">Selecciona una serie y cantidad para ver el resumen.</span>');
-                                }
-
-                                $serie = SerieVale::find($serieId);
-                                if (!$serie) return '-';
-
-                                $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
-                                $fin    = $inicio + $cantidad - 1;
-                                $monto  = $cantidad * (float) $serie->valor;
-
-                                $disponibles = $serie->correlativo_fin - $inicio + 1;
-                                $alerta      = $fin > $serie->correlativo_fin
-                                    ? '<span class="text-red-600 font-bold">⚠ Sin suficientes vales en esta serie.</span>'
-                                    : '<span class="text-green-600">✓ Vales disponibles suficientes.</span>';
-
-                                return new \Illuminate\Support\HtmlString("
-                                    <div class='text-sm space-y-1'>
-                                        <div><span class='font-medium'>Serie:</span> {$serie->nombre}</div>
-                                        <div><span class='font-medium'>Valor por vale:</span> \$" . number_format($serie->valor, 2) . "</div>
-                                        <div><span class='font-medium'>Correlativo:</span> {$inicio} → {$fin}</div>
-                                        <div><span class='font-medium'>Monto total:</span> <strong>\$" . number_format($monto, 2) . "</strong></div>
-                                        <div><span class='font-medium'>Vales disponibles en serie:</span> {$disponibles}</div>
-                                        <div>{$alerta}</div>
-                                    </div>
-                                ");
-                            }),
-                    ])
-    ]),    
-
-            ])
+                        return new \Illuminate\Support\HtmlString("
+                            <div class='text-sm space-y-1'>
+                                <div><span class='font-medium'>Serie:</span> {$serie->nombre}</div>
+                                <div><span class='font-medium'>Valor por vale:</span> \$" . number_format($serie->valor, 2) . "</div>
+                                <div><span class='font-medium'>Correlativo:</span> {$inicio} → {$fin}</div>
+                                <div><span class='font-medium'>Monto total:</span> <strong>\$" . number_format($monto, 2) . "</strong></div>
+                                <div><span class='font-medium'>Vales disponibles en serie:</span> {$disponibles}</div>
+                                <div>{$alerta}</div>
+                            </div>
+                        ");
+                    }),
+            ]), // Cierra el array de form()
+    ]), // Cierra el ActionGroup::make()
+]) // Cierra el array de actions()
             ->action(function (SolicitudCombustible $record, array $data) {
 
                 try {
