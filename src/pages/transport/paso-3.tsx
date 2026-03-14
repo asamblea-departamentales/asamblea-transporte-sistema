@@ -93,6 +93,20 @@ async function getOSRMRoute(points: { lat: number; lng: number }[]): Promise<{
   } catch { return null; }
 }
 
+// ─── Micro-componentes (Estilo Paso 1) ────────────────────────────────────────
+
+function SectionTitle({ icon, label }: { icon: React.ReactNode; label: string }) {
+  return (
+    <div className="flex items-center gap-2.5 mb-5">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0"
+        style={{ background: "rgba(15,37,72,0.07)", color: "#0f2548" }}>
+        {icon}
+      </div>
+      <span className="text-[14px] font-bold text-slate-800">{label}</span>
+    </div>
+  );
+}
+
 // ─── PÁGINA ────────────────────────────────────────────────────────────────────
 
 export default function TransportStep3Page() {
@@ -108,7 +122,6 @@ export default function TransportStep3Page() {
   const [submitting,    setSubmitting]    = useState(false);
   const [errorMsg,      setErrorMsg]      = useState<string | null>(null);
   const [routeInfo,     setRouteInfo]     = useState<{ distance: number; duration: number; isReal: boolean } | null>(null);
-
   const [successId,     setSuccessId]     = useState<string | undefined>(undefined);
   const [showSuccess,   setShowSuccess]   = useState(false);
 
@@ -124,17 +137,17 @@ export default function TransportStep3Page() {
 
   useEffect(() => {
     if (loading) return;
-    if (!mapRef.current) {
-      const mapDiv = document.getElementById("map-resumen");
-      if (!mapDiv) return;
-      const map = L.map(mapDiv, { zoomControl: true, dragging: true, scrollWheelZoom: false })
-        .setView([13.7942, -88.8965], 9);
-      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }).addTo(map);
-      mapRef.current = map;
-    }
+    const mapDiv = document.getElementById("map-resumen");
+    if (!mapDiv || mapRef.current) return;
+    
+    const map = L.map(mapDiv, { zoomControl: true, dragging: true, scrollWheelZoom: false })
+      .setView([13.7942, -88.8965], 9);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
+    mapRef.current = map;
+    
     return () => { mapRef.current?.remove(); mapRef.current = null; };
   }, [loading]);
 
@@ -142,7 +155,6 @@ export default function TransportStep3Page() {
     if (!mapRef.current || !wizardData.origen) return;
 
     async function renderMap() {
-      if (!mapRef.current) return;
       if (!mapRef.current) return;
       markersRef.current.forEach((m) => m.remove()); markersRef.current = [];
       routeLayerRef.current?.remove(); routeLayerRef.current = null;
@@ -190,7 +202,6 @@ export default function TransportStep3Page() {
         }
       }
       if (bounds.length > 0) mapRef.current!.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
-      if (bounds.length > 0) mapRef.current!.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
     }
     renderMap();
   }, [wizardData, loading]);
@@ -234,116 +245,132 @@ export default function TransportStep3Page() {
     }
   }
 
-  if (loading) return (
-    <div className="mx-auto max-w-7xl py-10">
-      <div className="rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
-        <div className="h-4 w-40 animate-pulse rounded bg-slate-200" />
-        <div className="mt-8 grid gap-4 lg:grid-cols-2">
-          <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
-          <div className="h-48 animate-pulse rounded-3xl bg-slate-100" />
-        </div>
-      </div>
-    </div>
-  );
+  if (loading) return null;
 
   if (showSuccess) return <SuccessScreen solicitudId={successId} />;
 
   return (
-    <div className="mx-auto max-w-7xl space-y-8 pb-12">
+    <div className="mx-auto max-w-2xl space-y-6 pb-8">
       <TransportWizard steps={[{id:1,label:"Datos"},{id:2,label:"Ruta"},{id:3,label:"Confirmar"}]} currentStep={3} />
 
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div className="space-y-2">
-          <h1 className="text-4xl font-black tracking-tight text-slate-900">Confirmación</h1>
-          <p className="text-sm font-medium text-slate-500">Revisa los datos antes de enviar la solicitud institucional</p>
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="inline-block h-[2px] w-5 rounded-full bg-blue-700" />
+          <span className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">
+            Último Paso
+          </span>
         </div>
-        <div className="flex h-10 items-center gap-2 rounded-full bg-blue-50 px-4 text-[10px] font-bold uppercase tracking-widest text-[#0f2548] ring-1 ring-blue-100">
-          <div className="h-2 w-2 animate-pulse rounded-full bg-[#0f2548]" />
-          Paso Final
-        </div>
+        <h1 className="text-[28px] font-bold tracking-tight text-slate-900 leading-none">
+          Confirmación
+        </h1>
+        <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+          Verifica los datos de tu solicitud institucional antes de enviarlos al sistema.
+        </p>
       </div>
 
       {errorMsg && (
-        <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-800">
+        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-[12px] text-red-800">
           {errorMsg}
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-5">
-        <div className="lg:col-span-3 space-y-8">
-          <div className="rounded-[2.5rem] border border-slate-200 bg-white p-8 shadow-xl shadow-slate-200/30">
-            <h2 className="mb-8 text-xl font-black text-slate-900">Resumen del Viaje</h2>
-            
-            <div className="grid gap-6 sm:grid-cols-2">
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Tipo de Vehículo</span>
-                <p className="font-bold text-slate-700">{wizardData.tipoVehiculo ? VEHICULO_LABELS[wizardData.tipoVehiculo] : "—"}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha y Hora</span>
-                <p className="font-bold text-slate-700">{wizardData.fecha} a las {wizardData.hora}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Encargado</span>
-                <p className="font-bold text-slate-700">{wizardData.encargado}</p>
-              </div>
-              <div className="space-y-1">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pasajeros</span>
-                <p className="font-bold text-slate-700">{wizardData.pasajeros} personas</p>
-              </div>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden divide-y divide-slate-100">
+        <div className="p-5 sm:p-6">
+          <SectionTitle 
+            label="Resumen del Servicio"
+            icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" /></svg>}
+          />
+          
+          <div className="grid grid-cols-2 gap-y-5 gap-x-4">
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Vehículo</span>
+              <p className="text-[13px] font-bold text-slate-700">{wizardData.tipoVehiculo ? VEHICULO_LABELS[wizardData.tipoVehiculo] : "—"}</p>
             </div>
-
-            <div className="my-10 h-px w-full bg-slate-100" />
-
-            <div className="space-y-6">
-              <div className="flex items-start gap-4">
-                <div className="mt-1 h-3 w-3 rounded-full bg-[#0f2548] shadow-lg shadow-[#0f2548]/40" />
-                <div className="space-y-1">
-                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Punto de Origen</span>
-                  <p className="text-sm font-bold text-slate-700">{wizardData.origen}</p>
-                </div>
-              </div>
-
-              {destinosValidos.map((d, i) => (
-                <div key={d.id} className="flex items-start gap-4">
-                  <div className="mt-1 h-3 w-3 rounded-full bg-red-500 shadow-lg shadow-red-500/40" />
-                  <div className="space-y-1">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Destino {i + 1}</span>
-                    <p className="text-sm font-medium text-slate-600">{d.address}</p>
-                  </div>
-                </div>
-              ))}
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Fecha y Hora</span>
+              <p className="text-[13px] font-bold text-slate-700">{wizardData.fecha} • {wizardData.hora}</p>
             </div>
-
-            <div className="mt-12 flex items-center justify-between gap-4 border-t border-slate-100 pt-8">
-              <button onClick={() => navigate("/solicitudes/transporte/paso-2")} className="flex h-12 items-center gap-2 px-6 text-sm font-black text-slate-400 transition hover:text-slate-900">
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M10 19l-7-7m0 0l7-7m-7 7h18" /></svg>
-                Corregir
-              </button>
-              <button onClick={handleSubmit} disabled={submitting} className="flex h-14 items-center gap-2 rounded-2xl bg-[#0f2548] px-10 text-sm font-black text-white shadow-xl shadow-[#0f2548]/20 transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50">
-                {submitting ? "Enviando..." : "Enviar Solicitud"}
-                <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-              </button>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Encargado</span>
+              <p className="text-[13px] font-bold text-slate-700">{wizardData.encargado}</p>
+            </div>
+            <div className="space-y-1">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Pasajeros</span>
+              <p className="text-[13px] font-bold text-slate-700">{wizardData.pasajeros} personas</p>
             </div>
           </div>
         </div>
 
-        <div className="lg:col-span-2">
-          <div className="sticky top-24 space-y-4">
-            <div className="overflow-hidden rounded-[2rem] border border-slate-200 bg-white shadow-xl shadow-slate-200/40">
-              <div className="border-b border-slate-100 px-6 py-4">
-                <h3 className="text-sm font-black uppercase tracking-widest text-slate-800">Mapa de Confirmación</h3>
-                <p className="mt-0.5 text-[11px] font-medium text-slate-400">Ruta calculada para el vehículo</p>
+        <div className="p-5 sm:p-6">
+          <SectionTitle 
+            label="Itinerario"
+            icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" /></svg>}
+          />
+          
+          <div className="space-y-5">
+            <div className="flex items-start gap-3">
+              <div className="mt-1 h-3 w-3 rounded-full bg-[#0f2548] ring-4 ring-blue-50" />
+              <div className="space-y-0.5">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Desde</span>
+                <p className="text-[13px] font-medium text-slate-600 leading-tight">{wizardData.origen}</p>
               </div>
-              <div id="map-resumen" className="h-[400px] bg-slate-50" />
-              {routeInfo && (
-                <div className="flex items-center justify-between border-t border-slate-100 bg-slate-50/50 px-6 py-4">
-                   <div className="text-xs font-bold text-slate-700">Distancia: {routeInfo.distance.toFixed(1)} km</div>
-                   <div className="text-xs font-bold text-slate-700">Tiempo: {routeInfo.duration.toFixed(0)} min</div>
-                </div>
-              )}
             </div>
+
+            {destinosValidos.map((d, i) => (
+              <div key={d.id} className="flex items-start gap-3">
+                <div className="mt-1 h-3 w-3 rounded-full bg-red-500 ring-4 ring-red-50" />
+                <div className="space-y-0.5">
+                  <span className="text-[10px] font-black uppercase tracking-widest text-slate-400">Destino {i + 1}</span>
+                  <p className="text-[13px] font-medium text-slate-600 leading-tight">{d.address}</p>
+                </div>
+              </div>
+            ))}
           </div>
+        </div>
+
+        <div className="p-5 sm:p-6">
+          <SectionTitle 
+            label="Vista de Mapa"
+            icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
+          />
+          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 relative">
+            <div id="map-resumen" className="h-[280px] w-full" />
+            {routeInfo && (
+              <div className="absolute top-3 right-3 flex items-center gap-2 rounded-lg bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
+                <span className="text-[11px] font-black text-slate-700">{routeInfo.distance.toFixed(1)} km</span>
+                <div className="h-3 w-[1px] bg-slate-200" />
+                <span className="text-[11px] font-black text-slate-700">{routeInfo.duration.toFixed(0)} min</span>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between px-5 py-4 bg-slate-50/50">
+          <button
+            onClick={() => navigate("/solicitudes/transporte/paso-2")}
+            disabled={submitting}
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:bg-white hover:text-slate-700 border border-transparent hover:border-slate-200 hover:shadow-sm focus:outline-none disabled:opacity-50"
+          >
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+            </svg>
+            Corregir
+          </button>
+
+          <button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-2.5 text-[13px] font-bold text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-70"
+            style={{
+              background: "linear-gradient(135deg, #0f2548 0%, #2354b4 100%)",
+              boxShadow: "0 4px 16px rgba(15,37,72,0.22), 0 1px 4px rgba(15,37,72,0.1)",
+            }}
+          >
+            {submitting ? "Enviando..." : "Enviar Solicitud"}
+            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
+            </svg>
+          </button>
         </div>
       </div>
     </div>
