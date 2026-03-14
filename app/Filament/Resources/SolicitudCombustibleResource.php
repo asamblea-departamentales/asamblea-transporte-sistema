@@ -581,6 +581,7 @@ public static function table(Table $table): Table
                                 ");
                             }),
                     ])
+    ]),    
 
             ])
             ->action(function (SolicitudCombustible $record, array $data) {
