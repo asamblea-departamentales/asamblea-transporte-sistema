@@ -1,4 +1,6 @@
 // src/auth/auth.storage.ts
+import type { AuthUser } from "../services/auth.service";
+
 const AUTH_FLAG_KEY = "auth_ok";
 const USER_KEY = "auth_user";
 const ALERT_KEY = "has_seen_profile_alert";
@@ -14,11 +16,11 @@ export const authStorage = {
     localStorage.removeItem(AUTH_FLAG_KEY);
   },
 
-  getUser<T = any>(): T | null {
+  getUser(): AuthUser | null {
     const raw = localStorage.getItem(USER_KEY);
-    return raw ? (JSON.parse(raw) as T) : null;
+    return raw ? (JSON.parse(raw) as AuthUser) : null;
   },
-  setUser(user: any) {
+  setUser(user: AuthUser) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   },
   clearUser() {

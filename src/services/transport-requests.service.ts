@@ -60,10 +60,11 @@ export type Paginated<T> = {
  */
 const BASE = "/transport-requests";
 
-function normalizeArray<T>(data: any): T[] {
+function normalizeArray<T>(data: T[] | { data: T[] } | { items: T[] } | null | undefined): T[] {
+  if (!data) return [];
   if (Array.isArray(data)) return data;
-  if (data && Array.isArray(data.data)) return data.data; // paginate => data.data
-  if (data && Array.isArray(data.items)) return data.items;
+  if ("data" in data && Array.isArray(data.data)) return data.data; // paginate => data.data
+  if ("items" in data && Array.isArray(data.items)) return data.items;
   return [];
 }
 

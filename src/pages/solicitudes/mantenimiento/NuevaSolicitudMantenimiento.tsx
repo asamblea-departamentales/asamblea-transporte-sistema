@@ -491,19 +491,19 @@ export default function NuevaSolicitudMantenimiento() {
       // El endpoint de vehiculos devuelve array con { id, label, placa, marca, modelo, tipo }
       // El endpoint de tipos devuelve array con { id, nombre }
       const vehiculos: Catalogo[] = (Array.isArray(jsonVehs) ? jsonVehs : jsonVehs.data ?? []).map(
-        (v: any) => ({ id: String(v.id), label: v.label ?? v.nombre ?? String(v.id) })
+        (v: { id: number | string; label?: string; nombre?: string }) => ({ id: String(v.id), label: v.label ?? v.nombre ?? String(v.id) })
       );
 
       const tiposMantenimiento: Catalogo[] = (Array.isArray(jsonTipos) ? jsonTipos : jsonTipos.data ?? []).map(
-        (t: any) => ({ id: String(t.id), label: t.nombre ?? t.label ?? String(t.id) })
+        (t: { id: number | string; nombre?: string; label?: string }) => ({ id: String(t.id), label: t.nombre ?? t.label ?? String(t.id) })
       );
 
       setCatalogos({ vehiculos, tiposMantenimiento, loading: false, error: null });
-    } catch (err: any) {
+    } catch (err: unknown) {
       setCatalogos((prev) => ({
         ...prev,
         loading: false,
-        error: err?.message ?? "No se pudieron cargar los catálogos.",
+        error: err instanceof Error ? err.message : "No se pudieron cargar los catálogos.",
       }));
     }
   }, []);
@@ -565,8 +565,8 @@ export default function NuevaSolicitudMantenimiento() {
       }
 
       setSubmitted(true);
-    } catch (e: any) {
-      setApiError(e?.message || "No se pudo conectar con el servidor.");
+    } catch (e: unknown) {
+      setApiError(e instanceof Error ? e.message : "No se pudo conectar con el servidor.");
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);

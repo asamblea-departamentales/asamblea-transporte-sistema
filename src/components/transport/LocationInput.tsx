@@ -89,8 +89,8 @@ export default function LocationInput({
           return [...sedes, ...nominatimSugs].slice(0, 7);
         });
         setOpen(true);
-      } catch (e: any) {
-        if (e.name !== "AbortError") console.error(e);
+      } catch (e: unknown) {
+        if (e instanceof Error && e.name !== "AbortError") console.error(e);
       } finally {
         setLoading(false);
       }

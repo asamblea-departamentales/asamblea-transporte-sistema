@@ -1,17 +1,39 @@
 import { useState } from "react";
-import type { Request } from "../../services/requests.service";
+
+// Local structural interface: only the fields AsignacionBloque actually reads.
+interface AsignacionRequest {
+  vehiculo?: {
+    id?: number;
+    placa?: string;
+    marca?: unknown;
+    modelo?: unknown;
+    tipo?: unknown;
+    fotografia_url?: string | null;
+  } | null;
+  motorista?: {
+    id?: number;
+    nombre?: string;
+    telefono?: string | null;
+    dui?: string | null;
+  } | null;
+}
 
 interface AsignacionBloqueProps {
-  request: Request;
+  request: AsignacionRequest;
 }
 
 // ─── HELPER ───────────────────────────────────────────────────────────────────
 /** Convierte cualquier valor (objeto, string, número, null) a string seguro */
-function str(value: any): string {
+function str(value: unknown): string {
   if (value === null || value === undefined) return "";
-  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const n = obj.nombre ?? obj.name;
+    return typeof n === "string" ? n : String(value);
+  }
   return String(value);
 }
+
 
 /**
  * Muestra el vehículo y motorista asignados a una solicitud.
@@ -76,7 +98,7 @@ export default function AsignacionBloque({ request }: AsignacionBloqueProps) {
                     </svg>
                     {str(vehiculo.placa)}
                   </span>
-                  {vehiculo.tipo && (
+                  {!!vehiculo.tipo && (
                     <span className="inline-flex items-center rounded-md bg-emerald-100 px-2 py-0.5 text-xs font-semibold text-emerald-700">
                       {str(vehiculo.tipo)}
                     </span>

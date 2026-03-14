@@ -157,9 +157,9 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       ]);
 
       const next: Snap[] = [];
-      if (t.status === "fulfilled") t.value.data.forEach((s: any) => next.push({ id: s.id, estado: s.estado, fecha_salida: s.fecha_salida, codigo: s.codigo, modulo: "transporte" }));
-      if (m.status === "fulfilled") m.value.data.forEach((s: any) => next.push({ id: s.id, estado: s.estado, fecha_salida: s.fecha_salida, codigo: s.codigo, modulo: "mantenimiento" }));
-      if (c.status === "fulfilled") c.value.data.forEach((s: any) => next.push({ id: s.id, estado: s.estado, fecha_salida: s.fecha_salida, codigo: s.codigo, modulo: "combustible" }));
+      if (t.status === "fulfilled") t.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
+      if (m.status === "fulfilled") m.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
+      if (c.status === "fulfilled") c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
 
       if (isFirstPoll.current) {
         // Primera carga: solo guardar snapshot, sin generar notifs

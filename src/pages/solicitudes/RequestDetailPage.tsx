@@ -23,12 +23,59 @@ import {
   FileText,
 } from "lucide-react";
 
-type GenericRequest = any;
+// GenericRequest: A purposeful type covering the fields used by this detail view
+// across the three modules (transporte, mantenimiento, combustible).
+// Rather than intersecting incompatible types, we declare exactly what we read.
+type GenericRequest = {
+  // ------ Shared core fields ------
+  id: number;
+  codigo: string;
+  estado: string;
+  solicitante_id?: number | string;
+  created_at?: string;
+  updated_at?: string;
+  // Related entities (present in all modules with slight shape differences)
+  solicitante?: { id?: number | string; name?: string; nombre?: string };
+  unidad?: { id?: number | string; nombre?: string };
+  vehiculo?: { id?: number; placa?: string; marca?: unknown; modelo?: unknown } | null;
+  motorista?: { id?: number; nombre?: string } | null;
+  observaciones?: string | null;
+  prioridad?: string;
+  // ------ Transporte ------
+  motivo_actividad?: string;
+  origen?: string;
+  destino?: string;
+  fecha_salida?: string;
+  cantidad_personas?: number;
+  // ------ Mantenimiento ------
+  descripcion?: string;
+  tipo_mantenimiento?: string | { id?: number; nombre?: string } | null;
+  fecha_sugerida?: string;
+  // Finalization fields for mantenimiento
+  fecha_realizada?: string | null;
+  costo_real?: number | string | null;
+  adjuntos?: string[] | null;
+  // ------ Combustible ------
+  destino_actividad?: string;
+  fecha_solicitud?: string;
+  cantidad_combustible?: number;
+  cantidad_vales?: number | null;
+  correlativo_inicio?: number | null;
+  correlativo_fin?: number | null;
+  forma_pago?: string | null;
+  valor_total?: number | string | null;
+  numero_vale_ticket?: string | null;
+  comprobantes?: string[] | null;
+};
 
 // ─── HELPER ───────────────────────────────────────────────────────────────────
-function str(value: any): string {
+function str(value: unknown): string {
   if (value === null || value === undefined) return "—";
-  if (typeof value === "object") return value.nombre ?? value.name ?? String(value);
+  if (typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    const n = obj.nombre ?? obj.name;
+    return typeof n === "string" ? n : String(value);
+  }
   return String(value);
 }
 
@@ -56,10 +103,11 @@ export default function RequestDetailPage() {
       else if (modulo === "combustible") res = await getSolicitudCombustible(parseInt(id));
 
       if (!res) throw new Error("No se encontró la solicitud");
-      setData(res);
-    } catch (err: any) {
+      setData(res as GenericRequest);
+    } catch (err) {
       console.error(err);
-      setError(err.message || "Error al cargar el detalle");
+      const msg = err instanceof Error ? err.message : "Error al cargar el detalle";
+      setError(msg);
     } finally {
       setLoading(false);
     }
@@ -121,8 +169,13 @@ export default function RequestDetailPage() {
       await completeRequest(data.id);
       setShowConfirmTransporte(false);
       fetchData();
-    } catch (err: any) {
-      alert(err.response?.data?.error || err.response?.data?.message || "Error al finalizar el viaje.");
+    } catch (err) {
+      const detail = err instanceof Error ? err.message : "Error al finalizar el viaje.";
+      alert(err && typeof err === "object" && "response" in err
+        ? ((err as { response?: { data?: { error?: string; message?: string } } }).response?.data?.error ||
+           (err as { response?: { data?: { error?: string; message?: string } } }).response?.data?.message ||
+           detail)
+        : detail);
     } finally {
       setFinalizandoTransporte(false);
     }
@@ -214,7 +267,7 @@ export default function RequestDetailPage() {
             {/* Detalles Comunes */}
             <DetailItem icon={<User className="h-4 w-4" />} label="Solicitante" value={str(data.solicitante?.name ?? data.solicitante)} />
             <DetailItem icon={<Building2 className="h-4 w-4" />} label="Unidad" value={str(data.unidad?.nombre ?? data.unidad)} />
-            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={new Date(data.fecha_salida || data.fecha_solicitud || data.fecha_sugerida).toLocaleDateString()} />
+            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={new Date(data.fecha_salida ?? data.fecha_solicitud ?? data.fecha_sugerida ?? Date.now()).toLocaleDateString()} />
 
             {/* Especiales Combustible */}
             {isCombustible && (
@@ -268,7 +321,7 @@ export default function RequestDetailPage() {
             <Wrench className="h-4 w-4" />
             Asignación de recursos
           </h2>
-          <AsignacionBloque request={data} />
+          <AsignacionBloque request={data as Parameters<typeof AsignacionBloque>[0]["request"]} />
         </section>
       )}
 
@@ -346,10 +399,14 @@ export default function RequestDetailPage() {
   );
 }
 
-function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: any }) {
-  const safe = (v: any): string => {
+function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: string; value: unknown }) {
+  const safe = (v: unknown): string => {
     if (v === null || v === undefined) return "—";
-    if (typeof v === "object") return v.nombre ?? v.name ?? String(v);
+    if (typeof v === "object") {
+      const obj = v as Record<string, unknown>;
+      const n = obj.nombre ?? obj.name;
+      return typeof n === "string" ? n : String(v);
+    }
     return String(v);
   };
   return (
@@ -384,7 +441,7 @@ function isImage(path: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(path);
 }
 
-function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }) {
+function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modulo: string }) {
   const isCombustible = modulo === "combustible";
   const isMantenimiento = modulo === "mantenimiento";
   const isTransporte = modulo === "transporte";
@@ -428,17 +485,18 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
             {isCombustible && (
               <>
                 {data.forma_pago && (() => {
-                  const PayIcon = FORMA_PAGO_MAP[data.forma_pago]?.Icon ?? Receipt;
+                  const key = String(data.forma_pago) as keyof typeof FORMA_PAGO_MAP;
+                  const PayIcon = FORMA_PAGO_MAP[key]?.Icon ?? Receipt;
                   return (
                     <InfoChip
                       label="Forma de Pago"
-                      value={FORMA_PAGO_MAP[data.forma_pago]?.label ?? data.forma_pago}
+                      value={FORMA_PAGO_MAP[key]?.label ?? String(data.forma_pago)}
                       icon={<PayIcon className="h-4 w-4" />}
                     />
                   );
                 })()}
                 {data.valor_total != null && (
-                  <InfoChip label="Valor Total" value={`$${parseFloat(data.valor_total).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
+                  <InfoChip label="Valor Total" value={`$${parseFloat(String(data.valor_total)).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
                 )}
                 {data.numero_vale_ticket && (
                   <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} icon={<Hash className="h-4 w-4" />} />
@@ -457,7 +515,7 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
                   />
                 )}
                 {data.costo_real != null && (
-                  <InfoChip label="Costo Real" value={`$${parseFloat(data.costo_real).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
+                  <InfoChip label="Costo Real" value={`$${parseFloat(String(data.costo_real)).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />
                 )}
               </>
             )}
@@ -549,7 +607,7 @@ function FinalizacionDataSection({ data, modulo }: { data: any; modulo: string }
   );
 }
 
-function InfoChip({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+function InfoChip({ label, value, icon }: { label: string; value: string | number; icon?: React.ReactNode }) {
   return (
     <div className="flex items-center gap-3 rounded-xl bg-slate-50/80 px-4 py-3.5 ring-1 ring-slate-100">
       {icon && <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-white text-slate-500 shadow-sm ring-1 ring-slate-200/50">{icon}</div>}

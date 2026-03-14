@@ -404,7 +404,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold text-white truncate leading-tight tracking-wide">{user?.name || "Usuario"}</p>
                   <p className="text-[11px] font-medium text-[#86a8e7] truncate mt-0.5">
-                    {(user as any)?.role || "Administrador"}
+                    {user?.roles?.[0] || "Administrador"}
                   </p>
                 </div>
               </div>

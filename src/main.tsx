@@ -7,8 +7,14 @@ import { AuthProvider } from "./auth/AuthContext";
 import { api } from "./lib/axios";
 import "leaflet/dist/leaflet.css";
 
+declare global {
+  interface Window {
+    api: typeof api;
+  }
+}
+
 if (import.meta.env.DEV) {
-  (window as any).api = api;
+  window.api = api;
   console.log("🔧 api (axios) disponible en DevTools");
   console.log("📍 API Base URL:", api.defaults.baseURL);
 }
