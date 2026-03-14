@@ -25,7 +25,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     protected static ?string $navigationGroup = 'Gestión Operativa';
     protected static ?string $navigationLabel = 'Gestión Operativa de Solicitudes';
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon  = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.gestion-operativa-solicitudes';
@@ -33,28 +33,39 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public string $etapa = 'bandeja';
 
     public ?string $date_from = null;
-    public ?string $date_to = null;
-    public ?string $tipo = null;
+    public ?string $date_to   = null;
+    public ?string $tipo      = null;
     public ?string $prioridad = null;
-    public ?string $estado = null;
+    public ?string $estado    = null;
 
     public int $kpi_total = 0;
-    public int $kpi_a = 0;
-    public int $kpi_b = 0;
-    public int $kpi_c = 0;
+    public int $kpi_a     = 0;
+    public int $kpi_b     = 0;
+    public int $kpi_c     = 0;
     public string $kpi_a_label = 'A';
     public string $kpi_b_label = 'B';
     public string $kpi_c_label = 'C';
 
+    // FIX #1: operativo también necesita acceder a esta página
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'ti', 'jefe']) ?? false;
+        return auth()->user()?->hasAnyRole([
+            'super_admin',
+            'ti',
+            'jefe',
+            'operativo',
+        ]) ?? false;
     }
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
         $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+
+        // Redirigir al jefe directo a aprobaciones al entrar
+        if (auth()->user()?->hasRole('jefe') && ! auth()->user()?->hasAnyRole(['super_admin', 'ti'])) {
+            $this->etapa = 'aprobaciones';
+        }
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -74,8 +85,37 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         }
     }
 
+    // FIX #2: Método centralizado para verificar acceso a etapa por rol
+    protected function puedeAccederEtapa(string $etapa): bool
+    {
+        $user = auth()->user();
+
+        if ($user->hasAnyRole(['super_admin', 'ti'])) {
+            return true;
+        }
+
+        if ($user->hasRole('operativo')) {
+            return in_array($etapa, ['bandeja', 'revision'], true);
+        }
+
+        if ($user->hasRole('jefe')) {
+            return $etapa === 'aprobaciones';
+        }
+
+        return false;
+    }
+
+    // FIX #3: Bloquear cambio de etapa si el rol no tiene permiso
     public function cambiarEtapa(string $etapa): void
     {
+        if (! $this->puedeAccederEtapa($etapa)) {
+            Notification::make()
+                ->title('No tienes permiso para acceder a esta etapa')
+                ->danger()
+                ->send();
+            return;
+        }
+
         $this->etapa = $etapa;
         $this->estado = null;
         $this->resetPage();
@@ -89,8 +129,8 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 Forms\Components\Select::make('tipo')
                     ->label('Tipo')
                     ->options([
-                        'transporte' => 'Transporte',
-                        'combustible' => 'Combustible',
+                        'transporte'    => 'Transporte',
+                        'combustible'   => 'Combustible',
                         'mantenimiento' => 'Mantenimiento',
                     ])
                     ->native(false)
@@ -136,17 +176,17 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function getRowsProperty(): Collection
     {
         return match ($this->etapa) {
-            'bandeja' => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
-            'revision' => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'bandeja'      => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'revision'     => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
             'aprobaciones' => app(AprobacionesService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
-            default => collect(),
+            default        => collect(),
         };
     }
 
     public function getPaginatedRowsProperty()
     {
         $perPage = 8;
-        $page = $this->getPage();
+        $page    = $this->getPage();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
             $this->rows->forPage($page, $perPage)->values(),
@@ -157,8 +197,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         );
     }
 
+    // FIX #4a: tomarParaRevision — solo operativo
     public function tomarParaRevision(string $tipo, int $id): void
     {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(BandejaOperativaService::class)
             ->tomarParaRevision($tipo, $id, auth()->id(), 'Tomada desde flujo operativo.');
 
@@ -171,8 +217,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // cambiarPrioridad — operativo y superiores
     public function cambiarPrioridad(string $tipo, int $id, string $prioridad): void
     {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(BandejaOperativaService::class)
             ->actualizarPrioridad($tipo, $id, $prioridad, auth()->id());
 
@@ -184,8 +236,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $this->refreshKpis();
     }
 
+    // FIX #4b: derivar — solo operativo
     public function derivar(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(RevisionOperativaService::class)->derivar(
             $tipo,
             $id,
@@ -201,8 +259,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // observarRevision — operativo y superiores
     public function observarRevision(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(RevisionOperativaService::class)->observar(
             $tipo,
             $id,
@@ -217,8 +281,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // FIX #4c: validar — solo operativo
     public function validar(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(RevisionOperativaService::class)->validarYPreaprobar(
             $tipo,
             $id,
@@ -236,49 +306,59 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // FIX #4d: aprobar — solo jefe
     public function aprobar(string $tipo, int $id, array $data): void
-{
-    app(AprobacionesService::class)->aprobar(
-        $tipo,
-        $id,
-        auth()->id(),
-        $data['comentario']
-    );
- 
-    $this->refreshKpis();
-    $this->resetPage();
- 
-    // Notificación base para todos los tipos
-    if ($tipo !== 'combustible') {
-        Notification::make()
-            ->title('Solicitud aprobada')
-            ->success()
-            ->send();
- 
-        return;
-    }
- 
-    // ── Notificación enriquecida para combustible ─────────────────────────
-    // Construimos el link directo al view del record en el Resource
-    $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
- 
-    Notification::make()
-        ->title('Solicitud de combustible aprobada')
-        ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
-        ->success()
-        ->actions([
-            \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                ->label('Asignar vales ahora →')
-                ->url($urlAsignacion)
-                ->button()
-                ->color('primary'),
-        ])
-        ->persistent()   // no se cierra sola, el usuario debe hacer clic o cerrarla
-        ->send();
-}
+    {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
 
+        app(AprobacionesService::class)->aprobar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario']
+        );
+
+        $this->refreshKpis();
+        $this->resetPage();
+
+        if ($tipo !== 'combustible') {
+            Notification::make()
+                ->title('Solicitud aprobada')
+                ->success()
+                ->send();
+
+            return;
+        }
+
+        // Notificación enriquecida para combustible con link directo a asignación de vales
+        $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
+
+        Notification::make()
+            ->title('Solicitud de combustible aprobada')
+            ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+            ->success()
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                    ->label('Asignar vales ahora →')
+                    ->url($urlAsignacion)
+                    ->button()
+                    ->color('primary'),
+            ])
+            ->persistent()
+            ->send();
+    }
+
+    // FIX #4e: rechazar — solo jefe
     public function rechazar(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(AprobacionesService::class)->rechazar(
             $tipo,
             $id,
@@ -295,8 +375,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // FIX #4f: condicionar — solo jefe
     public function condicionar(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(AprobacionesService::class)->condicionar(
             $tipo,
             $id,
@@ -313,8 +399,14 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->send();
     }
 
+    // reabrir — solo jefe (acción de resolución administrativa)
     public function reabrir(string $tipo, int $id, array $data): void
     {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
         app(AprobacionesService::class)->reabrir(
             $tipo,
             $id,
@@ -339,10 +431,10 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function limpiarFiltros(): void
     {
         $this->date_from = null;
-        $this->date_to = null;
-        $this->tipo = null;
+        $this->date_to   = null;
+        $this->tipo      = null;
         $this->prioridad = null;
-        $this->estado = null;
+        $this->estado    = null;
 
         $this->form->fill($this->getFilterState());
         $this->resetPage();
@@ -362,16 +454,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     private function refreshKpis(): void
     {
         $kpis = match ($this->etapa) {
-            'bandeja' => app(BandejaOperativaService::class)->getKpis($this->getFilterStateWithStage()),
-            'revision' => app(RevisionOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'bandeja'      => app(BandejaOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'revision'     => app(RevisionOperativaService::class)->getKpis($this->getFilterStateWithStage()),
             'aprobaciones' => app(AprobacionesService::class)->getKpis($this->getFilterStateWithStage()),
-            default => ['total' => 0, 'transporte' => 0, 'combustible' => 0, 'mantenimiento' => 0],
+            default        => ['total' => 0, 'transporte' => 0, 'combustible' => 0, 'mantenimiento' => 0],
         };
 
-        $this->kpi_total = $kpis['total'] ?? 0;
-        $this->kpi_a = $kpis['transporte'] ?? 0;
-        $this->kpi_b = $kpis['combustible'] ?? 0;
-        $this->kpi_c = $kpis['mantenimiento'] ?? 0;
+        $this->kpi_total = $kpis['total']          ?? 0;
+        $this->kpi_a     = $kpis['transporte']     ?? 0;
+        $this->kpi_b     = $kpis['combustible']    ?? 0;
+        $this->kpi_c     = $kpis['mantenimiento']  ?? 0;
 
         $this->kpi_a_label = 'Transporte';
         $this->kpi_b_label = 'Combustible';
@@ -381,19 +473,33 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     private function armarValidaciones(array $data): array
     {
         return [
-            'datos_completos' => (bool) ($data['datos_completos'] ?? false),
-            'fechas_validas' => (bool) ($data['fechas_validas'] ?? false),
+            'datos_completos'      => (bool) ($data['datos_completos']      ?? false),
+            'fechas_validas'       => (bool) ($data['fechas_validas']        ?? false),
             'recursos_disponibles' => (bool) ($data['recursos_disponibles'] ?? false),
-            'reglas_minimas' => (bool) ($data['reglas_minimas'] ?? false),
-            'hallazgos' => $data['hallazgos'] ?? null,
+            'reglas_minimas'       => (bool) ($data['reglas_minimas']        ?? false),
+            'hallazgos'            => $data['hallazgos'] ?? null,
         ];
     }
 
+    // FIX: estadosOptions ahora varía según rol además de etapa
     private function estadosOptions(): array
     {
+        $user = auth()->user();
+
+        // TI y super_admin ven todos los estados relevantes
+        if ($user?->hasAnyRole(['super_admin', 'ti'])) {
+            return [
+                EstadoSolicitudEnum::PENDIENTE->value    => 'Pendiente',
+                EstadoSolicitudEnum::EN_REVISION->value  => 'En revisión',
+                EstadoSolicitudEnum::PRE_APROBADA->value => 'Pre-aprobada',
+                EstadoSolicitudEnum::APROBADA->value     => 'Aprobada',
+                EstadoSolicitudEnum::RECHAZADA->value    => 'Rechazada',
+            ];
+        }
+
         return match ($this->etapa) {
             'bandeja' => [
-                EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
+                EstadoSolicitudEnum::PENDIENTE->value   => 'Pendiente',
                 EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
             ],
             'revision' => [
@@ -410,35 +516,58 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         return [
             'date_from' => $this->date_from,
-            'date_to' => $this->date_to,
-            'tipo' => $this->tipo,
+            'date_to'   => $this->date_to,
+            'tipo'      => $this->tipo,
             'prioridad' => $this->prioridad,
-            'estado' => $this->estado,
+            'estado'    => $this->estado,
         ];
     }
 
+    // FIX: ahora sí incluye la etapa para que los servicios puedan filtrar por ella
     private function getFilterStateWithStage(): array
     {
-        return $this->getFilterState();
+        return array_merge($this->getFilterState(), [
+            'etapa' => $this->etapa,
+        ]);
     }
 
     public function etapaLabel(): string
     {
         return match ($this->etapa) {
-            'bandeja' => 'Recepción, clasificación y priorización inicial.',
-            'revision' => 'Validación técnica, observaciones y derivación.',
+            'bandeja'      => 'Recepción, clasificación y priorización inicial.',
+            'revision'     => 'Validación técnica, observaciones y derivación.',
             'aprobaciones' => 'Resolución administrativa y cierre de decisión.',
-            default => '',
+            default        => '',
         };
     }
 
     public function etapaColor(): string
     {
         return match ($this->etapa) {
-            'bandeja' => 'primary',
-            'revision' => 'warning',
+            'bandeja'      => 'primary',
+            'revision'     => 'warning',
             'aprobaciones' => 'success',
-            default => 'gray',
+            default        => 'gray',
         };
+    }
+
+    // Método auxiliar para la vista — qué etapas puede ver el usuario actual
+    public function etapasDisponibles(): array
+    {
+        $user = auth()->user();
+
+        if ($user?->hasAnyRole(['super_admin', 'ti'])) {
+            return ['bandeja', 'revision', 'aprobaciones'];
+        }
+
+        if ($user?->hasRole('operativo')) {
+            return ['bandeja', 'revision'];
+        }
+
+        if ($user?->hasRole('jefe')) {
+            return ['aprobaciones'];
+        }
+
+        return [];
     }
 }
