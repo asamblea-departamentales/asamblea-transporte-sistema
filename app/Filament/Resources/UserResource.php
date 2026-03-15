@@ -71,16 +71,15 @@ class UserResource extends Resource
                     ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('password')
-                            ->label('Contraseña')
-                            ->password()
-                            ->revealable()
-                            // Encripta la contraseña antes de guardarla
-                            ->dehydrateStateUsing(fn ($state) => \Illuminate\Support\Facades\Hash::make($state))
-                            // Solo guarda si el campo no está vacío (útil al editar)
-                            ->dehydrated(fn ($state) => filled($state))
-                            ->required(fn ($context) => $context === 'create')
-                            ->helperText('Dejar en blanco para mantener la contraseña actual')
-                            ->minLength(9),
+    ->label('Contraseña')
+    ->password()
+    ->revealable()
+    // ❌ Quitar esta línea — el cast 'hashed' del modelo ya hashea
+    // ->dehydrateStateUsing(fn ($state) => \Illuminate\Support\Facades\Hash::make($state))
+    ->dehydrated(fn ($state) => filled($state))
+    ->required(fn ($context) => $context === 'create')
+    ->helperText('Dejar en blanco para mantener la contraseña actual')
+    ->minLength(9),
 
                         Forms\Components\Select::make('roles')
     ->label('Roles')
