@@ -65,7 +65,7 @@ class User extends Authenticatable implements FilamentUser
         if (app()->environment('local')) {
             return true;
         }
-        return $this->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
+        return $this->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin', 'operativo', 'liquidador']);
     }
 
     //Relaciones
