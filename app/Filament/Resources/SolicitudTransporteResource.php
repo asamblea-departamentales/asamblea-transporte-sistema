@@ -578,6 +578,10 @@ class SolicitudTransporteResource extends Resource
                             $record->motorista_id    = $data['motorista_id'];
                             $record->save();
 
+                            //LOGS
+                            \Illuminate\Support\Facades\Log::info('ACTION APROBAR - SAVE OK', ['estado' => $record->estado]);
+
+
                             $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
 
                             HistorialEstado::create([
@@ -601,6 +605,10 @@ class SolicitudTransporteResource extends Resource
                                 ],
                             ]);
 
+                            //LOGS
+                            \Illuminate\Support\Facades\Log::info('ACTION APROBAR - LLEGANDO A NOTIFICACION');
+
+
                             // Notificación persistente con botón de redirección al view
                             // para asignar transporte — igual que el patrón de combustible
                             $urlAsignacion = static::getUrl('view', ['record' => $record->id]);
@@ -618,6 +626,10 @@ class SolicitudTransporteResource extends Resource
                                 ])
                                 ->persistent()
                                 ->send();
+
+                                //LOGS
+                                \Illuminate\Support\Facades\Log::info('ACTION APROBAR - NOTIFICACION ENVIADA');
+    
 
                             try {
                                 $payload = [
