@@ -499,6 +499,8 @@ class SolicitudTransporteResource extends Resource
                         ->icon('heroicon-o-check-circle')
                         ->modalHeading('Aprobar y Asignar Vehículo')
                         ->modalWidth('2xl')
+                         ->successNotification(null) // ← esto desactiva la notificación por defecto
+
                         ->form([
                             Forms\Components\Textarea::make('comentario_jefe')
                                 ->label('Motivo de la aprobación')
