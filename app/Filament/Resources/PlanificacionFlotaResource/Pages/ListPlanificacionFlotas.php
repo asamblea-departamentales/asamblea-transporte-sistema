@@ -17,7 +17,7 @@ class ListPlanificacionFlotas extends ListRecords
             Action::make('ver_calendario')
                 ->label('Ver Calendario')
                 ->icon('heroicon-o-calendar-days')
-                ->color('indigo')
+                ->color('primary')
                 ->url(CalendarioFlota::getUrl()),
         ];
     }

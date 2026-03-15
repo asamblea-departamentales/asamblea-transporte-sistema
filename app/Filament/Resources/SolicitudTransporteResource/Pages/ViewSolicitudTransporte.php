@@ -499,13 +499,10 @@ class ViewSolicitudTransporte extends ViewRecord
                         ],
                     ]);
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
+               ->visible(fn (SolicitudTransporte $record) =>
     auth()->check() &&
     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-    in_array($record->estado, [
-        EstadoSolicitudEnum::APROBADA,
-        EstadoSolicitudEnum::PROGRAMADA,
-    ], true)
+    $record->estado === EstadoSolicitudEnum::PROGRAMADA
 ),
 
             // ── RECHAZAR ── modal mejorado ────────────────────────────────
