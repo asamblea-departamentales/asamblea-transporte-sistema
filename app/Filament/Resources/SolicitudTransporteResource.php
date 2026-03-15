@@ -769,6 +769,8 @@ class SolicitudTransporteResource extends Resource
             $query->whereIn('estado', [
                 EstadoSolicitudEnum::PRE_APROBADA->value,
                 EstadoSolicitudEnum::APROBADA->value,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::ASIGNADA,
             ]);
         }
 
