@@ -3,8 +3,10 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Filament\Resources\PlanificacionFlotaResource;
 use App\Models\SolicitudTransporte;
 use App\Models\Vehiculo;
+use Filament\Actions\Action;
 use Filament\Pages\Page;
 
 class CalendarioFlota extends Page
@@ -13,6 +15,9 @@ class CalendarioFlota extends Page
     protected static ?string $navigationLabel = 'Calendario de Flota';
     protected static ?string $navigationGroup = 'Gestión Operativa';
     protected static ?int    $navigationSort  = 3;
+
+    // Ocultar del menú lateral — se accede desde PlanificacionFlota
+    protected static bool $shouldRegisterNavigation = false;
 
     protected static string $view = 'filament.pages.calendario-flota';
 
@@ -23,7 +28,16 @@ class CalendarioFlota extends Page
         ]);
     }
 
-    // Devuelve los eventos para FullCalendar como JSON
+    protected function getHeaderActions(): array
+    {
+        return [
+            Action::make('volver_flota')
+                ->label('← Planificación de Flota')
+                ->color('gray')
+                ->url(PlanificacionFlotaResource::getUrl('index')),
+        ];
+    }
+
     public function getEventosJson(): string
     {
         $solicitudes = SolicitudTransporte::query()
@@ -37,12 +51,12 @@ class CalendarioFlota extends Page
             ->get()
             ->map(function (SolicitudTransporte $s) {
 
-                $placa      = $s->vehiculo?->placa ?? 'Vehículo';
-                $destino    = $s->destino ?? '—';
-                $origen     = $s->origen ?? '—';
+                $placa       = $s->vehiculo?->placa ?? 'Vehículo';
+                $destino     = $s->destino ?? '—';
+                $origen      = $s->origen ?? '—';
                 $solicitante = $s->solicitante?->name ?? '—';
-                $unidad     = $s->unidad?->nombre ?? '—';
-                $personas   = $s->cantidad_personas ?? '—';
+                $unidad      = $s->unidad?->nombre ?? '—';
+                $personas    = $s->cantidad_personas ?? '—';
 
                 $color = match ($s->estado) {
                     EstadoSolicitudEnum::EN_EJECUCION => '#D85A30',
@@ -77,7 +91,6 @@ class CalendarioFlota extends Page
         return json_encode(array_values($solicitudes));
     }
 
-    // Devuelve vehículos para el filtro
     public function getVehiculosOptions(): string
     {
         $vehiculos = Vehiculo::where('activo', true)
