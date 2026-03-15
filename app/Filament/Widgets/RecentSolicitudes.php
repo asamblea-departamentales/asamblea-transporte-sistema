@@ -19,7 +19,7 @@ class RecentSolicitudes extends Widget
 
     public static function canView(): bool
     {
-        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin']);
+        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'superadmin', 'operativo', 'liquidador']);
     }
 
     public function getSolicitudes(): \Illuminate\Support\Collection
