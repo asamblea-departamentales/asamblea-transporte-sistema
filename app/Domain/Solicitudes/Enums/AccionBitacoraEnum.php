@@ -13,4 +13,6 @@ enum AccionBitacoraEnum: string
     case OBSERVAR = 'observar';
 
     case COMPLETAR = 'completar';
+
+    case ASIGNAR = 'asignar;'
 }

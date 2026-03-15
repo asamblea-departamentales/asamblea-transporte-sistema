@@ -463,7 +463,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                         return new \Illuminate\Support\HtmlString("<div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>⚠️ Este vehículo no tiene motorista asignado</div>");
                                     }
 
-                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>✅ {$nombre}</div>");
+                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'> {$nombre}</div>");
                                 })
                                 ->columnSpan(1),
                         ])
@@ -615,7 +615,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         ];
 
                         Mail::to($record->solicitante->email)->send(
-                            new NotificacionEventMail('❌ Solicitud de Transporte RECHAZADA', $payload)
+                            new NotificacionEventMail(' Solicitud de Transporte RECHAZADA', $payload)
                         );
                     } catch (\Exception $e) {
                         Log::error('Error enviando correo de rechazo: ' . $e->getMessage());
