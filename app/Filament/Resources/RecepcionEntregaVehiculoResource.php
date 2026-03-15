@@ -226,7 +226,7 @@ class RecepcionEntregaVehiculoResource extends Resource
         return [
             'index' => Pages\ListRecepcionEntregaVehiculos::route('/'),
             'create' => Pages\CreateRecepcionEntregaVehiculo::route('/create'),
-            'view' => Pages\ViewRecepcionEntregaVehiculo::route('/{record}'),
+            //'view' => Pages\ViewRecepcionEntregaVehiculo::route('/{record}'),
             'edit' => Pages\EditRecepcionEntregaVehiculo::route('/{record}/edit'),
         ];
     }
