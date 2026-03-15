@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources;
 
+use Illuminate\Support\Facades\Hash;
 use App\Filament\Resources\UserResource\Pages;
 use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
@@ -70,26 +71,24 @@ class UserResource extends Resource
                 ->columns(2)
                 ->schema([
                     Forms\Components\TextInput::make('password')
-                        ->label('Contraseña')
-                        ->password()
-                        ->revealable()
-                        ->dehydrateStateUsing(fn ($state) => filled($state) ? $state : null)
-                        ->dehydrated(fn ($state) => filled($state))
-                        ->helperText('Dejar en blanco para mantener la contraseña actual')
-                        ->minLength(8),
+    ->label('Contraseña')
+    ->password()
+    ->revealable()
+    // Cambia el dehydrate por este:
+    ->dehydrateStateUsing(fn ($state) => Hash::make($state)) 
+    // Solo se procesa si el campo tiene contenido (útil para el Edit)
+    ->dehydrated(fn ($state) => filled($state))
+    ->required(fn ($context) => $context === 'create') // Obligatorio solo al crear
+    ->helperText('Dejar en blanco para mantener la contraseña actual')
+    ->minLength(8),
 
                     Forms\Components\Select::make('roles')
-                        ->label('Roles')
-                        ->multiple()
-                        ->searchable()
-                        ->preload()
-                        ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name')->toArray())
-                        ->helperText('Seleccioná uno o varios roles.')
-                        ->afterStateHydrated(function ($component, $record) {
-                            if (!$record) return;
-                            $component->state($record->getRoleNames()->toArray());
-                        })
-                        ->dehydrated(false), // no está en users table, lo manejamos en save
+    ->label('Roles')
+    ->relationship('roles', 'name') // <--- Esto reemplaza el options, hydrated y dehydrated
+    ->multiple()
+    ->searchable()
+    ->preload()
+    ->helperText('Seleccioná uno o varios roles.')
                 ])
             ]);
     }
