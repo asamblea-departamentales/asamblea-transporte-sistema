@@ -28,94 +28,136 @@ class PlanificacionFlotaResource extends Resource
                     ->label('')
                     ->html()
                     ->formatStateUsing(function (string $state, Vehiculo $record): string {
-                        
-                        // 1. Lógica de Solicitudes (Optimización: Podrías usar relaciones en el modelo para mejorar rendimiento)
-                        $solicitudesBase = SolicitudTransporte::where('vehiculo_id', $record->id)
+
+                        // ── Estado operativo ──────────────────────────────
+                        $solicitudActiva = SolicitudTransporte::where('vehiculo_id', $record->id)
                             ->whereIn('estado', [
                                 EstadoSolicitudEnum::EN_EJECUCION,
                                 EstadoSolicitudEnum::PROGRAMADA,
                                 EstadoSolicitudEnum::APROBADA,
                             ])
-                            ->orderBy('fecha_salida');
+                            ->orderBy('fecha_salida')
+                            ->first();
 
-                        $solicitudActiva = (clone $solicitudesBase)->first();
-                        
-                        // Determinar estado operativo para el estilo
                         $estadoOperativo = 'disponible';
                         if ($solicitudActiva) {
-                            $estadoOperativo = $solicitudActiva->estado === EstadoSolicitudEnum::EN_EJECUCION ? 'en_ejecucion' : 'programado';
+                            $estadoOperativo = $solicitudActiva->estado === EstadoSolicitudEnum::EN_EJECUCION
+                                ? 'en_ejecucion'
+                                : 'programado';
                         }
 
-                        // 2. Configuración Visual por Estado
-                        [$barColor, $badgeBg, $badgeColor, $badgeText, $icon] = match ($estadoOperativo) {
-                            'en_ejecucion' => ['#ef4444', '#fee2e2', '#991b1b', 'EN RUTA', 'heroicon-m-play'],
-                            'programado'   => ['#f59e0b', '#fef3c7', '#92400e', 'RESERVADO', 'heroicon-m-calendar'],
-                            default        => ['#22c55e', '#dcfce7', '#166534', 'DISPONIBLE', 'heroicon-m-check-circle'],
+                        // ── Paleta por estado usando ramps del design system ──
+                        // green ramp / amber ramp / coral ramp
+                        [$accentColor, $badgeBg, $badgeText, $badgeLabel, $borderColor, $dotColor] = match ($estadoOperativo) {
+                            'en_ejecucion' => ['#D85A30', '#FAECE7', '#711B0C', 'En ruta',    '#F0997B', '#D85A30'],
+                            'programado'   => ['#BA7517', '#FAEEDA', '#412402', 'Reservado',  '#FAC775', '#BA7517'],
+                            default        => ['#3B6D11', '#EAF3DE', '#173404', 'Disponible', '#C0DD97', '#3B6D11'],
                         };
 
-                        // 3. Preparación de Datos
-                        $motoristaNom = e($record->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista fijo');
-                        $marcaModelo  = e(($record->marca?->nombre ?? $record->marca) . ' ' . ($record->modelo?->nombre ?? $record->modelo));
-                        $tipoVehiculo = e($record->tipo?->nombre ?? 'Sin tipo');
-                        $fotoUrl      = $record->fotografia_url;
+                        // ── Datos ─────────────────────────────────────────
+                        $tipo      = e($record->tipo?->nombre ?? '—');
+                        $marca     = e($record->marca?->nombre ?? ($record->marca ?? ''));
+                        $modeloNom = e($record->modelo?->nombre ?? ($record->modelo ?? ''));
+                        $capacidad = $record->capacidad_personas ?? '—';
+                        $fotoUrl   = $record->fotografia_url;
 
-                        // 4. Construcción de Secciones
-                        $seccionViaje = "";
-                        if ($solicitudActiva) {
-                            $dest = e($solicitudActiva->destino);
-                            $fecha = $solicitudActiva->fecha_salida?->format('d M, H:i') ?? '—';
-                            $labelViaje = $estadoOperativo === 'en_ejecucion' ? 'Viaje Actual' : 'Próximo Viaje';
-                            $colorText = $estadoOperativo === 'en_ejecucion' ? '#b91c1c' : '#b45309';
-                            
-                            $seccionViaje = "
-                                <div style='margin-top:12px; padding:10px; border-radius:10px; background:rgba(0,0,0,0.03); border:1px solid rgba(0,0,0,0.05);'>
-                                    <div style='font-size:9px; font-weight:800; color:{$colorText}; text-transform:uppercase; margin-bottom:4px;'>● {$labelViaje}</div>
-                                    <div style='font-size:12px; font-weight:700; color:#1f2937; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;'>{$dest}</div>
-                                    <div style='font-size:11px; color:#6b7280; margin-top:2px;'>📅 {$fecha}</div>
+                        $motorista    = $record->asignacionVigenteMotorista?->motorista;
+                        $motoristaNom = $motorista ? e($motorista->nombre) : null;
+                        $motoristaDui = $motorista ? e($motorista->dui) : null;
+
+                        // ── Foto ──────────────────────────────────────────
+                        $fotoHtml = $fotoUrl
+                            ? "<img src='{$fotoUrl}' style='width:52px;height:52px;border-radius:10px;object-fit:cover;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.12);flex-shrink:0;'>"
+                            : "<div style='width:52px;height:52px;border-radius:10px;background:#f3f4f6;border:1.5px solid #e5e7eb;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;'>🚛</div>";
+
+                        // ── Motorista ─────────────────────────────────────
+                        if ($motoristaNom) {
+                            $motoristaHtml = "
+                                <div style='display:flex;align-items:center;gap:8px;padding:8px 10px;background:#f0f9ff;border:1px solid #bae6fd;border-radius:10px;'>
+                                    <div style='width:28px;height:28px;border-radius:50%;background:#0ea5e9;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>
+                                        <svg style='width:14px;height:14px;' fill='white' viewBox='0 0 20 20'><path d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'/></svg>
+                                    </div>
+                                    <div>
+                                        <div style='font-size:12px;font-weight:700;color:#0c4a6e;line-height:1.2;'>{$motoristaNom}</div>
+                                        " . ($motoristaDui ? "<div style='font-size:10px;color:#0369a1;font-family:monospace;'>DUI: {$motoristaDui}</div>" : '') . "
+                                    </div>
+                                </div>";
+                        } else {
+                            $motoristaHtml = "
+                                <div style='display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fafafa;border:1px dashed #d1d5db;border-radius:10px;'>
+                                    <div style='width:28px;height:28px;border-radius:50%;background:#e5e7eb;display:flex;align-items:center;justify-content:center;flex-shrink:0;'>
+                                        <svg style='width:14px;height:14px;' fill='#9ca3af' viewBox='0 0 20 20'><path d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'/></svg>
+                                    </div>
+                                    <div style='font-size:12px;color:#9ca3af;'>Sin motorista asignado</div>
                                 </div>";
                         }
 
-                        $htmlFoto = $fotoUrl 
-                            ? "<img src='{$fotoUrl}' style='width:52px; height:52px; border-radius:12px; object-fit:cover; box-shadow:0 2px 4px rgba(0,0,0,0.1); border:2px solid white;'>"
-                            : "<div style='width:52px; height:52px; border-radius:12px; background:#f3f4f6; display:flex; align-items:center; justify-content:center; font-size:24px; border:2px solid white;'>🚛</div>";
+                        // ── Solicitud activa ──────────────────────────────
+                        $solicitudHtml = '';
+                        if ($solicitudActiva) {
+                            $dest   = e($solicitudActiva->destino ?? '—');
+                            $orig   = e($solicitudActiva->origen ?? '—');
+                            $fecha  = $solicitudActiva->fecha_salida?->format('d M, H:i') ?? '—';
+                            $codigo = e($solicitudActiva->codigo ?? '');
 
-                        // 5. Renderizado Final
-                        return "
-                        <div style='padding:4px; font-family:sans-serif;'>
-                            <div style='height:5px; background:{$barColor}; border-radius:10px; margin-bottom:12px;'></div>
-                            
-                            <div style='display:flex; justify-content:space-between; align-items:flex-start;'>
-                                <div>
-                                    <div style='font-size:18px; font-weight:850; color:#111827; letter-spacing:-0.02em;'>{$state}</div>
-                                    <div style='font-size:12px; font-weight:500; color:#6b7280;'>{$tipoVehiculo}</div>
-                                </div>
-                                {$htmlFoto}
-                            </div>
+                            [$boxBg, $boxBorder, $labelColor, $boxLabel] = $estadoOperativo === 'en_ejecucion'
+                                ? ['#FAECE7', '#F0997B', '#711B0C', 'En viaje ahora']
+                                : ['#FAEEDA', '#FAC775', '#412402', 'Viaje asignado'];
 
-                            <div style='margin-top:14px; display:flex; flex-wrap:wrap; gap:6px;'>
-                                <span style='background:{$badgeBg}; color:{$badgeColor}; font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px; text-transform:uppercase; letter-spacing:0.03em;'>
-                                    {$badgeText}
-                                </span>
-                                <span style='background:#f3f4f6; color:#4b5563; font-size:10px; font-weight:700; padding:3px 10px; border-radius:20px;'>
-                                    👥 {$record->capacidad_personas}
-                                </span>
-                            </div>
-
-                            <div style='margin-top:14px; border-top:1px solid #f1f5f9; pt-12px'>
-                                <div style='margin-top:10px;'>
-                                    <p style='font-size:10px; color:#9ca3af; font-weight:600; text-transform:uppercase; margin:0;'>Marca y Modelo</p>
-                                    <p style='font-size:13px; color:#374151; font-weight:600; margin:2px 0 0 0;'>{$marcaModelo}</p>
-                                </div>
-
-                                <div style='margin-top:10px; display:flex; align-items:center; gap:8px;'>
-                                    <div style='width:24px; height:24px; border-radius:50%; background:#e0f2fe; display:flex; align-items:center; justify-content:center; color:#0369a1;'>
-                                        <svg style='width:14px; height:14px;' fill='currentColor' viewBox='0 0 20 20'><path d='M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z'></path></svg>
+                            $solicitudHtml = "
+                                <div style='background:{$boxBg};border:1px solid {$boxBorder};border-radius:10px;padding:10px 12px;margin-top:10px;'>
+                                    <div style='font-size:9px;text-transform:uppercase;letter-spacing:.08em;font-weight:800;color:{$labelColor};margin-bottom:5px;display:flex;align-items:center;gap:5px;'>
+                                        <span style='width:6px;height:6px;border-radius:50%;background:{$labelColor};display:inline-block;'></span>
+                                        {$boxLabel}
                                     </div>
-                                    <div style='font-size:12px; font-weight:600; color:#4b5563;'>{$motoristaNom}</div>
+                                    <div style='font-family:monospace;font-size:10px;color:#6b7280;margin-bottom:2px;'>{$codigo}</div>
+                                    <div style='font-size:12px;font-weight:700;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;'>{$orig}</div>
+                                    <div style='font-size:11px;color:#6b7280;display:flex;align-items:center;gap:4px;margin-top:2px;'>
+                                        <svg style='width:11px;height:11px;flex-shrink:0;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M17 8l4 4m0 0l-4 4m4-4H3'/></svg>
+                                        {$dest}
+                                    </div>
+                                    <div style='font-size:11px;color:#9ca3af;margin-top:3px;'>📅 {$fecha}</div>
+                                </div>";
+                        }
+
+                        // ── HTML de la card ───────────────────────────────
+                        return "
+                        <div style='font-family:system-ui,sans-serif;padding:2px;'>
+
+                            <div style='height:3px;background:{$accentColor};border-radius:3px;margin:-12px -12px 14px;opacity:.9;'></div>
+
+                            <div style='display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px;'>
+                                <div style='flex:1;min-width:0;'>
+                                    <div style='display:flex;align-items:center;gap:7px;flex-wrap:wrap;'>
+                                        <span style='font-family:monospace;font-size:18px;font-weight:700;color:#111827;letter-spacing:.03em;'>{$state}</span>
+                                        <span style='font-size:10px;font-weight:700;padding:2px 8px;border-radius:999px;background:{$badgeBg};color:{$badgeText};white-space:nowrap;border:1px solid {$borderColor};display:inline-flex;align-items:center;gap:4px;'>
+                                            <span style='width:5px;height:5px;border-radius:50%;background:{$dotColor};'></span>
+                                            {$badgeLabel}
+                                        </span>
+                                    </div>
+                                    <div style='font-size:12px;color:#6b7280;margin-top:3px;font-weight:500;'>{$tipo}</div>
+                                </div>
+                                {$fotoHtml}
+                            </div>
+
+                            <div style='display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;padding:10px;background:#f9fafb;border-radius:10px;border:1px solid #f3f4f6;'>
+                                <div>
+                                    <div style='font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;font-weight:700;margin-bottom:3px;'>Vehículo</div>
+                                    <div style='font-size:12px;font-weight:600;color:#374151;'>{$marca} {$modeloNom}</div>
+                                </div>
+                                <div>
+                                    <div style='font-size:9px;text-transform:uppercase;letter-spacing:.08em;color:#9ca3af;font-weight:700;margin-bottom:3px;'>Capacidad</div>
+                                    <div style='font-size:12px;font-weight:600;color:#374151;'>
+                                        <svg style='width:12px;height:12px;display:inline;margin-right:3px;vertical-align:middle;' fill='none' stroke='currentColor' viewBox='0 0 24 24'><path stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0'/></svg>
+                                        {$capacidad} pers.
+                                    </div>
                                 </div>
                             </div>
 
-                            {$seccionViaje}
+                            {$motoristaHtml}
+
+                            {$solicitudHtml}
+
                         </div>";
                     })
                     ->searchable(),
@@ -124,9 +166,9 @@ class PlanificacionFlotaResource extends Resource
                 Tables\Filters\SelectFilter::make('estado_operativo')
                     ->label('Estado')
                     ->options([
-                        'disponible'   => '✅ Disponible',
-                        'programado'   => '📅 Programado',
-                        'en_ejecucion' => '🚗 En ejecución',
+                        'disponible'   => 'Disponible',
+                        'programado'   => 'Reservado',
+                        'en_ejecucion' => 'En ruta',
                     ])
                     ->query(function (Builder $query, array $data) {
                         if (blank($data['value'])) return;
@@ -154,24 +196,32 @@ class PlanificacionFlotaResource extends Resource
                     ->icon('heroicon-m-list-bullet')
                     ->color('gray')
                     ->size('sm')
-                    ->url(fn (Vehiculo $record) => 
-                        SolicitudTransporteResource::getUrl('index', [
+                    ->url(fn (Vehiculo $record) =>
+                        \App\Filament\Resources\SolicitudTransporteResource::getUrl('index', [
                             'tableFilters[vehiculo_id][value]' => $record->id,
                         ])
                     ),
             ])
-            ->defaultSort('placa');
+            ->defaultSort('placa')
+            ->striped(false);
     }
 
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
             ->where('activo', true)
-            ->with(['tipo', 'marca', 'modelo', 'asignacionVigenteMotorista.motorista']);
+            ->with([
+                'tipo',
+                'marca',
+                'modelo',
+                'asignacionVigenteMotorista.motorista',
+            ]);
     }
 
     public static function getPages(): array
     {
-        return ['index' => Pages\ListPlanificacionFlotas::route('/')];
+        return [
+            'index' => Pages\ListPlanificacionFlotas::route('/'),
+        ];
     }
 }
