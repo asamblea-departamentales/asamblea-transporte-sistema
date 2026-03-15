@@ -307,33 +307,47 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     }
 
     // FIX #4d: aprobar — solo jefe
-    public function aprobar(string $tipo, int $id, array $data): void
-    {
-        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
-            Notification::make()->title('Sin permiso')->danger()->send();
-            return;
-        }
+    // FIX #4d: aprobar — solo jefe
+public function aprobar(string $tipo, int $id, array $data): void
+{
+    if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+        Notification::make()->title('Sin permiso')->danger()->send();
+        return;
+    }
 
-        app(AprobacionesService::class)->aprobar(
-            $tipo,
-            $id,
-            auth()->id(),
-            $data['comentario']
-        );
+    app(AprobacionesService::class)->aprobar(
+        $tipo,
+        $id,
+        auth()->id(),
+        $data['comentario']
+    );
 
-        $this->refreshKpis();
-        $this->resetPage();
+    $this->refreshKpis();
+    $this->resetPage();
 
-        if ($tipo !== 'combustible') {
-            Notification::make()
-                ->title('Solicitud aprobada')
-                ->success()
-                ->send();
+    // Notificación enriquecida para transporte
+    if ($tipo === 'transporte') {
+        $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
 
-            return;
-        }
+        Notification::make()
+            ->title('Solicitud de transporte aprobada')
+            ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
+            ->success()
+            ->actions([
+                \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                    ->label('Asignar transporte ahora →')
+                    ->url($urlAsignacion)
+                    ->button()
+                    ->color('primary'),
+            ])
+            ->persistent()
+            ->send();
 
-        // Notificación enriquecida para combustible con link directo a asignación de vales
+        return;
+    }
+
+    // Notificación enriquecida para combustible
+    if ($tipo === 'combustible') {
         $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
 
         Notification::make()
@@ -349,7 +363,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ])
             ->persistent()
             ->send();
+
+        return;
     }
+
+    // Notificación genérica para otros tipos
+    Notification::make()
+        ->title('Solicitud aprobada')
+        ->success()
+        ->send();
+}
 
     // FIX #4e: rechazar — solo jefe
     public function rechazar(string $tipo, int $id, array $data): void
