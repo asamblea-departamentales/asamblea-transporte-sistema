@@ -420,7 +420,7 @@ class SolicitudTransporteResource extends Resource
         EstadoSolicitudEnum::APROBADA,
         EstadoSolicitudEnum::PROGRAMADA,
     ], true)
-),
+)
                         ->form([
                             Forms\Components\Select::make('vehiculo_id')
                                 ->label('Vehículo')
