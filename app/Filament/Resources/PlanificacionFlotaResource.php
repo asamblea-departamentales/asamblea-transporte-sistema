@@ -96,7 +96,7 @@ class PlanificacionFlotaResource extends Resource
                     ->label('Ver solicitudes')
                     ->icon('heroicon-o-eye')
                     ->url(fn (Vehiculo $record) =>
-                        route('filament.admin.resources.solicitud-transportes.index', [
+                        route('filament.admin.resources.solicitud-transporte.index', [
                             'tableFilters[vehiculo_id][value]' => $record->id
                         ])
                     ),
