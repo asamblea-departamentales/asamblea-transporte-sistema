@@ -414,10 +414,13 @@ class SolicitudTransporteResource extends Resource
                         ->color('info')
                         ->modalHeading('Asignar Vehículo y Motorista')
                         ->visible(fn (SolicitudTransporte $record) =>
-                            auth()->check() &&
-                            auth()->user()->hasRole('jefe') &&
-                            $record->estado === EstadoSolicitudEnum::APROBADA
-                        )
+    auth()->check() &&
+    auth()->user()->hasRole('jefe') &&
+    in_array($record->estado, [
+        EstadoSolicitudEnum::APROBADA,
+        EstadoSolicitudEnum::PROGRAMADA,
+    ], true)
+),
                         ->form([
                             Forms\Components\Select::make('vehiculo_id')
                                 ->label('Vehículo')
