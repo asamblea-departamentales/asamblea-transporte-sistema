@@ -80,7 +80,7 @@ class UserResource extends Resource
                             ->dehydrated(fn ($state) => filled($state))
                             ->required(fn ($context) => $context === 'create')
                             ->helperText('Dejar en blanco para mantener la contraseña actual')
-                            ->minLength(8),
+                            ->minLength(9),
 
                         Forms\Components\Select::make('roles')
                             ->label('Roles')
