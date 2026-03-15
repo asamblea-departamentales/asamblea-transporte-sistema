@@ -34,7 +34,7 @@ class SolicitudMantenimientoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante']);
+        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador']);
     }
 
     public static function canCreate(): bool        { return false; }

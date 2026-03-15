@@ -55,7 +55,7 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) ?? false;
+        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']) ?? false;
     }
 
     public function updated($propertyName): void

@@ -58,7 +58,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) ?? false;
+        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']) ?? false;
     }
 
     /**

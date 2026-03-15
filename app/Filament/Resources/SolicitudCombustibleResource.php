@@ -29,7 +29,7 @@ class SolicitudCombustibleResource extends Resource
     // FIX #4: Verificar que el usuario esté autenticado antes de llamar hasAnyRole
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']);
+        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
     }
 
     public static function canCreate(): bool        { return false; }

@@ -32,7 +32,7 @@ class SolicitudTransporteResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']);
+        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
     }
 
     public static function form(Form $form): Form

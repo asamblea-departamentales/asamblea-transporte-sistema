@@ -51,7 +51,7 @@ class ReporteOrdenTrabajo extends Page implements Forms\Contracts\HasForms, Tabl
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) ?? false;
+        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']) ?? false;
     }
 
     public function updated($propertyName): void
