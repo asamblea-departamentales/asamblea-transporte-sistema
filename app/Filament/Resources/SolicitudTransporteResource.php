@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use App\Models\HistorialEstado;
 use App\Models\BitacoraEvento;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use Filament\Notifications\Notification;
 
 class SolicitudTransporteResource extends Resource
 {
@@ -404,8 +405,6 @@ class SolicitudTransporteResource extends Resource
                             $record->estado === EstadoSolicitudEnum::EN_REVISION
                         ),
 
-                    // FIX #1: correctamente indentado dentro del ActionGroup
-                    // FIX #4: ahora filtra vehículos ocupados por solapamiento de fechas
                     Tables\Actions\Action::make('asignar_transporte')
                         ->label('Asignar transporte')
                         ->icon('heroicon-o-truck')
@@ -458,7 +457,6 @@ class SolicitudTransporteResource extends Resource
 
                             Forms\Components\Hidden::make('motorista_id'),
 
-                            // FIX #2: advertencia visible si el vehículo no tiene motorista
                             Forms\Components\Placeholder::make('motorista_nombre')
                                 ->label('Motorista asignado')
                                 ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo')
@@ -559,7 +557,6 @@ class SolicitudTransporteResource extends Resource
 
                                     Forms\Components\Hidden::make('motorista_id'),
 
-                                    // FIX #2: advertencia visible si el vehículo no tiene motorista
                                     Forms\Components\Placeholder::make('motorista_nombre')
                                         ->label('Motorista Asignado')
                                         ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
@@ -571,7 +568,6 @@ class SolicitudTransporteResource extends Resource
                         ->action(function (SolicitudTransporte $record, array $data) {
                             $estadoAnterior = $record->estado;
 
-                            // FIX #3: estado unificado — record y historial usan PROGRAMADA
                             $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
                             $record->comentario_jefe = $data['comentario_jefe'];
                             $record->decidido_por    = auth()->id();
@@ -602,6 +598,24 @@ class SolicitudTransporteResource extends Resource
                                     'motorista_id' => $data['motorista_id'],
                                 ],
                             ]);
+
+                            // Notificación persistente con botón de redirección al view
+                            // para asignar transporte — igual que el patrón de combustible
+                            $urlAsignacion = static::getUrl('view', ['record' => $record->id]);
+
+                            Notification::make()
+                                ->title('Solicitud de transporte aprobada')
+                                ->body("El vehículo y motorista pueden asignarse desde el detalle de la solicitud {$record->codigo}.")
+                                ->success()
+                                ->actions([
+                                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                                        ->label('Asignar transporte ahora →')
+                                        ->url($urlAsignacion)
+                                        ->button()
+                                        ->color('primary'),
+                                ])
+                                ->persistent()
+                                ->send();
 
                             try {
                                 $payload = [
