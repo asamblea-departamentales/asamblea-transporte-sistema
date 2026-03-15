@@ -83,12 +83,23 @@ class UserResource extends Resource
                             ->minLength(9),
 
                         Forms\Components\Select::make('roles')
-                            ->label('Roles')
-                            ->relationship('roles', 'name')
-                            ->multiple()
-                            ->searchable()
-                            ->preload()
-                            ->helperText('Seleccioná uno o varios roles.'),
+    ->label('Roles')
+    ->multiple()
+    ->searchable()
+    ->preload()
+    ->options(
+        \Spatie\Permission\Models\Role::where('guard_name', 'web')
+            ->pluck('name', 'name') // clave = nombre, valor = nombre
+    )
+    ->afterStateHydrated(function ($component, $record) {
+        if ($record) {
+            $component->state($record->roles->pluck('name')->toArray());
+        }
+    })
+    ->saveRelationshipsUsing(function ($record, $state) {
+        $record->syncRoles($state ?? []);
+    })
+    ->helperText('Seleccioná uno o varios roles.'),
                     ])
             ]);
     }
