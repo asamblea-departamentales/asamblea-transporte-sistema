@@ -12,6 +12,7 @@ use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
+use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 
 class SolicitudTransporteController extends Controller
 {
@@ -226,6 +227,38 @@ class SolicitudTransporteController extends Controller
         }
     }
 
+    /**
+     * Para generar PDF de mision oficial individual
+     */
+    public function pdf(Request $request, ReporteMisionOficialService $service, $id = null)
+{
+    // Si la ruta envía un ID (clic desde el botón de Filament)
+    if ($id) {
+        $rows = SolicitudTransporte::with([
+            'solicitante', 'autorizador', 'motorista', 'tipoVehiculo',
+            'vehiculo.marca', 'vehiculo.modelo', 'vehiculo.color', 'vehiculo.clasificacion'
+        ])->where('id', $id)->get();
+        
+        $filters = [];
+    } else {
+        // Lógica original para el reporte masivo
+        $filters = $request->only(['date_from', 'date_to', 'vehiculo_id', 'motorista_id', 'tipo_vehiculo_id']);
+        $rows = $service->buildQuery($filters)->orderBy('fecha_salida', 'asc')->get();
+    }
+
+    $kpis = $service->getKpis($filters);
+
+    $pdf = Pdf::loadView('reports.reporte_mision_oficial_pdf', [
+        'rows' => $rows,
+        'filters' => $filters,
+        'kpis' => $kpis,
+        'service' => $service,
+        'rangeLabel' => $id ? "Misión Individual" : $this->rangeLabel($filters),
+    ])->setPaper('a4', 'portrait');
+
+    return $pdf->stream('reporte_mision_oficial.pdf');
+}
+
     // =====================================================
     // Helpers de autorización
     // =====================================================
@@ -256,4 +289,17 @@ class SolicitudTransporteController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para ver esta solicitud.');
         }
     }
+
+    private function rangeLabel(array $filters): string
+{
+    $from = !empty($filters['date_from'])
+        ? \Carbon\Carbon::parse($filters['date_from'])->format('d/m/Y')
+        : 'Inicio';
+
+    $to = !empty($filters['date_to'])
+        ? \Carbon\Carbon::parse($filters['date_to'])->format('d/m/Y')
+        : 'Fin';
+
+    return "Periodo: {$from} al {$to}";
+}
 }

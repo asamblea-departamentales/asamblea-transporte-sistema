@@ -634,24 +634,23 @@ class ViewSolicitudTransporte extends ViewRecord
 
             //Agregado para generar mision oficial para una solicitud especifica
             Actions\Action::make('mision_oficial')
-                ->button()
-                ->size('lg')
-                ->label('Misión Oficial')
-                ->color('gray')
-                ->icon('heroicon-o-document-text') 
-                ->url(fn (SolicitudTransporte $record) => 
-                    route ('reportes.mision-oficial.pdf', $record->id)
-                )
-                ->openUrlInNewTab()
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check()
-                    && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti'])
-                    && in_array($record->estado, [
-                        EstadoSolicitudEnum::PROGRAMADA,
-                        EstadoSolicitudEnum::ASIGNADA,
-                        EstadoSolicitudEnum::COMPLETADA,
-                    ], true)
-                ),
+    ->button()
+    ->size('lg')
+    ->label('Generar Misión Oficial')
+    ->color('gray')
+    ->icon('heroicon-o-document-text') 
+    ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['id' => $record->id]))
+    ->openUrlInNewTab()
+    ->visible(fn (SolicitudTransporte $record) => 
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->vehiculo_id !== null && // No tiene sentido imprimir sin vehículo
+        in_array($record->estado, [
+            EstadoSolicitudEnum::PROGRAMADA,
+            EstadoSolicitudEnum::ASIGNADA,
+            EstadoSolicitudEnum::COMPLETADA,
+            EstadoSolicitudEnum::APROBADA, // Asegúrate de incluir APROBADA si es el estado clave
+        ])
+    ),
 
         ];
     }

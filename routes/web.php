@@ -213,8 +213,8 @@ Route::get('/reportes/distribucion-vales/pdf', [ReporteDistribucionValesCombusti
 Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController::class, 'pdf'])
     ->name('reportes.general-servicios.pdf');   
 
-    //Pequeño cambio para esta ruta
-Route::get('/reportes/mision-oficial/pdf/{solicitud}', action:[ReporteMisionOficialController::class, 'pdf']) 
+// El '?' hace que el ID sea opcional para no romper el reporte general
+Route::get('/reporte-mision-oficial/{id?}', [ReporteMisionOficialController::class, 'pdf'])
     ->name('reportes.mision-oficial.pdf');
 
 Route::get('/reportes/orden-trabajo/pdf', action:[ReporteOrdenTrabajoController::class, 'pdf'])
