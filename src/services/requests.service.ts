@@ -9,6 +9,8 @@ export type RequestStatus =
   | "pendiente"
   | "observada"
   | "aprobada"
+  | "pre_aprobada"
+  | "asignada"
   | "rechazada"
   | "programada"
   | "en_ejecucion"

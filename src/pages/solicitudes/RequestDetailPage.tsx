@@ -153,7 +153,7 @@ export default function RequestDetailPage() {
   // ✅ Transporte: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
   const canFinalizarTransporte =
     isTransporte &&
-    ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
+    data.estado === "en_ejecucion" &&
     isOwner;
 
   // ✅ Mantenimiento: finalizar cuando está "en_ejecucion" o "programada"
