@@ -14,7 +14,6 @@ export type CombinedRequest = {
   id: number;
   codigo: string;
   estado: RequestStatus;
-  prioridad: string;
   created_at: string;
   updated_at: string;
   fecha_salida: string;
@@ -84,7 +83,6 @@ export function useCombinedRequests() {
             id:          s.id,
             codigo:      s.codigo,
             estado:      s.estado,
-            prioridad:   s.prioridad,
             created_at:  s.created_at,
             updated_at:  s.updated_at,
             fecha_salida: s.fecha_salida,
@@ -104,7 +102,6 @@ export function useCombinedRequests() {
             id:          s.id,
             codigo:      s.codigo,
             estado:      s.estado,
-            prioridad:   s.prioridad,
             created_at:  s.created_at,
             updated_at:  s.updated_at,
             fecha_salida: s.fecha_salida,
@@ -125,7 +122,6 @@ export function useCombinedRequests() {
             id:          s.id,
             codigo:      s.codigo,
             estado:      s.estado as RequestStatus,
-            prioridad:   s.prioridad,
             created_at:  s.created_at,
             updated_at:  s.updated_at,
             fecha_salida: s.fecha_salida,

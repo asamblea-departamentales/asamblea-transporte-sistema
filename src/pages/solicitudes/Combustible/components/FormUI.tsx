@@ -1,6 +1,3 @@
-import React from 'react';
-import { PRIORIDAD_CONFIG } from "../../../../services/combustible.service";
-import type { Prioridad } from "../../../../services/combustible.service";
 import { STEPS } from "../types";
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -97,33 +94,7 @@ export function SelectInput({
   );
 }
 
-export function PrioridadButton({
-  value, current, onClick,
-}: {
-  value: Prioridad;
-  current: Prioridad | "";
-  onClick: () => void;
-}) {
-  const cfg = PRIORIDAD_CONFIG[value];
-  const sel = current === value;
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={[
-        "flex items-center gap-2 rounded-lg border px-4 py-2.5 text-sm font-semibold transition-all focus:outline-none",
-        sel
-          ? value === "baja"  ? "border-emerald-500 bg-emerald-50 text-emerald-800 ring-1 ring-emerald-500/50"
-          : value === "media" ? "border-amber-500 bg-amber-50 text-amber-800 ring-1 ring-amber-500/50"
-          :                     "border-red-500 bg-red-50 text-red-800 ring-1 ring-red-500/50"
-          : "border-slate-200 bg-white text-slate-500 hover:border-slate-300 hover:bg-slate-50",
-      ].join(" ")}
-    >
-      <span className={["h-2.5 w-2.5 rounded-full", cfg.dot].join(" ")} />
-      {cfg.label}
-    </button>
-  );
-}
+
 
 export function ReviewRow({ label, value }: { label: string; value: string }) {
   return (

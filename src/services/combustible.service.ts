@@ -28,8 +28,6 @@ export type EstadoCombustible =
   | "completada"
   | "cancelada";
 
-export type Prioridad = "baja" | "media" | "alta";
-
 export type FormaPago =
   | "vale"
   | "ticket"
@@ -101,7 +99,6 @@ export type SolicitudCombustible = {
   fecha_inicio_periodo?: string | null;
   fecha_fin_periodo?: string | null;
   cantidad_combustible: number;
-  prioridad: Prioridad;
   observaciones?: string | null;
 
   // Asignación de vales
@@ -169,7 +166,6 @@ export type CrearSolicitudCombustiblePayload = {
   destino_actividad: string;
   fecha_solicitud: string;
   cantidad_combustible: number;
-  prioridad: Prioridad;
   motorista_id?: number;
   solicitud_transporte_id?: number;
   fecha_inicio_periodo?: string;
@@ -360,15 +356,6 @@ export const ESTADO_CONFIG: Record<
   rechazada: { label: "Rechazada", dot: "bg-red-400", badge: "bg-red-50     text-red-700     ring-red-200" },
   completada: { label: "Completada", dot: "bg-teal-400", badge: "bg-teal-50    text-teal-700    ring-teal-200" },
   cancelada: { label: "Cancelada", dot: "bg-slate-300", badge: "bg-slate-50   text-slate-400   ring-slate-200" },
-};
-
-export const PRIORIDAD_CONFIG: Record<
-  Prioridad,
-  { label: string; dot: string; badge: string }
-> = {
-  baja: { label: "Baja", dot: "bg-emerald-400", badge: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
-  media: { label: "Media", dot: "bg-amber-400", badge: "bg-amber-50   text-amber-700   ring-amber-200" },
-  alta: { label: "Alta", dot: "bg-red-400", badge: "bg-red-50     text-red-700     ring-red-200" },
 };
 
 export const FORMA_PAGO_LABELS: Record<FormaPago, string> = {

@@ -1,13 +1,8 @@
 import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-import {
-  getVehiculos,
-  getMotoristas,
-  getSolicitudesTransporteAsociables,
-  crearSolicitudCombustible,
-} from "../../../services/combustible.service";
-import type { CrearSolicitudCombustiblePayload, Prioridad } from "../../../services/combustible.service";
+import { getVehiculos, getMotoristas, getSolicitudesTransporteAsociables, crearSolicitudCombustible } from "../../../services/combustible.service";
+import type { CrearSolicitudCombustiblePayload } from "../../../services/combustible.service";
 
 // Tipos y constantes extraídas
 import type { FormData, CatalogosState } from "./types";
@@ -118,7 +113,6 @@ export default function NuevaSolicitudCombustible() {
         destino_actividad:    data.destino_actividad,
         fecha_solicitud:      data.fecha_solicitud,
         cantidad_combustible: parseFloat(data.cantidad_combustible),
-        prioridad:            data.prioridad as Prioridad,
       };
 
       if (data.solicitud_transporte_id) payload.solicitud_transporte_id = parseInt(data.solicitud_transporte_id);

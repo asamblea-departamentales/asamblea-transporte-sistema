@@ -271,7 +271,6 @@ export default function RequestDetailPage() {
             {isCombustible && (
               <>
                 <DetailItem icon={<Fuel className="h-4 w-4" />} label="Cantidad Solicitada" value={`${data.cantidad_combustible} Galones`} />
-                <DetailItem icon={<Clock className="h-4 w-4" />} label="Prioridad" value={str(data.prioridad)} />
                 {data.cantidad_vales != null && (
                   <DetailItem icon={<ClipboardList className="h-4 w-4" />} label="Cantidad de Vales" value={`${data.cantidad_vales} vales`} />
                 )}

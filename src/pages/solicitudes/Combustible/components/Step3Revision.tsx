@@ -1,5 +1,3 @@
-import { PRIORIDAD_CONFIG } from "../../../../services/combustible.service";
-import type { Prioridad } from "../../../../services/combustible.service";
 import type { FormData, CatalogosState } from "../types";
 import { ReviewRow } from "./FormUI";
 
@@ -18,7 +16,6 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
     ?? vehiculo?.motorista_nombre
     ?? (data.motorista_id ? "Motorista asignado" : "Sin asignar");
 
-  const prioCfg   = data.prioridad ? PRIORIDAD_CONFIG[data.prioridad as Prioridad] : null;
   const solTransporte = catalogos.solicitudesTransporte.find(
     (s) => String(s.id) === data.solicitud_transporte_id
   );
@@ -36,15 +33,6 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
             <p className="text-sm font-black text-slate-800">Resumen de solicitud</p>
             <p className="text-xs font-semibold text-slate-400">Verifique los datos antes de enviar</p>
           </div>
-          {prioCfg && (
-            <span className={[
-              "ml-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-black ring-1",
-              prioCfg.badge,
-            ].join(" ")}>
-              <span className={["h-2 w-2 rounded-full", prioCfg.dot].join(" ")} />
-              {prioCfg.label}
-            </span>
-          )}
         </div>
 
         <div>

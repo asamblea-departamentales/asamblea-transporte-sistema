@@ -1,6 +1,5 @@
-import type { Prioridad } from "../../../../services/combustible.service";
 import type { FormData } from "../types";
-import { FieldLabel, inputCls, PrioridadButton } from "./FormUI";
+import { FieldLabel, inputCls } from "./FormUI";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // STEP 2 — Detalles de la carga
@@ -94,23 +93,6 @@ export function Step2({
         </div>
       </div>
 
-      {/* Prioridad */}
-      <div>
-        <FieldLabel required>Prioridad</FieldLabel>
-        <div className="flex flex-wrap gap-3">
-          {(["baja", "media", "alta"] as Prioridad[]).map((p) => (
-            <PrioridadButton
-              key={p}
-              value={p}
-              current={data.prioridad}
-              onClick={() => update("prioridad", p)}
-            />
-          ))}
-        </div>
-        {errors.prioridad && (
-          <p className="mt-1 text-xs font-semibold text-red-500">{errors.prioridad}</p>
-        )}
-      </div>
 
       {/* Observaciones */}
       <div>

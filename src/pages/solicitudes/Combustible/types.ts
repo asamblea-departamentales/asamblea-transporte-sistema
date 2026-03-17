@@ -2,7 +2,6 @@ import type {
   VehiculoCatalogo,
   MotoristaCatalogo,
   SolicitudTransporteRef,
-  Prioridad,
 } from "../../../services/combustible.service";
 
 // ══════════════════════════════════════════════════════════════════════════════
@@ -27,7 +26,6 @@ export interface FormData {
   fecha_inicio_periodo: string;
   fecha_fin_periodo: string;
   cantidad_combustible: string;
-  prioridad: Prioridad | "";
   observaciones: string;
 }
 
@@ -44,7 +42,6 @@ export const INITIAL: FormData = {
   fecha_inicio_periodo: "",
   fecha_fin_periodo: "",
   cantidad_combustible: "",
-  prioridad: "",
   observaciones: "",
 };
 
@@ -77,8 +74,6 @@ export function validate(step: number, data: FormData): Partial<Record<keyof For
       e.fecha_solicitud = "La fecha de solicitud es requerida.";
     if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
       e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
-    if (!data.prioridad)
-      e.prioridad = "Seleccione una prioridad.";
     if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
       e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
   }
