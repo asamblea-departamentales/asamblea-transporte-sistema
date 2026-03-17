@@ -10,6 +10,8 @@ use App\Exports\SolicitudesCombustibleExport;
 use App\Exports\SolicitudesMantenimientoExport;
 use App\Exports\SolicitudesTransporteExport;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Api\SolicitudTransporteController;
+
 
 use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
