@@ -633,9 +633,9 @@ function InfoChip({ label, value, icon }: { label: string; value: string | numbe
 
 // ─── COMPONENTE DE MAPA ───────────────────────────────────────────────────────
 
-function MapSection({ origen, destinosRaw, destinosAdicionales }: { 
-  origen: string; 
-  destinosRaw: string; 
+function MapSection({ origen, destinosRaw, destinosAdicionales }: {
+  origen: string;
+  destinosRaw: string;
   destinosAdicionales?: string | null;
 }) {
   const mapRef = useRef<L.Map | null>(null);
@@ -651,14 +651,16 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
   });
 
+
+  //Fallo
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, { 
+    const map = L.map(containerRef.current, {
       zoomControl: true,
       dragging: !L.Browser.mobile,
       scrollWheelZoom: false,
     }).setView([13.7942, -88.8965], 9);
-    
+
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -667,7 +669,7 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     async function compute() {
       if (!mapRef.current) return;
       setLoading(true);
-      
+
       // Limpiar capas previas
       markersRef.current.forEach(m => m.remove());
       markersRef.current = [];
@@ -676,7 +678,7 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
 
       const adic = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
       const allStrings = [origen, destinosRaw, ...adic];
-      
+
       // Geocodificación paralela para mayor velocidad
       const results = await Promise.all(
         allStrings.map(async (s, i) => {
@@ -706,41 +708,41 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
           const pts: L.LatLngExpression[] = validCoords.map(c => [c.lat, c.lng]);
           routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.6, dashArray: "10,10" }).addTo(mapRef.current);
           let d = 0;
-          for(let i=0; i<validCoords.length-1; i++) d += haversineKm(validCoords[i].lat, validCoords[i].lng, validCoords[i+1].lat, validCoords[i+1].lng);
-          setRouteInfo({ distance: d, duration: (d/45)*60 });
+          for (let i = 0; i < validCoords.length - 1; i++) d += haversineKm(validCoords[i].lat, validCoords[i].lng, validCoords[i + 1].lat, validCoords[i + 1].lng);
+          setRouteInfo({ distance: d, duration: (d / 45) * 60 });
         }
       }
 
       if (bounds.length > 0) {
         mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
       }
-      
+
       setLoading(false);
     }
 
     compute();
-    
+
     // Resize fix for Leaflet in hidden containers or dynamic layouts
     const resizeTimer = setTimeout(() => {
       mapRef.current?.invalidateSize();
     }, 400);
 
-    return () => { 
+    return () => {
       clearTimeout(resizeTimer);
-      mapRef.current?.remove(); 
-      mapRef.current = null; 
+      mapRef.current?.remove();
+      mapRef.current = null;
     };
   }, [origen, destinosRaw, destinosAdicionales]);
 
   return (
     <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
       <div className="relative">
-        <div 
-          ref={containerRef} 
-          className="h-[300px] w-full z-0 sm:h-[450px] transition-all duration-500" 
+        <div
+          ref={containerRef}
+          className="h-[300px] w-full z-0 sm:h-[450px] transition-all duration-500"
           style={{ filter: loading ? 'grayscale(0.5) blur(1px)' : 'none' }}
         />
-        
+
         {loading && (
           <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
             <Spinner className="h-10 w-10 text-blue-600" />
