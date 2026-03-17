@@ -224,6 +224,34 @@ Route::prefix('catalogos')->group(function () {
         );
     });
 
+    // 1. Catálogo de Marcas
+    Route::get('/marcas', function () {
+        return response()->json(
+            \App\Models\VehMarca::where('activo', true)
+                ->orderBy('nombre')
+                ->get(['id', 'nombre'])
+        );
+    });
+
+    // 2. Catálogo de Modelos (con su relación a marca)
+    Route::get('/modelos', function (Request $request) {
+        $query = \App\Models\VehModelo::with('marca')->where('activo', true);
+
+        // Opcional: permitir filtrar modelos por una marca específica
+        if ($request->has('veh_marca_id')) {
+            $query->where('veh_marca_id', $request->veh_marca_id);
+        }
+
+        return response()->json(
+            $query->get()->map(fn($m) => [
+                'id' => $m->id,
+                'nombre' => $m->nombre,
+                'veh_marca_id' => $m->veh_marca_id,
+                'marca_nombre' => $m->marca?->nombre,
+            ])
+        );
+    });
+
     Route::get('/tipos-mantenimiento', function () {
         return response()->json(
             \App\Models\VehTipoMantenimiento::where('activo', true)
