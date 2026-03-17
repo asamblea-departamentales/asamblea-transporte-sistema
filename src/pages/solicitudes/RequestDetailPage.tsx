@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getRequestById,
@@ -22,6 +22,9 @@ import {
   Receipt, CreditCard, DollarSign, Ticket, CalendarCheck,
   FileText,
 } from "lucide-react";
+import L from "leaflet";
+import "leaflet/dist/leaflet.css";
+import { geocodeAddress, getOSRMRoute, haversineKm } from "../../lib/geo";
 
 // GenericRequest: A purposeful type covering the fields used by this detail view
 // across the three modules (transporte, mantenimiento, combustible).
@@ -66,6 +69,7 @@ type GenericRequest = {
   valor_total?: number | string | null;
   numero_vale_ticket?: string | null;
   comprobantes?: string[] | null;
+  destino_adicional?: string | null;
 };
 
 // ─── HELPER ───────────────────────────────────────────────────────────────────
@@ -310,6 +314,17 @@ export default function RequestDetailPage() {
           )}
         </div>
       </div>
+
+      {/* Bloque de Mapa (Solo Transporte) */}
+      {isTransporte && (data.origen || data.destino) && (
+        <section className="animate-fade-in-up">
+          <h2 className="mb-4 flex items-center gap-2 px-1 text-sm font-bold uppercase tracking-widest text-slate-400">
+            <MapPin className="h-4 w-4" />
+            Itinerario en Mapa
+          </h2>
+          <MapSection origen={data.origen!} destinosRaw={data.destino!} destinosAdicionales={data.destino_adicional} />
+        </section>
+      )}
 
       {/* Bloque de Asignación */}
       {(data.vehiculo || data.motorista) && (
@@ -611,6 +626,105 @@ function InfoChip({ label, value, icon }: { label: string; value: string | numbe
       <div className="min-w-0 flex-1">
         <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{label}</p>
         <p className="mt-0.5 text-sm font-bold text-slate-800">{value}</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── COMPONENTE DE MAPA ───────────────────────────────────────────────────────
+
+function MapSection({ origen, destinosRaw, destinosAdicionales }: { 
+  origen: string; 
+  destinosRaw: string; 
+  destinosAdicionales?: string | null;
+}) {
+  const mapRef = useRef<L.Map | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const markersRef = useRef<L.Marker[]>([]);
+  const routeLayerRef = useRef<L.Polyline | null>(null);
+
+  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
+
+  const makeIcon = (color: string) => L.icon({
+    iconUrl: "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`),
+    iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
+  });
+
+  useEffect(() => {
+    if (!containerRef.current || mapRef.current) return;
+    const map = L.map(containerRef.current, { zoomControl: true }).setView([13.7942, -88.8965], 9);
+    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; OpenStreetMap contributors'
+    }).addTo(map);
+    mapRef.current = map;
+
+    async function compute() {
+      if (!mapRef.current) return;
+      markersRef.current.forEach(m => m.remove());
+      routeLayerRef.current?.remove();
+
+      const adic = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
+      const allStrings = [origen, destinosRaw, ...adic];
+      
+      const coords: { lat: number; lng: number; label: string }[] = [];
+      const bounds: [number, number][] = [];
+
+      for (const [i, s] of allStrings.entries()) {
+        const c = await geocodeAddress(s);
+        if (c) {
+          coords.push({ ...c, label: s });
+          const color = i === 0 ? "#0f2548" : "#ef4444";
+          const m = L.marker([c.lat, c.lng], { icon: makeIcon(color) })
+            .addTo(mapRef.current!)
+            .bindPopup(`<b>${i === 0 ? 'Origen' : 'Destino'}:</b><br>${s}`);
+          markersRef.current.push(m);
+          bounds.push([c.lat, c.lng]);
+        }
+      }
+
+      if (coords.length >= 2) {
+        const osrm = await getOSRMRoute(coords);
+        if (osrm?.geometry?.length) {
+          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.8 }).addTo(mapRef.current);
+          setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin });
+        } else {
+          const pts: L.LatLngExpression[] = coords.map(c => [c.lat, c.lng]);
+          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.6, dashArray: "10,10" }).addTo(mapRef.current);
+          let d = 0;
+          for(let i=0; i<coords.length-1; i++) d += haversineKm(coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng);
+          setRouteInfo({ distance: d, duration: (d/45)*60 });
+        }
+      }
+
+      if (bounds.length > 0) mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+    }
+
+    compute();
+    return () => { mapRef.current?.remove(); mapRef.current = null; };
+  }, [origen, destinosRaw, destinosAdicionales]);
+
+  return (
+    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+      <div className="relative">
+        <div ref={containerRef} className="h-[320px] w-full z-0" />
+        {routeInfo && (
+          <div className="absolute top-4 right-4 z-[400] flex items-center gap-3 rounded-xl bg-white/95 px-4 py-2 shadow-xl backdrop-blur-md ring-1 ring-black/5">
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Distancia</span>
+              <span className="mt-1 text-sm font-bold text-slate-700">{routeInfo.distance.toFixed(1)} km</span>
+            </div>
+            <div className="h-6 w-[1px] bg-slate-200" />
+            <div className="flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo Est.</span>
+              <span className="mt-1 text-sm font-bold text-slate-700">{routeInfo.duration.toFixed(0)} min</span>
+            </div>
+          </div>
+        )}
+      </div>
+      <div className="bg-slate-50/50 p-3 text-center border-t border-slate-100">
+        <p className="text-[10px] font-medium text-slate-400 italic italic text-center">
+          La ruta mostrada es una estimación basada en los puntos georeferenciados.
+        </p>
       </div>
     </div>
   );
