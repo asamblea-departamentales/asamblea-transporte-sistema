@@ -178,27 +178,31 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('catalogos')->group(function () {
 
         Route::get('/vehiculos', function () {
-            return response()->json(
-                \App\Models\Vehiculo::with([
-                    'marca', 
-                    'modelo', 
-                    'tipo', 
-                    'asignacionVigenteMotorista.motorista'
-                ])
-                ->where('activo', true)
-                ->get()
-                ->map(fn ($v) => [
-                    'id'     => $v->id,
-                    'placa'  => $v->placa,
-                    'marca'  => $v->getRelation('marca')?->nombre ?? $v->marca, 
-                    'modelo' => $v->getRelation('modelo')?->nombre ?? $v->modelo,
-                    'tipo'   => $v->tipo?->nombre,
-                    'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
-                    'motorista_dui'    => $v->asignacionVigenteMotorista?->motorista?->dui,
-                    'label'  => "{$v->placa} — " . ($v->getRelation('marca')?->nombre ?? $v->marca),
-                ])
-            );
-        });
+    return response()->json(
+        \App\Models\Vehiculo::with([
+            'marca', 
+            'modelo', 
+            'tipo', 
+            'asignacionVigenteMotorista.motorista'
+        ])
+        ->where('activo', true)
+        ->get()
+        ->map(fn ($v) => [
+            'id'     => $v->id,
+            'placa'  => $v->placa,
+            'marca'  => $v->getRelation('marca')?->nombre ?? $v->marca, 
+            'modelo' => $v->getRelation('modelo')?->nombre ?? $v->modelo,
+            'tipo'   => $v->tipo?->nombre,
+            
+            // 🔥 AGREGAR ESTA LÍNEA EXACTA AQUÍ:
+            'motorista_id'     => $v->asignacionVigenteMotorista?->motorista_id,
+
+            'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
+            'motorista_dui'    => $v->asignacionVigenteMotorista?->motorista?->dui,
+            'label'  => "{$v->placa} — " . ($v->getRelation('marca')?->nombre ?? $v->marca),
+        ])
+    );
+});
 
         Route::get('/motoristas', function () {
             return response()->json(
