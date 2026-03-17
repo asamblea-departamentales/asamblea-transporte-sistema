@@ -149,6 +149,8 @@ export type VehiculoCatalogo = {
   tipo: string;
   label: string;
   motorista_id?: number;
+  motorista_nombre?: string;
+  motorista_dui?: string | null;
   motorista?: MotoristaCatalogo;
 };
 

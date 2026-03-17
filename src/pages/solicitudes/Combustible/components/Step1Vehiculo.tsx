@@ -168,11 +168,16 @@ export function Step1({
             const vData = catalogos.vehiculos.find(veh => String(veh.id) === v);
             const updates: Partial<FormData> = { vehiculo_id: v };
 
-            // Si el vehículo tiene un motorista asignado, autoseleccionar
-            if (vData?.motorista_id) {
+            if (v === "") {
+              // Al deseleccionar, limpiar motorista también
+              updates.motorista_id = "";
+            } else if (vData?.motorista_id) {
               updates.motorista_id = String(vData.motorista_id);
             } else if (vData?.motorista?.id) {
               updates.motorista_id = String(vData.motorista.id);
+            } else {
+              // Vehículo sin motorista asignado → limpiar selección anterior
+              updates.motorista_id = "";
             }
 
             updateMultiple(updates);
@@ -186,7 +191,7 @@ export function Step1({
           <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>
         )}
       </div>
-//No se me actualizo
+
       {/* Card info vehículo seleccionado */}
       {vehiculoSeleccionado && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -219,18 +224,57 @@ export function Step1({
       )}
 
       {/* ── Motorista ─────────────────────────────────────────────────── */}
-      <div>
-        <FieldLabel>
-          Motorista <span className="font-normal text-slate-400">(opcional)</span>
-        </FieldLabel>
-        <SelectInput
-          value={data.motorista_id}
-          onChange={(v) => update("motorista_id", v)}
-          options={motoristasOpts}
-          placeholder={catalogos.loading ? "Cargando motoristas..." : "Sin motorista asignado"}
-          disabled={catalogos.loading}
-        />
-      </div>
+      {(() => {
+        // ¿El vehículo seleccionado tiene un motorista asignado?
+        const motoristaBloqueado = !!(
+          vehiculoSeleccionado?.motorista_id || vehiculoSeleccionado?.motorista?.id
+        );
+        const motoristaNombre =
+          vehiculoSeleccionado?.motorista_nombre ||
+          catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.nombre;
+
+        return (
+          <div>
+            <div className="mb-2 flex items-center justify-between gap-2">
+              <FieldLabel>
+                Motorista <span className="font-normal text-slate-400">(opcional)</span>
+              </FieldLabel>
+              {motoristaBloqueado && (
+                <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500 ring-1 ring-slate-200">
+                  <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Asignado por vehículo
+                </span>
+              )}
+            </div>
+
+            {motoristaBloqueado ? (
+              /* Campo bloqueado — muestra el nombre del motorista vinculado */
+              <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 shadow-sm">
+                <svg className="h-4 w-4 shrink-0 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                </svg>
+                <span className="flex-1 text-sm font-semibold text-slate-700">
+                  {motoristaNombre ?? "Motorista asignado"}
+                </span>
+                <svg className="h-4 w-4 shrink-0 text-slate-300" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
+            ) : (
+              /* Campo libre — el vehículo no tiene motorista predefinido */
+              <SelectInput
+                value={data.motorista_id}
+                onChange={(v) => update("motorista_id", v)}
+                options={motoristasOpts}
+                placeholder={catalogos.loading ? "Cargando motoristas..." : "Sin motorista asignado"}
+                disabled={catalogos.loading}
+              />
+            )}
+          </div>
+        );
+      })()}
     </div>
   );
 }
