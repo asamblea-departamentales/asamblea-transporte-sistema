@@ -185,7 +185,7 @@ Route::get('/solicitudes/recientes', function () {
     // ── CATÁLOGOS (para el frontend) ────────────────────────
 Route::prefix('catalogos')->group(function () {
 
-    Route::get('/catalogos/vehiculos', function () {
+    Route::get('/vehiculos', function () {
     return response()->json(
         \App\Models\Vehiculo::with([
             'marca', // Carga la relación (aunque se llame igual que la columna)
@@ -262,4 +262,4 @@ Route::prefix('catalogos')->group(function () {
 
 });
 
-});
+})
