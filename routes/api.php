@@ -185,29 +185,30 @@ Route::get('/solicitudes/recientes', function () {
     // ── CATÁLOGOS (para el frontend) ────────────────────────
 Route::prefix('catalogos')->group(function () {
 
-    Route::get('/vehiculos', function () {
+    Route::get('/catalogos/vehiculos', function () {
     return response()->json(
         \App\Models\Vehiculo::with([
-            'marca', 
+            'marca', // Carga la relación (aunque se llame igual que la columna)
             'modelo', 
             'tipo', 
-            'asignacionVigenteMotorista.motorista' // Navegamos: Vehiculo -> Asignacion -> Motorista
+            'asignacionVigenteMotorista.motorista'
         ])
         ->where('activo', true)
         ->get()
         ->map(fn ($v) => [
             'id'     => $v->id,
             'placa'  => $v->placa,
-            'marca'  => $v->marca?->nombre,
-            'modelo' => $v->modelo?->nombre,
+            
+            // USAMOS getRelation() para saltarnos el conflicto de nombres
+            'marca'  => $v->getRelation('marca')?->nombre ?? $v->marca, 
+            'modelo' => $v->getRelation('modelo')?->nombre ?? $v->modelo,
+            
             'tipo'   => $v->tipo?->nombre,
             
-            // Extraemos los datos del motorista desde la asignación vigente
-            'motorista_id'     => $v->asignacionVigenteMotorista?->motorista_id,
             'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
             'motorista_dui'    => $v->asignacionVigenteMotorista?->motorista?->dui,
             
-            'label'  => "{$v->placa} — {$v->marca?->nombre} (" . ($v->asignacionVigenteMotorista?->motorista?->nombre ?? 'S/M') . ")",
+            'label'  => "{$v->placa} — " . ($v->getRelation('marca')?->nombre ?? $v->marca),
         ])
     );
 });
