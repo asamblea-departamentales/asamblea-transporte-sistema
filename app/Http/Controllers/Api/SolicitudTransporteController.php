@@ -230,33 +230,40 @@ class SolicitudTransporteController extends Controller
     /**
      * Para generar PDF de mision oficial individual
      */
-    public function pdf(Request $request, ReporteMisionOficialService $service, $id = null)
-{
-    // Si la ruta envía un ID (clic desde el botón de Filament)
-    if ($id) {
-        $rows = SolicitudTransporte::with([
+public function pdf(
+    Request $request, 
+    ReporteMisionOficialService $service, 
+    \App\Models\SolicitudTransporte $solicitud = null // <-- Importante: mismo nombre que en la ruta
+) {
+    if ($solicitud && $solicitud->exists) {
+        // CASO A: Imprimir una sola misión oficial (Botón de Filament)
+        $solicitud->load([
             'solicitante', 'autorizador', 'motorista', 'tipoVehiculo',
             'vehiculo.marca', 'vehiculo.modelo', 'vehiculo.color', 'vehiculo.clasificacion'
-        ])->where('id', $id)->get();
+        ]);
         
+        // Lo metemos en una colección para que el @foreach del Blade no falle
+        $rows = collect([$solicitud]); 
         $filters = [];
     } else {
-        // Lógica original para el reporte masivo
+        // CASO B: Reporte masivo desde la pantalla de reportes
         $filters = $request->only(['date_from', 'date_to', 'vehiculo_id', 'motorista_id', 'tipo_vehiculo_id']);
         $rows = $service->buildQuery($filters)->orderBy('fecha_salida', 'asc')->get();
     }
 
+    if ($rows->isEmpty()) {
+        return redirect()->back()->with('error', 'No hay datos para generar el PDF.');
+    }
+
     $kpis = $service->getKpis($filters);
 
-    $pdf = Pdf::loadView('reports.reporte_mision_oficial_pdf', [
+    return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.reporte_mision_oficial_pdf', [
         'rows' => $rows,
         'filters' => $filters,
         'kpis' => $kpis,
         'service' => $service,
-        'rangeLabel' => $id ? "Misión Individual" : $this->rangeLabel($filters),
-    ])->setPaper('a4', 'portrait');
-
-    return $pdf->stream('reporte_mision_oficial.pdf');
+        'rangeLabel' => ($solicitud && $solicitud->exists) ? "Misión Individual" : $this->rangeLabel($filters),
+    ])->setPaper('a4', 'portrait')->stream('mision_oficial.pdf');
 }
 
     // =====================================================

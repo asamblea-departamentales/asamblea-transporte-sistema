@@ -639,16 +639,19 @@ class ViewSolicitudTransporte extends ViewRecord
     ->label('Generar Misión Oficial')
     ->color('gray')
     ->icon('heroicon-o-document-text') 
-    ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['id' => $record->id]))
+    // CAMBIO CLAVE: Pasamos el objeto $record directamente o usamos la llave 'solicitud'
+    ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
     ->openUrlInNewTab()
     ->visible(fn (SolicitudTransporte $record) => 
-        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
-        $record->vehiculo_id !== null && // No tiene sentido imprimir sin vehículo
+        auth()->check() && 
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->vehiculo_id !== null && 
+        $record->motorista_id !== null && // Recomendado: verificar que tenga motorista
         in_array($record->estado, [
+            EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::PROGRAMADA,
             EstadoSolicitudEnum::ASIGNADA,
             EstadoSolicitudEnum::COMPLETADA,
-            EstadoSolicitudEnum::APROBADA, // Asegúrate de incluir APROBADA si es el estado clave
         ])
     ),
 
