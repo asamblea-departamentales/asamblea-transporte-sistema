@@ -164,7 +164,19 @@ export function Step1({
         <FieldLabel required>Vehículo</FieldLabel>
         <SelectInput
           value={data.vehiculo_id}
-          onChange={(v) => update("vehiculo_id", v)}
+          onChange={(v) => {
+            const vData = catalogos.vehiculos.find(veh => String(veh.id) === v);
+            const updates: Partial<FormData> = { vehiculo_id: v };
+            
+            // Si el vehículo tiene un motorista asignado, autoseleccionar
+            if (vData?.motorista_id) {
+               updates.motorista_id = String(vData.motorista_id);
+            } else if (vData?.motorista?.id) {
+               updates.motorista_id = String(vData.motorista.id);
+            }
+            
+            updateMultiple(updates);
+          }}
           options={vehiculosOpts}
           placeholder={catalogos.loading ? "Cargando vehículos..." : "Seleccione un vehículo..."}
           error={!!errors.vehiculo_id}

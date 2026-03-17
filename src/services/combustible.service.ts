@@ -23,7 +23,7 @@ export type EstadoCombustible =
   | "en_revision"
   | "pre_aprobada"
   | "aprobada"
-  | "asignada"       // ✅ aprobada + vehículo y vales asignados por jefatura
+  | "asignada"
   | "rechazada"
   | "completada"
   | "cancelada";
@@ -148,6 +148,8 @@ export type VehiculoCatalogo = {
   modelo: string;
   tipo: string;
   label: string;
+  motorista_id?: number;
+  motorista?: MotoristaCatalogo;
 };
 
 export type MotoristaCatalogo = {
@@ -335,50 +337,9 @@ export async function cancelarSolicitud(
 }
 
 // ══════════════════════════════════════════════════════════════════════════════
-// ACCIONES DE JEFATURA
+// ACCIONES DE JEFATURA (REMOVIDAS DEL FRONTEND)
 // ══════════════════════════════════════════════════════════════════════════════
 
-export async function registrarObservacion(
-  id: number,
-  payload: ObservacionSolicitudPayload
-): Promise<{ message: string; data: SolicitudCombustible }> {
-  const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
-    `/api/solicitudes-combustible/${id}/observacion`,
-    payload
-  );
-  return data;
-}
-
-export async function preAprobarSolicitud(
-  id: number
-): Promise<{ message: string; data: SolicitudCombustible }> {
-  const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
-    `/api/solicitudes-combustible/${id}/pre-aprobar`
-  );
-  return data;
-}
-
-export async function aprobarSolicitud(
-  id: number,
-  payload: AprobarSolicitudPayload
-): Promise<{ message: string; data: SolicitudCombustible }> {
-  const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
-    `/api/solicitudes-combustible/${id}/aprobar`,
-    payload
-  );
-  return data;
-}
-
-export async function rechazarSolicitud(
-  id: number,
-  payload: RechazarSolicitudPayload
-): Promise<{ message: string; data: SolicitudCombustible }> {
-  const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
-    `/api/solicitudes-combustible/${id}/rechazar`,
-    payload
-  );
-  return data;
-}
 
 // ══════════════════════════════════════════════════════════════════════════════
 // UTILIDADES PARA EL FRONTEND
@@ -419,12 +380,6 @@ export const FORMA_PAGO_LABELS: Record<FormaPago, string> = {
 export const ESTADOS_ACCIONABLES_SOLICITANTE: EstadoCombustible[] = [
   "borrador",
   "asignada", // ✅ puede finalizar cuando está asignada
-];
-
-export const ESTADOS_ACCIONABLES_JEFATURA: EstadoCombustible[] = [
-  "pendiente",
-  "en_revision",
-  "pre_aprobada",
 ];
 
 /** El solicitante puede finalizar cuando el estado es "asignada" */
