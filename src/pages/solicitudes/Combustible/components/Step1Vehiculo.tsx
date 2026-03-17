@@ -38,11 +38,11 @@ export function Step1({
 
     const fields: Partial<FormData> = { solicitud_transporte_id: solicitudId };
 
-    if (sol.vehiculo?.id)   fields.vehiculo_id        = String(sol.vehiculo.id);
-    if (sol.motorista?.id)  fields.motorista_id       = String(sol.motorista.id);
-    if (sol.destino)         fields.destino_actividad  = sol.destino;
-    if (sol.fecha_salida)    fields.fecha_inicio_periodo = sol.fecha_salida.split("T")[0].split(" ")[0];
-    if (sol.fecha_retorno)   fields.fecha_fin_periodo    = sol.fecha_retorno.split("T")[0].split(" ")[0];
+    if (sol.vehiculo?.id) fields.vehiculo_id = String(sol.vehiculo.id);
+    if (sol.motorista?.id) fields.motorista_id = String(sol.motorista.id);
+    if (sol.destino) fields.destino_actividad = sol.destino;
+    if (sol.fecha_salida) fields.fecha_inicio_periodo = sol.fecha_salida.split("T")[0].split(" ")[0];
+    if (sol.fecha_retorno) fields.fecha_fin_periodo = sol.fecha_retorno.split("T")[0].split(" ")[0];
 
     updateMultiple(fields);
   };
@@ -132,17 +132,17 @@ export function Step1({
                   <span className={[
                     "inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-black ring-1",
                     estadoTransporteColor[solicitudTransporteSeleccionada.estado]
-                      ?? "bg-slate-50 text-slate-600 ring-slate-200",
+                    ?? "bg-slate-50 text-slate-600 ring-slate-200",
                   ].join(" ")}>
                     {solicitudTransporteSeleccionada.estado}
                   </span>
                 </div>
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { label: "Destino",   value: solicitudTransporteSeleccionada.destino },
+                    { label: "Destino", value: solicitudTransporteSeleccionada.destino },
                     { label: "Motorista", value: solicitudTransporteSeleccionada.motorista?.nombre ?? "Sin asignar" },
-                    { label: "Salida",    value: solicitudTransporteSeleccionada.fecha_salida?.split("T")[0] ?? "" },
-                    { label: "Retorno",   value: solicitudTransporteSeleccionada.fecha_retorno?.split("T")[0] ?? "—" },
+                    { label: "Salida", value: solicitudTransporteSeleccionada.fecha_salida?.split("T")[0] ?? "" },
+                    { label: "Retorno", value: solicitudTransporteSeleccionada.fecha_retorno?.split("T")[0] ?? "—" },
                   ].map((item) => (
                     <div key={item.label} className="rounded-lg border border-slate-200 bg-white px-3 py-2">
                       <p className="text-[9px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
@@ -167,14 +167,14 @@ export function Step1({
           onChange={(v) => {
             const vData = catalogos.vehiculos.find(veh => String(veh.id) === v);
             const updates: Partial<FormData> = { vehiculo_id: v };
-            
+
             // Si el vehículo tiene un motorista asignado, autoseleccionar
             if (vData?.motorista_id) {
-               updates.motorista_id = String(vData.motorista_id);
+              updates.motorista_id = String(vData.motorista_id);
             } else if (vData?.motorista?.id) {
-               updates.motorista_id = String(vData.motorista.id);
+              updates.motorista_id = String(vData.motorista.id);
             }
-            
+
             updateMultiple(updates);
           }}
           options={vehiculosOpts}
@@ -186,7 +186,7 @@ export function Step1({
           <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>
         )}
       </div>
-
+//No se me actualizo
       {/* Card info vehículo seleccionado */}
       {vehiculoSeleccionado && (
         <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
@@ -204,10 +204,10 @@ export function Step1({
           </div>
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {[
-              { label: "Placa",  value: vehiculoSeleccionado.placa  },
-              { label: "Marca",  value: vehiculoSeleccionado.marca  },
+              { label: "Placa", value: vehiculoSeleccionado.placa },
+              { label: "Marca", value: vehiculoSeleccionado.marca },
               { label: "Modelo", value: vehiculoSeleccionado.modelo },
-              { label: "Tipo",   value: vehiculoSeleccionado.tipo   },
+              { label: "Tipo", value: vehiculoSeleccionado.tipo },
             ].map((item) => (
               <div key={item.label} className="bg-transparent py-2.5">
                 <p className="text-[10px] font-black uppercase tracking-wider text-slate-400">{item.label}</p>
