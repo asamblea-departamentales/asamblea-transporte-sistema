@@ -11,6 +11,7 @@ use App\Models\HistorialEstado;
 use App\Models\SolicitudTransporte;
 use Filament\Actions;
 use Filament\Forms;
+use Filament\Forms\Components\Actions as ComponentsActions;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -628,6 +629,27 @@ class ViewSolicitudTransporte extends ViewRecord
                         EstadoSolicitudEnum::PENDIENTE,
                         EstadoSolicitudEnum::EN_REVISION,
                         EstadoSolicitudEnum::PRE_APROBADA,
+                    ], true)
+                ),
+
+            //Agregado para generar mision oficial para una solicitud especifica
+            Actions\Action::make('mision_oficial')
+                ->button()
+                ->size('lg')
+                ->label('Misión Oficial')
+                ->color('gray')
+                ->icon('heroicon-o-document-text') 
+                ->url(fn (SolicitudTransporte $record) => 
+                    route ('reportes.mision-oficial.pdf', $record->id)
+                )
+                ->openUrlInNewTab()
+                ->visible(fn (SolicitudTransporte $record) =>
+                    auth()->check()
+                    && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti'])
+                    && in_array($record->estado, [
+                        EstadoSolicitudEnum::PROGRAMADA,
+                        EstadoSolicitudEnum::ASIGNADA,
+                        EstadoSolicitudEnum::COMPLETADA,
                     ], true)
                 ),
 

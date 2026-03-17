@@ -212,8 +212,9 @@ Route::get('/reportes/distribucion-vales/pdf', [ReporteDistribucionValesCombusti
 
 Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController::class, 'pdf'])
     ->name('reportes.general-servicios.pdf');   
-    
-Route::get('/reportes/mision-oficial/pdf', action:[ReporteMisionOficialController::class, 'pdf']) 
+
+    //Pequeño cambio para esta ruta
+Route::get('/reportes/mision-oficial/pdf/{solicitud}', action:[ReporteMisionOficialController::class, 'pdf']) 
     ->name('reportes.mision-oficial.pdf');
 
 Route::get('/reportes/orden-trabajo/pdf', action:[ReporteOrdenTrabajoController::class, 'pdf'])
