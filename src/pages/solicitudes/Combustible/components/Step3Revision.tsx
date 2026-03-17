@@ -8,8 +8,16 @@ import { ReviewRow } from "./FormUI";
 // ══════════════════════════════════════════════════════════════════════════════
 
 export function Step3({ data, catalogos }: { data: FormData; catalogos: CatalogosState }) {
-  const vehiculo  = catalogos.vehiculos.find((v) => String(v.id) === data.vehiculo_id)?.label ?? "";
-  const motorista = catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.nombre ?? "Sin asignar";
+  const vehiculo  = catalogos.vehiculos.find((v) => String(v.id) === data.vehiculo_id);
+  const vehiculoLabel = vehiculo?.label ?? "";
+
+  // Resolver nombre del motorista: primero en la lista de motoristas,
+  // si no, desde el campo motorista_nombre del vehículo (asignación vigente)
+  const motoristaNombre =
+    catalogos.motoristas.find((m) => String(m.id) === data.motorista_id)?.nombre
+    ?? vehiculo?.motorista_nombre
+    ?? (data.motorista_id ? "Motorista asignado" : "Sin asignar");
+
   const prioCfg   = data.prioridad ? PRIORIDAD_CONFIG[data.prioridad as Prioridad] : null;
   const solTransporte = catalogos.solicitudesTransporte.find(
     (s) => String(s.id) === data.solicitud_transporte_id
@@ -41,8 +49,8 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
 
         <div>
           {solTransporte && <ReviewRow label="Solicitud transporte" value={solTransporte.codigo} />}
-          <ReviewRow label="Vehículo"       value={vehiculo} />
-          <ReviewRow label="Motorista"       value={motorista} />
+          <ReviewRow label="Vehículo"       value={vehiculoLabel} />
+          <ReviewRow label="Motorista"       value={motoristaNombre} />
           <ReviewRow label="Destino"         value={data.destino_actividad} />
           <ReviewRow label="Fecha solicitud" value={data.fecha_solicitud} />
           <ReviewRow
