@@ -6,17 +6,17 @@ import {
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
-export type NotiTipo   = "aprobada" | "rechazada" | "observada" | "finalizada" | "recordatorio" | "info";
+export type NotiTipo = "aprobada" | "rechazada" | "observada" | "finalizada" | "recordatorio" | "info";
 export type NotiModulo = "transporte" | "mantenimiento" | "combustible";
 
 export type Notification = {
-  id:        string;
-  tipo:      NotiTipo;
-  modulo:    NotiModulo;
-  titulo:    string;
-  mensaje:   string;
-  codigo:    string;
-  leida:     boolean;
+  id: string;
+  tipo: NotiTipo;
+  modulo: NotiModulo;
+  titulo: string;
+  mensaje: string;
+  codigo: string;
+  leida: boolean;
   createdAt: string;
 };
 
@@ -24,9 +24,9 @@ export type Notification = {
 
 type Snap = { id: number; estado: string; fecha_salida: string; codigo: string; modulo: NotiModulo };
 
-const NOTIF_KEY    = "app_notifications_v1";
-const SNAP_KEY     = "app_snap_v1";
-const POLL_MS      = 60_000;
+const NOTIF_KEY = "app_notifications_v1";
+const SNAP_KEY = "app_snap_v1";
+const POLL_MS = 60_000;
 
 const load = <T,>(key: string, fallback: T): T => {
   try { return JSON.parse(localStorage.getItem(key) || "") ?? fallback; } catch { return fallback; }
@@ -35,29 +35,29 @@ const load = <T,>(key: string, fallback: T): T => {
 function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
 const TIPO_TITULO: Record<NotiTipo, string> = {
-  aprobada:     "Solicitud aprobada",
-  rechazada:    "Solicitud rechazada",
-  observada:    "Solicitud observada",
-  finalizada:   "Solicitud finalizada",
+  aprobada: "Solicitud aprobada",
+  rechazada: "Solicitud rechazada",
+  observada: "Solicitud observada",
+  finalizada: "Solicitud finalizada",
   recordatorio: "Recordatorio de finalización",
-  info:         "Actualización",
+  info: "Actualización",
 };
 
 const MODULO_LABEL: Record<NotiModulo, string> = {
-  transporte:    "Transporte",
+  transporte: "Transporte",
   mantenimiento: "Mantenimiento",
-  combustible:   "Combustible",
+  combustible: "Combustible",
 };
 
 function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
   const mod = MODULO_LABEL[snap.modulo];
   const mensajes: Record<NotiTipo, string> = {
-    aprobada:     `Tu solicitud de ${mod} ${snap.codigo} fue aprobada.`,
-    rechazada:    `Tu solicitud de ${mod} ${snap.codigo} fue rechazada.`,
-    observada:    `Tu solicitud de ${mod} ${snap.codigo} tiene observaciones del supervisor.`,
-    finalizada:   `Tu solicitud de ${mod} ${snap.codigo} fue marcada como finalizada.`,
+    aprobada: `Tu solicitud de ${mod} ${snap.codigo} fue aprobada.`,
+    rechazada: `Tu solicitud de ${mod} ${snap.codigo} fue rechazada.`,
+    observada: `Tu solicitud de ${mod} ${snap.codigo} tiene observaciones del supervisor.`,
+    finalizada: `Tu solicitud de ${mod} ${snap.codigo} fue marcada como finalizada.`,
     recordatorio: `Han pasado más de 24 h desde la fecha de tu solicitud ${snap.codigo}. Recuerda marcarla como finalizada.`,
-    info:         `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
+    info: `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
   };
   return {
     id: uid(), tipo, modulo: snap.modulo,
@@ -68,9 +68,9 @@ function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
 }
 
 function estadoATipo(estado: string): NotiTipo | null {
-  if (estado === "aprobada")                          return "aprobada";
-  if (estado === "rechazada")                         return "rechazada";
-  if (estado === "observada")                         return "observada";
+  if (estado === "aprobada") return "aprobada";
+  if (estado === "rechazada") return "rechazada";
+  if (estado === "observada") return "observada";
   if (estado === "finalizada" || estado === "completada") return "finalizada";
   return null;
 }
@@ -104,17 +104,17 @@ function detectar(prev: Snap[], next: Snap[], remindersSent: Set<string>): Notif
 
 type Ctx = {
   notifications: Notification[];
-  unreadCount:   number;
-  toast:         Notification | null;
-  markAsRead:    (id: string) => void;
-  markAllRead:   () => void;
+  unreadCount: number;
+  toast: Notification | null;
+  markAsRead: (id: string) => void;
+  markAllRead: () => void;
   deleteNotification: (id: string) => void;
-  clearToast:    () => void;
+  clearToast: () => void;
 };
 
 const NotifCtx = createContext<Ctx>({
   notifications: [], unreadCount: 0, toast: null,
-  markAsRead: () => {}, markAllRead: () => {}, deleteNotification: () => {}, clearToast: () => {},
+  markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, clearToast: () => { },
 });
 
 export function useNotifications() { return useContext(NotifCtx); }
@@ -123,10 +123,10 @@ export function useNotifications() { return useContext(NotifCtx); }
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
   const [notifications, setNotifications] = useState<Notification[]>(() => load(NOTIF_KEY, []));
-  const [toast, setToast]                 = useState<Notification | null>(null);
-  const snapRef        = useRef<Snap[]>(load(SNAP_KEY, []));
-  const remindersRef   = useRef<Set<string>>(new Set());
-  const isFirstPoll    = useRef(true);
+  const [toast, setToast] = useState<Notification | null>(null);
+  const snapRef = useRef<Snap[]>(load(SNAP_KEY, []));
+  const remindersRef = useRef<Set<string>>(new Set());
+  const isFirstPoll = useRef(true);
 
   const unreadCount = notifications.filter(n => !n.leida).length;
 
@@ -175,6 +175,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       push(incoming);
     } catch {
       // El fallo del polling no interrumpe la experiencia del usuario
+      //QUe paso
     }
   }, [push]);
 
@@ -184,10 +185,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(id);
   }, [poll]);
 
-  const markAsRead  = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
+  const markAsRead = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
   const markAllRead = useCallback(() => setNotifications(p => p.map(n => ({ ...n, leida: true }))), []);
   const deleteNotification = useCallback((id: string) => setNotifications(p => p.filter(n => n.id !== id)), []);
-  const clearToast  = useCallback(() => setToast(null), []);
+  const clearToast = useCallback(() => setToast(null), []);
 
   return (
     <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast }}>
