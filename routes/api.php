@@ -187,22 +187,28 @@ Route::prefix('catalogos')->group(function () {
 
     Route::get('/vehiculos', function () {
     return response()->json(
-        \App\Models\Vehiculo::with(['marca', 'modelo', 'tipo', 'motorista']) // <-- Agregamos motorista
-            ->where('activo', true)
-            ->get()
-            ->map(fn ($v) => [
-                'id'         => $v->id,
-                'placa'      => $v->placa,
-                'marca'      => $v->marca?->nombre,
-                'modelo'     => $v->modelo?->nombre,
-                'tipo'       => $v->tipo?->nombre,
-                // --- Datos del motorista vinculado ---
-                'motorista_id'     => $v->motorista_id,
-                'motorista_nombre' => $v->motorista?->nombre ?? 'Sin motorista asignado',
-                'motorista_dui'    => $v->motorista?->dui,
-                // -------------------------------------
-                'label'      => "{$v->placa} — {$v->marca?->nombre} {$v->modelo?->nombre} (" . ($v->motorista?->nombre ?? 'S/M') . ")",
-            ])
+        \App\Models\Vehiculo::with([
+            'marca', 
+            'modelo', 
+            'tipo', 
+            'asignacionVigenteMotorista.motorista' // Navegamos: Vehiculo -> Asignacion -> Motorista
+        ])
+        ->where('activo', true)
+        ->get()
+        ->map(fn ($v) => [
+            'id'     => $v->id,
+            'placa'  => $v->placa,
+            'marca'  => $v->marca?->nombre,
+            'modelo' => $v->modelo?->nombre,
+            'tipo'   => $v->tipo?->nombre,
+            
+            // Extraemos los datos del motorista desde la asignación vigente
+            'motorista_id'     => $v->asignacionVigenteMotorista?->motorista_id,
+            'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
+            'motorista_dui'    => $v->asignacionVigenteMotorista?->motorista?->dui,
+            
+            'label'  => "{$v->placa} — {$v->marca?->nombre} (" . ($v->asignacionVigenteMotorista?->motorista?->nombre ?? 'S/M') . ")",
+        ])
     );
 });
 
