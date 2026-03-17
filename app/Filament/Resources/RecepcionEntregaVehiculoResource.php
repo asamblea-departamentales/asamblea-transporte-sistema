@@ -64,6 +64,26 @@ class RecepcionEntregaVehiculoResource extends Resource
 
                     Forms\Components\Hidden::make('user_id')
                         ->default(fn () => auth()->id()),
+
+                    // En RecepcionEntregaVehiculoResource.php — dentro del form()
+
+Forms\Components\Select::make('solicitud_transporte_id')
+    ->label('Solicitud de Transporte')
+    ->relationship(
+        name: 'solicitud',
+        titleAttribute: 'codigo',
+        modifyQueryUsing: fn ($query) => $query
+            ->whereIn('estado', [
+                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::APROBADA,
+                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::ASIGNADA,
+                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::PROGRAMADA,
+            ])
+            ->orderByDesc('fecha_salida')
+    )
+    ->searchable()
+    ->preload()
+    ->nullable()
+    ->helperText('Opcional. Vincula esta entrega/recepción a una solicitud activa.'),    
                 ])
                 ->columns(2),
 

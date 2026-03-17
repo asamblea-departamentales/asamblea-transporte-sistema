@@ -13,19 +13,22 @@ class ReporteRecepcionEntregaVehiculoController extends Controller
     {
         $movimientoId = $request->integer('movimiento_id');
 
-      $movimiento = RecepcionEntregaVehiculo::query()
-    ->with([
-        'vehiculo.marca', 
-        'vehiculo.modelo', 
-        'vehiculo.color', 
-        'motorista' => function($q) { $q->withTrashed(); }, // Carga motoristas aunque estén desactivados
-        'usuario'
-    ])
-    ->findOrFail($movimientoId);
+        $movimiento = RecepcionEntregaVehiculo::query()
+            ->with([
+                'vehiculo.marca',
+                'vehiculo.modelo',
+                'vehiculo.color',
+                'motorista' => fn ($q) => $q->withTrashed(),
+                'usuario',
+                'solicitud.despachador', // ← nuevo
+            ])
+            ->findOrFail($movimientoId);
 
         $pdf = Pdf::loadView('reports.reporte_recepcion_entrega_vehiculo_pdf', [
             'movimiento' => $movimiento,
-        ])->setPaper('a4', 'portrait');
+        ])
+        ->setPaper('a4', 'portrait')
+        ->setWarnings(false);
 
         return $pdf->stream('reporte_recepcion_entrega_vehiculo.pdf');
     }

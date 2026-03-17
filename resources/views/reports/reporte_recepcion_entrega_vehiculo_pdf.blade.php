@@ -75,6 +75,16 @@
             border-top: 1px solid #000;
             margin: 35px auto 6px auto;
         }
+
+        .seccion-titulo {
+            font-size: 11px;
+            font-weight: bold;
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-bottom: none;
+            padding: 5px 8px;
+            margin-top: 4px;
+        }
     </style>
 </head>
 <body>
@@ -85,12 +95,11 @@
     <div class="titulo">RECEPCIÓN / ENTREGA DE VEHÍCULO</div>
     <div class="subtitulo">Control Operativo de Vehículos Institucionales</div>
 
+    {{-- BLOQUE 1: Datos del movimiento --}}
     <table class="tabla">
         <tr>
             <td>Tipo de movimiento</td>
-            <td>
-                {{ $movimiento->tipo_movimiento === 'entrega' ? 'Entrega' : 'Recepción' }}
-            </td>
+            <td>{{ $movimiento->tipo_movimiento === 'entrega' ? 'Entrega' : 'Recepción' }}</td>
         </tr>
         <tr>
             <td>Fecha y hora</td>
@@ -100,28 +109,29 @@
             <td>Registrado por</td>
             <td>{{ $movimiento->usuario?->name ?? '—' }}</td>
         </tr>
+        @if($movimiento->solicitud_transporte_id)
+        <tr>
+            <td>Solicitud vinculada</td>
+            <td>{{ $movimiento->solicitud?->codigo ?? "# {$movimiento->solicitud_transporte_id}" }}</td>
+        </tr>
+        @endif
     </table>
 
+    {{-- BLOQUE 2: Datos del vehículo --}}
     <table class="tabla">
         <tr>
             <td>Placa</td>
             <td>{{ $movimiento->vehiculo?->placa ?? '—' }}</td>
         </tr>
         <tr>
-         <tr>
-    <td>Marca</td>
-    <td>
-        {{-- Forzamos la relación con el método marca() y luego el nombre --}}
-        {{ $movimiento->vehiculo->marca()->first()?->nombre ?? $movimiento->vehiculo->marca ?? '—' }}
-    </td>
-</tr>
-<tr>
-    <td>Modelo</td>
-    <td>
-        {{-- Forzamos la relación con el método modelo() --}}
-        {{ $movimiento->vehiculo->modelo()->first()?->nombre ?? $movimiento->vehiculo->modelo ?? '—' }}
-    </td>
-</tr>
+            <td>Marca</td>
+            <td>{{ $movimiento->vehiculo?->marca()->first()?->nombre ?? $movimiento->vehiculo?->marca ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td>Modelo</td>
+            <td>{{ $movimiento->vehiculo?->modelo()->first()?->nombre ?? $movimiento->vehiculo?->modelo ?? '—' }}</td>
+        </tr>
+        <tr>
             <td>Color</td>
             <td>{{ $movimiento->vehiculo?->color?->nombre ?? '—' }}</td>
         </tr>
@@ -131,6 +141,7 @@
         </tr>
     </table>
 
+    {{-- BLOQUE 3: Condición del vehículo --}}
     <table class="tabla">
         <tr>
             <td>Kilometraje</td>
@@ -150,6 +161,36 @@
         </tr>
     </table>
 
+    {{-- BLOQUE 4: Fechas reales (solo si hay solicitud vinculada) --}}
+    @if($movimiento->solicitud_transporte_id && $movimiento->solicitud)
+    <div class="seccion-titulo">TRAZABILIDAD DE LA MISIÓN</div>
+    <table class="tabla">
+        <tr>
+            <td>Fecha de salida programada</td>
+            <td>{{ optional($movimiento->solicitud->fecha_salida)->format('d/m/Y H:i') ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td>Fecha de salida real</td>
+            <td>{{ optional($movimiento->solicitud->fecha_salida_real)->format('d/m/Y H:i') ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td>Fecha de retorno programada</td>
+            <td>{{ optional($movimiento->solicitud->fecha_retorno)->format('d/m/Y H:i') ?? '—' }}</td>
+        </tr>
+        <tr>
+            <td>Fecha de retorno real</td>
+            <td>{{ optional($movimiento->solicitud->fecha_retorno_real)->format('d/m/Y H:i') ?? '—' }}</td>
+        </tr>
+        @if($movimiento->solicitud->despachador)
+        <tr>
+            <td>Despachado por</td>
+            <td>{{ $movimiento->solicitud->despachador?->name ?? '—' }}</td>
+        </tr>
+        @endif
+    </table>
+    @endif
+
+    {{-- BLOQUE 5: Observaciones --}}
     <div class="bloque">
         <strong>Estado exterior:</strong><br><br>
         {{ $movimiento->estado_exterior ?? 'Sin observaciones.' }}
@@ -165,6 +206,7 @@
         {{ $movimiento->observaciones ?? 'Sin observaciones.' }}
     </div>
 
+    {{-- FIRMAS --}}
     <div class="firmas">
         <div class="firma-box">
             <div>{{ $movimiento->entregado_por ?? '—' }}</div>

@@ -27,6 +27,8 @@ class RecepcionEntregaVehiculo extends Model
         'recibido_por',
         'observaciones',
         'adjuntos',
+        'solicitud_transporte_id',
+
     ];
 
     protected $casts = [
@@ -54,5 +56,10 @@ class RecepcionEntregaVehiculo extends Model
     public function tieneAdjuntos(): bool
     {
         return !empty($this->adjuntos);
+    }
+
+    public function solicitud(): BelongsTo
+    {
+        return $this->belongsTo(SolicitudTransporte::class, 'solicitud_transporte_id');
     }
 }

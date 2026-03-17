@@ -33,6 +33,9 @@ class SolicitudTransporte extends Model
     'motorista_id',
     'tipo_vehiculo_id',
     'tipo_vehiculo_nombre',
+    'fecha_salida_real',
+    'fecha_retorno_real',
+    'despachado_por',
     
     // --- CAMPOS DE GEOLOCALIZACIÓN PARA EL MAPA ---
     'origen_lat',
@@ -49,6 +52,8 @@ class SolicitudTransporte extends Model
         'fecha_salida' => 'datetime',
         'fecha_retorno' => 'datetime',
         'decidido_en' => 'datetime',
+        'fecha_salida_real' => 'datetime',
+        'fecha_retorno_real' => 'datetime',
     ];
 
     /**
@@ -106,5 +111,9 @@ public function getDestinoAdicionalAttribute($value)
 public function tipoVehiculo()
 {
     return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
+}
+public function despachador(): BelongsTo
+{
+    return $this->belongsTo(User::class, 'despachado_por');
 }
 }
