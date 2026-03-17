@@ -5,10 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Models\SolicitudCombustible;
 use App\Models\HistorialEstado;
-use App\Models\BitacoraEvento;
-use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -19,7 +18,6 @@ class SolicitudCombustibleController extends Controller
         protected SolicitudCombustibleService $service
     ) {}
 
-    // ── LISTADO DE SOLICITUDES ──────────────────────────────────────────────
     public function index(Request $request)
     {
         $user  = $request->user();
@@ -35,46 +33,41 @@ class SolicitudCombustibleController extends Controller
         );
     }
 
-    // ── CREAR SOLICITUD ─────────────────────────────────────────────────────
-   public function store(Request $request)
-{
-    // 1. Mapeo previo: Si envían 'cantidad', lo tratamos como 'cantidad_combustible'
-    if ($request->has('cantidad') && !$request->has('cantidad_combustible')) {
-        $request->merge(['cantidad_combustible' => $request->cantidad]);
+    public function store(Request $request)
+    {
+        if ($request->has('cantidad') && !$request->has('cantidad_combustible')) {
+            $request->merge(['cantidad_combustible' => $request->cantidad]);
+        }
+
+        $data = $request->validate([
+            'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
+            'motorista_id'            => ['nullable', 'exists:motoristas,id'],
+            'solicitud_transporte_id' => ['nullable', 'exists:solicitud_transportes,id'],
+            'destino_actividad'       => ['required', 'string'],
+            'fecha_solicitud'         => ['required', 'date'],
+            'fecha_inicio_periodo'    => ['nullable', 'date'],
+            'fecha_fin_periodo'       => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
+            'cantidad_combustible'    => ['required', 'numeric', 'min:0'],
+            'observaciones'           => ['nullable', 'string', 'max:2000'],
+            // 'prioridad' eliminado — el backend la asigna
+        ]);
+
+        // El backend siempre asigna MEDIA por defecto
+        $data['prioridad'] = PrioridadSolicitudEnum::MEDIA;
+
+        try {
+            $solicitud = $this->service->crear($data, Auth::id());
+            $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+            return response()->json(
+                $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante']),
+                201
+            );
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
-    // 2. Validación
-    $data = $request->validate([
-        'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
-        'motorista_id'            => ['nullable', 'exists:motoristas,id'],
-        'solicitud_transporte_id' => ['nullable', 'exists:solicitud_transportes,id'],
-        'destino_actividad'       => ['required', 'string'],
-        'fecha_solicitud'         => ['required', 'date'],
-        'fecha_inicio_periodo'    => ['nullable', 'date'],
-        'fecha_fin_periodo'       => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
-        'cantidad_combustible'    => ['required', 'numeric', 'min:0'], // Ahora coincide con el merge
-        'prioridad'               => ['required', 'in:baja,media,alta'],
-        'observaciones'           => ['nullable', 'string', 'max:2000'],
-    ]);
-
-    try {
-        // 3. Delegar la creación al Service
-        // Esto generará el código correlativo y asignará el motorista automáticamente si falta
-        $solicitud = $this->service->crear($data, Auth::id());
-
-        // 4. Envío automático al flujo de aprobación (opcional, según tu lógica)
-        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
-
-        return response()->json(
-            $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante']),
-            201
-        );
-    } catch (\Exception $e) {
-        return response()->json(['message' => $e->getMessage()], 422);
-    }
-}
-
-    // ── VER DETALLE ─────────────────────────────────────────────────────────
     public function show(SolicitudCombustible $solicitud)
     {
         $this->authorizeView($solicitud);
@@ -84,7 +77,6 @@ class SolicitudCombustibleController extends Controller
         );
     }
 
-    // ── ACCIÓN: ENVIAR ──────────────────────────────────────────────────────
     public function enviar(SolicitudCombustible $solicitud)
     {
         $this->authorizeOwner($solicitud);
@@ -101,52 +93,50 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
-    // ── ACCIÓN: FINALIZAR (SOLICITANTE) ─────────────────────────────────────
-   public function finalizar(Request $request, SolicitudCombustible $solicitud)
-{
-    $this->authorizeOwner($solicitud);
+    public function finalizar(Request $request, SolicitudCombustible $solicitud)
+    {
+        $this->authorizeOwner($solicitud);
 
-    if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
-        return response()->json(['error' => 'Solo se pueden finalizar solicitudes que ya tengan cupones asignados.'], 422);
+        if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
+            return response()->json(['error' => 'Solo se pueden finalizar solicitudes que ya tengan cupones asignados.'], 422);
+        }
+
+        $request->validate([
+            'forma_pago'         => ['required', 'in:vale,ticket,tarjeta,efectivo,otro'],
+            'numero_vale_ticket' => ['nullable', 'string'],
+            'valor_total'        => ['required', 'numeric', 'min:0'],
+            'comprobantes'       => ['required', 'array', 'min:1'],
+            'comprobantes.*'     => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+        ]);
+
+        $rutas = [];
+        foreach ($request->file('comprobantes') as $archivo) {
+            $rutas[] = $archivo->store('combustible/comprobantes', 'public');
+        }
+
+        $estadoAnterior        = $solicitud->estado;
+        $solicitud->estado     = EstadoSolicitudEnum::COMPLETADA;
+        $solicitud->forma_pago = $request->forma_pago;
+        $solicitud->valor_total = $request->valor_total;
+        $solicitud->numero_vale_ticket = $request->numero_vale_ticket;
+        $solicitud->comprobantes = array_merge($solicitud->comprobantes ?? [], $rutas);
+        $solicitud->save();
+
+        HistorialEstado::create([
+            'entidad_tipo'    => 'solicitud_combustible',
+            'entidad_id'      => $solicitud->id,
+            'estado_anterior' => $estadoAnterior->value,
+            'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
+            'user_id'         => Auth::id(),
+            'comentario'      => 'Carga de combustible finalizada por el usuario.',
+        ]);
+
+        return response()->json([
+            'message' => 'Carga de combustible finalizada con éxito.',
+            'data'    => $solicitud->fresh(),
+        ]);
     }
 
-    $request->validate([
-        'forma_pago'         => ['required', 'in:vale,ticket,tarjeta,efectivo,otro'],
-        'numero_vale_ticket' => ['nullable', 'string'],
-        'valor_total'        => ['required', 'numeric', 'min:0'],
-        'comprobantes'       => ['required', 'array', 'min:1'],
-        'comprobantes.*'     => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-    ]);
-
-    $rutas = [];
-    foreach ($request->file('comprobantes') as $archivo) {
-        $rutas[] = $archivo->store('combustible/comprobantes', 'public');
-    }
-
-    $estadoAnterior = $solicitud->estado;
-    $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
-    $solicitud->forma_pago = $request->forma_pago;
-    $solicitud->valor_total = $request->valor_total;
-    $solicitud->numero_vale_ticket = $request->numero_vale_ticket;
-    $solicitud->comprobantes = array_merge($solicitud->comprobantes ?? [], $rutas);
-    $solicitud->save();
-
-    HistorialEstado::create([
-        'entidad_tipo'    => 'solicitud_combustible',
-        'entidad_id'      => $solicitud->id,
-        'estado_anterior' => $estadoAnterior->value,
-        'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
-        'user_id'         => Auth::id(),
-        'comentario'      => 'Carga de combustible finalizada por el usuario.',
-    ]);
-
-    return response()->json([
-        'message' => 'Carga de combustible finalizada con éxito.',
-        'data'    => $solicitud->fresh()
-    ]);
-}
-
-    // ── ACCIÓN: CANCELAR ────────────────────────────────────────────────────
     public function cancelar(SolicitudCombustible $solicitud)
     {
         $this->authorizeOwner($solicitud);
@@ -163,7 +153,6 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
-    // ── ACCIÓN: OBSERVACIÓN (JEFE) ──────────────────────────────────────────
     public function observacion(Request $request, SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();
@@ -184,7 +173,6 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
-    // ── ACCIÓN: PRE-APROBAR (JEFE) ──────────────────────────────────────────
     public function preAprobar(SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();
@@ -201,7 +189,6 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
-    // ── ACCIÓN: APROBAR (JEFE) ──────────────────────────────────────────────
     public function aprobar(Request $request, SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();
@@ -222,13 +209,12 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
-    // ── ACCIÓN: RECHAZAR (JEFE) ─────────────────────────────────────────────
     public function rechazar(Request $request, SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();
 
         $data = $request->validate([
-            'motivo' => ['required', 'string', 'max:2000'], // Ajustado a 'motivo' según api.php
+            'motivo' => ['required', 'string', 'max:2000'],
         ]);
 
         try {
