@@ -107,7 +107,16 @@ export default function RequestDetailPage() {
       else if (modulo === "combustible") res = await getSolicitudCombustible(parseInt(id));
 
       if (!res) throw new Error("No se encontró la solicitud");
-      setData(res as GenericRequest);
+      
+      // Normalizar campos para asegurar que el mapa y los detalles tengan data
+      const raw = res as any;
+      const normalized: GenericRequest = {
+        ...raw,
+        origen: raw.origen || raw.punto_salida, // fallback por si acaso
+        destino: raw.destino || raw.destino_principal || raw.destino_actividad,
+      };
+      
+      setData(normalized);
     } catch (err) {
       const msg = err instanceof Error ? err.message : "Error al cargar el detalle";
       setError(msg);
@@ -651,8 +660,7 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
   });
 
-
-  //Fallo
+  // 1. Inicializar Mapa (Solo una vez)
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, {
@@ -664,7 +672,18 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
+    
     mapRef.current = map;
+
+    return () => {
+      mapRef.current?.remove();
+      mapRef.current = null;
+    };
+  }, []);
+
+  // 2. Calcular Capas (Cada vez que cambian los datos)
+  useEffect(() => {
+    if (!mapRef.current) return;
 
     async function compute() {
       if (!mapRef.current) return;
@@ -676,10 +695,15 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       routeLayerRef.current?.remove();
       routeLayerRef.current = null;
 
-      const adic = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
-      const allStrings = [origen, destinosRaw, ...adic];
+      const adicStrings = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
+      const allStrings = [origen, destinosRaw, ...adicStrings].filter(s => s && s.trim().length > 0);
 
-      // Geocodificación paralela para mayor velocidad
+      if (allStrings.length === 0) {
+        setLoading(false);
+        return;
+      }
+
+      // Geocodificación paralela
       const results = await Promise.all(
         allStrings.map(async (s, i) => {
           const c = await geocodeAddress(s);
@@ -714,24 +738,15 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       }
 
       if (bounds.length > 0) {
-        mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+        mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], maxZoom: 15 });
       }
 
+      // Pequeño delay para asegurar que el renderizado de Leaflet se asiente
+      setTimeout(() => mapRef.current?.invalidateSize(), 100);
       setLoading(false);
     }
 
     compute();
-
-    // Resize fix for Leaflet in hidden containers or dynamic layouts
-    const resizeTimer = setTimeout(() => {
-      mapRef.current?.invalidateSize();
-    }, 400);
-
-    return () => {
-      clearTimeout(resizeTimer);
-      mapRef.current?.remove();
-      mapRef.current = null;
-    };
   }, [origen, destinosRaw, destinosAdicionales]);
 
   return (
