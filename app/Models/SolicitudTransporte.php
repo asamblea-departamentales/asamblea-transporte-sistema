@@ -6,6 +6,8 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+
 
 class SolicitudTransporte extends Model
 {
