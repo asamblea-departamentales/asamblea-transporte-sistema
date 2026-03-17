@@ -643,6 +643,7 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
   const markersRef = useRef<L.Marker[]>([]);
   const routeLayerRef = useRef<L.Polyline | null>(null);
 
+  const [loading, setLoading] = useState(true);
   const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
 
   const makeIcon = (color: string) => L.icon({
@@ -652,7 +653,12 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, { zoomControl: true }).setView([13.7942, -88.8965], 9);
+    const map = L.map(containerRef.current, { 
+      zoomControl: true,
+      dragging: !L.Browser.mobile,
+      scrollWheelZoom: false,
+    }).setView([13.7942, -88.8965], 9);
+    
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(map);
@@ -660,70 +666,114 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
 
     async function compute() {
       if (!mapRef.current) return;
+      setLoading(true);
+      
+      // Limpiar capas previas
       markersRef.current.forEach(m => m.remove());
+      markersRef.current = [];
       routeLayerRef.current?.remove();
+      routeLayerRef.current = null;
 
       const adic = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
       const allStrings = [origen, destinosRaw, ...adic];
       
-      const coords: { lat: number; lng: number; label: string }[] = [];
+      // Geocodificación paralela para mayor velocidad
+      const results = await Promise.all(
+        allStrings.map(async (s, i) => {
+          const c = await geocodeAddress(s);
+          return c ? { ...c, label: s, isOrigin: i === 0 } : null;
+        })
+      );
+
+      const validCoords = results.filter((c): c is { lat: number; lng: number; label: string; isOrigin: boolean } => c !== null);
       const bounds: [number, number][] = [];
 
-      for (const [i, s] of allStrings.entries()) {
-        const c = await geocodeAddress(s);
-        if (c) {
-          coords.push({ ...c, label: s });
-          const color = i === 0 ? "#0f2548" : "#ef4444";
-          const m = L.marker([c.lat, c.lng], { icon: makeIcon(color) })
-            .addTo(mapRef.current!)
-            .bindPopup(`<b>${i === 0 ? 'Origen' : 'Destino'}:</b><br>${s}`);
-          markersRef.current.push(m);
-          bounds.push([c.lat, c.lng]);
-        }
-      }
+      validCoords.forEach((c, i) => {
+        const color = c.isOrigin ? "#0f2548" : "#ef4444";
+        const m = L.marker([c.lat, c.lng], { icon: makeIcon(color) })
+          .addTo(mapRef.current!)
+          .bindPopup(`<b>${c.isOrigin ? 'Origen' : `Destino ${i}`}:</b><br>${c.label}`);
+        markersRef.current.push(m);
+        bounds.push([c.lat, c.lng]);
+      });
 
-      if (coords.length >= 2) {
-        const osrm = await getOSRMRoute(coords);
+      if (validCoords.length >= 2) {
+        const osrm = await getOSRMRoute(validCoords);
         if (osrm?.geometry?.length) {
           routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.8 }).addTo(mapRef.current);
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin });
         } else {
-          const pts: L.LatLngExpression[] = coords.map(c => [c.lat, c.lng]);
+          const pts: L.LatLngExpression[] = validCoords.map(c => [c.lat, c.lng]);
           routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.6, dashArray: "10,10" }).addTo(mapRef.current);
           let d = 0;
-          for(let i=0; i<coords.length-1; i++) d += haversineKm(coords[i].lat, coords[i].lng, coords[i+1].lat, coords[i+1].lng);
+          for(let i=0; i<validCoords.length-1; i++) d += haversineKm(validCoords[i].lat, validCoords[i].lng, validCoords[i+1].lat, validCoords[i+1].lng);
           setRouteInfo({ distance: d, duration: (d/45)*60 });
         }
       }
 
-      if (bounds.length > 0) mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+      if (bounds.length > 0) {
+        mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [40, 40] });
+      }
+      
+      setLoading(false);
     }
 
     compute();
-    return () => { mapRef.current?.remove(); mapRef.current = null; };
+    
+    // Resize fix for Leaflet in hidden containers or dynamic layouts
+    const resizeTimer = setTimeout(() => {
+      mapRef.current?.invalidateSize();
+    }, 400);
+
+    return () => { 
+      clearTimeout(resizeTimer);
+      mapRef.current?.remove(); 
+      mapRef.current = null; 
+    };
   }, [origen, destinosRaw, destinosAdicionales]);
 
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg">
+    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
       <div className="relative">
-        <div ref={containerRef} className="h-[320px] w-full z-0" />
-        {routeInfo && (
-          <div className="absolute top-4 right-4 z-[400] flex items-center gap-3 rounded-xl bg-white/95 px-4 py-2 shadow-xl backdrop-blur-md ring-1 ring-black/5">
+        <div 
+          ref={containerRef} 
+          className="h-[300px] w-full z-0 sm:h-[450px] transition-all duration-500" 
+          style={{ filter: loading ? 'grayscale(0.5) blur(1px)' : 'none' }}
+        />
+        
+        {loading && (
+          <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
+            <Spinner className="h-10 w-10 text-blue-600" />
+            <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-blue-900 animate-pulse">
+              Calculando ruta...
+            </p>
+          </div>
+        )}
+
+        {routeInfo && !loading && (
+          <div className="absolute bottom-4 right-4 left-4 z-[400] flex items-center justify-between gap-3 rounded-2xl bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-md ring-1 ring-black/5 sm:bottom-6 sm:right-6 sm:left-auto sm:w-auto sm:justify-start">
             <div className="flex flex-col">
               <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Distancia</span>
-              <span className="mt-1 text-sm font-bold text-slate-700">{routeInfo.distance.toFixed(1)} km</span>
+              <span className="mt-1.5 text-sm font-bold text-slate-900">{routeInfo.distance.toFixed(1)} km</span>
             </div>
-            <div className="h-6 w-[1px] bg-slate-200" />
+            <div className="h-8 w-[1px] bg-slate-200" />
             <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo Est.</span>
-              <span className="mt-1 text-sm font-bold text-slate-700">{routeInfo.duration.toFixed(0)} min</span>
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Estimado</span>
+              <span className="mt-1.5 text-sm font-bold text-slate-900">{routeInfo.duration.toFixed(0)} min</span>
+            </div>
+            <div className="hidden sm:block h-8 w-[1px] bg-slate-200" />
+            <div className="hidden sm:flex flex-col">
+              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Puntos</span>
+              <span className="mt-1.5 text-sm font-bold text-slate-900">{markersRef.current.length}</span>
             </div>
           </div>
         )}
       </div>
-      <div className="bg-slate-50/50 p-3 text-center border-t border-slate-100">
-        <p className="text-[10px] font-medium text-slate-400 italic italic text-center">
-          La ruta mostrada es una estimación basada en los puntos georeferenciados.
+      <div className="bg-slate-50/80 p-3.5 text-center border-t border-slate-100/80">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+          <span className="h-1 w-1 rounded-full bg-slate-300" />
+          Ruta Institucional Optimizada
+          <span className="h-1 w-1 rounded-full bg-slate-300" />
         </p>
       </div>
     </div>
