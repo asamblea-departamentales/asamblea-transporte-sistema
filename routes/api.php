@@ -186,20 +186,25 @@ Route::get('/solicitudes/recientes', function () {
 Route::prefix('catalogos')->group(function () {
 
     Route::get('/vehiculos', function () {
-        return response()->json(
-            \App\Models\Vehiculo::with(['marca', 'modelo', 'tipo'])
-                ->where('activo', true)
-                ->get()
-                ->map(fn ($v) => [
-                    'id'     => $v->id,
-                    'placa'  => $v->placa,
-                    'marca'  => $v->marca?->nombre,
-                    'modelo' => $v->modelo?->nombre,
-                    'tipo'   => $v->tipo?->nombre,
-                    'label'  => "{$v->placa} — {$v->marca?->nombre} {$v->modelo?->nombre}",
-                ])
-        );
-    });
+    return response()->json(
+        \App\Models\Vehiculo::with(['marca', 'modelo', 'tipo', 'motorista']) // <-- Agregamos motorista
+            ->where('activo', true)
+            ->get()
+            ->map(fn ($v) => [
+                'id'         => $v->id,
+                'placa'      => $v->placa,
+                'marca'      => $v->marca?->nombre,
+                'modelo'     => $v->modelo?->nombre,
+                'tipo'       => $v->tipo?->nombre,
+                // --- Datos del motorista vinculado ---
+                'motorista_id'     => $v->motorista_id,
+                'motorista_nombre' => $v->motorista?->nombre ?? 'Sin motorista asignado',
+                'motorista_dui'    => $v->motorista?->dui,
+                // -------------------------------------
+                'label'      => "{$v->placa} — {$v->marca?->nombre} {$v->modelo?->nombre} (" . ($v->motorista?->nombre ?? 'S/M') . ")",
+            ])
+    );
+});
 
     Route::get('/motoristas', function () {
         return response()->json(
