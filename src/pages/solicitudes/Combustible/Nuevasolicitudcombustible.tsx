@@ -31,6 +31,7 @@ export default function NuevaSolicitudCombustible() {
   const [errors, setErrors]       = useState<Partial<Record<keyof FormData, string>>>({});
   const [loading, setLoading]     = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [solicitudId, setSolicitudId] = useState<string | undefined>(undefined);
   const [apiError, setApiError]   = useState<string | null>(null);
 
   // ── Estado de catálogos ───────────────────────────────────────────────────
@@ -122,7 +123,8 @@ export default function NuevaSolicitudCombustible() {
       if (data.fecha_fin_periodo)       payload.fecha_fin_periodo = data.fecha_fin_periodo;
       if (data.observaciones.trim())    payload.observaciones = data.observaciones.trim();
 
-      await crearSolicitudCombustible(payload);
+      const resp = await crearSolicitudCombustible(payload);
+      setSolicitudId(resp.codigo);
       setSubmitted(true);
     } catch (err: unknown) {
       let message = "No se pudo conectar con el servidor.";
@@ -151,7 +153,7 @@ export default function NuevaSolicitudCombustible() {
   };
 
   // ── Renders condicionales ─────────────────────────────────────────────────
-  if (submitted) return <SuccessScreen onReset={handleReset} />;
+  if (submitted) return <SuccessScreen solicitudId={solicitudId} onReset={handleReset} />;
 
   if (!catalogos.loading && catalogos.error) {
     return <ErrorCatalogos message={catalogos.error} onRetry={fetchCatalogos} />;
