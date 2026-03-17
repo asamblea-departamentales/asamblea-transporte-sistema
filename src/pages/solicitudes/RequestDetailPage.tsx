@@ -150,14 +150,13 @@ export default function RequestDetailPage() {
   const canFinalizarCombustible =
     isCombustible && data.estado === "asignada" && isOwner;
 
-  // ✅ Transporte: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
+  // ✅ Transporte: finalizar cuando está "asignada"
   const canFinalizarTransporte =
     isTransporte &&
-    data.estado === "en_ejecucion" &&
+    data.estado === "asignada" &&
     isOwner;
 
-  // ✅ Mantenimiento: finalizar cuando está "en_ejecucion" o "programada"
-  //    (no "aprobada" porque el mantenimiento aún no ha iniciado)
+  // ✅ Mantenimiento: finalizar cuando está "asignada"
   const canFinalizarMantenimiento =
     isMantenimiento &&
     ["programada", "en_ejecucion"].includes(data.estado) &&
@@ -173,8 +172,8 @@ export default function RequestDetailPage() {
       const detail = err instanceof Error ? err.message : "Error al finalizar el viaje.";
       alert(err && typeof err === "object" && "response" in err
         ? ((err as { response?: { data?: { error?: string; message?: string } } }).response?.data?.error ||
-           (err as { response?: { data?: { error?: string; message?: string } } }).response?.data?.message ||
-           detail)
+          (err as { response?: { data?: { error?: string; message?: string } } }).response?.data?.message ||
+          detail)
         : detail);
     } finally {
       setFinalizandoTransporte(false);
@@ -425,11 +424,11 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
 // ── Sección de datos de finalización ────────────────────────────────────────
 
 const FORMA_PAGO_MAP: Record<string, { label: string; Icon: typeof Receipt }> = {
-  vale:     { label: "Vale",     Icon: Receipt },
-  ticket:   { label: "Ticket",   Icon: Ticket },
-  tarjeta:  { label: "Tarjeta",  Icon: CreditCard },
+  vale: { label: "Vale", Icon: Receipt },
+  ticket: { label: "Ticket", Icon: Ticket },
+  tarjeta: { label: "Tarjeta", Icon: CreditCard },
   efectivo: { label: "Efectivo", Icon: DollarSign },
-  otro:     { label: "Otro",     Icon: FileText },
+  otro: { label: "Otro", Icon: FileText },
 };
 
 function storageUrl(path: string): string {
@@ -461,8 +460,8 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
 
   const accentColor =
     isCombustible ? "bg-amber-500" :
-    isMantenimiento ? "bg-emerald-500" :
-    "bg-blue-500";
+      isMantenimiento ? "bg-emerald-500" :
+        "bg-blue-500";
 
   return (
     <section className="animate-fade-in-up">
