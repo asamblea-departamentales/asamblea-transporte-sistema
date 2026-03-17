@@ -1,68 +1,46 @@
-import { STEPS } from "../types";
+
 
 // ══════════════════════════════════════════════════════════════════════════════
 // COMPONENTES UI COMPARTIDOS
 // ══════════════════════════════════════════════════════════════════════════════
 
-export function StepperHeader({ current }: { current: number }) {
+import React from "react";
+import { cn } from "../../../../lib/utils";
+
+// ══════════════════════════════════════════════════════════════════════════════
+// COMPONENTES UI COMPARTIDOS (Alineados con Transporte)
+// ══════════════════════════════════════════════════════════════════════════════
+
+export function SectionTitle({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
-    <div className="relative mb-8 flex items-center justify-between">
-      <div className="absolute left-0 right-0 top-5 h-[2px] bg-slate-100" />
-      <div
-        className="absolute left-0 top-5 h-[2px] bg-slate-900 transition-all duration-700"
-        style={{ width: `${((current - 1) / (STEPS.length - 1)) * 100}%` }}
-      />
-      {STEPS.map((step) => {
-        const done   = step.id < current;
-        const active = step.id === current;
-        return (
-          <div key={step.id} className="relative z-10 flex flex-col items-center gap-2">
-            <div className={[
-              "flex h-10 w-10 items-center justify-center rounded-full border-2 text-sm font-bold transition-all duration-300",
-              done
-                ? "border-slate-900 bg-slate-900 text-white"
-                : active
-                ? "border-slate-900 bg-white text-slate-900 ring-4 ring-slate-100"
-                : "border-slate-200 bg-white text-slate-400 font-medium",
-            ].join(" ")}>
-              {done ? (
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                </svg>
-              ) : step.id}
-            </div>
-            <div className="text-center">
-              <p className={["text-xs tracking-tight",
-                active ? "text-slate-900 font-bold" : done ? "text-slate-700 font-bold" : "text-slate-500 font-semibold",
-              ].join(" ")}>
-                {step.title}
-              </p>
-              <p className="hidden text-[11px] font-medium text-slate-400 sm:block">{step.subtitle}</p>
-            </div>
-          </div>
-        );
-      })}
+    <div className="flex items-center gap-2.5 mb-5">
+      <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0"
+        style={{ background: "rgba(15,37,72,0.07)", color: "#0f2548" }}>
+        {icon}
+      </div>
+      <span className="text-[14px] font-bold text-slate-800">{label}</span>
     </div>
   );
 }
 
-export function FieldLabel({ children, required }: { children: React.ReactNode; required?: boolean }) {
+export function Label({ children, required }: { children: React.ReactNode; required?: boolean }) {
   return (
-    <label className="mb-2 block text-sm font-semibold tracking-tight text-slate-800">
+    <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-600 uppercase tracking-wide">
       {children}
-      {required && <span className="ml-1 text-red-500">*</span>}
+      {required && <span className="text-red-500 font-black normal-case tracking-normal">*</span>}
     </label>
   );
 }
 
-export function inputCls(hasError = false) {
-  return [
-    "w-full rounded-lg border px-4 py-3 text-sm font-medium text-slate-800",
-    "bg-white placeholder-slate-400 transition-all duration-200 outline-none",
-    "focus:ring-2 focus:ring-slate-900/5 focus:border-slate-900",
-    hasError ? "border-red-300 ring-2 ring-red-100" : "border-slate-200 hover:border-slate-300 shadow-sm",
-  ].join(" ");
-}
+export const inputCls = (err?: string) => cn(
+  "w-full rounded-xl border bg-white px-4 py-2.5 text-[13px] text-slate-900",
+  "outline-none transition placeholder:text-slate-300",
+  "focus:ring-[3px] focus:ring-offset-0",
+  err
+    ? "border-red-300 focus:border-red-400 focus:ring-red-100"
+    : "border-slate-200 focus:border-blue-500 focus:ring-blue-100/60",
+);
+
 
 export function SelectInput({
   value, onChange, options, placeholder, error, disabled,
@@ -79,7 +57,7 @@ export function SelectInput({
       value={value}
       onChange={(e) => onChange(e.target.value)}
       disabled={disabled}
-      className={inputCls(error) + " cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed"}
+      className={cn(inputCls(error ? "error" : undefined), "cursor-pointer appearance-none disabled:opacity-50 disabled:cursor-not-allowed")}
       style={{
         backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' fill='none' viewBox='0 0 24 24'%3E%3Cpath stroke='%2394a3b8' strokeWidth='2.5' strokeLinecap='round' strokeLinejoin='round' d='M6 9l6 6 6-6'/%3E%3C/svg%3E")`,
         backgroundRepeat: "no-repeat",
@@ -102,6 +80,18 @@ export function ReviewRow({ label, value }: { label: string; value: string }) {
       <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</span>
       <span className="max-w-[60%] text-right text-sm font-medium text-slate-900">{value || "—"}</span>
     </div>
+  );
+}
+
+export function FieldError({ msg }: { msg?: string }) {
+  if (!msg) return null;
+  return (
+    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-red-500">
+      <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
+        <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 3.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 7a.875.875 0 110-1.75.875.875 0 010 1.75z" />
+      </svg>
+      {msg}
+    </p>
   );
 }
 

@@ -9,8 +9,9 @@ import type { FormData, CatalogosState } from "./types";
 import { INITIAL, STEPS, validate } from "./types";
 
 // Componentes de interfaz compartidos y pantallas
-import { StepperHeader, Spinner } from "./components/FormUI";
+import { Spinner } from "./components/FormUI";
 import { SuccessScreen, ErrorCatalogos } from "./components/StatusScreens";
+import TransportWizard from "../../../components/ui/TransportWizard";
 
 // Pasos del formulario
 import { Step1 } from "./components/Step1Vehiculo";
@@ -158,37 +159,30 @@ export default function NuevaSolicitudCombustible() {
 
   // ── Render principal ──────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-slate-50/50 pb-12 pt-4 sm:pt-10">
-      {/* Contenedor centralizado con un ancho máximo óptimo para formularios */}
-      <div className="mx-auto max-w-3xl px-4 sm:px-6">
-        
-        {/* Contenedor tipo tarjeta */}
-        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+    <div className="mx-auto max-w-2xl space-y-6 pb-8 pt-4 sm:pt-10">
+      
+      {/* ── Wizard stepper ─────────────────────────────────────────────── */}
+      <TransportWizard steps={STEPS.map((s, i) => ({ id: i + 1, label: s.title }))} currentStep={step} />
+
+      {/* ── Page heading ───────────────────────────────────────────────── */}
+      <div>
+        <div className="flex items-center gap-2 mb-1.5">
+          <span className="inline-block h-[2px] w-5 rounded-full bg-blue-700" />
+          <span className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">
+            Solicitud de Combustible
+          </span>
+        </div>
+        <h1 className="text-[28px] font-bold tracking-tight text-slate-900 leading-none">
+          Nueva Solicitud
+        </h1>
+        <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+          Complete los campos requeridos para continuar con el registro de carga.
+        </p>
+      </div>
+
+      {/* ── Main card ──────────────────────────────────────────────────── */}
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           
-          {/* Header */}
-          <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-slate-100 bg-slate-50 px-3 py-1 text-[11px] font-bold text-slate-600">
-                <span className="h-2 w-2 rounded-full bg-slate-900" />
-                Combustible Vehicular
-              </div>
-              <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 sm:text-3xl">
-                Nueva Solicitud
-              </h1>
-              <p className="mt-1.5 text-sm font-medium text-slate-500">
-                Complete los datos para registrar la carga de combustible.
-              </p>
-            </div>
-            <button
-              onClick={() => navigate(-1)}
-              className="group inline-flex items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition-all hover:bg-slate-50 active:scale-95"
-            >
-              <svg className="h-4 w-4 transition-transform group-hover:-translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
-              Volver
-            </button>
-          </div>
 
           {/* Banner de error de API */}
           {apiError && (
@@ -208,54 +202,56 @@ export default function NuevaSolicitudCombustible() {
             </div>
           )}
 
-          <StepperHeader current={step} />
-
           {/* Contenedor del step activo */}
-          <div className="mt-8">
-            <div className="mb-6 flex items-center gap-3">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-slate-900 text-sm font-bold text-white shadow-sm">
-                {step}
-              </div>
-              <div>
-                <p className="text-base font-bold tracking-tight text-slate-900">{STEPS[step - 1].title}</p>
-                <p className="text-sm font-medium text-slate-500">{STEPS[step - 1].subtitle}</p>
-              </div>
-            </div>
-
+          <div className="p-5 sm:p-6">
             {step === 1 && (
               <Step1 data={data} update={update} updateMultiple={updateMultiple} errors={errors} catalogos={catalogos} />
             )}
             {step === 2 && <Step2 data={data} update={update} errors={errors} />}
             {step === 3 && <Step3 data={data} catalogos={catalogos} />}
-
+          </div>
             {/* Navegación inferior */}
-            <div className="mt-8 flex items-center justify-between gap-4 border-t border-slate-100 pt-6">
+            <div className="flex flex-col-reverse gap-2.5 sm:flex-row sm:items-center sm:justify-between px-5 py-4 bg-slate-50/50 border-t border-slate-100">
               {step > 1 ? (
                 <button
                   onClick={handleBack}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-lg border-transparent text-sm font-semibold text-slate-500 hover:text-slate-800 transition-all active:scale-95 disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:bg-white hover:text-slate-700 border border-transparent hover:border-slate-200 hover:shadow-sm focus:outline-none disabled:opacity-50"
                 >
-                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
                   </svg>
                   Anterior
                 </button>
-              ) : <span />}
+              ) : (
+                <button
+                  onClick={() => navigate(-1)}
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:bg-white hover:text-slate-700 border border-transparent hover:border-slate-200 hover:shadow-sm focus:outline-none"
+                >
+                  <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                  </svg>
+                  Cancelar
+                </button>
+              )}
 
               {step < 3 ? (
                 <button
                   onClick={handleNext}
                   disabled={catalogos.loading}
-                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-6 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-2.5 text-[13px] font-bold text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-50"
+                  style={{
+                    background: "linear-gradient(135deg, #0f2548 0%, #2354b4 100%)",
+                    boxShadow: "0 4px 16px rgba(15,37,72,0.22), 0 1px 4px rgba(15,37,72,0.1)",
+                  }}
                 >
                   {catalogos.loading && step === 1 ? (
                     <><Spinner /> Cargando...</>
                   ) : (
                     <>
-                      Siguiente
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                      Continuar
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/>
                       </svg>
                     </>
                   )}
@@ -264,13 +260,17 @@ export default function NuevaSolicitudCombustible() {
                 <button
                   onClick={handleSubmit}
                   disabled={loading}
-                  className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-7 py-2.5 text-sm font-semibold text-white shadow-md transition-all hover:bg-slate-800 active:scale-95 disabled:cursor-not-allowed disabled:opacity-60"
+                  className="inline-flex items-center justify-center gap-2 rounded-xl px-7 py-2.5 text-[13px] font-bold text-white transition active:scale-[0.98] focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 disabled:opacity-60"
+                  style={{
+                    background: "linear-gradient(135deg, #0f2548 0%, #2354b4 100%)",
+                    boxShadow: "0 4px 16px rgba(15,37,72,0.22), 0 1px 4px rgba(15,37,72,0.1)",
+                  }}
                 >
                   {loading ? (
                     <><Spinner /> Enviando...</>
                   ) : (
                     <>
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
                       </svg>
                       Confirmar y enviar
@@ -279,13 +279,10 @@ export default function NuevaSolicitudCombustible() {
                 </button>
               )}
             </div>
-          </div>
-
-          <p className="mt-4 text-center text-[11px] font-bold text-slate-400">
-            Paso {step} de {STEPS.length}
-          </p>
-        </div>
       </div>
+      <p className="mt-4 text-center text-[11px] font-bold text-slate-400">
+        Paso {step} de {STEPS.length}
+      </p>
     </div>
   );
 }

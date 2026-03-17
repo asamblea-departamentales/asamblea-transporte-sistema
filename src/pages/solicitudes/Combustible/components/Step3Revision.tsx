@@ -1,5 +1,5 @@
 import type { FormData, CatalogosState } from "../types";
-import { ReviewRow } from "./FormUI";
+import { ReviewRow, SectionTitle } from "./FormUI";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // STEP 3 — Revisión + confirmación
@@ -21,19 +21,12 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
   );
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
-        <div className="mb-4 flex items-center gap-3">
-          <div className="flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-white">
-            <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-          </div>
-          <div>
-            <p className="text-sm font-black text-slate-800">Resumen de solicitud</p>
-            <p className="text-xs font-semibold text-slate-400">Verifique los datos antes de enviar</p>
-          </div>
-        </div>
+        <SectionTitle 
+          label="Resumen de solicitud" 
+          icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>}
+        />
 
         <div>
           {solTransporte && <ReviewRow label="Solicitud transporte" value={solTransporte.codigo} />}

@@ -1,7 +1,7 @@
 import { useState } from "react";
 import type { FormData, CatalogosState } from "../types";
 import { estadoTransporteColor } from "../types";
-import { FieldLabel, SelectInput, Spinner } from "./FormUI";
+import { Label, SelectInput, Spinner, SectionTitle, FieldError } from "./FormUI";
 
 // ══════════════════════════════════════════════════════════════════════════════
 // STEP 1 — Vehículo + asociación a transporte
@@ -99,7 +99,7 @@ export function Step1({
         {/* Selector de solicitud de transporte */}
         {asociarTransporte && (
           <div className="mt-4 border-t border-slate-100 pt-4">
-            <FieldLabel>Solicitud de transporte</FieldLabel>
+            <Label>Solicitud de transporte</Label>
 
             {catalogos.loadingSolicitudes ? (
               <div className="flex items-center gap-2 py-3">
@@ -161,7 +161,11 @@ export function Step1({
 
       {/* ── Selector de vehículo ──────────────────────────────────────── */}
       <div>
-        <FieldLabel required>Vehículo</FieldLabel>
+        <SectionTitle 
+          label="Vehículo" 
+          icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>}
+        />
+        <Label required>Seleccionar vehículo</Label>
         <SelectInput
           value={data.vehiculo_id}
           onChange={(v) => {
@@ -187,9 +191,7 @@ export function Step1({
           error={!!errors.vehiculo_id}
           disabled={catalogos.loading}
         />
-        {errors.vehiculo_id && (
-          <p className="mt-1 text-xs font-semibold text-red-500">{errors.vehiculo_id}</p>
-        )}
+        <FieldError msg={errors.vehiculo_id} />
       </div>
 
       {/* Card info vehículo seleccionado */}
@@ -236,9 +238,9 @@ export function Step1({
         return (
           <div>
             <div className="mb-2 flex items-center justify-between gap-2">
-              <FieldLabel>
-                Motorista <span className="font-normal text-slate-400">(opcional)</span>
-              </FieldLabel>
+            <Label>
+                Motorista <span className="font-normal text-slate-400 font-sans normal-case tracking-normal">(opcional)</span>
+            </Label>
               {motoristaBloqueado && (
                 <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-2.5 py-0.5 text-[10px] font-bold text-slate-500 ring-1 ring-slate-200">
                   <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
