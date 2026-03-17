@@ -90,7 +90,7 @@ export default function LocationInput({
         });
         setOpen(true);
       } catch (e: unknown) {
-        if (e instanceof Error && e.name !== "AbortError") console.error(e);
+        if (e instanceof Error && e.name === "AbortError") return;
       } finally {
         setLoading(false);
       }

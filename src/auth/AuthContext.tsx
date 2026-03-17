@@ -30,9 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         const userData = await meRequest();
         setUser(userData);
-        console.log("✅ Token válido:", userData);
-      } catch (err) {
-        console.log("ℹ️ Token inválido o vencido, limpiando...");
+      } catch {
         localStorage.removeItem("auth_token");
         setUser(null);
       } finally {
@@ -48,7 +46,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await logoutRequest();
     } finally {
       setUser(null);
-      console.log("✅ Logout");
     }
   }
 

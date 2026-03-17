@@ -34,9 +34,8 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      console.error("🔴 Sesión expirada o no autorizada");
       localStorage.removeItem("auth_token");
-      // Opcional: window.location.href = "/login";
+      window.location.href = "/login";
     }
     return Promise.reject(error);
   }

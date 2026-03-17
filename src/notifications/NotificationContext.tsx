@@ -173,8 +173,8 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       snapRef.current = next;
       localStorage.setItem(SNAP_KEY, JSON.stringify(next));
       push(incoming);
-    } catch (e) {
-      console.warn("[Notifications] poll error:", e);
+    } catch {
+      // El fallo del polling no interrumpe la experiencia del usuario
     }
   }, [push]);
 

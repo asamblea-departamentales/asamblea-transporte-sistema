@@ -105,7 +105,6 @@ export default function RequestDetailPage() {
       if (!res) throw new Error("No se encontró la solicitud");
       setData(res as GenericRequest);
     } catch (err) {
-      console.error(err);
       const msg = err instanceof Error ? err.message : "Error al cargar el detalle";
       setError(msg);
     } finally {
