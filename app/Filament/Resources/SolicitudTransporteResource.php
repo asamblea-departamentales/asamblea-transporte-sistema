@@ -124,6 +124,27 @@ class SolicitudTransporteResource extends Resource
                     ->collapsed(false)
                     ->compact(),
 
+                Forms\Components\Section::make('Finalización del servicio')
+    ->description('Información del cierre del servicio de transporte')
+    ->icon('heroicon-o-check-badge')
+    ->schema([
+
+        Forms\Components\Placeholder::make('confirmado_por')
+            ->label('Finalizado por')
+            ->content(fn ($record) => $record->confirmador?->name ?? '—'),
+
+        Forms\Components\Placeholder::make('confirmado_en')
+            ->label('Fecha de finalización')
+            ->content(fn ($record) =>
+                optional($record->confirmado_en)?->format('d/m/Y H:i') ?? '—'
+            ),
+
+    ])
+    ->columns(2)
+    ->visible(fn ($record) =>
+        $record->estado === EstadoSolicitudEnum::COMPLETADA
+    ),    
+
                 Forms\Components\Section::make('Decisión / Auditoría')
                     ->schema([
                         Forms\Components\Placeholder::make('comentario_jefe_ui')

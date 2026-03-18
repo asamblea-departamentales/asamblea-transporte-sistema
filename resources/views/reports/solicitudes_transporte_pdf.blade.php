@@ -126,6 +126,7 @@
                 <th>Origen / Destino</th>
                 <th width="8%">Prioridad</th>
                 <th width="10%">Estado</th>
+                <th width="12%">Confirmado Por</th>
             </tr>
         </thead>
         <tbody>
@@ -154,6 +155,12 @@
                         {{ ucfirst(str_replace('_', ' ', $est)) }}
                     </span>
                 </td>
+                <td style="font-size: 8px;">
+            {{ $r->confirmador->name ?? 'N/A' }}<br>
+            <span style="color: #666;">
+                {{ $r->confirmado_en ? $r->confirmado_en->format('d/m/Y H:i') : '' }}
+            </span>
+        </td>
             </tr>
             @endforeach
         </tbody>

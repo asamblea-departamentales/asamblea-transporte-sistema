@@ -38,6 +38,8 @@ class SolicitudTransporte extends Model
     'fecha_salida_real',
     'fecha_retorno_real',
     'despachado_por',
+    'confirmado_por',
+    'confirmado_en',
     
     // --- CAMPOS DE GEOLOCALIZACIÓN PARA EL MAPA ---
     'origen_lat',
@@ -56,6 +58,7 @@ class SolicitudTransporte extends Model
         'decidido_en' => 'datetime',
         'fecha_salida_real' => 'datetime',
         'fecha_retorno_real' => 'datetime',
+        'confirmado_en' => 'datetime', //Nuevo
     ];
 
     /**
@@ -104,18 +107,24 @@ public function getDestinoAdicionalAttribute($value)
 
     //Para los estados
     public function historiales()
-{
-    return $this->hasMany(HistorialEstado::class, 'entidad_id')
-        ->where('entidad_tipo', 'solicitud_transporte')
-        ->latest();
-}
+    {
+        return $this->hasMany(HistorialEstado::class, 'entidad_id')
+            ->where('entidad_tipo', 'solicitud_transporte')
+            ->latest();
+    }
 //Para tipo de vehículo
-public function tipoVehiculo()
-{
-    return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
-}
-public function despachador(): BelongsTo
-{
-    return $this->belongsTo(User::class, 'despachado_por');
-}
+    public function tipoVehiculo()
+    {
+        return $this->belongsTo(TipoVehiculo::class, 'tipo_vehiculo_id');
+    }
+    public function despachador(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'despachado_por');
+    }
+
+    public function confirmador()
+    {
+        return $this->belongsTo(User::class, 'confirmado_por');
+    }
+
 }

@@ -132,35 +132,33 @@ class SolicitudTransporteController extends Controller
     /**
      * Finalizar (Acción desde el Frontend para el Solicitante)
      */
-    public function finalizar(SolicitudTransporte $solicitud)
-    {
-        $this->authorizeOwner($solicitud);
+    /**
+ * Finalizar (Acción desde el Frontend para el Solicitante)
+ */
+public function finalizar(SolicitudTransporte $solicitud)
+{
+    // Usamos el helper de autorización para asegurar que sea el dueño
+    $this->authorizeOwner($solicitud);
 
-        if ($solicitud->estado !== EstadoSolicitudEnum::PROGRAMADA && $solicitud->estado !== EstadoSolicitudEnum::APROBADA && $solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
-            return response()->json([
-                'error' => 'Solo se pueden finalizar solicitudes que estén programadas, asignadas y/o aprobada.'
-            ], 422);
-        }
-
-        $estadoAnterior = $solicitud->estado;
-        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
-        $solicitud->save();
-
-        // Registrar en Historial para Filament
-        HistorialEstado::create([
-            'entidad_tipo'    => 'solicitud_transporte',
-            'entidad_id'      => $solicitud->id,
-            'estado_anterior' => $estadoAnterior->value,
-            'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
-            'user_id'         => Auth::id(),
-            'comentario'      => 'Finalizada por el usuario desde el frontend.',
-        ]);
+    try {
+        //Delegamos TODA la carga al service
+        $solicitud = $this->service->finalizar($solicitud, Auth::id());
 
         return response()->json([
             'message' => 'Viaje finalizado con éxito.',
-            'data' => $solicitud->fresh()->load(['unidad', 'solicitante'])
+            'data' => $solicitud->fresh()->load(['unidad', 'solicitante', 'confirmador'])
         ]);
+
+    } catch (\DomainException $e) {
+        return response()->json([
+            'message' => $e->getMessage()
+        ], Response::HTTP_UNPROCESSABLE_ENTITY);
+    } catch (\Exception $e) {
+        // Log por si algo falla a nivel de base de datos
+        \Illuminate\Support\Facades\Log::error("Error al finalizar: " . $e->getMessage());
+        return response()->json(['message' => 'Error interno del servidor'], 500);
     }
+}
 
     /**
      * Observación del jefe

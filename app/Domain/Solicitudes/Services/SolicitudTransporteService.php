@@ -145,4 +145,44 @@ class SolicitudTransporteService
             'datos_extras' => $extra,
         ]);
     }
+
+    //Pasamos el evento o accion de Finalizar/Completar del Controller al Service
+    public function finalizar(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
+{
+    if (!in_array($solicitud->estado, [
+        EstadoSolicitudEnum::PROGRAMADA,
+        EstadoSolicitudEnum::APROBADA,
+        EstadoSolicitudEnum::ASIGNADA
+    ], true)) {
+        throw new \DomainException('Solo se pueden finalizar solicitudes en estado PROGRAMADA, APROBADA o ASIGNADA.');
+    }
+
+    return DB::transaction(function () use ($solicitud, $userId) {
+
+        $anterior = $solicitud->estado;
+
+        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
+        $solicitud->confirmado_por = $userId;
+        $solicitud->confirmado_en = now();
+        $solicitud->save();
+
+        // HISTORIAL
+        $this->registrarCambioEstado(
+            $solicitud,
+            $anterior,
+            $solicitud->estado,
+            $userId,
+            'Finalizada por el solicitante.'
+        );
+
+        // BITÁCORA
+        $this->registrarEvento(
+            $solicitud,
+            AccionBitacoraEnum::COMPLETAR->value,
+            $userId
+        );
+
+        return $solicitud;
+    });
+}
 }
