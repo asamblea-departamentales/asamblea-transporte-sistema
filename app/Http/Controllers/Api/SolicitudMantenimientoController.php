@@ -97,11 +97,6 @@ class SolicitudMantenimientoController extends Controller
 {
     $this->authorizeOwner($solicitud);
 
-    // Validación de estados según tu lógica: Solo si ya fue procesada por jefatura
-    if (!in_array($solicitud->estado, [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION])) {
-        return response()->json(['error' => 'Solo se pueden finalizar solicitudes aprobadas o en ejecución.'], 422);
-    }
-
     $data = $request->validate([
         'fecha_realizada' => ['required', 'date'],
         'costo_real'      => ['required', 'numeric', 'min:0'],
@@ -109,33 +104,28 @@ class SolicitudMantenimientoController extends Controller
         'adjuntos.*'      => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
     ]);
 
+    // Subida de archivos
     $rutas = [];
     foreach ($request->file('adjuntos') as $archivo) {
         $rutas[] = $archivo->store('mantenimiento/comprobantes', 'public');
     }
 
-    $estadoAnterior = $solicitud->estado;
-    $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
-    $solicitud->fecha_realizada = $data['fecha_realizada'];
-    $solicitud->costo_real = $data['costo_real'];
-    $solicitud->adjuntos = array_merge($solicitud->adjuntos ?? [], $rutas);
-    $solicitud->save();
+    try {
+        $solicitud = $this->service->completar($solicitud, Auth::id(), [
+            'fecha_realizada' => $data['fecha_realizada'],
+            'costo_real' => $data['costo_real'],
+            'adjuntos' => $rutas,
+        ]);
 
-    HistorialEstado::create([
-        'entidad_tipo'    => 'solicitud_mantenimiento',
-        'entidad_id'      => $solicitud->id,
-        'estado_anterior' => $estadoAnterior->value,
-        'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
-        'user_id'         => Auth::id(),
-        'comentario'      => 'Mantenimiento finalizado por el usuario desde el frontend móvil.',
-    ]);
+        return response()->json([
+            'message' => 'Mantenimiento finalizado con éxito.',
+            'data' => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento']),
+        ]);
 
-    return response()->json([
-        'message' => 'Mantenimiento finalizado con éxito.',
-        'data'    => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento'])
-    ]);
+    } catch (\DomainException $e) {
+        return response()->json(['error' => $e->getMessage()], 422);
+    }
 }
-
     // ── POST /api/mantenimiento/{solicitud}/cancelar ─────────
     public function cancelar(SolicitudMantenimiento $solicitud)
     {

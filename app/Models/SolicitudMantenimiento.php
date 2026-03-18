@@ -31,6 +31,8 @@ class SolicitudMantenimiento extends Model
         'motivo_rechazo',
         'observaciones',
         'adjuntos',
+        'finalizado_por',
+        'fecha_finalizacion',
     ];
 
     protected $casts = [
@@ -42,6 +44,7 @@ class SolicitudMantenimiento extends Model
         'adjuntos'         => 'array',
         'estado'           => EstadoSolicitudEnum::class,
         'prioridad'        => PrioridadSolicitudEnum::class,
+        'fecha_finalizacion',
     ];
 
     // ── Booted ──────────────────────────────────────────────
@@ -80,6 +83,11 @@ class SolicitudMantenimiento extends Model
     public function aprobador()
     {
         return $this->belongsTo(User::class, 'aprobador_id');
+    }
+
+    public function finalizador()
+    {
+        return $this->belongsTo(User::class, 'finalizado_por');
     }
 
     // ── Helpers ─────────────────────────────────────────────

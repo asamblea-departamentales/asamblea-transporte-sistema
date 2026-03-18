@@ -153,6 +153,20 @@ class SolicitudMantenimientoResource extends Resource
             ->collapsed()
             ->compact(),
 
+        Forms\Components\Section::make('Finalización')
+    ->schema([
+        Forms\Components\Placeholder::make('finalizado_por')
+            ->label('Finalizado por')
+            ->content(fn ($record) => $record->finalizador?->name ?? '-'),
+
+        Forms\Components\Placeholder::make('fecha_finalizacion')
+            ->label('Fecha de finalización')
+            ->content(fn ($record) =>
+                optional($record->fecha_finalizacion)?->format('d/m/Y H:i') ?? '-'
+            ),
+    ])
+    ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA),    
+
         Forms\Components\Section::make('Decisión / Auditoría')
             ->schema([
                 Forms\Components\Placeholder::make('aprobador_ui')

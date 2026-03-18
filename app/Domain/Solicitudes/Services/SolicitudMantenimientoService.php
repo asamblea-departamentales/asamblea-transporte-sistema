@@ -161,10 +161,15 @@ class SolicitudMantenimientoService
    // }
 
     // Completar: APROBADA -> COMPLETADA (desde frontend, con adjuntos / atestado)
+    //Mismo cambio que en transporte, pasamos la accion de finalizar al service
+
 public function completar(SolicitudMantenimiento $solicitud, int $userId, array $data): SolicitudMantenimiento
 {
-    if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-        throw new \DomainException('Solo se puede completar una solicitud Aprobada.');
+    if (!in_array($solicitud->estado, [
+        EstadoSolicitudEnum::APROBADA,
+        EstadoSolicitudEnum::EN_EJECUCION,
+    ])) {
+        throw new \DomainException('Solo se puede completar una solicitud aprobada o en ejecución.');
     }
 
     $adjuntosExistentes = $solicitud->adjuntos ?? [];
@@ -173,7 +178,7 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
     $todosAdjuntos = array_values(array_filter(array_merge($adjuntosExistentes, $nuevosAdjuntos)));
 
     if (empty($todosAdjuntos)) {
-        throw new \DomainException('Debes subir al menos un adjunto o atestado antes de completar.');
+        throw new \DomainException('Debes subir al menos un adjunto.');
     }
 
     return DB::transaction(function () use ($solicitud, $userId, $data, $todosAdjuntos) {
@@ -183,6 +188,9 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
         $solicitud->fecha_realizada = $data['fecha_realizada'];
         $solicitud->costo_real = $data['costo_real'];
         $solicitud->adjuntos = $todosAdjuntos;
+        $solicitud->finalizado_por = $userId;
+        $solicitud->fecha_finalizacion = now();
+
         $solicitud->save();
 
         $this->registrarCambioEstado(
@@ -190,13 +198,12 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
             $anterior,
             $solicitud->estado,
             $userId,
-            'Completado desde frontend. Costo real: $' . number_format((float) $data['costo_real'], 2)
+            'Mantenimiento finalizado.'
         );
 
         $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
             'costo_real' => $data['costo_real'],
             'fecha_realizada' => $data['fecha_realizada'],
-            'origen' => 'frontend',
         ]);
 
         return $solicitud;
@@ -222,6 +229,8 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
             return $solicitud;
         });
     }
+
+
 
     // =====================================================
     // Helpers (mismo patrón que transporte)
