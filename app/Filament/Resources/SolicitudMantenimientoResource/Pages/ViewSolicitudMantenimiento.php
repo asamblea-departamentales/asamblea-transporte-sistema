@@ -175,48 +175,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                         EstadoSolicitudEnum::EN_REVISION,
                         EstadoSolicitudEnum::PRE_APROBADA,
                     ], true)
-                ),
-
-            // ── EN EJECUCIÓN ─────────────────────────────────────────
-            Actions\Action::make('en_ejecucion')
-                ->button()
-                ->size('lg')
-                ->label('Iniciar Ejecución')
-                ->color('warning')
-                ->icon('heroicon-o-play-circle')
-                ->requiresConfirmation()
-                ->modalHeading('¿Marcar como En Ejecución?')
-                ->modalDescription('Confirma que el mantenimiento ha iniciado.')
-                ->action(function (SolicitudMantenimiento $record) {
-                    $estadoAnterior = $record->estado;
-
-                    $record->update(['estado' => EstadoSolicitudEnum::EN_EJECUCION]);
-
-                    HistorialEstado::create([
-                        'entidad_tipo'    => 'solicitud_mantenimiento',
-                        'entidad_id'      => $record->id,
-                        'estado_anterior' => $estadoAnterior?->value,
-                        'estado_nuevo'    => EstadoSolicitudEnum::EN_EJECUCION->value,
-                        'user_id'         => auth()->id(),
-                        'comentario'      => 'Mantenimiento iniciado.',
-                    ]);
-
-                    BitacoraEvento::create([
-                        'entidad_tipo' => 'solicitud_mantenimiento',
-                        'entidad_id'   => $record->id,
-                        'accion'       => 'EN_EJECUCION',
-                        'user_id'      => auth()->id(),
-                    ]);
-
-                    Notification::make()
-                        ->title('Mantenimiento en ejecución')
-                        ->warning()
-                        ->send();
-                })
-                ->visible(fn (SolicitudMantenimiento $record) =>
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                    $record->estado === EstadoSolicitudEnum::APROBADA
-                ),
+                ),    
 
             // ── EVALUAR ──────────────────────────────────────────────
             Actions\Action::make('evaluar')
