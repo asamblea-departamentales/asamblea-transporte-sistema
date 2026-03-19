@@ -5,6 +5,7 @@ import { useAuth } from "../auth/AuthContext";
 import React, { useState, useEffect } from "react";
 import { useNotifications, type Notification, type NotiTipo } from "../notifications/NotificationContext";
 import { cn } from "../lib/utils";
+import { GlobalLoading } from "../components/GlobalLoading";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -370,6 +371,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const { unreadCount }  = useNotifications();
 
   const [notiOpen, setNotiOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   const initial = (user?.name?.trim()?.[0] || "U").toUpperCase();
 
@@ -380,6 +382,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   ];
 
   const handleLogout = async () => {
+    setLoggingOut(true);
     onClose();
     await logout();
     navigate("/login", { replace: true });
@@ -399,6 +402,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   return (
     <>
+      {loggingOut && <GlobalLoading message="Cerrando Sesión Segura" isClosing={true} />}
       <NotificacionesDrawer open={notiOpen} onClose={() => setNotiOpen(false)} />
 
       {/* ── DESKTOP SIDEBAR (Permanent Left) ────────────────────────────────── */}

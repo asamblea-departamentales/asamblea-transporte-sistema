@@ -4,9 +4,10 @@ import logoAsamblea from "../assets/asamble.png"; // <-- Importación correcta d
 
 interface GlobalLoadingProps {
   isClosing?: boolean;
+  message?: string;
 }
 
-export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing }) => {
+export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing, message = "Iniciando Sesión Segura" }) => {
   return (
     <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#f8fafc] ${isClosing ? 'animate-fade-out-bg' : ''}`}>
       <div className="relative flex flex-col items-center">
@@ -35,7 +36,7 @@ export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing }) => {
             <div className="h-full w-full origin-left animate-progress-buffer bg-[#2d3a61]"></div>
           </div>
           <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2d3a61] opacity-70">
-            Iniciando Sesión Segura
+            {message}
           </span>
         </div>
       </div>

@@ -6,6 +6,7 @@ import Button from "../components/ui/Button";
 import { loginRequest } from "../services/auth.service";
 import { useAuth } from "../auth/AuthContext";
 import logo from "../assets/asamble.png";
+import { GlobalLoading } from "../components/GlobalLoading";
 
 export default function LoginPage() {
   const { setUser } = useAuth();
@@ -36,6 +37,7 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col">
+      {loading && <GlobalLoading message="Iniciando Sesión Segura" />}
 
       {/* Contenido principal */}
       <div className="flex flex-col flex-1 justify-center items-center px-6">
