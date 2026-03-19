@@ -102,8 +102,7 @@ class SolicitudMantenimiento extends Model
 
     public function historialEstados()
 {
-    // Esta es la que el controlador intenta cargar con ->with()
-    return $this->morphMany(\App\Models\HistorialEstado::class, 'entidad');
+    return $this->morphMany(HistorialEstado::class, 'entidad', 'entidad_tipo', 'entidad_id');
 }
 
     // ── Helpers ─────────────────────────────────────────────
