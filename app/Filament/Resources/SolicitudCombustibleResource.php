@@ -596,8 +596,11 @@ class SolicitudCombustibleResource extends Resource
     })
     ->visible(fn ($record) =>
         auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
-        $record->estado === EstadoSolicitudEnum::APROBADA
-    ),
+in_array($record->estado, [
+        EstadoSolicitudEnum::APROBADA, 
+        EstadoSolicitudEnum::ASIGNADA // <--- Agrega el estado que queda tras asignar vales
+    ], true)  
+      ),
 
                     // FIX #2 y #3: ->action() y ->visible() ahora están dentro del Action, antes del cierre del ActionGroup
                     Tables\Actions\Action::make('asignar_vales')

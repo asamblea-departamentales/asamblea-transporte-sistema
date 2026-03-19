@@ -285,7 +285,10 @@ class ViewSolicitudCombustible extends ViewRecord
     })
     ->visible(fn (SolicitudCombustible $record) =>
         auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
-        $record->estado === EstadoSolicitudEnum::APROBADA
+        in_array($record->estado, [
+        EstadoSolicitudEnum::APROBADA, 
+        EstadoSolicitudEnum::ASIGNADA // <--- Agrega el estado que queda tras asignar vales
+    ], true)    
     ),    
 
             Actions\Action::make('rechazar')
