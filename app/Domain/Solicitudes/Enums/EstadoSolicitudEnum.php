@@ -21,4 +21,5 @@ enum EstadoSolicitudEnum: string
     case PRE_APROBADA = 'pre_aprobada';
 
     case ASIGNADA = 'asignada';
+    case LIQUIDADA = 'liquidada';
 }

@@ -123,6 +123,11 @@ class SolicitudCombustible extends Model
         return $this->belongsTo(User::class, 'asignado_por');
     }
 
+    public function liquidacion()
+    {
+        return $this->hasOne(\App\Models\LiquidacionCombustible::class, 'solicitud_id');
+    }
+
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneComprobantes(): bool

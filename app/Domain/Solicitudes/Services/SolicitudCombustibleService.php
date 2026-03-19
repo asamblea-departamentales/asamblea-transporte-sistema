@@ -10,6 +10,7 @@ use App\Models\HistorialEstado;
 use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
+use App\Models\LiquidacionCombustible;
 
 class SolicitudCombustibleService
 {
@@ -195,6 +196,34 @@ public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId):
         return $solicitud;
     });
 }
+
+
+    //Liquidar
+public function liquidar($record, $userId, $data)
+{
+    if (empty($record->comprobantes)) {
+        throw new \DomainException('No se puede liquidar sin comprobantes.');
+    }
+
+    LiquidacionCombustible::create([
+        'solicitud_id'     => $record->id,
+        'user_id'          => $userId,
+        'monto_solicitado' => $record->valor_total,
+        'monto_validado'   => $data['monto_validado'],
+        'resultado'        => $data['resultado'],
+        'observaciones'    => $data['observaciones'] ?? null,
+        'fecha_liquidacion'=> now(),
+    ]);
+
+    // Cambio de estado
+    $this->cambiarEstado(
+        $record,
+        $userId,
+        EstadoSolicitudEnum::LIQUIDADA,
+        'Liquidación realizada'
+    );
+}
+
 
     // ── APROBADA → ASIGNADA ─────────────────────────────────
 
