@@ -95,9 +95,9 @@ class SolicitudMantenimiento extends Model
         return $this->belongsTo(User::class, 'finalizado_por');
     }
 
-    public function evaluacion()
+    public function evaluador()
     {
-        return $this->hasOne(SolicitudMantenimiento::class);
+        return $this->belongsTo(User::class, 'evaluado_por');
     }
 
     public function historialEstados()
