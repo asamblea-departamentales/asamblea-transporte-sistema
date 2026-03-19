@@ -7,8 +7,11 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "service-worker.ts",
       registerType: "autoUpdate",
-      includeAssets: ["favicon.ico", "robots.txt", "icons/*.png"],
+      includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
         name: "Asamblea Legislativa de El Salvador",
         short_name: "Asamblea",

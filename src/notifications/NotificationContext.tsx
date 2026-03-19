@@ -7,7 +7,7 @@ import { useNavigate } from "react-router-dom";
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
-export type NotiTipo = "aprobada" | "rechazada" | "observada" | "finalizada" | "recordatorio" | "info";
+export type NotiTipo = "aprobada" | "pre_aprobada" | "asignada" | "programada" | "rechazada" | "observada" | "en_revision" | "finalizada" | "cancelada" | "recordatorio" | "info";
 export type NotiModulo = "transporte" | "mantenimiento" | "combustible";
 
 export type Notification = {
@@ -41,12 +41,17 @@ const load = <T,>(key: string, fallback: T): T => {
 function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
 
 const TIPO_TITULO: Record<NotiTipo, string> = {
-  aprobada: "Solicitud aprobada",
-  rechazada: "Solicitud rechazada",
-  observada: "Solicitud observada",
-  finalizada: "Solicitud finalizada",
+  aprobada:     "Solicitud aprobada",
+  pre_aprobada: "Solicitud pre-aprobada",
+  asignada:     "Solicitud asignada",
+  programada:   "Solicitud programada",
+  rechazada:    "Solicitud rechazada",
+  observada:    "Solicitud observada",
+  en_revision:  "Solicitud en revisión",
+  finalizada:   "Solicitud finalizada",
+  cancelada:    "Solicitud cancelada",
   recordatorio: "Recordatorio de finalización",
-  info: "Actualización",
+  info:         "Actualización",
 };
 
 const MODULO_LABEL: Record<NotiModulo, string> = {
@@ -58,12 +63,17 @@ const MODULO_LABEL: Record<NotiModulo, string> = {
 function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
   const mod = MODULO_LABEL[snap.modulo];
   const mensajes: Record<NotiTipo, string> = {
-    aprobada: `Tu solicitud de ${mod} ${snap.codigo} fue aprobada.`,
-    rechazada: `Tu solicitud de ${mod} ${snap.codigo} fue rechazada.`,
-    observada: `Tu solicitud de ${mod} ${snap.codigo} tiene observaciones del supervisor.`,
-    finalizada: `Tu solicitud de ${mod} ${snap.codigo} fue marcada como finalizada.`,
+    aprobada:     `Tu solicitud de ${mod} ${snap.codigo} fue aprobada.`,
+    pre_aprobada: `Tu solicitud de ${mod} ${snap.codigo} fue pre-aprobada.`,
+    asignada:     `Tu solicitud de ${mod} ${snap.codigo} tiene un motorista/vehículo asignado.`,
+    programada:   `Tu solicitud de ${mod} ${snap.codigo} ha sido programada.`,
+    rechazada:    `Tu solicitud de ${mod} ${snap.codigo} fue rechazada.`,
+    observada:    `Tu solicitud de ${mod} ${snap.codigo} tiene observaciones del supervisor.`,
+    en_revision:  `Tu solicitud de ${mod} ${snap.codigo} está en revisión técnica.`,
+    finalizada:   `Tu solicitud de ${mod} ${snap.codigo} fue marcada como finalizada.`,
+    cancelada:    `Tu solicitud de ${mod} ${snap.codigo} fue cancelada.`,
     recordatorio: `Han pasado más de 24 h desde la fecha de tu solicitud ${snap.codigo}. Recuerda marcarla como finalizada.`,
-    info: `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
+    info:         `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
   };
   return {
     id: uid(), tipo, modulo: snap.modulo,
@@ -75,10 +85,15 @@ function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
 
 function estadoATipo(estado: string): NotiTipo | null {
   const e = estado.toLowerCase();
-  if (e === "aprobada") return "aprobada";
-  if (e === "rechazada") return "rechazada";
-  if (e === "observada") return "observada";
+  if (e === "aprobada")     return "aprobada";
+  if (e === "pre_aprobada") return "pre_aprobada";
+  if (e === "asignada")     return "asignada";
+  if (e === "programada")   return "programada";
+  if (e === "rechazada")    return "rechazada";
+  if (e === "observada")    return "observada";
+  if (e === "en_revision")  return "en_revision";
   if (e === "finalizada" || e === "completada") return "finalizada";
+  if (e === "cancelada")    return "cancelada";
   return null;
 }
 
@@ -210,9 +225,30 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       ]);
 
       const next: Snap[] = [];
-      if (t.status === "fulfilled") t.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
-      if (m.status === "fulfilled") m.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
-      if (c.status === "fulfilled") c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
+
+      // Helper to process results and potentially fetch page 2 if needed (for notifications we only need recent items)
+      if (t.status === "fulfilled") {
+        t.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
+        // Si hay muchísima actividad, cargamos una página más
+        if (t.value.total > t.value.data.length && t.value.data.length < 50) {
+           const p2 = await getAllRequests({ per_page: BIG, page: 2 });
+           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
+        }
+      }
+      if (m.status === "fulfilled") {
+        m.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
+        if (m.value.total > m.value.data.length && m.value.data.length < 50) {
+           const p2 = await getAllMantenimientos({ per_page: BIG, page: 2 });
+           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
+        }
+      }
+      if (c.status === "fulfilled") {
+        c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
+        if (c.value.total > c.value.data.length && c.value.data.length < 50) {
+           const p2 = await getAllCombustibles({ per_page: BIG, page: 2 });
+           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
+        }
+      }
 
       if (isFirstPoll.current) {
         isFirstPoll.current = false;

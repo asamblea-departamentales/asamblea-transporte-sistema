@@ -8,10 +8,15 @@ import { useNotifications, type NotiTipo } from "./NotificationContext";
 
 const toastCfg: Record<NotiTipo, { dot: string; bg: string; border: string; label: string }> = {
   aprobada:     { dot: "bg-emerald-500", bg: "bg-emerald-50",  border: "border-emerald-200", label: "Aprobada"     },
+  pre_aprobada: { dot: "bg-violet-500",  bg: "bg-violet-50",   border: "border-violet-200",  label: "Pre-Ap."      },
+  asignada:     { dot: "bg-cyan-500",    bg: "bg-cyan-50",     border: "border-cyan-200",    label: "Asignada"     },
+  programada:   { dot: "bg-indigo-500",  bg: "bg-indigo-50",   border: "border-indigo-200",  label: "Prog."        },
   rechazada:    { dot: "bg-red-500",     bg: "bg-red-50",      border: "border-red-200",     label: "Rechazada"    },
   observada:    { dot: "bg-blue-500",    bg: "bg-blue-50",     border: "border-blue-200",    label: "Observada"    },
+  en_revision:  { dot: "bg-amber-400",   bg: "bg-amber-50",    border: "border-amber-200",   label: "Revisión"     },
   finalizada:   { dot: "bg-slate-400",   bg: "bg-slate-50",    border: "border-slate-200",   label: "Finalizada"   },
-  recordatorio: { dot: "bg-amber-500",   bg: "bg-amber-50",    border: "border-amber-200",   label: "Recordatorio" },
+  cancelada:    { dot: "bg-slate-300",   bg: "bg-slate-50",    border: "border-slate-100",   label: "Cancelada"    },
+  recordatorio: { dot: "bg-amber-500",   bg: "bg-amber-50",    border: "border-amber-200",   label: "Aviso"        },
   info:         { dot: "bg-blue-400",    bg: "bg-blue-50",     border: "border-blue-200",    label: "Info"         },
 };
 

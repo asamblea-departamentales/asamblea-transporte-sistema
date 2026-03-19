@@ -1,16 +1,21 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { useNotifications, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
+import { useNotifications, type Notification, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
 
 // ─── Config visual ─────────────────────────────────────────────────────────────
 
 const TIPO_CONFIG: Record<NotiTipo, { label: string; dot: string; bg: string; border: string }> = {
   aprobada:     { label: "Aprobada",     dot: "#10b981", bg: "rgba(16,185,129,.12)", border: "rgba(16,185,129,.25)" },
+  pre_aprobada: { label: "Pre-Ap.",      dot: "#8b5cf6", bg: "rgba(139,92,246,.12)", border: "rgba(139,92,246,.25)" },
+  asignada:     { label: "Asignada",     dot: "#06b6d4", bg: "rgba(6,182,212,.12)",  border: "rgba(6,182,212,.25)"  },
+  programada:   { label: "Prog.",        dot: "#6366f1", bg: "rgba(99,102,241,.12)", border: "rgba(99,102,241,.25)" },
   rechazada:    { label: "Rechazada",    dot: "#ef4444", bg: "rgba(239,68,68,.12)",  border: "rgba(239,68,68,.25)"  },
   observada:    { label: "Observada",    dot: "#60a5fa", bg: "rgba(96,165,250,.12)", border: "rgba(96,165,250,.25)" },
+  en_revision:  { label: "Revisión",     dot: "#f59e0b", bg: "rgba(245,158,11,.12)", border: "rgba(245,158,11,.25)" },
   finalizada:   { label: "Finalizada",   dot: "#94a3b8", bg: "rgba(148,163,184,.12)",border: "rgba(148,163,184,.25)"},
+  cancelada:    { label: "Cancelada",    dot: "#64748b", bg: "rgba(100,116,139,.12)",border: "rgba(100,116,139,.2)" },
   recordatorio: { label: "Recordatorio", dot: "#fbbf24", bg: "rgba(251,191,36,.12)", border: "rgba(251,191,36,.25)" },
-  info:         { label: "Info",         dot: "#93c5fd", bg: "rgba(147,197,253,.12)", border: "rgba(147,197,253,.2)"},
+  info:         { label: "Info",         dot: "#3b82f6", bg: "rgba(59,130,246,.12)",  border: "rgba(59,130,246,.2)"  },
 };
 
 const MODULO_CONFIG: Record<NotiModulo, { label: string; icon: React.ReactNode }> = {
@@ -158,7 +163,7 @@ export default function NotificationsPage() {
             </p>
           </div>
         ) : (
-          filtered.map((n) => {
+          filtered.map((n: Notification) => {
             const cfg = TIPO_CONFIG[n.tipo];
             const mod = MODULO_CONFIG[n.modulo];
             return (

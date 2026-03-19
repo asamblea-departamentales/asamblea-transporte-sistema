@@ -24,9 +24,14 @@ const T = {
 
 const notiCfg: Record<NotiTipo, { dot: string; iconBg: string; iconBorder: string }> = {
   aprobada:     { dot: "bg-emerald-500", iconBg: "bg-emerald-50",  iconBorder: "ring-emerald-200" },
+  pre_aprobada: { dot: "bg-violet-500",  iconBg: "bg-violet-50",   iconBorder: "ring-violet-200"  },
+  asignada:     { dot: "bg-cyan-500",    iconBg: "bg-cyan-50",     iconBorder: "ring-cyan-200"    },
+  programada:   { dot: "bg-indigo-500",  iconBg: "bg-indigo-50",   iconBorder: "ring-indigo-200"  },
   rechazada:    { dot: "bg-red-500",     iconBg: "bg-red-50",      iconBorder: "ring-red-200"     },
   observada:    { dot: "bg-blue-500",    iconBg: "bg-blue-50",     iconBorder: "ring-blue-200"    },
+  en_revision:  { dot: "bg-amber-400",   iconBg: "bg-amber-50",    iconBorder: "ring-amber-200"   },
   finalizada:   { dot: "bg-slate-400",   iconBg: "bg-slate-50",    iconBorder: "ring-slate-200"   },
+  cancelada:    { dot: "bg-slate-300",   iconBg: "bg-slate-50",    iconBorder: "ring-slate-100"   },
   recordatorio: { dot: "bg-amber-400",   iconBg: "bg-amber-50",    iconBorder: "ring-amber-200"   },
   info:         { dot: "bg-blue-400",    iconBg: "bg-blue-50",     iconBorder: "ring-blue-200"    },
 };
