@@ -33,6 +33,10 @@ class SolicitudMantenimiento extends Model
         'adjuntos',
         'finalizado_por',
         'fecha_finalizacion',
+        'evaluacion_estado',
+        'evaluacion_comentario',
+        'evaluado_por',
+        'fecha_evaluacion',
     ];
 
     protected $casts = [
@@ -44,7 +48,8 @@ class SolicitudMantenimiento extends Model
         'adjuntos'         => 'array',
         'estado'           => EstadoSolicitudEnum::class,
         'prioridad'        => PrioridadSolicitudEnum::class,
-        'fecha_finalizacion',
+        'fecha_finalizacion' => 'datetime',
+        'fecha_evaluacion' => 'datetime',
     ];
 
     // ── Booted ──────────────────────────────────────────────
@@ -94,6 +99,12 @@ class SolicitudMantenimiento extends Model
     {
         return $this->hasOne(SolicitudMantenimiento::class);
     }
+
+    public function historialEstados()
+{
+    // Esta es la que el controlador intenta cargar con ->with()
+    return $this->morphMany(\App\Models\HistorialEstado::class, 'entidad');
+}
 
     // ── Helpers ─────────────────────────────────────────────
 
