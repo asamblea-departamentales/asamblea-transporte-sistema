@@ -234,37 +234,37 @@ class SolicitudCombustibleResource extends Resource
                 ->compact(),
 
             Forms\Components\Section::make('Historial de estados')
-                ->schema([
-                    Forms\Components\Repeater::make('historial_ui')
-                        ->label('')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->formatStateUsing(function ($state, SolicitudCombustible $record) {
-                            return HistorialEstado::query()
-                                ->where('entidad_tipo', 'solicitud_combustible')
-                                ->where('entidad_id', $record->id)
-                                ->orderByDesc('created_at')
-                                ->get()
-                                ->map(fn ($h) => [
-                                    'fecha'      => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
-                                    'de'         => $h->estado_anterior ?? '-',
-                                    'a'          => $h->estado_nuevo ?? '-',
-                                    'comentario' => $h->comentario ?? null,
-                                ])
-                                ->toArray();
-                        })
-                        ->schema([
-                            Forms\Components\TextInput::make('fecha')->disabled(),
-                            Forms\Components\TextInput::make('de')->label('De')->disabled(),
-                            Forms\Components\TextInput::make('a')->label('A')->disabled(),
-                            Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
-                        ])
-                        ->columns(['default' => 1, 'md' => 4])
-                        ->columnSpanFull(),
-                ])
-                ->collapsible()
-                ->collapsed(false)
-                ->compact(),
+    ->schema([
+        Forms\Components\Repeater::make('historial_ui')
+            ->label('')
+            ->disabled()
+            ->dehydrated(false)
+            ->formatStateUsing(function ($state, SolicitudCombustible $record) {
+                return HistorialEstado::query()
+                    ->where('entidad_tipo', 'solicitud_combustible')
+                    ->where('entidad_id', $record->id)
+                    ->orderByDesc('created_at')
+                    ->get()
+                    ->map(fn ($h) => [
+                        'fecha'      => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
+                        'de'         => $h->estado_anterior ?? '-',
+                        'a'          => $h->estado_nuevo ?? '-',
+                        'comentario' => $h->comentario ?? null,
+                    ])
+                    ->toArray();
+            })
+            ->schema([
+                Forms\Components\TextInput::make('fecha')->disabled(),
+                Forms\Components\TextInput::make('de')->label('De')->disabled(),
+                Forms\Components\TextInput::make('a')->label('A')->disabled(),
+                Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
+            ])
+            ->columns(['default' => 1, 'md' => 3])
+            ->columnSpanFull(),
+    ])
+    ->collapsible()
+    ->collapsed(false)
+    ->compact(),
 
         ]);
     }
