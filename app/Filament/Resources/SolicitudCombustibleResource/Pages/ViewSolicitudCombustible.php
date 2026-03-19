@@ -300,7 +300,8 @@ class ViewSolicitudCombustible extends ViewRecord
                     auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::APROBADA, 
-                        EstadoSolicitudEnum::ASIGNADA
+                        EstadoSolicitudEnum::ASIGNADA,
+                        EstadoSolicitudEnum::COMPLETADA
                     ], true)  
                 ),
 
