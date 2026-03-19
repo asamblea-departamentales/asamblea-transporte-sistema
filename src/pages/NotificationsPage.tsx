@@ -171,7 +171,7 @@ export default function NotificationsPage() {
                 key={n.id}
                 onClick={() => {
                   if (!n.leida) markAsRead(n.id);
-                  navigate(`/solicitudes/${n.modulo}/${n.codigo}`);
+                  navigate(`/solicitudes/${n.modulo}/${n.reqId}`);
                 }}
                 className={`group w-full rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] ${
                   n.leida ? "border-slate-100 opacity-60" : "border-slate-200"

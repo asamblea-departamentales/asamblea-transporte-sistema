@@ -10,8 +10,9 @@ import { useNavigate } from "react-router-dom";
 export type NotiTipo = "aprobada" | "pre_aprobada" | "asignada" | "programada" | "rechazada" | "observada" | "en_revision" | "finalizada" | "cancelada" | "recordatorio" | "info";
 export type NotiModulo = "transporte" | "mantenimiento" | "combustible";
 
-export type Notification = {
+export interface Notification {
   id: string;
+  reqId: number; // ID numérico para navegación
   tipo: NotiTipo;
   modulo: NotiModulo;
   titulo: string;
@@ -76,7 +77,7 @@ function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
     info:         `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
   };
   return {
-    id: uid(), tipo, modulo: snap.modulo,
+    id: uid(), reqId: snap.id, tipo, modulo: snap.modulo,
     titulo: TIPO_TITULO[tipo], mensaje: mensajes[tipo],
     codigo: snap.codigo, leida: false,
     createdAt: new Date().toISOString(),
@@ -181,7 +182,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       body: n.mensaje,
       icon: "/icons/icon-192x192.png",
       tag: n.id,
-      data: { url: `/solicitudes/${n.modulo}/${n.codigo}` }
+      data: { url: `/solicitudes/${n.modulo}/${n.reqId}` }
     };
 
     // Intentar vía Service Worker (mejor para Móvil/PWA)
@@ -280,6 +281,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const spawnTestNotification = useCallback(() => {
     const test: Notification = {
       id: uid(),
+      reqId: 123, // Dummy ID for testing
       tipo: "info",
       modulo: "transporte",
       titulo: "Notificación de Prueba",

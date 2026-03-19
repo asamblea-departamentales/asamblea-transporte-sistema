@@ -72,7 +72,7 @@ function ToastItem({ onDone }: { onDone: () => void }) {
 
   const handleNavigate = () => {
     if (!toast) return;
-    navigate(`/solicitudes/${toast.modulo}/${toast.codigo}`);
+    navigate(`/solicitudes/${toast.modulo}/${toast.reqId}`);
     handleClose({ stopPropagation: () => {} } as any); // Cerrar tras navegar
   };
 
