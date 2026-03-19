@@ -155,35 +155,39 @@ class SolicitudCombustibleService
 
 public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible
 {
-    // Validación: Solo si ya tiene vales
-    if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
-        throw new \DomainException('La solicitud debe tener vales asignados para ser enviada a liquidación.');
+    // CAMBIO: Permitir estados que ya tienen vales (APROBADA con vales, ASIGNADA o COMPLETADA)
+    // O simplemente validar que NO esté en estados iniciales
+    $estadosPermitidos = [
+        EstadoSolicitudEnum::ASIGNADA,
+        EstadoSolicitudEnum::COMPLETADA 
+    ];
+
+    if (!in_array($solicitud->estado, $estadosPermitidos)) {
+        throw new \DomainException('La solicitud debe estar en proceso de liquidación o asignada para realizar este envío.');
     }
 
-    // Validación: Debe tener comprobantes antes de "enviar"
+    // Validación de comprobantes: Esta SÍ es crítica
     if (!$solicitud->tieneComprobantes()) {
         throw new \DomainException('No se puede enviar a liquidador sin adjuntar los comprobantes.');
     }
 
     return DB::transaction(function () use ($solicitud, $userId) {
-        
-        // 1. Registramos en el historial (aunque el estado sea el mismo)
-        // Esto sirve para ver el "movimiento" en la línea de tiempo
+        // Registramos el cambio (aunque el estado actual se mantenga)
         $this->registrarCambioEstado(
             $solicitud, 
-            $solicitud->estado, // Anterior: ASIGNADA
-            $solicitud->estado, // Nuevo: ASIGNADA
+            $solicitud->estado, 
+            $solicitud->estado, 
             $userId, 
             'Traspaso administrativo: Solicitud enviada formalmente a revisión de liquidación.'
         );
 
-        // 2. Registramos el evento de negocio en la Bitácora
         $this->registrarEvento(
             $solicitud, 
-            'enviar_liquidador', // Acción personalizada
+            'enviar_liquidador', 
             $userId, 
             [
                 'fecha_envio' => now()->toDateTimeString(),
+                'estado_al_enviar' => $solicitud->estado->value,
                 'mensaje' => 'Documentación lista para revisión contable'
             ]
         );
