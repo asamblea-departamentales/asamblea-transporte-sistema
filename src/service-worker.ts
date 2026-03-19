@@ -23,14 +23,11 @@ self.addEventListener('notificationclick', (event) => {
   const relativeUrl = event.notification.data?.url || '/';
   const urlToOpen = new URL(relativeUrl, self.location.origin).href;
 
-  console.log('[SW] Click en notificación. URL destino:', urlToOpen);
-
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
       // 2. Intentar encontrar una pestaña que ya tenga esta URL exacta abierta
       for (const client of clientList) {
         if (client.url === urlToOpen && 'focus' in client) {
-          console.log('[SW] Pestaña existente encontrada. Enfocando...');
           return client.focus();
         }
       }
@@ -46,13 +43,11 @@ self.addEventListener('notificationclick', (event) => {
             break;
           }
         }
-        console.log('[SW] Reutilizando pestaña existente para navegar...');
         return clientToUse.navigate(urlToOpen).then(c => c?.focus());
       }
       
       // 4. Si no hay ninguna pestaña abierta de la App, abrir una nueva
       if (self.clients.openWindow) {
-        console.log('[SW] Abriendo nueva ventana...');
         return self.clients.openWindow(urlToOpen);
       }
     })

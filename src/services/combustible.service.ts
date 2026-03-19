@@ -7,7 +7,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { api } from "../lib/api";
+import { api, BASE_URL } from "../lib/api";
 import type {
   LaravelPaginatedResponse,
   RequestFilters,
@@ -381,11 +381,7 @@ export function puedeCancelarSolicitud(solicitud: SolicitudCombustible): boolean
 }
 
 export function getComprobantUrl(ruta: string): string {
-  const base =
-    import.meta.env.VITE_API_URL ||
-    import.meta.env.VITE_API_BASE_URL ||
-    "http://localhost:8000";
-  return `${base}/storage/${ruta}`;
+  return `${BASE_URL}/storage/${ruta}`;
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

@@ -35,6 +35,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
 
   const addFiles = (newFiles: FileList | null) => {
     if (!newFiles) return;
+    const MAX_FILES = 5;
     const valid = Array.from(newFiles).filter((f) => {
       const okType = ["image/jpeg", "image/png", "application/pdf"].includes(f.type);
       const okSize = f.size <= 5 * 1024 * 1024; // 5 MB
@@ -42,7 +43,12 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
     });
     setArchivos((prev) => {
       const names = new Set(prev.map((f) => f.name));
-      return [...prev, ...valid.filter((f) => !names.has(f.name))];
+      const merged = [...prev, ...valid.filter((f) => !names.has(f.name))];
+      if (merged.length > MAX_FILES) {
+        setError(`Máximo ${MAX_FILES} comprobantes por solicitud.`);
+        return prev;
+      }
+      return merged;
     });
   };
 

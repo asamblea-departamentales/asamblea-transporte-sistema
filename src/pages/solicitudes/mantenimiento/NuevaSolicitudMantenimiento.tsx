@@ -2,11 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TransportWizard from "../../../components/ui/TransportWizard";
 import { Label, SelectInput, Spinner, SectionTitle, FieldError } from "../Combustible/components/FormUI";
-
-const API_BASE =
-  import.meta.env.VITE_API_URL ||
-  import.meta.env.VITE_API_BASE_URL ||
-  "http://localhost:8000";
+import { api, BASE_URL as API_BASE } from "../../../lib/api";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TipoSolicitud = "taller" | "llantas";
@@ -414,38 +410,25 @@ export default function NuevaSolicitudMantenimiento() {
     setApiError(null);
     setLoading(true);
     try {
-      const res = await fetch(`${API_BASE}/api/solicitudes-mantenimiento`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...authHeaders(),
-        },
-        body: JSON.stringify({
-          vehiculo_id:               parseInt(data.vehiculo_id),
-          veh_tipo_mantenimiento_id: parseInt(data.veh_tipo_mantenimiento_id),
-          tipo_solicitud:            data.tipo_solicitud,
-          detalle:                   data.detalle,
-          fecha_sugerida:            data.fecha_sugerida,
-          // Prioridad eliminada de la requesión
-          costo_estimado:            data.costo_estimado ? parseFloat(data.costo_estimado) : null,
-          observaciones:             data.observaciones || null,
-        }),
+      await api.post("/api/solicitudes-mantenimiento", {
+        vehiculo_id:               parseInt(data.vehiculo_id),
+        veh_tipo_mantenimiento_id: parseInt(data.veh_tipo_mantenimiento_id),
+        tipo_solicitud:            data.tipo_solicitud,
+        detalle:                   data.detalle,
+        fecha_sugerida:            data.fecha_sugerida,
+        costo_estimado:            data.costo_estimado ? parseFloat(data.costo_estimado) : null,
+        observaciones:             data.observaciones || null,
       });
-
-      let json: any = null;
-      try { json = await res.json(); } catch { /* vacio */ }
-
-      if (!res.ok) {
-        const detail = json?.errors
-          ? Object.entries(json.errors as Record<string, string[]>).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
-          : json?.message || `Fallo al crear solicitud (${res.status})`;
-        throw new Error(detail);
-      }
 
       setSubmitted(true);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } catch (e: unknown) {
-      setApiError(e instanceof Error ? e.message : "No se pudo conectar con el servidor.");
+      const axiosErr = e as { response?: { data?: { errors?: Record<string, string[]>; message?: string } }; message?: string };
+      const errors = axiosErr.response?.data?.errors;
+      const detail = errors
+        ? Object.entries(errors).map(([k, v]) => `${k}: ${v[0]}`).join("\n")
+        : axiosErr.response?.data?.message || (e instanceof Error ? e.message : "No se pudo conectar con el servidor.");
+      setApiError(detail);
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setLoading(false);

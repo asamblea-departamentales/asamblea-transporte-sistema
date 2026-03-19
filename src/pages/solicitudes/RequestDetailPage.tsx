@@ -168,10 +168,10 @@ export default function RequestDetailPage() {
     data.estado === "asignada" &&
     isOwner;
 
-  // ✅ Mantenimiento: finalizar cuando está "asignada"
+  // ✅ Mantenimiento: finalizar cuando está "aprobada", "programada" o "en_ejecucion"
   const canFinalizarMantenimiento =
     isMantenimiento &&
-    ["programada", "en_ejecucion"].includes(data.estado) &&
+    ["aprobada", "programada", "en_ejecucion"].includes(data.estado) &&
     isOwner;
 
   const handleFinalizarTransporte = async () => {

@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
 if (!BASE_URL) {
   // En desarrollo podríamos permitir un fallback, pero en producción es crítico
@@ -14,6 +14,7 @@ if (!BASE_URL) {
  */
 export const api = axios.create({
   baseURL: BASE_URL,
+  timeout: 15_000,
   headers: {
     Accept: "application/json",
     "Content-Type": "application/json",
