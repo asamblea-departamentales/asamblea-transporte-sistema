@@ -132,6 +132,7 @@ type Ctx = {
   markAsRead: (id: string) => void;
   markAllRead: () => void;
   deleteNotification: (id: string) => void;
+  deleteAllNotifications: () => void;
   clearToast: () => void;
   spawnTestNotification: () => void;
   permission: NotificationPermission;
@@ -140,7 +141,7 @@ type Ctx = {
 
 const NotifCtx = createContext<Ctx>({
   notifications: [], unreadCount: 0, toast: null,
-  markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, clearToast: () => { },
+  markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, deleteAllNotifications: () => { }, clearToast: () => { },
   spawnTestNotification: () => { },
   permission: "default",
   requestPermission: async () => { },
@@ -276,6 +277,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const markAsRead = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
   const markAllRead = useCallback(() => setNotifications(p => p.map(n => ({ ...n, leida: true }))), []);
   const deleteNotification = useCallback((id: string) => setNotifications(p => p.filter(n => n.id !== id)), []);
+  const deleteAllNotifications = useCallback(() => setNotifications([]), []);
   const clearToast = useCallback(() => setToast(null), []);
 
   const spawnTestNotification = useCallback(() => {
@@ -295,7 +297,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   return (
     <NotifCtx.Provider value={{ 
-      notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast, 
+      notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, clearToast, 
       spawnTestNotification, permission, requestPermission 
     }}>
       {children}

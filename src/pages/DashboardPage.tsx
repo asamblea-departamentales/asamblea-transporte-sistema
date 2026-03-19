@@ -6,7 +6,6 @@ import {
   type DashboardSummary,
   type RecentRequest,
 } from "../services/dashboard.service";
-import { useNotifications } from "../notifications/NotificationContext";
 
 // ─── Skeleton ────────────────────────────────────────────────────────────────
 
@@ -160,7 +159,6 @@ export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [recent, setRecent] = useState<RecentRequest[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const { spawnTestNotification } = useNotifications();
 
   useEffect(() => {
     let alive = true;
@@ -248,24 +246,6 @@ export default function DashboardPage() {
             </div>
 
             <div style={{ display: "flex", gap: 10 }}>
-              <button
-                onClick={spawnTestNotification}
-                style={{
-                  display: "inline-flex", alignItems: "center", gap: 7,
-                  padding: "9px 18px", borderRadius: 9,
-                  background: "#f1f5f9", color: "#475569",
-                  fontSize: 13.5, fontWeight: 600,
-                  border: "1px solid #e2e8f0", cursor: "pointer",
-                  transition: "all 150ms",
-                  fontFamily: FONT, flexShrink: 0,
-                }}
-                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = "#e2e8f0"; }}
-                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = "#f1f5f9"; }}
-              >
-                <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
-                Probar Notificación
-              </button>
-
               <button
                 onClick={() => navigate("/nueva-solicitud")}
                 style={{

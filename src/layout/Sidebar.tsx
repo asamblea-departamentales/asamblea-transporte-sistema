@@ -68,6 +68,7 @@ const Icons = {
       <path d="M18 6L6 18M6 6l12 12" />
     </svg>
   ),
+
   Bell: () => (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
       <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
@@ -209,7 +210,7 @@ function timeAgo(iso: string): string {
 // ─── Notification Slide-Over Drawer ───────────────────────────────────────────
 
 function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () => void }) {
-  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, permission, requestPermission } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, permission, requestPermission } = useNotifications();
   const navigate  = useNavigate();
   // Mostramos más notificaciones en el drawer (ej. 20)
   const recientes = notifications.slice(0, 20);
@@ -244,6 +245,12 @@ function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () =>
               <button onClick={markAllRead} title="Marcar todo como leído"
                 className="flex items-center justify-center w-8 h-8 rounded-full text-blue-600 hover:bg-blue-50 transition-colors">
                 <Icons.Check />
+              </button>
+            )}
+            {notifications.length > 0 && (
+              <button onClick={deleteAllNotifications} title="Eliminar todas las notificaciones"
+                className="flex items-center justify-center w-8 h-8 rounded-full text-red-600 hover:bg-red-50 transition-colors">
+                <Icons.Trash />
               </button>
             )}
             <button onClick={onClose} title="Cerrar"
