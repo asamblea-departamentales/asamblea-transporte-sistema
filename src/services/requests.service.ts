@@ -15,7 +15,9 @@ export type RequestStatus =
   | "programada"
   | "en_ejecucion"
   | "completada"
-  | "finalizada";
+  | "finalizada"
+  | "en_revision"
+  | "cancelada";
 
 export type Unidad = {
   id: number;

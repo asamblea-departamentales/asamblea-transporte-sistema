@@ -1,5 +1,5 @@
-// src/pages/NotificationsPage.tsx
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useNotifications, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
 
 // ─── Config visual ─────────────────────────────────────────────────────────────
@@ -55,7 +55,8 @@ function timeAgo(iso: string): string {
 // ─── PÁGINA ────────────────────────────────────────────────────────────────────
 
 export default function NotificationsPage() {
-  const { notifications, unreadCount, markAsRead, markAllRead } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllRead, permission, requestPermission } = useNotifications();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<"todas" | "no_leidas" | NotiTipo>("todas");
 
   const filtered = notifications.filter((n) => {
@@ -101,6 +102,29 @@ export default function NotificationsPage() {
         )}
       </div>
 
+      {/* Permission Prompt (Mobile Friendly) */}
+      {permission === "default" && (
+        <div className="flex flex-col sm:flex-row items-center justify-between gap-4 rounded-3xl bg-blue-600 p-6 text-white shadow-xl shadow-blue-200">
+          <div className="flex items-center gap-4 text-left w-full">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/20 flex-shrink-0">
+              <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-lg font-bold">Activar Notificaciones</h3>
+              <p className="text-sm text-blue-100">Recibe alertas instantáneas en tu celular o PC.</p>
+            </div>
+          </div>
+          <button
+            onClick={requestPermission}
+            className="w-full sm:w-auto rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-blue-600 shadow-lg transition hover:scale-105 active:scale-95 flex-shrink-0"
+          >
+            Habilitar ahora
+          </button>
+        </div>
+      )}
+
       {/* Filtros */}
       <div className="flex gap-2 overflow-x-auto pb-1">
         {FILTROS.map((f) => (
@@ -140,8 +164,11 @@ export default function NotificationsPage() {
             return (
               <button
                 key={n.id}
-                onClick={() => markAsRead(n.id)}
-                className={`group w-full rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md ${
+                onClick={() => {
+                  if (!n.leida) markAsRead(n.id);
+                  navigate(`/solicitudes/${n.modulo}/${n.codigo}`);
+                }}
+                className={`group w-full rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] ${
                   n.leida ? "border-slate-100 opacity-60" : "border-slate-200"
                 }`}
               >

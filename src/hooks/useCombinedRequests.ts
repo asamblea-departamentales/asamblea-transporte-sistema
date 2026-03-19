@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getAllRequests } from "../services/requests.service";
 import { getAllMantenimientos } from "../services/mantenimiento.service";
 import { getAllCombustibles } from "../services/combustible.service";
+import { useAuth } from "../auth/AuthContext";
 import type { RequestStatus } from "../services/requests.service";
 import type { SolicitudCombustibleNormalizada } from "../services/combustible.service";
 
@@ -39,6 +40,7 @@ const PER_PAGE = 10;
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useCombinedRequests() {
+  const { user }                      = useAuth();
   const [allItems, setAllItems]       = useState<CombinedRequest[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -67,7 +69,7 @@ export function useCombinedRequests() {
     setLoading(true);
     setError(null);
     try {
-      const BIG = 500; // traemos muchos registros de una vez
+      const BIG = 1000; // traemos más registros de una vez
 
       const [transporte, mantenimiento, combustible] = await Promise.allSettled([
         getAllRequests({ per_page: BIG, page: 1 }),
@@ -155,6 +157,9 @@ export function useCombinedRequests() {
   // ─── Filtrado client-side ────────────────────────────────────────────────────
 
   const filtered = allItems.filter((item) => {
+    // Solo solicitudes del usuario actual
+    if (user?.id && item.solicitante?.id !== user.id) return false;
+
     if (filters.estado && item.estado !== filters.estado) return false;
     if (filters.modulo && item.modulo !== filters.modulo) return false;
     if (filters.search) {

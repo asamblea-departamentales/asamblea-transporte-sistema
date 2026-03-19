@@ -3,6 +3,7 @@ import {
   createContext, useContext, useState, useEffect,
   useRef, useCallback, type ReactNode,
 } from "react";
+import { useNavigate } from "react-router-dom";
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -29,7 +30,12 @@ const SNAP_KEY = "app_snap_v1";
 const POLL_MS = 60_000;
 
 const load = <T,>(key: string, fallback: T): T => {
-  try { return JSON.parse(localStorage.getItem(key) || "") ?? fallback; } catch { return fallback; }
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : fallback;
+  } catch {
+    return fallback;
+  }
 };
 
 function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
@@ -68,10 +74,11 @@ function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
 }
 
 function estadoATipo(estado: string): NotiTipo | null {
-  if (estado === "aprobada") return "aprobada";
-  if (estado === "rechazada") return "rechazada";
-  if (estado === "observada") return "observada";
-  if (estado === "finalizada" || estado === "completada") return "finalizada";
+  const e = estado.toLowerCase();
+  if (e === "aprobada") return "aprobada";
+  if (e === "rechazada") return "rechazada";
+  if (e === "observada") return "observada";
+  if (e === "finalizada" || e === "completada") return "finalizada";
   return null;
 }
 
@@ -89,7 +96,7 @@ function detectar(prev: Snap[], next: Snap[], remindersSent: Set<string>): Notif
     }
 
     // Recordatorio 24 h
-    if (snap.estado === "aprobada" && snap.fecha_salida && !remindersSent.has(snap.codigo)) {
+    if (snap.estado.toLowerCase() === "aprobada" && snap.fecha_salida && !remindersSent.has(snap.codigo)) {
       const horas = (Date.now() - new Date(snap.fecha_salida).getTime()) / 3_600_000;
       if (horas >= 24) {
         remindersSent.add(snap.codigo);
@@ -111,12 +118,16 @@ type Ctx = {
   deleteNotification: (id: string) => void;
   clearToast: () => void;
   spawnTestNotification: () => void;
+  permission: NotificationPermission;
+  requestPermission: () => Promise<void>;
 };
 
 const NotifCtx = createContext<Ctx>({
   notifications: [], unreadCount: 0, toast: null,
   markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, clearToast: () => { },
   spawnTestNotification: () => { },
+  permission: "default",
+  requestPermission: async () => { },
 });
 
 export function useNotifications() { return useContext(NotifCtx); }
@@ -124,11 +135,16 @@ export function useNotifications() { return useContext(NotifCtx); }
 // ─── Provider ──────────────────────────────────────────────────────────────────
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
+  const navigate = useNavigate();
   const [notifications, setNotifications] = useState<Notification[]>(() => load(NOTIF_KEY, []));
   const [toast, setToast] = useState<Notification | null>(null);
   const snapRef = useRef<Snap[]>(load(SNAP_KEY, []));
   const remindersRef = useRef<Set<string>>(new Set());
   const isFirstPoll = useRef(true);
+
+  const [permission, setPermission] = useState<NotificationPermission>(
+    typeof window !== "undefined" ? Notification.permission : "default"
+  );
 
   const unreadCount = notifications.filter(n => !n.leida).length;
 
@@ -136,29 +152,50 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
     localStorage.setItem(NOTIF_KEY, JSON.stringify(notifications.slice(0, 100)));
   }, [notifications]);
 
+  const requestPermission = async () => {
+    if (!("Notification" in window)) return;
+    const res = await Notification.requestPermission();
+    setPermission(res);
+  };
+
+  const showNativeNotification = useCallback(async (n: Notification) => {
+    if (permission !== "granted") return;
+
+    const title = n.titulo;
+    const options: NotificationOptions = {
+      body: n.mensaje,
+      icon: "/icons/icon-192x192.png",
+      tag: n.id,
+      data: { url: `/solicitudes/${n.modulo}/${n.codigo}` }
+    };
+
+    // Intentar vía Service Worker (mejor para Móvil/PWA)
+    if ("serviceWorker" in navigator) {
+      const reg = await navigator.serviceWorker.ready;
+      if (reg) {
+        reg.showNotification(title, options);
+        return;
+      }
+    }
+
+    // Fallback a Notification API estándar
+    const nativeNotif = new Notification(title, options);
+    nativeNotif.onclick = () => {
+      window.focus();
+      navigate(options.data.url);
+    };
+  }, [permission, navigate]);
+
   const push = useCallback((incoming: Notification[]) => {
     if (!incoming.length) return;
     const last = incoming[incoming.length - 1];
     setToast(last);
     setNotifications(prev => [...incoming.reverse(), ...prev]);
-
-    // ✅ Browser Native Notification (solo si el usuario dio permiso)
-    if (window.Notification && Notification.permission === "granted") {
-      try {
-        new window.Notification(last.titulo, {
-          body: last.mensaje,
-          icon: "/icons/icon-192x192.png",
-          tag: last.id, // Evita duplicados cercanos
-        });
-      } catch (err) {
-        console.error("Fallo al disparar notificación nativa:", err);
-      }
-    }
-  }, []);
+    showNativeNotification(last);
+  }, [showNativeNotification]);
 
   const poll = useCallback(async () => {
     try {
-      // Importación dinámica para no acoplar el contexto a los servicios concretos
       const [{ getAllRequests }, { getAllMantenimientos }, { getAllCombustibles }] = await Promise.all([
         import("../services/requests.service"),
         import("../services/mantenimiento.service"),
@@ -178,7 +215,6 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       if (c.status === "fulfilled") c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
 
       if (isFirstPoll.current) {
-        // Primera carga: solo guardar snapshot, sin generar notifs
         isFirstPoll.current = false;
         snapRef.current = next;
         localStorage.setItem(SNAP_KEY, JSON.stringify(next));
@@ -189,22 +225,14 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       snapRef.current = next;
       localStorage.setItem(SNAP_KEY, JSON.stringify(next));
       push(incoming);
-    } catch {
-      // El fallo del polling no interrumpe la experiencia del usuario
-      //QUe paso
+    } catch (err) {
+      console.error("Polling error:", err);
     }
   }, [push]);
 
   useEffect(() => {
     poll();
     const id = setInterval(poll, POLL_MS);
-    
-    // Solicitar permisos de notificación nativa al montar la aplicación
-    // Solo si el navegador lo soporta y aún no se ha denegado/concedido
-    if (window.Notification && Notification.permission === "default") {
-      Notification.requestPermission();
-    }
-
     return () => clearInterval(id);
   }, [poll]);
 
@@ -228,7 +256,10 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [push]);
 
   return (
-    <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast, spawnTestNotification }}>
+    <NotifCtx.Provider value={{ 
+      notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast, 
+      spawnTestNotification, permission, requestPermission 
+    }}>
       {children}
     </NotifCtx.Provider>
   );

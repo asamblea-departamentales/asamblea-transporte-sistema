@@ -204,7 +204,7 @@ function timeAgo(iso: string): string {
 // ─── Notification Slide-Over Drawer ───────────────────────────────────────────
 
 function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () => void }) {
-  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification } = useNotifications();
+  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, permission, requestPermission } = useNotifications();
   const navigate  = useNavigate();
   // Mostramos más notificaciones en el drawer (ej. 20)
   const recientes = notifications.slice(0, 20);
@@ -248,6 +248,27 @@ function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () =>
           </div>
         </div>
 
+        {/* Permission Prompt (Mobile Friendly) */}
+        {permission === "default" && (
+          <div className="mx-4 mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex flex-col gap-3">
+            <div className="flex gap-3">
+              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+                <Icons.Bell />
+              </div>
+              <div className="flex-1">
+                <p className="text-[13px] font-bold text-blue-900 leading-tight">Activar Notificaciones</p>
+                <p className="text-[12px] text-blue-700 mt-0.5 leading-snug">Recibe alertas de tus solicitudes en tu dispositivo.</p>
+              </div>
+            </div>
+            <button 
+              onClick={requestPermission}
+              className="w-full py-2 bg-blue-600 text-white rounded-xl text-[12.5px] font-bold shadow-sm shadow-blue-200 active:scale-95 transition-all"
+            >
+              Habilitar ahora
+            </button>
+          </div>
+        )}
+
         {/* Content */}
         <div className="overflow-y-auto flex-1 bg-white">
           {recientes.length === 0 ? (
@@ -274,6 +295,8 @@ function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () =>
                     // Evitar marcar como leído si hizo click en el botón de basura
                     if ((e.target as HTMLElement).closest('.btn-delete')) return;
                     if(isUnread) markAsRead(n.id);
+                    navigate(`/solicitudes/${n.modulo}/${n.codigo}`);
+                    onClose();
                   }}
                 >
                   

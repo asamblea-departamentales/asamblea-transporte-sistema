@@ -10,6 +10,9 @@ const STATUS_STYLES: Record<string, string> = {
   finalizada:   "bg-slate-800 text-white border-slate-600",
   rechazada:    "bg-red-100 text-red-700 border-red-200",
   observada:    "bg-blue-100 text-blue-700 border-blue-200",
+  programada:   "bg-cyan-100 text-cyan-700 border-cyan-200",
+  en_revision:  "bg-blue-100 text-blue-700 border-blue-200",
+  cancelada:    "bg-slate-100 text-slate-500 border-slate-200",
   borrador:     "bg-gray-100 text-gray-600 border-gray-200",
 };
 
