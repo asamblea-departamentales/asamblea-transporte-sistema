@@ -64,148 +64,152 @@ export function useCombinedRequests() {
     return () => clearTimeout(searchTimer.current);
   }, [searchInput]);
 
-  // Helper para mapear y combinar resultados de la API
-  const processResults = (transporte: any, mantenimiento: any, combustible: any) => {
-    const combined: CombinedRequest[] = [];
-    
-    if (transporte.status === "fulfilled") {
-      transporte.value.data.forEach((s: any) => {
-        combined.push({
-          id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-          estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-          solicitante: s.solicitante, modulo: "transporte", motorista: s.motorista,
-          vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida, updated_at: s.updated_at,
-          _raw: s as unknown as Record<string, unknown>,
-        });
-      });
-    }
-
-    if (mantenimiento.status === "fulfilled") {
-      mantenimiento.value.data.forEach((s: any) => {
-        combined.push({
-          id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-          estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-          solicitante: s.solicitante, modulo: "mantenimiento", motorista: s.motorista,
-          vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida, updated_at: s.updated_at,
-          _raw: s as unknown as Record<string, unknown>,
-        });
-      });
-    }
-
-    if (combustible.status === "fulfilled") {
-      combustible.value.data.forEach((s: SolicitudCombustibleNormalizada) => {
-        combined.push({
-          id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-          estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-          solicitante: s.solicitante ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email } : undefined,
-          modulo: "combustible", motorista: s.motorista, vehiculo: s.vehiculo,
-          created_at: (s as any).created_at || s.fecha_salida, updated_at: s.updated_at,
-          _raw: s as unknown as Record<string, unknown>,
-        });
-      });
-    }
-    return combined;
-  };
-
+  // Fetch todas las solicitudes (sin paginación server-side para poder combinarlas)
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    let active = true;
-
     try {
+      const BIG = 1000;
+
       const apiFilters = {
+        per_page: BIG,
         page: 1,
         estado: filters.estado || undefined,
         search: filters.search || undefined,
       };
 
-      // 1. CARGA RÁPIDA (Primeros 15 de cada módulo)
-      const [t1, m1, c1] = await Promise.allSettled([
-        getAllRequests({ ...apiFilters, per_page: 15 }),
-        getAllMantenimientos({ ...apiFilters, per_page: 15 }),
-        getAllCombustibles({ ...apiFilters, per_page: 15 } as any),
+      const [transporte, mantenimiento, combustible] = await Promise.allSettled([
+        getAllRequests(apiFilters),
+        getAllMantenimientos(apiFilters),
+        getAllCombustibles(apiFilters as any),
       ]);
 
-      if (!active) return;
+      const combined: CombinedRequest[] = [];
 
-      let combined = processResults(t1, m1, c1);
-      combined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-      
-      setAllItems(combined);
-      setLoading(false); // UI renderiza instantáneamente los primeros resultados
+      // 1. Transporte
+      if (transporte.status === "fulfilled") {
+        transporte.value.data.forEach((s) => {
+          combined.push({
+            id:          s.id,
+            codigo:      s.codigo,
+            destino:     s.destino,
+            fecha_salida: s.fecha_salida,
+            estado:      s.estado as RequestStatus,
+            origen:      s.origen,
+            unidad:      s.unidad,
+            solicitante: s.solicitante,
+            modulo:      "transporte",
+            motorista:   s.motorista,
+            vehiculo:    s.vehiculo,
+            created_at:  (s as any).created_at || s.fecha_salida,
+            updated_at:  s.updated_at,
+            _raw:        s as unknown as Record<string, unknown>,
+          });
+        });
 
-      // 2. CARGA EN SEGUNDO PLANO (Por paginación para no tirar el servidor)
-      const hasMoreT = t1.status === "fulfilled" && t1.value.total > t1.value.data.length;
-      const hasMoreM = m1.status === "fulfilled" && m1.value.total > m1.value.data.length;
-      const hasMoreC = c1.status === "fulfilled" && c1.value.total > c1.value.data.length;
-
-      if (hasMoreT || hasMoreM || hasMoreC) {
-        // Lanzamos la función asíncrona sin bloquear
-        (async () => {
-          let currentPage = 1;
-          const PER_PAGE_BG = 50;
-          let keepT = hasMoreT, keepM = hasMoreM, keepC = hasMoreC;
-          let accumulated: CombinedRequest[] = [...combined]; // Iniciar con lo que ya tenemos
-
-          while ((keepT || keepM || keepC) && active) {
-            const promises = [];
-            if (keepT) promises.push(getAllRequests({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG }).then(r => ({ type: 'T', res: r })).catch(() => ({ type: 'T', res: null })));
-            if (keepM) promises.push(getAllMantenimientos({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG }).then(r => ({ type: 'M', res: r })).catch(() => ({ type: 'M', res: null })));
-            if (keepC) promises.push(getAllCombustibles({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG } as any).then(r => ({ type: 'C', res: r })).catch(() => ({ type: 'C', res: null })));
-
-            const results = await Promise.all(promises);
-            if (!active) break;
-
-            let tRes: any = null, mRes: any = null, cRes: any = null;
-            results.forEach(r => {
-              if (r.type === 'T') tRes = r.res;
-              if (r.type === 'M') mRes = r.res;
-              if (r.type === 'C') cRes = r.res;
-            });
-
-            const newChunk = processResults(
-              tRes ? { status: "fulfilled", value: tRes } : { status: "rejected" },
-              mRes ? { status: "fulfilled", value: mRes } : { status: "rejected" },
-              cRes ? { status: "fulfilled", value: cRes } : { status: "rejected" }
-            );
-
-            // Deduplicación usando Map por si se solapan páginas de background con carga inicial
-            const mergedMap = new Map();
-            accumulated.forEach(item => mergedMap.set(`${item.modulo}-${item.id}`, item));
-            newChunk.forEach(item => mergedMap.set(`${item.modulo}-${item.id}`, item));
-            
-            accumulated = Array.from(mergedMap.values());
-            accumulated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-            
-            setAllItems(accumulated); // La UI se va llenando progresivamente sin perder datos
-
-            if (tRes) keepT = tRes.total > currentPage * PER_PAGE_BG;
-            if (mRes) keepM = mRes.total > currentPage * PER_PAGE_BG;
-            if (cRes) keepC = cRes.total > currentPage * PER_PAGE_BG;
-
-            currentPage++;
-            
-            // Pequeña pausa para dar respiro al servidor
-            await new Promise(r => setTimeout(r, 400));
-          }
-        })();
+        // Si hay más páginas y no hemos llegado a 1000, pidiéramos más, but BIG is 1000.
+        // Si el backend limitó a 15-50, pedimos unas cuantas páginas más.
+        if (transporte.value.total > transporte.value.data.length && transporte.value.data.length < 500) {
+          try {
+            const p2 = await getAllRequests({ ...apiFilters, page: 2 });
+            p2.data.forEach(s => combined.push({ ...s, modulo: "transporte", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p3 = await getAllRequests({ ...apiFilters, page: 3 });
+            p3.data.forEach(s => combined.push({ ...s, modulo: "transporte", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p4 = await getAllRequests({ ...apiFilters, page: 4 });
+            p4.data.forEach(s => combined.push({ ...s, modulo: "transporte", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p5 = await getAllRequests({ ...apiFilters, page: 5 });
+            p5.data.forEach(s => combined.push({ ...s, modulo: "transporte", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+          } catch(e) { console.warn("Failed to fetch more transporte pages", e); }
+        }
       }
 
-    } catch (e: unknown) {
-      if (active) setError((e as Error)?.message ?? "Error al cargar solicitudes.");
-    } finally {
-      if (active) setLoading(false);
-    }
+      // 2. Mantenimiento
+      if (mantenimiento.status === "fulfilled") {
+        mantenimiento.value.data.forEach((s) => {
+          combined.push({
+            id:          s.id,
+            codigo:      s.codigo,
+            destino:     s.destino,
+            fecha_salida: s.fecha_salida,
+            estado:      s.estado as RequestStatus,
+            origen:      s.origen,
+            unidad:      s.unidad,
+            solicitante: s.solicitante,
+            modulo:      "mantenimiento",
+            motorista:   (s as any).motorista,
+            vehiculo:    (s as any).vehiculo,
+            created_at:  (s as any).created_at || s.fecha_salida,
+            updated_at:  s.updated_at,
+            _raw:        s as unknown as Record<string, unknown>,
+          });
+        });
 
-    return () => { active = false; };
+        if (mantenimiento.value.total > mantenimiento.value.data.length && mantenimiento.value.data.length < 500) {
+          try {
+            const p2 = await getAllMantenimientos({ ...apiFilters, page: 2 });
+            p2.data.forEach(s => combined.push({ ...s, modulo: "mantenimiento", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p3 = await getAllMantenimientos({ ...apiFilters, page: 3 });
+            p3.data.forEach(s => combined.push({ ...s, modulo: "mantenimiento", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p4 = await getAllMantenimientos({ ...apiFilters, page: 4 });
+            p4.data.forEach(s => combined.push({ ...s, modulo: "mantenimiento", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+            const p5 = await getAllMantenimientos({ ...apiFilters, page: 5 });
+            p5.data.forEach(s => combined.push({ ...s, modulo: "mantenimiento", created_at: (s as any).created_at || s.fecha_salida, fecha_salida: s.fecha_salida, estado: s.estado as RequestStatus } as any));
+          } catch(e) { console.warn("Failed to fetch more mantenimiento pages", e); }
+        }
+      }
+
+      // 3. Combustible
+      if (combustible.status === "fulfilled") {
+        // Tipo explícito para evitar TS7006 (parameter implicitly has 'any' type)
+        combustible.value.data.forEach((s: SolicitudCombustibleNormalizada) => {
+          combined.push({
+            id:          s.id,
+            codigo:      s.codigo,
+            destino:     s.destino,
+            fecha_salida: s.fecha_salida,
+            estado:      s.estado as RequestStatus,
+            origen:      s.origen,
+            unidad:      s.unidad,
+            solicitante: s.solicitante
+              ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email }
+              : undefined,
+            modulo:      "combustible",
+            motorista:   s.motorista,
+            vehiculo:    s.vehiculo,
+            created_at:  (s as any).created_at || s.fecha_salida,
+            updated_at:  s.updated_at,
+            _raw:        s as unknown as Record<string, unknown>,
+          });
+        });
+
+        if (combustible.value.total > combustible.value.data.length && combustible.value.data.length < 500) {
+          try {
+            const p2 = await getAllCombustibles({ ...apiFilters, page: 2 } as any);
+            p2.data.forEach(s => combined.push({ ...s, modulo: "combustible", created_at: (s as any).created_at || (s as any).fecha_salida, fecha_salida: (s as any).fecha_salida, estado: (s as any).estado as RequestStatus } as any));
+            const p3 = await getAllCombustibles({ ...apiFilters, page: 3 } as any);
+            p3.data.forEach(s => combined.push({ ...s, modulo: "combustible", created_at: (s as any).created_at || (s as any).fecha_salida, fecha_salida: (s as any).fecha_salida, estado: (s as any).estado as RequestStatus } as any));
+            const p4 = await getAllCombustibles({ ...apiFilters, page: 4 } as any);
+            p4.data.forEach(s => combined.push({ ...s, modulo: "combustible", created_at: (s as any).created_at || (s as any).fecha_salida, fecha_salida: (s as any).fecha_salida, estado: (s as any).estado as RequestStatus } as any));
+            const p5 = await getAllCombustibles({ ...apiFilters, page: 5 } as any);
+            p5.data.forEach(s => combined.push({ ...s, modulo: "combustible", created_at: (s as any).created_at || (s as any).fecha_salida, fecha_salida: (s as any).fecha_salida, estado: (s as any).estado as RequestStatus } as any));
+          } catch(e) { console.warn("Failed to fetch more combustible pages", e); }
+        }
+      }
+
+      // Ordenar por fecha de creación desc
+      combined.sort(
+        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setAllItems(combined);
+    } catch (e: unknown) {
+      setError((e as Error)?.message ?? "Error al cargar solicitudes.");
+    } finally {
+      setLoading(false);
+    }
   }, [filters.estado, filters.search]);
 
-  useEffect(() => {
-    const cleanup = fetchAll();
-    return () => {
-      cleanup.then(fn => fn && fn());
-    };
-  }, [fetchAll]);
+  useEffect(() => { fetchAll(); }, [fetchAll]);
 
   // ─── Filtrado client-side ────────────────────────────────────────────────────
 
