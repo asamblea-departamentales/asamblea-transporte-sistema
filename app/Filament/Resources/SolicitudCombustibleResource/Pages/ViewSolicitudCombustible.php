@@ -262,6 +262,32 @@ class ViewSolicitudCombustible extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::APROBADA
                 ),
 
+            Actions\Action::make('enviar_liquidador')
+    ->label('Enviar a liquidador')
+    ->button() // Para que se vea como un botón destacado en la cabecera
+    ->size('lg')
+    ->color('primary')
+    ->icon('heroicon-o-arrow-right')
+    ->requiresConfirmation()
+    ->modalHeading('Enviar a liquidador')
+    ->modalDescription('La solicitud será enviada para proceso de liquidación.')
+    ->action(function (SolicitudCombustible $record) {
+        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+            ->enviarALiquidador($record, auth()->id());
+
+        Notification::make()
+            ->title('Enviada a liquidador')
+            ->success()
+            ->send();
+            
+        // Opcional: refrescar la página para ver el cambio de estado
+        $this->refreshFormData(['estado']);
+    })
+    ->visible(fn (SolicitudCombustible $record) =>
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->estado === EstadoSolicitudEnum::APROBADA
+    ),    
+
             Actions\Action::make('rechazar')
                 ->button()
                 ->size('lg')
