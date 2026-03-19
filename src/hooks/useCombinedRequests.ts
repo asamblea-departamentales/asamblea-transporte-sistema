@@ -134,24 +134,56 @@ export function useCombinedRequests() {
       setAllItems(combined);
       setLoading(false); // UI renderiza instantáneamente los primeros resultados
 
-      // 2. CARGA EN SEGUNDO PLANO (El resto de datos)
-      // Solo si el usuario no tiene filtros muy restrictivos que ya devolvieron todo
+      // 2. CARGA EN SEGUNDO PLANO (Por paginación para no tirar el servidor)
       const hasMoreT = t1.status === "fulfilled" && t1.value.total > t1.value.data.length;
       const hasMoreM = m1.status === "fulfilled" && m1.value.total > m1.value.data.length;
       const hasMoreC = c1.status === "fulfilled" && c1.value.total > c1.value.data.length;
 
       if (hasMoreT || hasMoreM || hasMoreC) {
-        const [tAll, mAll, cAll] = await Promise.allSettled([
-          getAllRequests({ ...apiFilters, per_page: 1000 }),
-          getAllMantenimientos({ ...apiFilters, per_page: 1000 }),
-          getAllCombustibles({ ...apiFilters, per_page: 1000 } as any),
-        ]);
+        // Lanzamos la función asíncrona sin bloquear
+        (async () => {
+          let currentPage = 1;
+          const PER_PAGE_BG = 50;
+          let keepT = hasMoreT, keepM = hasMoreM, keepC = hasMoreC;
+          let accumulated: CombinedRequest[] = [];
 
-        if (!active) return;
-        
-        const fullCombined = processResults(tAll, mAll, cAll);
-        fullCombined.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-        setAllItems(fullCombined); // Actualizamos silenciosamente con todo el historial
+          while ((keepT || keepM || keepC) && active) {
+            const promises = [];
+            if (keepT) promises.push(getAllRequests({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG }).then(r => ({ type: 'T', res: r })).catch(() => ({ type: 'T', res: null })));
+            if (keepM) promises.push(getAllMantenimientos({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG }).then(r => ({ type: 'M', res: r })).catch(() => ({ type: 'M', res: null })));
+            if (keepC) promises.push(getAllCombustibles({ ...apiFilters, page: currentPage, per_page: PER_PAGE_BG } as any).then(r => ({ type: 'C', res: r })).catch(() => ({ type: 'C', res: null })));
+
+            const results = await Promise.all(promises);
+            if (!active) break;
+
+            let tRes: any = null, mRes: any = null, cRes: any = null;
+            results.forEach(r => {
+              if (r.type === 'T') tRes = r.res;
+              if (r.type === 'M') mRes = r.res;
+              if (r.type === 'C') cRes = r.res;
+            });
+
+            const newChunk = processResults(
+              tRes ? { status: "fulfilled", value: tRes } : { status: "rejected" },
+              mRes ? { status: "fulfilled", value: mRes } : { status: "rejected" },
+              cRes ? { status: "fulfilled", value: cRes } : { status: "rejected" }
+            );
+
+            accumulated = [...accumulated, ...newChunk];
+            accumulated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+            
+            setAllItems(accumulated); // La UI se va llenando progresivamente
+
+            if (tRes) keepT = tRes.total > currentPage * PER_PAGE_BG;
+            if (mRes) keepM = mRes.total > currentPage * PER_PAGE_BG;
+            if (cRes) keepC = cRes.total > currentPage * PER_PAGE_BG;
+
+            currentPage++;
+            
+            // Pequeña pausa para dar respiro al servidor
+            await new Promise(r => setTimeout(r, 400));
+          }
+        })();
       }
 
     } catch (e: unknown) {
