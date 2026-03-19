@@ -179,7 +179,7 @@ class SolicitudCombustibleResource extends Resource
                 ->collapsed()
                 ->compact(),
 
-                Forms\Components\Section::make('Bitácora / Auditoría completa')
+    Forms\Components\Section::make('Bitácora / Auditoría completa')
     ->schema([
         Forms\Components\Placeholder::make('timeline_visual')
     ->label('Auditoría del proceso')
@@ -249,6 +249,10 @@ class SolicitudCombustibleResource extends Resource
         return new \Illuminate\Support\HtmlString($html);
     })
     ->columnSpanFull(),
+    ])
+    ->collapsible()
+    ->collapsed()
+    ->compact(),
 
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
