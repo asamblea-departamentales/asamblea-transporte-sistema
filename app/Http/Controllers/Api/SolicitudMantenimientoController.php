@@ -13,6 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
 use App\Models\HistorialEstado;
 use App\Models\BitacoraEvento;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 class SolicitudMantenimientoController extends Controller
 {
     public function __construct(
