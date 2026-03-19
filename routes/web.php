@@ -226,11 +226,13 @@ Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaV
     ->name('reportes.recepcion-entrega.pdf');    
 
 Route::get('/liquidacion/{record}/pdf', function (SolicitudCombustible $record) {
-    // Nota que ahora usamos Pdf (con minúsculas según el estandar moderno)
-    $pdf = Pdf::loadView('reports.liquidacion_pdf', [
+
+    // Cambiamos 'pdf.liquidacion' por 'reports.liquidacion_pdf'
+    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.liquidacion_pdf', [
         'solicitud' => $record,
         'liquidacion' => $record->liquidacion,
     ]);
 
-    return $pdf->download("liquidacion_{$record->codigo}.pdf");
-})->name('liquidacion.pdf');  
+    return $pdf->stream("liquidacion_{$record->codigo}.pdf");
+
+})->name('liquidacion.pdf');
