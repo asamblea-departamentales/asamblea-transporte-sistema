@@ -123,10 +123,11 @@ class SolicitudCombustible extends Model
         return $this->belongsTo(User::class, 'asignado_por');
     }
 
-    public function liquidacion()
-    {
-        return $this->hasOne(\App\Models\LiquidacionCombustible::class, 'solicitud_id');
-    }
+
+    public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
+{
+    return $this->morphOne(Liquidacion::class, 'liquidable');
+}
 
     // ── Helpers ─────────────────────────────────────────────
 

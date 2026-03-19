@@ -105,6 +105,11 @@ class SolicitudMantenimiento extends Model
     return $this->morphMany(HistorialEstado::class, 'entidad', 'entidad_tipo', 'entidad_id');
 }
 
+public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
+{
+    return $this->morphOne(Liquidacion::class, 'liquidable');
+}
+
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneAdjuntos(): bool

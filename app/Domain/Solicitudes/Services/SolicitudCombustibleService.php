@@ -10,8 +10,7 @@ use App\Models\HistorialEstado;
 use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
-use App\Models\LiquidacionCombustible;
-
+use App\Models\Liquidacion;
 class SolicitudCombustibleService
 {
     // ── BORRADOR (Creación inicial) ─────────────────────────
@@ -199,29 +198,41 @@ public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId):
 
 
     //Liquidar
-public function liquidar($record, $userId, $data)
+public function liquidar($record, $userId, $data): void
 {
     if (empty($record->comprobantes)) {
         throw new \DomainException('No se puede liquidar sin comprobantes.');
     }
 
-    LiquidacionCombustible::create([
-        'solicitud_id'     => $record->id,
-        'user_id'          => $userId,
-        'monto_solicitado' => $record->valor_total,
-        'monto_validado'   => $data['monto_validado'],
-        'resultado'        => $data['resultado'],
-        'observaciones'    => $data['observaciones'] ?? null,
-        'fecha_liquidacion'=> now(),
-    ]);
+    DB::transaction(function () use ($record, $userId, $data) {
+        // Crea la liquidación usando la relación polimórfica
+        $record->liquidacion()->create([
+            'user_id'           => $userId,
+            'monto_solicitado'  => $record->valor_total,
+            'monto_validado'    => $data['monto_validado'],
+            'resultado'         => $data['resultado'],
+            'observaciones'     => $data['observaciones'] ?? null,
+            'fecha_liquidacion' => now(),
+        ]);
 
-    // Cambio de estado
-    $this->cambiarEstado(
-        $record,
-        $userId,
-        EstadoSolicitudEnum::LIQUIDADA,
-        'Liquidación realizada'
-    );
+        // Cambio de estado
+        $anterior = $record->estado;
+        $record->estado = EstadoSolicitudEnum::LIQUIDADA;
+        $record->save();
+
+        $this->registrarCambioEstado(
+            $record,
+            $anterior,
+            $record->estado,
+            $userId,
+            'Liquidación realizada'
+        );
+
+        $this->registrarEvento($record, 'LIQUIDAR', $userId, [
+            'monto_validado' => $data['monto_validado'],
+            'resultado'      => $data['resultado'],
+        ]);
+    });
 }
 
 

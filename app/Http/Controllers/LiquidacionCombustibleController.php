@@ -10,11 +10,11 @@ class LiquidacionCombustibleController extends Controller
     public function pdf($id)
     {
         $solicitud = SolicitudCombustible::with([
-            'vehiculo.marca',
-            'vehiculo.modelo',
-            'solicitante',
-            'liquidacion'
-        ])->findOrFail($id);
+    'vehiculo.marca',
+    'vehiculo.modelo',
+    'solicitante',
+    'liquidacion.usuario', // ← nueva relación polimórfica
+])->findOrFail($id);
 
         $pdf = Pdf::loadView('pdf.liquidacion_combustible', [
             'solicitud' => $solicitud,
