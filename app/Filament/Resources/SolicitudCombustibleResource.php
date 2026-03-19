@@ -576,6 +576,29 @@ class SolicitudCombustibleResource extends Resource
         $record->estado === EstadoSolicitudEnum::PRE_APROBADA
     ),
 
+
+    //Action agregada para liquidador
+    Tables\Actions\Action::make('enviar_liquidador')
+    ->label('Enviar a liquidador')
+    ->color('primary')
+    ->icon('heroicon-o-arrow-right')
+    ->requiresConfirmation()
+    ->modalHeading('Enviar a liquidador')
+    ->modalDescription('La solicitud será enviada para proceso de liquidación.')
+    ->action(function (SolicitudCombustible $record) {
+        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+            ->enviarALiquidador($record, auth()->id());
+
+        Notification::make()
+            ->title('Enviada a liquidador')
+            ->success()
+            ->send();
+    })
+    ->visible(fn ($record) =>
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->estado === EstadoSolicitudEnum::APROBADA
+    ),
+
                     // FIX #2 y #3: ->action() y ->visible() ahora están dentro del Action, antes del cierre del ActionGroup
                     Tables\Actions\Action::make('asignar_vales')
                         ->label('Asignar Cupones')

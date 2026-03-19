@@ -150,6 +150,41 @@ class SolicitudCombustibleService
         });
     }
 
+    // --- ASIGNADA -> LIQUIDADA
+    public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId)
+{
+    DB::transaction(function () use ($solicitud, $userId) {
+
+        $estadoAnterior = $solicitud->estado;
+
+        //Cambiar estado
+        $solicitud->update([
+            'estado' => EstadoSolicitudEnum::ASIGNADA,
+        ]);
+
+        // Historial de estados
+        HistorialEstado::create([
+            'entidad_tipo'   => 'solicitud_combustible',
+            'entidad_id'     => $solicitud->id,
+            'estado_anterior'=> $estadoAnterior,
+            'estado_nuevo'   => EstadoSolicitudEnum::ASIGNADA,
+            'user_id'        => $userId,
+            'comentario'     => 'Solicitud enviada a liquidador.',
+        ]);
+
+        // 3. Bitácora (evento de negocio)
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_combustible',
+            'entidad_id'   => $solicitud->id,
+            'user_id'      => $userId,
+            'accion'       => 'enviar_liquidador',
+            'datos_extras' => [
+                'mensaje' => 'Solicitud enviada al área de liquidación',
+            ],
+        ]);
+    });
+}
+
     // ── APROBADA → ASIGNADA ─────────────────────────────────
 
     public function asignarVales(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
