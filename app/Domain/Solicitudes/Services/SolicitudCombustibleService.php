@@ -44,8 +44,7 @@ class SolicitudCombustibleService
             $solicitud = SolicitudCombustible::create($data);
 
             $this->registrarCambioEstado($solicitud, null, $solicitud->estado, $userId, 'Creación inicial de borrador.');
-            $this->registrarEvento($solicitud, 'CREAR_BORRADOR', $userId, null);
-
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::CREAR->value, $userId, null);
             return $solicitud;
         });
     }
@@ -122,8 +121,7 @@ class SolicitudCombustibleService
             $solicitud->save();
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, 'Solicitud pre-aprobada.');
-            $this->registrarEvento($solicitud, 'PRE_APROBAR', $jefeId, null);
-
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::PRE_APROBAR->value, $jefeId, null);
             return $solicitud;
         });
     }
@@ -226,7 +224,7 @@ class SolicitudCombustibleService
                 "Asignación de {$cantidadVales} vales. Serie {$serie->nombre}. Rango {$inicio}-{$fin}. Monto: $" . number_format($montoAsignado, 2)
             );
 
-            $this->registrarEvento($solicitud, 'ASIGNAR_VALES', $userId, [
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR->value, $userId, [
                 'contrato_id'       => $contrato->id,
                 'serie_vale_id'     => $serie->id,
                 'serie'             => $serie->nombre,
@@ -349,7 +347,8 @@ class SolicitudCombustibleService
         ]);
     }
 
-    private function registrarEvento(SolicitudCombustible $solicitud, string $accion, int $userId, ?array $extra = null): void
+    //Public para que pueda ser accesible
+    public function registrarEvento(SolicitudCombustible $solicitud, string $accion, int $userId, ?array $extra = null): void
     {
         BitacoraEvento::create([
             'entidad_tipo' => 'solicitud_combustible',

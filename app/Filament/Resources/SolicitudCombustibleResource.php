@@ -179,6 +179,38 @@ class SolicitudCombustibleResource extends Resource
                 ->collapsed()
                 ->compact(),
 
+                Forms\Components\Section::make('Bitácora / Auditoría completa')
+    ->schema([
+        Forms\Components\Repeater::make('timeline')
+            ->label('')
+            ->disabled()
+            ->dehydrated(false)
+            ->default(function ($record) {
+                return \App\Helpers\AuditoriaHelper::timeline(
+                    'solicitud_combustible',
+                    $record->id
+                )->map(function ($item) {
+                    return [
+                        'fecha' => optional($item['fecha'])->format('d/m/Y H:i'),
+                        'usuario' => $item['usuario'],
+                        'accion' => $item['accion'],
+                        'detalle' => is_array($item['detalle'])
+                            ? json_encode($item['detalle'], JSON_PRETTY_PRINT)
+                            : $item['detalle'],
+                    ];
+                })->toArray();
+            })
+            ->schema([
+                Forms\Components\TextInput::make('fecha')->disabled(),
+                Forms\Components\TextInput::make('usuario')->disabled(),
+                Forms\Components\TextInput::make('accion')->disabled(),
+                Forms\Components\Textarea::make('detalle')->rows(2)->disabled(),
+            ])
+            ->columns(3)
+            ->columnSpanFull(),
+    ])
+    ->collapsible()
+
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
                     Forms\Components\Placeholder::make('aprobador_ui')
@@ -339,7 +371,7 @@ class SolicitudCombustibleResource extends Resource
 
                 Tables\Columns\IconColumn::make('tiene_adjuntos')
                     ->label('Adj.')
-                    ->getStateUsing(fn ($record) => ! empty($record->adjuntos))
+                    ->getStateUsing(fn ($record) => ! empty($record->comprobantes))
                     ->boolean()
                     ->trueIcon('heroicon-m-paper-clip')
                     ->falseIcon('heroicon-m-minus')
@@ -378,107 +410,82 @@ class SolicitudCombustibleResource extends Resource
                         ),
 
                     Tables\Actions\Action::make('observacion')
-                        ->label('Observación')
-                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                        ->modalHeading('Agregar observación')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Comentario técnico')
-                                ->rows(4)
-                                ->required(),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            $estadoAnterior = $record->estado;
+    ->label('Observación')
+    ->icon('heroicon-o-chat-bubble-left-ellipsis')
+    ->modalHeading('Agregar observación')
+    ->form([
+        Forms\Components\Textarea::make('observaciones')
+            ->label('Comentario técnico')
+            ->rows(4)
+            ->required(),
+    ])
+    ->action(function (SolicitudCombustible $record, array $data) {
+        // LLAMADA LIMPIA AL SERVICE
+        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+            ->observar($record, auth()->id(), $data['observaciones']);
 
-                            $record->observaciones = $data['observaciones'];
+        Notification::make()
+            ->title('Solicitud observada exitosamente')
+            ->success()
+            ->send();
+    })
+    ->visible(fn ($record) => 
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        in_array($record->estado, [
+            EstadoSolicitudEnum::PENDIENTE,
+            EstadoSolicitudEnum::EN_REVISION,
+        ])
+    ),
+                   Tables\Actions\Action::make('pre_aprobar')
+    ->label('Pre-aprobar')
+    ->color('warning')
+    ->icon('heroicon-o-clock')
+    ->requiresConfirmation()
+    ->modalHeading('¿Pre-aprobar solicitud?')
+    ->modalDescription('La solicitud pasará al estado Pre-aprobada para su revisión final.')
+    ->action(function (SolicitudCombustible $record) {
+        // LLAMADA AL SERVICE (Centraliza estado, historial y bitácora)
+        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+            ->preAprobar($record, auth()->id());
 
-                            if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                                $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                            }
-
-                            $record->save();
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => $record->estado?->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['observaciones'],
-                            ]);
-                        })
-                        ->visible(fn ($record) =>
-                            auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                            ])
-                        ),
-
-                    Tables\Actions\Action::make('pre_aprobar')
-                        ->label('Pre-aprobar')
-                        ->color('warning')
-                        ->icon('heroicon-o-clock')
-                        ->requiresConfirmation()
-                        ->action(function (SolicitudCombustible $record) {
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado' => EstadoSolicitudEnum::PRE_APROBADA,
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::PRE_APROBADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => 'Solicitud pre-aprobada.',
-                            ]);
-                        })
-                        ->visible(fn ($record) =>
-                            auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                            ])
-                        ),
-
+        \Filament\Notifications\Notification::make()
+            ->title('Solicitud pre-aprobada')
+            ->success()
+            ->send();
+    })
+    ->visible(fn ($record) =>
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        in_array($record->estado, [
+            EstadoSolicitudEnum::PENDIENTE,
+            EstadoSolicitudEnum::EN_REVISION,
+        ])
+    ),
                     Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar final')
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Notas de aprobación')
-                                ->required(),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            $estadoAnterior = $record->estado;
+    ->label('Aprobar final')
+    ->color('success')
+    ->icon('heroicon-o-check-circle')
+    ->modalHeading('Confirmar Aprobación Final')
+    ->modalDescription('Al aprobar, la solicitud quedará lista para la asignación de vales.')
+    ->form([
+        Forms\Components\Textarea::make('observaciones')
+            ->label('Notas de aprobación')
+            ->placeholder('Escriba aquí cualquier nota técnica final...')
+            ->required(),
+    ])
+    ->action(function (SolicitudCombustible $record, array $data) {
+        // Ejecutamos la lógica centralizada del Service
+        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+            ->aprobar($record, auth()->id(), $data['observaciones']);
 
-                            $record->update([
-                                'estado'          => EstadoSolicitudEnum::APROBADA,
-                                'observaciones'   => $data['observaciones'],
-                                'aprobador_id'    => auth()->id(),
-                                'fecha_aprobacion' => now(),
-                            ]);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_combustible',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::APROBADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['observaciones'],
-                            ]);
-                        })
-                        ->visible(fn ($record) =>
-                            auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
+        \Filament\Notifications\Notification::make()
+            ->title('Solicitud aprobada con éxito')
+            ->success()
+            ->send();
+    })
+    ->visible(fn ($record) =>
+        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+    ),
 
                     // FIX #2 y #3: ->action() y ->visible() ahora están dentro del Action, antes del cierre del ActionGroup
                     Tables\Actions\Action::make('asignar_vales')

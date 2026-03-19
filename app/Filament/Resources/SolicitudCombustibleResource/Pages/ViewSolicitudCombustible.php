@@ -20,6 +20,15 @@ class ViewSolicitudCombustible extends ViewRecord
 {
     protected static string $resource = SolicitudCombustibleResource::class;
 
+    protected function afterFill(): void
+{
+    app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+        ->registrarEvento(
+            $this->record,
+            \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::VER->value,
+            auth()->id()
+        );
+}
     protected function getHeaderActions(): array
     {
         return [
