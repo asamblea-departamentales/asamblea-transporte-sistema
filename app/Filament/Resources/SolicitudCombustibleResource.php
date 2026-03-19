@@ -771,48 +771,59 @@ class SolicitudCombustibleResource extends Resource
     // FIX #1: Corregido getEloquentQuery — el return prematuro dejaba todo el filtrado por rol sin ejecutar.
     // Se extrae el query base a una variable, se aplican los filtros y se retorna al final.
     public static function getEloquentQuery(): Builder
-    {
-        $query = parent::getEloquentQuery()->with([
-            'vehiculo.marca',
-            'vehiculo.modelo',
-            'solicitante',
-            'aprobador',
-            'solicitudTransporte',
-        ]);
+{
+    $query = parent::getEloquentQuery()->with([
+        'vehiculo.marca',
+        'vehiculo.modelo',
+        'solicitante',
+        'aprobador',
+        'solicitudTransporte',
+    ]);
 
-        $user = auth()->user();
+    $user = auth()->user();
 
-        // Super admin y TI ven todo
-        if ($user->hasAnyRole(['super_admin', 'ti'])) {
-            return $query;
-        }
-
-        // Operativo: solo ve pendientes y en revisión
-        if ($user->hasAnyRole('operativo')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::PENDIENTE->value,
-                EstadoSolicitudEnum::EN_REVISION->value,
-            ]);
-        }
-
-        // Jefe: ve pre-aprobadas y aprobadas
-        if ($user->hasRole('jefe')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::PRE_APROBADA->value,
-                EstadoSolicitudEnum::APROBADA->value,
-            ]);
-        }
-
-        // FIX #6: Verificar que ASIGNADA exista en el enum; si no, reemplazar por los estados correctos
-        if ($user->hasRole('liquidador')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::ASIGNADA->value,   // ← asegúrate de que este case exista en el enum
-                EstadoSolicitudEnum::COMPLETADA->value,
-            ]);
-        }
-
+    // 1. Super admin, TI y Admin: Ven TODO.
+    if ($user->hasAnyRole(['super_admin', 'ti', 'admin'])) {
         return $query;
     }
+
+    // 2. SOLICITANTE: Solo ve lo que él mismo pidió (dueño de la solicitud).
+    // No importa el estado, siempre debe tener su historial disponible.
+    if ($user->hasRole('solicitante')) {
+        return $query->where('solicitante_id', $user->id);
+    }
+
+    // 3. OPERATIVO: Rol de apoyo/gestión técnica.
+    // Ve las que están en proceso inicial para darles seguimiento o corregir datos.
+    if ($user->hasRole('operativo')) {
+        return $query->whereIn('estado', [
+            EstadoSolicitudEnum::PENDIENTE->value,
+            EstadoSolicitudEnum::EN_REVISION->value,
+            EstadoSolicitudEnum::PRE_APROBADA->value,
+        ]);
+    }
+
+    // 4. JEFE: Ve lo que debe aprobar y lo que ya autorizó.
+    if ($user->hasRole('jefe')) {
+        return $query->whereIn('estado', [
+            EstadoSolicitudEnum::PRE_APROBADA->value,
+            EstadoSolicitudEnum::APROBADA->value,
+            EstadoSolicitudEnum::ASIGNADA->value,
+            EstadoSolicitudEnum::COMPLETADA->value,
+            EstadoSolicitudEnum::RECHAZADA->value,
+        ]);
+    }
+
+    // 5. LIQUIDADOR: Solo su área de trabajo (Vales entregados y cierre).
+    if ($user->hasRole('liquidador')) {
+        return $query->whereIn('estado', [
+            EstadoSolicitudEnum::ASIGNADA->value,
+            EstadoSolicitudEnum::COMPLETADA->value,
+        ]);
+    }
+
+    return $query;
+}
 
     public static function getPages(): array
     {
