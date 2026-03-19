@@ -1,5 +1,6 @@
 // src/notifications/NotificationToast.tsx
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useNotifications, type NotiTipo } from "./NotificationContext";
 
 // ─── Config visual por tipo ───────────────────────────────────────────────────
@@ -35,6 +36,7 @@ function ProgressBar({ active, color }: { active: boolean; color: string }) {
 
 function ToastItem({ onDone }: { onDone: () => void }) {
   const { toast } = useNotifications();
+  const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(false);
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -56,10 +58,17 @@ function ToastItem({ onDone }: { onDone: () => void }) {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [toast, onDone]);
 
-  const handleClose = () => {
+  const handleClose = (e: React.MouseEvent) => {
+    e.stopPropagation(); // Evitar navegar al cerrar
     setVisible(false);
     setProgress(false);
     timerRef.current = setTimeout(onDone, 350);
+  };
+
+  const handleNavigate = () => {
+    if (!toast) return;
+    navigate(`/solicitudes/${toast.modulo}/${toast.codigo}`);
+    handleClose({ stopPropagation: () => {} } as any); // Cerrar tras navegar
   };
 
   if (!toast) return null;
@@ -69,11 +78,12 @@ function ToastItem({ onDone }: { onDone: () => void }) {
     <div
       role="alert"
       aria-live="polite"
+      onClick={handleNavigate}
       className={`
         relative flex items-start gap-3
         w-80 rounded-xl border bg-white shadow-[0_8px_30px_rgba(15,37,72,0.12),0_2px_8px_rgba(15,37,72,0.06)]
         px-4 py-3.5
-        transition-all duration-350
+        transition-all duration-350 cursor-pointer hover:shadow-[0_12px_40px_rgba(15,37,72,0.18)] group/toast
         ${visible ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95"}
         ${cfg.border}
       `}

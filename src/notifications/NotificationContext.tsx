@@ -110,11 +110,13 @@ type Ctx = {
   markAllRead: () => void;
   deleteNotification: (id: string) => void;
   clearToast: () => void;
+  spawnTestNotification: () => void;
 };
 
 const NotifCtx = createContext<Ctx>({
   notifications: [], unreadCount: 0, toast: null,
   markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, clearToast: () => { },
+  spawnTestNotification: () => { },
 });
 
 export function useNotifications() { return useContext(NotifCtx); }
@@ -136,8 +138,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   const push = useCallback((incoming: Notification[]) => {
     if (!incoming.length) return;
-    setToast(incoming[incoming.length - 1]);
+    const last = incoming[incoming.length - 1];
+    setToast(last);
     setNotifications(prev => [...incoming.reverse(), ...prev]);
+
+    // ✅ Browser Native Notification (solo si el usuario dio permiso)
+    if (window.Notification && Notification.permission === "granted") {
+      try {
+        new window.Notification(last.titulo, {
+          body: last.mensaje,
+          icon: "/icons/icon-192x192.png",
+          tag: last.id, // Evita duplicados cercanos
+        });
+      } catch (err) {
+        console.error("Fallo al disparar notificación nativa:", err);
+      }
+    }
   }, []);
 
   const poll = useCallback(async () => {
@@ -182,6 +198,13 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     poll();
     const id = setInterval(poll, POLL_MS);
+    
+    // Solicitar permisos de notificación nativa al montar la aplicación
+    // Solo si el navegador lo soporta y aún no se ha denegado/concedido
+    if (window.Notification && Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     return () => clearInterval(id);
   }, [poll]);
 
@@ -190,8 +213,22 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   const deleteNotification = useCallback((id: string) => setNotifications(p => p.filter(n => n.id !== id)), []);
   const clearToast = useCallback(() => setToast(null), []);
 
+  const spawnTestNotification = useCallback(() => {
+    const test: Notification = {
+      id: uid(),
+      tipo: "info",
+      modulo: "transporte",
+      titulo: "Notificación de Prueba",
+      mensaje: "Esta es una prueba de notificación interactiva y nativa.",
+      codigo: "TEST-123",
+      leida: false,
+      createdAt: new Date().toISOString(),
+    };
+    push([test]);
+  }, [push]);
+
   return (
-    <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast }}>
+    <NotifCtx.Provider value={{ notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, clearToast, spawnTestNotification }}>
       {children}
     </NotifCtx.Provider>
   );
