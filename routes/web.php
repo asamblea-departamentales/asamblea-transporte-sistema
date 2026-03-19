@@ -227,7 +227,7 @@ Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaV
 
 Route::get('/liquidacion/{record}/pdf', function (SolicitudCombustible $record) {
     // Nota que ahora usamos Pdf (con minúsculas según el estandar moderno)
-    $pdf = Pdf::loadView('pdf.liquidacion', [
+    $pdf = Pdf::loadView('reports.liquidacion', [
         'solicitud' => $record,
         'liquidacion' => $record->liquidacion,
     ]);
