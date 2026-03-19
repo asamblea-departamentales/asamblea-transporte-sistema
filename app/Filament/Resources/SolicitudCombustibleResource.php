@@ -181,35 +181,74 @@ class SolicitudCombustibleResource extends Resource
 
                 Forms\Components\Section::make('Bitácora / Auditoría completa')
     ->schema([
-        Forms\Components\Repeater::make('timeline')
-            ->label('')
-            ->disabled()
-            ->dehydrated(false)
-            ->formatStateUsing(function ($state, $record) {
-                return \App\Helpers\AuditoriaHelper::timeline(
-                    'solicitud_combustible',
-                    $record->id
-                )->map(function ($item) {
-                    return [
-                        'fecha' => optional($item['fecha'])->format('d/m/Y H:i'),
-                        'usuario' => $item['usuario'],
-                        'accion' => $item['accion'],
-                        'detalle' => is_array($item['detalle'])
-                            ? json_encode($item['detalle'], JSON_PRETTY_PRINT)
-                            : $item['detalle'],
-                    ];
-                })->toArray();
-            })
-            ->schema([
-                Forms\Components\TextInput::make('fecha')->disabled(),
-                Forms\Components\TextInput::make('usuario')->disabled(),
-                Forms\Components\TextInput::make('accion')->disabled(),
-                Forms\Components\Textarea::make('detalle')->rows(2)->disabled(),
-            ])
-            ->columns(3)
-            ->columnSpanFull(),
-    ])
-    ->collapsible(),
+        Forms\Components\Placeholder::make('timeline_visual')
+    ->label('Auditoría del proceso')
+    ->content(function (SolicitudCombustible $record) {
+
+        $items = \App\Helpers\AuditoriaHelper::timeline(
+            'solicitud_combustible',
+            $record->id
+        );
+
+        if ($items->isEmpty()) {
+            return 'Sin actividad registrada.';
+        }
+
+        $html = '<div style="border-left: 3px solid #e5e7eb; padding-left: 15px;">';
+
+        foreach ($items as $item) {
+
+            $fecha = optional($item['fecha'])->format('d/m/Y H:i');
+            $usuario = $item['usuario'] ?? 'Sistema';
+            $accion = strtoupper($item['accion']);
+            $detalle = is_array($item['detalle'])
+                ? json_encode($item['detalle'])
+                : $item['detalle'];
+
+            // 🎨 Colores por tipo de acción
+            $color = match ($item['accion']) {
+                'crear' => '#6b7280',
+                'enviar' => '#3b82f6',
+                'aprobar' => '#10b981',
+                'rechazar' => '#ef4444',
+                'asignar' => '#8b5cf6',
+                default => '#6b7280',
+            };
+
+            $html .= "
+                <div style='margin-bottom: 20px; position: relative;'>
+                    
+                    <div style='
+                        position: absolute;
+                        left: -22px;
+                        top: 5px;
+                        width: 10px;
+                        height: 10px;
+                        background: {$color};
+                        border-radius: 50%;
+                    '></div>
+
+                    <div style='font-size: 12px; color: #6b7280;'>
+                        {$fecha} • {$usuario}
+                    </div>
+
+                    <div style='font-weight: bold; color: {$color};'>
+                        {$accion}
+                    </div>
+
+                    <div style='font-size: 13px; margin-top: 3px;'>
+                        {$detalle}
+                    </div>
+
+                </div>
+            ";
+        }
+
+        $html .= '</div>';
+
+        return new \Illuminate\Support\HtmlString($html);
+    })
+    ->columnSpanFull(),
 
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
