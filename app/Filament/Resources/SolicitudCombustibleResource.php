@@ -209,7 +209,7 @@ class SolicitudCombustibleResource extends Resource
             ->columns(3)
             ->columnSpanFull(),
     ])
-    ->collapsible()
+    ->collapsible(),
 
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
