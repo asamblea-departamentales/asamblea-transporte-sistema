@@ -19,7 +19,6 @@ class SolicitudMantenimientoController extends Controller
         protected SolicitudMantenimientoService $service
     ) {}
 
-    // ── GET /api/mantenimiento ----------------------------------------------
     public function index(Request $request)
     {
         $user  = $request->user();
@@ -35,7 +34,6 @@ class SolicitudMantenimientoController extends Controller
         );
     }
 
-    // ── POST /api/mantenimiento ──────────────────────────────
     public function store(Request $request)
     {
         $data = $request->validate([
@@ -44,37 +42,44 @@ class SolicitudMantenimientoController extends Controller
             'tipo_solicitud'            => ['required', 'in:taller,llantas'],
             'detalle'                   => ['required', 'string'],
             'fecha_sugerida'            => ['required', 'date'],
-            'prioridad'                 => ['required', 'in:baja,media,alta'],
+            // 'prioridad' ELIMINADO del request
             'costo_estimado'            => ['nullable', 'numeric', 'min:0'],
             'observaciones'             => ['nullable', 'string', 'max:2000'],
         ]);
 
-        $solicitud = SolicitudMantenimiento::create([
-            ...$data,
-            'solicitante_id' => Auth::id(),
-            'estado'         => EstadoSolicitudEnum::BORRADOR,
-        ]);
+        // ASIGNACIÓN AUTOMÁTICA EN BACKEND
+        // Al igual que en combustible, asignamos MEDIA por defecto
+        $data['prioridad'] = PrioridadSolicitudEnum::MEDIA;
 
-        // Envía automáticamente a PENDIENTE
-        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+        try {
+            // Creamos la solicitud como BORRADOR inicialmente
+            $solicitud = SolicitudMantenimiento::create([
+                ...$data,
+                'solicitante_id' => Auth::id(),
+                'estado'         => EstadoSolicitudEnum::BORRADOR,
+            ]);
 
-        return response()->json(
-            $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante']),
-            201
-        );
+            // Se envía automáticamente a PENDIENTE usando el service
+            $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+            return response()->json(
+                $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante']),
+                201
+            );
+        } catch (\Exception $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
     }
 
-    // ── GET /api/mantenimiento/{solicitud} ───────────────────
     public function show(SolicitudMantenimiento $solicitud)
     {
         $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante', 'aprobador'])
+            $solicitud->load(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante', 'aprobador', 'historialEstados'])
         );
     }
 
-    // ── POST /api/mantenimiento/{solicitud}/enviar ───────────
     public function enviar(SolicitudMantenimiento $solicitud)
     {
         $this->authorizeOwner($solicitud);
@@ -91,41 +96,37 @@ class SolicitudMantenimientoController extends Controller
         }
     }
 
-    // ── POST /api/mantenimiento/{solicitud}/completar ────────
-    // Solo desde el frontend del usuario
     public function finalizar(Request $request, SolicitudMantenimiento $solicitud)
-{
-    $this->authorizeOwner($solicitud);
+    {
+        $this->authorizeOwner($solicitud);
 
-    $data = $request->validate([
-        'fecha_realizada' => ['required', 'date'],
-        'costo_real'      => ['required', 'numeric', 'min:0'],
-        'adjuntos'        => ['required', 'array', 'min:1'],
-        'adjuntos.*'      => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
-    ]);
-
-    // Subida de archivos
-    $rutas = [];
-    foreach ($request->file('adjuntos') as $archivo) {
-        $rutas[] = $archivo->store('mantenimiento/comprobantes', 'public');
-    }
-
-    try {
-        $solicitud = $this->service->completar($solicitud, Auth::id(), [
-            'fecha_realizada' => $data['fecha_realizada'],
-            'costo_real' => $data['costo_real'],
-            'adjuntos' => $rutas,
+        $data = $request->validate([
+            'fecha_realizada' => ['required', 'date'],
+            'costo_real'      => ['required', 'numeric', 'min:0'],
+            'adjuntos'        => ['required', 'array', 'min:1'],
+            'adjuntos.*'      => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
-        return response()->json([
-            'message' => 'Mantenimiento finalizado con éxito.',
-            'data' => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento']),
-        ]);
+        $rutas = [];
+        foreach ($request->file('adjuntos') as $archivo) {
+            $rutas[] = $archivo->store('mantenimiento/comprobantes', 'public');
+        }
 
-    } catch (\DomainException $e) {
-        return response()->json(['error' => $e->getMessage()], 422);
+        try {
+            $solicitud = $this->service->completar($solicitud, Auth::id(), [
+                'fecha_realizada' => $data['fecha_realizada'],
+                'costo_real'      => $data['costo_real'],
+                'adjuntos'        => $rutas,
+            ]);
+
+            return response()->json([
+                'message' => 'Mantenimiento finalizado con éxito.',
+                'data'    => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento']),
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
-}
     // ── POST /api/mantenimiento/{solicitud}/cancelar ─────────
     public function cancelar(SolicitudMantenimiento $solicitud)
     {
@@ -239,6 +240,36 @@ public function iniciarEjecucion(SolicitudMantenimiento $solicitud)
     }
 }
 
+
+    //Agregado para el proceso de evaluacion de mantenimiento
+    public function evaluar(Request $request, SolicitudMantenimiento $solicitud)
+{
+    if (!auth()->user()->hasAnyRole(['jefe', 'operativo', 'liquidador'])) {
+        abort(403);
+    }
+
+    $data = $request->validate([
+        'estado' => ['required', 'in:conforme,observaciones,no_conforme'],
+        'comentario' => ['nullable', 'string'],
+    ]);
+
+    try {
+        $solicitud = $this->service->evaluar(
+            $solicitud,
+            auth()->id(),
+            $data['estado'],
+            $data['comentario']
+        );
+
+        return response()->json([
+            'message' => 'Evaluación registrada.',
+            'data' => $solicitud
+        ]);
+
+    } catch (\DomainException $e) {
+        return response()->json(['error' => $e->getMessage()], 422);
+    }
+}
     // ── Helpers de autorización ──────────────────────────────
 
     private function authorizeOwner(SolicitudMantenimiento $solicitud): void

@@ -90,6 +90,11 @@ class SolicitudMantenimiento extends Model
         return $this->belongsTo(User::class, 'finalizado_por');
     }
 
+    public function evaluacion()
+    {
+        return $this->hasOne(SolicitudMantenimiento::class);
+    }
+
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneAdjuntos(): bool

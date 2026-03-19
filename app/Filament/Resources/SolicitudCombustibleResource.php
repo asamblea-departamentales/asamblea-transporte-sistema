@@ -254,6 +254,7 @@ class SolicitudCombustibleResource extends Resource
     ->collapsed()
     ->compact(),
 
+
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
                     Forms\Components\Placeholder::make('aprobador_ui')

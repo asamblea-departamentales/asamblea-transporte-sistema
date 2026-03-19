@@ -229,6 +229,46 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
             return $solicitud;
         });
     }
+    
+
+    //Nuevo, agregado como proceso
+    public function evaluar(
+    SolicitudMantenimiento $solicitud,
+    int $userId,
+    string $estado,
+    ?string $comentario
+): SolicitudMantenimiento {
+
+    if ($solicitud->estado !== EstadoSolicitudEnum::COMPLETADA) {
+        throw new \DomainException('Solo se puede evaluar una solicitud completada.');
+    }
+
+    return DB::transaction(function () use ($solicitud, $userId, $estado, $comentario) {
+
+        $solicitud->evaluacion_estado = $estado;
+        $solicitud->evaluacion_comentario = $comentario;
+        $solicitud->evaluado_por = $userId;
+        $solicitud->fecha_evaluacion = now();
+
+        $solicitud->save();
+
+        // NO cambia estado → se mantiene COMPLETADA
+        // (igual que hiciste con liquidador ✔️)
+
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_mantenimiento',
+            'entidad_id' => $solicitud->id,
+            'accion' => 'EVALUAR',
+            'user_id' => $userId,
+            'datos_extras' => [
+                'estado' => $estado,
+                'comentario' => $comentario,
+            ],
+        ]);
+
+        return $solicitud;
+    });
+}
 
 
 

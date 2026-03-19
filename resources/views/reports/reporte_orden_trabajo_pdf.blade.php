@@ -73,6 +73,15 @@
         .salto {
             page-break-after: always;
         }
+
+        .evaluacion-texto {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 3px;
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 9px;
+        }
     </style>
 </head>
 <body>
@@ -155,6 +164,26 @@
                 <td>Costo real</td>
                 <td>${{ number_format((float) ($r->costo_real ?? 0), 2) }}</td>
             </tr>
+            {{-- Bloque de Evaluación --}}
+            @if($r->evaluacion_estado)
+            <tr>
+                <td>Evaluación Final</td>
+                <td>
+                    <strong>
+                        {{ match($r->evaluacion_estado) {
+                            'conforme' => 'CONFORME',
+                            'observaciones' => 'CON OBSERVACIONES',
+                            'no_conforme' => 'NO CONFORME',
+                            default => $r->evaluacion_estado
+                        } }}
+                    </strong>
+                    @if($r->evaluacion_comentario)
+                        <br>
+                        <span style="color: #4b5563; font-style: italic;">"{{ $r->evaluacion_comentario }}"</span>
+                    @endif
+                </td>
+            </tr>
+            @endif
             <tr>
                 <td>Adjuntos</td>
                 <td>{{ $service->resolverAdjuntos($r) }}</td>
@@ -167,14 +196,14 @@
         </div>
 
         <div class="bloque">
-            <strong>Observaciones:</strong><br><br>
+            <strong>Observaciones de solicitud:</strong><br><br>
             {{ $r->observaciones ?? 'Sin observaciones.' }}
         </div>
 
         <div class="firma">
             <div>{{ $r->aprobador?->name ?? '—' }}</div>
             <div class="linea"></div>
-            <div>Autorizador</div>
+            <div>Autorizador / Jefe de Transporte</div>
         </div>
 
         @if(!$loop->last)

@@ -153,6 +153,122 @@ class SolicitudMantenimientoResource extends Resource
             ->collapsed()
             ->compact(),
 
+        Forms\Components\Section::make('Estado de Liquidación')
+    ->schema([
+
+        Forms\Components\Placeholder::make('alerta')
+            ->label('')
+            ->content(function ($record) {
+
+                if (!$record->tieneAdjuntos()) {
+                    return new \Illuminate\Support\HtmlString(
+                        "<div style='color:red;font-weight:bold'>⚠ SIN COMPROBANTES</div>"
+                    );
+                }
+
+                if (!$record->evaluacion) {
+                    return new \Illuminate\Support\HtmlString(
+                        "<div style='color:orange;font-weight:bold'>⏳ PENDIENTE DE EVALUACIÓN</div>"
+                    );
+                }
+
+                if (!$record->evaluacion->coincide) {
+                    return new \Illuminate\Support\HtmlString(
+                        "<div style='color:red;font-weight:bold'>❌ DISCREPANCIA</div>"
+                    );
+                }
+
+                return new \Illuminate\Support\HtmlString(
+                    "<div style='color:green;font-weight:bold'>✔ VALIDADO</div>"
+                );
+            }),
+
+    ])
+    ->visible(fn () => auth()->user()->hasRole('liquidador')),
+    
+    Forms\Components\Section::make('Comparación de Costos')
+    ->schema([
+
+        Forms\Components\Placeholder::make('estimado')
+            ->label('Costo estimado')
+            ->content(fn ($r) => '$' . number_format($r->costo_estimado, 2)),
+
+        Forms\Components\Placeholder::make('real')
+            ->label('Costo real')
+            ->content(fn ($r) => '$' . number_format($r->costo_real, 2)),
+
+        Forms\Components\Placeholder::make('diferencia')
+            ->label('Diferencia')
+            ->content(function ($r) {
+                $diff = $r->costo_real - $r->costo_estimado;
+
+                $color = $diff > 0 ? 'red' : 'green';
+
+                return new \Illuminate\Support\HtmlString(
+                    "<span style='color:{$color};font-weight:bold'>$" . number_format($diff, 2) . "</span>"
+                );
+            }),
+
+    ])->columns(3),
+
+    Forms\Components\Section::make('Comprobantes')
+    ->schema([
+        Forms\Components\Placeholder::make('files')
+            ->label('')
+            ->content(function ($record) {
+
+                if (empty($record->adjuntos)) {
+                    return 'Sin comprobantes.';
+                }
+
+                return new \Illuminate\Support\HtmlString(
+                    collect($record->adjuntos)->map(function ($path) {
+
+                        $url = asset('storage/' . $path);
+                        $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+
+                        if (in_array($ext, ['jpg','jpeg','png','webp'])) {
+                            return "<img src='{$url}' style='width:120px;height:120px;object-fit:cover;margin:5px;border-radius:8px;border:1px solid #ccc;'>";
+                        }
+
+                        return "<a href='{$url}' target='_blank' style='display:block;margin:5px;color:blue'>📄 Ver PDF</a>";
+                    })->implode('')
+                );
+            }),
+    ]),
+
+    Forms\Components\Section::make('Evaluación del mantenimiento')
+    ->schema([
+
+        Forms\Components\Placeholder::make('evaluacion_estado')
+            ->label('Resultado')
+            ->content(fn ($record) => match ($record->evaluacion_estado) {
+                'conforme' => '✔ Conforme',
+                'observaciones' => '⚠ Con observaciones',
+                'no_conforme' => '❌ No conforme',
+                default => 'Pendiente',
+            }),
+
+        Forms\Components\Placeholder::make('evaluacion_comentario')
+            ->label('Comentario')
+            ->content(fn ($record) => $record->evaluacion_comentario ?? '—')
+            ->columnSpanFull(),
+
+        Forms\Components\Placeholder::make('evaluador')
+            ->label('Evaluado por')
+            ->content(fn ($record) => $record->evaluador?->name ?? '—'),
+
+        Forms\Components\Placeholder::make('fecha_evaluacion')
+            ->label('Fecha')
+            ->content(fn ($record) =>
+                optional($record->fecha_evaluacion)?->format('d/m/Y H:i') ?? '—'
+            ),
+
+    ])
+    ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA)
+    ->columns(2)
+    ->collapsible(),
+
         Forms\Components\Section::make('Finalización')
     ->schema([
         Forms\Components\Placeholder::make('finalizado_por')
@@ -166,6 +282,28 @@ class SolicitudMantenimientoResource extends Resource
             ),
     ])
     ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA),    
+
+    Forms\Components\Section::make('Resultado de Evaluación')
+    ->schema([
+
+        Forms\Components\Placeholder::make('resultado')
+            ->label('Resultado')
+            ->content(fn ($r) =>
+                $r->evaluacion
+                    ? ($r->evaluacion->coincide ? '✔ Correcto' : '❌ Discrepancia')
+                    : 'Pendiente'
+            ),
+
+        Forms\Components\Placeholder::make('evaluador')
+            ->label('Evaluado por')
+            ->content(fn ($r) => $r->evaluacion?->evaluador?->name ?? '-'),
+
+        Forms\Components\Placeholder::make('obs')
+            ->label('Observaciones')
+            ->content(fn ($r) => $r->evaluacion?->observaciones ?? '-'),
+
+    ])
+    ->visible(fn ($r) => $r->evaluacion),
 
         Forms\Components\Section::make('Decisión / Auditoría')
             ->schema([
@@ -409,6 +547,33 @@ class SolicitudMantenimientoResource extends Resource
         ])
         ->actions([
             Tables\Actions\ViewAction::make(),
+            Tables\Actions\Action::make('evaluar')
+    ->label('Evaluar')
+    ->icon('heroicon-o-check-circle')
+    ->visible(fn ($record) =>
+        $record->estado === EstadoSolicitudEnum::COMPLETADA
+        && !$record->evaluacion_estado
+    )
+    ->form([
+        Forms\Components\Select::make('estado')
+            ->options([
+                'conforme' => '✔ Conforme',
+                'observaciones' => '⚠ Con observaciones',
+                'no_conforme' => '❌ No conforme',
+            ])
+            ->required(),
+
+        Forms\Components\Textarea::make('comentario'),
+    ])
+    ->action(function ($record, $data) {
+        app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)
+            ->evaluar(
+                $record,
+                auth()->id(),
+                $data['estado'],
+                $data['comentario']
+            );
+    }),
 
             Tables\Actions\ActionGroup::make([
                 // aquí dejas tus acciones tal como las tenés
