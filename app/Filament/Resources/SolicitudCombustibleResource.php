@@ -787,14 +787,15 @@ class SolicitudCombustibleResource extends Resource
         return $query;
     }
 
-    // 2. SOLICITANTE: Solo ve lo que él mismo pidió (dueño de la solicitud).
-    // No importa el estado, siempre debe tener su historial disponible.
+    // 2. SOLICITANTE (Tu colega del Frontend)
+    // Eliminamos cualquier restricción de estado. 
+    // Si solo ve "unas cuantas", verifica que el campo 'solicitante_id' en la DB 
+    // coincida con su ID de usuario actual.
     if ($user->hasRole('solicitante')) {
         return $query->where('solicitante_id', $user->id);
     }
 
-    // 3. OPERATIVO: Rol de apoyo/gestión técnica.
-    // Ve las que están en proceso inicial para darles seguimiento o corregir datos.
+    // 3. OPERATIVO
     if ($user->hasRole('operativo')) {
         return $query->whereIn('estado', [
             EstadoSolicitudEnum::PENDIENTE->value,
@@ -803,7 +804,7 @@ class SolicitudCombustibleResource extends Resource
         ]);
     }
 
-    // 4. JEFE: Ve lo que debe aprobar y lo que ya autorizó.
+    // 4. JEFE
     if ($user->hasRole('jefe')) {
         return $query->whereIn('estado', [
             EstadoSolicitudEnum::PRE_APROBADA->value,
@@ -814,7 +815,7 @@ class SolicitudCombustibleResource extends Resource
         ]);
     }
 
-    // 5. LIQUIDADOR: Solo su área de trabajo (Vales entregados y cierre).
+    // 5. LIQUIDADOR
     if ($user->hasRole('liquidador')) {
         return $query->whereIn('estado', [
             EstadoSolicitudEnum::ASIGNADA->value,
