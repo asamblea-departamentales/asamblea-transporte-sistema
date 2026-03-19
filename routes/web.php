@@ -10,7 +10,8 @@ use App\Exports\SolicitudesCombustibleExport;
 use App\Exports\SolicitudesMantenimientoExport;
 use App\Exports\SolicitudesTransporteExport;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Controllers\Api\SolicitudTransporteController;
+use App\Http\Controllers\LiquidacionCombustibleController;
+use App\Http\Controllers\LiquidacionMantenimientoController;
 
 
 use App\Http\Controllers\Reportes\ReporteMisionOficialController;
@@ -236,3 +237,10 @@ Route::get('/liquidacion/{record}/pdf', function (SolicitudCombustible $record) 
     return $pdf->stream("liquidacion_{$record->codigo}.pdf");
 
 })->name('liquidacion.pdf');
+
+//Ruta para las liquidaciones unificadas
+Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::class, 'pdf'])
+    ->name('liquidacion.combustible.pdf');
+
+Route::get('/liquidacion/mantenimiento/{id}', [LiquidacionMantenimientoController::class, 'pdf'])
+    ->name('liquidacion.mantenimiento.pdf');
