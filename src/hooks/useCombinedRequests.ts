@@ -145,7 +145,7 @@ export function useCombinedRequests() {
           let currentPage = 1;
           const PER_PAGE_BG = 50;
           let keepT = hasMoreT, keepM = hasMoreM, keepC = hasMoreC;
-          let accumulated: CombinedRequest[] = [];
+          let accumulated: CombinedRequest[] = [...combined]; // Iniciar con lo que ya tenemos
 
           while ((keepT || keepM || keepC) && active) {
             const promises = [];
@@ -169,10 +169,15 @@ export function useCombinedRequests() {
               cRes ? { status: "fulfilled", value: cRes } : { status: "rejected" }
             );
 
-            accumulated = [...accumulated, ...newChunk];
+            // Deduplicación usando Map por si se solapan páginas de background con carga inicial
+            const mergedMap = new Map();
+            accumulated.forEach(item => mergedMap.set(`${item.modulo}-${item.id}`, item));
+            newChunk.forEach(item => mergedMap.set(`${item.modulo}-${item.id}`, item));
+            
+            accumulated = Array.from(mergedMap.values());
             accumulated.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
             
-            setAllItems(accumulated); // La UI se va llenando progresivamente
+            setAllItems(accumulated); // La UI se va llenando progresivamente sin perder datos
 
             if (tRes) keepT = tRes.total > currentPage * PER_PAGE_BG;
             if (mRes) keepM = mRes.total > currentPage * PER_PAGE_BG;
