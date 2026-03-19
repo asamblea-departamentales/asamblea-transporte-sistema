@@ -151,37 +151,44 @@ class SolicitudCombustibleService
     }
 
     // --- ASIGNADA -> LIQUIDADA
-    public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId)
+    // ── ASIGNADA → ENVIAR A REVISIÓN (Sin cambio de estado) ────────────────
+
+public function enviarALiquidador(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible
 {
-    DB::transaction(function () use ($solicitud, $userId) {
+    // Validación: Solo si ya tiene vales
+    if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
+        throw new \DomainException('La solicitud debe tener vales asignados para ser enviada a liquidación.');
+    }
 
-        $estadoAnterior = $solicitud->estado;
+    // Validación: Debe tener comprobantes antes de "enviar"
+    if (!$solicitud->tieneComprobantes()) {
+        throw new \DomainException('No se puede enviar a liquidador sin adjuntar los comprobantes.');
+    }
 
-        //Cambiar estado
-        $solicitud->update([
-            'estado' => EstadoSolicitudEnum::ASIGNADA,
-        ]);
+    return DB::transaction(function () use ($solicitud, $userId) {
+        
+        // 1. Registramos en el historial (aunque el estado sea el mismo)
+        // Esto sirve para ver el "movimiento" en la línea de tiempo
+        $this->registrarCambioEstado(
+            $solicitud, 
+            $solicitud->estado, // Anterior: ASIGNADA
+            $solicitud->estado, // Nuevo: ASIGNADA
+            $userId, 
+            'Traspaso administrativo: Solicitud enviada formalmente a revisión de liquidación.'
+        );
 
-        // Historial de estados
-        HistorialEstado::create([
-            'entidad_tipo'   => 'solicitud_combustible',
-            'entidad_id'     => $solicitud->id,
-            'estado_anterior'=> $estadoAnterior,
-            'estado_nuevo'   => EstadoSolicitudEnum::ASIGNADA,
-            'user_id'        => $userId,
-            'comentario'     => 'Solicitud enviada a liquidador.',
-        ]);
+        // 2. Registramos el evento de negocio en la Bitácora
+        $this->registrarEvento(
+            $solicitud, 
+            'enviar_liquidador', // Acción personalizada
+            $userId, 
+            [
+                'fecha_envio' => now()->toDateTimeString(),
+                'mensaje' => 'Documentación lista para revisión contable'
+            ]
+        );
 
-        // 3. Bitácora (evento de negocio)
-        BitacoraEvento::create([
-            'entidad_tipo' => 'solicitud_combustible',
-            'entidad_id'   => $solicitud->id,
-            'user_id'      => $userId,
-            'accion'       => 'enviar_liquidador',
-            'datos_extras' => [
-                'mensaje' => 'Solicitud enviada al área de liquidación',
-            ],
-        ]);
+        return $solicitud;
     });
 }
 

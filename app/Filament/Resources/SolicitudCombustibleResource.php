@@ -584,23 +584,42 @@ class SolicitudCombustibleResource extends Resource
     ->icon('heroicon-o-arrow-right')
     ->requiresConfirmation()
     ->modalHeading('Enviar a liquidador')
-    ->modalDescription('La solicitud será enviada para proceso de liquidación.')
-    ->action(function (SolicitudCombustible $record) {
-        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
-            ->enviarALiquidador($record, auth()->id());
+    ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
+    
+    // 1. VALIDACIÓN PREVIA (UX): Deshabilitar o mostrar tooltip si no hay comprobantes
+    ->disabled(fn (SolicitudCombustible $record) => !$record->tieneComprobantes())
+    ->tooltip(fn (SolicitudCombustible $record) => 
+        !$record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
+    )
 
-        Notification::make()
-            ->title('Enviada a liquidador')
-            ->success()
-            ->send();
+    ->action(function (SolicitudCombustible $record, \Filament\Actions\StaticAction $action) {
+        try {
+            app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+                ->enviarALiquidador($record, auth()->id());
+
+            Notification::make()
+                ->title('Enviada a liquidador')
+                ->success()
+                ->send();
+
+        } catch (\DomainException $e) {
+            // Captura el error del Service si faltan los comprobantes o el estado es inválido
+            Notification::make()
+                ->title('Error al enviar')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
+            
+            $action->halt();
+        }
     })
     ->visible(fn ($record) =>
         auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
-in_array($record->estado, [
-        EstadoSolicitudEnum::APROBADA, 
-        EstadoSolicitudEnum::ASIGNADA // <--- Agrega el estado que queda tras asignar vales
-    ], true)  
-      ),
+        in_array($record->estado, [
+            EstadoSolicitudEnum::APROBADA, 
+            EstadoSolicitudEnum::ASIGNADA
+        ], true)  
+    ),
 
                     // FIX #2 y #3: ->action() y ->visible() ahora están dentro del Action, antes del cierre del ActionGroup
                     Tables\Actions\Action::make('asignar_vales')
