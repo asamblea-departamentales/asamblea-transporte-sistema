@@ -19,32 +19,40 @@ clientsClaim()
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
 
-  // Recuperar la URL del campo 'data' o usar la raíz como fallback
-  const urlToOpen = event.notification.data?.url || '/';
+  // 1. Normalizar la URL (Convertir relativa a absoluta)
+  const relativeUrl = event.notification.data?.url || '/';
+  const urlToOpen = new URL(relativeUrl, self.location.origin).href;
+
+  console.log('[SW] Click en notificación. URL destino:', urlToOpen);
 
   event.waitUntil(
     self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      // 1. Intentar encontrar una pestaña que ya tenga esta URL abierta
+      // 2. Intentar encontrar una pestaña que ya tenga esta URL exacta abierta
       for (const client of clientList) {
         if (client.url === urlToOpen && 'focus' in client) {
+          console.log('[SW] Pestaña existente encontrada. Enfocando...');
           return client.focus();
         }
       }
       
-      // 2. Si no hay pestaña abierta, intentar enfocar cualquiera y navegar, o abrir nueva
+      // 3. Si no hay una con la URL exacta, intentar enfocar la primera pestaña disponible del origen
+      // y navegar esa pestaña a la nueva URL.
       if (clientList.length > 0) {
-        let client = clientList[0];
+        let clientToUse = clientList[0];
+        // Preferir la que ya esté enfocada si es posible
         for (const c of clientList) {
           if (c.focused) {
-            client = c;
+            clientToUse = c;
             break;
           }
         }
-        return client.navigate(urlToOpen).then(c => c?.focus());
+        console.log('[SW] Reutilizando pestaña existente para navegar...');
+        return clientToUse.navigate(urlToOpen).then(c => c?.focus());
       }
       
-      // 3. Como último recurso, abrir una nueva ventana
+      // 4. Si no hay ninguna pestaña abierta de la App, abrir una nueva
       if (self.clients.openWindow) {
+        console.log('[SW] Abriendo nueva ventana...');
         return self.clients.openWindow(urlToOpen);
       }
     })
