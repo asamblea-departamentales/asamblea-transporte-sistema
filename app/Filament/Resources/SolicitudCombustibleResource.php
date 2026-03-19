@@ -235,49 +235,31 @@ class SolicitudCombustibleResource extends Resource
 
             Forms\Components\Section::make('Historial de estados')
                 ->schema([
-                      App\Models\HistorialEstado {#7636
-        id: 116,
-        entidad_tipo: "solicitud_combustible",
-        entidad_id: 5,
-        estado_anterior: "",
-        estado_nuevo: "borrador",
-        user_id: 2,
-        comentario: "Creación inicial de borrador.",
-        created_at: "2026-03-12 15:01:38",
-        updated_at: "2026-03-12 15:01:38",
-      },
-      App\Models\HistorialEstado {#7635
-        id: 117,
-        entidad_tipo: "solicitud_combustible",
-        entidad_id: 5,
-        estado_anterior: "borrador",
-        estado_nuevo: "pendiente",
-        user_id: 2,
-        comentario: null,
-        created_at: "2026-03-12 15:01:38",
-        updated_at: "2026-03-12 15:01:38",
-      },
-      App\Models\HistorialEstado {#7634
-        id: 118,
-        entidad_tipo: "solicitud_combustible",
-        entidad_id: 5,
-        estado_anterior: "pendiente",
-        estado_nuevo: "pre_aprobada",
-        user_id: 1,
-        comentario: "Solicitud pre-aprobada.",
-        created_at: "2026-03-12 15:02:33",
-        updated_at: "2026-03-12 15:02:33",
-      },
-      App\Models\HistorialEstado {#7633
-        id: 119,
-:
+                    Forms\Components\Repeater::make('historial_ui')
+                        ->label('')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->formatStateUsing(function ($state, SolicitudCombustible $record) {
+                            return HistorialEstado::query()
+                                ->where('entidad_tipo', 'solicitud_combustible')
+                                ->where('entidad_id', $record->id)
+                                ->orderByDesc('created_at')
+                                ->get()
+                                ->map(fn ($h) => [
+                                    'fecha'      => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
+                                    'de'         => $h->estado_anterior ?? '-',
+                                    'a'          => $h->estado_nuevo ?? '-',
+                                    'comentario' => $h->comentario ?? null,
+                                ])
+                                ->toArray();
+                        })
                         ->schema([
                             Forms\Components\TextInput::make('fecha')->disabled(),
                             Forms\Components\TextInput::make('de')->label('De')->disabled(),
                             Forms\Components\TextInput::make('a')->label('A')->disabled(),
                             Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
                         ])
-                        ->columns(['default' => 1, 'md' => 3])
+                        ->columns(['default' => 1, 'md' => 4])
                         ->columnSpanFull(),
                 ])
                 ->collapsible()
