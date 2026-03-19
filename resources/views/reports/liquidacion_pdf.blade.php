@@ -1,113 +1,295 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <title>Liquidación {{ $solicitud->codigo }}</title>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title>Distribución de Flota Vehicular</title>
     <style>
-        body { font-family: 'Helvetica', 'Arial', sans-serif; color: #333; line-height: 1.5; font-size: 12px; }
-        .header { text-align: center; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px; }
-        .header h1 { margin: 0; color: #1a56db; text-transform: uppercase; font-size: 20px; }
-        .header p { margin: 5px 0; color: #666; }
-        
-        .section-title { background: #f3f4f6; padding: 8px; font-weight: bold; margin-bottom: 15px; border-left: 4px solid #1a56db; }
-        
-        .info-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
-        .info-table td { padding: 5px 0; vertical-align: top; }
-        .label { font-weight: bold; color: #555; width: 30%; }
-        
-        .totals-table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        .totals-table th { background: #1a56db; color: white; padding: 10px; text-align: left; }
-        .totals-table td { padding: 10px; border-bottom: 1px solid #eee; }
-        .bg-gray { background: #f9fafb; }
-        
-        .status-badge { display: inline-block; padding: 4px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; }
-        .status-success { background: #dcfce7; color: #166534; }
-        
-        .footer-signatures { margin-top: 60px; width: 100%; }
-        .signature-box { text-align: center; width: 45%; }
-        .signature-line { border-top: 1px solid #333; margin-top: 40px; padding-top: 5px; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
 
-        .diferencia-negativa { color: #dc2626; font-weight: bold; }
-        .diferencia-positiva { color: #16a34a; font-weight: bold; }
+        body {
+            font-family: 'DejaVu Sans', sans-serif;
+            font-size: 9px;
+            color: #1f2937;
+            background: #ffffff;
+        }
+
+        /* ── HEADER ─────────────────────────── */
+        .header {
+            display: table;
+            width: 100%;
+            margin-bottom: 0;
+            padding: 0 0 12px 0;
+        }
+
+        .header-logo {
+            display: table-cell;
+            width: 90px;
+            vertical-align: middle;
+        }
+
+        .header-logo img {
+            width: 80px;
+        }
+
+        .header-center {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: center;
+        }
+
+        .header-center .inst {
+            font-size: 9px;
+            color: #6b7280;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 3px;
+        }
+
+        .header-center .titulo {
+            font-size: 16px;
+            font-weight: bold;
+            color: #1e3a8a;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .header-right {
+            display: table-cell;
+            width: 110px;
+            vertical-align: middle;
+            text-align: right;
+            font-size: 8px;
+            color: #6b7280;
+            line-height: 1.6;
+        }
+
+        .header-line {
+            border: none;
+            border-top: 2px solid #1e3a8a;
+            margin-bottom: 10px;
+        }
+
+        .header-line-thin {
+            border: none;
+            border-top: 0.5px solid #d1d5db;
+            margin-bottom: 12px;
+        }
+
+        /* ── META STRIP ─────────────────────── */
+        .meta-strip {
+            background: #eff6ff;
+            border: 0.5px solid #bfdbfe;
+            border-radius: 4px;
+            padding: 7px 10px;
+            margin-bottom: 14px;
+            display: table;
+            width: 100%;
+        }
+
+        .meta-strip td {
+            border: none;
+            padding: 0 6px 0 0;
+            font-size: 8.5px;
+            color: #374151;
+            vertical-align: middle;
+        }
+
+        .meta-strip .label {
+            color: #6b7280;
+            font-size: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+
+        .meta-strip .value {
+            font-weight: bold;
+            color: #1e3a8a;
+        }
+
+        .meta-divider {
+            border-left: 0.5px solid #bfdbfe;
+            padding-left: 10px !important;
+        }
+
+        /* ── TABLA ──────────────────────────── */
+        table.data {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 0;
+        }
+
+        table.data thead tr {
+            background: #1e3a8a;
+        }
+
+        table.data th {
+            color: #ffffff;
+            font-size: 7.5px;
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            padding: 6px 5px;
+            text-align: center;
+            border: none;
+        }
+
+        table.data th:first-child { border-radius: 3px 0 0 0; }
+        table.data th:last-child  { border-radius: 0 3px 0 0; }
+
+        table.data tbody tr:nth-child(even) {
+            background: #f0f4ff;
+        }
+
+        table.data tbody tr:nth-child(odd) {
+            background: #ffffff;
+        }
+
+        table.data tbody tr:last-child td:first-child { border-radius: 0 0 0 3px; }
+        table.data tbody tr:last-child td:last-child  { border-radius: 0 0 3px 0; }
+
+        table.data td {
+            padding: 5px 5px;
+            border-bottom: 0.5px solid #e5e7eb;
+            border-right: 0.5px solid #e5e7eb;
+            vertical-align: middle;
+            color: #1f2937;
+            font-size: 8.5px;
+        }
+
+        table.data td:first-child {
+            border-left: 0.5px solid #e5e7eb;
+            text-align: center;
+            color: #6b7280;
+            font-size: 8px;
+        }
+
+        .placa {
+            font-weight: bold;
+            color: #1e3a8a;
+            letter-spacing: 0.5px;
+        }
+
+        .na {
+            color: #9ca3af;
+            font-style: italic;
+        }
+
+        /* ── FOOTER ─────────────────────────── */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 22px;
+            background: #f8fafc;
+            border-top: 0.5px solid #d1d5db;
+            padding: 0 16px;
+            display: table;
+            width: 100%;
+        }
+
+        .footer-left {
+            display: table-cell;
+            vertical-align: middle;
+            font-size: 7.5px;
+            color: #9ca3af;
+        }
+
+        .footer-right {
+            display: table-cell;
+            vertical-align: middle;
+            text-align: right;
+            font-size: 7.5px;
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
 
+    {{-- ENCABEZADO --}}
     <div class="header">
-        <h1>Comprobante de Liquidación</h1>
-        <p>Sistema de Gestión de Combustible | Fecha: {{ now()->format('d/m/Y H:i') }}</p>
+        <div class="header-logo">
+            <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Asamblea Legislativa">
+        </div>
+        <div class="header-center">
+            <div class="inst">Asamblea Legislativa de El Salvador</div>
+            <div class="titulo">Distribución de Flota Vehicular</div>
+        </div>
+        <div class="header-right">
+            Generado<br>
+            <strong>{{ now()->format('d/m/Y') }}</strong><br>
+            {{ now()->format('H:i') }} hrs
+        </div>
     </div>
 
-    <div class="section-title">Datos de la Solicitud</div>
-    <table class="info-table">
+    <hr class="header-line">
+
+    {{-- META STRIP --}}
+    <table class="meta-strip">
         <tr>
-            <td class="label">Código de Control:</td>
-            <td><strong>{{ $solicitud->codigo }}</strong></td>
-            <td class="label">Fecha Solicitud:</td>
-            <td>{{ $solicitud->created_at->format('d/m/Y') }}</td>
-        </tr>
-        <tr>
-            <td class="label">Vehículo / Placa:</td>
-            <td>{{ $solicitud->vehiculo->marca->nombre ?? '' }} {{ $solicitud->vehiculo->modelo->nombre ?? '' }} ({{ $solicitud->vehiculo->placa ?? '-' }})</td>
-            <td class="label">Solicitante:</td>
-            <td>{{ $solicitud->solicitante->name ?? 'N/A' }}</td>
+            <td width="12%" class="label">Total vehículos</td>
+            <td width="8%" class="value">{{ $rows->count() }}</td>
+            <td width="12%" class="label meta-divider">Periodo</td>
+            <td class="value">{{ now()->format('d/m/Y') }}</td>
+            <td width="25%" style="text-align:right; color:#6b7280; font-size:8px;">
+                Sistema de Gestión de Transporte
+            </td>
         </tr>
     </table>
 
-    <div class="section-title">Resumen Financiero</div>
-    <table class="totals-table">
+    {{-- TABLA PRINCIPAL --}}
+    <table class="data">
         <thead>
             <tr>
-                <th>Concepto</th>
-                <th style="text-align: right;">Monto</th>
+                <th style="width:3%">#</th>
+                <th style="width:7%">Placa</th>
+                <th style="width:8%">Marca</th>
+                <th style="width:8%">Modelo</th>
+                <th style="width:8%">Clase</th>
+                <th style="width:6%">Color</th>
+                <th style="width:4%">Año</th>
+                <th style="width:7%">Combustible</th>
+                <th style="width:5%">Cap.</th>
+                <th style="width:9%">No. Motor</th>
+                <th style="width:9%">Chasis</th>
+                <th style="width:9%">VIN</th>
+                <th>Asignado a</th>
             </tr>
         </thead>
         <tbody>
-            <tr>
-                <td>Valor Total de Vales Asignados</td>
-                <td style="text-align: right;">${{ number_format($solicitud->valor_total, 2) }}</td>
-            </tr>
-            <tr class="bg-gray">
-                <td>Monto Real Validado (Facturas)</td>
-                <td style="text-align: right;"><strong>${{ number_format($liquidacion->monto_validado ?? 0, 2) }}</strong></td>
-            </tr>
-            @php
-                $diferencia = ($liquidacion->monto_validado ?? 0) - $solicitud->valor_total;
-            @endphp
-            <tr>
-                <td>Diferencia / Remanente</td>
-                <td style="text-align: right;" class="{{ $diferencia < 0 ? 'diferencia-negativa' : 'diferencia-positiva' }}">
-                    ${{ number_format($diferencia, 2) }}
-                </td>
-            </tr>
+            @foreach($rows as $index => $r)
+                @php
+                    $marca = $r->getRelation('marca')?->nombre ?? $r->getRawOriginal('marca') ?? null;
+                    $modelo = $r->getRelation('modelo')?->nombre ?? $r->getRawOriginal('modelo') ?? null;
+                @endphp
+                <tr>
+                    <td>{{ $index + 1 }}</td>
+                    <td><span class="placa">{{ $r->placa }}</span></td>
+                    <td>{{ $marca ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $modelo ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->clasificacion?->nombre ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->color?->nombre ?? '<span class="na">—</span>' }}</td>
+                    <td style="text-align:center">{{ $r->anio ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->tipoCombustible?->nombre ?? '<span class="na">—</span>' }}</td>
+                    <td style="text-align:center">{{ $r->capacidad_personas ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->motor_numero ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->chasis ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $r->vin ?? '<span class="na">—</span>' }}</td>
+                    <td>{{ $service->resolverAsignadoA($r) }}</td>
+                </tr>
+            @endforeach
         </tbody>
     </table>
 
-    <div style="margin-top: 20px;">
-        <strong>Resultado de Liquidación:</strong> 
-        <span class="status-badge status-success">{{ $liquidacion->resultado ?? 'PROCESADO' }}</span>
+    {{-- FOOTER --}}
+    <div class="footer">
+        <div class="footer-left">
+            Asamblea Legislativa de El Salvador &mdash; Sistema de Gestión de Transporte
+        </div>
+        <div class="footer-right">
+            Página <script type="text/php">echo $PAGE_NUM . " de " . $PAGE_COUNT;</script>
+        </div>
     </div>
-
-    <div style="margin-top: 20px;">
-        <strong>Observaciones Contables:</strong>
-        <p style="background: #f9fafb; padding: 10px; border: 1px border #eee; border-radius: 4px;">
-            {{ $liquidacion->observaciones ?? 'Sin observaciones adicionales.' }}
-        </p>
-    </div>
-
-    <table class="footer-signatures">
-        <tr>
-            <td class="signature-box">
-                <div class="signature-line">Firma Liquidador</div>
-                <small>{{ auth()->user()->name }}</small>
-            </td>
-            <td style="width: 10%;"></td>
-            <td class="signature-box">
-                <div class="signature-line">Firma Solicitante / Motorista</div>
-                <small>{{ $solicitud->solicitante->name ?? 'Responsable' }}</small>
-            </td>
-        </tr>
-    </table>
 
 </body>
 </html>
