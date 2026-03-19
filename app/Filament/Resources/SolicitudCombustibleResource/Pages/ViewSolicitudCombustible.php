@@ -15,7 +15,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-
+use Filament\Actions\Action;
 class ViewSolicitudCombustible extends ViewRecord
 {
     protected static string $resource = SolicitudCombustibleResource::class;
@@ -262,48 +262,92 @@ class ViewSolicitudCombustible extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::APROBADA
                 ),
 
-            Tables\Actions\Action::make('enviar_liquidador')
-    ->label('Enviar a liquidador')
-    ->color('primary')
-    ->icon('heroicon-o-arrow-right')
-    ->requiresConfirmation()
-    ->modalHeading('Enviar a liquidador')
-    ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
-    
-    // 1. VALIDACIÓN PREVIA (UX): Deshabilitar o mostrar tooltip si no hay comprobantes
-    ->disabled(fn (SolicitudCombustible $record) => !$record->tieneComprobantes())
-    ->tooltip(fn (SolicitudCombustible $record) => 
-        !$record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
-    )
+            El error principal es que intentaste usar una acción de tabla (Tables\Actions\Action) dentro de una página de vista (ViewRecord). En las páginas de Filament, las acciones deben ser del namespace Filament\Actions\Action.
 
-    ->action(function (SolicitudCombustible $record, \Filament\Actions\StaticAction $action) {
-        try {
-            app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
-                ->enviarALiquidador($record, auth()->id());
+Aquí tienes el código corregido. He eliminado el prefijo Tables\ y ajustado la lógica para que sea compatible con el encabezado de la página:
 
-            Notification::make()
-                ->title('Enviada a liquidador')
-                ->success()
-                ->send();
+ViewSolicitudCombustible.php corregido
+PHP
+<?php
 
-        } catch (\DomainException $e) {
-            // Captura el error del Service si faltan los comprobantes o el estado es inválido
-            Notification::make()
-                ->title('Error al enviar')
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
+namespace App\Filament\Resources\SolicitudCombustibleResource\Pages;
+
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
+use App\Filament\Resources\SolicitudCombustibleResource;
+use App\Models\BitacoraEvento;
+use App\Models\ContratoCombustible;
+use App\Models\HistorialEstado;
+use App\Models\SerieVale;
+use App\Models\SolicitudCombustible;
+use Filament\Actions;
+use Filament\Forms;
+use Filament\Notifications\Notification;
+use Filament\Resources\Pages\ViewRecord;
+use Filament\Actions\Action; // Importación correcta para Header Actions
+
+class ViewSolicitudCombustible extends ViewRecord
+{
+    protected static string $resource = SolicitudCombustibleResource::class;
+
+    protected function afterFill(): void
+    {
+        app(SolicitudCombustibleService::class)
+            ->registrarEvento(
+                $this->record,
+                AccionBitacoraEnum::VER->value,
+                auth()->id()
+            );
+    }
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            // ... (Tus otras acciones: pre_aprobar, aprobar, asignar_vales se mantienen igual)
             
-            $action->halt();
-        }
-    })
-    ->visible(fn ($record) =>
-        auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
-        in_array($record->estado, [
-            EstadoSolicitudEnum::APROBADA, 
-            EstadoSolicitudEnum::ASIGNADA
-        ], true)  
-    ),
+            // --- CORRECCIÓN DE ENVIAR A LIQUIDADOR ---
+            Actions\Action::make('enviar_liquidador')
+                ->label('Enviar a liquidador')
+                ->color('primary')
+                ->icon('heroicon-o-arrow-right')
+                ->requiresConfirmation()
+                ->modalHeading('Enviar a liquidador')
+                ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
+                
+                // Validación UX
+                ->disabled(fn (SolicitudCombustible $record) => !$record->tieneComprobantes())
+                ->tooltip(fn (SolicitudCombustible $record) => 
+                    !$record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
+                )
+
+                ->action(function (SolicitudCombustible $record, Actions\StaticAction $action) {
+                    try {
+                        app(SolicitudCombustibleService::class)
+                            ->enviarALiquidador($record, auth()->id());
+
+                        Notification::make()
+                            ->title('Enviada a liquidador')
+                            ->success()
+                            ->send();
+
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title('Error al enviar')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                        
+                        $action->halt();
+                    }
+                })
+                ->visible(fn (SolicitudCombustible $record) =>
+                    auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    in_array($record->estado, [
+                        EstadoSolicitudEnum::APROBADA, 
+                        EstadoSolicitudEnum::ASIGNADA
+                    ], true)  
+                ),
 
             Actions\Action::make('rechazar')
                 ->button()
