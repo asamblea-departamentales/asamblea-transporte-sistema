@@ -262,34 +262,48 @@ class ViewSolicitudCombustible extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::APROBADA
                 ),
 
-            Actions\Action::make('enviar_liquidador')
+            Tables\Actions\Action::make('enviar_liquidador')
     ->label('Enviar a liquidador')
-    ->button() // Para que se vea como un botón destacado en la cabecera
-    ->size('lg')
     ->color('primary')
     ->icon('heroicon-o-arrow-right')
     ->requiresConfirmation()
     ->modalHeading('Enviar a liquidador')
-    ->modalDescription('La solicitud será enviada para proceso de liquidación.')
-    ->action(function (SolicitudCombustible $record) {
-        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
-            ->enviarALiquidador($record, auth()->id());
+    ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
+    
+    // 1. VALIDACIÓN PREVIA (UX): Deshabilitar o mostrar tooltip si no hay comprobantes
+    ->disabled(fn (SolicitudCombustible $record) => !$record->tieneComprobantes())
+    ->tooltip(fn (SolicitudCombustible $record) => 
+        !$record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
+    )
 
-        Notification::make()
-            ->title('Enviada a liquidador')
-            ->success()
-            ->send();
+    ->action(function (SolicitudCombustible $record, \Filament\Actions\StaticAction $action) {
+        try {
+            app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+                ->enviarALiquidador($record, auth()->id());
+
+            Notification::make()
+                ->title('Enviada a liquidador')
+                ->success()
+                ->send();
+
+        } catch (\DomainException $e) {
+            // Captura el error del Service si faltan los comprobantes o el estado es inválido
+            Notification::make()
+                ->title('Error al enviar')
+                ->body($e->getMessage())
+                ->danger()
+                ->send();
             
-        // Opcional: refrescar la página para ver el cambio de estado
-        $this->refreshFormData(['estado']);
+            $action->halt();
+        }
     })
-    ->visible(fn (SolicitudCombustible $record) =>
+    ->visible(fn ($record) =>
         auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
         in_array($record->estado, [
-        EstadoSolicitudEnum::APROBADA, 
-        EstadoSolicitudEnum::ASIGNADA // <--- Agrega el estado que queda tras asignar vales
-    ], true)    
-    ),    
+            EstadoSolicitudEnum::APROBADA, 
+            EstadoSolicitudEnum::ASIGNADA
+        ], true)  
+    ),
 
             Actions\Action::make('rechazar')
                 ->button()
