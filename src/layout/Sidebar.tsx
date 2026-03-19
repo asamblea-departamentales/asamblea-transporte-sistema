@@ -300,7 +300,7 @@ function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () =>
                     // Evitar marcar como leído si hizo click en el botón de basura
                     if ((e.target as HTMLElement).closest('.btn-delete')) return;
                     if(isUnread) markAsRead(n.id);
-                    navigate(`/solicitudes/${n.modulo}/${n.codigo}`);
+                    navigate(`/solicitudes/${n.modulo}/${n.reqId}`);
                     onClose();
                   }}
                 >
