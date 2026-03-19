@@ -18,6 +18,8 @@ class LiquidacionCombustibleResource extends Resource
 {
     protected static ?string $model = SolicitudCombustible::class;
 
+    protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationGroup = 'Liquidación';
     protected static ?string $navigationLabel = 'Panel de Liquidación';
     protected static ?string $navigationIcon = 'heroicon-o-check-badge';
