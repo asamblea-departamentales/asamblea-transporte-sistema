@@ -278,32 +278,78 @@ class SolicitudCombustibleResource extends Resource
 
             Forms\Components\Section::make('Historial de estados')
     ->schema([
-        Forms\Components\Repeater::make('historial_ui')
-            ->label('')
-            ->disabled()
-            ->dehydrated(false)
-            ->formatStateUsing(function ($state, SolicitudCombustible $record) {
-                return HistorialEstado::query()
-                    ->where('entidad_tipo', 'solicitud_combustible')
-                    ->where('entidad_id', $record->id)
-                    ->orderByDesc('created_at')
-                    ->get()
-                    ->map(fn ($h) => [
-                        'fecha'      => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
-                        'de'         => $h->estado_anterior ?? '-',
-                        'a'          => $h->estado_nuevo ?? '-',
-                        'comentario' => $h->comentario ?? null,
-                    ])
-                    ->toArray();
-            })
-            ->schema([
-                Forms\Components\TextInput::make('fecha')->disabled(),
-                Forms\Components\TextInput::make('de')->label('De')->disabled(),
-                Forms\Components\TextInput::make('a')->label('A')->disabled(),
-                Forms\Components\Textarea::make('comentario')->rows(2)->disabled()->columnSpanFull(),
-            ])
-            ->columns(['default' => 1, 'md' => 3])
-            ->columnSpanFull(),
+        Forms\Components\Placeholder::make('historial_visual')
+    ->label('Historial de estados')
+    ->content(function (SolicitudCombustible $record) {
+
+        $historial = \App\Models\HistorialEstado::query()
+            ->where('entidad_tipo', 'solicitud_combustible')
+            ->where('entidad_id', $record->id)
+            ->orderBy('created_at') // importante: ascendente para flujo
+            ->get();
+
+        if ($historial->isEmpty()) {
+            return 'Sin cambios de estado.';
+        }
+
+        $html = '<div style="border-left: 3px solid #e5e7eb; padding-left: 15px;">';
+
+        foreach ($historial as $h) {
+
+            $fecha = optional($h->created_at)->format('d/m/Y H:i');
+            $de = strtoupper($h->estado_anterior ?: 'INICIO');
+            $a  = strtoupper($h->estado_nuevo);
+
+            // 🎨 Colores por estado destino
+            $color = match ($h->estado_nuevo) {
+                'borrador' => '#6b7280',
+                'pendiente' => '#f59e0b',
+                'en_revision' => '#3b82f6',
+                'pre_aprobada' => '#a855f7',
+                'aprobada' => '#10b981',
+                'rechazada' => '#ef4444',
+                'asignada' => '#6366f1',
+                'completada' => '#059669',
+                'cancelada' => '#6b7280',
+                default => '#6b7280',
+            };
+
+            $comentario = $h->comentario
+                ? "<div style='font-size: 12px; color: #6b7280;'>💬 {$h->comentario}</div>"
+                : "";
+
+            $html .= "
+                <div style='margin-bottom: 20px; position: relative;'>
+
+                    <div style='
+                        position: absolute;
+                        left: -22px;
+                        top: 6px;
+                        width: 10px;
+                        height: 10px;
+                        background: {$color};
+                        border-radius: 50%;
+                    '></div>
+
+                    <div style='font-size: 12px; color: #6b7280;'>
+                        {$fecha}
+                    </div>
+
+                    <div style='font-weight: bold; color: {$color};'>
+                        {$de} → {$a}
+                    </div>
+
+                    {$comentario}
+
+                </div>
+            ";
+        }
+
+        $html .= '</div>';
+
+        return new \Illuminate\Support\HtmlString($html);
+    })
+    ->columnSpanFull(),
     ])
     ->collapsible()
     ->collapsed(false)
