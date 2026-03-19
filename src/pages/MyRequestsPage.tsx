@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useCombinedRequests } from "../hooks/useCombinedRequests";
 import { ESTADOS } from "../constants/requests.constants";
 import { getStatusStyle, isCompleted } from "../lib/format";
+import { InnerLoading } from "../components/InnerLoading";
 import type { RequestStatus } from "../services/requests.service";
 import type { CombinedRequest, Modulo } from "../hooks/useCombinedRequests";
 
@@ -273,44 +274,6 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
   );
 }
 
-// ─── Skeletons ─────────────────────────────────────────────────────────────────
-
-function CardSkeleton() {
-  return (
-    <div className="animate-pulse overflow-hidden rounded-2xl border-l-4 border-l-slate-200 bg-white px-5 py-4 shadow-sm ring-1 ring-slate-100">
-      <div className="flex items-start justify-between gap-3">
-        <div className="h-5 w-36 rounded-lg bg-slate-100" />
-        <div className="h-5 w-20 rounded-full bg-slate-100" />
-      </div>
-      <div className="mt-2 h-3 w-36 rounded bg-slate-100" />
-      <div className="mt-4 space-y-2">
-        <div className="h-3.5 w-48 rounded bg-slate-100" />
-        <div className="h-3.5 w-40 rounded bg-slate-100" />
-      </div>
-      <div className="mt-4 flex justify-end">
-        <div className="h-3 w-20 rounded bg-slate-100" />
-      </div>
-    </div>
-  );
-}
-
-function RowSkeleton() {
-  return (
-    <tr className="animate-pulse border-b border-slate-50">
-      <td className="px-6 py-4"><div className="h-4 w-36 rounded bg-slate-100" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-24 rounded-full bg-slate-100" /></td>
-      <td className="px-6 py-4"><div className="h-4 w-32 rounded bg-slate-100" /></td>
-      <td className="px-6 py-4">
-        <div className="space-y-1.5">
-          <div className="h-3.5 w-44 rounded bg-slate-100" />
-          <div className="h-3.5 w-36 rounded bg-slate-100" />
-        </div>
-      </td>
-      <td className="px-6 py-4"><div className="h-5 w-20 rounded-full bg-slate-100" /></td>
-      <td className="px-6 py-4 text-right"><div className="ml-auto h-4 w-20 rounded bg-slate-100" /></td>
-    </tr>
-  );
-}
 
 // ─── Tarjeta mobile ────────────────────────────────────────────────────────────
 
@@ -507,7 +470,7 @@ export default function MyRequestsPage() {
       {/* ── TARJETAS (mobile + tablet) ── */}
       <div className="block space-y-3 lg:hidden">
         {loading
-          ? <><CardSkeleton /><CardSkeleton /><CardSkeleton /></>
+          ? <InnerLoading message="Cargando solicitudes..." />
           : requests.length === 0
             ? <EmptyState message={emptyMessage} />
             : requests.map((req) => (
@@ -539,7 +502,7 @@ export default function MyRequestsPage() {
           </thead>
           <tbody>
             {loading
-              ? <><RowSkeleton /><RowSkeleton /><RowSkeleton /><RowSkeleton /><RowSkeleton /></>
+              ? <tr><td colSpan={6}><InnerLoading message="Cargando solicitudes..." /></td></tr>
               : requests.length === 0
                 ? (
                   <tr>
