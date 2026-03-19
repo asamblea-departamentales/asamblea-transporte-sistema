@@ -9,8 +9,8 @@
       "destination": "https://router.project-osrm.org/:path*"
     },
     {
-      "source": "/(.*)",
-      "destination": "/"
+      "source": "/((?!assets/|icons/|sw.js|manifest.webmanifest).*)",
+      "destination": "/index.html"
     }
   ],
   "headers": [

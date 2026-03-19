@@ -3,7 +3,6 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { getAllRequests } from "../services/requests.service";
 import { getAllMantenimientos } from "../services/mantenimiento.service";
 import { getAllCombustibles } from "../services/combustible.service";
-import { useAuth } from "../auth/AuthContext";
 import type { RequestStatus } from "../services/requests.service";
 import type { SolicitudCombustibleNormalizada } from "../services/combustible.service";
 
@@ -22,6 +21,8 @@ export type CombinedRequest = {
   destino: string;
   unidad?: { id: number; nombre: string };
   solicitante?: { id: number; name: string; email: string };
+  motorista?: { id: number; nombre: string } | null;
+  vehiculo?: { id: number; placa: string } | null;
   modulo: Modulo;
   // raw data por si la vista de detalle lo necesita
   _raw: Record<string, unknown>;
@@ -40,7 +41,6 @@ const PER_PAGE = 10;
 // ─── Hook ──────────────────────────────────────────────────────────────────────
 
 export function useCombinedRequests() {
-  const { user }                      = useAuth();
   const [allItems, setAllItems]       = useState<CombinedRequest[]>([]);
   const [loading, setLoading]         = useState(true);
   const [error, setError]             = useState<string | null>(null);
@@ -93,6 +93,8 @@ export function useCombinedRequests() {
             unidad:      s.unidad,
             solicitante: s.solicitante,
             modulo:      "transporte",
+            motorista:   s.motorista,
+            vehiculo:    s.vehiculo,
             _raw:        s as unknown as Record<string, unknown>,
           });
         });
@@ -112,6 +114,8 @@ export function useCombinedRequests() {
             unidad:      s.unidad,
             solicitante: s.solicitante,
             modulo:      "mantenimiento",
+            motorista:   (s as any).motorista,
+            vehiculo:    (s as any).vehiculo,
             _raw:        s as unknown as Record<string, unknown>,
           });
         });
@@ -134,6 +138,8 @@ export function useCombinedRequests() {
               ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email }
               : undefined,
             modulo:      "combustible",
+            motorista:   s.motorista,
+            vehiculo:    s.vehiculo,
             _raw:        s as unknown as Record<string, unknown>,
           });
         });
@@ -157,9 +163,6 @@ export function useCombinedRequests() {
   // ─── Filtrado client-side ────────────────────────────────────────────────────
 
   const filtered = allItems.filter((item) => {
-    // Solo solicitudes del usuario actual
-    if (user?.id && item.solicitante?.id !== user.id) return false;
-
     if (filters.estado && item.estado !== filters.estado) return false;
     if (filters.modulo && item.modulo !== filters.modulo) return false;
     if (filters.search) {
