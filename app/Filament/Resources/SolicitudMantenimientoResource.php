@@ -191,16 +191,16 @@ class SolicitudMantenimientoResource extends Resource
 
         Forms\Components\Placeholder::make('estimado')
             ->label('Costo estimado')
-            ->content(fn ($r) => '$' . number_format($r->costo_estimado, 2)),
+            ->content(fn ($record) => '$' . number_format($record->costo_estimado, 2)),
 
         Forms\Components\Placeholder::make('real')
             ->label('Costo real')
-            ->content(fn ($r) => '$' . number_format($r->costo_real, 2)),
+            ->content(fn ($record) => '$' . number_format($record->costo_real, 2)),
 
         Forms\Components\Placeholder::make('diferencia')
             ->label('Diferencia')
-            ->content(function ($r) {
-                $diff = $r->costo_real - $r->costo_estimado;
+            ->content(function ($record) {
+                $diff = $record->costo_real - $record->costo_estimado;
 
                 $color = $diff > 0 ? 'red' : 'green';
 
@@ -288,22 +288,22 @@ class SolicitudMantenimientoResource extends Resource
 
         Forms\Components\Placeholder::make('resultado')
             ->label('Resultado')
-            ->content(fn ($r) =>
-                $r->evaluacion
-                    ? ($r->evaluacion->coincide ? '✔ Correcto' : '❌ Discrepancia')
+            ->content(fn ($record) =>
+                $record->evaluacion
+                    ? ($record->evaluacion->coincide ? '✔ Correcto' : '❌ Discrepancia')
                     : 'Pendiente'
             ),
 
         Forms\Components\Placeholder::make('evaluador')
             ->label('Evaluado por')
-            ->content(fn ($r) => $r->evaluacion?->evaluador?->name ?? '-'),
+            ->content(fn ($record) => $record->evaluacion?->evaluador?->name ?? '-'),
 
         Forms\Components\Placeholder::make('obs')
             ->label('Observaciones')
-            ->content(fn ($r) => $r->evaluacion?->observaciones ?? '-'),
+            ->content(fn ($record) => $record->evaluacion?->observaciones ?? '-'),
 
     ])
-    ->visible(fn ($r) => $r->evaluacion),
+    ->visible(fn ($record) => $record->evaluacion),
 
         Forms\Components\Section::make('Decisión / Auditoría')
             ->schema([
