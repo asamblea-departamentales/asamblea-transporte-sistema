@@ -124,6 +124,8 @@ class PanelLiquidaciones extends Page
             ])->findOrFail($id);
 
             $this->detalleItem = [
+                'id'                => $record->id,
+                'fecha'              => $record->created_at?->format('d/m/Y'),
                 'codigo'            => $record->codigo,
                 'tipo'              => 'combustible',
                 'vehiculo'          => trim($record->vehiculo?->placa . ' — ' . $record->vehiculo?->marca?->nombre . ' ' . $record->vehiculo?->modelo?->nombre),
@@ -147,6 +149,8 @@ class PanelLiquidaciones extends Page
             ])->findOrFail($id);
 
             $this->detalleItem = [
+                'id'                => $record->id,
+                'fecha'              => $record->created_at?->format('d/m/Y'),
                 'codigo'            => $record->codigo,
                 'tipo'              => 'mantenimiento',
                 'vehiculo'          => trim($record->vehiculo?->placa . ' — ' . $record->vehiculo?->marca?->nombre . ' ' . $record->vehiculo?->modelo?->nombre),

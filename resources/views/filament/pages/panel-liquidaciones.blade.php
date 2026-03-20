@@ -500,15 +500,15 @@
 <div class="liq-list">
     @forelse($items as $item)
         <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}"
-             x-data="{ id: {{ $item['id'] }}, tipo: '{{ $item['tipo'] }}', liquidado: {{ $item['liquidado'] ? 'true' : 'false' }} }"
-             @click="if(liquidado) $wire.abrirDetalle(id, tipo)">
+             x-data="{ id: {{ $item['id'] }}, tipo: '{{ $item['tipo'] }}' }"
+             @click="$wire.abrirDetalle(id, tipo)"
+             style="cursor:pointer;">
 
-            <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}"
-                 style="{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}">
+            <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
                 {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
             </div>
 
-            <div class="liq-info" style="{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}">
+            <div class="liq-info">
                 <div class="liq-codigo">{{ $item['codigo'] }}</div>
                 <div class="liq-meta">
                     {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
@@ -533,7 +533,6 @@
 
             <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
 
-            {{-- Acciones: @click.stop para que no propague al drawer --}}
             <div class="liq-actions" @click.stop>
                 @if(!$item['liquidado'] && $item['tiene_comprobantes'])
                     <button
@@ -634,13 +633,19 @@
             @if($this->detalleItem['tipo'] === 'combustible')
             <div class="liq-drawer-row">
                 <span class="liq-drawer-row-label">Motorista</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['motorista'] }}</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['motorista'] ?? '—' }}</span>
             </div>
             @endif
+            <div class="liq-drawer-row">
+                <span class="liq-drawer-row-label">Fecha</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha'] ?? '—' }}</span>
+            </div>
+            @if($this->detalleItem['liquidado'])
             <div class="liq-drawer-row">
                 <span class="liq-drawer-row-label">Fecha liquidación</span>
                 <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_liquidacion'] ?? '—' }}</span>
             </div>
+            @endif
         </div>
 
         {{-- Montos --}}
@@ -648,11 +653,14 @@
             <div class="liq-drawer-section-title">Resumen financiero</div>
             <div style="display:flex;gap:10px;margin-bottom:10px;">
                 <div class="liq-monto-box">
-                    <div class="liq-monto-box-label">Solicitado</div>
+                    <div class="liq-monto-box-label">
+                        {{ $this->detalleItem['tipo'] === 'combustible' ? 'Valor solicitado' : 'Costo real' }}
+                    </div>
                     <div class="liq-monto-box-value" style="color:#111827;">
                         ${{ number_format($this->detalleItem['monto_solicitado'] ?? 0, 2) }}
                     </div>
                 </div>
+                @if($this->detalleItem['liquidado'])
                 <div class="liq-monto-box">
                     <div class="liq-monto-box-label">Validado</div>
                     <div class="liq-monto-box-value"
@@ -660,34 +668,37 @@
                         ${{ number_format($this->detalleItem['monto_validado'] ?? 0, 2) }}
                     </div>
                 </div>
-            </div>
-
-            @php
-                $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
-            @endphp
-            <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
-                    {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
-                </span>
-                <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
-                    {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
-                </span>
-            </div>
-
-            <div style="display:flex;align-items:center;justify-content:space-between;">
-                <span style="font-size:12px;color:#6b7280;">Resultado</span>
-                @if($this->detalleItem['resultado'] === 'coincide')
-                    <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
-                @elseif($this->detalleItem['resultado'] === 'discrepancia')
-                    <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
-                @else
-                    <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
                 @endif
             </div>
+
+            @if($this->detalleItem['liquidado'])
+                @php
+                    $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
+                @endphp
+                <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                    <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
+                        {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
+                    </span>
+                    <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
+                        {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
+                    </span>
+                </div>
+
+                <div style="display:flex;align-items:center;justify-content:space-between;">
+                    <span style="font-size:12px;color:#6b7280;">Resultado</span>
+                    @if($this->detalleItem['resultado'] === 'coincide')
+                        <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
+                    @elseif($this->detalleItem['resultado'] === 'discrepancia')
+                        <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
+                    @else
+                        <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
+                    @endif
+                </div>
+            @endif
         </div>
 
-        {{-- Observaciones --}}
-        @if($this->detalleItem['observaciones'])
+        {{-- Observaciones (solo si está liquidado y tiene) --}}
+        @if($this->detalleItem['liquidado'] && $this->detalleItem['observaciones'])
         <div>
             <div class="liq-drawer-section-title">Observaciones</div>
             <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;">
@@ -700,15 +711,15 @@
         <div>
             <div class="liq-drawer-section-title">Comprobantes</div>
             @if(empty($this->detalleItem['comprobantes']))
-                <div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px;">
+                <div style="text-align:center;padding:24px;background:#f9fafb;border-radius:10px;color:#9ca3af;font-size:13px;">
                     Sin comprobantes adjuntos
                 </div>
             @else
                 <div class="liq-comp-grid">
                     @foreach($this->detalleItem['comprobantes'] as $path)
                         @php
-                            $url = asset('storage/' . $path);
-                            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                            $url   = asset('storage/' . $path);
+                            $ext   = strtolower(pathinfo($path, PATHINFO_EXTENSION));
                             $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
                         @endphp
                         <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
@@ -726,13 +737,29 @@
 
     </div>
 
+    {{-- Footer: si está liquidado muestra PDF, si no muestra botón Liquidar --}}
     <div class="liq-drawer-footer">
-        <a href="{{ $this->detalleItem['pdf_route'] }}"
-           target="_blank"
-           style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;transition:opacity 0.15s;"
-           onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
-            📄 Descargar PDF
-        </a>
+        @if($this->detalleItem['liquidado'])
+            <a href="{{ $this->detalleItem['pdf_route'] }}"
+               target="_blank"
+               style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;">
+                📄 Descargar PDF
+            </a>
+        @else
+            @if($this->detalleItem['tiene_comprobantes'])
+                <button
+                    wire:click="cerrarDetalle"
+                    x-data="{}"
+                    @click="$nextTick(() => $wire.abrirModalLiquidar({{ $this->detalleItem['id'] }}, '{{ $this->detalleItem['tipo'] }}'))"
+                    style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;">
+                    Liquidar esta solicitud
+                </button>
+            @else
+                <div style="text-align:center;padding:11px;border-radius:12px;background:#f3f4f6;color:#9ca3af;font-size:13px;">
+                    Sin comprobantes — no se puede liquidar
+                </div>
+            @endif
+        @endif
     </div>
 
 </div>
