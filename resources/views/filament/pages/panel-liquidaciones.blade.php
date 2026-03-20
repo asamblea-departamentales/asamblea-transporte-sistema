@@ -499,62 +499,67 @@
 {{-- LISTA --}}
 <div class="liq-list">
     @forelse($items as $item)
-        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }} {{ $item['liquidado'] ? 'clickable' : '' }}">
+        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}">
 
-    {{-- Zona clickeable para abrir drawer (solo si está liquidado) --}}
-    <div style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;"
-         @if($item['liquidado']) wire:click="abrirDetalle({{ $item['id'] }}, '{{ $item['tipo'] }}')" @endif>
+            {{-- Zona clickeable con Alpine --}}
+            <div
+                style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}"
+                @if($item['liquidado'])
+                    x-data="{}"
+                    @click="$wire.abrirDetalle({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+                @endif
+            >
+                <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
+                    {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
+                </div>
 
-        <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
-            {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
-        </div>
+                <div class="liq-info">
+                    <div class="liq-codigo">{{ $item['codigo'] }}</div>
+                    <div class="liq-meta">
+                        {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
+                    </div>
+                    <div class="liq-fecha">
+                        {{ $item['fecha'] ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '—' }}
+                    </div>
+                </div>
 
-        <div class="liq-info">
-            <div class="liq-codigo">{{ $item['codigo'] }}</div>
-            <div class="liq-meta">
-                {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
+                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
+                    @if($item['liquidado'])
+                        <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
+                    @else
+                        <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
+                    @endif
+                    @if($item['tiene_comprobantes'])
+                        <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
+                    @else
+                        <span class="liq-badge liq-badge-comp-no">✖ Sin comp.</span>
+                    @endif
+                </div>
+
+                <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
             </div>
-            <div class="liq-fecha">
-                {{ $item['fecha'] ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '—' }}
+
+            {{-- Acciones — Alpine stop para no propagar al drawer --}}
+            <div class="liq-actions" x-data="{}" @click.stop>
+                @if(!$item['liquidado'] && $item['tiene_comprobantes'])
+                    <button
+                        wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+                        class="liq-btn liq-btn-liquidar">
+                        Liquidar
+                    </button>
+                @endif
+                @if($item['liquidado'])
+                    <a href="{{ $item['tipo'] === 'combustible'
+                        ? route('liquidacion.combustible.pdf', $item['id'])
+                        : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
+                       target="_blank"
+                       class="liq-btn liq-btn-pdf">
+                        📄 PDF
+                    </a>
+                @endif
             </div>
+
         </div>
-
-        <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
-            @if($item['liquidado'])
-                <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
-            @else
-                <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
-            @endif
-            @if($item['tiene_comprobantes'])
-                <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
-            @else
-                <span class="liq-badge liq-badge-comp-no">✖ Sin comp.</span>
-            @endif
-        </div>
-
-        <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
-
-    </div>{{-- fin zona clickeable --}}
-           <div class="liq-actions">
-        @if(!$item['liquidado'] && $item['tiene_comprobantes'])
-            <button
-                wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
-                class="liq-btn liq-btn-liquidar">
-                Liquidar
-            </button>
-        @endif
-        @if($item['liquidado'])
-            <a href="{{ $item['tipo'] === 'combustible'
-                ? route('liquidacion.combustible.pdf', $item['id'])
-                : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
-               target="_blank"
-               class="liq-btn liq-btn-pdf">
-                📄 PDF
-            </a>
-        @endif
-    </div>
-
-</div>
     @empty
         <div class="liq-empty">
             <div class="liq-empty-icon">📋</div>
