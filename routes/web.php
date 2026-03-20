@@ -227,6 +227,7 @@ Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaV
     ->name('reportes.recepcion-entrega.pdf');    
 
 
+Route::get('/liquidacion/combustible-simple/{record}/pdf', function (SolicitudCombustible $record) {
 
 //Ruta para las liquidaciones unificadas
 Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::class, 'pdf'])

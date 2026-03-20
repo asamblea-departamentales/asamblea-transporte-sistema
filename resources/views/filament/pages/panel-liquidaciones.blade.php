@@ -27,6 +27,7 @@
         color: #111827;
         transition: border-color 0.15s;
         outline: none;
+        box-sizing: border-box;
     }
     .liq-filter-group input:focus,
     .liq-filter-group select:focus {
@@ -83,12 +84,8 @@
         border-color: #e0e7ff;
         box-shadow: 0 4px 16px rgba(99,102,241,0.07);
     }
-    .liq-card.liquidado {
-        border-left: 3px solid #6366f1;
-    }
-    .liq-card.pendiente {
-        border-left: 3px solid #f59e0b;
-    }
+    .liq-card.liquidado { border-left: 3px solid #6366f1; }
+    .liq-card.pendiente { border-left: 3px solid #f59e0b; }
     .liq-tipo-badge {
         width: 40px;
         height: 40px;
@@ -99,7 +96,7 @@
         font-size: 18px;
         flex-shrink: 0;
     }
-    .liq-tipo-combustible { background: #fef3c7; }
+    .liq-tipo-combustible   { background: #fef3c7; }
     .liq-tipo-mantenimiento { background: #dbeafe; }
     .liq-info { flex: 1; min-width: 0; }
     .liq-codigo {
@@ -121,18 +118,12 @@
         color: #9ca3af;
         margin-top: 2px;
     }
-    .liq-monto {
-        text-align: right;
-        flex-shrink: 0;
-    }
     .liq-monto-valor {
         font-size: 16px;
         font-weight: 700;
         color: #111827;
-    }
-    .liq-monto-sub {
-        font-size: 11px;
-        margin-top: 3px;
+        flex-shrink: 0;
+        text-align: right;
     }
     .liq-actions {
         display: flex;
@@ -152,10 +143,10 @@
         border: none;
         cursor: pointer;
     }
-    .liq-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+    .liq-btn:hover  { opacity: 0.88; transform: translateY(-1px); }
     .liq-btn:active { transform: scale(0.97); }
     .liq-btn-liquidar { background: #6366f1; color: #fff; }
-    .liq-btn-pdf { background: #f3f4f6; color: #374151; }
+    .liq-btn-pdf      { background: #f3f4f6; color: #374151; }
     .liq-badge {
         display: inline-flex;
         align-items: center;
@@ -174,21 +165,17 @@
         padding: 64px 0;
         color: #9ca3af;
     }
-    .liq-empty-icon { font-size: 48px; margin-bottom: 12px; }
+    .liq-empty-icon  { font-size: 48px; margin-bottom: 12px; }
     .liq-empty-title { font-size: 15px; font-weight: 600; color: #6b7280; }
-    .liq-empty-sub { font-size: 13px; margin-top: 4px; }
+    .liq-empty-sub   { font-size: 13px; margin-top: 4px; }
     .liq-top {
         display: flex;
         align-items: center;
-        justify-content: between;
-        margin-bottom: 6px;
         gap: 12px;
+        margin-bottom: 10px;
     }
-    .liq-count {
-        font-size: 12px;
-        color: #9ca3af;
-        margin-left: auto;
-    }
+    .liq-top-title { font-size: 13px; font-weight: 600; color: #374151; }
+    .liq-count     { font-size: 12px; color: #9ca3af; margin-left: auto; }
     .liq-clear {
         background: none;
         border: none;
@@ -199,6 +186,105 @@
         padding: 0;
     }
     .liq-clear:hover { color: #6b7280; }
+
+    /* Modal */
+    .liq-modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.45);
+        z-index: 50;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .liq-modal {
+        background: #fff;
+        border-radius: 20px;
+        padding: 28px 32px;
+        width: 100%;
+        max-width: 440px;
+        box-shadow: 0 20px 60px rgba(0,0,0,0.15);
+    }
+    .liq-modal-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 20px;
+    }
+    .liq-modal-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+    .liq-modal-close {
+        background: none;
+        border: none;
+        font-size: 22px;
+        color: #9ca3af;
+        cursor: pointer;
+        line-height: 1;
+        padding: 0;
+    }
+    .liq-modal-close:hover { color: #374151; }
+    .liq-field { display: flex; flex-direction: column; gap: 5px; }
+    .liq-field label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #6b7280;
+    }
+    .liq-field input,
+    .liq-field select,
+    .liq-field textarea {
+        width: 100%;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 10px;
+        padding: 9px 12px;
+        font-size: 14px;
+        outline: none;
+        box-sizing: border-box;
+        background: #fff;
+        color: #111827;
+        transition: border-color 0.15s;
+    }
+    .liq-field input:focus,
+    .liq-field select:focus,
+    .liq-field textarea:focus {
+        border-color: #6366f1;
+        box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
+    }
+    .liq-field textarea { resize: none; }
+    .liq-field-error { font-size: 11px; color: #ef4444; }
+    .liq-modal-footer {
+        display: flex;
+        gap: 10px;
+        margin-top: 22px;
+        justify-content: flex-end;
+    }
+    .liq-btn-cancel {
+        padding: 9px 18px;
+        border-radius: 10px;
+        border: 1.5px solid #e5e7eb;
+        background: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+    }
+    .liq-btn-confirm {
+        padding: 9px 20px;
+        border-radius: 10px;
+        border: none;
+        background: #6366f1;
+        color: #fff;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: opacity 0.15s;
+    }
+    .liq-btn-confirm:hover { opacity: 0.88; }
 </style>
 
 {{-- FILTROS --}}
@@ -231,8 +317,8 @@
 
 {{-- KPIs --}}
 @php
-    $items     = $this->getData();
-    $total     = $items->count();
+    $items      = $this->getData();
+    $total      = $items->count();
     $pendientes = $items->filter(fn($i) => !$i['liquidado'])->count();
     $liquidados = $items->filter(fn($i) =>  $i['liquidado'])->count();
     $montoTotal = $items->sum('monto');
@@ -261,7 +347,7 @@
         <div class="liq-stat-sub">en el periodo</div>
     </div>
     @if($sinComp > 0)
-    <div class="liq-stat" style="border-color:#fee2e2; background:#fffafa;">
+    <div class="liq-stat" style="border-color:#fee2e2;background:#fffafa;">
         <div class="liq-stat-label" style="color:#ef4444;">Sin comp.</div>
         <div class="liq-stat-value" style="color:#ef4444;">{{ $sinComp }}</div>
         <div class="liq-stat-sub" style="color:#ef4444;">sin comprobantes</div>
@@ -271,9 +357,7 @@
 
 {{-- HEADER LISTA --}}
 <div class="liq-top">
-    <span style="font-size:13px; font-weight:600; color:#374151;">
-        Solicitudes
-    </span>
+    <span class="liq-top-title">Solicitudes</span>
     <span class="liq-count">{{ $total }} resultado(s)</span>
     <button class="liq-clear" wire:click="limpiarFiltros">Limpiar filtros</button>
 </div>
@@ -283,12 +367,10 @@
     @forelse($items as $item)
         <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}">
 
-            {{-- Ícono tipo --}}
             <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
                 {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
             </div>
 
-            {{-- Info --}}
             <div class="liq-info">
                 <div class="liq-codigo">{{ $item['codigo'] }}</div>
                 <div class="liq-meta">
@@ -299,53 +381,40 @@
                 </div>
             </div>
 
-            {{-- Estado badges --}}
-            <div style="display:flex; flex-direction:column; gap:5px; align-items:flex-end; flex-shrink:0;">
+            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
                 @if($item['liquidado'])
                     <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
                 @else
                     <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
                 @endif
-
                 @if($item['tiene_comprobantes'])
-                    <span class="liq-badge liq-badge-comp-ok">📎 Comp.</span>
+                    <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
                 @else
                     <span class="liq-badge liq-badge-comp-no">✖ Sin comp.</span>
                 @endif
             </div>
 
-            {{-- Monto --}}
-            <div class="liq-monto">
-                <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
+            <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
+
+            <div class="liq-actions">
+                @if(!$item['liquidado'] && $item['tiene_comprobantes'])
+                    <button
+                        wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+                        class="liq-btn liq-btn-liquidar">
+                        Liquidar
+                    </button>
+                @endif
+
+                @if($item['liquidado'])
+                    <a href="{{ $item['tipo'] === 'combustible'
+                        ? route('liquidacion.combustible.pdf', $item['id'])
+                        : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
+                       target="_blank"
+                       class="liq-btn liq-btn-pdf">
+                        📄 PDF
+                    </a>
+                @endif
             </div>
-
-            {{-- Acciones --}}
-            {{-- Acciones --}}
-<div class="liq-actions">
-    {{-- Botón Liquidar: Solo si NO está liquidado y tiene comprobantes --}}
-    @if(!$item['liquidado'] && $item['tiene_comprobantes'])
-        @if($item['tipo'] === 'combustible')
-            {{-- Verifica si es 'solicitudes-combustible' o 'solicitud-combustibles' --}}
-            <a href="/admin/solicitud-combustibles/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
-                Liquidar
-            </a>
-        @else
-            {{-- Verifica si es 'solicitudes-mantenimiento' o 'mantenimientos' --}}
-            <a href="/admin/mantenimientos/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
-                Liquidar
-            </a>
-        @endif
-    @endif
-
-    {{-- Botón PDF: Solo si está liquidado --}}
-    @if($item['liquidado'])
-        <a href="{{ $item['tipo'] === 'combustible' ? route('liquidacion.combustible.pdf', $item['id']) : route('liquidacion.mantenimiento.pdf', $item['id']) }}" 
-           target="_blank" 
-           class="liq-btn liq-btn-pdf">
-            📄 PDF
-        </a>
-    @endif
-</div>
 
         </div>
     @empty
@@ -356,5 +425,66 @@
         </div>
     @endforelse
 </div>
+
+{{-- MODAL LIQUIDAR --}}
+@if($this->modalLiquidar)
+<div class="liq-modal-overlay" wire:click.self="cerrarModal">
+    <div class="liq-modal">
+
+        <div class="liq-modal-header">
+            <h3 class="liq-modal-title">Registrar Liquidación</h3>
+            <button class="liq-modal-close" wire:click="cerrarModal">&times;</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <div class="liq-field">
+                <label>Monto Validado (USD)</label>
+                <input
+                    type="number"
+                    step="0.01"
+                    wire:model="monto_validado"
+                    placeholder="0.00"
+                >
+                @error('monto_validado')
+                    <span class="liq-field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="liq-field">
+                <label>Resultado</label>
+                <select wire:model="resultado">
+                    <option value="">Seleccionar...</option>
+                    <option value="coincide">✔ Coincide</option>
+                    <option value="discrepancia">✖ Discrepancia</option>
+                </select>
+                @error('resultado')
+                    <span class="liq-field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="liq-field">
+                <label>Observaciones</label>
+                <textarea
+                    wire:model="observaciones"
+                    rows="3"
+                    placeholder="Notas contables opcionales..."
+                ></textarea>
+            </div>
+
+        </div>
+
+        <div class="liq-modal-footer">
+            <button class="liq-btn-cancel" wire:click="cerrarModal">
+                Cancelar
+            </button>
+            <button class="liq-btn-confirm" wire:click="confirmarLiquidacion">
+                Confirmar Liquidación
+            </button>
+        </div>
+
+    </div>
+</div>
+@endif
 
 </x-filament::page>

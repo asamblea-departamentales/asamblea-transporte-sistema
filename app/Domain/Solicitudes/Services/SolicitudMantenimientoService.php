@@ -270,6 +270,41 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
     });
 }
 
+public function liquidar(SolicitudMantenimiento $solicitud, int $userId, array $data): void
+{
+    if (empty($solicitud->adjuntos)) {
+        throw new \DomainException('No se puede liquidar sin adjuntos.');
+    }
+
+    DB::transaction(function () use ($solicitud, $userId, $data) {
+        $solicitud->liquidacion()->create([
+            'user_id'           => $userId,
+            'monto_solicitado'  => $solicitud->costo_real ?? $solicitud->costo_estimado,
+            'monto_validado'    => $data['monto_validado'],
+            'resultado'         => $data['resultado'],
+            'observaciones'     => $data['observaciones'] ?? null,
+            'fecha_liquidacion' => now(),
+        ]);
+
+        $anterior = $solicitud->estado;
+        $solicitud->estado = EstadoSolicitudEnum::LIQUIDADA;
+        $solicitud->save();
+
+        $this->registrarCambioEstado(
+            $solicitud,
+            $anterior,
+            $solicitud->estado,
+            $userId,
+            'Liquidación registrada.'
+        );
+
+        $this->registrarEvento($solicitud, 'LIQUIDAR', $userId, [
+            'monto_validado' => $data['monto_validado'],
+            'resultado'      => $data['resultado'],
+        ]);
+    });
+}
+
 
 
     // =====================================================
