@@ -86,6 +86,7 @@
     }
     .liq-card.liquidado { border-left: 3px solid #6366f1; }
     .liq-card.pendiente { border-left: 3px solid #f59e0b; }
+    .liq-card.clickable { cursor: pointer; }
     .liq-tipo-badge {
         width: 40px;
         height: 40px;
@@ -187,7 +188,7 @@
     }
     .liq-clear:hover { color: #6b7280; }
 
-    /* Modal */
+    /* ── MODAL ── */
     .liq-modal-overlay {
         position: fixed;
         inset: 0;
@@ -285,6 +286,138 @@
         transition: opacity 0.15s;
     }
     .liq-btn-confirm:hover { opacity: 0.88; }
+
+    /* ── DRAWER ── */
+    .liq-drawer-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0,0,0,0.35);
+        z-index: 40;
+    }
+    .liq-drawer {
+        position: fixed;
+        top: 0;
+        right: 0;
+        height: 100vh;
+        width: 100%;
+        max-width: 420px;
+        background: #fff;
+        z-index: 41;
+        box-shadow: -8px 0 40px rgba(0,0,0,0.12);
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    .liq-drawer-header {
+        padding: 20px 24px 16px;
+        border-bottom: 1.5px solid #f3f4f6;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-shrink: 0;
+    }
+    .liq-drawer-title {
+        font-size: 15px;
+        font-weight: 700;
+        color: #111827;
+        margin: 0;
+    }
+    .liq-drawer-close {
+        background: #f3f4f6;
+        border: none;
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        font-size: 18px;
+        color: #6b7280;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .liq-drawer-close:hover { background: #e5e7eb; color: #111827; }
+    .liq-drawer-body {
+        flex: 1;
+        overflow-y: auto;
+        padding: 20px 24px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    .liq-drawer-section-title {
+        font-size: 10px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        color: #9ca3af;
+        margin-bottom: 10px;
+    }
+    .liq-drawer-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: baseline;
+        padding: 6px 0;
+        border-bottom: 1px solid #f9fafb;
+    }
+    .liq-drawer-row:last-child { border-bottom: none; }
+    .liq-drawer-row-label { font-size: 12px; color: #6b7280; }
+    .liq-drawer-row-value {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+        text-align: right;
+        max-width: 60%;
+    }
+    .liq-monto-box {
+        flex: 1;
+        background: #f9fafb;
+        border-radius: 12px;
+        padding: 14px 16px;
+    }
+    .liq-monto-box-label {
+        font-size: 11px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #9ca3af;
+        margin-bottom: 4px;
+    }
+    .liq-monto-box-value {
+        font-size: 20px;
+        font-weight: 700;
+        line-height: 1;
+    }
+    .liq-comp-grid {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 8px;
+    }
+    .liq-comp-thumb {
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1.5px solid #f3f4f6;
+        aspect-ratio: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f9fafb;
+        text-decoration: none;
+        transition: border-color 0.15s;
+        flex-direction: column;
+        gap: 4px;
+    }
+    .liq-comp-thumb:hover { border-color: #6366f1; }
+    .liq-comp-thumb img { width: 100%; height: 100%; object-fit: cover; }
+    .liq-comp-label {
+        font-size: 10px;
+        font-weight: 600;
+        color: #6b7280;
+    }
+    .liq-drawer-footer {
+        padding: 16px 24px;
+        border-top: 1.5px solid #f3f4f6;
+        flex-shrink: 0;
+    }
 </style>
 
 {{-- FILTROS --}}
@@ -365,7 +498,8 @@
 {{-- LISTA --}}
 <div class="liq-list">
     @forelse($items as $item)
-        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}">
+        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }} {{ $item['liquidado'] ? 'clickable' : '' }}"
+             @if($item['liquidado']) wire:click="abrirDetalle({{ $item['id'] }}, '{{ $item['tipo'] }}')" @endif>
 
             <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
                 {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
@@ -396,7 +530,7 @@
 
             <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
 
-            <div class="liq-actions">
+            <div class="liq-actions" wire:click.stop>
                 @if(!$item['liquidado'] && $item['tiene_comprobantes'])
                     <button
                         wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
@@ -404,7 +538,6 @@
                         Liquidar
                     </button>
                 @endif
-
                 @if($item['liquidado'])
                     <a href="{{ $item['tipo'] === 'combustible'
                         ? route('liquidacion.combustible.pdf', $item['id'])
@@ -430,27 +563,18 @@
 @if($this->modalLiquidar)
 <div class="liq-modal-overlay" wire:click.self="cerrarModal">
     <div class="liq-modal">
-
         <div class="liq-modal-header">
             <h3 class="liq-modal-title">Registrar Liquidación</h3>
             <button class="liq-modal-close" wire:click="cerrarModal">&times;</button>
         </div>
-
         <div style="display:flex;flex-direction:column;gap:14px;">
-
             <div class="liq-field">
                 <label>Monto Validado (USD)</label>
-                <input
-                    type="number"
-                    step="0.01"
-                    wire:model="monto_validado"
-                    placeholder="0.00"
-                >
+                <input type="number" step="0.01" wire:model="monto_validado" placeholder="0.00">
                 @error('monto_validado')
                     <span class="liq-field-error">{{ $message }}</span>
                 @enderror
             </div>
-
             <div class="liq-field">
                 <label>Resultado</label>
                 <select wire:model="resultado">
@@ -462,28 +586,151 @@
                     <span class="liq-field-error">{{ $message }}</span>
                 @enderror
             </div>
-
             <div class="liq-field">
                 <label>Observaciones</label>
-                <textarea
-                    wire:model="observaciones"
-                    rows="3"
-                    placeholder="Notas contables opcionales..."
-                ></textarea>
+                <textarea wire:model="observaciones" rows="3" placeholder="Notas contables opcionales..."></textarea>
             </div>
+        </div>
+        <div class="liq-modal-footer">
+            <button class="liq-btn-cancel" wire:click="cerrarModal">Cancelar</button>
+            <button class="liq-btn-confirm" wire:click="confirmarLiquidacion">Confirmar Liquidación</button>
+        </div>
+    </div>
+</div>
+@endif
 
+{{-- DRAWER DETALLE --}}
+@if($this->drawerDetalle && $this->detalleItem)
+<div class="liq-drawer-overlay" wire:click="cerrarDetalle"></div>
+<div class="liq-drawer">
+
+    <div class="liq-drawer-header">
+        <div>
+            <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">
+                {{ $this->detalleItem['tipo'] === 'combustible' ? '⛽ Combustible' : '🔧 Mantenimiento' }}
+            </div>
+            <h3 class="liq-drawer-title">{{ $this->detalleItem['codigo'] }}</h3>
+        </div>
+        <button class="liq-drawer-close" wire:click="cerrarDetalle">&times;</button>
+    </div>
+
+    <div class="liq-drawer-body">
+
+        {{-- Info general --}}
+        <div>
+            <div class="liq-drawer-section-title">Información general</div>
+            <div class="liq-drawer-row">
+                <span class="liq-drawer-row-label">Vehículo</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['vehiculo'] ?? '—' }}</span>
+            </div>
+            <div class="liq-drawer-row">
+                <span class="liq-drawer-row-label">Solicitante</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['solicitante'] ?? '—' }}</span>
+            </div>
+            @if($this->detalleItem['tipo'] === 'combustible')
+            <div class="liq-drawer-row">
+                <span class="liq-drawer-row-label">Motorista</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['motorista'] }}</span>
+            </div>
+            @endif
+            <div class="liq-drawer-row">
+                <span class="liq-drawer-row-label">Fecha liquidación</span>
+                <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_liquidacion'] ?? '—' }}</span>
+            </div>
         </div>
 
-        <div class="liq-modal-footer">
-            <button class="liq-btn-cancel" wire:click="cerrarModal">
-                Cancelar
-            </button>
-            <button class="liq-btn-confirm" wire:click="confirmarLiquidacion">
-                Confirmar Liquidación
-            </button>
+        {{-- Montos --}}
+        <div>
+            <div class="liq-drawer-section-title">Resumen financiero</div>
+            <div style="display:flex;gap:10px;margin-bottom:10px;">
+                <div class="liq-monto-box">
+                    <div class="liq-monto-box-label">Solicitado</div>
+                    <div class="liq-monto-box-value" style="color:#111827;">
+                        ${{ number_format($this->detalleItem['monto_solicitado'] ?? 0, 2) }}
+                    </div>
+                </div>
+                <div class="liq-monto-box">
+                    <div class="liq-monto-box-label">Validado</div>
+                    <div class="liq-monto-box-value"
+                         style="color:{{ ($this->detalleItem['monto_validado'] ?? 0) < ($this->detalleItem['monto_solicitado'] ?? 0) ? '#ef4444' : '#10b981' }}">
+                        ${{ number_format($this->detalleItem['monto_validado'] ?? 0, 2) }}
+                    </div>
+                </div>
+            </div>
+
+            @php
+                $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
+            @endphp
+            <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
+                    {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
+                </span>
+                <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
+                    {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
+                </span>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:space-between;">
+                <span style="font-size:12px;color:#6b7280;">Resultado</span>
+                @if($this->detalleItem['resultado'] === 'coincide')
+                    <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
+                @elseif($this->detalleItem['resultado'] === 'discrepancia')
+                    <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
+                @else
+                    <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
+                @endif
+            </div>
+        </div>
+
+        {{-- Observaciones --}}
+        @if($this->detalleItem['observaciones'])
+        <div>
+            <div class="liq-drawer-section-title">Observaciones</div>
+            <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;">
+                {{ $this->detalleItem['observaciones'] }}
+            </div>
+        </div>
+        @endif
+
+        {{-- Comprobantes --}}
+        <div>
+            <div class="liq-drawer-section-title">Comprobantes</div>
+            @if(empty($this->detalleItem['comprobantes']))
+                <div style="text-align:center;padding:24px;color:#9ca3af;font-size:13px;">
+                    Sin comprobantes adjuntos
+                </div>
+            @else
+                <div class="liq-comp-grid">
+                    @foreach($this->detalleItem['comprobantes'] as $path)
+                        @php
+                            $url = asset('storage/' . $path);
+                            $ext = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                            $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
+                        @endphp
+                        <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
+                            @if($isImg)
+                                <img src="{{ $url }}" alt="Comprobante">
+                            @else
+                                <span style="font-size:24px;">📄</span>
+                                <span class="liq-comp-label">{{ strtoupper($ext) }}</span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            @endif
         </div>
 
     </div>
+
+    <div class="liq-drawer-footer">
+        <a href="{{ $this->detalleItem['pdf_route'] }}"
+           target="_blank"
+           style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;transition:opacity 0.15s;"
+           onmouseover="this.style.opacity='0.88'" onmouseout="this.style.opacity='1'">
+            📄 Descargar PDF
+        </a>
+    </div>
+
 </div>
 @endif
 

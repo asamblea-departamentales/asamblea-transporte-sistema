@@ -19,23 +19,24 @@ class PanelLiquidaciones extends Page
 
     #[Url]
     public string $fecha_desde = '';
-
     #[Url]
     public string $fecha_hasta = '';
-
     #[Url]
     public string $tipo        = '';
-
     #[Url]
     public string $estado      = '';
 
-    // Modal
+    // Modal liquidar
     public bool   $modalLiquidar  = false;
     public ?int   $liquidarId     = null;
     public string $liquidarTipo   = '';
     public string $monto_validado = '';
     public string $resultado      = '';
     public string $observaciones  = '';
+
+    // Drawer detalle
+    public bool   $drawerDetalle = false;
+    public ?array $detalleItem   = null;
 
     public function mount(): void
     {
@@ -60,6 +61,8 @@ class PanelLiquidaciones extends Page
         $this->tipo        = '';
         $this->estado      = '';
     }
+
+    // ── MODAL LIQUIDAR ───────────────────────────────────────
 
     public function abrirModalLiquidar(int $id, string $tipo): void
     {
@@ -102,14 +105,71 @@ class PanelLiquidaciones extends Page
 
             $this->cerrarModal();
 
-            $this->dispatch('notify', [
-                'type'    => 'success',
-                'message' => 'Liquidación registrada correctamente.',
-            ]);
-
         } catch (\DomainException $e) {
             $this->addError('monto_validado', $e->getMessage());
         }
+    }
+
+    // ── DRAWER DETALLE ───────────────────────────────────────
+
+    public function abrirDetalle(int $id, string $tipo): void
+    {
+        if ($tipo === 'combustible') {
+            $record = SolicitudCombustible::with([
+                'vehiculo.marca',
+                'vehiculo.modelo',
+                'solicitante',
+                'motorista',
+                'liquidacion',
+            ])->findOrFail($id);
+
+            $this->detalleItem = [
+                'codigo'            => $record->codigo,
+                'tipo'              => 'combustible',
+                'vehiculo'          => trim($record->vehiculo?->placa . ' — ' . $record->vehiculo?->marca?->nombre . ' ' . $record->vehiculo?->modelo?->nombre),
+                'solicitante'       => $record->solicitante?->name,
+                'motorista'         => $record->motorista?->nombre ?? '—',
+                'monto_solicitado'  => $record->valor_total,
+                'monto_validado'    => $record->liquidacion?->monto_validado,
+                'resultado'         => $record->liquidacion?->resultado,
+                'observaciones'     => $record->liquidacion?->observaciones,
+                'fecha_liquidacion' => $record->liquidacion?->fecha_liquidacion?->format('d/m/Y H:i'),
+                'comprobantes'      => $record->comprobantes ?? [],
+                'liquidado'         => $record->liquidacion !== null,
+                'pdf_route'         => route('liquidacion.combustible.pdf', $record->id),
+            ];
+        } else {
+            $record = SolicitudMantenimiento::with([
+                'vehiculo.marca',
+                'vehiculo.modelo',
+                'solicitante',
+                'liquidacion',
+            ])->findOrFail($id);
+
+            $this->detalleItem = [
+                'codigo'            => $record->codigo,
+                'tipo'              => 'mantenimiento',
+                'vehiculo'          => trim($record->vehiculo?->placa . ' — ' . $record->vehiculo?->marca?->nombre . ' ' . $record->vehiculo?->modelo?->nombre),
+                'solicitante'       => $record->solicitante?->name,
+                'motorista'         => '—',
+                'monto_solicitado'  => $record->costo_real ?? $record->costo_estimado,
+                'monto_validado'    => $record->liquidacion?->monto_validado,
+                'resultado'         => $record->liquidacion?->resultado,
+                'observaciones'     => $record->liquidacion?->observaciones,
+                'fecha_liquidacion' => $record->liquidacion?->fecha_liquidacion?->format('d/m/Y H:i'),
+                'comprobantes'      => $record->adjuntos ?? [],
+                'liquidado'         => $record->liquidacion !== null,
+                'pdf_route'         => route('liquidacion.mantenimiento.pdf', $record->id),
+            ];
+        }
+
+        $this->drawerDetalle = true;
+    }
+
+    public function cerrarDetalle(): void
+    {
+        $this->drawerDetalle = false;
+        $this->detalleItem   = null;
     }
 
     public static function canAccess(): bool
