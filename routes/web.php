@@ -226,17 +226,7 @@ Route::get('/reportes/orden-trabajo/pdf', action:[ReporteOrdenTrabajoController:
 Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaVehiculoController::class, 'pdf'])
     ->name('reportes.recepcion-entrega.pdf');    
 
-Route::get('/liquidacion/{record}/pdf', function (SolicitudCombustible $record) {
 
-    // Cambiamos 'pdf.liquidacion' por 'reports.liquidacion_pdf'
-    $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.liquidacion_pdf', [
-        'solicitud' => $record,
-        'liquidacion' => $record->liquidacion,
-    ]);
-
-    return $pdf->stream("liquidacion_{$record->codigo}.pdf");
-
-})->name('liquidacion.pdf');
 
 //Ruta para las liquidaciones unificadas
 Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::class, 'pdf'])
