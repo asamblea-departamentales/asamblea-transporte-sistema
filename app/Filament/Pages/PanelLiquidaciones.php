@@ -162,6 +162,7 @@ class PanelLiquidaciones extends Page
                 'observaciones'     => $record->liquidacion?->observaciones,
                 'fecha_liquidacion' => $record->liquidacion?->fecha_liquidacion?->format('d/m/Y H:i'),
                 'comprobantes'      => $record->adjuntos ?? [],
+                'tiene_comprobantes'=> !empty($record->comprobantes),  // ← agrega esto
                 'liquidado'         => $record->liquidacion !== null,
                 'pdf_route'         => route('liquidacion.mantenimiento.pdf', $record->id),
             ];
