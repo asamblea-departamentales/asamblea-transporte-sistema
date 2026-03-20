@@ -496,72 +496,45 @@
     <button class="liq-clear" wire:click="limpiarFiltros">Limpiar filtros</button>
 </div>
 
-{{-- DEBUG --}}
-{{-- DEBUG --}}
-@php $firstItem = $items->first(); @endphp
-<div style="margin-bottom:12px;padding:10px;background:#fef3c7;border-radius:8px;font-size:12px;">
-    <strong>drawerDetalle:</strong> {{ $this->drawerDetalle ? 'true' : 'false' }} |
-    <strong>detalleItem:</strong> {{ $this->detalleItem ? $this->detalleItem['codigo'] : 'null' }}
-    <br><br>
-    @if($firstItem)
-    <button
-        style="padding:6px 12px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:8px;"
-        wire:click="abrirDetalle({{ $firstItem['id'] }}, '{{ $firstItem['tipo'] }}')">
-        Forzar drawer ({{ $firstItem['codigo'] }})
-    </button>
-    @endif
-    <button
-        style="padding:6px 12px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;"
-        wire:click="cerrarDetalle">
-        Cerrar
-    </button>
-</div>
-
 {{-- LISTA --}}
 <div class="liq-list">
     @forelse($items as $item)
-        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}">
+        <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}"
+             x-data="{ id: {{ $item['id'] }}, tipo: '{{ $item['tipo'] }}', liquidado: {{ $item['liquidado'] ? 'true' : 'false' }} }"
+             @click="if(liquidado) $wire.abrirDetalle(id, tipo)">
 
-            {{-- Zona clickeable con Alpine --}}
-            <div
-                style="display:flex;align-items:center;gap:16px;flex:1;min-width:0;{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}"
-                @if($item['liquidado'])
-                    x-data="{}"
-                    @click="$wire.abrirDetalle({{ $item['id'] }}, '{{ $item['tipo'] }}')"
-                @endif
-            >
-                <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
-                    {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
-                </div>
-
-                <div class="liq-info">
-                    <div class="liq-codigo">{{ $item['codigo'] }}</div>
-                    <div class="liq-meta">
-                        {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
-                    </div>
-                    <div class="liq-fecha">
-                        {{ $item['fecha'] ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '—' }}
-                    </div>
-                </div>
-
-                <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
-                    @if($item['liquidado'])
-                        <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
-                    @else
-                        <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
-                    @endif
-                    @if($item['tiene_comprobantes'])
-                        <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
-                    @else
-                        <span class="liq-badge liq-badge-comp-no">✖ Sin comp.</span>
-                    @endif
-                </div>
-
-                <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
+            <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}"
+                 style="{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}">
+                {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
             </div>
 
-            {{-- Acciones — Alpine stop para no propagar al drawer --}}
-            <div class="liq-actions" x-data="{}" @click.stop>
+            <div class="liq-info" style="{{ $item['liquidado'] ? 'cursor:pointer;' : '' }}">
+                <div class="liq-codigo">{{ $item['codigo'] }}</div>
+                <div class="liq-meta">
+                    {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
+                </div>
+                <div class="liq-fecha">
+                    {{ $item['fecha'] ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '—' }}
+                </div>
+            </div>
+
+            <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
+                @if($item['liquidado'])
+                    <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
+                @else
+                    <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
+                @endif
+                @if($item['tiene_comprobantes'])
+                    <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
+                @else
+                    <span class="liq-badge liq-badge-comp-no">✖ Sin comp.</span>
+                @endif
+            </div>
+
+            <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
+
+            {{-- Acciones: @click.stop para que no propague al drawer --}}
+            <div class="liq-actions" @click.stop>
                 @if(!$item['liquidado'] && $item['tiene_comprobantes'])
                     <button
                         wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
