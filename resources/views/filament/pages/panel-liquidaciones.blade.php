@@ -320,29 +320,32 @@
             </div>
 
             {{-- Acciones --}}
-            <div class="liq-actions">
-                @if(!$item['liquidado'] && $item['tiene_comprobantes'])
-                    @if($item['tipo'] === 'combustible')
-                        <a href="/admin/solicitudes-combustible/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
-                            Liquidar
-                        </a>
-                    @else
-                        <a href="/admin/solicitudes-mantenimiento/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
-                            Liquidar
-                        </a>
-                    @endif
-                @endif
+            {{-- Acciones --}}
+<div class="liq-actions">
+    {{-- Botón Liquidar: Solo si NO está liquidado y tiene comprobantes --}}
+    @if(!$item['liquidado'] && $item['tiene_comprobantes'])
+        @if($item['tipo'] === 'combustible')
+            {{-- Verifica si es 'solicitudes-combustible' o 'solicitud-combustibles' --}}
+            <a href="/admin/solicitud-combustibles/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
+                Liquidar
+            </a>
+        @else
+            {{-- Verifica si es 'solicitudes-mantenimiento' o 'mantenimientos' --}}
+            <a href="/admin/mantenimientos/{{ $item['id'] }}" class="liq-btn liq-btn-liquidar">
+                Liquidar
+            </a>
+        @endif
+    @endif
 
-                @if($item['tipo'] === 'combustible')
-                    <a href="{{ route('liquidacion.combustible.pdf', $item['id']) }}" target="_blank" class="liq-btn liq-btn-pdf">
-                        PDF
-                    </a>
-                @else
-                    <a href="{{ route('liquidacion.mantenimiento.pdf', $item['id']) }}" target="_blank" class="liq-btn liq-btn-pdf">
-                        PDF
-                    </a>
-                @endif
-            </div>
+    {{-- Botón PDF: Solo si está liquidado --}}
+    @if($item['liquidado'])
+        <a href="{{ $item['tipo'] === 'combustible' ? route('liquidacion.combustible.pdf', $item['id']) : route('liquidacion.mantenimiento.pdf', $item['id']) }}" 
+           target="_blank" 
+           class="liq-btn liq-btn-pdf">
+            📄 PDF
+        </a>
+    @endif
+</div>
 
         </div>
     @empty
