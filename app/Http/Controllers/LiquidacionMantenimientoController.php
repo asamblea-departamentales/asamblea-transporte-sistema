@@ -16,7 +16,7 @@ class LiquidacionMantenimientoController extends Controller
     'liquidacion.usuario', // ← misma relación
 ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('pdf.liquidacion_mantenimiento', [
+        $pdf = Pdf::loadView('reports.liquidacion_mantenimiento_pdf', [
             'solicitud' => $solicitud,
             'liquidacion' => $solicitud->liquidacion,
         ]);

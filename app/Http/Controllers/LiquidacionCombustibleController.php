@@ -16,10 +16,10 @@ class LiquidacionCombustibleController extends Controller
     'liquidacion.usuario', // ← nueva relación polimórfica
 ])->findOrFail($id);
 
-        $pdf = Pdf::loadView('pdf.liquidacion_combustible', [
-            'solicitud' => $solicitud,
-            'liquidacion' => $solicitud->liquidacion,
-        ]);
+        $pdf = Pdf::loadView('reports.liquidacion_pdf', [
+    'solicitud'   => $solicitud,
+    'liquidacion' => $solicitud->liquidacion,
+]);
 
         return $pdf->stream("liquidacion_{$solicitud->codigo}.pdf");
     }
