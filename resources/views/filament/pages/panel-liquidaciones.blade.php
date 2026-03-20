@@ -1,5 +1,9 @@
 <x-filament::page>
 
+{{-- DEBUG TEMPORAL --}}
+<button wire:click="abrirDetalle(1, 'combustible')" class="liq-btn liq-btn-liquidar mb-4">
+    Test drawer
+</button>
 <style>
     .liq-filters {
         display: grid;
