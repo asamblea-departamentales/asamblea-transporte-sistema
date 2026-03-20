@@ -497,15 +497,19 @@
 </div>
 
 {{-- DEBUG --}}
-<div x-data="{}" style="margin-bottom:12px;padding:10px;background:#fef3c7;border-radius:8px;font-size:12px;">
+{{-- DEBUG --}}
+@php $firstItem = $items->first(); @endphp
+<div style="margin-bottom:12px;padding:10px;background:#fef3c7;border-radius:8px;font-size:12px;">
     <strong>drawerDetalle:</strong> {{ $this->drawerDetalle ? 'true' : 'false' }} |
     <strong>detalleItem:</strong> {{ $this->detalleItem ? $this->detalleItem['codigo'] : 'null' }}
     <br><br>
+    @if($firstItem)
     <button
         style="padding:6px 12px;background:#6366f1;color:#fff;border:none;border-radius:6px;cursor:pointer;margin-right:8px;"
-        wire:click="abrirDetalle({{ $items->first()?->offsetGet('id') ?? 1 }}, '{{ $items->first()?->offsetGet('tipo') ?? 'combustible' }}')">
-        Forzar drawer (primer item)
+        wire:click="abrirDetalle({{ $firstItem['id'] }}, '{{ $firstItem['tipo'] }}')">
+        Forzar drawer ({{ $firstItem['codigo'] }})
     </button>
+    @endif
     <button
         style="padding:6px 12px;background:#ef4444;color:#fff;border:none;border-radius:6px;cursor:pointer;"
         wire:click="cerrarDetalle">
