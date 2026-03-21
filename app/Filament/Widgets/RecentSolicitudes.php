@@ -13,7 +13,7 @@ use Filament\Widgets\Widget;
 
 class RecentSolicitudes extends Widget
 {
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 6;
     protected int|string|array $columnSpan = 'full';
     protected static string $view = 'filament.widgets.recent-solicitudes';
 
