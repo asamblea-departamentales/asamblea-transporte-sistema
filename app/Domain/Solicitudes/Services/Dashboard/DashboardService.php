@@ -67,6 +67,7 @@ class DashboardService
         return $comb->merge($mant)
             ->sortByDesc('created_at')
             ->take(10)
-            ->values();
+            ->values()
+            ->all();
     }
 }
