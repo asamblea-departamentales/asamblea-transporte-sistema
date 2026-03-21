@@ -534,6 +534,13 @@
             <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
 
             <div class="liq-actions" @click.stop>
+
+                <button
+        wire:click="abrirModalIncidencia({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+        class="liq-btn"
+        style="background:#fee2e2;color:#991b1b;">
+        ⚠ Incidencia
+    </button>
                 @if(!$item['liquidado'] && $item['tiene_comprobantes'])
                     <button
                         wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
