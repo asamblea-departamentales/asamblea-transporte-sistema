@@ -38,6 +38,17 @@ class PanelLiquidaciones extends Page
     public bool   $drawerDetalle = false;
     public ?array $detalleItem   = null;
 
+    // Modal de Incidencias
+    public bool $modalIncidencia = false;
+
+public ?int $incidencia_id = null;
+public ?string $incidencia_tipo = null;
+
+public $tipo_incidencia;
+public $severidad;
+public $descripcion;
+public $evidencia = []; // si usas uploads luego
+
     public function mount(): void
     {
         $this->fecha_desde = now()->startOfMonth()->format('Y-m-d');
@@ -177,6 +188,64 @@ class PanelLiquidaciones extends Page
         $this->drawerDetalle = false;
         $this->detalleItem   = null;
     }
+
+    //Metodos para las incidencias
+    public function abrirModalIncidencia(int $id, string $tipo): void
+{
+    $this->incidencia_id = $id;
+    $this->incidencia_tipo = $tipo;
+
+    $this->reset([
+        'tipo_incidencia',
+        'severidad',
+        'descripcion',
+        'evidencia',
+    ]);
+
+    $this->modalIncidencia = true;
+}
+
+public function cerrarModalIncidencia(): void
+{
+    $this->modalIncidencia = false;
+
+    $this->reset([
+        'incidencia_id',
+        'incidencia_tipo',
+        'tipo_incidencia',
+        'severidad',
+        'descripcion',
+        'evidencia',
+    ]);
+}
+
+public function guardarIncidencia(): void
+{
+    $this->validate([
+        'tipo_incidencia' => ['required', 'string', 'max:100'],
+        'severidad' => ['required', 'in:baja,media,alta,critica'],
+        'descripcion' => ['required', 'string', 'max:1000'],
+    ]);
+
+    app(\App\Domain\Incidencias\Services\IncidenciaService::class)
+        ->crear([
+            'entidad_tipo' => $this->incidencia_tipo,
+            'entidad_id' => $this->incidencia_id,
+            'tipo' => $this->tipo_incidencia,
+            'severidad' => $this->severidad,
+            'descripcion' => $this->descripcion,
+            'user_id' => auth()->id(),
+        ]);
+
+    $this->cerrarModalIncidencia();
+
+    $this->dispatch('$refresh');
+
+    \Filament\Notifications\Notification::make()
+        ->title('Incidencia registrada')
+        ->success()
+        ->send();
+}
 
     public static function canAccess(): bool
     {

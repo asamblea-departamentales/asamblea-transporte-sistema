@@ -110,6 +110,12 @@ public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
     return $this->morphOne(Liquidacion::class, 'liquidable');
 }
 
+//Relacion para incidencias
+public function incidencias()
+{
+    return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+}
+
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneAdjuntos(): bool

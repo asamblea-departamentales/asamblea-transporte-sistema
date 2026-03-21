@@ -127,4 +127,11 @@ public function getDestinoAdicionalAttribute($value)
         return $this->belongsTo(User::class, 'confirmado_por');
     }
 
+
+    //Relacion con incidencias
+    public function incidencias()
+{
+    return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+}
+
 }

@@ -601,6 +601,60 @@
     </div>
 </div>
 @endif
+{{-- MODAL INCIDENCIAS --}}
+@if($this->modalIncidencia)
+<div class="liq-modal-overlay" wire:click.self="cerrarModalIncidencia">
+    <div class="liq-modal">
+
+        <div class="liq-modal-header">
+            <h3 class="liq-modal-title">Reportar Incidencia</h3>
+            <button class="liq-modal-close" wire:click="cerrarModalIncidencia">&times;</button>
+        </div>
+
+        <div style="display:flex;flex-direction:column;gap:14px;">
+
+            <div class="liq-field">
+                <label>Tipo</label>
+                <input type="text" wire:model="tipo_incidencia" placeholder="Ej: Daño mecánico">
+                @error('tipo_incidencia')
+                    <span class="liq-field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="liq-field">
+                <label>Severidad</label>
+                <select wire:model="severidad">
+                    <option value="">Seleccionar...</option>
+                    <option value="baja">🟢 Baja</option>
+                    <option value="media">🟡 Media</option>
+                    <option value="alta">🟠 Alta</option>
+                    <option value="critica">🔴 Crítica</option>
+                </select>
+                @error('severidad')
+                    <span class="liq-field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+            <div class="liq-field">
+                <label>Descripción</label>
+                <textarea wire:model="descripcion" rows="4" placeholder="Describe lo ocurrido..."></textarea>
+                @error('descripcion')
+                    <span class="liq-field-error">{{ $message }}</span>
+                @enderror
+            </div>
+
+        </div>
+
+        <div class="liq-modal-footer">
+            <button class="liq-btn-cancel" wire:click="cerrarModalIncidencia">Cancelar</button>
+            <button class="liq-btn-confirm" wire:click="guardarIncidencia">
+                Registrar Incidencia
+            </button>
+        </div>
+
+    </div>
+</div>
+@endif
 
 {{-- DRAWER DETALLE --}}
 @if($this->drawerDetalle && $this->detalleItem)

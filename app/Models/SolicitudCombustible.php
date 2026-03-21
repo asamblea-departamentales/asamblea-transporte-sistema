@@ -129,6 +129,12 @@ class SolicitudCombustible extends Model
     return $this->morphOne(Liquidacion::class, 'liquidable');
 }
 
+    //Relacion para incidencias
+    public function incidencias()
+{
+    return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+}
+
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneComprobantes(): bool
