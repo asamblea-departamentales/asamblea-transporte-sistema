@@ -192,7 +192,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   const navItems: NavItem[] = [
     { to: "/dashboard",   label: "Mis Viajes",           mobileLabel: "Viajes",      icon: Icons.Dashboard },
-    { to: "/incapacidad", label: "Reportar Incapacidad", mobileLabel: "Incapacidad", icon: Icons.Plus      },
   ];
 
   const handleLogout = async () => {

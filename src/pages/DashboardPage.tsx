@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
 import { getViajesMes } from "../services/viajes.service";
 import type { ViajeAsignado } from "../services/viajes.service";
-import { getDisponibilidad } from "../services/disponibilidad.service";
+import { getDisponibilidad, reportarDisponibilidad } from "../services/disponibilidad.service";
 
 // ────────────────────────────────────────────────
 // Helpers de calendario
@@ -192,6 +192,12 @@ export default function DashboardPage() {
   const [error, setError] = useState<string | null>(null);
   const [selectedDayViajes, setSelectedDayViajes] = useState<ViajeAsignado[] | null>(null);
 
+  // States para el Flujo Dinámico de Disponibilidad
+  const [showIncapacityModal, setShowIncapacityModal] = useState(false);
+  const [showActiveModal, setShowActiveModal] = useState(false);
+  const [incapacityReason, setIncapacityReason] = useState("");
+  const [updatingStatus, setUpdatingStatus] = useState(false);
+
   const cargarViajes = useCallback(async () => {
     setLoadingViajes(true);
     setError(null);
@@ -212,6 +218,39 @@ export default function DashboardPage() {
       .then((d) => setActivo(d.activo))
       .catch(() => setActivo(null));
   }, []);
+
+  async function toggleToInactive() {
+    if (!incapacityReason.trim()) {
+      setError("Debes ingresar un motivo para reportar incapacidad.");
+      return;
+    }
+    setUpdatingStatus(true);
+    setError(null);
+    try {
+      await reportarDisponibilidad(false, incapacityReason.trim());
+      setActivo(false);
+      setShowIncapacityModal(false);
+      setIncapacityReason("");
+    } catch (err) {
+      setError("Error al procesar la incapacidad en el sistema.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
+
+  async function toggleToActive() {
+    setUpdatingStatus(true);
+    setError(null);
+    try {
+      await reportarDisponibilidad(true, "");
+      setActivo(true);
+      setShowActiveModal(false);
+    } catch (err) {
+      setError("Error al recuperar la disponibilidad en el sistema.");
+    } finally {
+      setUpdatingStatus(false);
+    }
+  }
 
   useEffect(() => {
     cargarViajes();
@@ -310,13 +349,15 @@ export default function DashboardPage() {
           </div>
 
           <div style={{ display: "flex", gap: 10 }}>
-            {/* Chip de disponibilidad */}
+            {/* Chip de disponibilidad Dinámico */}
             {activo !== null && (
-              <div 
-                className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2 text-[13px] font-bold shadow-sm transition-all border ${
+              <button 
+                onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)}
+                title="Haz clic para cambiar tu disponibilidad"
+                className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2 text-[13px] font-bold shadow-sm transition-all border cursor-pointer outline-none hover:shadow-md hover:scale-[1.02] active:scale-95 ${
                   activo
-                    ? "bg-white text-emerald-700 border-emerald-100"
-                    : "bg-white text-red-700 border-red-100"
+                    ? "bg-white text-emerald-700 border-emerald-100 hover:bg-emerald-50"
+                    : "bg-white text-red-700 border-red-100 hover:bg-red-50"
                 }`}
               >
                 <span className="relative flex h-3 w-3">
@@ -324,7 +365,7 @@ export default function DashboardPage() {
                   <span className={`relative inline-flex rounded-full h-3 w-3 ${activo ? "bg-emerald-500" : "bg-red-500"}`}></span>
                 </span>
                 {activo ? "Disponible" : "En Incapacidad"}
-              </div>
+              </button>
             )}
           </div>
         </div>
@@ -444,7 +485,57 @@ export default function DashboardPage() {
 
       </div>
 
-      {/* Modal */}
+      {/* Modal Incapacidad */}
+      {showIncapacityModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: FONT }}>
+          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 transform transition-all">
+            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Reportar Incapacidad</h3>
+            <p className="text-sm font-medium text-slate-500 mb-5 leading-relaxed">
+              Ingresa el motivo por el cual no podrás realizar viajes. Cambiaremos tu estado a Inactivo en el sistema.
+            </p>
+            <textarea
+              rows={3}
+              value={incapacityReason}
+              onChange={(e) => setIncapacityReason(e.target.value)}
+              placeholder="Enfermedad, interrupción u otro motivo crítico..."
+              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-medium text-[#0f172a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f2548]/20 focus:border-[#0f2548] resize-none transition-all"
+            />
+            <div className="flex justify-end gap-3 mt-6">
+              <button disabled={updatingStatus} onClick={() => setShowIncapacityModal(false)} className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">Cancelar</button>
+              <button disabled={updatingStatus} onClick={toggleToInactive} className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-red-600 text-white hover:bg-red-700 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:-translate-y-0 disabled:shadow-none">
+                {updatingStatus ? "Registrando..." : "Confirmar Incapacidad"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Activar */}
+      {showActiveModal && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: FONT }}>
+          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-7 text-center transform transition-all">
+            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-5 shadow-inner">
+              <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+              </svg>
+            </div>
+            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">¿Volver a estar Activo?</h3>
+            <p className="text-[14px] font-medium text-slate-500 mb-7 leading-relaxed px-2">
+              El reporte de incapacidad será limpiado y volverás al padrón regular para recibir nuevos viajes.
+            </p>
+            <div className="flex flex-col gap-3">
+              <button disabled={updatingStatus} onClick={toggleToActive} className="w-full py-3.5 rounded-xl text-[14px] font-bold bg-[#0f172a] text-white hover:bg-slate-800 shadow-[0_4px_14px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:-translate-y-0 disabled:shadow-none">
+                {updatingStatus ? "Actualizando Red..." : "Sí, estoy Disponible"}
+              </button>
+              <button disabled={updatingStatus} onClick={() => setShowActiveModal(false)} className="w-full py-3 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition">
+                Cancelar operación
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Viajes Diarios */}
       {selectedDayViajes && (
         <ViajeModal viajes={selectedDayViajes} onClose={() => setSelectedDayViajes(null)} />
       )}
