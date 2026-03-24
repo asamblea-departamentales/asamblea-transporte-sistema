@@ -31,6 +31,11 @@ class Motorista extends Model
         return $this->hasMany(MotoristaEstado::class);
     }
 
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
     public function estadoActual()
     {
         return $this->hasOne(MotoristaEstado::class)->latestOfMany();

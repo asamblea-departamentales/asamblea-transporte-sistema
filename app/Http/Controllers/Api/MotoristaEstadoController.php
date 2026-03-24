@@ -62,7 +62,15 @@ class MotoristaEstadoController extends Controller
     //Nuevo
     public function miEstado()
     {
-        $motorista = auth()->user()->motorista->load('estadoActual');
+        $motorista = auth()->user()->motorista;
+
+        if (!$motorista){
+            return response()->json([
+                'message' => 'El usuario no es motorista para acceder'
+            ], 404);
+        };
+
+        $motorista->load('estadoActual');
 
         return response()->json([
             'activo' => $motorista->estadoActual?->activo ?? true,
@@ -73,15 +81,24 @@ class MotoristaEstadoController extends Controller
 
     public function cambiarMiEstado(Request $request)
     {
-        $request ->validate([
+        $request->validate([
             'activo' => 'required|boolean',
             'motivo' => 'nullable|string|max:255',
         ]);
 
         $motorista = auth()->user()->motorista;
 
-        app(MotoristaService::class)->cambiarEstado($motorista, $request->activo, $request->motivo);
+        if(!$motorista){
+            return response()->json([
+                'message' => 'El usuario no puede acceder'
+            ], 404);
+        }
 
+        app(MotoristaService::class)->cambiarEstado(
+            $motorista,
+            $request->activo,
+            $request->motivo
+        );
         return response()->json([
             'message' => 'Estado actualizado correctamente'
         ]);

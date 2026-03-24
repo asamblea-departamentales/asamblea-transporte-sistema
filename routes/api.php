@@ -177,9 +177,16 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //Rutas para motoristas
-    Route::middleware(['auth:sanctum', 'role:motorista'])->prefix('motoristas')->group(function() {
-        //Nueva
+   Route::middleware(['auth:sanctum', 'role:motorista'])
+    ->prefix('motoristas')
+    ->group(function() {
+
+        // 🔥 NUEVAS (self-service motorista)
         Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
+        Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
+        Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
+
+        // 📊 Operativas (admin/jefe)
         Route::get('/', [MotoristaEstadoController::class, 'index']);
         Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
         Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
