@@ -4,6 +4,7 @@ import { useAuth } from "../../auth/AuthContext";
 import React, { useState, useEffect } from "react";
 import { cn } from "../../lib/utils";
 import { GlobalLoading } from "../GlobalLoading";
+import logo from "../../assets/asamble.png";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -171,18 +172,9 @@ function NavLinkDrawer({ item, onClick, pathname }: { item: NavItem; onClick?: (
 
 // ─── Assembly Logo Placeholder ────────────────────────────────────────────────
 
-function AssemblyLogo() {
+function AssemblyLogo({ className = "h-[80px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" }: { className?: string }) {
   return (
-    <div className="w-[80px] h-[60px] relative flex items-center justify-center mb-1">
-      <svg viewBox="0 0 100 60" className="absolute inset-0 w-full h-full drop-shadow-lg" fill="none" stroke="currentColor">
-        <path d="M 10 50 A 40 40 0 0 1 90 50" strokeWidth="2" strokeDasharray="3 4" stroke="white" opacity="0.8" />
-        <path d="M 20 50 A 30 30 0 0 1 80 50" strokeWidth="2" strokeDasharray="2 3" stroke="white" opacity="0.6" />
-        <path d="M 30 50 A 20 20 0 0 1 70 50" strokeWidth="2" strokeDasharray="1 2" stroke="white" opacity="0.4" />
-      </svg>
-      <span className="text-[5px] text-white absolute bottom-1 text-center font-bold tracking-widest leading-tight shadow-sm opacity-90">
-        ASAMBLEA<br/>LEGISLATIVA
-      </span>
-    </div>
+    <img src={logo} alt="Asamblea" className={className} />
   );
 }
 
@@ -297,6 +289,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         </button>
 
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3">
+          <AssemblyLogo className="h-[28px] brightness-0 invert opacity-100 drop-shadow-md" />
           <span className="text-[16px] font-extrabold text-white tracking-wide">Transporte</span>
         </button>
 
@@ -320,7 +313,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
         <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div className="flex flex-col items-center gap-3 mb-6 px-1 pt-4 text-center">
-            <AssemblyLogo />
+            <AssemblyLogo className="h-[60px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" />
             <div className="flex flex-col justify-center mt-2">
               <p className="text-[10px] font-bold uppercase tracking-[.18em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
               <p className="text-[15px] font-extrabold text-white leading-none">Transporte</p>
