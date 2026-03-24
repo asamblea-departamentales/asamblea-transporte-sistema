@@ -480,34 +480,45 @@ class SolicitudTransporteResource extends Resource
                                         return;
                                     }
 
-                                    // QUITAR estadoActual del with() para evitar el bug del latestOfMany
                                     $vehiculo = Vehiculo::with('asignacionVigenteMotorista.motorista')->find($state);
                                     $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
                                     
-                                    // Cargar la relación limpia luego
+                                    // VERIFICACIÓN A PRUEBA DE BALAS DIRECTAMENTE EN LA DB (Evita el bug del latestOfMany)
+                                    $estado_titular_libre = true;
                                     if ($motorista) {
-                                        $motorista->load('estadoActual');
+                                        $ultimo_est = \App\Models\MotoristaEstado::where('motorista_id', $motorista->id)
+                                            ->orderByDesc('fecha_inicio')
+                                            ->orderByDesc('id')
+                                            ->first();
+                                            
+                                        if ($ultimo_est && !filter_var($ultimo_est->activo, FILTER_VALIDATE_BOOLEAN)) {
+                                            $estado_titular_libre = false;
+                                        }
                                     }
-                                    
-                                    $estado = $motorista?->estadoActual;
 
-                                    if ($motorista && ($estado?->activo ?? true)) {
+                                    if ($motorista && $estado_titular_libre) {
                                         $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
                                         $set('motorista_id', $motorista->id);
                                         return;
                                     }
 
                                     // 🚫 Motorista NO disponible
-                                    if ($motorista && !($estado?->activo ?? true)) {
+                                    if ($motorista && ! $estado_titular_libre) {
                                         $set('motorista_nombre', "{$motorista->nombre} ❌ No disponible — buscando sustituto...");
                                         $set('motorista_id', null);
                                     }
 
                                     // 🔥 SUGERIR MOTORISTA REALMENTE DISPONIBLE
+                                    $motoristas_inactivos = \App\Models\MotoristaEstado::orderByDesc('fecha_inicio')
+                                        ->orderByDesc('id')
+                                        ->get()
+                                        ->unique('motorista_id')
+                                        ->filter(fn($st) => !filter_var($st->activo, FILTER_VALIDATE_BOOLEAN))
+                                        ->pluck('motorista_id')
+                                        ->toArray();
+
                                     $sugerido = Motorista::where('activo', true)
-                                        ->whereHas('estadoActual', function ($q) {
-                                            $q->where('activo', true);
-                                        })
+                                        ->whereNotIn('id', $motoristas_inactivos)
                                         ->whereDoesntHave('asignacionesVehiculo', function ($q) {
                                             $q->where('vigente', true)->whereNull('hasta');
                                         })
@@ -533,19 +544,19 @@ class SolicitudTransporteResource extends Resource
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
                             if (! empty($data['motorista_id'])) {
-                                $motorista = Motorista::find($data['motorista_id']);
-                                if ($motorista) {
-                                    $motorista->load('estadoActual');
-                                }
-                                $estado = $motorista?->estadoActual;
-                                
-                                if ($motorista && !($estado?->activo ?? true)) {
+                                $ultimo_est = \App\Models\MotoristaEstado::where('motorista_id', $data['motorista_id'])
+                                    ->orderByDesc('fecha_inicio')
+                                    ->orderByDesc('id')
+                                    ->first();
+
+                                if ($ultimo_est && !filter_var($ultimo_est->activo, FILTER_VALIDATE_BOOLEAN)) {
                                     Notification::make()
-                                        ->title('Motorista no disponible')
-                                        ->body("{$motorista->nombre} no está disponible actualmente.")
+                                        ->title('Acción Bloqueada')
+                                        ->body('Problema de seguridad: Este motorista ha sido reportado INACTIVO y no puede ser asignado.')
                                         ->danger()
                                         ->send();
-                                    return;
+                                        
+                                    \Filament\Support\Exceptions\Halt::throw();
                                 }
                             }
 
@@ -632,26 +643,45 @@ class SolicitudTransporteResource extends Resource
                                                 return;
                                             }
 
-                                            // QUITAR estadoActual del with() para evitar el bug del latestOfMany
                                             $vehiculo = Vehiculo::with('asignacionVigenteMotorista.motorista')->find($state);
                                             $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
                                             
-                                            // Cargar la relación limpia luego
+                                            // VERIFICACIÓN A PRUEBA DE BALAS DIRECTAMENTE EN LA DB (Evita el bug del latestOfMany)
+                                            $estado_titular_libre = true;
                                             if ($motorista) {
-                                                $motorista->load('estadoActual');
+                                                $ultimo_est = \App\Models\MotoristaEstado::where('motorista_id', $motorista->id)
+                                                    ->orderByDesc('fecha_inicio')
+                                                    ->orderByDesc('id')
+                                                    ->first();
+                                                    
+                                                if ($ultimo_est && !filter_var($ultimo_est->activo, FILTER_VALIDATE_BOOLEAN)) {
+                                                    $estado_titular_libre = false;
+                                                }
                                             }
-                                            
-                                            $estado = $motorista?->estadoActual;
 
-                                            if ($motorista && ($estado?->activo ?? true)) {
+                                            if ($motorista && $estado_titular_libre) {
                                                 $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
                                                 $set('motorista_id', $motorista->id);
                                                 return;
                                             }
 
-                                            // 🚫 Motorista NO disponible: Buscar sustituto libre
+                                            // 🚫 Motorista NO disponible
+                                            if ($motorista && ! $estado_titular_libre) {
+                                                $set('motorista_nombre', "{$motorista->nombre} ❌ No disponible — buscando sustituto...");
+                                                $set('motorista_id', null);
+                                            }
+
+                                            // 🔥 SUGERIR MOTORISTA REALMENTE DISPONIBLE
+                                            $motoristas_inactivos = \App\Models\MotoristaEstado::orderByDesc('fecha_inicio')
+                                                ->orderByDesc('id')
+                                                ->get()
+                                                ->unique('motorista_id')
+                                                ->filter(fn($st) => !filter_var($st->activo, FILTER_VALIDATE_BOOLEAN))
+                                                ->pluck('motorista_id')
+                                                ->toArray();
+
                                             $sugerido = Motorista::where('activo', true)
-                                                ->whereHas('estadoActual', fn($q) => $q->where('activo', true))
+                                                ->whereNotIn('id', $motoristas_inactivos)
                                                 ->whereDoesntHave('asignacionesVehiculo', function ($q) {
                                                     $q->where('vigente', true)->whereNull('hasta');
                                                 })
@@ -679,19 +709,19 @@ class SolicitudTransporteResource extends Resource
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
                             if (!empty($data['motorista_id'])) {
-                                $motorista = Motorista::find($data['motorista_id']);
-                                if ($motorista) {
-                                    $motorista->load('estadoActual');
-                                }
-                                $estado = $motorista?->estadoActual;
+                                $ultimo_est = \App\Models\MotoristaEstado::where('motorista_id', $data['motorista_id'])
+                                    ->orderByDesc('fecha_inicio')
+                                    ->orderByDesc('id')
+                                    ->first();
 
-                                if ($motorista && !($estado?->activo ?? true)) {
+                                if ($ultimo_est && !filter_var($ultimo_est->activo, FILTER_VALIDATE_BOOLEAN)) {
                                     Notification::make()
-                                        ->title('Motorista no disponible')
-                                        ->body("{$motorista->nombre} no está disponible actualmente.")
+                                        ->title('Acción Bloqueada')
+                                        ->body('Problema de seguridad: Este motorista ha sido reportado INACTIVO y no puede ser asignado.')
                                         ->danger()
                                         ->send();
-                                    return;
+                                        
+                                    \Filament\Support\Exceptions\Halt::throw();
                                 }
                             }
 
