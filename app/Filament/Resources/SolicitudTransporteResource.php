@@ -26,8 +26,7 @@ class SolicitudTransporteResource extends Resource
 {
     protected static ?string $model = SolicitudTransporte::class;
 
-    protected static ?string $slug = 'solicitud-transporte'; // el que coincida con tu URL real
-
+    protected static ?string $slug = 'solicitud-transporte';
 
     protected static ?string $navigationGroup = 'Asignaciones';
     protected static ?string $navigationLabel = 'Solicitudes de Transporte';
@@ -125,25 +124,23 @@ class SolicitudTransporteResource extends Resource
                     ->compact(),
 
                 Forms\Components\Section::make('Finalización del servicio')
-    ->description('Información del cierre del servicio de transporte')
-    ->icon('heroicon-o-check-badge')
-    ->schema([
+                    ->description('Información del cierre del servicio de transporte')
+                    ->icon('heroicon-o-check-badge')
+                    ->schema([
+                        Forms\Components\Placeholder::make('confirmado_por')
+                            ->label('Finalizado por')
+                            ->content(fn ($record) => $record->confirmador?->name ?? '—'),
 
-        Forms\Components\Placeholder::make('confirmado_por')
-            ->label('Finalizado por')
-            ->content(fn ($record) => $record->confirmador?->name ?? '—'),
-
-        Forms\Components\Placeholder::make('confirmado_en')
-            ->label('Fecha de finalización')
-            ->content(fn ($record) =>
-                optional($record->confirmado_en)?->format('d/m/Y H:i') ?? '—'
-            ),
-
-    ])
-    ->columns(2)
-    ->visible(fn ($record) =>
-        $record->estado === EstadoSolicitudEnum::COMPLETADA
-    ),    
+                        Forms\Components\Placeholder::make('confirmado_en')
+                            ->label('Fecha de finalización')
+                            ->content(fn ($record) =>
+                                optional($record->confirmado_en)?->format('d/m/Y H:i') ?? '—'
+                            ),
+                    ])
+                    ->columns(2)
+                    ->visible(fn ($record) =>
+                        $record->estado === EstadoSolicitudEnum::COMPLETADA
+                    ),    
 
                 Forms\Components\Section::make('Decisión / Auditoría')
                     ->schema([
@@ -433,7 +430,7 @@ class SolicitudTransporteResource extends Resource
                         ->label('Asignar transporte')
                         ->icon('heroicon-o-truck')
                         ->color('info')
-                        ->modalHeading('Asignar Vehículo y Motorista')
+                                                ->modalHeading('Asignar Vehículo y Motorista')
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->check() &&
                             auth()->user()->hasRole('jefe') &&
@@ -481,26 +478,33 @@ class SolicitudTransporteResource extends Resource
                                     }
 
                                     $vehiculo  = \App\Models\Vehiculo::with(
-                                        'asignacionVigenteMotorista.motorista'
+                                        'asignacionVigenteMotorista.motorista.estadoActual'
                                     )->find($state);
 
                                     $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                                    $estado = $motorista?->estadoActual;
 
-                                    if ($motorista && $motorista->activo) {
+                                    // ✅ NUEVA LÓGICA: Verificar estadoActual->activo
+                                    if ($motorista && ($estado?->activo ?? true)) {
                                         $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
                                         $set('motorista_id', $motorista->id);
                                         return;
                                     }
 
-                                    if ($motorista && ! $motorista->activo) {
-                                        $set('motorista_nombre', "{$motorista->nombre} ❌ Inactivo — buscando sustituto...");
+                                    // 🚫 Motorista NO disponible
+                                    if ($motorista && !($estado?->activo ?? true)) {
+                                        $set('motorista_nombre', "{$motorista->nombre} ❌ No disponible — buscando sustituto...");
                                         $set('motorista_id', null);
                                     }
 
+                                    // 🔥 SUGERIR MOTORISTA REALMENTE DISPONIBLE
                                     $sugerido = \App\Models\Motorista::where('activo', true)
-                                        ->whereDoesntHave('asignacionesVehiculo', fn ($q) =>
-                                            $q->where('vigente', true)->whereNull('hasta')
-                                        )
+                                        ->whereHas('estadoActual', function ($q) {
+                                            $q->where('activo', true);
+                                        })
+                                        ->whereDoesntHave('asignacionesVehiculo', function ($q) {
+                                            $q->where('vigente', true)->whereNull('hasta');
+                                        })
                                         ->orderBy('nombre')
                                         ->first();
 
@@ -522,13 +526,15 @@ class SolicitudTransporteResource extends Resource
                                 ->hintColor('danger'),
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
-                            // Validación backend
+                            // ✅ VALIDACIÓN BACKEND CORREGIDA
                             if (! empty($data['motorista_id'])) {
-                                $motorista = \App\Models\Motorista::find($data['motorista_id']);
-                                if ($motorista && ! $motorista->activo) {
+                                $motorista = \App\Models\Motorista::with('estadoActual')->find($data['motorista_id']);
+                                $estado = $motorista?->estadoActual;
+                                
+                                if ($motorista && !($estado?->activo ?? true)) {
                                     Notification::make()
                                         ->title('Motorista no disponible')
-                                        ->body("{$motorista->nombre} está marcado como inactivo y no puede ser asignado.")
+                                        ->body("{$motorista->nombre} no está disponible actualmente.")
                                         ->danger()
                                         ->send();
                                     return;
@@ -621,29 +627,33 @@ class SolicitudTransporteResource extends Resource
                                             }
 
                                             $vehiculo  = \App\Models\Vehiculo::with(
-                                                'asignacionVigenteMotorista.motorista'
+                                                'asignacionVigenteMotorista.motorista.estadoActual'
                                             )->find($state);
 
                                             $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                                            $estado = $motorista?->estadoActual;
 
-                                            // Motorista vigente y activo → asignar directo
-                                            if ($motorista && $motorista->activo) {
+                                            // ✅ NUEVA LÓGICA: Verificar estadoActual->activo
+                                            if ($motorista && ($estado?->activo ?? true)) {
                                                 $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
                                                 $set('motorista_id', $motorista->id);
                                                 return;
                                             }
 
-                                            // Motorista inactivo → avisar
-                                            if ($motorista && ! $motorista->activo) {
-                                                $set('motorista_nombre', "{$motorista->nombre} ❌ Inactivo — buscando sustituto...");
+                                            // 🚫 Motorista NO disponible
+                                            if ($motorista && !($estado?->activo ?? true)) {
+                                                $set('motorista_nombre', "{$motorista->nombre} ❌ No disponible — buscando sustituto...");
                                                 $set('motorista_id', null);
                                             }
 
-                                            // Sin motorista disponible → sugerir el primero libre y activo
+                                            // 🔥 SUGERIR MOTORISTA REALMENTE DISPONIBLE
                                             $sugerido = \App\Models\Motorista::where('activo', true)
-                                                ->whereDoesntHave('asignacionesVehiculo', fn ($q) =>
-                                                    $q->where('vigente', true)->whereNull('hasta')
-                                                )
+                                                ->whereHas('estadoActual', function ($q) {
+                                                    $q->where('activo', true);
+                                                })
+                                                ->whereDoesntHave('asignacionesVehiculo', function ($q) {
+                                                    $q->where('vigente', true)->whereNull('hasta');
+                                                })
                                                 ->orderBy('nombre')
                                                 ->first();
 
@@ -667,13 +677,15 @@ class SolicitudTransporteResource extends Resource
                                 ->columns(2),
                         ])
                         ->action(function (SolicitudTransporte $record, array $data) {
-                            // Validación backend
+                            // ✅ VALIDACIÓN BACKEND CORREGIDA
                             if (! empty($data['motorista_id'])) {
-                                $motorista = \App\Models\Motorista::find($data['motorista_id']);
-                                if ($motorista && ! $motorista->activo) {
+                                $motorista = \App\Models\Motorista::with('estadoActual')->find($data['motorista_id']);
+                                $estado = $motorista?->estadoActual;
+                                
+                                if ($motorista && !($estado?->activo ?? true)) {
                                     Notification::make()
                                         ->title('Motorista no disponible')
-                                        ->body("{$motorista->nombre} está marcado como inactivo y no puede ser asignado.")
+                                        ->body("{$motorista->nombre} no está disponible actualmente.")
                                         ->danger()
                                         ->send();
                                     return;
@@ -690,7 +702,6 @@ class SolicitudTransporteResource extends Resource
                             $record->motorista_id    = $data['motorista_id'];
                             $record->save();
 
-                            //LOGS
                             \Illuminate\Support\Facades\Log::info('ACTION APROBAR - SAVE OK', ['estado' => $record->estado]);
 
                             $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
@@ -716,7 +727,6 @@ class SolicitudTransporteResource extends Resource
                                 ],
                             ]);
 
-                            //LOGS
                             \Illuminate\Support\Facades\Log::info('ACTION APROBAR - LLEGANDO A NOTIFICACION');
 
                             $urlAsignacion = static::getUrl('view', ['record' => $record->id]);
@@ -735,7 +745,6 @@ class SolicitudTransporteResource extends Resource
                                 ->persistent()
                                 ->send();
 
-                            //LOGS
                             \Illuminate\Support\Facades\Log::info('ACTION APROBAR - NOTIFICACION ENVIADA');
 
                             try {
@@ -854,7 +863,7 @@ class SolicitudTransporteResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()
-            ->with(['solicitante', 'unidad', 'autorizador', 'vehiculo.tipo', 'motorista']);
+                        ->with(['solicitante', 'unidad', 'autorizador', 'vehiculo.tipo', 'motorista']);
 
         $user = auth()->user();
 
