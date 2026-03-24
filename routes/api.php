@@ -177,7 +177,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     //Rutas para motoristas
-    Route::middleware(['auth:sanctum', 'role:motoristas'])->prefix('motoristas')->group(function() {
+    Route::middleware(['auth:sanctum', 'role:motorista'])->prefix('motoristas')->group(function() {
         //Nueva
         Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
         Route::get('/', [MotoristaEstadoController::class, 'index']);
