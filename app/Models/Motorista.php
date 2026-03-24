@@ -24,6 +24,17 @@ class Motorista extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
+    
+    //Relacion con sus estados
+    public function estados()
+    {
+        return $this->hasMany(MotoristaEstado::class);
+    }
+
+    public function estadoActual()
+    {
+        return $this->hasOne(MotoristaEstado::class)->latestOfMany();
+    }
 
     public function asignacionesVehiculo(): HasMany
     {

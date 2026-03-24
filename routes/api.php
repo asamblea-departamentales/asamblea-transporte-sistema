@@ -6,8 +6,10 @@ use App\Http\Controllers\Api\TokenAuthController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
+use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\Motorista;
 use App\Models\SolicitudMantenimiento;
 
 // AUTH POR TOKEN (PUBLICO)
@@ -172,6 +174,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
         Route::post('solicitudes-combustible/{solicitud}/aprobar',     [SolicitudCombustibleController::class, 'aprobar']);
         Route::post('solicitudes-combustible/{solicitud}/rechazar',    [SolicitudCombustibleController::class, 'rechazar']);
+    });
+
+    //Rutas para motoristas
+    Route::prefix('motoristas')->group(function () {
+        Route::get('/', [MotoristaEstadoController::class, 'estadoActual']);
+        Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
+        Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
     });
 
     // ── CATÁLOGOS (para el frontend) ────────────────────────
