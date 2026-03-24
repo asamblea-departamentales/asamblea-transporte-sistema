@@ -15,14 +15,12 @@ class MotoristaEstadoController extends Controller
      */
     public function index()
     {
-        // Usamos eager loading para evitar el problema de consultas N+1
         $motoristas = Motorista::with('estadoActual')->get()
             ->map(function ($motorista) {
                 return [
                     'id'      => $motorista->id,
                     'nombre'  => $motorista->nombre,
                     'dui'     => $motorista->dui,
-                    // Si no tiene registro de estado, se asume activo (true)
                     'activo'  => (bool) ($motorista->estadoActual?->activo ?? true),
                     'motivo'  => $motorista->estadoActual?->motivo,
                     'desde'   => $motorista->estadoActual?->fecha_inicio,
@@ -60,10 +58,10 @@ class MotoristaEstadoController extends Controller
 
         $motorista = Motorista::findOrFail($motoristaId);
 
-        // El Service se encarga de cerrar el estado anterior y crear el nuevo
+        // AQUÍ ESTÁ LA CORRECCIÓN: Usamos ->boolean('activo')
         $estado = app(MotoristaService::class)->cambiarEstado(
             $motorista,
-            $request->activo,
+            $request->boolean('activo'), 
             $request->motivo
         );
 
@@ -113,9 +111,10 @@ class MotoristaEstadoController extends Controller
             ], 404);
         }
 
+        // AQUÍ ESTÁ LA CORRECCIÓN: Usamos ->boolean('activo')
         app(MotoristaService::class)->cambiarEstado(
             $motorista,
-            $request->activo,
+            $request->boolean('activo'),
             $request->motivo
         );
 
