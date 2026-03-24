@@ -12,7 +12,7 @@ class MotoristaService
     public function cambiarEstado(Motorista $motorista, bool $activo, ?string $motivo = null): MotoristaEstado
     {
         //cerrar el estado actual
-        $actual = $motorista->estadoActual:
+        $actual = $motorista->estadoActual;
         if ($actual) {
             $actual->update([
                 'fecha_fin' => now(),
