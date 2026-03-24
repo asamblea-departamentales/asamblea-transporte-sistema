@@ -168,87 +168,86 @@ class AsignacionVehiculoMotoristaResource extends Resource
 
             // ── Acción de cabecera: Nueva asignación ─────────────────────────
             ->headerActions([
-                Action::make('nueva_asignacion')
-                    ->label('Nueva asignación')
-                    ->icon('heroicon-o-plus-circle')
-                    ->color('primary')
-                    ->form([
-                        Section::make('Vehículo y motorista')
-                            ->schema([
-                                Select::make('vehiculo_id')
-                                    ->label('Vehículo')
-                                    ->options(
-                                        Vehiculo::with('tipo')
-                                            ->where('activo', true)
-                                            ->get()
-                                            ->mapWithKeys(fn ($v) => [
-                                                $v->id => "{$v->placa} — {$v->tipo?->nombre}",
-                                            ])
-                                    )
-                                    ->searchable()
-                                    ->required()
-                                    ->live()
-                                    ->helperText('Si ya tiene motorista, la asignación anterior se cierra automáticamente.')
-                                    ->afterStateUpdated(function ($state, callable $set) {
-                                        if (! $state) {
-                                            $set('motorista_preview', 'Selecciona un vehículo primero');
-                                            $set('motorista_id_sugerido', null);
-                                            return;
-                                        }
+    Action::make('nueva_asignacion')
+        ->label('Nueva asignación')
+        ->icon('heroicon-o-plus-circle')
+        ->color('primary')
+        ->form([
+            Section::make('Vehículo y motorista')
+                ->schema([
+                    Select::make('vehiculo_id')
+                        ->label('Vehículo')
+                        ->options(
+                            Vehiculo::with('tipo')
+                                ->where('activo', true)
+                                ->get()
+                                ->mapWithKeys(fn ($v) => [
+                                    $v->id => "{$v->placa} — {$v->tipo?->nombre}",
+                                ])
+                        )
+                        ->searchable()
+                        ->required()
+                        ->live()
+                        ->helperText('Si ya tiene motorista, la asignación anterior se cierra automáticamente.')
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            if (! $state) {
+                                $set('motorista_preview', 'Selecciona un vehículo primero');
+                                $set('motorista_id_sugerido', null);
+                                return;
+                            }
 
-                                        $vehiculo  = Vehiculo::with('asignacionVigenteMotorista.motorista')->find($state);
-                                        $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                            $vehiculo  = Vehiculo::with('asignacionVigenteMotorista.motorista')->find($state);
+                            $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
 
-                                        $set(
-                                            'motorista_preview',
-                                            $motorista
-                                                ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                                : 'Sin motorista asignado actualmente'
-                                        );
-                                        $set('motorista_id_sugerido', $motorista?->id);
-                                    }),
+                            $set(
+                                'motorista_preview',
+                                $motorista
+                                    ? "{$motorista->nombre} — DUI: {$motorista->dui}"
+                                    : 'Sin motorista asignado actualmente'
+                            );
+                            $set('motorista_id_sugerido', $motorista?->id);
+                        }),
 
-                                // Info: motorista vigente actual del vehículo seleccionado
-                                Placeholder::make('motorista_preview')
-                                    ->label('Motorista vigente actual')
-                                    ->content(fn ($get) => $get('motorista_preview') ?? 'Selecciona un vehículo primero'),
+                    Placeholder::make('motorista_preview')
+                        ->label('Motorista vigente actual')
+                        ->content(fn ($get) => $get('motorista_preview') ?? 'Selecciona un vehículo primero'),
 
-                                Hidden::make('motorista_id_sugerido'),
+                    Hidden::make('motorista_id_sugerido'),
 
-                                Select::make('motorista_id')
-                                    ->label('Nuevo motorista a asignar')
-                                    ->relationship(
-                                        name: 'motorista',
-                                        titleAttribute: 'nombre',
-                                        modifyQueryUsing: fn (Builder $q) => $q->where('activo', true),
-                                    )
-                                    ->searchable()
-                                    ->preload()
-                                    ->required()
-                                    ->helperText('Solo motoristas activos. Si ya tiene vehículo asignado, su asignación anterior también se cerrará.'),
+                    // ← ESTE era el que tronaba: ->relationship() en Action form
+                    Select::make('motorista_id')
+                        ->label('Nuevo motorista a asignar')
+                        ->options(
+                            \App\Models\Motorista::where('activo', true)
+                                ->orderBy('nombre')
+                                ->pluck('nombre', 'id')
+                        )
+                        ->searchable()
+                        ->required()
+                        ->helperText('Solo motoristas activos. Si ya tiene vehículo asignado, su asignación anterior también se cerrará.'),
 
-                                DateTimePicker::make('desde')
-                                    ->label('Fecha de inicio')
-                                    ->default(now())
-                                    ->nullable()
-                                    ->helperText('Vacío = hora actual del servidor.'),
-                            ])
-                            ->columns(2),
-                    ])
-                    ->action(function (array $data): void {
-                        app(AsignacionVehiculoMotoristaService::class)->asignar(
-                            vehiculoId:  (int) $data['vehiculo_id'],
-                            motoristaId: (int) $data['motorista_id'],
-                            desde:       $data['desde'] ?? null,
-                        );
+                    DateTimePicker::make('desde')
+                        ->label('Fecha de inicio')
+                        ->default(now())
+                        ->nullable()
+                        ->helperText('Vacío = hora actual del servidor.'),
+                ])
+                ->columns(2),
+        ])
+        ->action(function (array $data): void {
+            app(AsignacionVehiculoMotoristaService::class)->asignar(
+                vehiculoId:  (int) $data['vehiculo_id'],
+                motoristaId: (int) $data['motorista_id'],
+                desde:       $data['desde'] ?? null,
+            );
 
-                        Notification::make()
-                            ->title('Asignación registrada')
-                            ->body('El vehículo y el motorista han sido vinculados correctamente.')
-                            ->success()
-                            ->send();
-                    }),
-            ])
+            Notification::make()
+                ->title('Asignación registrada')
+                ->body('El vehículo y el motorista han sido vinculados correctamente.')
+                ->success()
+                ->send();
+        }),
+])
 
             ->bulkActions([]);
     }
