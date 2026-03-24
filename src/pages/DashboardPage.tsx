@@ -77,6 +77,41 @@ function ViajeModal({ viajes, onClose }: { viajes: ViajeAsignado[]; onClose: () 
 }
 
 // ────────────────────────────────────────────────
+// Íconos SVG para las tarjetas
+// ────────────────────────────────────────────────
+function ClockIcon() {
+  return (
+    <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function LightningIcon() {
+  return (
+    <svg className="w-5 h-5 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  );
+}
+
+function CheckCircleIcon() {
+  return (
+    <svg className="w-5 h-5 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  );
+}
+
+function FileTextIcon() {
+  return (
+    <svg className="w-5 h-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  );
+}
+
+// ────────────────────────────────────────────────
 // Página principal
 // ────────────────────────────────────────────────
 export default function DashboardPage() {
@@ -137,31 +172,105 @@ export default function DashboardPage() {
   const isToday = (day: number) =>
     day === today.getDate() && month === today.getMonth() && year === today.getFullYear();
 
-  return (
-    <div className="p-4 md:p-8 max-w-3xl mx-auto">
+  const totalViajes = viajes.length;
+  const asignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
+  const enEjecucion = viajes.filter(v => v.estado === "EN_EJECUCION").length;
+  const finalizadas = viajes.filter(v => v.estado === "FINALIZADA").length;
 
-      {/* Header de sección */}
-      <div className="mb-6 flex items-center justify-between">
+  return (
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
+
+      {/* Header de sección con diseño premium */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-slate-900">Mis Viajes</h1>
-          <p className="text-sm text-slate-500 mt-0.5">Calendario de viajes asignados</p>
+          <p className="text-[10px] font-bold tracking-widest text-[#0f2548]/50 uppercase mb-1.5">
+            ASAMBLEA LEGISLATIVA • TRANSPORTE
+          </p>
+          <h1 className="text-3xl font-black text-[#0f2548] tracking-tight">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Resumen general de viajes asignados</p>
         </div>
-        {/* Chip de disponibilidad */}
+        
+        {/* Chip de disponibilidad estilizado como un botón */}
         {activo !== null && (
-          <span className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold ${
+          <div className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-sm font-bold shadow-sm transition-all ${
             activo
-              ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
-              : "bg-red-50 text-red-700 border border-red-200"
+              ? "bg-white text-emerald-700 border border-emerald-100"
+              : "bg-white text-red-700 border border-red-100"
           }`}>
-            <span className={`h-2 w-2 rounded-full ${activo ? "bg-emerald-500" : "bg-red-500"}`} />
-            {activo ? "Habilitado" : "En Incapacidad"}
-          </span>
+            <span className="relative flex h-3 w-3">
+              <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-30 ${activo ? "bg-emerald-400" : "bg-red-400"}`}></span>
+              <span className={`relative inline-flex rounded-full h-3 w-3 ${activo ? "bg-emerald-500" : "bg-red-500"}`}></span>
+            </span>
+            {activo ? "Disponible" : "En Incapacidad"}
+          </div>
         )}
       </div>
 
+      {/* Tarjetas de Estadísticas (Generadas con los datos del mes) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Card: Pendientes (ASIGNADA) */}
+        <div className="bg-white rounded-[20px] border border-slate-100 p-5 shadow-sm flex items-start justify-between">
+          <div>
+            <h3 className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Asignadas</h3>
+            <p className="text-3xl font-black text-[#0f2548] mt-1">{asignadas}</p>
+            <div className="mt-4 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500"></span>
+              <span className="text-[11px] font-bold text-amber-600">Por iniciar</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-[14px] border border-slate-50 flex items-center justify-center shadow-sm">
+             <ClockIcon />
+          </div>
+        </div>
+
+        {/* Card: En Progreso (EN_EJECUCION) */}
+        <div className="bg-white rounded-[20px] border border-slate-100 p-5 shadow-sm flex items-start justify-between">
+          <div>
+            <h3 className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">En Progreso</h3>
+            <p className="text-3xl font-black text-[#0f2548] mt-1">{enEjecucion}</p>
+            <div className="mt-4 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-blue-500"></span>
+              <span className="text-[11px] font-bold text-blue-600">En proceso</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-[14px] bg-blue-50/50 border border-blue-100/50 flex items-center justify-center shadow-sm">
+             <LightningIcon />
+          </div>
+        </div>
+
+        {/* Card: Finalizadas */}
+        <div className="bg-white rounded-[20px] border border-slate-100 p-5 shadow-sm flex items-start justify-between">
+          <div>
+            <h3 className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Finalizadas</h3>
+            <p className="text-3xl font-black text-[#0f2548] mt-1">{finalizadas}</p>
+            <div className="mt-4 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500"></span>
+              <span className="text-[11px] font-bold text-emerald-600">Completadas</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-[14px] border border-slate-50 flex items-center justify-center shadow-sm">
+             <CheckCircleIcon />
+          </div>
+        </div>
+
+        {/* Card: Total Mes */}
+        <div className="bg-white rounded-[20px] border border-slate-100 p-5 shadow-sm flex items-start justify-between">
+          <div>
+            <h3 className="text-[11px] font-bold text-slate-400 tracking-wider uppercase">Total de Mes</h3>
+            <p className="text-3xl font-black text-[#0f2548] mt-1">{totalViajes}</p>
+            <div className="mt-4 flex items-center gap-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-slate-400"></span>
+              <span className="text-[11px] font-bold text-slate-500">Global</span>
+            </div>
+          </div>
+          <div className="w-10 h-10 rounded-[14px] border border-slate-50 flex items-center justify-center shadow-sm">
+             <FileTextIcon />
+          </div>
+        </div>
+      </div>
+
       {/* Card del calendario */}
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-        {/* Navegación de mes */}
+      <div className="rounded-[24px] border border-slate-100 bg-white shadow-sm overflow-hidden p-2">
         <div className="flex items-center justify-between px-6 py-4 border-b border-slate-100">
           <button
             onClick={prevMonth}
