@@ -17,5 +17,7 @@ class RolesSeeder extends Seeder
         // Nuevos roles del flujo
         Role::firstOrCreate(['name' => 'operativo', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'liquidador', 'guard_name' => 'web']);
+        //Nuevo rol para interfaz de motorista
+        Role::firstOrCreate(['name' => 'motorista', 'guard_name' => 'web']);
     }
 }

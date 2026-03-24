@@ -11,6 +11,7 @@ use Illuminate\Notifications\Notifiable;
 use Illuminate\Testing\Fluent\Concerns\Has;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
+use App\Models\Motorista;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -77,6 +78,12 @@ class User extends Authenticatable implements FilamentUser
     public function departamental()
     {
         return $this->belongsTo(Departamental::class, 'departamental_id');
+    }
+
+    //Relacion para motorista
+    public function motorista()
+    {
+        return $this->hasOne(Motorista::class);
     }
 
 }

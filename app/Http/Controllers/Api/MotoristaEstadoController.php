@@ -59,6 +59,42 @@ class MotoristaEstadoController extends Controller
         ]);
     }
 
+    //Nuevo
+    public function miEstado()
+    {
+        $motorista = auth()->user()->motorista->load('estadoActual');
+
+        return response()->json([
+            'activo' => $motorista->estadoActual?->activo ?? true,
+            'motivo' => $motorista->estadoActual?->motivo,
+            'desde' => $motorista->estadoActual?->fecha_inicio,
+        ]);
+    }
+
+    public function cambiarMiEstado(Request $request)
+    {
+        $request ->validate([
+            'activo' => 'required|boolean',
+            'motivo' => 'nullable|string|max:255',
+        ]);
+
+        $motorista = auth()->user()->motorista;
+
+        app(MotoristaService::class)->cambiarEstado($motorista, $request->activo, $request->motivo);
+
+        return response()->json([
+            'message' => 'Estado actualizado correctamente'
+        ]);
+    }
+
+    public function miHistorial()
+    {
+        $motorista = auth()->user()->motorista;
+
+        return response()->json(
+            $motorista->estados()->latest()->get()
+        );
+    }
     //Historial
     public function historial($motoristaId)
     {
