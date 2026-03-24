@@ -8,21 +8,21 @@ export interface Disponibilidad {
 
 /**
  * Obtiene el estado actual del motorista autenticado.
- * GET /api/motorista/mi-estado
+ * GET /api/motoristas/me/estado
  */
 export async function getDisponibilidad(): Promise<Disponibilidad> {
-  const { data } = await api.get("/api/motorista/mi-estado");
+  const { data } = await api.get("/api/motoristas/me/estado");
   return data as Disponibilidad;
 }
 
 /**
  * Cambia el estado de disponibilidad del motorista autenticado.
- * POST /api/motorista/mi-estado
+ * POST /api/motoristas/me/estado
  * Body: { activo: boolean, motivo?: string }
  */
 export async function reportarDisponibilidad(
   activo: boolean,
   motivo: string
 ): Promise<void> {
-  await api.post("/api/motorista/mi-estado", { activo, motivo });
+  await api.post("/api/motoristas/me/estado", { activo, motivo });
 }
