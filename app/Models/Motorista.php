@@ -38,7 +38,7 @@ class Motorista extends Model
 
     public function estadoActual()
     {
-        return $this->hasOne(MotoristaEstado::class)->latestOfMany();
+        return $this->hasOne(MotoristaEstado::class)->latestOfMany('fecha_inicio');    
     }
 
     public function asignacionesVehiculo(): HasMany
