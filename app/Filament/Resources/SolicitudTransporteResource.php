@@ -570,225 +570,191 @@ class SolicitudTransporteResource extends Resource
                             ]);
                         }),
 
-                    Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar')
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->modalHeading('Aprobar y Asignar Vehículo')
-                        ->modalWidth('2xl')
-                        ->successNotification(null)
-                        ->form([
-                            Forms\Components\Textarea::make('comentario_jefe')
-                                ->label('Motivo de la aprobación')
-                                ->rows(4)
-                                ->required()
-                                ->maxLength(2000)
-                                ->columnSpanFull(),
+                    Action::make('aprobar')
+    ->label('Aprobar')
+    ->color('success')
+    ->icon('heroicon-o-check-circle')
+    ->modalHeading('Aprobar y Asignar Vehículo')
+    ->modalWidth('2xl')
+    ->successNotification(null) // Se maneja manualmente en el action
+    ->form([
+        Forms\Components\Textarea::make('comentario_jefe')
+            ->label('Motivo de la aprobación')
+            ->rows(4)
+            ->required()
+            ->maxLength(2000)
+            ->columnSpanFull(),
 
-                            Forms\Components\Section::make('Asignación de Vehículo y Motorista')
-                                ->schema([
-                                    Forms\Components\Select::make('vehiculo_id')
-                                        ->label('Vehículo')
-                                        ->options(function (SolicitudTransporte $record) {
-                                            $ocupados = SolicitudTransporte::query()
-                                                ->where('id', '!=', $record->id)
-                                                ->whereIn('estado', [
-                                                    EstadoSolicitudEnum::PROGRAMADA,
-                                                    EstadoSolicitudEnum::APROBADA,
-                                                    EstadoSolicitudEnum::EN_EJECUCION,
-                                                ])
-                                                ->where(function ($query) use ($record) {
-                                                    $query->where(function ($q) use ($record) {
-                                                        $q->where('fecha_salida', '<=', $record->fecha_retorno)
-                                                          ->where('fecha_retorno', '>=', $record->fecha_salida);
-                                                    });
-                                                })
-                                                ->pluck('vehiculo_id')
-                                                ->filter()
-                                                ->unique();
+        Forms\Components\Section::make('Asignación de Vehículo y Motorista')
+            ->schema([
+                Forms\Components\Select::make('vehiculo_id')
+                    ->label('Vehículo')
+                    ->options(function (SolicitudTransporte $record) {
+                        // 1. Buscar vehículos ocupados en ese rango de fechas
+                        $ocupados = SolicitudTransporte::query()
+                            ->where('id', '!=', $record->id)
+                            ->whereIn('estado', [
+                                EstadoSolicitudEnum::PROGRAMADA,
+                                EstadoSolicitudEnum::APROBADA,
+                                EstadoSolicitudEnum::EN_EJECUCION,
+                            ])
+                            ->where(function ($query) use ($record) {
+                                $query->where('fecha_salida', '<=', $record->fecha_retorno)
+                                      ->where('fecha_retorno', '>=', $record->fecha_salida);
+                            })
+                            ->pluck('vehiculo_id')
+                            ->filter()
+                            ->unique();
 
-                                            return \App\Models\Vehiculo::where('activo', true)
-                                                ->whereNotIn('id', $ocupados)
-                                                ->get()
-                                                ->mapWithKeys(fn ($v) => [
-                                                    $v->id => "{$v->placa} - {$v->tipo->nombre}"
-                                                ]);
-                                        })
-                                        ->searchable()
-                                        ->required()
-                                        ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                        ->hintColor('warning')
-                                        ->live()
-                                        ->afterStateUpdated(function ($state, callable $set) {
-                                            if (! $state) {
-                                                $set('motorista_nombre', 'Sin motorista asignado');
-                                                $set('motorista_id', null);
-                                                return;
-                                            }
-
-                                            $vehiculo  = \App\Models\Vehiculo::with(
-                                                'asignacionVigenteMotorista.motorista.estadoActual'
-                                            )->find($state);
-
-                                            $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                                            $estado = $motorista?->estadoActual;
-
-                                            // ✅ NUEVA LÓGICA: Verificar estadoActual->activo
-                                            if ($motorista && ($estado?->activo ?? true)) {
-                                                $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
-                                                $set('motorista_id', $motorista->id);
-                                                return;
-                                            }
-
-                                            // 🚫 Motorista NO disponible
-                                            if ($motorista && !($estado?->activo ?? true)) {
-                                                $set('motorista_nombre', "{$motorista->nombre} ❌ No disponible — buscando sustituto...");
-                                                $set('motorista_id', null);
-                                            }
-
-                                            // 🔥 SUGERIR MOTORISTA REALMENTE DISPONIBLE
-                                            $sugerido = \App\Models\Motorista::where('activo', true)
-                                                ->whereHas('estadoActual', function ($q) {
-                                                    $q->where('activo', true);
-                                                })
-                                                ->whereDoesntHave('asignacionesVehiculo', function ($q) {
-                                                    $q->where('vigente', true)->whereNull('hasta');
-                                                })
-                                                ->orderBy('nombre')
-                                                ->first();
-
-                                            if ($sugerido) {
-                                                $set('motorista_nombre', "💡 Sugerido: {$sugerido->nombre} — DUI: {$sugerido->dui}");
-                                                $set('motorista_id', $sugerido->id);
-                                            } else {
-                                                $set('motorista_nombre', '❌ No hay motoristas disponibles');
-                                                $set('motorista_id', null);
-                                            }
-                                        }),
-
-                                    Forms\Components\Hidden::make('motorista_id'),
-
-                                    Forms\Components\Placeholder::make('motorista_nombre')
-                                        ->label('Motorista asignado')
-                                        ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
-                                        ->hint(fn ($get) => ! $get('motorista_id') ? '⚠ Este vehículo no tiene motorista disponible' : null)
-                                        ->hintColor('danger'),
-                                ])
-                                ->columns(2),
-                        ])
-                        ->action(function (SolicitudTransporte $record, array $data) {
-                            // ✅ VALIDACIÓN BACKEND CORREGIDA
-                            if (! empty($data['motorista_id'])) {
-                                $motorista = \App\Models\Motorista::with('estadoActual')->find($data['motorista_id']);
-                                $estado = $motorista?->estadoActual;
-                                
-                                if ($motorista && !($estado?->activo ?? true)) {
-                                    Notification::make()
-                                        ->title('Motorista no disponible')
-                                        ->body("{$motorista->nombre} no está disponible actualmente.")
-                                        ->danger()
-                                        ->send();
-                                    return;
-                                }
-                            }
-
-                            $estadoAnterior = $record->estado;
-
-                            $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
-                            $record->comentario_jefe = $data['comentario_jefe'];
-                            $record->decidido_por    = auth()->id();
-                            $record->decidido_en     = now();
-                            $record->vehiculo_id     = $data['vehiculo_id'];
-                            $record->motorista_id    = $data['motorista_id'];
-                            $record->save();
-
-                            \Illuminate\Support\Facades\Log::info('ACTION APROBAR - SAVE OK', ['estado' => $record->estado]);
-
-                            $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
-
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_transporte',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::PROGRAMADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['comentario_jefe'],
+                        // 2. Retornar solo vehículos activos y no ocupados
+                        return Vehiculo::where('activo', true)
+                            ->whereNotIn('id', $ocupados)
+                            ->get()
+                            ->mapWithKeys(fn ($v) => [
+                                $v->id => "{$v->placa} - {$v->tipo->nombre}"
                             ]);
+                    })
+                    ->searchable()
+                    ->required()
+                    ->hint(fn ($record) => "Solicitó: " . ($record->tipo_vehiculo_nombre ?? 'N/A'))
+                    ->hintColor('warning')
+                    ->live()
+                    ->afterStateUpdated(function ($state, callable $set) {
+                        if (!$state) {
+                            $set('motorista_nombre', 'Sin motorista asignado');
+                            $set('motorista_id', null);
+                            return;
+                        }
 
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_transporte',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::APROBAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => [
-                                    'comentario'   => $data['comentario_jefe'],
-                                    'vehiculo_id'  => $data['vehiculo_id'],
-                                    'motorista_id' => $data['motorista_id'],
-                                ],
-                            ]);
+                        $vehiculo = Vehiculo::with('asignacionVigenteMotorista.motorista.estadoActual')->find($state);
+                        $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
+                        $estado = $motorista?->estadoActual;
 
-                            \Illuminate\Support\Facades\Log::info('ACTION APROBAR - LLEGANDO A NOTIFICACION');
+                        // ✅ Verificar disponibilidad del motorista vinculado al vehículo
+                        if ($motorista && ($estado?->activo ?? true)) {
+                            $set('motorista_nombre', "{$motorista->nombre} — DUI: {$motorista->dui}");
+                            $set('motorista_id', $motorista->id);
+                            return;
+                        }
 
-                            $urlAsignacion = static::getUrl('view', ['record' => $record->id]);
+                        // 🚫 Motorista NO disponible: Buscar sustituto libre
+                        $sugerido = Motorista::where('activo', true)
+                            ->whereHas('estadoActual', fn($q) => $q->where('activo', true))
+                            ->whereDoesntHave('asignacionesVehiculo', function ($q) {
+                                $q->where('vigente', true)->whereNull('hasta');
+                            })
+                            ->orderBy('nombre')
+                            ->first();
 
-                            Notification::make()
-                                ->title('Solicitud de transporte aprobada')
-                                ->body("El vehículo y motorista pueden asignarse desde el detalle de la solicitud {$record->codigo}.")
-                                ->success()
-                                ->actions([
-                                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                                        ->label('Asignar transporte ahora →')
-                                        ->url($urlAsignacion)
-                                        ->button()
-                                        ->color('primary'),
-                                ])
-                                ->persistent()
-                                ->send();
+                        if ($sugerido) {
+                            $set('motorista_nombre', "💡 Sugerido: {$sugerido->nombre} — DUI: {$sugerido->dui}");
+                            $set('motorista_id', $sugerido->id);
+                        } else {
+                            $set('motorista_nombre', '❌ No hay motoristas disponibles');
+                            $set('motorista_id', null);
+                        }
+                    }),
 
-                            \Illuminate\Support\Facades\Log::info('ACTION APROBAR - NOTIFICACION ENVIADA');
+                Forms\Components\Hidden::make('motorista_id'),
 
-                            try {
-                                $payload = [
-                                    'tipo'    => 'transporte',
-                                    'evento'  => 'solicitud_aprobada',
-                                    'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
-                                    'solicitud' => [
-                                        'codigo'               => $record->codigo,
-                                        'estado'               => 'aprobado',
-                                        'tipo_vehiculo_nombre' => $record->vehiculo->tipo->nombre ?? 'No asignado',
-                                        'cantidad_personas'    => $record->cantidad_personas,
-                                        'origen'               => $record->origen,
-                                        'destino'              => $record->destino,
-                                        'destino_adicional'    => $record->destino_adicional,
-                                        'fecha_salida'         => $record->fecha_salida,
-                                        'fecha_retorno'        => $record->fecha_retorno,
-                                        'motivo_actividad'     => $record->motivo_actividad,
-                                        'vehiculo_placa'       => $record->vehiculo->placa ?? 'N/A',
-                                        'motorista_nombre'     => $record->motorista->nombre ?? 'N/A',
-                                    ],
-                                    'solicitante' => [
-                                        'name'  => $record->solicitante->name,
-                                        'email' => $record->solicitante->email,
-                                        'unidad' => [
-                                            'nombre' => $record->unidad->nombre ?? 'N/A',
-                                            'siglas' => $record->unidad->siglas ?? 'N/A',
-                                        ],
-                                    ],
-                                    'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                                ];
+                Forms\Components\Placeholder::make('motorista_nombre_display')
+                    ->label('Motorista asignado')
+                    ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
+                    ->hint(fn ($get) => !$get('motorista_id') ? '⚠ No hay motorista disponible' : null)
+                    ->hintColor('danger'),
+            ])
+            ->columns(2),
+    ])
+    ->action(function (SolicitudTransporte $record, array $data) {
+        // ✅ VALIDACIÓN DE DISPONIBILIDAD EN BACKEND
+        if (!empty($data['motorista_id'])) {
+            $motorista = Motorista::with('estadoActual')->find($data['motorista_id']);
+            if ($motorista && !($motorista->estadoActual?->activo ?? true)) {
+                Notification::make()
+                    ->title('Motorista no disponible')
+                    ->body("{$motorista->nombre} no está disponible actualmente.")
+                    ->danger()
+                    ->send();
+                return;
+            }
+        }
 
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
-                            }
-                        })
-                        ->visible(fn (SolicitudTransporte $record) =>
-                            auth()->check() &&
-                            auth()->user()->hasRole('jefe') &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
+        $estadoAnterior = $record->estado;
+
+        // Actualizar Registro
+        $record->update([
+            'estado' => EstadoSolicitudEnum::PROGRAMADA,
+            'comentario_jefe' => $data['comentario_jefe'],
+            'decidido_por' => auth()->id(),
+            'decidido_en' => now(),
+            'vehiculo_id' => $data['vehiculo_id'],
+            'motorista_id' => $data['motorista_id'],
+        ]);
+
+        // Registrar en Historial
+        HistorialEstado::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id' => $record->id,
+            'estado_anterior' => $estadoAnterior->value,
+            'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
+            'user_id' => auth()->id(),
+            'comentario' => $data['comentario_jefe'],
+        ]);
+
+        // Bitácora de Auditoría
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id' => $record->id,
+            'accion' => AccionBitacoraEnum::APROBAR->value,
+            'user_id' => auth()->id(),
+            'datos_extras' => [
+                'comentario' => $data['comentario_jefe'],
+                'vehiculo_id' => $data['vehiculo_id'],
+                'motorista_id' => $data['motorista_id'],
+            ],
+        ]);
+
+        // Notificación en UI
+        Notification::make()
+            ->title('Solicitud aprobada con éxito')
+            ->body("La solicitud {$record->codigo} ha sido programada.")
+            ->success()
+            ->send();
+
+        // Envío de Correo
+        try {
+            $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
+            
+            $payload = [
+                'tipo' => 'transporte',
+                'evento' => 'solicitud_aprobada',
+                'mensaje' => 'Tu solicitud de transporte ha sido APROBADA.',
+                'solicitud' => [
+                    'codigo' => $record->codigo,
+                    'estado' => 'aprobado',
+                    'vehiculo' => $record->vehiculo->placa ?? 'N/A',
+                    'motorista' => $record->motorista->nombre ?? 'N/A',
+                    'fecha_salida' => $record->fecha_salida,
+                    'destino' => $record->destino,
+                ],
+                'solicitante' => [
+                    'name' => $record->solicitante->name,
+                    'email' => $record->solicitante->email,
+                ],
+                'timestamp' => now()->toIso8601String(),
+            ];
+
+            Mail::to($record->solicitante->email)->send(
+                new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error en correo de aprobación: ' . $e->getMessage());
+        }
+    })
+    ->visible(fn (SolicitudTransporte $record) => 
+        auth()->user()?->hasRole('jefe') && 
+        $record->estado === EstadoSolicitudEnum::PRE_APROBADA
+    ),
 
                     Tables\Actions\Action::make('mision_oficial')
                         ->label('Misión Oficial')
