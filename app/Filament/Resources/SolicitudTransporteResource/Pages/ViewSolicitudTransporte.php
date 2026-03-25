@@ -8,10 +8,12 @@ use App\Filament\Resources\SolicitudTransporteResource;
 use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
+use App\Models\Motorista;
 use App\Models\SolicitudTransporte;
+use App\Models\MotoristaEstado;
 use Filament\Actions;
 use Filament\Forms;
-use Filament\Forms\Components\Actions as ComponentsActions;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -19,6 +21,146 @@ use Illuminate\Support\Facades\Mail;
 class ViewSolicitudTransporte extends ViewRecord
 {
     protected static string $resource = SolicitudTransporteResource::class;
+
+    // =========================================================================
+    // HELPER — misma lógica que SolicitudTransporteResource::resolverMotoristaParaVehiculo
+    // =========================================================================
+    private function resolverMotorista(int $vehiculoId): array
+    {
+        $vehiculo         = \App\Models\Vehiculo::with('asignacionVigenteMotorista.motorista')->find($vehiculoId);
+        $motoristaTitular = $vehiculo?->asignacionVigenteMotorista?->motorista;
+
+        if ($motoristaTitular) {
+            $ultimoEstado = MotoristaEstado::where('motorista_id', $motoristaTitular->id)
+                ->orderByDesc('fecha_inicio')
+                ->orderByDesc('id')
+                ->first();
+
+            $titularDisponible = ! ($ultimoEstado && ! filter_var($ultimoEstado->activo, FILTER_VALIDATE_BOOLEAN));
+
+            if ($titularDisponible) {
+                return [
+                    'id'          => $motoristaTitular->id,
+                    'label'       => "{$motoristaTitular->nombre} — DUI: {$motoristaTitular->dui}",
+                    'disponible'  => true,
+                    'sugerido'    => false,
+                ];
+            }
+
+            $motivoBloqueo = $ultimoEstado?->motivo ?? 'No disponible';
+        }
+
+        // Buscar sustituto
+        $motoristasInactivos = MotoristaEstado::orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->get()
+            ->unique('motorista_id')
+            ->filter(fn ($st) => ! filter_var($st->activo, FILTER_VALIDATE_BOOLEAN))
+            ->pluck('motorista_id')
+            ->toArray();
+
+        $sugerido = Motorista::where('activo', true)
+            ->whereNotIn('id', $motoristasInactivos)
+            ->when($motoristaTitular, fn ($q) => $q->where('id', '!=', $motoristaTitular->id))
+            ->orderBy('nombre')
+            ->first();
+
+        if ($motoristaTitular && $sugerido) {
+            return [
+                'id'         => $sugerido->id,
+                'label'      => "⚠️ {$motoristaTitular->nombre} no disponible ({$motivoBloqueo}). 💡 Sugerido: {$sugerido->nombre} — DUI: {$sugerido->dui}",
+                'disponible' => false,
+                'sugerido'   => true,
+            ];
+        }
+
+        if ($motoristaTitular && ! $sugerido) {
+            return [
+                'id'         => null,
+                'label'      => "no_disponible_sin_sustituto|{$motoristaTitular->nombre} no disponible ({$motivoBloqueo}) y no hay sustitutos.",
+                'disponible' => false,
+                'sugerido'   => false,
+            ];
+        }
+
+        // Sin titular
+        return [
+            'id'         => null,
+            'label'      => 'sin_motorista',
+            'disponible' => false,
+            'sugerido'   => false,
+        ];
+    }
+
+    // =========================================================================
+    // HELPER — guard antes de guardar
+    // =========================================================================
+    private function validarMotoristaDisponible(?int $motoristaId): void
+    {
+        if (! $motoristaId) {
+            return;
+        }
+
+        $ultimoEstado = MotoristaEstado::where('motorista_id', $motoristaId)
+            ->orderByDesc('fecha_inicio')
+            ->orderByDesc('id')
+            ->first();
+
+        if ($ultimoEstado && ! filter_var($ultimoEstado->activo, FILTER_VALIDATE_BOOLEAN)) {
+            Notification::make()
+                ->title('Acción Bloqueada')
+                ->body('El motorista seleccionado está marcado como NO DISPONIBLE. Seleccioná otro.')
+                ->danger()
+                ->send();
+
+            \Filament\Support\Exceptions\Halt::throw();
+        }
+    }
+
+    // =========================================================================
+    // HELPER — renderiza el HTML del placeholder de motorista
+    // =========================================================================
+    private function htmlMotorista(?string $label): \Illuminate\Support\HtmlString
+    {
+        if (! $label) {
+            return new \Illuminate\Support\HtmlString("
+                <div style='background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:12px;padding:14px 18px;color:#9ca3af;font-size:13px;'>
+                    👤 Selecciona un vehículo para ver el motorista
+                </div>
+            ");
+        }
+
+        if ($label === 'sin_motorista') {
+            return new \Illuminate\Support\HtmlString("
+                <div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;'>
+                    ⚠️ Este vehículo no tiene motorista asignado
+                </div>
+            ");
+        }
+
+        if (str_starts_with($label, 'no_disponible_sin_sustituto|')) {
+            $msg = str_replace('no_disponible_sin_sustituto|', '', $label);
+            return new \Illuminate\Support\HtmlString("
+                <div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;'>
+                    ❌ {$msg}
+                </div>
+            ");
+        }
+
+        if (str_contains($label, '⚠️') || str_contains($label, '💡')) {
+            return new \Illuminate\Support\HtmlString("
+                <div style='background:#fffbeb;border:1.5px solid #fcd34d;border-radius:12px;padding:14px 18px;color:#92400e;font-size:13px;font-weight:600;'>
+                    {$label}
+                </div>
+            ");
+        }
+
+        return new \Illuminate\Support\HtmlString("
+            <div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;'>
+                ✅ {$label}
+            </div>
+        ");
+    }
 
     protected function getHeaderActions(): array
     {
@@ -119,7 +261,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     ], true)
                 ),
 
-            // ── APROBAR / PROGRAMAR ── modal mejorado ─────────────────────
+            // ── APROBAR / PROGRAMAR ───────────────────────────────────────
             Actions\Action::make('aprobar')
                 ->button()
                 ->size('lg')
@@ -133,7 +275,6 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->modalSubmitActionLabel('✔ Confirmar programación')
                 ->modalWidth('2xl')
                 ->form([
-                    // Resumen visual de la solicitud en verde
                     Forms\Components\Section::make('')
                         ->schema([
                             Forms\Components\Placeholder::make('resumen_aprobar')
@@ -176,7 +317,6 @@ class ViewSolicitudTransporte extends ViewRecord
                         ])
                         ->compact(),
 
-                    // Comentario de decisión
                     Forms\Components\Section::make('Decisión')
                         ->description('El comentario quedará registrado en el historial de la solicitud.')
                         ->icon('heroicon-o-document-text')
@@ -191,7 +331,6 @@ class ViewSolicitudTransporte extends ViewRecord
                         ])
                         ->compact(),
 
-                    // Asignación de vehículo y motorista
                     Forms\Components\Section::make('Asignación de Vehículo')
                         ->description('Solo se muestran vehículos sin conflicto de horario para las fechas de esta solicitud.')
                         ->icon('heroicon-o-truck')
@@ -232,17 +371,15 @@ class ViewSolicitudTransporte extends ViewRecord
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    if (!$state) {
+                                    if (! $state) {
+                                        $set('motorista_id',     null);
                                         $set('motorista_nombre', null);
-                                        $set('motorista_id', null);
                                         return;
                                     }
-                                    $vehiculo  = \App\Models\Vehiculo::find($state);
-                                    $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                                    $set('motorista_nombre', $motorista
-                                        ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                        : 'sin_motorista');
-                                    $set('motorista_id', $motorista?->id);
+
+                                    $resultado = $this->resolverMotorista((int) $state);
+                                    $set('motorista_id',     $resultado['id']);
+                                    $set('motorista_nombre', $resultado['label']);
                                 })
                                 ->columnSpan(1),
 
@@ -250,25 +387,16 @@ class ViewSolicitudTransporte extends ViewRecord
 
                             Forms\Components\Placeholder::make('motorista_nombre')
                                 ->label('Motorista del vehículo')
-                                ->content(function ($get) {
-                                    $nombre = $get('motorista_nombre');
-
-                                    if (! $nombre) {
-                                        return new \Illuminate\Support\HtmlString("<div style='background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:12px;padding:14px 18px;color:#9ca3af;font-size:13px;display:flex;align-items:center;gap:8px;'>👤 Selecciona un vehículo para ver el motorista</div>");
-                                    }
-
-                                    if ($nombre === 'sin_motorista') {
-                                        return new \Illuminate\Support\HtmlString("<div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>⚠️ Este vehículo no tiene motorista asignado</div>");
-                                    }
-
-                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>✅ {$nombre}</div>");
-                                })
+                                ->content(fn ($get) => $this->htmlMotorista($get('motorista_nombre')))
                                 ->columnSpan(1),
                         ])
                         ->columns(2)
                         ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
+                    // ── Guard ────────────────────────────────────────────
+                    $this->validarMotoristaDisponible($data['motorista_id'] ?? null);
+
                     $estadoAnterior = $record->estado;
 
                     $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
@@ -345,7 +473,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
-            // ── ASIGNAR TRANSPORTE ── modal mejorado ──────────────────────
+            // ── ASIGNAR TRANSPORTE ────────────────────────────────────────
             Actions\Action::make('asignar_transporte')
                 ->button()
                 ->size('lg')
@@ -359,7 +487,6 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->modalSubmitActionLabel('🚗 Confirmar asignación')
                 ->modalWidth('2xl')
                 ->form([
-                    // Resumen visual en azul
                     Forms\Components\Section::make('')
                         ->schema([
                             Forms\Components\Placeholder::make('resumen_asignacion')
@@ -440,12 +567,15 @@ class ViewSolicitudTransporte extends ViewRecord
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, callable $set) {
-                                    $vehiculo  = \App\Models\Vehiculo::find($state);
-                                    $motorista = $vehiculo?->asignacionVigenteMotorista?->motorista;
-                                    $set('motorista_nombre', $motorista
-                                        ? "{$motorista->nombre} — DUI: {$motorista->dui}"
-                                        : 'sin_motorista');
-                                    $set('motorista_id', $motorista?->id);
+                                    if (! $state) {
+                                        $set('motorista_id',     null);
+                                        $set('motorista_nombre', null);
+                                        return;
+                                    }
+
+                                    $resultado = $this->resolverMotorista((int) $state);
+                                    $set('motorista_id',     $resultado['id']);
+                                    $set('motorista_nombre', $resultado['label']);
                                 })
                                 ->columnSpan(1),
 
@@ -453,25 +583,16 @@ class ViewSolicitudTransporte extends ViewRecord
 
                             Forms\Components\Placeholder::make('motorista_nombre')
                                 ->label('Motorista del vehículo')
-                                ->content(function ($get) {
-                                    $nombre = $get('motorista_nombre');
-
-                                    if (! $nombre) {
-                                        return new \Illuminate\Support\HtmlString("<div style='background:#f9fafb;border:1.5px dashed #e5e7eb;border-radius:12px;padding:14px 18px;color:#9ca3af;font-size:13px;display:flex;align-items:center;gap:8px;'>👤 Selecciona un vehículo para ver el motorista</div>");
-                                    }
-
-                                    if ($nombre === 'sin_motorista') {
-                                        return new \Illuminate\Support\HtmlString("<div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'>⚠️ Este vehículo no tiene motorista asignado</div>");
-                                    }
-
-                                    return new \Illuminate\Support\HtmlString("<div style='background:#f0fdf4;border:1.5px solid #86efac;border-radius:12px;padding:14px 18px;color:#166534;font-size:13px;font-weight:600;display:flex;align-items:center;gap:8px;'> {$nombre}</div>");
-                                })
+                                ->content(fn ($get) => $this->htmlMotorista($get('motorista_nombre')))
                                 ->columnSpan(1),
                         ])
                         ->columns(2)
                         ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
+                    // ── Guard ────────────────────────────────────────────
+                    $this->validarMotoristaDisponible($data['motorista_id'] ?? null);
+
                     $estadoAnterior = $record->estado;
 
                     $record->update([
@@ -500,13 +621,13 @@ class ViewSolicitudTransporte extends ViewRecord
                         ],
                     ]);
                 })
-               ->visible(fn (SolicitudTransporte $record) =>
-    auth()->check() &&
-    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-    $record->estado === EstadoSolicitudEnum::PROGRAMADA
-),
+                ->visible(fn (SolicitudTransporte $record) =>
+                    auth()->check() &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    $record->estado === EstadoSolicitudEnum::PROGRAMADA
+                ),
 
-            // ── RECHAZAR ── modal mejorado ────────────────────────────────
+            // ── RECHAZAR ─────────────────────────────────────────────────
             Actions\Action::make('rechazar')
                 ->button()
                 ->size('lg')
@@ -520,7 +641,6 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->modalSubmitActionLabel('✕ Confirmar rechazo')
                 ->modalWidth('lg')
                 ->form([
-                    // Resumen compacto en rojo
                     Forms\Components\Section::make('')
                         ->schema([
                             Forms\Components\Placeholder::make('resumen_rechazo')
@@ -616,7 +736,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         ];
 
                         Mail::to($record->solicitante->email)->send(
-                            new NotificacionEventMail(' Solicitud de Transporte RECHAZADA', $payload)
+                            new NotificacionEventMail('Solicitud de Transporte RECHAZADA', $payload)
                         );
                     } catch (\Exception $e) {
                         Log::error('Error enviando correo de rechazo: ' . $e->getMessage());
@@ -632,29 +752,27 @@ class ViewSolicitudTransporte extends ViewRecord
                     ], true)
                 ),
 
-            //Agregado para generar mision oficial para una solicitud especifica
+            // ── MISIÓN OFICIAL ────────────────────────────────────────────
             Actions\Action::make('mision_oficial')
-    ->button()
-    ->size('lg')
-    ->label('Generar Misión Oficial')
-    ->color('gray')
-    ->icon('heroicon-o-document-text') 
-    // CAMBIO CLAVE: Pasamos el objeto $record directamente o usamos la llave 'solicitud'
-    ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
-    ->openUrlInNewTab()
-    ->visible(fn (SolicitudTransporte $record) => 
-        auth()->check() && 
-        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-        $record->vehiculo_id !== null && 
-        $record->motorista_id !== null && // Recomendado: verificar que tenga motorista
-        in_array($record->estado, [
-            EstadoSolicitudEnum::APROBADA,
-            EstadoSolicitudEnum::PROGRAMADA,
-            EstadoSolicitudEnum::ASIGNADA,
-            EstadoSolicitudEnum::COMPLETADA,
-        ])
-    ),
-
+                ->button()
+                ->size('lg')
+                ->label('Generar Misión Oficial')
+                ->color('gray')
+                ->icon('heroicon-o-document-text')
+                ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
+                ->openUrlInNewTab()
+                ->visible(fn (SolicitudTransporte $record) =>
+                    auth()->check() &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    $record->vehiculo_id !== null &&
+                    $record->motorista_id !== null &&
+                    in_array($record->estado, [
+                        EstadoSolicitudEnum::APROBADA,
+                        EstadoSolicitudEnum::PROGRAMADA,
+                        EstadoSolicitudEnum::ASIGNADA,
+                        EstadoSolicitudEnum::COMPLETADA,
+                    ])
+                ),
         ];
     }
 
