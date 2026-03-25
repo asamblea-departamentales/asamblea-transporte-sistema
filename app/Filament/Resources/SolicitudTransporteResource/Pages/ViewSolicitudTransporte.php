@@ -744,7 +744,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 })
                 ->visible(fn (SolicitudTransporte $record) =>
                     auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
                         EstadoSolicitudEnum::EN_REVISION,
