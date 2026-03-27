@@ -1,45 +1,26 @@
-// src/components/layout/AppLayout.tsx
 import { Outlet } from "react-router-dom";
-import Sidebar, { Icons, type NavItem } from "./Sidebar";
-import { useState, useEffect } from "react";
+import Sidebar from "./Sidebar";
+import { useState } from "react";
 
 export function AppLayout() {
-  const [collapsed, setCollapsed] = useState(false);
-
-  useEffect(() => {
-    // Escuchar el tamaño de la ventana para colapsar automáticamente el sidebar en pantallas pequeñas
-    const handleResize = () => {
-      if (window.innerWidth < 1024) {
-        setCollapsed(true);
-      } else {
-        setCollapsed(false);
-      }
-    };
-    
-    // Inicializar estado
-    handleResize();
-
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  const navItems: NavItem[] = [
-    { to: "/dashboard", label: "Mis Viajes", icon: Icons.Dashboard },
-  ];
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   return (
-    <div className="flex min-h-screen bg-slate-50">
+    <div className="flex min-h-screen bg-slate-50 font-sans">
       <Sidebar 
-        items={navItems}
-        collapsed={collapsed} 
-        onToggle={() => setCollapsed(!collapsed)} 
+        open={sidebarOpen} 
+        onClose={() => setSidebarOpen(false)} 
+        onOpen={() => setSidebarOpen(true)} 
       />
-      
-      <main 
-        className={`flex-1 min-h-screen flex flex-col relative w-full overflow-x-hidden transition-all duration-300 ease-in-out ${
-          collapsed ? "ml-16" : "ml-64"
-        }`}
-      >
+      {/* 
+        Contenedor Principal: 
+        En pantallas móviles (PWA):
+          - Añade un padding superior (pt-[60px]) para no tapar la Top Bar.
+          - Añade un padding inferior (pb-[64px]) para acomodar la Bottom Nav Bar.
+        En escritorio (lg:):
+          - El padding vertical es cero, y se traslada hacia la derecha (lg:ml-[280px]) para dar espacio al Sidebar fijo.
+      */}
+      <main className="flex-1 lg:ml-[280px] pt-[60px] pb-[64px] lg:pt-0 lg:pb-0 min-h-screen flex flex-col relative w-full overflow-x-hidden transition-all duration-300">
         <Outlet />
       </main>
     </div>
