@@ -130,22 +130,23 @@ class AprobacionesSolicitudes extends Page implements Forms\Contracts\HasForms
     }
 
     public function aprobar(string $tipo, int $id, array $data): void
-    {
-        app(AprobacionesService::class)->aprobar(
-            $tipo,
-            $id,
-            auth()->id(),
-            $data['comentario'],
-        );
+{
+    app(AprobacionesService::class)->aprobar(
+        $tipo,
+        $id,
+        auth()->id(),
+        $data['comentario'],
+        $data['firma'] ?? null,  // ← nuevo
+    );
 
-        $this->refreshKpis();
-        $this->resetPage();
+    $this->refreshKpis();
+    $this->resetPage();
 
-        Notification::make()
-            ->title('Solicitud aprobada correctamente')
-            ->success()
-            ->send();
-    }
+    Notification::make()
+        ->title('Solicitud aprobada correctamente')
+        ->success()
+        ->send();
+}
 
     public function rechazar(string $tipo, int $id, array $data): void
     {

@@ -44,37 +44,39 @@ class AprobacionesService
         ];
     }
 
-    public function aprobar(string $tipo, int $id, int $userId, string $comentario): void
-    {
-        $record = $this->resolverModelo($tipo, $id);
-        $estadoAnterior = $record->estado;
-        $nuevoEstado = $this->resolverEstadoAprobado($tipo);
+   public function aprobar(string $tipo, int $id, int $userId, string $comentario, ?string $firma = null): void
+{
+    $record = $this->resolverModelo($tipo, $id);
+    $estadoAnterior = $record->estado;
+    $nuevoEstado = $this->resolverEstadoAprobado($tipo);
 
-        $record->estado = $nuevoEstado;
-        $this->guardarComentario($record, $comentario);
-        $this->guardarAprobador($record, $userId);
-        $record->save();
+    $record->estado = $nuevoEstado;
+    $this->guardarComentario($record, $comentario);
+    $this->guardarAprobador($record, $userId);
+    $this->guardarFirma($record, $firma);  // ← nuevo
+    $record->save();
 
-        HistorialEstado::create([
-            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-            'entidad_id' => $record->id,
-            'estado_anterior' => $this->enumValue($estadoAnterior),
-            'estado_nuevo' => $this->enumValue($nuevoEstado),
-            'user_id' => $userId,
+    HistorialEstado::create([
+        'entidad_tipo' => $this->resolverEntidadTipo($tipo),
+        'entidad_id' => $record->id,
+        'estado_anterior' => $this->enumValue($estadoAnterior),
+        'estado_nuevo' => $this->enumValue($nuevoEstado),
+        'user_id' => $userId,
+        'comentario' => $comentario,
+    ]);
+
+    BitacoraEvento::create([
+        'entidad_tipo' => $this->resolverEntidadTipo($tipo),
+        'entidad_id' => $record->id,
+        'accion' => 'APROBAR_FINAL',
+        'user_id' => $userId,
+        'datos_extras' => [
             'comentario' => $comentario,
-        ]);
-
-        BitacoraEvento::create([
-            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-            'entidad_id' => $record->id,
-            'accion' => 'APROBAR_FINAL',
-            'user_id' => $userId,
-            'datos_extras' => [
-                'comentario' => $comentario,
-                'estado_resultante' => $this->enumValue($nuevoEstado),
-            ],
-        ]);
-    }
+            'estado_resultante' => $this->enumValue($nuevoEstado),
+            'con_firma' => !empty($firma),
+        ],
+    ]);
+}
 
     public function rechazar(string $tipo, int $id, int $userId, string $comentario): void
     {
@@ -320,6 +322,16 @@ class AprobacionesService
             $record->motivo_rechazo = $comentario;
         }
     }
+
+    //Metodo nuevo para la firma
+    private function guardarFirma($record, ?string $firma): void
+{
+    if (empty($firma)) return;
+
+    if (in_array('firma_aprobador', $record->getFillable())) {
+        $record->firma_aprobador = $firma;
+    }
+}
 
     private function enumValue($value): string
     {

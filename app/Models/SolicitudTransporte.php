@@ -30,6 +30,7 @@ class SolicitudTransporte extends Model
     'decidido_por',
     'decidido_en',
     'comentario_jefe',
+    'firma_aprobador',       // ← nuevo
     'destino_adicional',
     'vehiculo_id',
     'motorista_id',

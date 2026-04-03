@@ -710,77 +710,90 @@ class SolicitudTransporteResource extends Resource
                                         ->hintColor('danger'),
                                 ])
                                 ->columns(2),
+
+                                //NUEVO PARA LA FIRMA
+                                Forms\Components\Section::make('Firma del Aprobador')
+                                ->description('Dibuje su firma. Aparecerá en el PDF de Misión Oficial.')
+                            ->schema([
+                                \App\Forms\Components\SignaturePad::make('firma_aprobador')
+                                    ->label('Firma')
+                                    ->required()
+                                    ->columnSpanFull(),
+                                ])
+                             ->columnSpanFull(),
                         ])
+                        
                         ->action(function (SolicitudTransporte $record, array $data) {
-                            static::guardarSiMotoristaDisponible($data);
+    static::guardarSiMotoristaDisponible($data);
 
-                            $estadoAnterior = $record->estado;
+    $estadoAnterior = $record->estado;
 
-                            $record->update([
-                                'estado'          => EstadoSolicitudEnum::PROGRAMADA,
-                                'comentario_jefe' => $data['comentario_jefe'],
-                                'decidido_por'    => auth()->id(),
-                                'decidido_en'     => now(),
-                                'vehiculo_id'     => $data['vehiculo_id'],
-                                'motorista_id'    => $data['motorista_id'],
-                            ]);
+    $record->update([
+        'estado'           => EstadoSolicitudEnum::PROGRAMADA,
+        'comentario_jefe'  => $data['comentario_jefe'],
+        'decidido_por'     => auth()->id(),
+        'decidido_en'      => now(),
+        'vehiculo_id'      => $data['vehiculo_id'],
+        'motorista_id'     => $data['motorista_id'],
+        'firma_aprobador'  => $data['firma_aprobador'] ?? null,  // ← nuevo
+    ]);
 
-                            HistorialEstado::create([
-                                'entidad_tipo'    => 'solicitud_transporte',
-                                'entidad_id'      => $record->id,
-                                'estado_anterior' => $estadoAnterior->value,
-                                'estado_nuevo'    => EstadoSolicitudEnum::PROGRAMADA->value,
-                                'user_id'         => auth()->id(),
-                                'comentario'      => $data['comentario_jefe'],
-                            ]);
+    HistorialEstado::create([
+        'entidad_tipo'    => 'solicitud_transporte',
+        'entidad_id'      => $record->id,
+        'estado_anterior' => $estadoAnterior->value,
+        'estado_nuevo'    => EstadoSolicitudEnum::PROGRAMADA->value,
+        'user_id'         => auth()->id(),
+        'comentario'      => $data['comentario_jefe'],
+    ]);
 
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_transporte',
-                                'entidad_id'   => $record->id,
-                                'accion'       => AccionBitacoraEnum::APROBAR->value,
-                                'user_id'      => auth()->id(),
-                                'datos_extras' => [
-                                    'comentario'   => $data['comentario_jefe'],
-                                    'vehiculo_id'  => $data['vehiculo_id'],
-                                    'motorista_id' => $data['motorista_id'],
-                                ],
-                            ]);
+    BitacoraEvento::create([
+        'entidad_tipo' => 'solicitud_transporte',
+        'entidad_id'   => $record->id,
+        'accion'       => AccionBitacoraEnum::APROBAR->value,
+        'user_id'      => auth()->id(),
+        'datos_extras' => [
+            'comentario'   => $data['comentario_jefe'],
+            'vehiculo_id'  => $data['vehiculo_id'],
+            'motorista_id' => $data['motorista_id'],
+        ],
+    ]);
 
-                            Notification::make()
-                                ->title('Solicitud aprobada con éxito')
-                                ->body("La solicitud {$record->codigo} ha sido programada.")
-                                ->success()
-                                ->send();
+    Notification::make()
+        ->title('Solicitud aprobada con éxito')
+        ->body("La solicitud {$record->codigo} ha sido programada.")
+        ->success()
+        ->send();
 
-                            try {
-                                $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
+    try {
+        $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
 
-                                $payload = [
-                                    'tipo'   => 'transporte',
-                                    'evento' => 'solicitud_aprobada',
-                                    'mensaje' => 'Tu solicitud de transporte ha sido APROBADA.',
-                                    'solicitud' => [
-                                        'codigo'       => $record->codigo,
-                                        'estado'       => 'aprobado',
-                                        'vehiculo'     => $record->vehiculo->placa ?? 'N/A',
-                                        'motorista'    => $record->motorista->nombre ?? 'N/A',
-                                        'fecha_salida' => $record->fecha_salida,
-                                        'destino'      => $record->destino,
-                                    ],
-                                    'solicitante' => [
-                                        'name'  => $record->solicitante->name,
-                                        'email' => $record->solicitante->email,
-                                    ],
-                                    'timestamp' => now()->toIso8601String(),
-                                ];
+        $payload = [
+            'tipo'   => 'transporte',
+            'evento' => 'solicitud_aprobada',
+            'mensaje' => 'Tu solicitud de transporte ha sido APROBADA.',
+            'solicitud' => [
+                'codigo'       => $record->codigo,
+                'estado'       => 'aprobado',
+                'vehiculo'     => $record->vehiculo->placa ?? 'N/A',
+                'motorista'    => $record->motorista->nombre ?? 'N/A',
+                'fecha_salida' => $record->fecha_salida,
+                'destino'      => $record->destino,
+            ],
+            'solicitante' => [
+                'name'  => $record->solicitante->name,
+                'email' => $record->solicitante->email,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ];
 
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error en correo de aprobación: ' . $e->getMessage());
-                            }
-                        })
+        Mail::to($record->solicitante->email)->send(
+            new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+        );
+    } catch (\Exception $e) {
+        Log::error('Error en correo de aprobación: ' . $e->getMessage());
+    }
+})
                         ->visible(fn (SolicitudTransporte $record) =>
                             auth()->user()?->hasRole('jefe') &&
                             $record->estado === EstadoSolicitudEnum::PRE_APROBADA

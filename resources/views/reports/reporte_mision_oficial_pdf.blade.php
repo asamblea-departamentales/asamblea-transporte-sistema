@@ -131,10 +131,19 @@
         </div>
 
         <div class="firma">
-            <div>{{ $r->autorizador?->name ?? '—' }}</div>
-            <div class="linea"></div>
-            <div>{{ $service->resolverAutorizadorCargo($r) }}</div>
-        </div>
+    @if(!empty($r->firma_aprobador))
+        <img
+            src="{{ $r->firma_aprobador }}"
+            style="height:70px; max-width:280px; display:block; margin:0 auto 4px auto;"
+            alt="Firma"
+        >
+    @else
+        <div style="height:70px;"></div>
+    @endif
+    <div class="linea"></div>
+    <div>{{ $r->autorizador?->name ?? '—' }}</div>
+    <div>{{ $service->resolverAutorizadorCargo($r) }}</div>
+</div>
 
         @if(!$loop->last)
             <div class="salto"></div>
