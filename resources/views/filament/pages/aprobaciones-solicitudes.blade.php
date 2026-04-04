@@ -156,86 +156,95 @@
                                             ></div>
 
                                             {{-- Dialog --}}
-                                            <div
-                                                x-show="open"
-                                                x-transition
-                                                class="fixed inset-0 z-50 flex items-center justify-center p-4"
-                                                style="display:none"
-                                            >
-                                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
-
-                                                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                                                        <x-filament::icon icon="heroicon-o-check-circle" class="w-5 h-5 text-green-500" />
-                                                        Aprobar solicitud
-                                                        <span class="text-sm font-mono text-gray-400">{{ $row['codigo'] }}</span>
-                                                    </h2>
-
-                                                    {{-- Comentario --}}
-                                                    <div>
-                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                            Comentario de aprobación <span class="text-red-500">*</span>
-                                                        </label>
-                                                        <textarea
-                                                            x-model="comentario"
-                                                            rows="3"
-                                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                                                            placeholder="Motivo o comentario de aprobación..."
-                                                        ></textarea>
-                                                    </div>
-
-                                                    {{-- Firma (solo si es transporte) --}}
-                                                   {{-- Firma (solo si es transporte) --}}
-<div x-show="tipo === 'transporte'">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Firma del aprobador
-        <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
-    </label>
+                                            {{-- Dialog --}}
+<template x-if="open">
     <div
-        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
-        style="touch-action: none;"
+        class="fixed inset-0 z-50 flex items-center justify-center p-4"
     >
-        <canvas
-            x-ref="firmaCanvas"
-            width="560"
-            height="150"
-            style="width:100%; height:150px; cursor:crosshair; display:block;"
-            @mousedown="startDraw"
-            @mousemove="onDraw"
-            @mouseup="stopDraw"
-            @mouseleave="stopDraw"
-            @touchstart="startDraw"
-            @touchmove="onDraw"
-            @touchend="stopDraw"
-        ></canvas>
-    </div>
-    <button
-        type="button"
-        @click="clearFirma"
-        class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
-    >
-        ✕ Limpiar firma
-    </button>
-</div>
+        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
 
-                                                    {{-- Acciones --}}
-                                                    <div class="flex justify-end gap-3 pt-2">
-                                                        <x-filament::button
-                                                            color="gray"
-                                                            @click="open = false"
-                                                        >
-                                                            Cancelar
-                                                        </x-filament::button>
-                                                        <x-filament::button
-                                                            color="success"
-                                                            @click="confirmar"
-                                                            x-bind:disabled="!comentario.trim()"
-                                                        >
-                                                            Confirmar aprobación
-                                                        </x-filament::button>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        </div>
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                <x-filament::icon icon="heroicon-o-check-circle" class="w-5 h-5 text-green-500" />
+                Aprobar solicitud
+                <span class="text-sm font-mono text-gray-400">{{ $row['codigo'] }}</span>
+            </h2>
+
+            {{-- Comentario --}}
+            <div>
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Comentario de aprobación <span class="text-red-500">*</span>
+                </label>
+                <textarea
+                    x-model="comentario"
+                    rows="3"
+                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                    placeholder="Motivo o comentario de aprobación..."
+                ></textarea>
+            </div>
+
+            {{-- Firma --}}
+            <div x-show="tipo === 'transporte'">
+                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                    Firma del aprobador
+                    <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
+                </label>
+                <div
+                    class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
+                    style="touch-action: none;"
+                    x-init="
+                        $nextTick(() => {
+                            canvas = $refs.firmaCanvas;
+                            if (!canvas) return;
+                            ctx = canvas.getContext('2d');
+                            ctx.strokeStyle = '#1e3a5f';
+                            ctx.lineWidth = 2;
+                            ctx.lineCap = 'round';
+                            ctx.lineJoin = 'round';
+                        })
+                    "
+                >
+                    <canvas
+                        x-ref="firmaCanvas"
+                        width="560"
+                        height="150"
+                        style="width:100%; height:150px; cursor:crosshair; display:block;"
+                        @mousedown="startDraw"
+                        @mousemove="onDraw"
+                        @mouseup="stopDraw"
+                        @mouseleave="stopDraw"
+                        @touchstart="startDraw"
+                        @touchmove="onDraw"
+                        @touchend="stopDraw"
+                    ></canvas>
+                </div>
+                <button
+                    type="button"
+                    @click="clearFirma"
+                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
+                >
+                    ✕ Limpiar firma
+                </button>
+            </div>
+
+            {{-- Acciones --}}
+            <div class="flex justify-end gap-3 pt-2">
+                <x-filament::button
+                    color="gray"
+                    @click="open = false"
+                >
+                    Cancelar
+                </x-filament::button>
+                <x-filament::button
+                    color="success"
+                    @click="confirmar"
+                    x-bind:disabled="!comentario.trim()"
+                >
+                    Confirmar aprobación
+                </x-filament::button>
+            </div>
+        </div>
+    </div>
+</template>
                                         {{-- ═══════════════════════════════════════ --}}
 
                                         {{-- RECHAZAR --}}
