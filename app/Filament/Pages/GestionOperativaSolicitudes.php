@@ -319,7 +319,8 @@ public function aprobar(string $tipo, int $id, array $data): void
         $tipo,
         $id,
         auth()->id(),
-        $data['comentario']
+        $data['comentario'],
+        $data['firma'] ?? null,  // ← nuevo
     );
 
     $this->refreshKpis();
