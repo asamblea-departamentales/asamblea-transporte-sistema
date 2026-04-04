@@ -62,17 +62,19 @@
                                                 open: false,
                                                 comentario: '',
                                                 firma: null,
+                                                tipo: '{{ $row['tipo'] }}',   // ← nuevo
                                                 canvas: null,
                                                 ctx: null,
                                                 drawing: false,
                                                 lastX: 0,
                                                 lastY: 0,
 
-                                                openModal() {
+                                              openModal() {
     this.comentario = '';
     this.firma = null;
     this.open = true;
     setTimeout(() => {
+        if (this.tipo !== 'transporte') return;  // ← nuevo
         this.canvas = this.$refs.firmaCanvas;
         if (!this.canvas) return;
         this.ctx = this.canvas.getContext('2d');
@@ -182,39 +184,38 @@
                                                     </div>
 
                                                     {{-- Firma (solo si es transporte) --}}
-                                                    @if($row['tipo'] === 'transporte')
-                                                    <div>
-                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                                                            Firma del aprobador
-                                                            <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
-                                                        </label>
-                                                        <div
-                                                            class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
-                                                            style="touch-action: none;"
-                                                        >
-                                                            <canvas
-                                                                x-ref="firmaCanvas"
-                                                                width="560"
-                                                                height="150"
-                                                                style="width:100%; height:150px; cursor:crosshair; display:block;"
-                                                                @mousedown="startDraw"
-                                                                @mousemove="onDraw"
-                                                                @mouseup="stopDraw"
-                                                                @mouseleave="stopDraw"
-                                                                @touchstart="startDraw"
-                                                                @touchmove="onDraw"
-                                                                @touchend="stopDraw"
-                                                            ></canvas>
-                                                        </div>
-                                                        <button
-                                                            type="button"
-                                                            @click="clearFirma"
-                                                            class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
-                                                        >
-                                                            ✕ Limpiar firma
-                                                        </button>
-                                                    </div>
-                                                    @endif
+                                                   {{-- Firma (solo si es transporte) --}}
+<div x-show="tipo === 'transporte'">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Firma del aprobador
+        <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
+    </label>
+    <div
+        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
+        style="touch-action: none;"
+    >
+        <canvas
+            x-ref="firmaCanvas"
+            width="560"
+            height="150"
+            style="width:100%; height:150px; cursor:crosshair; display:block;"
+            @mousedown="startDraw"
+            @mousemove="onDraw"
+            @mouseup="stopDraw"
+            @mouseleave="stopDraw"
+            @touchstart="startDraw"
+            @touchmove="onDraw"
+            @touchend="stopDraw"
+        ></canvas>
+    </div>
+    <button
+        type="button"
+        @click="clearFirma"
+        class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
+    >
+        ✕ Limpiar firma
+    </button>
+</div>
 
                                                     {{-- Acciones --}}
                                                     <div class="flex justify-end gap-3 pt-2">
