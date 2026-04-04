@@ -54,40 +54,50 @@
                                 <td class="py-3 pr-4">
                                     <div class="flex flex-wrap gap-2">
 
-                                        {{-- ═══════════════════════════════════════
-                                             APROBAR — con canvas de firma
-                                        ════════════════════════════════════════ --}}
+                                        {{-- APROBAR --}}
                                         <div
                                             x-data="{
                                                 open: false,
                                                 comentario: '',
                                                 firma: null,
-                                                tipo: '{{ $row['tipo'] }}',   // ← nuevo
-                                                canvas: null,
-                                                ctx: null,
+                                                esTransporte: {{ $row['tipo'] === 'transporte' ? 'true' : 'false' }},
                                                 drawing: false,
                                                 lastX: 0,
                                                 lastY: 0,
 
-                                              openModal() {
-    this.comentario = '';
-    this.firma = null;
-    this.open = true;
-},
+                                                openModal() {
+                                                    this.comentario = '';
+                                                    this.firma = null;
+                                                    this.open = true;
+                                                    if (this.esTransporte) {
+                                                        setTimeout(() => {
+                                                            const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                            if (!c) return;
+                                                            const ctx = c.getContext('2d');
+                                                            ctx.strokeStyle = '#1e3a5f';
+                                                            ctx.lineWidth = 2;
+                                                            ctx.lineCap = 'round';
+                                                            ctx.lineJoin = 'round';
+                                                            ctx.clearRect(0, 0, c.width, c.height);
+                                                        }, 50);
+                                                    }
+                                                },
 
-                                                getPos(e) {
-                                                    const rect = this.canvas.getBoundingClientRect();
-                                                    const src  = e.touches ? e.touches[0] : e;
+                                                getPos(e, c) {
+                                                    const rect = c.getBoundingClientRect();
+                                                    const src = e.touches ? e.touches[0] : e;
                                                     return {
-                                                        x: (src.clientX - rect.left) * (this.canvas.width  / rect.width),
-                                                        y: (src.clientY - rect.top)  * (this.canvas.height / rect.height),
+                                                        x: (src.clientX - rect.left) * (c.width / rect.width),
+                                                        y: (src.clientY - rect.top) * (c.height / rect.height),
                                                     };
                                                 },
 
                                                 startDraw(e) {
                                                     e.preventDefault();
+                                                    const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                    if (!c) return;
                                                     this.drawing = true;
-                                                    const p = this.getPos(e);
+                                                    const p = this.getPos(e, c);
                                                     this.lastX = p.x;
                                                     this.lastY = p.y;
                                                 },
@@ -95,11 +105,14 @@
                                                 onDraw(e) {
                                                     if (!this.drawing) return;
                                                     e.preventDefault();
-                                                    const p = this.getPos(e);
-                                                    this.ctx.beginPath();
-                                                    this.ctx.moveTo(this.lastX, this.lastY);
-                                                    this.ctx.lineTo(p.x, p.y);
-                                                    this.ctx.stroke();
+                                                    const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                    if (!c) return;
+                                                    const ctx = c.getContext('2d');
+                                                    const p = this.getPos(e, c);
+                                                    ctx.beginPath();
+                                                    ctx.moveTo(this.lastX, this.lastY);
+                                                    ctx.lineTo(p.x, p.y);
+                                                    ctx.stroke();
                                                     this.lastX = p.x;
                                                     this.lastY = p.y;
                                                 },
@@ -107,11 +120,14 @@
                                                 stopDraw() {
                                                     if (!this.drawing) return;
                                                     this.drawing = false;
-                                                    this.firma = this.canvas.toDataURL('image/png');
+                                                    const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                    if (c) this.firma = c.toDataURL('image/png');
                                                 },
 
                                                 clearFirma() {
-                                                    this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                                                    const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                    if (!c) return;
+                                                    c.getContext('2d').clearRect(0, 0, c.width, c.height);
                                                     this.firma = null;
                                                 },
 
@@ -126,14 +142,13 @@
                                                 }
                                             }"
                                         >
-                                            {{-- Trigger --}}
                                             <button
-    type="button"
-    @click="openModal()"
-    class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm bg-green-600 hover:bg-green-500 focus:outline-none"
->
-    Aprobar
-</button>
+                                                type="button"
+                                                @click="openModal()"
+                                                class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm bg-green-600 hover:bg-green-500 focus:outline-none"
+                                            >
+                                                Aprobar
+                                            </button>
 
                                             {{-- Overlay --}}
                                             <div
@@ -145,100 +160,88 @@
                                             ></div>
 
                                             {{-- Dialog --}}
-                                            {{-- Dialog --}}
-<template x-if="open">
-    <div
-        class="fixed inset-0 z-50 flex items-center justify-center p-4"
-    >
-        <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
+                                            <div
+                                                x-show="open"
+                                                x-transition
+                                                class="fixed inset-0 z-50 flex items-center justify-center p-4"
+                                                style="display:none"
+                                            >
+                                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4">
 
-            <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                <x-filament::icon icon="heroicon-o-check-circle" class="w-5 h-5 text-green-500" />
-                Aprobar solicitud
-                <span class="text-sm font-mono text-gray-400">{{ $row['codigo'] }}</span>
-            </h2>
+                                                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                                                        <x-filament::icon icon="heroicon-o-check-circle" class="w-5 h-5 text-green-500" />
+                                                        Aprobar solicitud
+                                                        <span class="text-sm font-mono text-gray-400">{{ $row['codigo'] }}</span>
+                                                    </h2>
 
-            {{-- Comentario --}}
-            <div>
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Comentario de aprobación <span class="text-red-500">*</span>
-                </label>
-                <textarea
-                    x-model="comentario"
-                    rows="3"
-                    class="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
-                    placeholder="Motivo o comentario de aprobación..."
-                ></textarea>
-            </div>
+                                                    {{-- Comentario --}}
+                                                    <div>
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            Comentario de aprobación <span class="text-red-500">*</span>
+                                                        </label>
+                                                        <textarea
+                                                            x-model="comentario"
+                                                            rows="3"
+                                                            class="w-full rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-green-500"
+                                                            placeholder="Motivo o comentario de aprobación..."
+                                                        ></textarea>
+                                                    </div>
 
-            {{-- Firma --}}
-<div x-show="tipo === 'transporte'">
-    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-        Firma del aprobador
-        <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
-    </label>
-    <div
-        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
-        style="touch-action: none;"
-    >
-        <canvas
-            x-ref="firmaCanvas"
-            width="560"
-            height="150"
-            style="width:100%; height:150px; cursor:crosshair; display:block;"
-            x-init="
-                canvas = $el;
-                ctx = $el.getContext('2d');
-                ctx.strokeStyle = '#1e3a5f';
-                ctx.lineWidth = 2;
-                ctx.lineCap = 'round';
-                ctx.lineJoin = 'round';
-            "
-            @mousedown="startDraw"
-            @mousemove="onDraw"
-            @mouseup="stopDraw"
-            @mouseleave="stopDraw"
-            @touchstart="startDraw"
-            @touchmove="onDraw"
-            @touchend="stopDraw"
-        ></canvas>
-    </div>
-    <button
-        type="button"
-        @click="clearFirma"
-        class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
-    >
-        ✕ Limpiar firma
-    </button>
-</div>
+                                                    {{-- Firma — siempre en el DOM, visible solo si es transporte --}}
+                                                    <div x-show="esTransporte">
+                                                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+                                                            Firma del aprobador
+                                                            <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
+                                                        </label>
+                                                        <div
+                                                            class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
+                                                            style="touch-action: none;"
+                                                        >
+                                                            <canvas
+                                                                id="firma-{{ $row['id'] }}"
+                                                                width="560"
+                                                                height="150"
+                                                                style="width:100%; height:150px; cursor:crosshair; display:block;"
+                                                                @mousedown="startDraw"
+                                                                @mousemove="onDraw"
+                                                                @mouseup="stopDraw"
+                                                                @mouseleave="stopDraw"
+                                                                @touchstart="startDraw"
+                                                                @touchmove="onDraw"
+                                                                @touchend="stopDraw"
+                                                            ></canvas>
+                                                        </div>
+                                                        <button
+                                                            type="button"
+                                                            @click="clearFirma"
+                                                            class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
+                                                        >
+                                                            ✕ Limpiar firma
+                                                        </button>
+                                                    </div>
 
-            {{-- Acciones --}}
-            <div class="flex justify-end gap-3 pt-2">
-                <x-filament::button
-                    color="gray"
-                    @click="open = false"
-                >
-                    Cancelar
-                </x-filament::button>
-                <x-filament::button
-                    color="success"
-                    @click="confirmar"
-                    x-bind:disabled="!comentario.trim()"
-                >
-                    Confirmar aprobación
-                </x-filament::button>
-            </div>
-        </div>
-    </div>
-</template>
-                                        {{-- ═══════════════════════════════════════ --}}
+                                                    {{-- Acciones --}}
+                                                    <div class="flex justify-end gap-3 pt-2">
+                                                        <x-filament::button color="gray" @click="open = false">
+                                                            Cancelar
+                                                        </x-filament::button>
+                                                        <x-filament::button
+                                                            color="success"
+                                                            @click="confirmar"
+                                                            x-bind:disabled="!comentario.trim()"
+                                                        >
+                                                            Confirmar aprobación
+                                                        </x-filament::button>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        {{-- FIN APROBAR --}}
 
                                         {{-- RECHAZAR --}}
                                         <x-filament::modal width="xl">
                                             <x-slot name="trigger">
-                                                <x-filament::button size="sm" color="danger">
-                                                    Rechazar
-                                                </x-filament::button>
+                                                <x-filament::button size="sm" color="danger">Rechazar</x-filament::button>
                                             </x-slot>
                                             <x-slot name="heading">Rechazar solicitud</x-slot>
                                             <form wire:submit.prevent="rechazar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
@@ -252,9 +255,7 @@
                                                     required
                                                 ></textarea>
                                                 <div class="flex justify-end">
-                                                    <x-filament::button type="submit" color="danger">
-                                                        Confirmar rechazo
-                                                    </x-filament::button>
+                                                    <x-filament::button type="submit" color="danger">Confirmar rechazo</x-filament::button>
                                                 </div>
                                             </form>
                                         </x-filament::modal>
@@ -262,9 +263,7 @@
                                         {{-- CONDICIONAR --}}
                                         <x-filament::modal width="xl">
                                             <x-slot name="trigger">
-                                                <x-filament::button size="sm" color="warning">
-                                                    Condicionar
-                                                </x-filament::button>
+                                                <x-filament::button size="sm" color="warning">Condicionar</x-filament::button>
                                             </x-slot>
                                             <x-slot name="heading">Condicionar solicitud</x-slot>
                                             <form wire:submit.prevent="condicionar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
@@ -278,9 +277,7 @@
                                                     required
                                                 ></textarea>
                                                 <div class="flex justify-end">
-                                                    <x-filament::button type="submit" color="warning">
-                                                        Enviar con condiciones
-                                                    </x-filament::button>
+                                                    <x-filament::button type="submit" color="warning">Enviar con condiciones</x-filament::button>
                                                 </div>
                                             </form>
                                         </x-filament::modal>
@@ -288,9 +285,7 @@
                                         {{-- REABRIR --}}
                                         <x-filament::modal width="xl">
                                             <x-slot name="trigger">
-                                                <x-filament::button size="sm" color="gray">
-                                                    Reabrir
-                                                </x-filament::button>
+                                                <x-filament::button size="sm" color="gray">Reabrir</x-filament::button>
                                             </x-slot>
                                             <x-slot name="heading">Reabrir solicitud</x-slot>
                                             <form wire:submit.prevent="reabrir('{{ $row['tipo'] }}', {{ $row['id'] }}, {
@@ -304,9 +299,7 @@
                                                     required
                                                 ></textarea>
                                                 <div class="flex justify-end">
-                                                    <x-filament::button type="submit" color="gray">
-                                                        Confirmar reapertura
-                                                    </x-filament::button>
+                                                    <x-filament::button type="submit" color="gray">Confirmar reapertura</x-filament::button>
                                                 </div>
                                             </form>
                                         </x-filament::modal>
