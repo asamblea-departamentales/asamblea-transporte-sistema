@@ -73,17 +73,6 @@
     this.comentario = '';
     this.firma = null;
     this.open = true;
-    setTimeout(() => {
-        if (this.tipo !== 'transporte') return;  // ← nuevo
-        this.canvas = this.$refs.firmaCanvas;
-        if (!this.canvas) return;
-        this.ctx = this.canvas.getContext('2d');
-        this.ctx.strokeStyle = '#1e3a5f';
-        this.ctx.lineWidth   = 2;
-        this.ctx.lineCap     = 'round';
-        this.ctx.lineJoin    = 'round';
-        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    }, 150);
 },
 
                                                 getPos(e) {
@@ -183,48 +172,45 @@
             </div>
 
             {{-- Firma --}}
-            <div x-show="tipo === 'transporte'">
-                <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                    Firma del aprobador
-                    <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
-                </label>
-                <div
-                    class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
-                    style="touch-action: none;"
-                    x-init="
-                        $nextTick(() => {
-                            canvas = $refs.firmaCanvas;
-                            if (!canvas) return;
-                            ctx = canvas.getContext('2d');
-                            ctx.strokeStyle = '#1e3a5f';
-                            ctx.lineWidth = 2;
-                            ctx.lineCap = 'round';
-                            ctx.lineJoin = 'round';
-                        })
-                    "
-                >
-                    <canvas
-                        x-ref="firmaCanvas"
-                        width="560"
-                        height="150"
-                        style="width:100%; height:150px; cursor:crosshair; display:block;"
-                        @mousedown="startDraw"
-                        @mousemove="onDraw"
-                        @mouseup="stopDraw"
-                        @mouseleave="stopDraw"
-                        @touchstart="startDraw"
-                        @touchmove="onDraw"
-                        @touchend="stopDraw"
-                    ></canvas>
-                </div>
-                <button
-                    type="button"
-                    @click="clearFirma"
-                    class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
-                >
-                    ✕ Limpiar firma
-                </button>
-            </div>
+<div x-show="tipo === 'transporte'">
+    <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
+        Firma del aprobador
+        <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
+    </label>
+    <div
+        class="border border-gray-300 dark:border-gray-600 rounded-lg overflow-hidden bg-white"
+        style="touch-action: none;"
+    >
+        <canvas
+            x-ref="firmaCanvas"
+            width="560"
+            height="150"
+            style="width:100%; height:150px; cursor:crosshair; display:block;"
+            x-init="
+                canvas = $el;
+                ctx = $el.getContext('2d');
+                ctx.strokeStyle = '#1e3a5f';
+                ctx.lineWidth = 2;
+                ctx.lineCap = 'round';
+                ctx.lineJoin = 'round';
+            "
+            @mousedown="startDraw"
+            @mousemove="onDraw"
+            @mouseup="stopDraw"
+            @mouseleave="stopDraw"
+            @touchstart="startDraw"
+            @touchmove="onDraw"
+            @touchend="stopDraw"
+        ></canvas>
+    </div>
+    <button
+        type="button"
+        @click="clearFirma"
+        class="mt-1 text-xs text-red-500 hover:text-red-700 underline"
+    >
+        ✕ Limpiar firma
+    </button>
+</div>
 
             {{-- Acciones --}}
             <div class="flex justify-end gap-3 pt-2">
