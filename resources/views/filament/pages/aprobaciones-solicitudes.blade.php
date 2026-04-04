@@ -136,13 +136,13 @@
                                             }"
                                         >
                                             {{-- Trigger --}}
-                                            <x-filament::button
-                                                size="sm"
-                                                color="success"
-                                                @click="openModal()"
-                                            >
-                                                Aprobar
-                                            </x-filament::button>
+                                            <button
+    type="button"
+    @click="openModal()"
+    class="inline-flex items-center justify-center gap-1 rounded-lg px-3 py-1.5 text-sm font-semibold text-white shadow-sm bg-green-600 hover:bg-green-500 focus:outline-none"
+>
+    Aprobar
+</button>
 
                                             {{-- Overlay --}}
                                             <div
