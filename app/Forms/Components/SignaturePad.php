@@ -6,5 +6,5 @@ use Filament\Forms\Components\Field;
 
 class SignaturePad extends Field
 {
-    protected string $view = 'forms.components.signature-pad';  // ← sin la "s"
+    protected string $view = 'forms.components.firma-canvas';
 }

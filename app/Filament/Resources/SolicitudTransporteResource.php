@@ -712,15 +712,14 @@ class SolicitudTransporteResource extends Resource
                                 ->columns(2),
 
                                 //NUEVO PARA LA FIRMA
-                                Forms\Components\Section::make('Firma del Aprobador')
-                                ->description('Dibuje su firma. Aparecerá en el PDF de Misión Oficial.')
-                            ->schema([
-                                \App\Forms\Components\SignaturePad::make('firma_aprobador')
-                                    ->label('Firma')
-                                    ->required()
-                                    ->columnSpanFull(),
-                                ])
-                             ->columnSpanFull(),
+                               Forms\Components\Section::make('Firma del Aprobador')
+    ->description('Dibuje su firma. Aparecerá en el PDF de Misión Oficial.')
+    ->schema([
+        \App\Forms\Components\SignaturePad::make('firma_aprobador')
+            ->label('Firma')
+            ->columnSpanFull(),
+    ])
+    ->columnSpanFull(),
                         ])
                         
                         ->action(function (SolicitudTransporte $record, array $data) {
