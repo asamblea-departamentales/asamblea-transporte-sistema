@@ -60,7 +60,6 @@
                                                 open: false,
                                                 comentario: '',
                                                 firma: null,
-                                                esTransporte: {{ $row['tipo'] === 'transporte' ? 'true' : 'false' }},
                                                 drawing: false,
                                                 lastX: 0,
                                                 lastY: 0,
@@ -69,18 +68,16 @@
                                                     this.comentario = '';
                                                     this.firma = null;
                                                     this.open = true;
-                                                    if (this.esTransporte) {
-                                                        setTimeout(() => {
-                                                            const c = document.getElementById('firma-{{ $row['id'] }}');
-                                                            if (!c) return;
-                                                            const ctx = c.getContext('2d');
-                                                            ctx.strokeStyle = '#1e3a5f';
-                                                            ctx.lineWidth = 2;
-                                                            ctx.lineCap = 'round';
-                                                            ctx.lineJoin = 'round';
-                                                            ctx.clearRect(0, 0, c.width, c.height);
-                                                        }, 50);
-                                                    }
+                                                    setTimeout(() => {
+                                                        const c = document.getElementById('firma-{{ $row['id'] }}');
+                                                        if (!c) return;
+                                                        const ctx = c.getContext('2d');
+                                                        ctx.strokeStyle = '#1e3a5f';
+                                                        ctx.lineWidth = 2;
+                                                        ctx.lineCap = 'round';
+                                                        ctx.lineJoin = 'round';
+                                                        ctx.clearRect(0, 0, c.width, c.height);
+                                                    }, 50);
                                                 },
 
                                                 getPos(e, c) {
@@ -187,8 +184,9 @@
                                                         ></textarea>
                                                     </div>
 
-                                                    {{-- Firma — siempre en el DOM, visible solo si es transporte --}}
-                                                    <div x-show="esTransporte">
+                                                    {{-- Firma — solo para transporte --}}
+                                                    @if($row['tipo'] === 'transporte')
+                                                    <div>
                                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                             Firma del aprobador
                                                             <span class="text-xs text-gray-400 font-normal">(aparecerá en el PDF)</span>
@@ -219,6 +217,7 @@
                                                             ✕ Limpiar firma
                                                         </button>
                                                     </div>
+                                                    @endif
 
                                                     {{-- Acciones --}}
                                                     <div class="flex justify-end gap-3 pt-2">
