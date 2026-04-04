@@ -69,20 +69,20 @@
                                                 lastY: 0,
 
                                                 openModal() {
-                                                    this.comentario = '';
-                                                    this.firma = null;
-                                                    this.open = true;
-                                                    this.$nextTick(() => {
-                                                        this.canvas = this.$refs.firmaCanvas;
-                                                        if (!this.canvas) return;
-                                                        this.ctx = this.canvas.getContext('2d');
-                                                        this.ctx.strokeStyle = '#1e3a5f';
-                                                        this.ctx.lineWidth   = 2;
-                                                        this.ctx.lineCap     = 'round';
-                                                        this.ctx.lineJoin    = 'round';
-                                                        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                                                    });
-                                                },
+    this.comentario = '';
+    this.firma = null;
+    this.open = true;
+    setTimeout(() => {
+        this.canvas = this.$refs.firmaCanvas;
+        if (!this.canvas) return;
+        this.ctx = this.canvas.getContext('2d');
+        this.ctx.strokeStyle = '#1e3a5f';
+        this.ctx.lineWidth   = 2;
+        this.ctx.lineCap     = 'round';
+        this.ctx.lineJoin    = 'round';
+        this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+    }, 150);
+},
 
                                                 getPos(e) {
                                                     const rect = this.canvas.getBoundingClientRect();
