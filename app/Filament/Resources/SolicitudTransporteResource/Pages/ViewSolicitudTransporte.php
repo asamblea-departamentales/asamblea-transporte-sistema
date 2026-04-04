@@ -22,9 +22,6 @@ class ViewSolicitudTransporte extends ViewRecord
 {
     protected static string $resource = SolicitudTransporteResource::class;
 
-    // =========================================================================
-    // HELPER — misma lógica que SolicitudTransporteResource::resolverMotoristaParaVehiculo
-    // =========================================================================
     private function resolverMotorista(int $vehiculoId): array
     {
         $vehiculo         = \App\Models\Vehiculo::with('asignacionVigenteMotorista.motorista')->find($vehiculoId);
@@ -50,7 +47,6 @@ class ViewSolicitudTransporte extends ViewRecord
             $motivoBloqueo = $ultimoEstado?->motivo ?? 'No disponible';
         }
 
-        // Buscar sustituto
         $motoristasInactivos = MotoristaEstado::orderByDesc('fecha_inicio')
             ->orderByDesc('id')
             ->get()
@@ -83,7 +79,6 @@ class ViewSolicitudTransporte extends ViewRecord
             ];
         }
 
-        // Sin titular
         return [
             'id'         => null,
             'label'      => 'sin_motorista',
@@ -92,9 +87,6 @@ class ViewSolicitudTransporte extends ViewRecord
         ];
     }
 
-    // =========================================================================
-    // HELPER — guard antes de guardar
-    // =========================================================================
     private function validarMotoristaDisponible(?int $motoristaId): void
     {
         if (! $motoristaId) {
@@ -117,9 +109,6 @@ class ViewSolicitudTransporte extends ViewRecord
         }
     }
 
-    // =========================================================================
-    // HELPER — renderiza el HTML del placeholder de motorista
-    // =========================================================================
     private function htmlMotorista(?string $label): \Illuminate\Support\HtmlString
     {
         if (! $label) {
@@ -392,9 +381,21 @@ class ViewSolicitudTransporte extends ViewRecord
                         ])
                         ->columns(2)
                         ->compact(),
+
+                    // ── FIRMA ─────────────────────────────────────────────
+                    Forms\Components\Section::make('Firma del Aprobador')
+                        ->description('Dibuje su firma. Aparecerá en el PDF de Misión Oficial.')
+                        ->icon('heroicon-o-pencil')
+                        ->schema([
+                            \App\Forms\Components\SignaturePad::make('firma_aprobador')
+                                ->label('Firma')
+                                ->columnSpanFull(),
+                        ])
+                        ->compact()
+                        ->columnSpanFull(),
+                    // ─────────────────────────────────────────────────────
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
-                    // ── Guard ────────────────────────────────────────────
                     $this->validarMotoristaDisponible($data['motorista_id'] ?? null);
 
                     $estadoAnterior = $record->estado;
@@ -405,6 +406,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->comentario_jefe = $data['comentario_jefe'];
                     $record->decidido_por    = auth()->id();
                     $record->decidido_en     = now();
+                    $record->firma_aprobador = $data['firma_aprobador'] ?? null; // ← nuevo
                     $record->save();
 
                     HistorialEstado::create([
@@ -590,7 +592,6 @@ class ViewSolicitudTransporte extends ViewRecord
                         ->compact(),
                 ])
                 ->action(function (SolicitudTransporte $record, array $data) {
-                    // ── Guard ────────────────────────────────────────────
                     $this->validarMotoristaDisponible($data['motorista_id'] ?? null);
 
                     $estadoAnterior = $record->estado;
