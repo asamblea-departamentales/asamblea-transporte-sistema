@@ -107,31 +107,31 @@ class SolicitudMantenimientoResource extends Resource
 
             Forms\Components\Section::make('Detalle del Servicio')
                 ->schema([
-                Forms\Components\Placeholder::make('detalle_ui')
+                    Forms\Components\Placeholder::make('detalle_ui')
                         ->label('')
                         ->content(fn (SolicitudMantenimiento $record) => $record->detalle ?? '-'),
-            ])
+                ])
                 ->collapsible()
                 ->collapsed(false)
                 ->compact(),
 
             Forms\Components\Section::make('Costos')
                 ->schema([
-                Forms\Components\Placeholder::make('costo_estimado_ui')
+                    Forms\Components\Placeholder::make('costo_estimado_ui')
                         ->label('Costo Estimado')
                         ->content(fn (SolicitudMantenimiento $record) => $record->costo_estimado ? '$'.number_format($record->costo_estimado, 2) : '-'
                         ),
 
-                Forms\Components\Placeholder::make('costo_real_ui')
+                    Forms\Components\Placeholder::make('costo_real_ui')
                         ->label('Costo Real')
                         ->content(fn (SolicitudMantenimiento $record) => $record->costo_real ? '$'.number_format($record->costo_real, 2) : 'Pendiente'
                         ),
 
-                Forms\Components\Placeholder::make('fecha_realizada_ui')
+                    Forms\Components\Placeholder::make('fecha_realizada_ui')
                         ->label('Fecha Realizada')
                         ->content(fn (SolicitudMantenimiento $record) => optional($record->fecha_realizada)?->format('d/m/Y') ?? 'Pendiente'
                         ),
-            ])
+                ])
                 ->columns(['default' => 1, 'md' => 3])
                 ->collapsible()
                 ->collapsed()
@@ -139,7 +139,7 @@ class SolicitudMantenimientoResource extends Resource
 
             Forms\Components\Section::make('Adjuntos')
                 ->schema([
-                Forms\Components\Placeholder::make('adjuntos_ui')
+                    Forms\Components\Placeholder::make('adjuntos_ui')
                         ->label('')
                         ->content(function (SolicitudMantenimiento $record) {
                             if (empty($record->adjuntos)) {
@@ -154,7 +154,7 @@ class SolicitudMantenimientoResource extends Resource
 
                             return new \Illuminate\Support\HtmlString($links);
                         }),
-            ])
+                ])
                 ->collapsible()
                 ->collapsed()
                 ->compact(),
@@ -162,7 +162,7 @@ class SolicitudMantenimientoResource extends Resource
             Forms\Components\Section::make('Estado de Liquidación')
                 ->schema([
 
-                Forms\Components\Placeholder::make('alerta')
+                    Forms\Components\Placeholder::make('alerta')
                         ->label('')
                         ->content(function ($record) {
 
@@ -189,21 +189,21 @@ class SolicitudMantenimientoResource extends Resource
                             );
                         }),
 
-            ])
+                ])
                 ->visible(fn () => auth()->user()->hasRole('liquidador')),
 
             Forms\Components\Section::make('Comparación de Costos')
                 ->schema([
 
-                Forms\Components\Placeholder::make('estimado')
+                    Forms\Components\Placeholder::make('estimado')
                         ->label('Costo estimado')
                         ->content(fn ($record) => '$'.number_format($record->costo_estimado, 2)),
 
-                Forms\Components\Placeholder::make('real')
+                    Forms\Components\Placeholder::make('real')
                         ->label('Costo real')
                         ->content(fn ($record) => '$'.number_format($record->costo_real, 2)),
 
-                Forms\Components\Placeholder::make('diferencia')
+                    Forms\Components\Placeholder::make('diferencia')
                         ->label('Diferencia')
                         ->content(function ($record) {
                             $diff = $record->costo_real - $record->costo_estimado;
@@ -215,11 +215,11 @@ class SolicitudMantenimientoResource extends Resource
                             );
                         }),
 
-            ])->columns(3),
+                ])->columns(3),
 
             Forms\Components\Section::make('Comprobantes')
                 ->schema([
-                Forms\Components\Placeholder::make('files')
+                    Forms\Components\Placeholder::make('files')
                         ->label('')
                         ->content(function ($record) {
 
@@ -241,12 +241,12 @@ class SolicitudMantenimientoResource extends Resource
                                 })->implode('')
                             );
                         }),
-            ]),
+                ]),
 
             Forms\Components\Section::make('Evaluación del mantenimiento')
                 ->schema([
 
-                Forms\Components\Placeholder::make('evaluacion_estado')
+                    Forms\Components\Placeholder::make('evaluacion_estado')
                         ->label('Resultado')
                         ->content(fn ($record) => match ($record->evaluacion_estado) {
                             'conforme' => '✔ Conforme',
@@ -255,80 +255,80 @@ class SolicitudMantenimientoResource extends Resource
                             default => 'Pendiente',
                         }),
 
-                Forms\Components\Placeholder::make('evaluacion_comentario')
+                    Forms\Components\Placeholder::make('evaluacion_comentario')
                         ->label('Comentario')
                         ->content(fn ($record) => $record->evaluacion_comentario ?? '—')
                         ->columnSpanFull(),
 
-                Forms\Components\Placeholder::make('evaluador')
+                    Forms\Components\Placeholder::make('evaluador')
                         ->label('Evaluado por')
                         ->content(fn ($record) => $record->evaluador?->name ?? '—'),
 
-                Forms\Components\Placeholder::make('fecha_evaluacion')
+                    Forms\Components\Placeholder::make('fecha_evaluacion')
                         ->label('Fecha')
                         ->content(fn ($record) => optional($record->fecha_evaluacion)?->format('d/m/Y H:i') ?? '—'
                         ),
 
-            ])
+                ])
                 ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA)
                 ->columns(2)
                 ->collapsible(),
 
             Forms\Components\Section::make('Finalización')
                 ->schema([
-                Forms\Components\Placeholder::make('finalizado_por')
+                    Forms\Components\Placeholder::make('finalizado_por')
                         ->label('Finalizado por')
                         ->content(fn ($record) => $record->finalizador?->name ?? '-'),
 
-                Forms\Components\Placeholder::make('fecha_finalizacion')
+                    Forms\Components\Placeholder::make('fecha_finalizacion')
                         ->label('Fecha de finalización')
                         ->content(fn ($record) => optional($record->fecha_finalizacion)?->format('d/m/Y H:i') ?? '-'
                         ),
-            ])
+                ])
                 ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA),
 
             Forms\Components\Section::make('Resultado de Evaluación')
                 ->schema([
 
-                Forms\Components\Placeholder::make('resultado')
+                    Forms\Components\Placeholder::make('resultado')
                         ->label('Resultado')
                         ->content(fn ($record) => $record->evaluacion
                                 ? ($record->evaluacion->coincide ? '✔ Correcto' : '❌ Discrepancia')
                                 : 'Pendiente'
                         ),
 
-                Forms\Components\Placeholder::make('evaluador')
+                    Forms\Components\Placeholder::make('evaluador')
                         ->label('Evaluado por')
                         ->content(fn ($record) => $record->evaluacion?->evaluador?->name ?? '-'),
 
-                Forms\Components\Placeholder::make('obs')
+                    Forms\Components\Placeholder::make('obs')
                         ->label('Observaciones')
                         ->content(fn ($record) => $record->evaluacion?->observaciones ?? '-'),
 
-            ])
+                ])
                 ->visible(fn ($record) => $record->evaluacion),
 
             Forms\Components\Section::make('Decisión / Auditoría')
                 ->schema([
-                Forms\Components\Placeholder::make('aprobador_ui')
+                    Forms\Components\Placeholder::make('aprobador_ui')
                         ->label('Aprobado / Rechazado por')
                         ->content(fn (SolicitudMantenimiento $record) => $record->aprobador?->name ?? '-'),
 
-                Forms\Components\Placeholder::make('fecha_aprobacion_ui')
+                    Forms\Components\Placeholder::make('fecha_aprobacion_ui')
                         ->label('Fecha de Decisión')
                         ->content(fn (SolicitudMantenimiento $record) => optional($record->fecha_aprobacion)?->format('d/m/Y H:i') ?? '-'
                         ),
 
-                Forms\Components\Placeholder::make('motivo_rechazo_ui')
+                    Forms\Components\Placeholder::make('motivo_rechazo_ui')
                         ->label('Motivo de Rechazo')
                         ->content(fn (SolicitudMantenimiento $record) => $record->motivo_rechazo ?? '-')
                         ->columnSpanFull(),
 
-                Forms\Components\Placeholder::make('observaciones_ui')
+                    Forms\Components\Placeholder::make('observaciones_ui')
                         ->label('Observaciones')
                         ->content(fn (SolicitudMantenimiento $record) => $record->observaciones ?? '-')
                         ->columnSpanFull(),
-            ])
+                ])
                 ->columns(['default' => 1, 'md' => 2])
                 ->collapsible()
                 ->collapsed()
@@ -336,7 +336,7 @@ class SolicitudMantenimientoResource extends Resource
 
             Forms\Components\Section::make('Historial de estados')
                 ->schema([
-                Forms\Components\Repeater::make('historial_ui')
+                    Forms\Components\Repeater::make('historial_ui')
                         ->label('')
                         ->disabled()
                         ->dehydrated(false)
@@ -365,7 +365,7 @@ class SolicitudMantenimientoResource extends Resource
                         ])
                         ->columns(['default' => 1, 'md' => 3])
                         ->columnSpanFull(),
-            ])
+                ])
                 ->collapsible()
                 ->collapsed(false)
                 ->compact(),
@@ -520,7 +520,7 @@ class SolicitudMantenimientoResource extends Resource
                     ->visibleFrom('md'),
             ])
             ->filters([
-            Tables\Filters\SelectFilter::make('estado')
+                Tables\Filters\SelectFilter::make('estado')
                     ->multiple()
                     ->options([
                         EstadoSolicitudEnum::BORRADOR->value => 'Borrador',
@@ -534,23 +534,23 @@ class SolicitudMantenimientoResource extends Resource
                         EstadoSolicitudEnum::CANCELADA->value => 'Cancelada',
                     ]),
 
-            Tables\Filters\SelectFilter::make('prioridad')
+                Tables\Filters\SelectFilter::make('prioridad')
                     ->options([
                         PrioridadSolicitudEnum::BAJA->value => 'Baja',
                         PrioridadSolicitudEnum::MEDIA->value => 'Media',
                         PrioridadSolicitudEnum::ALTA->value => 'Alta',
                     ]),
 
-            Tables\Filters\SelectFilter::make('tipo_solicitud')
+                Tables\Filters\SelectFilter::make('tipo_solicitud')
                     ->label('Tipo')
                     ->options([
                         'taller' => 'Taller',
                         'llantas' => 'Llantas',
                     ]),
-        ])
+            ])
             ->actions([
-            Tables\Actions\ViewAction::make(),
-            Tables\Actions\Action::make('evaluar')
+                Tables\Actions\ViewAction::make(),
+                Tables\Actions\Action::make('evaluar')
                     ->label('Evaluar')
                     ->icon('heroicon-o-check-circle')
                     ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA
@@ -577,7 +577,7 @@ class SolicitudMantenimientoResource extends Resource
                             );
                     }),
 
-            Tables\Actions\ActionGroup::make([
+                Tables\Actions\ActionGroup::make([
                     // -------------------------------------------------------------------------------------------------------
                     // Orden de trabajo
                     // -------------------------------------------------------------------------------------------------------
@@ -585,7 +585,7 @@ class SolicitudMantenimientoResource extends Resource
                         ->label('Orden de trabajo')
                         ->icon('heroicon-o-document-text')
                         ->color('info')
-                        ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud_id' => $record->id]))
+                        ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud' => $record->id]))
                         ->openUrlInNewTab()
                         ->visible(fn ($record) => auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo']) &&
                             in_array($record->estado->value, [
@@ -595,10 +595,10 @@ class SolicitudMantenimientoResource extends Resource
                             ]) && ! empty($record->vehiculo_id)
                         ),
 
-            ])
+                ])
                     ->label('Más')
                     ->icon('heroicon-m-ellipsis-vertical'),
-        ])
+            ])
             ->bulkActions([]);
     }
 

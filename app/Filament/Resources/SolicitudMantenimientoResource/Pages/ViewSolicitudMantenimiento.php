@@ -174,29 +174,21 @@ class ViewSolicitudMantenimiento extends ViewRecord
                 ], true)
                 ),
 
-            // ── MISIÓN OFICIAL ────────────────────────────────────────────
             Actions\Action::make('orden_trabajo')
                 ->button()
                 ->size('lg')
                 ->label('Generar Orden de Trabajo')
                 ->color('gray')
                 ->icon('heroicon-o-document-text')
-                ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud' => $record]))
+                ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud_id' => $record->id]))
                 ->openUrlInNewTab()
                 ->visible(fn (SolicitudMantenimiento $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     $record->vehiculo_id !== null &&
-                    $record->motorista_id !== null &&
-                    in_array($record->estado, [
-                        EstadoSolicitudEnum::APROBADA,
-                        EstadoSolicitudEnum::PROGRAMADA,
-                        EstadoSolicitudEnum::ASIGNADA,
-                        EstadoSolicitudEnum::COMPLETADA,
-
-                        Notification::make()
-                            ->title('Generando orden de trabajo...')
-                            ->info()
-                            ->send(),
+                    in_array($record->estado->value, [
+                        EstadoSolicitudEnum::APROBADA->value,
+                        EstadoSolicitudEnum::EN_EJECUCION->value,
+                        EstadoSolicitudEnum::COMPLETADA->value,
                     ])
                 ),
 
