@@ -16,7 +16,13 @@ class MotoristaEstado extends Model
         'user_id',
     ];
 
-    //Relacion directa con motorista
+    protected $casts = [
+        'activo' => 'boolean',
+        'fecha_inicio' => 'datetime',
+        'fecha_fin' => 'datetime',
+    ];
+
+    // Relacion directa con motorista
     public function motorista()
     {
         return $this->belongsTo(Motorista::class);

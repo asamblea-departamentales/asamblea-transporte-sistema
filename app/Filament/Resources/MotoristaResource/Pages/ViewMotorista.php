@@ -3,9 +3,9 @@
 namespace App\Filament\Resources\MotoristaResource\Pages;
 
 use App\Filament\Resources\MotoristaResource;
+use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -37,7 +37,7 @@ class ViewMotorista extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
+                    'sm' => 2,
                 ])
                 ->compact(),
 
@@ -68,7 +68,7 @@ class ViewMotorista extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
+                    'sm' => 2,
                 ])
                 ->collapsible()
                 ->compact(),
@@ -89,13 +89,22 @@ class ViewMotorista extends ViewRecord
                         ->label('Desde')
                         ->dateTime('d/m/Y H:i'),
 
-                    TextEntry::make('estadoActual.evidencia')
+                    TextEntry::make('estadoActual.archivo')
                         ->label('Evidencia')
-                        ->formatStateUsing(fn ($state) =>
-                            $state
-                                ? '<a href="' . asset('storage/' . $state) . '" target="_blank">Ver archivo</a>'
-                                : 'Sin evidencia'
-                        )
+                        ->formatStateUsing(function ($state) {
+                            if (empty($state)) {
+                                return 'Sin evidencia';
+                            }
+                            $url = asset('storage/'.$state);
+                            $ext = strtolower(pathinfo($state, PATHINFO_EXTENSION));
+                            $imageExts = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
+
+                            if (in_array($ext, $imageExts)) {
+                                return "<a href='{$url}' target='_blank'><img src='{$url}' style='max-width:200px;max-height:150px;border-radius:8px;border:1px solid #e5e7eb;'></a>";
+                            }
+
+                            return "<a href='{$url}' target='_blank' style='display:inline-flex;align-items:center;gap:4px;padding:6px 12px;background:#fee2e2;color:#dc2626;border-radius:6px;font-weight:600;text-decoration:none;'>📄 Ver archivo PDF</a>";
+                        })
                         ->html(),
                 ])
                 ->columns(2)
@@ -115,5 +124,8 @@ class ViewMotorista extends ViewRecord
         ]);
     }
 
-    protected function canCreate(): bool { return false; }
+    protected function canCreate(): bool
+    {
+        return false;
+    }
 }
