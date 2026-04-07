@@ -366,9 +366,9 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
                  <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors">
                     <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-400">
                       <Icons.UploadContent />
-                      <p className="mt-2 text-xs font-bold">Haz clic para subir archivo (IMG, PDF)</p>
+                      <p className="mt-2 text-xs font-bold text-center px-4">Haz clic para subir archivo<br/>(IMG, PDF, DOC, DOCX - Max 2MB)</p>
                     </div>
-                    <input type="file" className="hidden" accept="image/*,application/pdf" onChange={handleFileChange} />
+                    <input type="file" className="hidden" accept="image/*,application/pdf,.doc,.docx" onChange={handleFileChange} />
                  </label>
                )}
             </div>

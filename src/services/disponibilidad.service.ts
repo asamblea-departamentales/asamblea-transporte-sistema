@@ -29,7 +29,7 @@ export async function reportarDisponibilidad(
   }
   
   if (!activo && evidencia) {
-    formData.append("evidencia", evidencia);
+    formData.append("archivo", evidencia);
   }
 
   // 🔥 LOG PARA DEPURACIÓN: Verificador en consola de lo que se enviará
