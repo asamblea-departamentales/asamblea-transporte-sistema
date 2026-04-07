@@ -32,6 +32,10 @@ export async function reportarDisponibilidad(
     formData.append("evidencia", evidencia);
   }
 
-  // Axios setea automáticamente el header correcto (multipart/form-data con boundary)
-  await api.post("/api/motoristas/me/estado", formData);
+  // Sobrescribimos el header de JSON global en axios para forzar la carga multipart
+  await api.post("/api/motoristas/me/estado", formData, {
+    headers: {
+      "Content-Type": "multipart/form-data"
+    }
+  });
 }
