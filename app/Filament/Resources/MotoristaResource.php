@@ -143,6 +143,12 @@ class MotoristaResource extends Resource
                         ->color('warning')
                         ->grow(false),    
 
+                    Tables\Columns\TextColumn::make('estadoActual.motivo')
+                        ->label('Motivo Inactividad')
+                        ->placeholder('-')
+                        ->limit(30)
+                        ->color('danger')
+                        ->tooltip(fn (Motorista $record) => $record->estadoActual?->motivo),
                     Tables\Columns\IconColumn::make('activo')
                         ->label('Activo')
                         ->boolean()
@@ -173,7 +179,7 @@ class MotoristaResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with([
-                'asignacionVigenteVehiculo.vehiculo.tipo',
+                'asignacionVigenteVehiculo.vehiculo.tipo', 'estadoActual',
             ]);
     }
 

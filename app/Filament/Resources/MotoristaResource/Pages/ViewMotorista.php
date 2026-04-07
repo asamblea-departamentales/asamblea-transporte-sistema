@@ -72,7 +72,34 @@ class ViewMotorista extends ViewRecord
                 ])
                 ->collapsible()
                 ->compact(),
+            
+Section::make('Estado Actual')
+    ->schema([
+        TextEntry::make('estadoActual.activo')
+            ->label('Disponibilidad')
+            ->badge()
+            ->formatStateUsing(fn ($state) => $state ? 'Disponible' : 'No disponible')
+            ->color(fn ($state) => $state ? 'success' : 'danger'),
 
+        TextEntry::make('estadoActual.motivo')
+            ->label('Motivo')
+            ->placeholder('Sin motivo'),
+
+        TextEntry::make('estadoActual.fecha_inicio')
+            ->label('Desde')
+            ->dateTime('d/m/Y H:i'),
+
+        TextEntry::make('estadoActual.evidencia')
+            ->label('Evidencia')
+            ->formatStateUsing(fn ($state) =>
+                $state
+                    ? '<a href="' . asset('storage/' . $state) . '" target="_blank">Ver archivo</a>'
+                    : 'Sin evidencia'
+            )
+            ->html(),
+    ])
+    ->columns(2)
+    ->compact(),            -    
             Section::make('Historial de Vehículos')
                 ->schema([
                     TextEntry::make('asignacionesVehiculo.vehiculo.placa')
