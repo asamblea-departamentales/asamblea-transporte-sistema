@@ -12,7 +12,7 @@ import logo from "../../assets/asamble.png";
 // ─── Utils ────────────────────────────────────────────────────────────────────
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
-}
+}// 
 
 // ─── Types & Interfaces ─────────────────────────────────────────────────────────
 export interface SidebarProps {
@@ -31,11 +31,11 @@ export interface NavItem {
 
 // ─── Design tokens ──────────────────────────────────────────────────────────────
 const Design = {
-  headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
+  headerBg: "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
   bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
-  goldenLine:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
-  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
-  fontJakarta: "font-['Plus_Jakarta_Sans',system-ui,sans-serif]" 
+  goldenLine: "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
+  drawerGlow: "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
+  fontJakarta: "font-['Plus_Jakarta_Sans',system-ui,sans-serif]"
 };
 
 // ─── Icons ────────────────────────────────────────────────────────────────────
@@ -47,7 +47,7 @@ export const Icons = {
   Bell: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" /></svg>,
   Logout: () => <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><path d="M16 17l5-5-5-5M21 12H9" /></svg>,
   User: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round"><circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" /></svg>,
-  UploadContent: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+  UploadContent: () => <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
 };
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -179,11 +179,11 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const handleLogout = async () => {
     setLoggingOut(true);
     onClose();
-    try { await logout(); } catch {} finally { navigate("/login", { replace: true }); }
+    try { await logout(); } catch { } finally { navigate("/login", { replace: true }); }
   };
 
   useEffect(() => {
-    onClose(); 
+    onClose();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
@@ -197,7 +197,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
       `}</style>
-      
+
       {loggingOut && <GlobalLoading message="Cerrando Sesión Segura" isClosing={true} />}
 
       {/* ────────────────────────────────────────────────────────────────────── */}
@@ -218,10 +218,10 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
         <nav className="flex-1 px-4 pt-4 space-y-1.5 overflow-y-auto no-scrollbar">
           <p className={cn("px-4 pb-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/40", Design.fontJakarta)}>Menú Principal</p>
           {navItems.map((item) => <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />)}
-          
+
           {activo !== null && (
-            <button 
-              onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)} 
+            <button
+              onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)}
               className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 shadow-sm border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-t border-white/[0.12] ring-1 ring-white/5" : "text-white/60 hover:text-white hover:bg-white/5")}
             >
               <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all duration-200", !activo ? "bg-red-500/20 text-red-400 shadow-[inset_0_0_8px_rgba(239,68,68,0.2)]" : "text-white/40 group-hover:text-amber-400")}>
@@ -276,11 +276,11 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
         <div className="absolute top-0 right-0 bottom-0 w-[2px]" style={{ background: Design.drawerGlow }} />
         <div className="p-5 border-b border-white/[0.08] relative">
           <div className="flex flex-col items-center gap-2 mb-6 pt-4 text-center">
-             <img src={logo} alt="Asamblea Logo" className="h-[60px] brightness-0 invert drop-shadow-lg mb-1" />
-             <div className={cn("flex flex-col justify-center", Design.fontJakarta)}>
-               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
-               <p className="text-[16px] font-extrabold text-white leading-none tracking-tight">Transporte Web</p>
-             </div>
+            <img src={logo} alt="Asamblea Logo" className="h-[60px] brightness-0 invert drop-shadow-lg mb-1" />
+            <div className={cn("flex flex-col justify-center", Design.fontJakarta)}>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#86a8e7] leading-none mb-1">Asamblea</p>
+              <p className="text-[16px] font-extrabold text-white leading-none tracking-tight">Transporte Web</p>
+            </div>
           </div>
           <div className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 shadow-inner mb-4">
             <Avatar initial={initial} size="md" />
@@ -290,16 +290,16 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
             </div>
             {activo !== null && <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 border ${activo ? 'bg-emerald-400 border-emerald-200 shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-red-400 border-red-200 shadow-[0_0_8px_rgba(248,113,113,0.7)]'}`} />}
           </div>
-          
+
 
 
         </div>
         <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5 no-scrollbar">
           <p className={cn("px-4 pb-2 text-[10px] font-black uppercase tracking-[0.25em] text-white/40", Design.fontJakarta)}>Navegación Móvil</p>
           {navItems.map((item) => <NavLinkDrawer key={item.to} item={item} onClick={onClose} pathname={location.pathname} />)}
-          
+
           {activo !== null && (
-            <button 
+            <button
               onClick={() => { activo ? setShowIncapacityModal(true) : setShowActiveModal(true); }}
               className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-150 border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/10 text-white border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-inner" : "text-white/60 hover:text-white hover:bg-white/5")}
             >
@@ -315,7 +315,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
           <button onClick={handleLogout} className={cn("w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl text-[13.5px] font-bold transition-all duration-200 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-transparent hover:border-red-500/30", Design.fontJakarta)}><Icons.Logout /> Cerrar Sesión Exit</button>
         </div>
       </aside>
-      
+
       {open && <div onClick={onClose} className="fixed inset-0 z-[60] bg-[#0f172a]/60 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden" aria-hidden="true" />}
 
       {/* ────────────────────────────────────────────────────────────────────── */}
@@ -339,42 +339,42 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
             <p className="text-sm font-medium text-slate-500 mb-4 leading-relaxed">
               Ingresa el motivo y adjunta opcionalmente un documento (foto o PDF) para respaldar tu incapacidad en el sistema.
             </p>
-            
+
             {errorStatus && (
               <div className="p-3 mb-4 rounded-xl bg-red-50 text-red-600 text-xs font-bold border border-red-100">{errorStatus}</div>
             )}
 
             <div className="overflow-y-auto no-scrollbar pb-2 mb-2 flex-grow">
-               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Motivo *</label>
-               <textarea
-                 rows={3}
-                 value={incapacityReason}
-                 onChange={(e) => setIncapacityReason(e.target.value)}
-                 placeholder="Ej. Visita al ISSS, Constancia Médica..."
-                 className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-medium text-[#0f172a] placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-all mb-5"
-               />
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Motivo *</label>
+              <textarea
+                rows={3}
+                value={incapacityReason}
+                onChange={(e) => setIncapacityReason(e.target.value)}
+                placeholder="Ej. Visita al ISSS, Constancia Médica..."
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-medium text-[#0f172a] placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-all mb-5"
+              />
 
-               <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Evidencia (Opcional)</label>
-               {evidenceFile ? (
-                 <div className="relative flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
-                    <span className="text-sm font-semibold text-slate-700 truncate max-w-[80%]">{evidenceFile.name}</span>
-                    <button onClick={clearFile} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200">
-                      ✕
-                    </button>
-                 </div>
-               ) : (
-                 <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors">
-                    <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-400">
-                      <Icons.UploadContent />
-                      <p className="mt-2 text-xs font-bold text-center px-4">Haz clic para subir archivo<br/>(IMG, PDF, DOC, DOCX - Max 2MB)</p>
-                    </div>
-                    <input type="file" className="hidden" accept="image/*,application/pdf,.doc,.docx" onChange={handleFileChange} />
-                 </label>
-               )}
+              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Evidencia (Opcional)</label>
+              {evidenceFile ? (
+                <div className="relative flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                  <span className="text-sm font-semibold text-slate-700 truncate max-w-[80%]">{evidenceFile.name}</span>
+                  <button onClick={clearFile} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200">
+                    ✕
+                  </button>
+                </div>
+              ) : (
+                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors">
+                  <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-400">
+                    <Icons.UploadContent />
+                    <p className="mt-2 text-xs font-bold text-center px-4">Haz clic para subir archivo<br />(IMG, PDF, DOC, DOCX - Max 2MB)</p>
+                  </div>
+                  <input type="file" className="hidden" accept="image/*,application/pdf,.doc,.docx" onChange={handleFileChange} />
+                </label>
+              )}
             </div>
 
             <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-              <button disabled={updatingStatus} onClick={() => {setShowIncapacityModal(false); setErrorStatus(null); clearFile(); }} className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">Cancelar</button>
+              <button disabled={updatingStatus} onClick={() => { setShowIncapacityModal(false); setErrorStatus(null); clearFile(); }} className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">Cancelar</button>
               <button disabled={updatingStatus} onClick={toggleToInactive} className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-amber-500 text-white hover:bg-amber-600 shadow-[0_4px_14px_rgba(245,158,11,0.25)] transition hover:-translate-y-0.5 disabled:opacity-50 disabled:shadow-none">
                 {updatingStatus ? "Subiendo..." : "Confirmar Estado"}
               </button>
@@ -402,7 +402,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
               <button disabled={updatingStatus} onClick={toggleToActive} className="w-full py-3.5 rounded-xl text-[14px] font-bold bg-[#0f172a] text-white hover:bg-slate-800 shadow-[0_4px_14px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:shadow-none">
                 {updatingStatus ? "Enviando..." : "Sí, estoy Disponible"}
               </button>
-              <button disabled={updatingStatus} onClick={() => {setShowActiveModal(false); setErrorStatus(null);}} className="w-full py-3 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition">
+              <button disabled={updatingStatus} onClick={() => { setShowActiveModal(false); setErrorStatus(null); }} className="w-full py-3 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition">
                 Cancelar
               </button>
             </div>
