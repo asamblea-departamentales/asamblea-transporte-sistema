@@ -29,7 +29,7 @@ export default function LoginPage() {
       // Validar que el usuario tenga el rol de motorista
       const esMorista = user.roles?.includes("motorista");
       if (!esMorista) {
-        localStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_token");
         setError("Acceso denegado. Esta aplicación es exclusiva para motoristas.");
         return;
       }

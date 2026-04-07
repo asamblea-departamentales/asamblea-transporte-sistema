@@ -19,7 +19,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     async function checkAuth() {
-      const token = localStorage.getItem("auth_token");
+      const token = sessionStorage.getItem("auth_token");
       if (!token) {
         setUser(null);
         setLoading(false);
@@ -29,7 +29,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const userData = await meRequest();
         setUser(userData);
       } catch {
-        localStorage.removeItem("auth_token");
+        sessionStorage.removeItem("auth_token");
         setUser(null);
       } finally {
         setLoading(false);

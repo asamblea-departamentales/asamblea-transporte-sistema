@@ -11,7 +11,7 @@ export type AuthUser = {
 
 export async function loginRequest(payload: LoginPayload): Promise<AuthUser> {
   const { data } = await api.post("/api/auth/login", payload);
-  localStorage.setItem("auth_token", data.token);
+  sessionStorage.setItem("auth_token", data.token);
   return data.user as AuthUser;
 }
 
@@ -24,6 +24,6 @@ export async function logoutRequest(): Promise<void> {
   try {
     await api.post("/api/auth/logout");
   } finally {
-    localStorage.removeItem("auth_token");
+    sessionStorage.removeItem("auth_token");
   }
 }

@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
+import { useNotification } from "../../contexts/NotificationContext";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { GlobalLoading } from "../GlobalLoading";
@@ -195,7 +196,17 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
+  const { permission, requestPermission, simulateNotification } = useNotification();
   const [loggingOut, setLoggingOut] = useState(false);
+
+  // Logic Handlers
+  const handleBellClick = () => {
+    if (permission === 'default') {
+      requestPermission();
+    } else {
+      simulateNotification("✅ Notificaciones Activas", "Todo listo. Se te avisará aquí cuando tengas un nuevo viaje o recordatorio.");
+    }
+  };
 
   // Derive initials softly
   const initial = typeof user?.name === "string" ? (user.name.trim()[0] || "M").toUpperCase() : "M";
@@ -285,8 +296,11 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
               </div>
             </div>
             
-            <button className={btnSecondaryClass} title="Notificaciones del Sistema">
+            <button onClick={handleBellClick} className={btnSecondaryClass} title="Notificaciones del Sistema">
               <Icons.Bell />
+              {permission === 'default' && (
+                <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20 animate-pulse" title="Requiere permisos" />
+              )}
             </button>
           </div>
 
@@ -326,10 +340,13 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
           <span className={cn("text-[16px] font-extrabold text-white tracking-wide", Design.fontJakarta)}>Transporte</span>
         </button>
 
-        <button className="flex items-center justify-center w-10 h-10 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all focus:outline-none relative">
+        <button onClick={handleBellClick} className="flex items-center justify-center w-10 h-10 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all focus:outline-none relative">
           <Icons.Bell />
-          {/* Badge indicator hipotético */}
-          <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] border border-white/20" />
+          {permission === 'default' ? (
+             <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20 animate-pulse" />
+          ) : (
+             <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] border border-white/20" />
+          )}
         </button>
       </header>
 
