@@ -10,6 +10,7 @@ class MotoristaEstado extends Model
         'motorista_id',
         'activo',
         'motivo',
+        'archivo',
         'fecha_inicio',
         'fecha_fin',
         'user_id',

@@ -8,23 +8,21 @@ use Carbon\Carbon; // Es mejor usar Carbon para Laravel
 
 class MotoristaService
 {
-    public function cambiarEstado(Motorista $motorista, bool $activo, ?string $motivo = null): MotoristaEstado
+    public function cambiarEstado(Motorista $motorista, bool $activo, ?string $motivo = null, ?string $archivo = null): MotoristaEstado
 {
-    // 1. Cerrar el estado actual
-    $actual = $motorista->estadoActual;
-    if ($actual) {
-        $actual->update([
-            'fecha_fin' => now(),
-        ]);
-    }
 
-    // 2. Crear nuevo estado con los nombres confirmados
-    return MotoristaEstado::create([
-        'motorista_id' => $motorista->id,
-        'activo'       => $activo,
-        'motivo'       => $motivo,       // Confirmado por el show
-        'fecha_inicio' => now(),         // Confirmado por el show
-        'user_id'      => auth()->id(),
-    ]);
-}
+        return DB::transaction(function () use ($motorista, $activo, $motivo, $archivo) {
+            // Cerrar el estado anterior si existe
+           $motorista->estados()->whereNull('fecha_fin')->update(['fecha_fin' => Carbon::now()]);
+
+            // Crear un nuevo estado
+            $motorista->estados()->create([
+                'activo' => $activo,
+                'motivo' => $motivo,
+                'archivo' => $archivo, // Guardar la ruta del archivo si se proporcionó
+                'fecha_inicio' => Carbon::now(),
+                'user_id' => auth()->id(),
+            ]);
+        }
+
 }

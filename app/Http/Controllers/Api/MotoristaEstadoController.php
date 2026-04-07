@@ -103,6 +103,7 @@ class MotoristaEstadoController extends Controller
         $request->validate([
             'activo' => 'required|boolean',
             'motivo' => 'nullable|string|max:255',
+            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:2048', // Permitir subir un archivo justificativo
         ]);
 
         $motorista = auth()->user()->motorista;
@@ -113,15 +114,24 @@ class MotoristaEstadoController extends Controller
             ], 404);
         }
 
+        $archivoPath = null;
+
+        //Guardar el archivo si se ha subido
+        if ($request->hasFile('archivo')) {
+            $archivoPath = $request->file('archivo')->store('motoristas/incapacidades', 'public');
+        }
+
         // AQUÍ ESTÁ LA CORRECCIÓN: Usamos ->boolean('activo')
         app(MotoristaService::class)->cambiarEstado(
             $motorista,
             $request->boolean('activo'),
-            $request->motivo
+            $request->motivo,
+            $archivoPath // -> NUEVO PARÁMETRO PARA GUARDAR LA RUTA DEL ARCHIVO
         );
 
         return response()->json([
-            'message' => 'Tu estado ha sido actualizado correctamente.'
+            'message' => 'Tu estado ha sido actualizado correctamente.',
+            'archivo_url' => $archivoPath ? asset('storage/' . $archivoPath) : null, // Devolver la URL del archivo si se subió
         ]);
     }
 
