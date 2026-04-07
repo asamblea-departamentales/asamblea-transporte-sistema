@@ -110,6 +110,120 @@ function ReviewRow({ label, value }: { label: string; value: string }) {
   );
 }
 
+// ─── Success Screen (Modal Premium — Alineado con Transporte) ─────────────────
+
+function MantenimientoSuccessScreen({ onReset }: { onReset: () => void }) {
+  const navigate = useNavigate();
+  const [show, setShow] = useState(false);
+
+  useEffect(() => {
+    const t = setTimeout(() => setShow(true), 30);
+    return () => clearTimeout(t);
+  }, []);
+
+  function go(path: string) {
+    setShow(false);
+    setTimeout(() => navigate(path), 280);
+  }
+
+  function handleReset() {
+    setShow(false);
+    setTimeout(onReset, 280);
+  }
+
+  return (
+    <div
+      className={`fixed inset-0 z-50 flex items-center justify-center px-4 transition-all duration-300 ${
+        show ? "bg-black/40 backdrop-blur-sm" : "bg-black/0 backdrop-blur-none"
+      }`}
+    >
+      <div
+        className={`w-full max-w-sm rounded-2xl border border-slate-200 bg-white shadow-xl transition-all duration-300 ${
+          show ? "translate-y-0 opacity-100" : "translate-y-4 opacity-0"
+        }`}
+      >
+        {/* Header */}
+        <div className="border-b border-slate-100 px-6 py-5">
+          <div className="flex items-center gap-3">
+            <div
+              className={`flex h-9 w-9 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 transition-all delay-150 duration-500 ${
+                show ? "scale-100 opacity-100" : "scale-75 opacity-0"
+              }`}
+            >
+              <svg
+                className="h-5 w-5 text-slate-800"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                strokeWidth={2.5}
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  d="M5 13l4 4L19 7"
+                  style={{
+                    strokeDasharray: "28",
+                    strokeDashoffset: show ? "0" : "28",
+                    transition: "stroke-dashoffset 500ms 300ms ease",
+                  }}
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="text-[11px] font-extrabold uppercase tracking-widest text-slate-400">
+                Solicitud registrada
+              </p>
+              <p className="text-base font-black text-slate-900">
+                Enviada correctamente
+              </p>
+            </div>
+          </div>
+        </div>
+
+        {/* Body */}
+        <div
+          className={`px-6 py-5 transition-all delay-200 duration-300 ${
+            show ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+          }`}
+        >
+          <p className="text-xs leading-relaxed text-slate-500">
+            Tu solicitud de mantenimiento fue enviada correctamente. Puedes
+            seguir el estado desde tu historial de solicitudes.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div
+          className={`space-y-2 border-t border-slate-100 px-6 py-5 transition-all delay-300 duration-300 ${
+            show ? "translate-y-0 opacity-100" : "translate-y-2 opacity-0"
+          }`}
+        >
+          <button
+            onClick={() => go("/dashboard")}
+            className="w-full rounded-xl border border-slate-900 bg-slate-900 px-4 py-2.5 text-sm font-bold text-white transition-all hover:bg-slate-800 active:scale-[0.98]"
+          >
+            Ir al Dashboard
+          </button>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => go("/mis-solicitudes")}
+              className="rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+            >
+              Mis solicitudes
+            </button>
+            <button
+              onClick={handleReset}
+              className="rounded-xl border border-slate-200 px-3 py-2.5 text-xs font-semibold text-slate-600 transition-all hover:border-slate-300 hover:bg-slate-50 active:scale-[0.98]"
+            >
+              Nueva solicitud
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 // ─── Steps ────────────────────────────────────────────────────────────────────
 
 function Step1({
@@ -438,25 +552,9 @@ export default function NuevaSolicitudMantenimiento() {
   // ── Success Screen ─────────────────────────────────────────────────────────
   if (submitted) {
     return (
-      <div className="flex h-[80vh] flex-col items-center justify-center p-4">
-        <div className="w-full max-w-sm rounded-[2rem] border border-slate-200 bg-white p-8 text-center shadow-2xl shadow-slate-200/50">
-          <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-2xl bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-             <svg className="h-10 w-10 text-blue-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-          </div>
-          <h2 className="text-2xl font-black text-slate-900 mb-2">¡Solicitud Generada!</h2>
-          <p className="text-[13px] font-semibold text-slate-500 mb-8 px-4">
-            El reporte de mantenimiento fue enviado al administrador.
-          </p>
-          <div className="flex flex-col gap-3">
-             <button onClick={() => navigate("/mis-solicitudes")} className="w-full rounded-2xl py-3.5 text-sm font-bold text-white shadow-lg transition-transform active:scale-95" style={{ background: "linear-gradient(135deg, #0f2548 0%, #2354b4 100%)" }}>
-               Ir a Mis Solicitudes
-             </button>
-             <button onClick={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }} className="w-full rounded-2xl py-3 text-sm font-bold text-slate-500 border border-slate-200 bg-white hover:bg-slate-50 active:scale-95 transition-all">
-                Crear Otra Solicitud
-             </button>
-          </div>
-        </div>
-      </div>
+      <MantenimientoSuccessScreen
+        onReset={() => { setData(INITIAL); setStep(1); setSubmitted(false); setApiError(null); }}
+      />
     );
   }
 
