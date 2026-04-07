@@ -211,8 +211,8 @@
         <div style="height:70px;"></div>
     @endif
     <div class="linea"></div>
-    <div>{{ $r->autorizador?->name ?? '—' }}</div>
-    <div>{{ $service->resolverAutorizadorCargo($r) }}</div>
+    <div>{{ $r->aprobador?->name ?? '—' }}</div>
+    <div>Jefe / Aprobador</div>
 </div>
 
         @if(!$loop->last)
