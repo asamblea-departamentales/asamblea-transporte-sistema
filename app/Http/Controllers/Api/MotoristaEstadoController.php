@@ -103,7 +103,7 @@ class MotoristaEstadoController extends Controller
         $request->validate([
             'activo' => 'required|boolean',
             'motivo' => 'nullable|string|max:255',
-            'archivo' => 'nullable|file|mimes:pdf,doc,docx|max:2048', // Permitir subir un archivo justificativo
+            'archivo' => 'nullable|file|max:10240', // Aumenté el límite a 10MB        
         ]);
 
         $motorista = auth()->user()->motorista;
