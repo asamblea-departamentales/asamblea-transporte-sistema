@@ -43,10 +43,10 @@ export async function reportarDisponibilidad(
   }
   console.log("------------------------------------------");
 
-  // Sobrescribimos el header de JSON global en axios para forzar la carga multipart
+  // Dejamos que Axios y el navegador resuelvan el Content-Type y el boundary automáticamente
   await api.post("/api/motoristas/me/estado", formData, {
     headers: {
-      "Content-Type": "multipart/form-data"
+      "Content-Type": undefined
     }
   });
 }
