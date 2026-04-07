@@ -218,22 +218,22 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
         <nav className="flex-1 px-4 pt-4 space-y-1.5 overflow-y-auto no-scrollbar">
           <p className={cn("px-4 pb-2 text-[10px] font-black uppercase tracking-[0.3em] text-white/40", Design.fontJakarta)}>Menú Principal</p>
           {navItems.map((item) => <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />)}
+          
+          {activo !== null && (
+            <button 
+              onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)} 
+              className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 shadow-sm border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-t border-white/[0.12] ring-1 ring-white/5" : "text-white/60 hover:text-white hover:bg-white/5")}
+            >
+              <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all duration-200", !activo ? "bg-red-500/20 text-red-400 shadow-[inset_0_0_8px_rgba(239,68,68,0.2)]" : "text-white/40 group-hover:text-amber-400")}>
+                {!activo ? <Icons.X /> : <Icons.Menu />}
+              </div>
+              <span className="tracking-wide flex-1">{activo ? "Reportar Incapacidad" : "Modo Incapacidad"}</span>
+              {!activo && <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />}
+            </button>
+          )}
         </nav>
 
-        {/* Status Activo o Inactivo */}
-        <div className="px-6 pb-2 text-center">
-           {activo !== null && (
-             <button 
-               onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)}
-               className={`w-full relative overflow-hidden flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-all duration-300 font-bold text-[12.5px] tracking-wide focus:outline-none hover:scale-[1.02] active:scale-95 ${
-                 activo ? "bg-[#f0fdf4]/10 text-emerald-300 border-emerald-400/30 hover:border-emerald-400/50" : "bg-red-500/10 text-red-300 border-red-500/30 hover:border-red-500/50"
-               }`}
-             >
-               <span className={`w-2.5 h-2.5 rounded-full shadow-[0_0_8px_currentColor] animate-pulse ${activo ? 'bg-emerald-400' : 'bg-red-400'}`}></span>
-               {activo ? "Disponible para Viajes" : "Modo Incapacidad"}
-             </button>
-           )}
-        </div>
+
 
         <div className="px-6 py-5 pb-8 mt-4 flex flex-col gap-4 bg-black/10 border-t border-white/5 relative">
           <div className="flex items-center justify-between gap-3">
@@ -291,16 +291,25 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
             {activo !== null && <span className={`w-2.5 h-2.5 rounded-full flex-shrink-0 border ${activo ? 'bg-emerald-400 border-emerald-200 shadow-[0_0_8px_rgba(52,211,153,0.7)]' : 'bg-red-400 border-red-200 shadow-[0_0_8px_rgba(248,113,113,0.7)]'}`} />}
           </div>
           
-          {activo !== null && (
-             <button onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)} className={`w-full relative overflow-hidden flex items-center justify-center gap-2 py-2.5 rounded-xl border transition-all duration-300 font-bold text-[12px] tracking-wide ${activo ? "bg-[#f0fdf4]/10 text-emerald-300 border-emerald-400/30" : "bg-red-500/10 text-red-300 border-red-500/30"}`}>
-               {activo ? "Cambiar a Incapacidad" : "Recuperar Disponibilidad"}
-             </button>
-          )}
+
 
         </div>
         <nav className="flex-1 overflow-y-auto px-4 py-5 space-y-1.5 no-scrollbar">
           <p className={cn("px-4 pb-2 text-[10px] font-black uppercase tracking-[0.25em] text-white/40", Design.fontJakarta)}>Navegación Móvil</p>
           {navItems.map((item) => <NavLinkDrawer key={item.to} item={item} onClick={onClose} pathname={location.pathname} />)}
+          
+          {activo !== null && (
+            <button 
+              onClick={() => { activo ? setShowIncapacityModal(true) : setShowActiveModal(true); }}
+              className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-150 border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/10 text-white border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-inner" : "text-white/60 hover:text-white hover:bg-white/5")}
+            >
+              <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-colors", !activo ? "bg-red-500/20 text-red-400" : "text-white/40 group-hover:text-amber-400")}>
+                {!activo ? <Icons.X /> : <Icons.Menu />}
+              </div>
+              <span className="tracking-wide flex-1">{activo ? "Reportar Incapacidad" : "Modo Incapacidad"}</span>
+              {!activo && <span className="w-2.5 h-2.5 rounded-full bg-red-500 shadow-[0_0_8px_rgba(239,68,68,0.8)] animate-pulse" />}
+            </button>
+          )}
         </nav>
         <div className="p-4 bg-white/5 border-t border-white/10">
           <button onClick={handleLogout} className={cn("w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl text-[13.5px] font-bold transition-all duration-200 hover:bg-red-500/20 text-red-300 hover:text-red-200 border border-transparent hover:border-red-500/30", Design.fontJakarta)}><Icons.Logout /> Cerrar Sesión Exit</button>
