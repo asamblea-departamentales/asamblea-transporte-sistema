@@ -10,6 +10,8 @@ type TipoSolicitud = "taller" | "llantas";
 interface Catalogo {
   id: string;
   label: string;
+  image?: string | null;
+  placa?: string | null;
 }
 
 interface CatalogosState {
@@ -244,14 +246,68 @@ function Step1({
           icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>}
         />
         <Label required>Vehículo a procesar</Label>
-        <SelectInput
-          value={data.vehiculo_id}
-          onChange={(v) => update("vehiculo_id", v)}
-          options={vehiculos}
-          placeholder={loadingCatalogos ? "Cargando vehículos..." : "Seleccione un vehículo..."}
-          error={!!errors.vehiculo_id}
-          disabled={loadingCatalogos}
-        />
+        {loadingCatalogos ? (
+          <SelectInput
+            value=""
+            onChange={() => {}}
+            options={[]}
+            placeholder="Cargando vehículos..."
+            disabled={true}
+          />
+        ) : (
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+            {vehiculos.map((v) => {
+              const  isSelected = data.vehiculo_id === v.id;
+              return (
+                <button
+                  key={v.id}
+                  type="button"
+                  onClick={() => update("vehiculo_id", v.id)}
+                  className={`group relative flex flex-col overflow-hidden rounded-2xl border-2 text-left transition-all ${
+                    isSelected
+                      ? "border-blue-500 bg-blue-50/50 shadow-md ring-2 ring-blue-500/20"
+                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                  }`}
+                >
+                  <div className="aspect-[4/3] w-full bg-slate-100 overflow-hidden">
+                    {v.image ? (
+                      <img
+                        src={v.image.startsWith("http") ? v.image : `${import.meta.env.VITE_API_BASE_URL || ""}/storage/${v.image}`}
+                        alt={v.label}
+                        className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                        onError={(e) => {
+                          const el = e.target as HTMLImageElement;
+                          el.parentElement!.innerHTML = `<div class="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300"><svg class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg></div>`;
+                        }}
+                      />
+                    ) : (
+                      <div className="flex h-full w-full items-center justify-center bg-slate-100 text-slate-300">
+                        <svg className="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>
+                      </div>
+                    )}
+                  </div>
+                  <div className="p-3">
+                    <p className={`text-xs font-bold leading-tight ${isSelected ? "text-blue-900" : "text-slate-700"}`}>
+                      {v.label}
+                    </p>
+                    {v.placa && (
+                      <p className="mt-0.5 text-[10px] font-semibold text-slate-400">
+                         Placa: {v.placa}
+                      </p>
+                    )}
+                  </div>
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 flex h-5 w-5 items-center justify-center rounded-full bg-blue-500 text-white shadow-sm">
+                      <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                      </svg>
+                    </div>
+                  )}
+                </button>
+              );
+            })}
+          </div>
+        )}
         <FieldError msg={errors.vehiculo_id} />
       </div>
 
@@ -476,9 +532,11 @@ export default function NuevaSolicitudMantenimiento() {
       const [jsonVehs, jsonTipos] = await Promise.all([resVehs.json(), resTipos.json()]);
 
       const vehiculos: Catalogo[] = (Array.isArray(jsonVehs) ? jsonVehs : jsonVehs.data ?? []).map(
-        (v: { id: number | string; label?: string; nombre?: string; placa?: string }) => ({ 
+        (v: { id: number | string; label?: string; nombre?: string; placa?: string; fotografia_url?: string; imagen?: string }) => ({ 
           id: String(v.id), 
-          label: v.placa ? `${v.placa} - ${v.label ?? v.nombre ?? ''}` : (v.label ?? v.nombre ?? String(v.id))
+          label: v.placa ? `${v.placa} - ${v.label ?? v.nombre ?? ''}` : (v.label ?? v.nombre ?? String(v.id)),
+          image: v.fotografia_url || v.imagen || null,
+          placa: v.placa || null
         })
       );
 
