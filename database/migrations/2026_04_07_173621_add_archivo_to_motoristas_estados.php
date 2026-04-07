@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('motoristas_estados', function (Blueprint $table) {
+        Schema::table('motorista_estados', function (Blueprint $table) {
             $table->string('archivo')->nullable()->after('motivo');
         });
     }
