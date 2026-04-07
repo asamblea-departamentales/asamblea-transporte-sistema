@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   getRequestById,
@@ -25,6 +25,7 @@ import {
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import { geocodeAddress, getOSRMRoute, haversineKm } from "../../lib/geo";
+import Lightbox from "../../components/ui/Lightbox";
 
 // GenericRequest: A purposeful type covering the fields used by this detail view
 // across the three modules (transporte, mantenimiento, combustible).
@@ -467,6 +468,9 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
   const isMantenimiento = modulo === "mantenimiento";
   const isTransporte = modulo === "transporte";
 
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [lightboxIndex, setLightboxIndex] = useState(0);
+
   const hasData =
     (isCombustible && (data.forma_pago || data.valor_total || data.comprobantes?.length)) ||
     (isMantenimiento && (data.fecha_realizada || data.costo_real != null || data.adjuntos?.length)) ||
@@ -479,6 +483,22 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
     : isMantenimiento
       ? (data.adjuntos ?? [])
       : [];
+
+  // Prepare lightbox file list
+  const lightboxFiles = useMemo(
+    () =>
+      archivos.map((path) => ({
+        url: storageUrl(path),
+        name: path.split("/").pop() ?? "archivo",
+        isImage: isImage(path),
+      })),
+    [archivos],
+  );
+
+  function openLightbox(index: number) {
+    setLightboxIndex(index);
+    setLightboxOpen(true);
+  }
 
   const accentColor =
     isCombustible ? "bg-amber-500" :
@@ -561,7 +581,7 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
                 </span>
               </p>
 
-              {/* Image gallery */}
+              {/* Image gallery — now opens in-app lightbox */}
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {archivos.map((path: string, i: number) => {
                   const url = storageUrl(path);
@@ -569,12 +589,11 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
 
                   if (isImage(path)) {
                     return (
-                      <a
+                      <button
                         key={i}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="group relative overflow-hidden rounded-xl shadow-sm ring-1 ring-slate-200/80 transition-all hover:shadow-lg hover:ring-slate-300"
+                        type="button"
+                        onClick={() => openLightbox(i)}
+                        className="group relative overflow-hidden rounded-xl shadow-sm ring-1 ring-slate-200/80 transition-all hover:shadow-lg hover:ring-slate-300 text-left cursor-pointer"
                       >
                         <div className="aspect-square bg-slate-100">
                           <img
@@ -592,31 +611,30 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
                           <div className="flex w-full items-center justify-between p-3">
                             <span className="truncate text-xs font-semibold text-white/90">{name}</span>
                             <svg className="h-4 w-4 flex-shrink-0 text-white/80" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7" />
                             </svg>
                           </div>
                         </div>
-                      </a>
+                      </button>
                     );
                   }
 
-                  // PDF / non-image file
+                  // PDF / non-image file — also opens in lightbox
                   return (
-                    <a
+                    <button
                       key={i}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl bg-slate-50 ring-1 ring-slate-200/80 transition-all hover:bg-slate-100 hover:shadow-md hover:ring-slate-300"
+                      type="button"
+                      onClick={() => openLightbox(i)}
+                      className="group flex aspect-square flex-col items-center justify-center gap-3 rounded-xl bg-slate-50 ring-1 ring-slate-200/80 transition-all hover:bg-slate-100 hover:shadow-md hover:ring-slate-300 cursor-pointer"
                     >
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-slate-200/60 transition group-hover:shadow-md">
                         <FileText className="h-6 w-6 text-red-500" />
                       </div>
                       <div className="w-full px-3 text-center">
                         <p className="truncate text-xs font-bold text-slate-600 group-hover:text-slate-800">{name}</p>
-                        <p className="mt-0.5 text-[10px] text-slate-400">PDF • Abrir ↗</p>
+                        <p className="mt-0.5 text-[10px] text-slate-400">Clic para ver</p>
                       </div>
-                    </a>
+                    </button>
                   );
                 })}
               </div>
@@ -624,6 +642,15 @@ function FinalizacionDataSection({ data, modulo }: { data: GenericRequest; modul
           )}
         </div>
       </div>
+
+      {/* ── Lightbox Viewer ──────────────────────────────── */}
+      {lightboxOpen && lightboxFiles.length > 0 && (
+        <Lightbox
+          files={lightboxFiles}
+          initialIndex={lightboxIndex}
+          onClose={() => setLightboxOpen(false)}
+        />
+      )}
     </section>
   );
 }
