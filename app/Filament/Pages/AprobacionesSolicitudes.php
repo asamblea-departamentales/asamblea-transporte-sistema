@@ -5,10 +5,10 @@ namespace App\Filament\Pages;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
@@ -18,27 +18,37 @@ class AprobacionesSolicitudes extends Page implements Forms\Contracts\HasForms
     use WithPagination;
 
     protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationGroup = 'Gestión Operativa';
+
     protected static ?string $navigationLabel = 'Aprobaciones';
+
     protected static ?string $navigationIcon = 'heroicon-o-check-badge';
+
     protected static ?int $navigationSort = 3;
 
     protected static string $view = 'filament.pages.aprobaciones-solicitudes';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?string $tipo = null;
+
     public ?string $prioridad = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_transporte = 0;
+
     public int $kpi_combustible = 0;
+
     public int $kpi_mantenimiento = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -130,23 +140,88 @@ class AprobacionesSolicitudes extends Page implements Forms\Contracts\HasForms
     }
 
     public function aprobar(string $tipo, int $id, array $data): void
-{
-    app(AprobacionesService::class)->aprobar(
-        $tipo,
-        $id,
-        auth()->id(),
-        $data['comentario'],
-        $data['firma'] ?? null,  // ← nuevo
-    );
+    {
+        app(AprobacionesService::class)->aprobar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario'],
+            $data['firma'] ?? null,
+        );
 
-    $this->refreshKpis();
-    $this->resetPage();
+        $this->refreshKpis();
+        $this->resetPage();
 
-    Notification::make()
-        ->title('Solicitud aprobada correctamente')
-        ->success()
-        ->send();
-}
+        // Notificación enriquecida para transporte
+        if ($tipo === 'transporte') {
+            $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de transporte aprobada')
+                ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                        ->label('Asignar transporte ahora →')
+                        ->url($urlAsignacion)
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación enriquecida para combustible
+        if ($tipo === 'combustible') {
+            $urlAsignacion = \App\Filament\Resources\SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de combustible aprobada')
+                ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                        ->label('Asignar vales ahora →')
+                        ->url($urlAsignacion)
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación enriquecida para mantenimiento
+        if ($tipo === 'mantenimiento') {
+            $urlOrden = route('reportes.orden-trabajo.pdf', ['solicitud_id' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de mantenimiento aprobada')
+                ->body('La orden de trabajo puede generarse desde el detalle de la solicitud.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_orden')
+                        ->label('Generar orden de trabajo →')
+                        ->url($urlOrden)
+                        ->openUrlInNewTab()
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación genérica para otros tipos
+        Notification::make()
+            ->title('Solicitud aprobada correctamente')
+            ->success()
+            ->send();
+    }
 
     public function rechazar(string $tipo, int $id, array $data): void
     {

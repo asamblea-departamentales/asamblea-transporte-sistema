@@ -4,19 +4,18 @@ namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
-use App\Models\User;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
+use App\Filament\Resources\SolicitudCombustibleResource;
+use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
-
-use App\Filament\Resources\SolicitudCombustibleResource;
 
 class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasForms
 {
@@ -24,8 +23,11 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     use WithPagination;
 
     protected static ?string $navigationGroup = 'Gestión Operativa';
+
     protected static ?string $navigationLabel = 'Gestión Operativa de Solicitudes';
-    protected static ?string $navigationIcon  = 'heroicon-o-rectangle-stack';
+
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.gestion-operativa-solicitudes';
@@ -33,17 +35,27 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public string $etapa = 'bandeja';
 
     public ?string $date_from = null;
-    public ?string $date_to   = null;
-    public ?string $tipo      = null;
+
+    public ?string $date_to = null;
+
+    public ?string $tipo = null;
+
     public ?string $prioridad = null;
-    public ?string $estado    = null;
+
+    public ?string $estado = null;
 
     public int $kpi_total = 0;
-    public int $kpi_a     = 0;
-    public int $kpi_b     = 0;
-    public int $kpi_c     = 0;
+
+    public int $kpi_a = 0;
+
+    public int $kpi_b = 0;
+
+    public int $kpi_c = 0;
+
     public string $kpi_a_label = 'A';
+
     public string $kpi_b_label = 'B';
+
     public string $kpi_c_label = 'C';
 
     // FIX #1: operativo también necesita acceder a esta página
@@ -60,7 +72,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         // Redirigir al jefe directo a aprobaciones al entrar
         if (auth()->user()?->hasRole('jefe') && ! auth()->user()?->hasAnyRole(['super_admin', 'ti'])) {
@@ -113,6 +125,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->title('No tienes permiso para acceder a esta etapa')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -129,8 +142,8 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 Forms\Components\Select::make('tipo')
                     ->label('Tipo')
                     ->options([
-                        'transporte'    => 'Transporte',
-                        'combustible'   => 'Combustible',
+                        'transporte' => 'Transporte',
+                        'combustible' => 'Combustible',
                         'mantenimiento' => 'Mantenimiento',
                     ])
                     ->native(false)
@@ -176,17 +189,17 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function getRowsProperty(): Collection
     {
         return match ($this->etapa) {
-            'bandeja'      => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
-            'revision'     => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'bandeja' => app(BandejaOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
+            'revision' => app(RevisionOperativaService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
             'aprobaciones' => app(AprobacionesService::class)->obtenerSolicitudes($this->getFilterStateWithStage()),
-            default        => collect(),
+            default => collect(),
         };
     }
 
     public function getPaginatedRowsProperty()
     {
         $perPage = 8;
-        $page    = $this->getPage();
+        $page = $this->getPage();
 
         return new \Illuminate\Pagination\LengthAwarePaginator(
             $this->rows->forPage($page, $perPage)->values(),
@@ -202,6 +215,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -222,6 +236,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -241,6 +256,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -264,6 +280,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -286,6 +303,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -308,78 +326,102 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     // FIX #4d: aprobar — solo jefe
     // FIX #4d: aprobar — solo jefe
-public function aprobar(string $tipo, int $id, array $data): void
-{
-    if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
-        Notification::make()->title('Sin permiso')->danger()->send();
-        return;
-    }
+    public function aprobar(string $tipo, int $id, array $data): void
+    {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
 
-    app(AprobacionesService::class)->aprobar(
-        $tipo,
-        $id,
-        auth()->id(),
-        $data['comentario'],
-        $data['firma'] ?? null,  // ← nuevo
-    );
+            return;
+        }
 
-    $this->refreshKpis();
-    $this->resetPage();
+        app(AprobacionesService::class)->aprobar(
+            $tipo,
+            $id,
+            auth()->id(),
+            $data['comentario'],
+            $data['firma'] ?? null,  // ← nuevo
+        );
 
-    // Notificación enriquecida para transporte
-    if ($tipo === 'transporte') {
-        $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
+        $this->refreshKpis();
+        $this->resetPage();
 
+        // Notificación enriquecida para transporte
+        if ($tipo === 'transporte') {
+            $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de transporte aprobada')
+                ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                        ->label('Asignar transporte ahora →')
+                        ->url($urlAsignacion)
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación enriquecida para combustible
+        if ($tipo === 'combustible') {
+            $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de combustible aprobada')
+                ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                        ->label('Asignar vales ahora →')
+                        ->url($urlAsignacion)
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación enriquecida para mantenimiento
+        if ($tipo === 'mantenimiento') {
+            $urlOrden = route('reportes.orden-trabajo.pdf', ['solicitud_id' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de mantenimiento aprobada')
+                ->body('La orden de trabajo puede generarse desde el detalle de la solicitud.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_orden')
+                        ->label('Generar orden de trabajo →')
+                        ->url($urlOrden)
+                        ->openUrlInNewTab()
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
+
+        // Notificación genérica para otros tipos
         Notification::make()
-            ->title('Solicitud de transporte aprobada')
-            ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
+            ->title('Solicitud aprobada')
             ->success()
-            ->actions([
-                \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                    ->label('Asignar transporte ahora →')
-                    ->url($urlAsignacion)
-                    ->button()
-                    ->color('primary'),
-            ])
-            ->persistent()
             ->send();
-
-        return;
     }
-
-    // Notificación enriquecida para combustible
-    if ($tipo === 'combustible') {
-        $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
-
-        Notification::make()
-            ->title('Solicitud de combustible aprobada')
-            ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
-            ->success()
-            ->actions([
-                \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                    ->label('Asignar vales ahora →')
-                    ->url($urlAsignacion)
-                    ->button()
-                    ->color('primary'),
-            ])
-            ->persistent()
-            ->send();
-
-        return;
-    }
-
-    // Notificación genérica para otros tipos
-    Notification::make()
-        ->title('Solicitud aprobada')
-        ->success()
-        ->send();
-}
 
     // FIX #4e: rechazar — solo jefe
     public function rechazar(string $tipo, int $id, array $data): void
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -404,6 +446,7 @@ public function aprobar(string $tipo, int $id, array $data): void
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -428,6 +471,7 @@ public function aprobar(string $tipo, int $id, array $data): void
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -455,10 +499,10 @@ public function aprobar(string $tipo, int $id, array $data): void
     public function limpiarFiltros(): void
     {
         $this->date_from = null;
-        $this->date_to   = null;
-        $this->tipo      = null;
+        $this->date_to = null;
+        $this->tipo = null;
         $this->prioridad = null;
-        $this->estado    = null;
+        $this->estado = null;
 
         $this->form->fill($this->getFilterState());
         $this->resetPage();
@@ -468,7 +512,7 @@ public function aprobar(string $tipo, int $id, array $data): void
     public function setMesActual(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->resetPage();
@@ -478,16 +522,16 @@ public function aprobar(string $tipo, int $id, array $data): void
     private function refreshKpis(): void
     {
         $kpis = match ($this->etapa) {
-            'bandeja'      => app(BandejaOperativaService::class)->getKpis($this->getFilterStateWithStage()),
-            'revision'     => app(RevisionOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'bandeja' => app(BandejaOperativaService::class)->getKpis($this->getFilterStateWithStage()),
+            'revision' => app(RevisionOperativaService::class)->getKpis($this->getFilterStateWithStage()),
             'aprobaciones' => app(AprobacionesService::class)->getKpis($this->getFilterStateWithStage()),
-            default        => ['total' => 0, 'transporte' => 0, 'combustible' => 0, 'mantenimiento' => 0],
+            default => ['total' => 0, 'transporte' => 0, 'combustible' => 0, 'mantenimiento' => 0],
         };
 
-        $this->kpi_total = $kpis['total']          ?? 0;
-        $this->kpi_a     = $kpis['transporte']     ?? 0;
-        $this->kpi_b     = $kpis['combustible']    ?? 0;
-        $this->kpi_c     = $kpis['mantenimiento']  ?? 0;
+        $this->kpi_total = $kpis['total'] ?? 0;
+        $this->kpi_a = $kpis['transporte'] ?? 0;
+        $this->kpi_b = $kpis['combustible'] ?? 0;
+        $this->kpi_c = $kpis['mantenimiento'] ?? 0;
 
         $this->kpi_a_label = 'Transporte';
         $this->kpi_b_label = 'Combustible';
@@ -497,11 +541,11 @@ public function aprobar(string $tipo, int $id, array $data): void
     private function armarValidaciones(array $data): array
     {
         return [
-            'datos_completos'      => (bool) ($data['datos_completos']      ?? false),
-            'fechas_validas'       => (bool) ($data['fechas_validas']        ?? false),
+            'datos_completos' => (bool) ($data['datos_completos'] ?? false),
+            'fechas_validas' => (bool) ($data['fechas_validas'] ?? false),
             'recursos_disponibles' => (bool) ($data['recursos_disponibles'] ?? false),
-            'reglas_minimas'       => (bool) ($data['reglas_minimas']        ?? false),
-            'hallazgos'            => $data['hallazgos'] ?? null,
+            'reglas_minimas' => (bool) ($data['reglas_minimas'] ?? false),
+            'hallazgos' => $data['hallazgos'] ?? null,
         ];
     }
 
@@ -513,17 +557,17 @@ public function aprobar(string $tipo, int $id, array $data): void
         // TI y super_admin ven todos los estados relevantes
         if ($user?->hasAnyRole(['super_admin', 'ti'])) {
             return [
-                EstadoSolicitudEnum::PENDIENTE->value    => 'Pendiente',
-                EstadoSolicitudEnum::EN_REVISION->value  => 'En revisión',
+                EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
+                EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
                 EstadoSolicitudEnum::PRE_APROBADA->value => 'Pre-aprobada',
-                EstadoSolicitudEnum::APROBADA->value     => 'Aprobada',
-                EstadoSolicitudEnum::RECHAZADA->value    => 'Rechazada',
+                EstadoSolicitudEnum::APROBADA->value => 'Aprobada',
+                EstadoSolicitudEnum::RECHAZADA->value => 'Rechazada',
             ];
         }
 
         return match ($this->etapa) {
             'bandeja' => [
-                EstadoSolicitudEnum::PENDIENTE->value   => 'Pendiente',
+                EstadoSolicitudEnum::PENDIENTE->value => 'Pendiente',
                 EstadoSolicitudEnum::EN_REVISION->value => 'En revisión',
             ],
             'revision' => [
@@ -540,10 +584,10 @@ public function aprobar(string $tipo, int $id, array $data): void
     {
         return [
             'date_from' => $this->date_from,
-            'date_to'   => $this->date_to,
-            'tipo'      => $this->tipo,
+            'date_to' => $this->date_to,
+            'tipo' => $this->tipo,
             'prioridad' => $this->prioridad,
-            'estado'    => $this->estado,
+            'estado' => $this->estado,
         ];
     }
 
@@ -558,20 +602,20 @@ public function aprobar(string $tipo, int $id, array $data): void
     public function etapaLabel(): string
     {
         return match ($this->etapa) {
-            'bandeja'      => 'Recepción, clasificación y priorización inicial.',
-            'revision'     => 'Validación técnica, observaciones y derivación.',
+            'bandeja' => 'Recepción, clasificación y priorización inicial.',
+            'revision' => 'Validación técnica, observaciones y derivación.',
             'aprobaciones' => 'Resolución administrativa y cierre de decisión.',
-            default        => '',
+            default => '',
         };
     }
 
     public function etapaColor(): string
     {
         return match ($this->etapa) {
-            'bandeja'      => 'primary',
-            'revision'     => 'warning',
+            'bandeja' => 'primary',
+            'revision' => 'warning',
             'aprobaciones' => 'success',
-            default        => 'gray',
+            default => 'gray',
         };
     }
 
