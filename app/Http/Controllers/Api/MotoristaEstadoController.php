@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Http\Controllers\Controller;
 use App\Models\Motorista;
 use App\Models\MotoristaEstado;
 use Illuminate\Http\Request;
 use App\Domain\Solicitudes\Services\MotoristaService;
+use App\Models\SolicitudTransporte;
 
 class MotoristaEstadoController extends Controller
 {
@@ -147,5 +149,66 @@ class MotoristaEstadoController extends Controller
             ->get();
 
         return response()->json($historial);
+    }
+
+        /**
+        * Listar los viajes asignados al motorista autenticado.
+        */
+    public function misViajes(Request $request)
+    {
+        $user = auth()->user();
+
+        $motorista = $user->motorista;
+
+        //Validar que el usuario autenticado tenga un perfil de motorista asociado
+        if (!$motorista) {
+            return response()->json([
+                'message' => 'El usuario autenticado no tiene un perfil de motorista asociado.'
+            ], 404);
+        }
+
+        //Obtener el mes
+        $mes = $request->query('mes');
+
+        if(!$mes) {
+            return response()->json([
+                'message' => 'El parámetro "mes" es requerido en formato YYYY-MM.'
+            ], 422);
+        }
+        try{
+            [$year, $month] = explode('-', $mes);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'El formato del parámetro "mes" es inválido. Debe ser YYYY-MM.'
+            ], 422);
+        }
+
+        //Query para obtener los viajes asignados al motorista autenticado en el mes especificado
+        $viajes = SolicitudTransporte::query()
+            ->where('motorista_id', $motorista->id)
+            ->whereYear('fecha_salida', $year)
+            ->whereMonth('fecha_salida', $month)
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::ASIGNADA,
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::COMPLETADA,
+                EstadoSolicitudEnum::CANCELADA,
+            ])
+            ->with('solicitante')
+            ->orderBy('fecha_salida', 'asc')
+            ->get()
+            ->map(function ($viaje){
+                return [
+                    'id' => $viaje->id,
+                    'fecha' => optional($viaje->fecha_salida)->format('Y-m-d'),
+                    'hora_salida' => optional($viaje->fecha_salida)->format('H:i A'),
+                    'origen' => $viaje->origen,
+                    'destino' => $viaje->destino,
+                    'estado' => strtoupper($viaje->estado->value),
+                    'solicitante' => $viaje->solicitante?->name ?? 'Desconocido',
+                ];
+            });
+
+            return response()->json($viajes);
     }
 }

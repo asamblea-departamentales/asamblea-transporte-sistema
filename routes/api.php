@@ -267,6 +267,9 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
+        //Ruta para el frontend de motoristas (acceso a los viajes asignados y mostrarlos)
+        Route::get('me/viajes', [MotoristaEstadoController::class, 'misViajes']);
+
     }); // Cierra catalogos
 
 }); // Cierra sanctum
