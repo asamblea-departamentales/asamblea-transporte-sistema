@@ -184,9 +184,8 @@
                                                         ></textarea>
                                                     </div>
 
-                                                    {{-- Firma — solo para transporte --}}
-                                                    {{-- DEBUG: tipo={{ $row['tipo'] }} --}}
-                                                    @if($row['tipo'] === 'transporte')
+                                                    {{-- Firma — para transporte y mantenimiento --}}
+                                                    @if(in_array($row['tipo'], ['transporte', 'mantenimiento']))
                                                     <div>
                                                         <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
                                                             Firma del aprobador

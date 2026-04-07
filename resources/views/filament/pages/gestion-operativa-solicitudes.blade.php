@@ -425,7 +425,7 @@
                                     this.comentario = '';
                                     this.firma = null;
                                     this.open = true;
-                                    @if($row['tipo'] === 'transporte')
+                                    @if(in_array($row['tipo'], ['transporte', 'mantenimiento']))
                                     setTimeout(() => {
                                         const c = document.getElementById('firma-gos-{{ $row['id'] }}');
                                         if (!c) return;
@@ -517,7 +517,7 @@
                                         <textarea x-model="comentario" class="modal-textarea" rows="4" placeholder="Deja un comentario de aprobación..."></textarea>
                                     </div>
 
-                                    @if($row['tipo'] === 'transporte')
+                                    @if(in_array($row['tipo'], ['transporte', 'mantenimiento']))
                                     <div>
                                         <div class="modal-label">Firma del aprobador <span class="text-gray-400 font-normal text-xs">(aparecerá en el PDF)</span></div>
                                         <div class="border border-gray-300 rounded-lg overflow-hidden bg-white" style="touch-action: none;">

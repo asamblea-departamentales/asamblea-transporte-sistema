@@ -30,6 +30,7 @@ class SolicitudMantenimiento extends Model
         'fecha_aprobacion',
         'motivo_rechazo',
         'observaciones',
+        'firma_aprobador',
         'adjuntos',
         'finalizado_por',
         'fecha_finalizacion',
@@ -40,14 +41,14 @@ class SolicitudMantenimiento extends Model
     ];
 
     protected $casts = [
-        'fecha_sugerida'   => 'date',
-        'fecha_realizada'  => 'date',
+        'fecha_sugerida' => 'date',
+        'fecha_realizada' => 'date',
         'fecha_aprobacion' => 'datetime',
-        'costo_estimado'   => 'decimal:2',
-        'costo_real'       => 'decimal:2',
-        'adjuntos'         => 'array',
-        'estado'           => EstadoSolicitudEnum::class,
-        'prioridad'        => PrioridadSolicitudEnum::class,
+        'costo_estimado' => 'decimal:2',
+        'costo_real' => 'decimal:2',
+        'adjuntos' => 'array',
+        'estado' => EstadoSolicitudEnum::class,
+        'prioridad' => PrioridadSolicitudEnum::class,
         'fecha_finalizacion' => 'datetime',
         'fecha_evaluacion' => 'datetime',
     ];
@@ -57,14 +58,14 @@ class SolicitudMantenimiento extends Model
     protected static function booted()
     {
         static::creating(function ($solicitud) {
-            $year   = now()->year;
+            $year = now()->year;
             $ultima = static::where('codigo', 'like', "SM-{$year}-%")
                 ->latest('id')
                 ->first();
 
             $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
-            $solicitud->codigo = "SM-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
+            $solicitud->codigo = "SM-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
         });
     }
 
@@ -101,26 +102,26 @@ class SolicitudMantenimiento extends Model
     }
 
     public function historialEstados()
-{
-    return $this->morphMany(HistorialEstado::class, 'entidad', 'entidad_tipo', 'entidad_id');
-}
+    {
+        return $this->morphMany(HistorialEstado::class, 'entidad', 'entidad_tipo', 'entidad_id');
+    }
 
-public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
-{
-    return $this->morphOne(Liquidacion::class, 'liquidable');
-}
+    public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(Liquidacion::class, 'liquidable');
+    }
 
-//Relacion para incidencias
-public function incidencias()
-{
-    return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
-}
+    // Relacion para incidencias
+    public function incidencias()
+    {
+        return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+    }
 
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneAdjuntos(): bool
     {
-        return !empty($this->adjuntos);
+        return ! empty($this->adjuntos);
     }
 
     public function puedeCompletarse(): bool
