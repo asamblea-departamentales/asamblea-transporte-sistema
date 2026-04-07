@@ -15,14 +15,23 @@ export async function getDisponibilidad(): Promise<Disponibilidad> {
   return data as Disponibilidad;
 }
 
-/**
- * Cambia el estado de disponibilidad del motorista autenticado.
- * POST /api/motoristas/me/estado
- * Body: { activo: boolean, motivo?: string }
- */
 export async function reportarDisponibilidad(
   activo: boolean,
-  motivo: string
+  motivo?: string,
+  evidencia?: File
 ): Promise<void> {
-  await api.post("/api/motoristas/me/estado", { activo, motivo });
+  const formData = new FormData();
+  // Laravel suele esperar booleanos como '1' o '0' en FormData, o 'true'/'false'
+  formData.append("activo", activo ? "1" : "0");
+  
+  if (motivo) {
+    formData.append("motivo", motivo);
+  }
+  
+  if (!activo && evidencia) {
+    formData.append("evidencia", evidencia);
+  }
+
+  // Axios setea automáticamente el header correcto (multipart/form-data con boundary)
+  await api.post("/api/motoristas/me/estado", formData);
 }

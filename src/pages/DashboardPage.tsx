@@ -1,7 +1,7 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { getViajesMes } from "../services/viajes.service";
 import type { ViajeAsignado } from "../services/viajes.service";
-import { getDisponibilidad, reportarDisponibilidad } from "../services/disponibilidad.service";
+import { useNotification } from "../contexts/NotificationContext";
 
 // ────────────────────────────────────────────────
 // Helpers y Constantes
@@ -24,10 +24,7 @@ const ESTADO_COLORS: Record<string, string> = {
 
 function SkeletonCard() {
   return (
-    <div style={{
-      background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14,
-      padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14,
-    }}>
+    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between" }}>
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           <div style={{ height: 11, width: 70, borderRadius: 6, background: "#f1f5f9", animation: "skpulse 1.4s ease-in-out infinite" }} />
@@ -40,76 +37,28 @@ function SkeletonCard() {
   );
 }
 
-function StatCard({ title, value, tag, icon, accent, loading }: {
-  title: string; value: number | null; tag: string;
-  icon: React.ReactNode;
-  accent: { bg: string; iconColor: string; text: string; dot: string; line: string };
-  loading: boolean;
-}) {
+function StatCard({ title, value, tag, icon, accent, loading }: { title: string; value: number | null; tag: string; icon: React.ReactNode; accent: { bg: string; iconColor: string; text: string; dot: string; line: string }; loading: boolean; }) {
   const [hovered, setHovered] = useState(false);
   if (loading) return <SkeletonCard />;
 
   return (
-    <div
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
+    <div onMouseEnter={() => setHovered(true)} onMouseLeave={() => setHovered(false)}
       style={{
-        position: "relative",
-        background: "#fff",
-        border: "1px solid",
-        borderColor: hovered ? "#d1d5db" : "#e5e7eb",
-        borderRadius: 14,
-        padding: "22px 24px 20px",
-        display: "flex", flexDirection: "column",
-        overflow: "hidden",
-        transition: "border-color 200ms, box-shadow 200ms, transform 200ms",
-        boxShadow: hovered ? "0 8px 30px rgba(0,0,0,0.08)" : "0 1px 3px rgba(0,0,0,0.04)",
-        transform: hovered ? "translateY(-2px)" : "translateY(0)",
-      }}
-    >
-      <div style={{
-        position: "absolute", top: 0, left: 0, right: 0, height: 3,
-        background: accent.line,
-        borderRadius: "14px 14px 0 0",
-        transform: hovered ? "scaleX(1)" : "scaleX(0)",
-        transformOrigin: "left",
-        transition: "transform 250ms cubic-bezier(0.4,0,0.2,1)",
-      }} />
-      <div style={{
-        position: "absolute", top: -30, right: -30,
-        width: 80, height: 80, borderRadius: "50%",
-        background: accent.line,
-        opacity: hovered ? 0.08 : 0,
-        transition: "opacity 250ms",
-        filter: "blur(20px)",
-        pointerEvents: "none",
-      }} />
-
+        position: "relative", background: "#fff", border: "1px solid", borderColor: hovered ? "#d1d5db" : "#e5e7eb", borderRadius: 14, padding: "22px 24px 20px", display: "flex", flexDirection: "column", overflow: "hidden", transition: "border-color 200ms, box-shadow 200ms, transform 200ms", boxShadow: hovered ? "0 8px 30px rgba(0,0,0,0.08)" : "0 1px 3px rgba(0,0,0,0.04)", transform: hovered ? "translateY(-2px)" : "translateY(0)"
+      }}>
+      <div style={{ position: "absolute", top: 0, left: 0, right: 0, height: 3, background: accent.line, borderRadius: "14px 14px 0 0", transform: hovered ? "scaleX(1)" : "scaleX(0)", transformOrigin: "left", transition: "transform 250ms cubic-bezier(0.4,0,0.2,1)" }} />
+      <div style={{ position: "absolute", top: -30, right: -30, width: 80, height: 80, borderRadius: "50%", background: accent.line, opacity: hovered ? 0.08 : 0, transition: "opacity 250ms", filter: "blur(20px)", pointerEvents: "none" }} />
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 14 }}>
         <div>
-          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.07em", textTransform: "uppercase" }}>
-            {title}
-          </p>
-          <p style={{ margin: "7px 0 0", fontSize: 32, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.04em", lineHeight: 1 }}>
-            {value ?? 0}
-          </p>
+          <p style={{ margin: 0, fontSize: 11, fontWeight: 700, color: "#9ca3af", letterSpacing: "0.07em", textTransform: "uppercase" }}>{title}</p>
+          <p style={{ margin: "7px 0 0", fontSize: 32, fontWeight: 800, color: "#0f172a", letterSpacing: "-0.04em", lineHeight: 1 }}>{value ?? 0}</p>
         </div>
-        <div style={{
-          width: 42, height: 42, borderRadius: 11,
-          background: hovered ? accent.bg : "#f8fafc",
-          color: accent.iconColor,
-          display: "flex", alignItems: "center", justifyContent: "center",
-          flexShrink: 0, transition: "background 200ms",
-        }}>
+        <div style={{ width: 42, height: 42, borderRadius: 11, background: hovered ? accent.bg : "#f8fafc", color: accent.iconColor, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, transition: "background 200ms" }}>
           {icon}
         </div>
       </div>
-      <span style={{
-        display: "inline-flex", alignItems: "center", gap: 5,
-        fontSize: 11.5, fontWeight: 600, color: accent.text,
-      }}>
-        <span style={{ width: 5, height: 5, borderRadius: "50%", background: accent.dot }} />
-        {tag}
+      <span style={{ display: "inline-flex", alignItems: "center", gap: 5, fontSize: 11.5, fontWeight: 600, color: accent.text }}>
+        <span style={{ width: 5, height: 5, borderRadius: "50%", background: accent.dot }} />{tag}
       </span>
     </div>
   );
@@ -120,19 +69,12 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
 // ────────────────────────────────────────────────
 function TripCard({ viaje }: { viaje: ViajeAsignado }) {
   const isPending = viaje.estado === "ASIGNADA";
-  
-  // Format Date (assuming YYYY-MM-DD input)
   const dateObj = new Date(viaje.fecha + "T00:00:00");
-  const formattedDate = dateObj.toLocaleDateString("es-SV", { weekday: "long", day: "numeric", month: "short" });
+  const formattedDate = dateObj.toLocaleDateString("es-SV", { weekday: "long", day: "numeric", month: "long" });
 
   return (
     <div className={`relative flex flex-col p-5 md:p-6 bg-white border ${isPending ? 'border-amber-200 shadow-[0_8px_30px_rgba(245,158,11,0.1)] hover:border-amber-300' : 'border-slate-200 hover:border-slate-300 hover:shadow-md'} rounded-[20px] transition-all duration-300 group overflow-hidden`}>
-       
-       {isPending && (
-         <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />
-       )}
-
-       {/* Cabecera del Viaje */}
+       {isPending && <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />}
        <div className="flex items-center justify-between mb-5 z-10">
           <div className="flex flex-col">
             <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">{formattedDate}</span>
@@ -142,16 +84,12 @@ function TripCard({ viaje }: { viaje: ViajeAsignado }) {
             {viaje.estado.replace("_", " ")}
           </span>
        </div>
-
-       {/* Timeline Interno */}
        <div className="flex items-stretch gap-4 z-10 w-full mb-1">
-          {/* Línea e iconos */}
           <div className="flex flex-col items-center justify-between py-1.5 w-[20px]">
              <div className="w-4 h-4 bg-[#0f172a] rounded-full border-[3px] border-white shadow-sm shrink-0" />
              <div className="w-[2px] bg-slate-200/80 flex-1 my-1 rounded-full" />
              <div className="w-4 h-4 bg-blue-500 rounded-full border-[3px] border-white shadow-sm shrink-0" />
           </div>
-
           <div className="flex flex-col flex-1 gap-5 py-1">
              <div>
                <p className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 leading-none">Punto de Origen</p>
@@ -163,24 +101,17 @@ function TripCard({ viaje }: { viaje: ViajeAsignado }) {
              </div>
           </div>
        </div>
-
-       {/* Pie de tarjeta (Pasajero) */}
        {viaje.solicitante && (
          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between z-10 bg-slate-50/50 -mx-5 -mb-5 px-5 md:-mx-6 md:-mb-6 md:px-6 pb-5 rounded-b-[20px]">
            <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-[#0f172a] flex items-center justify-center text-white text-[12px] font-black shadow-sm shrink-0">
-               {viaje.solicitante.charAt(0)}
-             </div>
+             <div className="w-8 h-8 rounded-full bg-[#0f172a] flex items-center justify-center text-white text-[12px] font-black shadow-sm shrink-0">{viaje.solicitante.charAt(0)}</div>
              <div className="flex flex-col">
                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Pasajero Asignado</span>
                <span className="text-[13px] font-bold text-[#0f172a] leading-none truncate max-w-[150px] sm:max-w-xs">{viaje.solicitante}</span>
              </div>
            </div>
-           
            <button className="flex items-center justify-center w-8 h-8 bg-white border border-slate-200 group-hover:border-blue-200 text-slate-400 group-hover:text-blue-600 rounded-full shadow-sm transition-colors shrink-0">
-              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
+              <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
            </button>
          </div>
        )}
@@ -197,88 +128,61 @@ export default function DashboardPage() {
   const [month, setMonth] = useState(today.getMonth());
   const [viajes, setViajes] = useState<ViajeAsignado[]>([]);
   const [loadingViajes, setLoadingViajes] = useState(true);
-  const [activo, setActivo] = useState<boolean | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  // States para el Flujo Dinámico de Disponibilidad
-  const [showIncapacityModal, setShowIncapacityModal] = useState(false);
-  const [showActiveModal, setShowActiveModal] = useState(false);
-  const [incapacityReason, setIncapacityReason] = useState("");
-  const [updatingStatus, setUpdatingStatus] = useState(false);
+  const { simulateNotification } = useNotification();
+  const prevViajesLength = useRef<number | null>(null);
 
   const cargarViajes = useCallback(async () => {
-    setLoadingViajes(true);
-    setError(null);
     try {
       const mes = `${year}-${String(month + 1).padStart(2, "0")}`;
       const data = await getViajesMes(mes);
       setViajes(data);
+      if(error) setError(null);
     } catch {
-      setError("No se pudo cargar el listado de viajes.");
-      setViajes([]);
+      setError("No se pudo conectar con los servidores de asignación de viajes.");
     } finally {
       setLoadingViajes(false);
     }
-  }, [year, month]);
+  }, [year, month, error]);
 
-  useEffect(() => {
-    getDisponibilidad()
-      .then((d) => setActivo(d.activo))
-      .catch(() => setActivo(null));
-  }, []);
-
-  async function toggleToInactive() {
-    if (!incapacityReason.trim()) {
-      setError("Debes ingresar un motivo para reportar incapacidad.");
-      return;
-    }
-    setUpdatingStatus(true);
-    setError(null);
-    try {
-      await reportarDisponibilidad(false, incapacityReason.trim());
-      setActivo(false);
-      setShowIncapacityModal(false);
-      setIncapacityReason("");
-    } catch (err) {
-      setError("Error al procesar la incapacidad en el sistema.");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  }
-
-  async function toggleToActive() {
-    setUpdatingStatus(true);
-    setError(null);
-    try {
-      await reportarDisponibilidad(true, "");
-      setActivo(true);
-      setShowActiveModal(false);
-    } catch (err) {
-      setError("Error al recuperar la disponibilidad en el sistema.");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  }
-
+  // Carga inicial y Polling (refresca info en background cada X segundos)
   useEffect(() => {
     cargarViajes();
+    
+    // Polling cada 15 segundos para buscar nuevos viajes
+    const interval = setInterval(() => {
+      cargarViajes();
+    }, 15000); 
+
+    return () => clearInterval(interval);
   }, [cargarViajes]);
 
-  const prevMonth = () => {
-    if (month === 0) { setYear(y => y - 1); setMonth(11); }
-    else setMonth(m => m - 1);
-  };
-  const nextMonth = () => {
-    if (month === 11) { setYear(y => y + 1); setMonth(0); }
-    else setMonth(m => m + 1);
-  };
+  // Lógica de Notificador In-App Integrada al Fetch
+  useEffect(() => {
+    if (loadingViajes) return; // Wait until initial load is completely done
+    
+    const countAsignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
+    
+    // Si la cantidad de asignadas ahora es mayor que la medición de hace unos instantes...
+    if (prevViajesLength.current !== null && countAsignadas > prevViajesLength.current) {
+        simulateNotification(
+           "🚗 ¡Nuevo Viaje Asignado!", 
+           "Revisa tu panel. La jefatura te ha despachado una nueva ruta."
+        );
+    }
+    
+    // Almacenamos el count actual para compararlo en el siguiente renderizado/fetch
+    prevViajesLength.current = countAsignadas;
+  }, [viajes, loadingViajes, simulateNotification]);
 
-  // Sorted Viajes: Ascending by date
+  const prevMonth = () => { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); };
+  const nextMonth = () => { if (month === 11) { setYear(y => y + 1); setMonth(0); } else setMonth(m => m + 1); };
+
   const sortedViajes = useMemo(() => {
     return [...viajes].sort((a, b) => new Date(`${a.fecha}T${a.hora_salida}`).getTime() - new Date(`${b.fecha}T${b.hora_salida}`).getTime());
   }, [viajes]);
 
-  // Cards stats
   const totalViajes = viajes.length;
   const asignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
   const enEjecucion = viajes.filter(v => v.estado === "EN_EJECUCION").length;
@@ -287,58 +191,26 @@ export default function DashboardPage() {
   const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const cards = useMemo(() => [
-    { title: "Asignadas", value: asignadas, tag: "Por iniciar", accent: { bg: "#fffbeb", iconColor: "#d97706", text: "#b45309", dot: "#f59e0b", line: "#f59e0b" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { title: "En Progreso", value: enEjecucion, tag: "Actualmente", accent: { bg: "#eff6ff", iconColor: "#2563eb", text: "#1d4ed8", dot: "#3b82f6", line: "#3b82f6" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-    { title: "Finalizadas", value: finalizadas, tag: "Este mes", accent: { bg: "#f0fdf4", iconColor: "#16a34a", text: "#15803d", dot: "#22c55e", line: "#22c55e" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { title: "Total", value: totalViajes, tag: "Global mes", accent: { bg: "#f1f5f9", iconColor: "#64748b", text: "#475569", dot: "#94a3b8", line: "#94a3b8" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
+    { title: "Nuevas", value: asignadas, tag: "Por iniciar", accent: { bg: "#fffbeb", iconColor: "#d97706", text: "#b45309", dot: "#f59e0b", line: "#f59e0b" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { title: "En Curso", value: enEjecucion, tag: "Actualmente", accent: { bg: "#eff6ff", iconColor: "#2563eb", text: "#1d4ed8", dot: "#3b82f6", line: "#3b82f6" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
+    { title: "Listas", value: finalizadas, tag: "Este mes", accent: { bg: "#f0fdf4", iconColor: "#16a34a", text: "#15803d", dot: "#22c55e", line: "#22c55e" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { title: "Global", value: totalViajes, tag: "Todo el mes", accent: { bg: "#f1f5f9", iconColor: "#64748b", text: "#475569", dot: "#94a3b8", line: "#94a3b8" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
   ], [asignadas, enEjecucion, finalizadas, totalViajes]);
 
   return (
     <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
-        * { box-sizing: border-box; }
-        @keyframes skpulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-      `}</style>
-
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; } @keyframes skpulse { 0%,100%{opacity:1} 50%{opacity:.4} }`}</style>
       <div className="p-4 md:p-8 w-full max-w-4xl mx-auto" style={{ fontFamily: FONT }}>
         
-        {/* ── Header ── */}
+        {/* Header (Limpio ya que la disponibilidad pasó al Sidebar) */}
         <div className="flex items-end justify-between mb-7 gap-4 flex-wrap">
           <div>
-            <p className="m-0 text-[11px] font-bold text-slate-400 tracking-[0.08em] uppercase">
-              Asamblea Legislativa · Transporte
-            </p>
-            <h1 className="m-0 mt-1 mb-1 text-2xl md:text-3xl font-extrabold text-[#0f172a] tracking-tight leading-tight">
-              Dashboard Operativo
-            </h1>
-            <p className="m-0 text-[13.5px] text-slate-500 font-medium">
-              Gestión visual de tus solicitudes de viaje
-            </p>
-          </div>
-
-          <div className="flex gap-2">
-            {activo !== null && (
-              <button 
-                onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)}
-                title="Haz clic para cambiar tu disponibilidad"
-                className={`inline-flex items-center gap-2.5 rounded-xl px-4 py-2.5 text-[13px] font-bold shadow-sm transition-all border outline-none hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 ${
-                  activo
-                    ? "bg-white text-emerald-700 border-emerald-100/80 hover:bg-emerald-50"
-                    : "bg-white text-red-700 border-red-100 hover:bg-red-50"
-                }`}
-              >
-                <span className="relative flex h-3 w-3">
-                  <span className={`animate-ping absolute inline-flex h-full w-full rounded-full opacity-30 ${activo ? "bg-emerald-400" : "bg-red-400"}`}></span>
-                  <span className={`relative inline-flex rounded-full h-3 w-3 ${activo ? "bg-emerald-500" : "bg-red-500"}`}></span>
-                </span>
-                {activo ? "Red Activa" : "Incapacitado"}
-              </button>
-            )}
+            <p className="m-0 text-[11px] font-bold text-slate-400 tracking-[0.08em] uppercase">Asamblea Legislativa · Transporte</p>
+            <h1 className="m-0 mt-1 mb-1 text-2xl md:text-3xl font-extrabold text-[#0f172a] tracking-tight leading-tight">Panel Principal</h1>
+            <p className="m-0 text-[13.5px] text-slate-500 font-medium">Actualización automática activada</p>
           </div>
         </div>
 
-        {/* ── Error ── */}
         {error && (
           <div className="flex items-center gap-3 p-3.5 rounded-xl bg-red-50 border border-red-200 mb-6 shadow-sm">
             <svg width={18} height={18} fill="none" viewBox="0 0 24 24" stroke="#dc2626" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
@@ -346,25 +218,21 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* ── Cards Stats ── */}
+        {/* Cards Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
           {cards.map(c => <StatCard key={c.title} {...c} loading={loadingViajes} />)}
         </div>
 
-        {/* ── Lista de Viajes Rediseñada ── */}
+        {/* Lista de Viajes Rediseñada */}
         <div className="flex flex-col gap-5">
-           
            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
               <div>
                  <h2 className="text-[18px] font-extrabold text-[#0f172a] flex items-center gap-2">
                     Mis Viajes del Mes
-                    {sortedViajes.filter(v => v.estado === 'ASIGNADA').length > 0 && (
-                      <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-black tracking-wider rounded-lg animate-pulse">Nuevos</span>
-                    )}
+                    {asignadas > 0 && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-black tracking-wider rounded-lg animate-pulse">Por iniciar</span>}
                  </h2>
                  <p className="text-[13px] font-medium text-slate-500 mt-0.5">Listado ordenado por cronología de salida</p>
               </div>
-
               <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
                 <button onClick={prevMonth} className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-bold transition-all shrink-0">‹</button>
                 <div className="px-4 py-1.5 min-w-[120px] text-center shrink-0">
@@ -374,12 +242,8 @@ export default function DashboardPage() {
               </div>
            </div>
 
-           {/* CONTENEDOR DE LA LISTA VIVA */}
            {loadingViajes ? (
-             <div className="flex flex-col gap-4 py-4">
-                <SkeletonCard />
-                <SkeletonCard />
-             </div>
+             <div className="flex flex-col gap-4 py-4"><SkeletonCard /><SkeletonCard /></div>
            ) : sortedViajes.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white/50 border border-slate-200/60 border-dashed rounded-3xl mt-2 text-center">
                 <div className="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mb-4">
@@ -388,70 +252,15 @@ export default function DashboardPage() {
                   </svg>
                 </div>
                 <h3 className="text-[16px] font-bold text-slate-800 mb-1">Sin viajes en este mes</h3>
-                <p className="text-[13.5px] font-medium text-slate-500 max-w-sm">
-                  Actualmente no tienes viajes programados ni finalizados en {MESES[month]}.
-                </p>
+                <p className="text-[13.5px] font-medium text-slate-500 max-w-sm">Actualmente no tienes viajes programados ni finalizados en {MESES[month]}.</p>
              </div>
            ) : (
              <div className="flex flex-col gap-4 mt-2">
-                {sortedViajes.map((v) => (
-                  <TripCard key={v.id} viaje={v} />
-                ))}
+                {sortedViajes.map((v) => <TripCard key={v.id} viaje={v} />)}
              </div>
            )}
         </div>
-
       </div>
-
-      {/* Modal Incapacidad */}
-      {showIncapacityModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: FONT }}>
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 transform transition-all">
-            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Reportar Incapacidad</h3>
-            <p className="text-sm font-medium text-slate-500 mb-5 leading-relaxed">
-              Ingresa el motivo por el cual no podrás realizar viajes. Cambiaremos tu estado a Inactivo en el sistema.
-            </p>
-            <textarea
-              rows={3}
-              value={incapacityReason}
-              onChange={(e) => setIncapacityReason(e.target.value)}
-              placeholder="Enfermedad, interrupción u otro motivo crítico..."
-              className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-medium text-[#0f172a] placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-[#0f2548]/20 focus:border-[#0f2548] resize-none transition-all"
-            />
-            <div className="flex justify-end gap-3 mt-6">
-              <button disabled={updatingStatus} onClick={() => setShowIncapacityModal(false)} className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">Cancelar</button>
-              <button disabled={updatingStatus} onClick={toggleToInactive} className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-red-600 text-white hover:bg-red-700 shadow-[0_4px_14px_rgba(220,38,38,0.25)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:-translate-y-0 disabled:shadow-none">
-                {updatingStatus ? "Registrando..." : "Confirmar Incapacidad"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Activar */}
-      {showActiveModal && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: FONT }}>
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-7 text-center transform transition-all">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-5 shadow-inner">
-              <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">¿Volver a estar Activo?</h3>
-            <p className="text-[14px] font-medium text-slate-500 mb-7 leading-relaxed px-2">
-              El reporte de incapacidad será limpiado y volverás al padrón regular para recibir nuevos viajes.
-            </p>
-            <div className="flex flex-col gap-3">
-              <button disabled={updatingStatus} onClick={toggleToActive} className="w-full py-3.5 rounded-xl text-[14px] font-bold bg-[#0f172a] text-white hover:bg-slate-800 shadow-[0_4px_14px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:hover:-translate-y-0 disabled:shadow-none">
-                {updatingStatus ? "Actualizando Red..." : "Sí, estoy Disponible"}
-              </button>
-              <button disabled={updatingStatus} onClick={() => setShowActiveModal(false)} className="w-full py-3 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition">
-                Cancelar operación
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
