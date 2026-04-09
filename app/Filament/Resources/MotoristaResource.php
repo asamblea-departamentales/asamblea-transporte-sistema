@@ -113,7 +113,7 @@ class MotoristaResource extends Resource
                             ->disabled()
                             ->columnSpan(1),
 
-                        Forms\Components\ViewField::make('archivo')
+                        Forms\Components\Placeholder::make('archivo')
                             ->label('Evidencia Adjunta')
                             ->content(function ($get){
                                 $archivo = $get('archivo');
