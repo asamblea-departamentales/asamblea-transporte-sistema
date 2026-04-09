@@ -114,31 +114,32 @@ class ViewMotorista extends ViewRecord
                 ->schema([
                     TextEntry::make('estados')
                         ->label('')
-                        ->formatStateUsing(function ($state, $record){
-                            if (!$record->estados || $record->estados->isEmpty()) {
-                                return 'Sin historial de estados';
-                            }
-                            return $record->estados->sortbyDesc('fecha_inicio')
-                            ->map(function ($estado){
-                                $estado = $estado->activo ? '🟢 Disponible' : ' 🔴 No disponible';
-                                $fecha = optional($estado->fecha_inicio)?->format('d/m/Y H:i');
-                                $motivo = $estado->motivo ?? 'Sin motivo';
+                        ->formatStateUsing(function ($state, $record) {
+    if (!$record->estados || $record->estados->isEmpty()) {
+        return 'Sin historial de estados';
+    }
 
-                                $archivoHtml = '';
-                                if($estado->archivo){
-                                    $url = asset('storage/' . $estado->archivo);
+    return $record->estados->sortByDesc('fecha_inicio')
+        ->map(function ($estado) {
+            $label   = $estado->activo ? '🟢 Disponible' : '🔴 No disponible';
+            $fecha   = optional($estado->fecha_inicio)?->format('d/m/Y H:i') ?? '-';
+            $motivo  = $estado->motivo ?? 'Sin motivo';
 
-                                    $archivoHtml = "<a href='{$url}' target='_blank' style='color: #2563; font-weight: 600;'>📎 Ver Archivo</a>";
-                                }
-                                return "<div style='margin-bottom: 12px; padding-bottom:10px; border:1px solid #e5e7eb; border-radius:8px'>
-                                            <strong>{$estado}</strong><br>
-                                            <small>{$fecha}</small><br>
-                                            <span>{$motivo}</span><br>
-                                            {$archivoHtml}
-                                        </div>";
-                            })
-                            ->implode('');
-                        })
+            $archivoHtml = '';
+            if ($estado->archivo) {
+                $url = asset('storage/' . $estado->archivo);
+                $archivoHtml = "<a href='{$url}' target='_blank' style='color:#2563eb;font-weight:600;'>📎 Ver Archivo</a>";
+            }
+
+            return "<div style='margin-bottom:12px;padding:10px;border:1px solid #e5e7eb;border-radius:8px'>
+                        <strong>{$label}</strong><br>
+                        <small>{$fecha}</small><br>
+                        <span>{$motivo}</span><br>
+                        {$archivoHtml}
+                    </div>";
+        })
+        ->implode('');
+})
                         ->html()
                         ->columnSpanFull(),
                 ])
