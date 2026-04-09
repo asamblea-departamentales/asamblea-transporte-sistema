@@ -114,23 +114,19 @@ class MotoristaResource extends Resource
                             ->columnSpan(1),
 
                         Forms\Components\Placeholder::make('archivo')
-    ->label('Evidencia Adjunta')
-    ->content(function ($component) {
-        // En un Repeater, obtenemos el estado de la fila actual así:
-        $state = $component->getContainer()->getState();
-        $archivo = $state['archivo'] ?? null;
+                            ->label('Evidencia Adjunta')
+                            ->content(function ($get){
+                                $archivo = $get('archivo');
+                                if (!$archivo) {
+                                    return 'Sin evidencia adjunta';
+                                }
 
-        if (!$archivo) {
-            return 'Sin evidencia adjunta';
-        }
+                                $url = Storage::disk('public')->url($archivo);
 
-        // Generamos la URL usando el Facade Storage
-        $url = \Illuminate\Support\Facades\Storage::disk('public')->url($archivo);
-
-        return new \Illuminate\Support\HtmlString(
-            "<a href='{$url}' target='_blank' style='color: #2563eb; font-weight: bold; text-decoration: underline;'>📎 Ver Archivo</a>"
-        );
-    }),
+                                return new \Illuminate\Support\HtmlString(
+                                    "<a href='{$url}' target='_blank' style='color: #2563; font-weight: bold;'>📎 Ver Archivo</a>"
+                                );
+                            }),
                     ])
                     ->columns(3)
                     ->columnSpanFull(),
