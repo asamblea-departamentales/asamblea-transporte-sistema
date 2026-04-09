@@ -10,6 +10,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Facades\Storage;
 
 class MotoristaResource extends Resource
 {
@@ -74,6 +75,64 @@ class MotoristaResource extends Resource
                         ->default(true),
      
                 ])->columns(2),
+
+            Forms\Components\Section::make('Historial de estados')
+            ->description('Estados del motorista, incluyendo incapacidades y sus evidencias.')
+            ->icon('heroicon-o-clock')
+            ->schema([
+                Forms\Components\Repeater::make('historia_estados')
+                    ->label('')
+                    ->disabled()
+                    ->dehydrated(false)
+                    ->default(function ($record) {
+                        if (!$record) return [];
+
+                        return $record->estados()->orderByDesc('fecha_inicio')->get()
+                        ->map(fn ($estado) => [
+                            'estado' => $estado->activo ? 'Disponible' : 'No Disponible',
+                            'motivo' => $estado->motivo,
+                            'fecha'  => optional($estado->fecha_inicio)?->format('d/m/Y H:i'),
+                            'archivo' => $estado->archivo,
+                        ])
+                        ->toArray();
+                    })
+
+                    ->schema([
+                        Forms\Components\TextInput::make('estado')
+                            ->label('Estado')
+                            ->disabled()
+                            ->columnSpan(1),
+
+                        Forms\Components\TextInput::make('motivo')
+                            ->label('Motivo')
+                            ->disabled()
+                            ->columnSpan(2),
+
+                        Forms\Components\TextInput::make('fecha')
+                            ->label('Fecha de Inicio')
+                            ->disabled()
+                            ->columnSpan(1),
+
+                        Forms\Components\ViewField::make('archivo')
+                            ->label('Evidencia Adjunta')
+                            ->content(function ($get){
+                                $archivo = $get('archivo');
+                                if (!$archivo) {
+                                    return 'Sin evidencia adjunta';
+                                }
+
+                                $url = Storage::disk('public')->url($archivo);
+
+                                return new \Illuminate\Support\HtmlString(
+                                    "<a href='{$url}' target='_blank' style='color: #2563; font-weight: bold;'>📎 Ver Archivo</a>"
+                                );
+                            }),
+                    ])
+                    ->columns(3)
+                    ->columnSpanFull(),
+            ])
+            ->collapsible()
+            ->collapsed(false),    
 
             Forms\Components\Section::make('Licencia de Conducir')
                 ->icon('heroicon-o-identification')
