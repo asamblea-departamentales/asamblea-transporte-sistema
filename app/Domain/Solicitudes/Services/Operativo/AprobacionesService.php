@@ -3,12 +3,15 @@
 namespace App\Domain\Solicitudes\Services\Operativo;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class AprobacionesService
 {
@@ -21,11 +24,11 @@ class AprobacionesService
             ->sortBy('fecha_ingreso')
             ->values();
 
-        if (!empty($filters['tipo'])) {
+        if (! empty($filters['tipo'])) {
             $rows = $rows->where('tipo', $filters['tipo'])->values();
         }
 
-        if (!empty($filters['prioridad'])) {
+        if (! empty($filters['prioridad'])) {
             $rows = $rows->where('prioridad', $filters['prioridad'])->values();
         }
 
@@ -44,39 +47,85 @@ class AprobacionesService
         ];
     }
 
-   public function aprobar(string $tipo, int $id, int $userId, string $comentario, ?string $firma = null): void
-{
-    $record = $this->resolverModelo($tipo, $id);
-    $estadoAnterior = $record->estado;
-    $nuevoEstado = $this->resolverEstadoAprobado($tipo);
+    public function aprobar(string $tipo, int $id, int $userId, string $comentario, ?string $firma = null): void
+    {
+        $record = $this->resolverModelo($tipo, $id);
 
-    $record->estado = $nuevoEstado;
-    $this->guardarComentario($record, $comentario);
-    $this->guardarAprobador($record, $userId);
-    $this->guardarFirma($record, $firma);  // ← nuevo
-    $record->save();
+        $record->load('solicitante');
 
-    HistorialEstado::create([
-        'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-        'entidad_id' => $record->id,
-        'estado_anterior' => $this->enumValue($estadoAnterior),
-        'estado_nuevo' => $this->enumValue($nuevoEstado),
-        'user_id' => $userId,
-        'comentario' => $comentario,
-    ]);
+        $estadoAnterior = $record->estado;
+        $nuevoEstado = $this->resolverEstadoAprobado($tipo);
 
-    BitacoraEvento::create([
-        'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-        'entidad_id' => $record->id,
-        'accion' => 'APROBAR_FINAL',
-        'user_id' => $userId,
-        'datos_extras' => [
+        $record->estado = $nuevoEstado;
+        $this->guardarComentario($record, $comentario);
+        $this->guardarAprobador($record, $userId);
+        $this->guardarFirma($record, $firma);  // ← nuevo
+        $record->save();
+
+        $this->enviarCorreoAprobacion($record, $tipo);
+
+        HistorialEstado::create([
+            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
+            'entidad_id' => $record->id,
+            'estado_anterior' => $this->enumValue($estadoAnterior),
+            'estado_nuevo' => $this->enumValue($nuevoEstado),
+            'user_id' => $userId,
             'comentario' => $comentario,
-            'estado_resultante' => $this->enumValue($nuevoEstado),
-            'con_firma' => !empty($firma),
-        ],
-    ]);
-}
+        ]);
+
+        BitacoraEvento::create([
+            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
+            'entidad_id' => $record->id,
+            'accion' => 'APROBAR_FINAL',
+            'user_id' => $userId,
+            'datos_extras' => [
+                'comentario' => $comentario,
+                'estado_resultante' => $this->enumValue($nuevoEstado),
+                'con_firma' => ! empty($firma),
+            ],
+        ]);
+    }
+
+    private function enviarCorreoAprobacion($record, string $tipo): void
+    {
+        if (! $record->solicitante || ! $record->solicitante->email) {
+            return;
+        }
+
+        $payload = $this->construirPayload($record, $tipo);
+
+        try {
+            Mail::to($record->solicitante->email)->send(
+                new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de aprobación: '.$e->getMessage());
+        }
+    }
+
+    private function construirPayload($record, string $tipo): array
+    {
+        $payload = [
+            'tipo' => $tipo,
+            'solicitud' => [
+                'id' => $record->id,
+                'codigo' => $record->codigo,
+                'estado' => $this->enumValue($record->estado),
+            ],
+            'solicitante' => [
+                'name' => $record->solicitante->name,
+                'email' => $record->solicitante->email,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        if ($tipo === 'transporte') {
+            $payload['solicitud']['origen'] = $record->origen;
+            $payload['solicitud']['destino'] = $record->destino;
+        }
+
+        return $payload;
+    }
 
     public function rechazar(string $tipo, int $id, int $userId, string $comentario): void
     {
@@ -173,11 +222,11 @@ class AprobacionesService
             ->with(['solicitante', 'unidad'])
             ->where('estado', EstadoSolicitudEnum::PRE_APROBADA);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -202,11 +251,11 @@ class AprobacionesService
             ->with(['solicitante'])
             ->where('estado', EstadoSolicitudEnum::PRE_APROBADA);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -231,11 +280,11 @@ class AprobacionesService
             ->with(['solicitante', 'tipoMantenimiento'])
             ->where('estado', EstadoSolicitudEnum::PRE_APROBADA);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -248,7 +297,7 @@ class AprobacionesService
                 'solicitante' => $r->solicitante?->name ?? '—',
                 'unidad' => '—',
                 'detalle' => $r->tipoMantenimiento?->nombre
-                    ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
+                    ? $r->tipoMantenimiento->nombre.' - '.$r->detalle
                     : $r->detalle,
                 'prioridad' => $this->enumValue($r->prioridad),
                 'estado' => $this->enumValue($r->estado),
@@ -323,15 +372,17 @@ class AprobacionesService
         }
     }
 
-    //Metodo nuevo para la firma
+    // Metodo nuevo para la firma
     private function guardarFirma($record, ?string $firma): void
-{
-    if (empty($firma)) return;
+    {
+        if (empty($firma)) {
+            return;
+        }
 
-    if (in_array('firma_aprobador', $record->getFillable())) {
-        $record->firma_aprobador = $firma;
+        if (in_array('firma_aprobador', $record->getFillable())) {
+            $record->firma_aprobador = $firma;
+        }
     }
-}
 
     private function enumValue($value): string
     {
