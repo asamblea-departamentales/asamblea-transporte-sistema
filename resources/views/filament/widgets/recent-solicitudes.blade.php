@@ -12,13 +12,12 @@
                 <p class="text-sm font-medium">No hay solicitudes pendientes</p>
             </div>
         @else
-            {{-- Mobile: lista vertical. md+: grid de 2 cols. xl+: 3 cols --}}
-            <div class="flex flex-col gap-3 md:grid md:grid-cols-2 md:gap-4 xl:grid-cols-3">
+            <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
                 @foreach ($solicitudes as $solicitud)
                     <a href="{{ $solicitud['url'] }}"
-                       class="flex items-stretch bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm active:scale-[0.98] hover:shadow-md hover:-translate-y-0.5 transition-all duration-150 overflow-hidden min-h-[72px]">
+                       class="flex items-stretch bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm active:scale-[0.98] hover:shadow-md transition-all duration-150 overflow-hidden w-full">
 
-                        {{-- Franja lateral de color por módulo (visible en mobile, da contexto visual rápido) --}}
+                        {{-- Franja lateral --}}
                         <div @class([
                             'w-1.5 shrink-0',
                             'bg-blue-500'   => $solicitud['modulo'] === 'Transporte',
@@ -26,15 +25,15 @@
                             'bg-green-500'  => $solicitud['modulo'] === 'Combustible',
                         ])></div>
 
-                        {{-- Contenido principal --}}
-                        <div class="flex flex-1 items-center gap-3 px-3 py-3 min-w-0">
+                        {{-- Contenido --}}
+                        <div class="flex flex-1 items-center gap-3 px-3 py-3 min-w-0 w-full">
 
-                            {{-- Ícono de módulo --}}
+                            {{-- Ícono --}}
                             <div @class([
                                 'shrink-0 flex items-center justify-center w-9 h-9 rounded-lg',
-                                'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300'     => $solicitud['modulo'] === 'Transporte',
+                                'bg-blue-100 text-blue-600 dark:bg-blue-900/50 dark:text-blue-300'         => $solicitud['modulo'] === 'Transporte',
                                 'bg-orange-100 text-orange-600 dark:bg-orange-900/50 dark:text-orange-300' => $solicitud['modulo'] === 'Mantenimiento',
-                                'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300' => $solicitud['modulo'] === 'Combustible',
+                                'bg-green-100 text-green-600 dark:bg-green-900/50 dark:text-green-300'     => $solicitud['modulo'] === 'Combustible',
                             ])>
                                 @if ($solicitud['modulo'] === 'Transporte')
                                     <x-heroicon-m-truck class="w-5 h-5" />
@@ -47,11 +46,9 @@
 
                             {{-- Texto --}}
                             <div class="flex-1 min-w-0">
-                                <div class="flex items-center gap-2 mb-0.5">
-                                    <p class="text-sm font-bold text-gray-900 dark:text-white font-mono truncate">
-                                        {{ $solicitud['codigo'] }}
-                                    </p>
-                                </div>
+                                <p class="text-sm font-bold text-gray-900 dark:text-white font-mono truncate">
+                                    {{ $solicitud['codigo'] }}
+                                </p>
                                 <p class="text-xs text-gray-500 dark:text-gray-400 truncate">
                                     {{ $solicitud['solicitante'] }}
                                 </p>
@@ -60,7 +57,7 @@
                                 </p>
                             </div>
 
-                            {{-- Estado badge + flecha --}}
+                            {{-- Estado + chevron --}}
                             <div class="shrink-0 flex flex-col items-end gap-2">
                                 <span @class([
                                     'inline-flex text-xs font-semibold px-2 py-0.5 rounded-full whitespace-nowrap',
