@@ -9,7 +9,11 @@ class DashboardFinanzas extends Widget
 {
     protected static string $view = 'filament.widgets.dashboard-finanzas';
     protected static ?int $sort = 4;
-    protected int|string|array $columnSpan = 1;
+    protected int|string|array $columnSpan = [
+        'default' => 1,
+        'sm'      => 1,
+        'lg'      => 1,
+    ];
 
     public function getData(): array
     {
