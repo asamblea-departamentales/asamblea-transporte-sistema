@@ -6,6 +6,7 @@ namespace App\Domain\Solicitudes\Services\Dashboard;
 
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
 use App\Models\Incidencia;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 class DashboardService
@@ -59,15 +60,39 @@ class DashboardService
         ];
     }
 
-    public function getActividad(): array
-    {
-        $comb = SolicitudCombustible::latest()->take(5)->get();
-        $mant = SolicitudMantenimiento::latest()->take(5)->get();
+   public function getActividad(): array
+{
+    $comb = SolicitudCombustible::with('solicitante')->latest()->take(5)->get()
+        ->map(fn($s) => [
+            'codigo'      => $s->codigo,
+            'modulo'      => 'Combustible',
+            'estado'      => $s->estado?->value ?? $s->estado,
+            'solicitante' => $s->solicitante?->name ?? '-',
+            'fecha'       => $s->created_at,
+        ]);
 
-        return $comb->merge($mant)
-            ->sortByDesc('created_at')
-            ->take(10)
-            ->values()
-            ->all();
-    }
+    $mant = SolicitudMantenimiento::with('solicitante')->latest()->take(5)->get()
+        ->map(fn($s) => [
+            'codigo'      => $s->codigo,
+            'modulo'      => 'Mantenimiento',
+            'estado'      => $s->estado?->value ?? $s->estado,
+            'solicitante' => $s->solicitante?->name ?? '-',
+            'fecha'       => $s->created_at,
+        ]);
+
+    $trans = SolicitudTransporte::with('solicitante')->latest()->take(5)->get()
+        ->map(fn($s) => [
+            'codigo'      => $s->codigo,
+            'modulo'      => 'Transporte',
+            'estado'      => $s->estado?->value ?? $s->estado,
+            'solicitante' => $s->solicitante?->name ?? '-',
+            'fecha'       => $s->created_at,
+        ]);
+
+    return $comb->merge($mant)->merge($trans)
+        ->sortByDesc('fecha')
+        ->take(10)
+        ->values()
+        ->all();
+}
 }
