@@ -51,7 +51,13 @@ class AprobacionesService
     {
         $record = $this->resolverModelo($tipo, $id);
 
-        $record->load('solicitante');
+        $relations = match ($tipo) {
+            'transporte' => ['solicitante'],
+            'mantenimiento' => ['solicitante', 'tipoMantenimiento', 'vehiculo'],
+            'combustible' => ['solicitante', 'vehiculo'],
+            default => ['solicitante'],
+        };
+        $record->load($relations);
 
         $estadoAnterior = $record->estado;
         $nuevoEstado = $this->resolverEstadoAprobado($tipo);
@@ -94,9 +100,16 @@ class AprobacionesService
 
         $payload = $this->construirPayload($record, $tipo);
 
+        $subject = match ($tipo) {
+            'transporte' => '✅ Solicitud de Transporte APROBADA',
+            'mantenimiento' => '✅ Solicitud de Mantenimiento APROBADA',
+            'combustible' => '✅ Solicitud de Combustible APROBADA',
+            default => '✅ Solicitud APROBADA',
+        };
+
         try {
             Mail::to($record->solicitante->email)->send(
-                new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+                new NotificacionEventMail($subject, $payload)
             );
         } catch (\Exception $e) {
             Log::error('Error enviando correo de aprobación: '.$e->getMessage());
@@ -107,10 +120,12 @@ class AprobacionesService
     {
         $payload = [
             'tipo' => $tipo,
+            'evento' => 'solicitud_aprobada',
+            'mensaje' => 'Tu solicitud ha sido APROBADA.',
             'solicitud' => [
                 'id' => $record->id,
                 'codigo' => $record->codigo,
-                'estado' => $this->enumValue($record->estado),
+                'estado' => 'aprobado',
             ],
             'solicitante' => [
                 'name' => $record->solicitante->name,
@@ -122,6 +137,13 @@ class AprobacionesService
         if ($tipo === 'transporte') {
             $payload['solicitud']['origen'] = $record->origen;
             $payload['solicitud']['destino'] = $record->destino;
+        } elseif ($tipo === 'mantenimiento') {
+            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
+            $payload['solicitud']['tipo_mantenimiento'] = $record->tipoMantenimiento?->nombre ?? 'General';
+            $payload['solicitud']['descripcion_falla'] = $record->detalle;
+        } elseif ($tipo === 'combustible') {
+            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
+            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_galones.' galones';
         }
 
         return $payload;

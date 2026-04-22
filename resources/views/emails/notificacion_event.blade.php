@@ -145,6 +145,14 @@
         .status-rechazado { background-color:#fee2e2; color:#991b1b; }
         .status-en_proceso { background-color:#e0f2fe; color:#1e40af; }
         .status-completado { background-color:#e0fce7; color:#166534; }
+        .status-borrador { background-color:#f3f4f6; color:#374151; }
+        .status-en_revision { background-color:#dbeafe; color:#1e40af; }
+        .status-pre_aprobada { background-color:#dcfce7; color:#166534; }
+        .status-programada { background-color:#dbeafe; color:#1e40af; }
+        .status-en_ejecucion { background-color:#1e3a8a; color:#ffffff; }
+        .status-cancelada { background-color:#6b7280; color:#ffffff; }
+        .status-asignada { background-color:#a855f7; color:#ffffff; }
+        .status-liquidada { background-color:#16a34a; color:#ffffff; }
 
         .map-section {
             margin:24px 0 8px;
@@ -417,35 +425,41 @@
 
             @if($mapUrl)
                <div class="map-section">
-                <div class="map-header">
-                    Mapa aproximado de la ruta
-                </div>
-                <div class="map-body">
-                    <p>Esta visualización muestra una aproximación del recorrido de la solicitud.</p>
+                <div class="map-header">
+                    Mapa aproximado de la ruta
+                </div>
+                <div class="map-body">
+                    <p>Esta visualización muestra una aproximación del recorrido de la solicitud.</p>
 
-                    <div class="map-image-wrapper">
-                        @if (!empty($map_url))
-                            <img src="{{ $map_url }}" alt="Mapa aproximado de la ruta">
-                        @else
-                            <p style="color:#888;">
-                                No se pudo generar el mapa para esta solicitud.
-                            </p>
-                        @endif
-                    </div>
+                    <div class="map-image-wrapper">
+                        @if (!empty($map_url))
+                            <img src="{{ $map_url }}" alt="Mapa aproximado de la ruta">
+                        @else
+                            <p style="color:#888;">
+                                No se pudo generar el mapa para esta solicitud.
+                            </p>
+                        @endif
+                    </div>
 
-                    <p class="map-note">
-                        El mapa es ilustrativo y podría no reflejar el recorrido exacto.
-                    </p>
-                </div>
-            </div>
+                    <p class="map-note">
+                        El mapa es ilustrativo y podría no reflejar el recorrido exacto.
+                    </p>
+                </div>
+            </div>
             @endif
 
         @elseif($tipo === 'combustible' && isset($payload['solicitud']))
             <div class="details-grid">
-                <div class="detail-item-full">
-                    <div class="detail-label">Tipo de solicitud</div>
-                    <div class="detail-value">Combustible</div>
-                </div>
+                @if(isset($payload['solicitud']['estado']))
+                    <div class="detail-item-full">
+                        <div class="detail-label">Estado</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
+                                {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 @if(isset($payload['solicitud']['vehiculo']))
                     <div class="detail-item">
@@ -454,26 +468,76 @@
                     </div>
                 @endif
 
-                @if(isset($payload['solicitud']['cantidad_combustible']))
+                @if(isset($payload['solicitud']['motorista']))
                     <div class="detail-item">
-                        <div class="detail-label">Cantidad solicitada</div>
-                        <div class="detail-value">{{ $payload['solicitud']['cantidad_combustible'] }}</div>
+                        <div class="detail-label">Motorista</div>
+                        <div class="detail-value">{{ $payload['solicitud']['motorista'] }}</div>
                     </div>
                 @endif
 
-                @if(isset($payload['solicitud']['motivo']))
+                @if(isset($payload['solicitud']['cantidad_combustible']))
+                    <div class="detail-item">
+                        <div class="detail-label">Cantidad solicitada</div>
+                        <div class="detail-value">{{ $payload['solicitud']['cantidad_combustible'] }} galones</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['valor_total']))
+                    <div class="detail-item">
+                        <div class="detail-label">Valor total</div>
+                        <div class="detail-value">${{ number_format($payload['solicitud']['valor_total'], 2) }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['fecha_solicitud']))
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha de solicitud</div>
+                        <div class="detail-value">
+                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_solicitud'])->format('d/m/Y') }}
+                        </div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['destino_actividad']))
                     <div class="detail-item-full">
-                        <div class="detail-label">Motivo</div>
-                        <div class="detail-value">{{ $payload['solicitud']['motivo'] }}</div>
+                        <div class="detail-label">Destino de actividad</div>
+                        <div class="detail-value">{{ $payload['solicitud']['destino_actividad'] }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['forma_pago']))
+                    <div class="detail-item">
+                        <div class="detail-label">Forma de pago</div>
+                        <div class="detail-value">{{ $payload['solicitud']['forma_pago'] }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['numero_vale_ticket']))
+                    <div class="detail-item">
+                        <div class="detail-label">Número de vale/ticket</div>
+                        <div class="detail-value">{{ $payload['solicitud']['numero_vale_ticket'] }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['motivo_rechazo']))
+                    <div class="detail-item-full">
+                        <div class="detail-label">Motivo del rechazo</div>
+                        <div class="detail-value">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
                     </div>
                 @endif
             </div>
         @elseif($tipo === 'mantenimiento' && isset($payload['solicitud']))
             <div class="details-grid">
-                <div class="detail-item-full">
-                    <div class="detail-label">Tipo de solicitud</div>
-                    <div class="detail-value">Mantenimiento de vehículo</div>
-                </div>
+                @if(isset($payload['solicitud']['estado']))
+                    <div class="detail-item-full">
+                        <div class="detail-label">Estado</div>
+                        <div class="detail-value">
+                            <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
+                                {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
+                            </span>
+                        </div>
+                    </div>
+                @endif
 
                 @if(isset($payload['solicitud']['vehiculo']))
                     <div class="detail-item">
@@ -489,10 +553,47 @@
                     </div>
                 @endif
 
-                @if(isset($payload['solicitud']['descripcion_falla']))
+                @if(isset($payload['solicitud']['prioridad']))
+                    <div class="detail-item">
+                        <div class="detail-label">Prioridad</div>
+                        <div class="detail-value">{{ ucfirst($payload['solicitud']['prioridad']) }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['detalle']))
                     <div class="detail-item-full">
-                        <div class="detail-label">Descripción de la falla</div>
-                        <div class="detail-value">{{ $payload['solicitud']['descripcion_falla'] }}</div>
+                        <div class="detail-label">Detalle</div>
+                        <div class="detail-value">{{ $payload['solicitud']['detalle'] }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['fecha_sugerida']))
+                    <div class="detail-item">
+                        <div class="detail-label">Fecha sugerida</div>
+                        <div class="detail-value">
+                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_sugerida'])->format('d/m/Y') }}
+                        </div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['costo_estimado']))
+                    <div class="detail-item">
+                        <div class="detail-label">Costo estimado</div>
+                        <div class="detail-value">${{ number_format($payload['solicitud']['costo_estimado'], 2) }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['observaciones']))
+                    <div class="detail-item-full">
+                        <div class="detail-label">Observaciones</div>
+                        <div class="detail-value">{{ $payload['solicitud']['observaciones'] }}</div>
+                    </div>
+                @endif
+
+                @if(isset($payload['solicitud']['motivo_rechazo']))
+                    <div class="detail-item-full">
+                        <div class="detail-label">Motivo del rechazo</div>
+                        <div class="detail-value">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
                     </div>
                 @endif
             </div>
