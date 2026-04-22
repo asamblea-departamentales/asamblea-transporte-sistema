@@ -116,6 +116,57 @@ class AprobacionesService
         }
     }
 
+    private function enviarCorreoRechazo($record, string $tipo, string $motivo): void
+    {
+        if (! $record->solicitante || ! $record->solicitante->email) {
+            return;
+        }
+
+        $payload = [
+            'tipo' => $tipo,
+            'evento' => 'solicitud_rechazada',
+            'mensaje' => 'Tu solicitud ha sido RECHAZADA.',
+            'solicitud' => [
+                'id' => $record->id,
+                'codigo' => $record->codigo,
+                'estado' => 'rechazado',
+                'motivo_rechazo' => $motivo,
+            ],
+            'solicitante' => [
+                'name' => $record->solicitante->name,
+                'email' => $record->solicitante->email,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        if ($tipo === 'transporte') {
+            $payload['solicitud']['origen'] = $record->origen ?? 'N/A';
+            $payload['solicitud']['destino'] = $record->destino ?? 'N/A';
+        } elseif ($tipo === 'mantenimiento') {
+            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
+            $payload['solicitud']['tipo_mantenimiento'] = $record->tipoMantenimiento?->nombre ?? 'General';
+            $payload['solicitud']['detalle'] = $record->detalle ?? 'N/A';
+        } elseif ($tipo === 'combustible') {
+            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
+            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_galones ?? 'N/A';
+        }
+
+        $subject = match ($tipo) {
+            'transporte' => '❌ Solicitud de Transporte RECHAZADA',
+            'mantenimiento' => '❌ Solicitud de Mantenimiento RECHAZADA',
+            'combustible' => '❌ Solicitud de Combustible RECHAZADA',
+            default => '❌ Solicitud RECHAZADA',
+        };
+
+        try {
+            Mail::to($record->solicitante->email)->send(
+                new NotificacionEventMail($subject, $payload)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de rechazo: '.$e->getMessage());
+        }
+    }
+
     private function construirPayload($record, string $tipo): array
     {
         $payload = [
@@ -152,6 +203,15 @@ class AprobacionesService
     public function rechazar(string $tipo, int $id, int $userId, string $comentario): void
     {
         $record = $this->resolverModelo($tipo, $id);
+
+        $relations = match ($tipo) {
+            'transporte' => ['solicitante'],
+            'mantenimiento' => ['solicitante', 'tipoMantenimiento', 'vehiculo'],
+            'combustible' => ['solicitante', 'vehiculo'],
+            default => ['solicitante'],
+        };
+        $record->load($relations);
+
         $estadoAnterior = $record->estado;
 
         $record->estado = EstadoSolicitudEnum::RECHAZADA;
@@ -159,6 +219,8 @@ class AprobacionesService
         $this->guardarAprobador($record, $userId);
         $this->guardarMotivoRechazo($record, $comentario);
         $record->save();
+
+        $this->enviarCorreoRechazo($record, $tipo, $comentario);
 
         HistorialEstado::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
