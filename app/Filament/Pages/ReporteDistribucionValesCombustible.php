@@ -69,18 +69,22 @@ implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
                 Forms\Components\DatePicker::make('date_to')->label('Hasta')->live()->columnSpan(3),
 
                 Forms\Components\Select::make('vehiculo_id')
+                    ->label('Vehículo')
                     ->options(Vehiculo::pluck('placa','id'))
                     ->searchable()->columnSpan(3)->live(),
 
                 Forms\Components\Select::make('motorista_id')
+                    ->label('Motorista')
                     ->options(Motorista::pluck('nombre','id'))
                     ->searchable()->columnSpan(3)->live(),
 
                 Forms\Components\Select::make('proveedor_id')
+                    ->label('Proveedor')
                     ->options(Proveedor::pluck('nombre_comercial','id'))
                     ->searchable()->columnSpan(3)->live(),
 
                 Forms\Components\Select::make('serie_vale_id')
+                    ->label('Serie Vale')
                     ->options(SerieVale::pluck('nombre','id'))
                     ->searchable()->columnSpan(3)->live(),
 
