@@ -41,8 +41,9 @@ export default function LoginPage() {
         const response = (err as { response?: { status?: number, data?: { message?: string } } }).response;
         
         if (response?.status === 409) {
-          setError("Ya tienes una sesión activa en otro dispositivo.");
-          return;
+          setError("Sesión Activa: Ya tienes una sesión abierta en otro dispositivo. Debes cerrarla allá para poder entrar aquí.");
+          setLoading(false); // Detener el loading inmediatamente
+          return; // SALIR ABSOLUTAMENTE DEL FLUJO
         }
         
         setError(response?.data?.message || "Credenciales incorrectas. Intente de nuevo.");
