@@ -152,7 +152,7 @@ export default function HistorialViajesPage() {
               </div>
            </div>
 
-           {loadingViajes ? (
+           {loadingViajes && sortedViajes.length === 0 ? (
              <div className="flex flex-col gap-4 py-4"><SkeletonCard /><SkeletonCard /></div>
            ) : sortedViajes.length === 0 ? (
              <div className="flex flex-col items-center justify-center py-16 px-4 bg-white/50 border border-slate-200/60 border-dashed rounded-3xl mt-2 text-center">
@@ -165,7 +165,7 @@ export default function HistorialViajesPage() {
                 <p className="text-[13.5px] font-medium text-slate-500 max-w-sm">No hay registros de viajes en {MESES[month]} de {year}.</p>
              </div>
            ) : (
-             <div className="flex flex-col gap-4 mt-2">
+             <div className={`flex flex-col gap-4 mt-2 transition-opacity duration-300 ${loadingViajes ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
                 {sortedViajes.map((v) => <TripCard key={v.id} viaje={v} />)}
              </div>
            )}

@@ -102,65 +102,13 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 
   // Estados de Disponibilidad Globales
   const [activo, setActivo] = useState<boolean | null>(null);
-  const [showIncapacityModal, setShowIncapacityModal] = useState(false);
-  const [showActiveModal, setShowActiveModal] = useState(false);
-  const [incapacityReason, setIncapacityReason] = useState("");
-  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
-  const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [errorStatus, setErrorStatus] = useState<string | null>(null);
 
   // Inicializar estado del motorista
   useEffect(() => {
     getDisponibilidad()
       .then((d) => setActivo(d.activo))
       .catch((_) => setActivo(null));
-  }, []);
-
-  const toggleToInactive = async () => {
-    if (!incapacityReason.trim()) {
-      setErrorStatus("Debes ingresar un motivo para reportar incapacidad.");
-      return;
-    }
-    setUpdatingStatus(true);
-    setErrorStatus(null);
-    try {
-      await reportarDisponibilidad(false, incapacityReason.trim(), evidenceFile || undefined);
-      setActivo(false);
-      setShowIncapacityModal(false);
-      setIncapacityReason("");
-      setEvidenceFile(null);
-      simulateNotification("ESTADO ACTUALIZADO", "Te has reportado como Incapacitado. No se te asignarán viajes nuevos.");
-    } catch (err) {
-      setErrorStatus("Error al procesar la incapacidad en el sistema.");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  const toggleToActive = async () => {
-    setUpdatingStatus(true);
-    setErrorStatus(null);
-    try {
-      await reportarDisponibilidad(true);
-      setActivo(true);
-      setShowActiveModal(false);
-      simulateNotification("ESTADO ACTUALIZADO", "Estás De Nuevo Activo. Volverás al padrón de asignaciones regulares.");
-    } catch (err) {
-      setErrorStatus("Error al recuperar la disponibilidad en el sistema.");
-    } finally {
-      setUpdatingStatus(false);
-    }
-  };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setEvidenceFile(e.target.files[0]);
-    }
-  };
-
-  const clearFile = () => {
-    setEvidenceFile(null);
-  };
+  }, [location.pathname]); // Refrescar cuando cambie de ruta
 
   // Logic Handlers
   const handleBellClick = () => {
@@ -222,7 +170,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 
           {activo !== null && (
             <button
-              onClick={() => activo ? setShowIncapacityModal(true) : setShowActiveModal(true)}
+              onClick={() => navigate("/incapacidad")}
               className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 shadow-sm border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-t border-white/[0.12] ring-1 ring-white/5" : "text-white/60 hover:text-white hover:bg-white/5")}
             >
               <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all duration-200", !activo ? "bg-red-500/20 text-red-400 shadow-[inset_0_0_8px_rgba(239,68,68,0.2)]" : "text-white/40 group-hover:text-amber-400")}>
@@ -303,7 +251,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 
           {activo !== null && (
             <button
-              onClick={() => { activo ? setShowIncapacityModal(true) : setShowActiveModal(true); }}
+              onClick={() => { navigate("/incapacidad"); onClose(); }}
               className={cn("w-full group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-150 border border-transparent text-left", Design.fontJakarta, !activo ? "bg-white/10 text-white border-white/10 shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-inner" : "text-white/60 hover:text-white hover:bg-white/5")}
             >
               <div className={cn("flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-colors", !activo ? "bg-red-500/20 text-red-400" : "text-white/40 group-hover:text-amber-400")}>
@@ -372,86 +320,6 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
         </button>
       </nav>
 
-      {/* ────────────────────────────────────────────────────────────────────── */}
-      {/* ── MODALES GLOBALES DE DISPONIBILIDAD (Alojados en Sidebar)        ── */}
-      {/* ────────────────────────────────────────────────────────────────────── */}
-      {showIncapacityModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: Design.fontJakarta }}>
-          <div className="w-full max-w-md rounded-2xl bg-white shadow-2xl p-6 transform transition-all flex flex-col max-h-screen">
-            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">Reportar Incapacidad</h3>
-            <p className="text-sm font-medium text-slate-500 mb-4 leading-relaxed">
-              Ingresa el motivo y adjunta opcionalmente un documento (foto o PDF) para respaldar tu incapacidad en el sistema.
-            </p>
-
-            {errorStatus && (
-              <div className="p-3 mb-4 rounded-xl bg-red-50 text-red-600 text-xs font-bold border border-red-100">{errorStatus}</div>
-            )}
-
-            <div className="overflow-y-auto no-scrollbar pb-2 mb-2 flex-grow">
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Motivo *</label>
-              <textarea
-                rows={3}
-                value={incapacityReason}
-                onChange={(e) => setIncapacityReason(e.target.value)}
-                placeholder="Ej. Visita al ISSS, Constancia Médica..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-[14px] font-medium text-[#0f172a] placeholder:text-slate-400 focus:outline-none focus:border-blue-500 focus:bg-white resize-none transition-all mb-5"
-              />
-
-              <label className="block text-xs font-bold text-slate-600 uppercase tracking-wide mb-2">Evidencia (Opcional)</label>
-              {evidenceFile ? (
-                <div className="relative flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
-                  <span className="text-sm font-semibold text-slate-700 truncate max-w-[80%]">{evidenceFile.name}</span>
-                  <button onClick={clearFile} className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200">
-                    ✕
-                  </button>
-                </div>
-              ) : (
-                <label className="flex flex-col items-center justify-center w-full h-24 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 hover:border-blue-400 transition-colors">
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-400">
-                    <Icons.UploadContent />
-                    <p className="mt-2 text-xs font-bold text-center px-4">Haz clic para subir archivo<br />(IMG, PDF, DOC, DOCX - Max 2MB)</p>
-                  </div>
-                  <input type="file" className="hidden" accept="image/*,application/pdf,.doc,.docx" onChange={handleFileChange} />
-                </label>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 mt-4 pt-4 border-t border-slate-100">
-              <button disabled={updatingStatus} onClick={() => { setShowIncapacityModal(false); setErrorStatus(null); clearFile(); }} className="px-5 py-2.5 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition">Cancelar</button>
-              <button disabled={updatingStatus} onClick={toggleToInactive} className="px-5 py-2.5 rounded-xl text-[13px] font-bold bg-amber-500 text-white hover:bg-amber-600 shadow-[0_4px_14px_rgba(245,158,11,0.25)] transition hover:-translate-y-0.5 disabled:opacity-50 disabled:shadow-none">
-                {updatingStatus ? "Subiendo..." : "Confirmar Estado"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {showActiveModal && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 transition-opacity" style={{ fontFamily: Design.fontJakarta }}>
-          <div className="w-full max-w-sm rounded-2xl bg-white shadow-2xl p-7 text-center transform transition-all">
-            <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-5 shadow-inner">
-              <svg className="w-8 h-8 text-emerald-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-              </svg>
-            </div>
-            <h3 className="text-xl font-black text-slate-900 mb-2 tracking-tight">¿Volver a la Base?</h3>
-            <p className="text-[14px] font-medium text-slate-500 mb-7 leading-relaxed px-2">
-              Se eliminará tu último reporte y estarás activo en el radar para la asignación de viajes de Transporte.
-            </p>
-            {errorStatus && (
-              <div className="p-2 mb-4 rounded-lg bg-red-50 text-red-600 text-xs font-bold">{errorStatus}</div>
-            )}
-            <div className="flex flex-col gap-3">
-              <button disabled={updatingStatus} onClick={toggleToActive} className="w-full py-3.5 rounded-xl text-[14px] font-bold bg-[#0f172a] text-white hover:bg-slate-800 shadow-[0_4px_14px_rgba(15,23,42,0.2)] transition hover:-translate-y-0.5 active:translate-y-0 disabled:opacity-50 disabled:shadow-none">
-                {updatingStatus ? "Enviando..." : "Sí, estoy Disponible"}
-              </button>
-              <button disabled={updatingStatus} onClick={() => { setShowActiveModal(false); setErrorStatus(null); }} className="w-full py-3 rounded-xl text-[13px] font-bold text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition">
-                Cancelar
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </>
   );
 }
