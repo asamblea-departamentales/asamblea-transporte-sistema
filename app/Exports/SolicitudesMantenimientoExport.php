@@ -20,7 +20,7 @@ class SolicitudesMantenimientoExport implements FromCollection, ShouldAutoSize, 
     public function collection()
     {
         return $this->query
-            ->with(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante', 'aprobador'])
+            ->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'tipoMantenimiento', 'solicitante', 'aprobador'])
             ->orderBy('fecha_sugerida')
             ->get();
     }
