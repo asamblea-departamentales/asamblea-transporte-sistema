@@ -23,76 +23,10 @@ type FieldErrors = Partial<Record<keyof FormState, string>>;
 const STORAGE_KEY     = "solicitud_transporte";
 const MIN_HOURS_AHEAD = 2;
 
-// ─── Custom vehicle SVG icons ─────────────────────────────────────────────────
-// Reciben `sel` para cambiar color — sin JSX inline en datos
-
-function SeданIcon({ sel }: { sel: boolean }) {
-  return (
-    <svg viewBox="0 0 64 28" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-      className={cn("w-full h-11 transition-colors duration-200", sel ? "text-blue-600" : "text-slate-300")}>
-      <path strokeWidth="1.8" d="M4 19h56M4 19v3a1.5 1.5 0 003 0v-1M57 19v3a1.5 1.5 0 003 0v-1" />
-      <path strokeWidth="1.8" d="M4 19l5-9h46l5 9" />
-      <path strokeWidth="1.5" d="M13 10l3-6h32l3 6" />
-      <line strokeWidth="1.2" x1="16" y1="10" x2="48" y2="10" />
-      <line strokeWidth="1.1" x1="21" y1="4.5" x2="21" y2="10" />
-      <line strokeWidth="1.1" x1="30" y1="4" x2="30" y2="10" />
-      <line strokeWidth="1.1" x1="39" y1="4" x2="39" y2="10" />
-      <line strokeWidth="1.1" x1="46" y1="4.5" x2="46" y2="10" />
-      <circle cx="14" cy="21.5" r="3.8" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="14" cy="21.5" r="1.7" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-      <circle cx="50" cy="21.5" r="3.8" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="50" cy="21.5" r="1.7" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-    </svg>
-  );
-}
-
-function MicrobusIcon({ sel }: { sel: boolean }) {
-  return (
-    <svg viewBox="0 0 64 28" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-      className={cn("w-full h-11 transition-colors duration-200", sel ? "text-blue-600" : "text-slate-300")}>
-      <rect x="2" y="5" width="60" height="16" rx="2.5" strokeWidth="1.8" className={sel ? "fill-blue-50/50" : "fill-slate-50/50"}/>
-      <line strokeWidth="1.5" x1="2" y1="10.5" x2="62" y2="10.5" />
-      <line strokeWidth="1.3" x1="22" y1="5" x2="22" y2="10.5" />
-      <line strokeWidth="1.3" x1="42" y1="5" x2="42" y2="10.5" />
-      <rect x="5"  y="12" width="8"  height="6" rx="1" strokeWidth="1.2" className={sel ? "fill-blue-100/60" : "fill-slate-100"}/>
-      <rect x="16" y="12" width="8"  height="6" rx="1" strokeWidth="1.2" className={sel ? "fill-blue-100/60" : "fill-slate-100"}/>
-      <rect x="27" y="12" width="8"  height="6" rx="1" strokeWidth="1.2" className={sel ? "fill-blue-100/60" : "fill-slate-100"}/>
-      <rect x="38" y="12" width="8"  height="6" rx="1" strokeWidth="1.2" className={sel ? "fill-blue-100/60" : "fill-slate-100"}/>
-      <rect x="49" y="12" width="8"  height="6" rx="1" strokeWidth="1.2" className={sel ? "fill-blue-100/60" : "fill-slate-100"}/>
-      <circle cx="12" cy="23" r="3.5" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="12" cy="23" r="1.6" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-      <circle cx="52" cy="23" r="3.5" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="52" cy="23" r="1.6" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-    </svg>
-  );
-}
-
-function CamionIcon({ sel }: { sel: boolean }) {
-  return (
-    <svg viewBox="0 0 64 28" fill="none" stroke="currentColor" strokeLinecap="round" strokeLinejoin="round"
-      className={cn("w-full h-11 transition-colors duration-200", sel ? "text-blue-600" : "text-slate-300")}>
-      <rect x="2" y="7" width="36" height="14" rx="2" strokeWidth="1.8" className={sel ? "fill-blue-50/60" : "fill-slate-50"}/>
-      <line strokeWidth="1.2" x1="10" y1="7" x2="10" y2="21" />
-      <line strokeWidth="1.2" x1="18" y1="7" x2="18" y2="21" />
-      <line strokeWidth="1.2" x1="26" y1="7" x2="26" y2="21" />
-      <line strokeWidth="1.4" x1="2" y1="16" x2="38" y2="16" />
-      <path strokeWidth="1.8" d="M38 10h10l8 7v4H38V10z" className={sel ? "fill-blue-50/80" : "fill-slate-100"}/>
-      <line strokeWidth="1.2" x1="38" y1="16" x2="54" y2="16" />
-      <line strokeWidth="1.2" x1="46" y1="10" x2="46" y2="16" />
-      <circle cx="11" cy="23" r="3.5" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="11" cy="23" r="1.6" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-      <circle cx="29" cy="23" r="3.5" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="29" cy="23" r="1.6" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-      <circle cx="50" cy="23" r="3.5" className={sel ? "fill-blue-100 stroke-blue-500" : "fill-slate-100 stroke-slate-300"} strokeWidth="1.4"/>
-      <circle cx="50" cy="23" r="1.6" className={sel ? "fill-blue-500" : "fill-slate-400"} stroke="none"/>
-    </svg>
-  );
-}
-
 const VEHICULOS = [
-  { id: "sedan"    as VehiculoId, label: "Sedán",    sub: "Viajes ejecutivos",   capacity: "1 – 4 pasajeros",  Icon: SeданIcon    },
-  { id: "microbus" as VehiculoId, label: "Microbús", sub: "Grupos medianos",     capacity: "5 – 20 pasajeros", Icon: MicrobusIcon },
-  { id: "camion"   as VehiculoId, label: "Camión",   sub: "Transporte de carga", capacity: "Carga pesada",     Icon: CamionIcon   },
+  { id: "sedan"    as VehiculoId, label: "Sedán",    sub: "Viajes ejecutivos",   capacity: "1 – 4 pasajeros",  image: "/vehicles/sedan.png"    },
+  { id: "microbus" as VehiculoId, label: "Microbús", sub: "Grupos medianos",     capacity: "5 – 20 pasajeros", image: "/vehicles/microbus.png" },
+  { id: "camion"   as VehiculoId, label: "Camión",   sub: "Transporte de carga", capacity: "Carga pesada",     image: "/vehicles/camion.png"   },
 ];
 
 // ─── Date/time helpers ────────────────────────────────────────────────────────
@@ -306,40 +240,40 @@ export default function TransportStep1Page() {
                   aria-pressed={sel}
                   className={cn(
                     "group relative flex flex-row sm:flex-col items-center gap-3 sm:gap-0",
-                    "rounded-xl border-2 px-4 py-3.5 sm:px-4 sm:pt-4 sm:pb-3.5 text-left",
-                    "transition-all duration-200 active:scale-[0.98]",
+                    "rounded-2xl border-2 px-4 py-3.5 sm:px-4 sm:pt-6 sm:pb-5 text-left",
+                    "transition-all duration-300 active:scale-[0.97]",
                     "focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2",
                     sel
-                      ? "border-blue-500 shadow-sm"
-                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/60",
+                      ? "border-blue-500 shadow-lg shadow-blue-500/10 ring-4 ring-blue-50"
+                      : "border-slate-200 hover:border-slate-300 hover:bg-slate-50/60 hover:-translate-y-1 hover:shadow-xl hover:shadow-slate-200/50",
                     submitted && errors.tipoVehiculo && !sel ? "border-red-200 bg-red-50/20" : "",
                   )}
-                  style={sel ? { background: "linear-gradient(160deg, #eff6ff 0%, #ffffff 100%)" } : {}}
+                  style={sel ? { background: "linear-gradient(160deg, #f0f7ff 0%, #ffffff 100%)" } : {}}
                 >
                   {/* Radio */}
                   <span className={cn(
-                    "absolute right-2.5 top-2.5 h-4 w-4 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0",
-                    sel ? "border-blue-500 bg-blue-500" : "border-slate-300 bg-white",
+                    "absolute right-3.5 top-3.5 h-5 w-5 rounded-full border-2 flex items-center justify-center transition-all flex-shrink-0 z-10",
+                    sel ? "border-blue-600 bg-blue-600" : "border-slate-300 bg-white",
                   )}>
-                    {sel && <span className="h-1.5 w-1.5 rounded-full bg-white" />}
+                    {sel && <span className="h-2 w-2 rounded-full bg-white" />}
                   </span>
 
-                  {/* SVG vehículo */}
-                  <div className="w-20 sm:w-full flex-shrink-0 sm:mb-2 -my-0.5">
-                    <v.Icon sel={sel} />
+                  {/* Imagen realista del vehículo */}
+                  <div className="w-24 h-16 sm:w-36 sm:h-24 flex-shrink-0 sm:mb-3 flex items-center justify-center transition-transform duration-500 group-hover:scale-110 drop-shadow-md">
+                    <img src={v.image} alt={v.label} className="w-full h-full object-contain mix-blend-darken" />
                   </div>
 
                   {/* Texto */}
-                  <div className="pr-4 sm:pr-0 min-w-0">
-                    <p className={cn("text-[13px] font-bold leading-tight", sel ? "text-blue-800" : "text-slate-700")}>
+                  <div className="pr-4 sm:pr-0 min-w-0 w-full text-left sm:text-center">
+                    <p className={cn("text-[15px] font-extrabold leading-tight tracking-tight", sel ? "text-blue-900" : "text-slate-800")}>
                       {v.label}
                     </p>
-                    <p className={cn("text-[11px] mt-0.5", sel ? "text-blue-500" : "text-slate-400")}>
+                    <p className={cn("text-[12px] mt-0.5 font-medium", sel ? "text-blue-600" : "text-slate-500")}>
                       {v.sub}
                     </p>
                     <span className={cn(
-                      "inline-block mt-2 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                      sel ? "bg-blue-100 text-blue-700" : "bg-slate-100 text-slate-500",
+                      "inline-block mt-3 rounded-full px-3 py-1 text-[10px] font-bold tracking-wide",
+                      sel ? "bg-blue-100 text-blue-800" : "bg-slate-100 text-slate-500",
                     )}>
                       {v.capacity}
                     </span>
