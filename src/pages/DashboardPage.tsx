@@ -6,10 +6,7 @@ import { useNotification } from "../contexts/NotificationContext";
 // ────────────────────────────────────────────────
 // Helpers y Constantes
 // ────────────────────────────────────────────────
-const MESES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
-];
+
 
 const ESTADO_COLORS: Record<string, string> = {
   ASIGNADA: "bg-amber-500",
@@ -192,7 +189,7 @@ export default function DashboardPage() {
     return [...viajes].sort((a, b) => new Date(`${a.fecha}T${a.hora_salida}`).getTime() - new Date(`${b.fecha}T${b.hora_salida}`).getTime());
   }, [viajes]);
 
-  const totalActivos = viajes.length;
+
   const asignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
   const enEjecucion = viajes.filter(v => v.estado === "EN_EJECUCION").length;
 
