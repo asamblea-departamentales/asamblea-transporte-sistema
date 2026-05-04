@@ -18,7 +18,12 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // Verificar si el usuario ya tiene una sesión activa
+        // 1. PRIMERO validar credenciales SIN loguear
+        if (! Auth::validate($credentials)) {
+            return response()->json(['message' => 'Credenciales inválidas'], 401);
+        }
+
+        // 2. AHORA que sabemos que es el dueño, verificar sesión activa
         $user = \App\Models\User::where('email', $credentials['email'])->first();
 
         if ($user && UserSession::where('user_id', $user->id)->exists()) {
@@ -27,13 +32,11 @@ class AuthController extends Controller
             ], 409);
         }
 
-        if (! Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Credenciales inválidas'], 401);
-        }
-
+        // 3. Proceder con el login real
+        Auth::attempt($credentials);
         $request->session()->regenerate();
 
-        // Registrar la nueva sesión
+        // 4. Registrar la nueva sesión
         UserSession::create([
             'user_id' => $user->id,
             'session_id' => $request->session()->getId(),
