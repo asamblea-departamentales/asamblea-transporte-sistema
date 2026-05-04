@@ -96,8 +96,9 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { permission, requestPermission, simulateNotification } = useNotification();
+  const { permission, requestPermission, simulateNotification, notifications, markAsRead, unreadCount } = useNotification();
   const [loggingOut, setLoggingOut] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
 
   // Estados de Disponibilidad Globales
   const [activo, setActivo] = useState<boolean | null>(null);
@@ -163,17 +164,17 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
 
   // Logic Handlers
   const handleBellClick = () => {
+    setShowNotifications(true);
     if (permission === 'default') {
       requestPermission();
-    } else {
-      simulateNotification("✅ Notificaciones Activas", "Todo listo. Se te avisará aquí cuando tengas un nuevo viaje o recordatorio.");
     }
   };
 
   const initial = typeof user?.name === "string" ? (user.name.trim()[0] || "M").toUpperCase() : "M";
 
   const navItems: NavItem[] = [
-    { to: "/dashboard", label: "Mis Viajes", mobileLabel: "Viajes", icon: Icons.Dashboard },
+    { to: "/dashboard", label: "Panel Principal", mobileLabel: "Panel", icon: Icons.Dashboard },
+    { to: "/historial", label: "Historial Viajes", mobileLabel: "Historial", icon: Icons.List },
   ];
 
   const handleLogout = async () => {
@@ -246,7 +247,8 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
             </div>
             <button onClick={handleBellClick} className={btnSecondaryClass} title="Notificaciones del Sistema">
               <Icons.Bell />
-              {permission === 'default' && <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20 animate-pulse" title="Requiere permisos" />}
+              {unreadCount > 0 && <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] border border-white/20 animate-pulse" title="Notificaciones nuevas" />}
+              {permission === 'default' && unreadCount === 0 && <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20" title="Requiere permisos" />}
             </button>
           </div>
           <button onClick={handleLogout} className={cn("w-full flex items-center justify-center gap-2.5 py-3.5 rounded-xl text-[13px] font-bold tracking-wide transition-all duration-200 text-red-300 hover:text-red-200 hover:bg-white/10 bg-white/5 border border-white/10 shadow-sm", Design.fontJakarta)} title="Desconectarse del sistema"><Icons.Logout /> Cerrar Sesión</button>
@@ -266,7 +268,8 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
         </button>
         <button onClick={handleBellClick} className="flex items-center justify-center w-10 h-10 rounded-xl text-white/80 hover:text-white hover:bg-white/10 transition-all focus:outline-none relative">
           <Icons.Bell />
-          {permission === 'default' ? <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20 animate-pulse" /> : <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] border border-white/20" />}
+          {unreadCount > 0 && <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-red-500 shadow-[0_0_6px_rgba(239,68,68,0.8)] border border-white/20 animate-pulse" />}
+          {permission === 'default' && unreadCount === 0 && <span className="absolute top-[8px] right-[10px] w-2 h-2 rounded-full bg-amber-500 shadow-[0_0_6px_rgba(245,158,11,0.8)] border border-white/20" />}
         </button>
       </header>
 
@@ -317,6 +320,46 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
       </aside>
 
       {open && <div onClick={onClose} className="fixed inset-0 z-[60] bg-[#0f172a]/60 backdrop-blur-[2px] transition-opacity duration-300 lg:hidden" aria-hidden="true" />}
+
+      {/* ────────────────────────────────────────────────────────────────────── */}
+      {/* ── NOTIFICATIONS DRAWER ── */}
+      <aside className={cn("fixed top-0 right-0 z-[80] w-full sm:w-[320px] h-full bg-white flex flex-col border-l border-slate-200 shadow-2xl transition-transform duration-300 ease-[cubic-bezier(.34,1.56,.64,1)]", showNotifications ? "translate-x-0" : "translate-x-full")} style={{ fontFamily: Design.fontJakarta }}>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-slate-100 bg-slate-50/50">
+          <div className="flex items-center gap-3">
+             <div className="w-8 h-8 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center">
+                <Icons.Bell />
+             </div>
+             <h2 className="text-[16px] font-extrabold text-slate-800 tracking-tight">Notificaciones</h2>
+          </div>
+          <button onClick={() => setShowNotifications(false)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-200 text-slate-500 transition-colors">
+            <Icons.X />
+          </button>
+        </div>
+        <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-2 bg-slate-50/30">
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center h-full text-center p-6 opacity-60">
+               <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5} className="text-slate-400 mb-3"><path strokeLinecap="round" strokeLinejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" /></svg>
+               <p className="text-[14px] font-bold text-slate-600">Nada por aquí</p>
+               <p className="text-[13px] text-slate-400 mt-1 leading-tight">Te avisaremos cuando tengas asignaciones nuevas.</p>
+            </div>
+          ) : (
+            notifications.map((notif) => (
+              <div key={notif.id} onClick={() => markAsRead(notif.id)} className={cn("p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden", notif.read ? "bg-white border-slate-100" : "bg-blue-50/50 border-blue-100 shadow-sm")}>
+                 {!notif.read && <div className="absolute top-0 left-0 bottom-0 w-1 bg-blue-500" />}
+                 <div className="flex justify-between items-start gap-2 mb-1.5 pl-1">
+                   <h4 className={cn("text-[13.5px] font-bold leading-tight", notif.read ? "text-slate-700" : "text-blue-900")}>{notif.title}</h4>
+                   <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase shrink-0 mt-0.5">
+                      {notif.date.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
+                   </span>
+                 </div>
+                 <p className={cn("text-[13px] leading-relaxed pl-1", notif.read ? "text-slate-500" : "text-slate-600")}>{notif.body}</p>
+              </div>
+            ))
+          )}
+        </div>
+      </aside>
+      
+      {showNotifications && <div onClick={() => setShowNotifications(false)} className="fixed inset-0 z-[75] bg-slate-900/20 backdrop-blur-[1px] transition-opacity duration-300" aria-hidden="true" />}
 
       {/* ────────────────────────────────────────────────────────────────────── */}
       {/* ── BOTTOM NAV ── */}

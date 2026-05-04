@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import LoginPage from "./pages/LoginPage";
 import DashboardPage from "./pages/DashboardPage";
 import IncapacidadPage from "./pages/IncapacidadPage";
+import HistorialViajesPage from "./pages/HistorialViajesPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
 import { AppLayout } from "./components/layout/AppLayout";
 
@@ -16,6 +17,7 @@ export default function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<AppLayout />}>
             <Route path="/dashboard" element={<DashboardPage />} />
+            <Route path="/historial" element={<HistorialViajesPage />} />
             <Route path="/incapacidad" element={<IncapacidadPage />} />
           </Route>
         </Route>

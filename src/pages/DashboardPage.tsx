@@ -14,8 +14,6 @@ const MESES = [
 const ESTADO_COLORS: Record<string, string> = {
   ASIGNADA: "bg-amber-500",
   EN_EJECUCION: "bg-blue-500",
-  FINALIZADA: "bg-emerald-500",
-  CANCELADA: "bg-red-500",
 };
 
 // ────────────────────────────────────────────────
@@ -123,9 +121,6 @@ function TripCard({ viaje }: { viaje: ViajeAsignado }) {
 // Página principal
 // ────────────────────────────────────────────────
 export default function DashboardPage() {
-  const today = new Date();
-  const [year, setYear] = useState(today.getFullYear());
-  const [month, setMonth] = useState(today.getMonth());
   const [viajes, setViajes] = useState<ViajeAsignado[]>([]);
   const [loadingViajes, setLoadingViajes] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -135,16 +130,33 @@ export default function DashboardPage() {
 
   const cargarViajes = useCallback(async () => {
     try {
-      const mes = `${year}-${String(month + 1).padStart(2, "0")}`;
-      const data = await getViajesMes(mes);
-      setViajes(data);
+      const today = new Date();
+      const currentMonthStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}`;
+      
+      let nextMonth = today.getMonth() + 1;
+      let nextYear = today.getFullYear();
+      if (nextMonth > 11) { nextMonth = 0; nextYear++; }
+      const nextMonthStr = `${nextYear}-${String(nextMonth + 1).padStart(2, "0")}`;
+
+      const [dataCurrent, dataNext] = await Promise.all([
+        getViajesMes(currentMonthStr),
+        getViajesMes(nextMonthStr)
+      ]);
+      
+      const allViajes = [...dataCurrent, ...dataNext];
+      const activeViajes = allViajes.filter(v => v.estado === "ASIGNADA" || v.estado === "EN_EJECUCION");
+      
+      // Eliminar duplicados por si acaso el backend devuelve algo raro
+      const uniqueViajes = Array.from(new Map(activeViajes.map(item => [item.id, item])).values());
+      
+      setViajes(uniqueViajes);
       if(error) setError(null);
     } catch {
       setError("No se pudo conectar con los servidores de asignación de viajes.");
     } finally {
       setLoadingViajes(false);
     }
-  }, [year, month, error]);
+  }, [error]);
 
   // Carga inicial y Polling (refresca info en background cada X segundos)
   useEffect(() => {
@@ -176,26 +188,20 @@ export default function DashboardPage() {
     prevViajesLength.current = countAsignadas;
   }, [viajes, loadingViajes, simulateNotification]);
 
-  const prevMonth = () => { if (month === 0) { setYear(y => y - 1); setMonth(11); } else setMonth(m => m - 1); };
-  const nextMonth = () => { if (month === 11) { setYear(y => y + 1); setMonth(0); } else setMonth(m => m + 1); };
-
   const sortedViajes = useMemo(() => {
     return [...viajes].sort((a, b) => new Date(`${a.fecha}T${a.hora_salida}`).getTime() - new Date(`${b.fecha}T${b.hora_salida}`).getTime());
   }, [viajes]);
 
-  const totalViajes = viajes.length;
+  const totalActivos = viajes.length;
   const asignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
   const enEjecucion = viajes.filter(v => v.estado === "EN_EJECUCION").length;
-  const finalizadas = viajes.filter(v => v.estado === "FINALIZADA").length;
 
   const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
 
   const cards = useMemo(() => [
-    { title: "Nuevas", value: asignadas, tag: "Por iniciar", accent: { bg: "#fffbeb", iconColor: "#d97706", text: "#b45309", dot: "#f59e0b", line: "#f59e0b" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
+    { title: "Por Iniciar", value: asignadas, tag: "Nuevas", accent: { bg: "#fffbeb", iconColor: "#d97706", text: "#b45309", dot: "#f59e0b", line: "#f59e0b" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
     { title: "En Curso", value: enEjecucion, tag: "Actualmente", accent: { bg: "#eff6ff", iconColor: "#2563eb", text: "#1d4ed8", dot: "#3b82f6", line: "#3b82f6" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" /></svg> },
-    { title: "Listas", value: finalizadas, tag: "Este mes", accent: { bg: "#f0fdf4", iconColor: "#16a34a", text: "#15803d", dot: "#22c55e", line: "#22c55e" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg> },
-    { title: "Global", value: totalViajes, tag: "Todo el mes", accent: { bg: "#f1f5f9", iconColor: "#64748b", text: "#475569", dot: "#94a3b8", line: "#94a3b8" }, icon: <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg> },
-  ], [asignadas, enEjecucion, finalizadas, totalViajes]);
+  ], [asignadas, enEjecucion]);
 
   return (
     <>
@@ -219,40 +225,35 @@ export default function DashboardPage() {
         )}
 
         {/* Cards Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 mb-8">
+        <div className="grid grid-cols-2 gap-3 md:gap-4 mb-8">
           {cards.map(c => <StatCard key={c.title} {...c} loading={loadingViajes} />)}
         </div>
 
-        {/* Lista de Viajes Rediseñada */}
+        {/* Lista de Viajes Pendientes */}
         <div className="flex flex-col gap-5">
            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-slate-200/60">
               <div>
                  <h2 className="text-[18px] font-extrabold text-[#0f172a] flex items-center gap-2">
-                    Mis Viajes del Mes
-                    {asignadas > 0 && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-black tracking-wider rounded-lg animate-pulse">Por iniciar</span>}
+                    Próximos Viajes
+                    {asignadas > 0 && <span className="px-2 py-0.5 bg-amber-100 text-amber-700 text-[10px] uppercase font-black tracking-wider rounded-lg animate-pulse">Pendientes</span>}
                  </h2>
-                 <p className="text-[13px] font-medium text-slate-500 mt-0.5">Listado ordenado por cronología de salida</p>
-              </div>
-              <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm shrink-0">
-                <button onClick={prevMonth} className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-bold transition-all shrink-0">‹</button>
-                <div className="px-4 py-1.5 min-w-[120px] text-center shrink-0">
-                   <h2 className="text-[12px] font-black text-[#0f172a] uppercase tracking-widest">{MESES[month]} {year}</h2>
-                </div>
-                <button onClick={nextMonth} className="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-700 hover:bg-slate-50 font-bold transition-all shrink-0">›</button>
+                 <p className="text-[13px] font-medium text-slate-500 mt-0.5">Listado de asignaciones activas por atender</p>
               </div>
            </div>
 
            {loadingViajes ? (
              <div className="flex flex-col gap-4 py-4"><SkeletonCard /><SkeletonCard /></div>
            ) : sortedViajes.length === 0 ? (
-             <div className="flex flex-col items-center justify-center py-16 px-4 bg-white/50 border border-slate-200/60 border-dashed rounded-3xl mt-2 text-center">
-                <div className="w-16 h-16 bg-slate-100 text-slate-300 rounded-full flex items-center justify-center mb-4">
-                  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+             <div className="flex flex-col items-center justify-center py-16 px-4 bg-[#f8fafc] border border-slate-200 rounded-3xl mt-2 text-center shadow-inner">
+                <div className="w-20 h-20 bg-white shadow-sm border border-slate-100 text-emerald-500 rounded-full flex items-center justify-center mb-5">
+                  <svg width="32" height="32" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                   </svg>
                 </div>
-                <h3 className="text-[16px] font-bold text-slate-800 mb-1">Sin viajes en este mes</h3>
-                <p className="text-[13.5px] font-medium text-slate-500 max-w-sm">Actualmente no tienes viajes programados ni finalizados en {MESES[month]}.</p>
+                <h3 className="text-[18px] font-extrabold text-slate-800 mb-2">¡Todo al día!</h3>
+                <p className="text-[14px] font-medium text-slate-500 max-w-sm leading-relaxed">
+                   Actualmente no tienes viajes pendientes o en curso. Mantente alerta, te avisaremos cuando se te asigne una nueva ruta.
+                </p>
              </div>
            ) : (
              <div className="flex flex-col gap-4 mt-2">
