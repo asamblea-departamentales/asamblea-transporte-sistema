@@ -54,15 +54,20 @@ export default function IncapacidadPage() {
     );
   }
 
+  const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
+
   return (
-    <div className="p-4 md:p-8 max-w-lg mx-auto">
-      {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-xl font-black text-slate-900">Reportar Disponibilidad</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          Informa si estás disponible o si no podrás asistir por enfermedad u otro motivo.
-        </p>
-      </div>
+    <>
+      <style>{`@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap'); * { box-sizing: border-box; }`}</style>
+      <div className="p-4 md:p-8 w-full max-w-lg mx-auto" style={{ fontFamily: FONT }}>
+        
+        <div className="flex items-end justify-between mb-7 gap-4 flex-wrap">
+          <div>
+            <p className="m-0 text-[11px] font-bold text-slate-400 tracking-[0.08em] uppercase">Asamblea Legislativa · Transporte</p>
+            <h1 className="m-0 mt-1 mb-1 text-2xl md:text-3xl font-extrabold text-[#0f172a] tracking-tight leading-tight">Disponibilidad</h1>
+            <p className="m-0 text-[13.5px] text-slate-500 font-medium">Informa tu estado para la asignación de viajes</p>
+          </div>
+        </div>
 
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm p-6 space-y-6">
 
@@ -149,5 +154,6 @@ export default function IncapacidadPage() {
         </button>
       </div>
     </div>
+    </>
   );
 }
