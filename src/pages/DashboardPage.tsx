@@ -57,13 +57,13 @@ const Icons = {
 
 function SkeletonCard() {
   return (
-    <div className="bg-surface-card border border-surface-border rounded-card p-6 flex flex-col gap-3.5 animate-pulse">
+    <div className="bg-white border border-slate-200 rounded-2xl p-6 flex flex-col gap-3.5 animate-pulse shadow-sm">
       <div className="flex justify-between">
         <div className="flex flex-col gap-2.5">
           <div className="h-2.5 w-16 rounded bg-slate-200" />
           <div className="h-8 w-12 rounded bg-slate-300" />
         </div>
-        <div className="w-10 h-10 rounded-lg bg-slate-200" />
+        <div className="w-10 h-10 rounded-lg bg-slate-100" />
       </div>
       <div className="h-2.5 w-20 rounded bg-slate-200" />
     </div>
@@ -74,7 +74,7 @@ function SkeletonRow() {
   return (
     <tr className="animate-pulse">
       {[90, 110, 100, 72].map((w, i) => (
-        <td key={i} className="p-4 border-b border-surface-border">
+        <td key={i} className="p-4 border-b border-slate-100">
           <div className="h-3 rounded bg-slate-200" style={{ width: w }} />
         </td>
       ))}
@@ -89,21 +89,21 @@ function StatusBadge({ status }: { status: string }) {
   let classes = "inline-flex items-center gap-1.5 px-3 py-1 rounded-badge text-xs font-semibold border ";
   
   if (s.includes("aprob") || s.includes("aceptad") || s.includes("pre_apro")) {
-    classes += "bg-noti-approved-bg text-noti-approved-dot border-noti-approved-border";
+    classes += "bg-emerald-50 text-emerald-700 border-emerald-200";
   } else if (s.includes("pend")) {
-    classes += "bg-noti-info-bg text-noti-info-dot border-noti-info-border";
+    classes += "bg-amber-50 text-amber-700 border-amber-200";
   } else if (s.includes("rechaz")) {
-    classes += "bg-noti-rejected-bg text-noti-rejected-dot border-noti-rejected-border";
-  } else if (s.includes("progres")) {
-    classes += "bg-blue-glass text-blue-solid border-blue-border";
+    classes += "bg-red-50 text-red-700 border-red-200";
+  } else if (s.includes("progres") || s.includes("ejecu")) {
+    classes += "bg-indigo-50 text-indigo-700 border-indigo-200";
   } else {
-    classes += "bg-noti-done-bg text-noti-done-dot border-noti-done-border";
+    classes += "bg-slate-50 text-slate-700 border-slate-200";
   }
 
-  const dotClass = s.includes("aprob") || s.includes("aceptad") ? "bg-noti-approved-dot" :
-                   s.includes("pend") ? "bg-noti-info-dot" :
-                   s.includes("rechaz") ? "bg-noti-rejected-dot" :
-                   s.includes("progres") ? "bg-blue-solid" : "bg-noti-done-dot";
+  const dotClass = s.includes("aprob") || s.includes("aceptad") ? "bg-emerald-500" :
+                   s.includes("pend") ? "bg-amber-500" :
+                   s.includes("rechaz") ? "bg-red-500" :
+                   s.includes("progres") || s.includes("ejecu") ? "bg-indigo-500" : "bg-slate-500";
 
   return (
     <span className={classes}>
@@ -129,13 +129,13 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative bg-surface-card border border-surface-border rounded-card p-6 flex flex-col overflow-hidden transition-all duration-200 cursor-default",
-        hovered ? "shadow-card -translate-y-0.5 border-surface-border-strong" : "shadow-none"
+        "relative bg-white border border-slate-200 rounded-2xl p-6 flex flex-col overflow-hidden transition-all duration-200 cursor-default",
+        hovered ? "shadow-md -translate-y-0.5 border-slate-300" : "shadow-sm"
       )}
     >
       {/* Top color line on hover */}
       <div className={cn(
-        "absolute top-0 left-0 right-0 h-[3px] rounded-t-card transition-transform duration-250 origin-left",
+        "absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl transition-transform duration-250 origin-left",
         accent.line,
         hovered ? "scale-x-100" : "scale-x-0"
       )} />
@@ -150,12 +150,12 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
       {/* Content */}
       <div className="flex justify-between items-start mb-3.5">
         <div>
-          <p className="text-2xs font-bold uppercase tracking-[0.07em] text-ink-muted mb-1.5">{title}</p>
-          <p className="text-3xl font-extrabold text-ink-primary tracking-[-0.04em] leading-none">{value ?? 0}</p>
+          <p className="text-2xs font-bold uppercase tracking-[0.07em] text-slate-500 mb-1.5">{title}</p>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-[-0.04em] leading-none">{value ?? 0}</p>
         </div>
         <div className={cn(
           "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200",
-          hovered ? accent.iconBg : "bg-surface-subtle"
+          hovered ? accent.iconBg : "bg-slate-50"
         )}>
           {icon}
         </div>
@@ -174,12 +174,12 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
 function EmptyState({ onNewRequest }: { onNewRequest: () => void }) {
   return (
     <div className="flex flex-col items-center gap-3 py-14">
-      <div className="w-12 h-12 rounded-xl bg-surface-subtle flex items-center justify-center">
+      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center">
         <Icons.Truck />
       </div>
       <div className="text-center">
-        <p className="text-sm font-semibold text-ink-primary">Sin solicitudes recientes</p>
-        <p className="text-xs text-ink-muted mt-1">Crea tu primera solicitud para comenzar.</p>
+        <p className="text-sm font-semibold text-slate-900">Sin solicitudes recientes</p>
+        <p className="text-xs text-slate-500 mt-1">Crea tu primera solicitud para comenzar.</p>
       </div>
       <button
         onClick={onNewRequest}
@@ -225,28 +225,28 @@ export default function DashboardPage() {
       title: "Pendientes",
       value: summary?.pending ?? null,
       tag: "Por aprobar",
-      accent: { bg: "bg-noti-info-bg", iconBg: "bg-noti-info-bg", text: "text-noti-info-dot", dot: "bg-noti-info-dot", line: "bg-noti-info-dot" },
+      accent: { bg: "bg-amber-50", iconBg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-500", line: "bg-amber-500" },
       icon: <Icons.Clock />,
     },
     {
       title: "En Progreso",
       value: summary?.in_progress ?? null,
       tag: "En proceso",
-      accent: { bg: "bg-blue-glass", iconBg: "bg-blue-glass", text: "text-blue-solid", dot: "bg-blue-solid", line: "bg-blue-solid" },
+      accent: { bg: "bg-indigo-50", iconBg: "bg-indigo-50", text: "text-indigo-600", dot: "bg-indigo-500", line: "bg-indigo-500" },
       icon: <Icons.Lightning />,
     },
     {
       title: "Aceptadas",
       value: summary?.accepted ?? null,
       tag: "Aprobadas",
-      accent: { bg: "bg-noti-approved-bg", iconBg: "bg-noti-approved-bg", text: "text-noti-approved-dot", dot: "bg-noti-approved-dot", line: "bg-noti-approved-dot" },
+      accent: { bg: "bg-emerald-50", iconBg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-500", line: "bg-emerald-500" },
       icon: <Icons.CheckCircle />,
     },
     {
       title: "Finalizadas",
       value: summary?.completed ?? null,
       tag: "Completadas",
-      accent: { bg: "bg-noti-done-bg", iconBg: "bg-noti-done-bg", text: "text-noti-done-dot", dot: "bg-noti-done-dot", line: "bg-noti-done-dot" },
+      accent: { bg: "bg-slate-100", iconBg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-500", line: "bg-slate-500" },
       icon: <Icons.Document />,
     },
   ], [summary]);
@@ -258,13 +258,13 @@ export default function DashboardPage() {
         {/* ── Header ── */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-7 gap-4">
           <div>
-            <p className="text-2xs font-bold uppercase tracking-[0.08em] text-ink-muted">
+            <p className="text-2xs font-bold uppercase tracking-[0.08em] text-slate-500">
               Asamblea Legislativa · Transporte
             </p>
-            <h1 className="mt-1 text-2xl md:text-3xl font-extrabold text-ink-primary tracking-[-0.035em] leading-tight">
+            <h1 className="mt-1 text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.035em] leading-tight">
               Dashboard
             </h1>
-            <p className="mt-1.5 text-sm text-ink-secondary">
+            <p className="mt-1.5 text-sm text-slate-500">
               Resumen general de solicitudes de transporte
             </p>
           </div>
@@ -280,9 +280,9 @@ export default function DashboardPage() {
 
         {/* ── Error ── */}
         {error && (
-          <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-noti-rejected-bg border border-noti-rejected-border mb-6">
+          <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-red-50 border border-red-200 mb-6">
             <Icons.Alert />
-            <p className="text-sm font-medium text-noti-rejected-dot">{error}</p>
+            <p className="text-sm font-medium text-red-600">{error}</p>
           </div>
         )}
 
@@ -292,17 +292,17 @@ export default function DashboardPage() {
         </div>
 
         {/* ── Recent Requests Table ── */}
-        <div className="bg-surface-card border border-surface-border rounded-card overflow-hidden">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           {/* Table Header */}
-          <div className="flex items-center justify-between p-5 border-b border-surface-border">
+          <div className="flex items-center justify-between p-5 border-b border-slate-100">
             <div>
-              <h2 className="text-base font-bold text-ink-primary tracking-[-0.02em]">Solicitudes recientes</h2>
-              <p className="text-xs text-ink-muted mt-0.5">Últimas solicitudes registradas en el sistema</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-[-0.02em]">Solicitudes recientes</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Últimas solicitudes registradas en el sistema</p>
             </div>
             {!loading && recent.length > 0 && (
               <button
                 onClick={() => navigate("/mis-solicitudes")}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-surface-border text-xs font-semibold text-ink-primary hover:bg-surface-subtle transition-all active:scale-95"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
               >
                 Ver todas
                 <Icons.ArrowRight />
@@ -314,10 +314,10 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-surface-subtle border-b border-surface-border">
+                <tr className="bg-slate-50 border-b border-slate-100">
                   {(["Código", "Fecha", "Tipo", "Estado"] as const).map((h, i) => (
                     <th key={h} className={cn(
-                      "text-2xs font-bold uppercase tracking-[0.07em] text-ink-muted p-3",
+                      "text-2xs font-bold uppercase tracking-[0.07em] text-slate-500 p-3",
                       i === 3 ? "text-right" : "text-left"
                     )}>
                       {h}
@@ -336,18 +336,18 @@ export default function DashboardPage() {
                   </tr>
                 ) : (
                   recent.map(r => (
-                    <tr key={r.code} className="border-b border-surface-border hover:bg-surface-subtle transition-colors duration-120 last:border-b-0">
+                    <tr key={r.code} className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-120 last:border-b-0">
                       <td className="p-4">
                         <div className="flex items-center gap-2">
-                          <span className="w-1.5 h-1.5 rounded-full bg-blue-solid flex-shrink-0" />
-                          <span className="text-sm font-semibold text-ink-primary">{r.code}</span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                          <span className="text-sm font-semibold text-slate-900">{r.code}</span>
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm text-ink-secondary">{r.date}</span>
+                        <span className="text-sm text-slate-500">{r.date}</span>
                       </td>
                       <td className="p-4">
-                        <span className="text-sm text-ink-primary font-medium">{r.type}</span>
+                        <span className="text-sm text-slate-900 font-medium">{r.type}</span>
                       </td>
                       <td className="p-4 text-right">
                         <StatusBadge status={r.status} />
@@ -361,10 +361,10 @@ export default function DashboardPage() {
 
           {/* Table Footer */}
           {!loading && recent.length > 0 && (
-            <div className="p-4 border-t border-surface-border">
+            <div className="p-4 border-t border-slate-100">
               <button
                 onClick={() => navigate("/mis-solicitudes")}
-                className="w-full flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-surface-border text-xs font-semibold text-ink-primary hover:bg-surface-subtle transition-all active:scale-95"
+                className="w-full flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
               >
                 Ver todas las solicitudes
                 <Icons.ArrowRight />
