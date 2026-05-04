@@ -3,7 +3,7 @@ import React, { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
 import { useNotification } from "../../contexts/NotificationContext";
-import { getDisponibilidad, reportarDisponibilidad } from "../../services/disponibilidad.service";
+import { getDisponibilidad } from "../../services/disponibilidad.service";
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { GlobalLoading } from "../GlobalLoading";
@@ -97,7 +97,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { permission, requestPermission, simulateNotification, notifications, markAsRead, unreadCount } = useNotification();
+  const { permission, requestPermission, notifications, markAsRead, unreadCount } = useNotification();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
