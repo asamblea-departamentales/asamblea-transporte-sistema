@@ -1,10 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import LoginPage from "./pages/LoginPage";
-import DashboardPage from "./pages/DashboardPage";
-import IncapacidadPage from "./pages/IncapacidadPage";
-import HistorialViajesPage from "./pages/HistorialViajesPage";
+import LoginPage from "./auth/pages/LoginPage";
+import DashboardPage from "./viajes/DashboardPage";
+import IncapacidadPage from "./disponibilidad/IncapacidadPage";
+import HistorialViajesPage from "./viajes/HistorialViajesPage";
 import ProtectedRoute from "./auth/ProtectedRoute";
-import { AppLayout } from "./components/layout/AppLayout";
+import { AppLayout } from "./shared/components/layout/AppLayout";
 
 export default function App() {
   return (
