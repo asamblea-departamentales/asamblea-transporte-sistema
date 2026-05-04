@@ -203,7 +203,7 @@
                 <td>
                     <strong>{{ $r->vehiculo?->placa ?? 'N/A' }}</strong><br>
                     <span style="font-size:8px; color:#6b7280;">
-                        {{ trim("{$r->vehiculo?->marca?->nombre} {$r->vehiculo?->modelo?->nombre}") }}
+                        {{ trim("{$r->vehiculo?->vehMarca?->nombre} {$r->vehiculo?->vehModelo?->nombre}") }}
                     </span>
                 </td>
                 <td style="font-size:9px;">{{ mb_convert_encoding($r->motorista?->nombre ?? '—', 'UTF-8', 'UTF-8') }}</td>

@@ -4,22 +4,16 @@ namespace App\Exports;
 
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SolicitudesMantenimientoExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    ShouldAutoSize,
-    WithStyles,
-    WithEvents
+class SolicitudesMantenimientoExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(private Builder $query) {}
 
@@ -62,14 +56,14 @@ class SolicitudesMantenimientoExport implements
         return [
             $clean($row->codigo),
             $clean($row->vehiculo?->placa ?? ''),
-            $clean(trim("{$row->vehiculo?->marca?->nombre} {$row->vehiculo?->modelo?->nombre}")),
+            $clean(trim("{$row->vehiculo?->vehMarca?->nombre} {$row->vehiculo?->vehModelo?->nombre}")),
             $clean($row->tipoMantenimiento?->nombre ?? ''),
             ucfirst($row->tipo_solicitud ?? ''),
             $clean($row->detalle ?? ''),
             optional($row->fecha_sugerida)->format('Y-m-d'),
             optional($row->fecha_realizada)->format('Y-m-d'),
             $row->costo_estimado ? number_format($row->costo_estimado, 2) : '',
-            $row->costo_real     ? number_format($row->costo_real, 2)     : '',
+            $row->costo_real ? number_format($row->costo_real, 2) : '',
             strtoupper($row->prioridad?->value ?? ''),
             strtoupper($row->estado?->value ?? ''),
             $clean($row->solicitante?->name ?? ''),
@@ -86,11 +80,11 @@ class SolicitudesMantenimientoExport implements
         return [
             1 => [
                 'font' => [
-                    'bold'  => true,
+                    'bold' => true,
                     'color' => ['rgb' => 'FFFFFF'],
                 ],
                 'fill' => [
-                    'fillType'   => Fill::FILL_SOLID,
+                    'fillType' => Fill::FILL_SOLID,
                     'startColor' => ['rgb' => '065F46'], // Verde oscuro — mantenimiento
                 ],
                 'alignment' => ['vertical' => 'center'],
@@ -102,10 +96,10 @@ class SolicitudesMantenimientoExport implements
     {
         return [
             AfterSheet::class => function (AfterSheet $event) {
-                $sheet      = $event->sheet->getDelegate();
-                $lastRow    = $sheet->getHighestRow();
+                $sheet = $event->sheet->getDelegate();
+                $lastRow = $sheet->getHighestRow();
                 $lastColumn = $sheet->getHighestColumn();
-                $rangeAll   = "A1:{$lastColumn}{$lastRow}";
+                $rangeAll = "A1:{$lastColumn}{$lastRow}";
 
                 $sheet->setAutoFilter("A1:{$lastColumn}1");
                 $sheet->freezePane('A2');
@@ -114,7 +108,7 @@ class SolicitudesMantenimientoExport implements
                     'borders' => [
                         'allBorders' => [
                             'borderStyle' => 'thin',
-                            'color'       => ['rgb' => 'D1D5DB'],
+                            'color' => ['rgb' => 'D1D5DB'],
                         ],
                     ],
                 ]);
@@ -123,7 +117,7 @@ class SolicitudesMantenimientoExport implements
                     if ($r % 2 === 0) {
                         $sheet->getStyle("A{$r}:{$lastColumn}{$r}")->applyFromArray([
                             'fill' => [
-                                'fillType'   => Fill::FILL_SOLID,
+                                'fillType' => Fill::FILL_SOLID,
                                 'startColor' => ['rgb' => 'F0FDF4'],
                             ],
                         ]);

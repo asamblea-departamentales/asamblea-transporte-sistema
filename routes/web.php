@@ -114,7 +114,7 @@ Route::get('/reportes/solicitudes-mantenimiento/pdf', function (Request $request
         $q->where('tipo_solicitud', $request->input('tipo_solicitud'));
     }
 
-    $rows = $q->with(['vehiculo.marca', 'vehiculo.modelo', 'tipoMantenimiento', 'solicitante', 'aprobador'])
+    $rows = $q->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'tipoMantenimiento', 'solicitante', 'aprobador'])
         ->orderBy('fecha_sugerida')
         ->get()
         ->map(function ($row) {
@@ -172,7 +172,7 @@ Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) 
         $q->where('forma_pago', $request->input('forma_pago'));
     }
 
-    $rows = $q->with(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante', 'aprobador'])
+    $rows = $q->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante', 'aprobador'])
         ->orderBy('fecha_solicitud')
         ->get()
         ->map(function ($row) {

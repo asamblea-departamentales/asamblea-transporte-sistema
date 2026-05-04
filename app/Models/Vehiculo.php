@@ -3,10 +3,10 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Facades\Storage;
 
 class Vehiculo extends Model
@@ -51,20 +51,23 @@ class Vehiculo extends Model
     ];
 
     protected $casts = [
-        'anio'                => 'integer',
-        'capacidad_personas'  => 'integer',
-        'num_llantas'         => 'integer',
-        'activo'              => 'boolean',
+        'anio' => 'integer',
+        'capacidad_personas' => 'integer',
+        'num_llantas' => 'integer',
+        'activo' => 'boolean',
         'vencimiento_tarjeta' => 'date',
         'accesorios' => 'array',
     ];
 
     protected $appends = ['fotografia_url'];
 
-    //Accesor para la fotografía
+    // Accesor para la fotografía
     public function getFotografiaUrlAttribute(): ?string
     {
-        if (!$this->fotografia) return null;
+        if (! $this->fotografia) {
+            return null;
+        }
+
         return Storage::disk('public')->url($this->fotografia);
     }
 
@@ -90,12 +93,12 @@ class Vehiculo extends Model
 
     // Nuevas relaciones catálogos
 
-    public function marca(): BelongsTo
+    public function vehMarca(): BelongsTo
     {
         return $this->belongsTo(VehMarca::class, 'veh_marca_id');
     }
 
-    public function modelo(): BelongsTo
+    public function vehModelo(): BelongsTo
     {
         return $this->belongsTo(VehModelo::class, 'veh_modelo_id');
     }
