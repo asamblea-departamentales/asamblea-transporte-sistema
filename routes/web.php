@@ -207,10 +207,31 @@ Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) 
 Route::get('/reportes/solicitudes-combustible/excel', function (Request $request) {
     abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
 
+    $q = SolicitudCombustible::query();
+    $dateField = $request->string('date_field', 'fecha_solicitud')->toString();
+
+    if ($request->filled('date_from')) {
+        $q->where($dateField, '>=', $request->input('date_from'));
+    }
+    if ($request->filled('date_to')) {
+        $q->where($dateField, '<=', $request->input('date_to'));
+    }
+    if ($request->filled('vehiculo_id')) {
+        $q->where('vehiculo_id', $request->input('vehiculo_id'));
+    }
+    if ($request->filled('estado')) {
+        $q->where('estado', $request->input('estado'));
+    }
+    if ($request->filled('prioridad')) {
+        $q->where('prioridad', $request->input('prioridad'));
+    }
+    if ($request->filled('forma_pago')) {
+        $q->where('forma_pago', $request->input('forma_pago'));
+    }
+
     $filename = 'reporte_combustible_'.now()->format('Ymd_His').'.xlsx';
 
-    // Se pasa todo el $request para que el Export pueda filtrar igual que la tabla
-    return Excel::download(new SolicitudesCombustibleExport($request->all()), $filename);
+    return Excel::download(new SolicitudesCombustibleExport($q), $filename);
 })->name('reportes.solicitudes-combustible.excel');
 
 // Excel Mantenimiento
@@ -267,7 +288,7 @@ Route::get('/reportes/orden-trabajo/pdf', action: [ReporteOrdenTrabajoController
     ->name('reportes.orden-trabajo.pdf');
 
 Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaVehiculoController::class, 'pdf'])
-        ->name('reportes.recepcion-entrega.pdf');
+    ->name('reportes.recepcion-entrega.pdf');
 
 // Ruta para las liquidaciones unificadas
 Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::class, 'pdf'])
