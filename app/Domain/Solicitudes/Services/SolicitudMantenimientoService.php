@@ -4,10 +4,13 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * Servicio encargado de gestionar la lógica y transiciones de estado de Solicitudes de Mantenimiento.
@@ -29,6 +32,9 @@ class SolicitudMantenimientoService
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, null);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::ENVIAR->value, $userId, null);
+
+            // Enviar correo de notificación
+            $this->enviarCorreoEnviada($solicitud);
 
             return $solicitud;
         });
@@ -77,8 +83,8 @@ class SolicitudMantenimientoService
         return DB::transaction(function () use ($solicitud, $jefeId) {
             $anterior = $solicitud->estado;
 
-            $solicitud->estado           = EstadoSolicitudEnum::PRE_APROBADA;
-            $solicitud->aprobador_id     = $jefeId;     // útil para auditoría
+            $solicitud->estado = EstadoSolicitudEnum::PRE_APROBADA;
+            $solicitud->aprobador_id = $jefeId;     // útil para auditoría
             $solicitud->fecha_aprobacion = now();       // útil para auditoría
             $solicitud->save();
 
@@ -99,11 +105,11 @@ class SolicitudMantenimientoService
         return DB::transaction(function () use ($solicitud, $jefeId, $observaciones) {
             $anterior = $solicitud->estado;
 
-            $solicitud->estado           = EstadoSolicitudEnum::APROBADA;
-            $solicitud->aprobador_id     = $jefeId;
+            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
+            $solicitud->aprobador_id = $jefeId;
             $solicitud->fecha_aprobacion = now();
-            $solicitud->observaciones    = $observaciones;
-            $solicitud->motivo_rechazo   = null; // limpiar si venía rechazada antes
+            $solicitud->observaciones = $observaciones;
+            $solicitud->motivo_rechazo = null; // limpiar si venía rechazada antes
             $solicitud->save();
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $observaciones);
@@ -125,9 +131,9 @@ class SolicitudMantenimientoService
         return DB::transaction(function () use ($solicitud, $jefeId, $motivoRechazo) {
             $anterior = $solicitud->estado;
 
-            $solicitud->estado           = EstadoSolicitudEnum::RECHAZADA;
-            $solicitud->motivo_rechazo   = $motivoRechazo;
-            $solicitud->aprobador_id     = $jefeId;
+            $solicitud->estado = EstadoSolicitudEnum::RECHAZADA;
+            $solicitud->motivo_rechazo = $motivoRechazo;
+            $solicitud->aprobador_id = $jefeId;
             $solicitud->fecha_aprobacion = now();
             $solicitud->save();
 
@@ -141,74 +147,74 @@ class SolicitudMantenimientoService
     }
 
     // Iniciar ejecución: APROBADA -> EN_EJECUCION
-    //public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
-  //  {
-       // if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-          //  throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
-        //}
+    // public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
+    //  {
+    // if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+    //  throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
+    // }
 
-        //return DB::transaction(function () use ($solicitud, $userId) {
-            //$anterior = $solicitud->estado;
+    // return DB::transaction(function () use ($solicitud, $userId) {
+    // $anterior = $solicitud->estado;
 
-           // $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
-            //$solicitud->save();
+    // $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
+    // $solicitud->save();
 
-          //  $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Mantenimiento iniciado.');
-         //   $this->registrarEvento($solicitud, 'EN_EJECUCION', $userId, null);
+    //  $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Mantenimiento iniciado.');
+    //   $this->registrarEvento($solicitud, 'EN_EJECUCION', $userId, null);
 
-       //     return $solicitud;
-     //   });
-   // }
+    //     return $solicitud;
+    //   });
+    // }
 
     // Completar: APROBADA -> COMPLETADA (desde frontend, con adjuntos / atestado)
-    //Mismo cambio que en transporte, pasamos la accion de finalizar al service
+    // Mismo cambio que en transporte, pasamos la accion de finalizar al service
 
-public function completar(SolicitudMantenimiento $solicitud, int $userId, array $data): SolicitudMantenimiento
-{
-    if (!in_array($solicitud->estado, [
-        EstadoSolicitudEnum::APROBADA,
-        EstadoSolicitudEnum::EN_EJECUCION,
-    ])) {
-        throw new \DomainException('Solo se puede completar una solicitud aprobada o en ejecución.');
+    public function completar(SolicitudMantenimiento $solicitud, int $userId, array $data): SolicitudMantenimiento
+    {
+        if (! in_array($solicitud->estado, [
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::EN_EJECUCION,
+        ])) {
+            throw new \DomainException('Solo se puede completar una solicitud aprobada o en ejecución.');
+        }
+
+        $adjuntosExistentes = $solicitud->adjuntos ?? [];
+        $nuevosAdjuntos = $data['adjuntos'] ?? [];
+
+        $todosAdjuntos = array_values(array_filter(array_merge($adjuntosExistentes, $nuevosAdjuntos)));
+
+        if (empty($todosAdjuntos)) {
+            throw new \DomainException('Debes subir al menos un adjunto.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $data, $todosAdjuntos) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
+            $solicitud->fecha_realizada = $data['fecha_realizada'];
+            $solicitud->costo_real = $data['costo_real'];
+            $solicitud->adjuntos = $todosAdjuntos;
+            $solicitud->finalizado_por = $userId;
+            $solicitud->fecha_finalizacion = now();
+
+            $solicitud->save();
+
+            $this->registrarCambioEstado(
+                $solicitud,
+                $anterior,
+                $solicitud->estado,
+                $userId,
+                'Mantenimiento finalizado.'
+            );
+
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
+                'costo_real' => $data['costo_real'],
+                'fecha_realizada' => $data['fecha_realizada'],
+            ]);
+
+            return $solicitud;
+        });
     }
-
-    $adjuntosExistentes = $solicitud->adjuntos ?? [];
-    $nuevosAdjuntos = $data['adjuntos'] ?? [];
-
-    $todosAdjuntos = array_values(array_filter(array_merge($adjuntosExistentes, $nuevosAdjuntos)));
-
-    if (empty($todosAdjuntos)) {
-        throw new \DomainException('Debes subir al menos un adjunto.');
-    }
-
-    return DB::transaction(function () use ($solicitud, $userId, $data, $todosAdjuntos) {
-        $anterior = $solicitud->estado;
-
-        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
-        $solicitud->fecha_realizada = $data['fecha_realizada'];
-        $solicitud->costo_real = $data['costo_real'];
-        $solicitud->adjuntos = $todosAdjuntos;
-        $solicitud->finalizado_por = $userId;
-        $solicitud->fecha_finalizacion = now();
-
-        $solicitud->save();
-
-        $this->registrarCambioEstado(
-            $solicitud,
-            $anterior,
-            $solicitud->estado,
-            $userId,
-            'Mantenimiento finalizado.'
-        );
-
-        $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId, [
-            'costo_real' => $data['costo_real'],
-            'fecha_realizada' => $data['fecha_realizada'],
-        ]);
-
-        return $solicitud;
-    });
-}
 
     // Cancelar: BORRADOR/PENDIENTE -> CANCELADA
     public function cancelar(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
@@ -229,83 +235,80 @@ public function completar(SolicitudMantenimiento $solicitud, int $userId, array 
             return $solicitud;
         });
     }
-    
 
-    //Nuevo, agregado como proceso
+    // Nuevo, agregado como proceso
     public function evaluar(
-    SolicitudMantenimiento $solicitud,
-    int $userId,
-    string $estado,
-    ?string $comentario
-): SolicitudMantenimiento {
+        SolicitudMantenimiento $solicitud,
+        int $userId,
+        string $estado,
+        ?string $comentario
+    ): SolicitudMantenimiento {
 
-    if ($solicitud->estado !== EstadoSolicitudEnum::COMPLETADA) {
-        throw new \DomainException('Solo se puede evaluar una solicitud completada.');
+        if ($solicitud->estado !== EstadoSolicitudEnum::COMPLETADA) {
+            throw new \DomainException('Solo se puede evaluar una solicitud completada.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $estado, $comentario) {
+
+            $solicitud->evaluacion_estado = $estado;
+            $solicitud->evaluacion_comentario = $comentario;
+            $solicitud->evaluado_por = $userId;
+            $solicitud->fecha_evaluacion = now();
+
+            $solicitud->save();
+
+            // NO cambia estado → se mantiene COMPLETADA
+            // (igual que hiciste con liquidador ✔️)
+
+            BitacoraEvento::create([
+                'entidad_tipo' => 'solicitud_mantenimiento',
+                'entidad_id' => $solicitud->id,
+                'accion' => 'EVALUAR',
+                'user_id' => $userId,
+                'datos_extras' => [
+                    'estado' => $estado,
+                    'comentario' => $comentario,
+                ],
+            ]);
+
+            return $solicitud;
+        });
     }
 
-    return DB::transaction(function () use ($solicitud, $userId, $estado, $comentario) {
+    public function liquidar(SolicitudMantenimiento $solicitud, int $userId, array $data): void
+    {
+        if (empty($solicitud->adjuntos)) {
+            throw new \DomainException('No se puede liquidar sin adjuntos.');
+        }
 
-        $solicitud->evaluacion_estado = $estado;
-        $solicitud->evaluacion_comentario = $comentario;
-        $solicitud->evaluado_por = $userId;
-        $solicitud->fecha_evaluacion = now();
+        DB::transaction(function () use ($solicitud, $userId, $data) {
+            $solicitud->liquidacion()->create([
+                'user_id' => $userId,
+                'monto_solicitado' => $solicitud->costo_real ?? $solicitud->costo_estimado,
+                'monto_validado' => $data['monto_validado'],
+                'resultado' => $data['resultado'],
+                'observaciones' => $data['observaciones'] ?? null,
+                'fecha_liquidacion' => now(),
+            ]);
 
-        $solicitud->save();
+            $anterior = $solicitud->estado;
+            $solicitud->estado = EstadoSolicitudEnum::LIQUIDADA;
+            $solicitud->save();
 
-        // NO cambia estado → se mantiene COMPLETADA
-        // (igual que hiciste con liquidador ✔️)
+            $this->registrarCambioEstado(
+                $solicitud,
+                $anterior,
+                $solicitud->estado,
+                $userId,
+                'Liquidación registrada.'
+            );
 
-        BitacoraEvento::create([
-            'entidad_tipo' => 'solicitud_mantenimiento',
-            'entidad_id' => $solicitud->id,
-            'accion' => 'EVALUAR',
-            'user_id' => $userId,
-            'datos_extras' => [
-                'estado' => $estado,
-                'comentario' => $comentario,
-            ],
-        ]);
-
-        return $solicitud;
-    });
-}
-
-public function liquidar(SolicitudMantenimiento $solicitud, int $userId, array $data): void
-{
-    if (empty($solicitud->adjuntos)) {
-        throw new \DomainException('No se puede liquidar sin adjuntos.');
+            $this->registrarEvento($solicitud, 'LIQUIDAR', $userId, [
+                'monto_validado' => $data['monto_validado'],
+                'resultado' => $data['resultado'],
+            ]);
+        });
     }
-
-    DB::transaction(function () use ($solicitud, $userId, $data) {
-        $solicitud->liquidacion()->create([
-            'user_id'           => $userId,
-            'monto_solicitado'  => $solicitud->costo_real ?? $solicitud->costo_estimado,
-            'monto_validado'    => $data['monto_validado'],
-            'resultado'         => $data['resultado'],
-            'observaciones'     => $data['observaciones'] ?? null,
-            'fecha_liquidacion' => now(),
-        ]);
-
-        $anterior = $solicitud->estado;
-        $solicitud->estado = EstadoSolicitudEnum::LIQUIDADA;
-        $solicitud->save();
-
-        $this->registrarCambioEstado(
-            $solicitud,
-            $anterior,
-            $solicitud->estado,
-            $userId,
-            'Liquidación registrada.'
-        );
-
-        $this->registrarEvento($solicitud, 'LIQUIDAR', $userId, [
-            'monto_validado' => $data['monto_validado'],
-            'resultado'      => $data['resultado'],
-        ]);
-    });
-}
-
-
 
     // =====================================================
     // Helpers (mismo patrón que transporte)
@@ -314,23 +317,58 @@ public function liquidar(SolicitudMantenimiento $solicitud, int $userId, array $
     private function registrarCambioEstado(SolicitudMantenimiento $solicitud, $anterior, $nuevo, int $userId, ?string $comentario): void
     {
         HistorialEstado::create([
-            'entidad_tipo'    => 'solicitud_mantenimiento',
-            'entidad_id'      => $solicitud->id,
+            'entidad_tipo' => 'solicitud_mantenimiento',
+            'entidad_id' => $solicitud->id,
             'estado_anterior' => $anterior?->value ?? (string) $anterior,
-            'estado_nuevo'    => $nuevo?->value ?? (string) $nuevo,
-            'user_id'         => $userId,
-            'comentario'      => $comentario,
+            'estado_nuevo' => $nuevo?->value ?? (string) $nuevo,
+            'user_id' => $userId,
+            'comentario' => $comentario,
         ]);
     }
 
     private function registrarEvento(SolicitudMantenimiento $solicitud, string $accion, int $userId, ?array $extra = null): void
     {
         BitacoraEvento::create([
-            'entidad_tipo'  => 'solicitud_mantenimiento',
-            'entidad_id'    => $solicitud->id,
-            'accion'        => $accion,
-            'user_id'       => $userId,
-            'datos_extras'  => $extra,
+            'entidad_tipo' => 'solicitud_mantenimiento',
+            'entidad_id' => $solicitud->id,
+            'accion' => $accion,
+            'user_id' => $userId,
+            'datos_extras' => $extra,
         ]);
+    }
+
+    // Enviar correo cuando se envía la solicitud (borrador -> pendiente)
+    private function enviarCorreoEnviada(SolicitudMantenimiento $solicitud): void
+    {
+        try {
+            $solicitud->load(['vehiculo', 'tipoMantenimiento', 'solicitante']);
+
+            $payload = [
+                'tipo' => 'mantenimiento',
+                'evento' => 'solicitud_enviada',
+                'mensaje' => 'Tu solicitud de mantenimiento ha sido ENVIADA y está pendiente de revisión.',
+                'solicitud' => [
+                    'codigo' => $solicitud->codigo,
+                    'estado' => 'pendiente',
+                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
+                    'tipo_mantenimiento' => $solicitud->tipoMantenimiento?->nombre ?? 'N/A',
+                    'prioridad' => $solicitud->prioridad->value,
+                    'detalle' => $solicitud->detalle,
+                    'fecha_sugerida' => $solicitud->fecha_sugerida,
+                    'costo_estimado' => $solicitud->costo_estimado,
+                ],
+                'solicitante' => [
+                    'name' => $solicitud->solicitante?->name,
+                    'email' => $solicitud->solicitante?->email,
+                ],
+                'timestamp' => now()->toIso8601String(),
+            ];
+
+            Mail::to($solicitud->solicitante?->email)->send(
+                new NotificacionEventMail('📤 Solicitud de Mantenimiento ENVIADA', $payload)
+            );
+        } catch (\Exception $e) {
+            Log::error('Error enviando correo de envío mantenimiento: '.$e->getMessage());
+        }
     }
 }
