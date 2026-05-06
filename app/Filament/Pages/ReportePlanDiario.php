@@ -17,7 +17,7 @@ class ReportePlanDiario extends Page
 {
     protected static ?string $title = 'Plan Diario de Transporte';
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
-    protected static ?string $navigationGroup = 'Operativo';
+    protected static ?string $navigationGroup = 'Reportes';
 
     public $fecha_seleccionada;
     public $datos = [];
