@@ -19,6 +19,7 @@ use FontLib\Table\Type\name;
 use Illuminate\Http\Request; // Asegúrate de que el controlador exista
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
+use App\Http\Controllers\Reportes\ReportePlanDiarioController;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -296,3 +297,11 @@ Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::c
 
 Route::get('/liquidacion/mantenimiento/{id}', [LiquidacionMantenimientoController::class, 'pdf'])
     ->name('liquidacion.mantenimiento.pdf');
+
+
+//----------------------- NUEVOS REPORTES FILAMENT -----------------------//
+Route::get('/reportes/plan-diario', [ReportePlanDiarioController::class, 'index'])
+    ->name('reportes.plan-diario.index');
+
+Route::get('/reportes/plan-diario/{fecha}/pdf', [ReportePlanDiarioController::class, 'pdf'])
+    ->name('reportes.plan-diario.pdf');
