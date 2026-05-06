@@ -4,7 +4,7 @@
     <div class="bg-white rounded-xl shadow mb-4 px-6 py-4">
         <div class="flex flex-col items-center text-center border-b border-gray-300 pb-4 mb-3">
             {{-- Logo Asamblea --}}
-            <img src="{{ asset('images/logo-asamblea.png') }}"
+            <img src="{{ asset('images/logo-azul-fondo-transparente.png') }}"
                  alt="Asamblea Legislativa de El Salvador"
                  class="h-20 object-contain mb-2" />
             <div class="text-xs text-gray-500 uppercase tracking-wide font-medium">
