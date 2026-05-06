@@ -257,7 +257,7 @@
 
             {{-- Logo --}}
             <div class="header-logo">
-                <img src="{{ public_path('images/logo-asamblea.png') }}" alt="Logo Asamblea">
+                <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Logo Asamblea">
             </div>
 
             {{-- Título central --}}

@@ -26,7 +26,7 @@ class ReportePlanDiarioService
                     'destino' => trim(($solicitud->destino ?? '-').($solicitud->destino_adicional ? ' - '.$solicitud->destino_adicional : '')),
                     'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
                     'motorista' => $solicitud->motorista?->nombre ?? 'N/A',
-                    'solicitante' => $solicitud->solicitante?->nombre ?? 'N/A',
+                    'solicitante' => $solicitud->solicitante?->name ?? 'N/A',
                     'tipo_vehiculo' => $solicitud->tipoVehiculo?->nombre ?? 'N/A',
                     'estado' => $solicitud->estado->value,
                     'comunicado' => '',
