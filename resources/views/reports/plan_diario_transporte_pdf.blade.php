@@ -22,6 +22,11 @@
             line-height: 1.3;
         }
 
+        .page-container {
+            width: 88%;
+            margin: 0 auto;
+        }
+
         /* =========================
            HEADER INSTITUCIONAL
         ========================== */
@@ -199,7 +204,7 @@
         ========================== */
 
         .footer-section {
-            margin-top: 10px;
+            margin-top: 28px;
             width: 100%;
         }
 
@@ -233,8 +238,8 @@
 
         .signature-line {
             border-top: 1px solid #000;
-            width: 220px;
-            margin: 0 auto 3px;
+            width: 180px;
+            margin: 25px auto 5px;
         }
 
         .signature-label {
@@ -257,6 +262,8 @@
     </style>
 </head>
 <body>
+
+<div class="page-container">
 
     {{-- HEADER INSTITUCIONAL --}}
     <div class="header">
@@ -334,6 +341,7 @@
             @php
                 $relleno = max(0, 10 - count($rows));
             @endphp
+
             @for($i = 0; $i < $relleno; $i++)
             <tr class="empty-row">
                 <td></td>
@@ -354,16 +362,19 @@
             TURNO:
             <span class="turno-line"></span>
         </div>
+
         <div class="signature-section">
             <div class="signature-line"></div>
             <div class="signature-label">Jefe de Transporte</div>
         </div>
     </div>
 
-    <div class="page-footer">
-        Asamblea Legislativa de El Salvador — Sistema de Gestión de Transporte —
-        Pág. <script type="text/php">echo $PAGE_NUM . " de " . $PAGE_COUNT;</script>
-    </div>
+</div>
+
+<div class="page-footer">
+    Asamblea Legislativa de El Salvador — Sistema de Gestión de Transporte —
+    Pág. <script type="text/php">echo $PAGE_NUM . " de " . $PAGE_COUNT;</script>
+</div>
 
 </body>
 </html>
