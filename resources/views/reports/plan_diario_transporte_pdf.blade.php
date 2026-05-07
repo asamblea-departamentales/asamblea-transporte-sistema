@@ -7,7 +7,7 @@
 
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9px;
+            font-size: 8px;
             color: #000;
             background: #fff;
         }
@@ -16,7 +16,7 @@
         .header-wrapper {
             width: 100%;
             border: 1.5px solid #000;
-            margin-bottom: 6px;
+            margin-bottom: 4px;
         }
 
         .header-top {
@@ -30,17 +30,17 @@
         .header-top-meta {
             display: table-cell;
             vertical-align: middle;
-            padding: 6px 8px;
+            padding: 5px 7px;
         }
 
         .header-top-logo {
-            width: 90px;
+            width: 80px;
             text-align: center;
             border-right: 1px solid #000;
         }
 
         .header-top-logo img {
-            width: 75px;
+            width: 65px;
             height: auto;
         }
 
@@ -49,30 +49,29 @@
         }
 
         .header-top-title .institution {
-            font-size: 10px;
+            font-size: 9.5px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.4px;
+            letter-spacing: 0.3px;
         }
 
         .header-top-title .department {
-            font-size: 8.5px;
+            font-size: 8px;
             text-transform: uppercase;
             margin-top: 2px;
             color: #333;
         }
 
         .header-top-title .doc-title {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: bold;
             text-transform: uppercase;
-            margin-top: 5px;
-            letter-spacing: 0.5px;
+            margin-top: 4px;
             text-decoration: underline;
         }
 
         .header-top-meta {
-            width: 120px;
+            width: 110px;
             border-left: 1px solid #000;
             padding: 0;
         }
@@ -80,13 +79,12 @@
         .header-top-meta table {
             width: 100%;
             border-collapse: collapse;
-            height: 100%;
         }
 
         .header-top-meta td {
             border-bottom: 1px solid #000;
-            padding: 3px 5px;
-            font-size: 8px;
+            padding: 2.5px 4px;
+            font-size: 7.5px;
         }
 
         .header-top-meta tr:last-child td {
@@ -96,13 +94,13 @@
         .header-top-meta .meta-label {
             background: #e0e0e0;
             font-weight: bold;
-            width: 45px;
+            width: 42px;
             border-right: 1px solid #000;
         }
 
         .header-bottom {
-            padding: 3px 10px;
-            font-size: 8.5px;
+            padding: 2.5px 8px;
+            font-size: 8px;
             text-align: center;
             font-weight: bold;
             text-transform: uppercase;
@@ -110,7 +108,7 @@
         }
 
         /* ══ KPIs ══ */
-        .kpis-wrapper { margin-bottom: 6px; }
+        .kpis-wrapper { margin-bottom: 4px; }
 
         .kpis-table {
             width: 100%;
@@ -120,20 +118,20 @@
 
         .kpis-table td {
             border: 1px solid #000;
-            padding: 4px 6px;
+            padding: 3px 5px;
             text-align: center;
             width: 25%;
         }
 
         .kpi-label {
-            font-size: 7px;
+            font-size: 6.5px;
             text-transform: uppercase;
             color: #444;
             margin-bottom: 1px;
         }
 
         .kpi-value {
-            font-size: 15px;
+            font-size: 13px;
             font-weight: bold;
         }
 
@@ -141,7 +139,7 @@
         .main-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
         }
 
         .main-table thead tr {
@@ -150,27 +148,27 @@
 
         .main-table th {
             border: 1px solid #000;
-            padding: 5px 3px;
+            padding: 4px 2px;
             text-align: center;
-            font-size: 7.5px;
+            font-size: 7px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.2px;
+            letter-spacing: 0.1px;
         }
 
         .main-table td {
             border: 1px solid #000;
-            padding: 5px 3px;
+            padding: 4px 2px;
             text-align: center;
             vertical-align: middle;
-            font-size: 8px;
+            font-size: 7.5px;
             color: #000;
         }
 
         .main-table td.destino {
             text-align: left;
-            padding-left: 5px;
-            font-size: 7.5px;
+            padding-left: 4px;
+            font-size: 7px;
         }
 
         .main-table td.hora {
@@ -180,18 +178,18 @@
 
         .main-table td.vehiculo {
             font-family: 'DejaVu Sans Mono', monospace;
-            font-size: 7.5px;
+            font-size: 7px;
         }
 
         .main-table tr.empty-row td {
-            height: 20px;
+            height: 17px;
         }
 
         /* ══ PIE ══ */
         .footer {
-            margin-top: 8px;
+            margin-top: 5px;
             border-top: 1.5px solid #000;
-            padding-top: 5px;
+            padding-top: 4px;
             display: table;
             width: 100%;
         }
@@ -205,25 +203,25 @@
         }
 
         .footer-left {
-            font-size: 8px;
+            font-size: 7.5px;
             font-weight: bold;
             text-transform: uppercase;
         }
 
         .footer-center {
             text-align: center;
-            font-size: 8px;
+            font-size: 7.5px;
         }
 
         .firma-line {
             border-top: 1px solid #000;
-            width: 130px;
-            margin: 25px auto 3px;
+            width: 120px;
+            margin: 22px auto 3px;
         }
 
         .footer-right {
             text-align: right;
-            font-size: 7.5px;
+            font-size: 7px;
             color: #555;
         }
     </style>
@@ -233,17 +231,14 @@
     {{-- ══ ENCABEZADO ══ --}}
     <div class="header-wrapper">
         <div class="header-top">
-
             <div class="header-top-logo">
                 <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Logo Asamblea">
             </div>
-
             <div class="header-top-title">
                 <div class="institution">Asamblea Legislativa de El Salvador</div>
                 <div class="department">Departamento de Transporte</div>
                 <div class="doc-title">Plan Diario de Transporte</div>
             </div>
-
             <div class="header-top-meta">
                 <table>
                     <tr>
@@ -260,9 +255,7 @@
                     </tr>
                 </table>
             </div>
-
         </div>
-
         <div class="header-bottom">
             {{ ucfirst($fecha->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY')) }}
         </div>
@@ -322,12 +315,13 @@
                 </tr>
             @empty
                 <tr>
-                    <td colspan="8" style="text-align:center; padding:15px; font-style:italic; color:#666;">
+                    <td colspan="8" style="text-align:center; padding:12px; font-style:italic; color:#666;">
                         No hay misiones programadas para esta fecha.
                     </td>
                 </tr>
             @endforelse
 
+            {{-- Relleno hasta 14 filas --}}
             @php $rellenar = max(0, 14 - count($rows)); @endphp
             @for($i = 0; $i < $rellenar; $i++)
                 <tr class="empty-row">

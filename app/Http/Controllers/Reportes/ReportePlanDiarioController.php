@@ -24,7 +24,7 @@ class ReportePlanDiarioController
         }
 
         return Pdf::loadView('reports.plan_diario_transporte_pdf', compact('rows', 'kpis', 'fecha'))
-            ->setPaper('a4', 'landscape')
+            ->setPaper('a4', 'portrait')
             ->stream('reporte_plan_diario_'.$fecha->format('Y_m_d').'.pdf');
     }
 }
