@@ -17,7 +17,7 @@ class LoteCombustibleService
             $lote = AsignacionCombustibleLote::create([
                 'fecha' => $data['fecha'],
                 'creado_por' => $userId,
-                'estado' => EstadoLoteEnum::BORRADOR->value,
+                'estado' => EstadoLoteEnum::BORRADOR,
                 'observaciones' => $data['observaciones'] ?? null,
             ]);
 
@@ -34,7 +34,7 @@ class LoteCombustibleService
         return DB::transaction(function () use ($loteId, $data){
             $lote = AsignacionCombustibleLote::findOrFail($loteId);
 
-            if ($lote->estado !== EstadoLoteEnum::BORRADOR->value) {
+            if ($lote->estado !== EstadoLoteEnum::BORRADOR) {
                 throw new \DomainException('No se pueded modificar un lote finalizado o en proceso');
             }
 
@@ -64,7 +64,7 @@ class LoteCombustibleService
             $detalle = AsignacionCombustibleLoteDetalle::with('lote')->findOrFail($detalleId);
             $lote = $detalle->lote;
 
-            if ($lote->estado !== EstadoLoteEnum::BORRADOR->value) {
+            if ($lote->estado !== EstadoLoteEnum::BORRADOR) {
                 throw new \DomainException('No se pueded modificar un lote finalizado o en proceso');
             }
 
@@ -77,7 +77,7 @@ class LoteCombustibleService
         return DB::transaction(function () use ($loteId, $userId) {
             $lote = AsignacionCombustibleLote::findOrFail($loteId);
 
-            if ($lote->estado !== EstadoLoteEnum::BORRADOR->value) {
+            if ($lote->estado !== EstadoLoteEnum::BORRADOR) {
                 throw new \DomainException('Solo se pueden finalizar lotes en estado borrador');
             }
 
@@ -86,6 +86,8 @@ class LoteCombustibleService
             }
 
             $lote->estado = EstadoLoteEnum::FINALIZADO->value;
+
+            $lote->save();
 
             Log::info("Lote de combustible finalizado", [
                 'lote_id' => $lote->id, 'finalizado_por' => $userId, 'total_vehiculos' => $lote->detalles()->count(), 'monto_total' => $lote->total_monto

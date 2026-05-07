@@ -16,7 +16,7 @@ return new class extends Migration
             $table->id();
             $table->date('fecha');
             $table->foreignId('creado_por')->constrained('users')->restrictOnDelete();
-            $table->string('estado', 20)->default(EstadoLoteEnum::BORRADOR->value);
+            $table->string('estado', 20)->default(EstadoLoteEnum::BORRADOR);
             $table->text('observaciones')->nullable();
             $table->timestamps();
         });
