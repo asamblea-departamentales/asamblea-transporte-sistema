@@ -2,181 +2,364 @@
 <html lang="es">
 <head>
     <meta charset="utf-8">
+
     <style>
-        /* Configuración de página horizontal para coincidir con la foto */
         @page {
-            size: A4 landscape;
-            margin: 8mm; /* Margen ligeramente más pequeño para ganar espacio */
+            size: A4 portrait;
+            margin: 10mm;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
         body {
-            font-family: 'Helvetica', 'Arial', sans-serif;
-            font-size: 8pt; /* Tamaño un poco más compacto para que quepa todo */
+            font-family: "Times New Roman", serif;
+            font-size: 8px;
             color: #000;
-            background: #fff;
         }
 
-        /* ENCABEZADO ESTILO FORMULARIO */
-        .header-container {
+        /* =========================
+           ENCABEZADO
+        ========================== */
+
+        .header {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 5px;
+            margin-bottom: 2px;
         }
 
-        .header-container td {
-            border: 1.5pt solid #000; /* Bordes más gruesos en el encabezado */
-            padding: 6px;
+        .header td {
+            border: 1px solid #000;
             vertical-align: middle;
+            padding: 3px;
         }
 
-        .inst-title {
+        .logo-cell {
+            width: 80px;
             text-align: center;
-            text-transform: uppercase;
-            font-weight: bold;
         }
 
-        /* TABLA PRINCIPAL - CALCADA DE LA IMAGEN */
+        .logo-cell img {
+            width: 55px;
+            height: auto;
+        }
+
+        .title-cell {
+            text-align: center;
+        }
+
+        .title-main {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .title-sub {
+            font-size: 8px;
+            margin-top: 2px;
+        }
+
+        .title-doc {
+            font-size: 10px;
+            font-weight: bold;
+            text-transform: uppercase;
+            margin-top: 3px;
+        }
+
+        .meta-cell {
+            width: 120px;
+            font-size: 7px;
+        }
+
+        .meta-cell div {
+            margin-bottom: 2px;
+        }
+
+        /* =========================
+           TABLA
+        ========================== */
+
         .main-table {
             width: 100%;
             border-collapse: collapse;
             table-layout: fixed;
         }
 
-        .main-table th, .main-table td {
-            border: 1pt solid #000; /* Bordes negros sólidos */
-            padding: 2px 4px;
-            text-align: center;
+        .main-table th,
+        .main-table td {
+            border: 1px solid #000;
+            padding: 2px;
             vertical-align: middle;
-            word-wrap: break-word;
-            overflow: hidden;
+            text-align: center;
         }
 
         .main-table th {
-            background-color: #ffffff; /* Totalmente blanco para B/N puro */
-            font-size: 7.5pt;
-            text-transform: uppercase;
+            font-size: 7px;
             font-weight: bold;
-            height: 35px; /* Altura de la cabecera */
+            text-transform: uppercase;
+            height: 32px;
         }
 
-        /* Altura de las celdas para que se vean espaciosas como en la foto */
         .main-table td {
-            height: 42px; 
-            font-size: 8.5pt;
+            font-size: 7px;
+            height: 60px;
         }
 
-        /* Estilos específicos para columnas */
-        .text-left { text-align: left !important; padding-left: 5px !important; }
-        .font-small { font-size: 7.5pt !important; }
-        .bold { font-weight: bold; }
-
-        /* PIE DE PÁGINA */
-        .footer {
-            margin-top: 10px;
-            width: 100%;
-        }
-
-        .turno-area {
-            border-top: 1.5pt solid #000;
-            padding-top: 5px;
+        .hora {
+            width: 9%;
             font-weight: bold;
-            font-size: 9pt;
-            text-transform: uppercase;
         }
 
-        .signature-container {
-            margin-top: 25px;
+        .unidad {
+            width: 13%;
+        }
+
+        .destino {
+            width: 40%;
+            text-align: left;
+            padding-left: 4px;
+        }
+
+        .vehiculo {
+            width: 13%;
+        }
+
+        .motorista {
+            width: 12%;
+        }
+
+        .usuario {
+            width: 8%;
+        }
+
+        .comunicado {
+            width: 5%;
+        }
+
+        .empty-row td {
+            height: 62px;
+        }
+
+        /* =========================
+           FOOTER
+        ========================== */
+
+        .footer {
+            margin-top: 8px;
             width: 100%;
-            text-align: center;
         }
 
-        .signature-box {
+        .turno {
+            font-size: 8px;
+            font-weight: bold;
+            margin-bottom: 35px;
+        }
+
+        .turno-line {
             display: inline-block;
-            width: 300px;
+            border-bottom: 1px solid #000;
+            width: 140px;
+            height: 10px;
+            margin-left: 5px;
+        }
+
+        .firma {
             text-align: center;
         }
 
-        .signature-line {
-            border-top: 1pt solid #000;
-            margin-bottom: 4px;
+        .firma-line {
+            border-top: 1px solid #000;
+            width: 220px;
+            margin: 0 auto 3px;
+        }
+
+        .firma-label {
+            font-size: 8px;
+            font-weight: bold;
         }
     </style>
 </head>
+
 <body>
 
-    <table class="header-container">
+    {{-- HEADER --}}
+    <table class="header">
+
         <tr>
-            <td style="width: 12%; text-align: center;">
-                <div style="font-weight: bold; border: 1pt solid #000; padding: 10px; border-radius: 50%;">1</div>
+
+            <td class="logo-cell">
+                <img
+                    src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
+                    alt="Logo"
+                >
             </td>
-            <td class="inst-title">
-                <div style="font-size: 13pt;">Asamblea Legislativa de El Salvador</div>
-                <div style="font-size: 10pt; margin-top: 2px;">Departamento de Transporte</div>
-                <div style="font-size: 11pt; text-decoration: underline; margin-top: 6px;">PLAN DIARIO DE TRANSPORTE</div>
+
+            <td class="title-cell">
+
+                <div class="title-main">
+                    Asamblea Legislativa de El Salvador
+                </div>
+
+                <div class="title-sub">
+                    Departamento de Transporte
+                </div>
+
+                <div class="title-doc">
+                    Plan Diario de Transporte
+                </div>
+
             </td>
-            <td style="width: 20%; font-size: 8pt; line-height: 1.4;">
-                <strong>FECHA:</strong> {{ $fecha->format('d/m/Y') }}<br>
-                <strong>DÍA:</strong> {{ strtoupper($fecha->locale('es')->isoFormat('dddd')) }}<br>
-                <strong>HORA:</strong> {{ now()->format('h:i A') }}
+
+            <td class="meta-cell">
+
+                <div>
+                    <strong>Fecha:</strong>
+                    {{ $fecha->format('d/m/Y') }}
+                </div>
+
+                <div>
+                    <strong>Día:</strong>
+                    {{ ucfirst($fecha->locale('es')->isoFormat('dddd')) }}
+                </div>
+
+                <div>
+                    <strong>Hora:</strong>
+                    {{ now()->format('h:i A') }}
+                </div>
+
             </td>
+
         </tr>
+
     </table>
 
+    {{-- TABLA --}}
     <table class="main-table">
+
         <thead>
             <tr>
-                <th style="width: 8%;">Hora de<br>Salida</th>
-                <th style="width: 14%;">Unidad Solicitante</th>
-                <th style="width: 30%;">Destino</th>
-                <th style="width: 10%;">Vehículo</th>
-                <th style="width: 12%;">Motorista</th>
-                <th style="width: 12%;">Usuario</th>
-                <th style="width: 8%;">Comunicado</th>
+
+                <th class="hora">
+                    Hora de<br>Salida
+                </th>
+
+                <th class="unidad">
+                    Unidad Solicitante
+                </th>
+
+                <th class="destino">
+                    Destino
+                </th>
+
+                <th class="vehiculo">
+                    Vehículo
+                </th>
+
+                <th class="motorista">
+                    Motorista
+                </th>
+
+                <th class="usuario">
+                    Usuario
+                </th>
+
+                <th class="comunicado">
+                    Comunicado
+                </th>
+
             </tr>
         </thead>
-        <tbody>
-            @foreach($rows as $row)
-            <tr>
-                <td class="bold">{{ $row['hora'] }}</td>
-                <td class="text-left font-small">{{ $row['unidad'] }}</td>
-                <td class="text-left font-small">{{ $row['destino'] }}</td>
-                <td class="bold" style="font-family: 'Courier New', Courier, monospace;">{{ $row['vehiculo'] }}</td>
-                <td class="font-small">{{ $row['motorista'] }}</td>
-                <td class="font-small">{{ $row['solicitante'] }}</td>
-                <td>{{ $row['comunicado'] ?? '' }}</td>
-            </tr>
-            @endforeach
 
-            {{-- Relleno de filas para que la tabla siempre llegue abajo como en la foto --}}
-            @php $limite = 13; @endphp {{-- Ajustado a 13 para llenar la hoja A4 --}}
-            @for($i = count($rows); $i < $limite; $i++)
+        <tbody>
+
+            @forelse($rows as $row)
+
             <tr>
-                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+
+                <td class="hora">
+                    {{ $row['hora'] }}
+                </td>
+
+                <td>
+                    {{ $row['unidad'] }}
+                </td>
+
+                <td class="destino">
+                    {{ $row['destino'] }}
+                </td>
+
+                <td>
+                    {{ $row['vehiculo'] }}
+                </td>
+
+                <td>
+                    {{ $row['motorista'] }}
+                </td>
+
+                <td>
+                    {{ $row['solicitante'] }}
+                </td>
+
+                <td>
+                    {{ $row['comunicado'] ?? '' }}
+                </td>
+
             </tr>
+
+            @empty
+
+            <tr>
+                <td colspan="7" style="height:80px;">
+                    No hay registros.
+                </td>
+            </tr>
+
+            @endforelse
+
+            {{-- FILAS VACIAS --}}
+            @php
+                $relleno = max(0, 10 - count($rows));
+            @endphp
+
+            @for($i = 0; $i < $relleno; $i++)
+
+            <tr class="empty-row">
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+
             @endfor
+
         </tbody>
+
     </table>
 
+    {{-- FOOTER --}}
     <div class="footer">
-        <div class="turno-area">
-            TURNO: ____________________________________________________________________________________
+
+        <div class="turno">
+            TURNO:
+            <span class="turno-line"></span>
         </div>
 
-        <table style="width: 100%; margin-top: 40px;">
-            <tr>
-                <td style="width: 50%; text-align: center;">
-                    <div style="width: 250px; margin: 0 auto; border-top: 1pt solid #000; padding-top: 4px;">
-                        <strong>Jefe de Departamento de Transporte</strong><br>
-                        <span style="font-size: 7pt;">Firma y Sello</span>
-                    </div>
-                </td>
-                <td style="width: 50%; text-align: right; vertical-align: bottom; font-size: 7pt; color: #555;">
-                    Página 1 de 1
-                </td>
-            </tr>
-        </table>
+        <div class="firma">
+
+            <div class="firma-line"></div>
+
+            <div class="firma-label">
+                JEFE DE TRANSPORTE
+            </div>
+
+        </div>
+
     </div>
 
 </body>
