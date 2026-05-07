@@ -5,7 +5,7 @@ namespace Database\Seeders;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
-class SerieValesSeeder extends Seeder
+class SerieCargasSeeder extends Seeder
 {
     public function run(): void
     {
@@ -45,8 +45,8 @@ class SerieValesSeeder extends Seeder
             ['id' => 39, 'nombre' => '11/2023 ENTREGA FINAL DE CUPONES $5',               'valor' => 5.00,  'valor_compra' => 5.00,  'fecha_emision' => '2023-07-28', 'fecha_vencimiento' => '2024-07-27', 'fecha_recibido' => '2023-08-09', 'correlativo_inicio' => 37547537, 'correlativo_fin' => 37548136, 'cantidad' => 600,    'observaciones' => null,                                       'activo' => true],
             ['id' => 40, 'nombre' => '2024-PRIMERA ENTREGA PARCIAL $10',                  'valor' => 10.00, 'valor_compra' => 10.00, 'fecha_emision' => '2024-02-09', 'fecha_vencimiento' => '2024-12-28', 'fecha_recibido' => '2024-02-09', 'correlativo_inicio' => 38664889, 'correlativo_fin' => 38673638, 'cantidad' => 8750,   'observaciones' => null,                                       'activo' => true],
             ['id' => 41, 'nombre' => '2024-PRIMERA ENTREGA PARCIAL $5',                   'valor' => 5.00,  'valor_compra' => 5.00,  'fecha_emision' => '2024-02-09', 'fecha_vencimiento' => '2024-12-28', 'fecha_recibido' => '2024-02-09', 'correlativo_inicio' => 38673639, 'correlativo_fin' => 38674138, 'cantidad' => 500,    'observaciones' => null,                                       'activo' => true],
-            ['id' => 42, 'nombre' => '2024 ENTREGA FINAL DE VALES DE $10',                'valor' => 10.00, 'valor_compra' => 87500.00,'fecha_emision' => '2024-08-13','fecha_vencimiento' => '2024-12-31', 'fecha_recibido' => '2024-08-20', 'correlativo_inicio' => 40114271, 'correlativo_fin' => 40123020, 'cantidad' => 8750,   'observaciones' => null,                                       'activo' => true],
-            ['id' => 43, 'nombre' => '2024 ENTREGA FINAL VALES DE $5',                    'valor' => 5.00,  'valor_compra' => 0.00,  'fecha_emision' => '2024-08-13', 'fecha_vencimiento' => '2024-12-31', 'fecha_recibido' => '2024-08-20', 'correlativo_inicio' => 40123021, 'correlativo_fin' => 40123520, 'cantidad' => 500,    'observaciones' => null,                                       'activo' => true],
+            ['id' => 42, 'nombre' => '2024 ENTREGA FINAL DE VALES DE $10',                'valor' => 10.00, 'valor_compra' => 87500.00, 'fecha_emision' => '2024-08-13', 'fecha_vencimiento' => '2024-12-31', 'fecha_recibido' => '2024-08-20', 'correlativo_inicio' => 40114271, 'correlativo_fin' => 40123020, 'cantidad' => 8750,   'observaciones' => null,                                       'activo' => true],
+            ['id' => 43, 'nombre' => '2024 ENTREGA FINAL VALES DE $5',                    'valor' => 5.00,  'valor_compra' => 0.00,  'fecha_emision' => '2024-08-13', 'fecha_vencimiento' => '2024-12-31', 'fecha_recibido' => '2024-08-13', 'correlativo_inicio' => 40123021, 'correlativo_fin' => 40123520, 'cantidad' => 500,    'observaciones' => null,                                       'activo' => true],
             ['id' => 44, 'nombre' => '2025 SUMINISTRO DE TARJETAS ELECTRONICAS DE COMBUSTIBLE', 'valor' => 1.00, 'valor_compra' => 1.00, 'fecha_emision' => '2025-04-29', 'fecha_vencimiento' => '2025-12-31', 'fecha_recibido' => '2025-04-09', 'correlativo_inicio' => 1, 'correlativo_fin' => 190000, 'cantidad' => 110005, 'observaciones' => null,                                       'activo' => true],
         ]);
     }

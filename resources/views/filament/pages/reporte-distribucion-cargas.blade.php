@@ -12,8 +12,8 @@
 </x-filament::section>
 
 <x-filament::section>
-<div class="text-sm text-gray-500">Vales</div>
-<div class="text-2xl font-bold">{{ $kpi_vales }}</div>
+<div class="text-sm text-gray-500">Cargas</div>
+<div class="text-2xl font-bold">{{ $kpi_cargas }}</div>
 </x-filament::section>
 
 <x-filament::section>

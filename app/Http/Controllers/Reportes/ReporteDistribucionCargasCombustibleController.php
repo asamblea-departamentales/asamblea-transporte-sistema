@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\Reportes;
 
+use App\Domain\Solicitudes\Services\Reportes\ReporteDistribucionCargasCombustibleService;
 use App\Http\Controllers\Controller;
-use App\Domain\Solicitudes\Services\Reportes\ReporteDistribucionValesCombustibleService;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
-class ReporteDistribucionValesCombustibleController extends Controller
+class ReporteDistribucionCargasCombustibleController extends Controller
 {
-    public function pdf(Request $request, ReporteDistribucionValesCombustibleService $service)
+    public function pdf(Request $request, ReporteDistribucionCargasCombustibleService $service)
     {
         $filters = $request->only([
             'date_field',
@@ -30,7 +30,7 @@ class ReporteDistribucionValesCombustibleController extends Controller
 
         $kpis = $service->kpis($filters);
 
-        $pdf = Pdf::loadView('reports.reporte_distribucion_vales_pdf', [
+        $pdf = Pdf::loadView('reports.reporte_distribucion_cargas_pdf', [
             'rows' => $rows,
             'filters' => $filters,
             'kpis' => $kpis,
@@ -38,16 +38,16 @@ class ReporteDistribucionValesCombustibleController extends Controller
             'rangeLabel' => $this->rangeLabel($filters),
         ])->setPaper('a4', 'landscape');
 
-        return $pdf->stream('reporte_distribucion_vales.pdf');
+        return $pdf->stream('reporte_distribucion_cargas.pdf');
     }
 
     private function rangeLabel(array $filters): string
     {
-        $from = !empty($filters['date_from'])
+        $from = ! empty($filters['date_from'])
             ? Carbon::parse($filters['date_from'])->format('d/m/Y')
             : 'Inicio';
 
-        $to = !empty($filters['date_to'])
+        $to = ! empty($filters['date_to'])
             ? Carbon::parse($filters['date_to'])->format('d/m/Y')
             : 'Fin';
 

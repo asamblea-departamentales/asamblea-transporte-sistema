@@ -400,6 +400,13 @@ class SolicitudMantenimientoResource extends Resource
                             " · {$tipo}";
                     }),
 
+                Tables\Columns\TextColumn::make('ticket')
+                    ->label('Ticket')
+                    ->sortable()
+                    ->searchable()
+                    ->weight('bold')
+                    ->fontFamily('mono'),
+
                 Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()

@@ -89,7 +89,7 @@
         </thead>
         <tbody>
             <tr>
-                <td>Valor Total de Vales Asignados</td>
+                <td>Valor Total de Cargas Asignadas</td>
                 <td style="text-align: right;">${{ number_format($solicitud->valor_total, 2) }}</td>
             </tr>
             <tr class="bg-gray">

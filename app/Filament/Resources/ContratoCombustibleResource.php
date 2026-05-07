@@ -13,15 +13,34 @@ use Filament\Tables\Table;
 class ContratoCombustibleResource extends Resource
 {
     protected static ?string $model = ContratoCombustible::class;
-    protected static ?string $navigationGroup = 'Catálogos Globales';
-    protected static ?string $navigationLabel = 'Contratos de Combustible';
-    protected static ?string $navigationIcon  = 'heroicon-o-document-text';
-    protected static ?int    $navigationSort  = 21;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe']); }
+    protected static ?string $navigationGroup = 'Catálogos Globales';
+
+    protected static ?string $navigationLabel = 'Contratos de Combustible';
+
+    protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
+    protected static ?int $navigationSort = 21;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canEdit($r): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canDelete($r): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe']);
+    }
 
     public static function form(Form $form): Form
     {
@@ -30,14 +49,14 @@ class ContratoCombustibleResource extends Resource
             Forms\Components\Section::make('Identificación del Contrato')
                 ->icon('heroicon-o-document-text')
                 ->schema([
-                  Forms\Components\TextInput::make('numero_contrato')
-    ->label('Número de Contrato')
-    ->required()
-    ->maxLength(100)
-    ->unique(ignoreRecord: true)
-    ->placeholder('Ej: CONT-2026-001')
+                    Forms\Components\TextInput::make('numero_contrato')
+                        ->label('Número de Contrato')
+                        ->required()
+                        ->maxLength(100)
+                        ->unique(ignoreRecord: true)
+                        ->placeholder('Ej: CONT-2026-001')
     // Reemplaza ->fontFamily('mono') por esto:
-    ->extraInputAttributes(['class' => 'font-mono text-cyan-700 font-bold']),
+                        ->extraInputAttributes(['class' => 'font-mono text-cyan-700 font-bold']),
                     Forms\Components\TextInput::make('nombre')
                         ->label('Nombre / Descripción')
                         ->required()
@@ -74,7 +93,7 @@ class ContratoCombustibleResource extends Resource
                         ->live(debounce: 500)
                         ->afterStateUpdated(function ($state, $set, $get) {
                             // Al crear, monto_disponible = monto_inicial
-                            if (!$get('id')) {
+                            if (! $get('id')) {
                                 $set('monto_disponible', $state);
                             }
                         }),
@@ -85,7 +104,7 @@ class ContratoCombustibleResource extends Resource
                         ->required()
                         ->prefix('$')
                         ->minValue(0)
-                        ->helperText('Se descuenta automáticamente al asignar vales.'),
+                        ->helperText('Se descuenta automáticamente al asignar cargas.'),
 
                     Forms\Components\Textarea::make('observaciones')
                         ->label('Observaciones')
@@ -124,25 +143,24 @@ class ContratoCombustibleResource extends Resource
                     ->label('Disponible')
                     ->money('USD')->sortable()
                     ->weight('bold')
-                    ->color(fn ($record) => match(true) {
-                        $record->monto_disponible <= 0                                        => 'danger',
-                        $record->monto_disponible <= ($record->monto_inicial * 0.20)          => 'warning',
-                        default                                                               => 'success',
+                    ->color(fn ($record) => match (true) {
+                        $record->monto_disponible <= 0 => 'danger',
+                        $record->monto_disponible <= ($record->monto_inicial * 0.20) => 'warning',
+                        default => 'success',
                     }),
 
                 Tables\Columns\TextColumn::make('porcentaje_usado')
                     ->label('% Usado')
-                    ->getStateUsing(fn ($record) =>
-                        $record->monto_inicial > 0
-                            ? round((1 - $record->monto_disponible / $record->monto_inicial) * 100, 1) . '%'
+                    ->getStateUsing(fn ($record) => $record->monto_inicial > 0
+                            ? round((1 - $record->monto_disponible / $record->monto_inicial) * 100, 1).'%'
                             : '—'
                     )
                     ->badge()
-                    ->color(fn ($record) => match(true) {
-                        $record->monto_inicial <= 0                                            => 'gray',
-                        (1 - $record->monto_disponible / $record->monto_inicial) >= 0.80      => 'danger',
-                        (1 - $record->monto_disponible / $record->monto_inicial) >= 0.60      => 'warning',
-                        default                                                                => 'success',
+                    ->color(fn ($record) => match (true) {
+                        $record->monto_inicial <= 0 => 'gray',
+                        (1 - $record->monto_disponible / $record->monto_inicial) >= 0.80 => 'danger',
+                        (1 - $record->monto_disponible / $record->monto_inicial) >= 0.60 => 'warning',
+                        default => 'success',
                     }),
 
                 Tables\Columns\TextColumn::make('series_count')
@@ -156,11 +174,11 @@ class ContratoCombustibleResource extends Resource
                 Tables\Columns\TextColumn::make('fecha_fin')
                     ->label('Vence')
                     ->date('d/m/Y')->sortable()
-                    ->color(fn ($record) => match(true) {
-                        !$record->fecha_fin                          => 'gray',
-                        $record->fecha_fin->isPast()                 => 'danger',
-                        $record->fecha_fin->diffInDays(now()) <= 30  => 'warning',
-                        default                                      => 'success',
+                    ->color(fn ($record) => match (true) {
+                        ! $record->fecha_fin => 'gray',
+                        $record->fecha_fin->isPast() => 'danger',
+                        $record->fecha_fin->diffInDays(now()) <= 30 => 'warning',
+                        default => 'success',
                     }),
 
                 Tables\Columns\IconColumn::make('activo')
@@ -202,10 +220,10 @@ class ContratoCombustibleResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListContratoCombustibles::route('/'),
+            'index' => Pages\ListContratoCombustibles::route('/'),
             'create' => Pages\CreateContratoCombustible::route('/create'),
-            'edit'   => Pages\EditContratoCombustible::route('/{record}/edit'),
-            'view'   => Pages\ViewContratoCombustible::route('/{record}'),
+            'edit' => Pages\EditContratoCombustible::route('/{record}/edit'),
+            'view' => Pages\ViewContratoCombustible::route('/{record}'),
         ];
     }
 }

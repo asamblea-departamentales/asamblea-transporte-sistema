@@ -1,24 +1,27 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-class SerieVale extends Model
+class SerieCarga extends Model
 {
     protected $table = 'serie_vales';
+
     protected $fillable = [
         'nombre', 'valor', 'valor_compra',
         'fecha_emision', 'fecha_vencimiento', 'fecha_recibido',
         'correlativo_inicio', 'correlativo_fin', 'cantidad',
         'observaciones', 'activo', 'contrato_id', 'correlativo_actual',
     ];
+
     protected $casts = [
-        'activo'            => 'boolean',
-        'fecha_emision'     => 'date',
+        'activo' => 'boolean',
+        'fecha_emision' => 'date',
         'fecha_vencimiento' => 'date',
-        'fecha_recibido'    => 'date',
-        'valor'             => 'decimal:2',
-        'valor_compra'      => 'decimal:2',
+        'fecha_recibido' => 'date',
+        'valor' => 'decimal:2',
+        'valor_compra' => 'decimal:2',
     ];
 
     public function getEstaVigenteAttribute(): bool
@@ -27,7 +30,7 @@ class SerieVale extends Model
     }
 
     public function contrato()
-{
-    return $this->belongsTo(ContratoCombustible::class, 'contrato_id');
-}
+    {
+        return $this->belongsTo(ContratoCombustible::class, 'contrato_id');
+    }
 }

@@ -9,7 +9,6 @@ use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoCombustible;
 use App\Models\HistorialEstado;
-use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use Filament\Actions;
 use Filament\Forms;
@@ -125,11 +124,11 @@ class ViewSolicitudCombustible extends ViewRecord
             Actions\Action::make('asignar_vales')
                 ->button()
                 ->size('lg')
-                ->label('Asignar Vales')
+                ->label('Asignar Cargas')
                 ->color('primary')
                 ->icon('heroicon-o-ticket')
-                ->modalHeading('Asignar Vales de Combustible')
-                ->modalDescription('Selecciona el contrato, la serie y la cantidad de vales a asignar.')
+                ->modalHeading('Asignar Cargas de Combustible')
+                ->modalDescription('Selecciona el contrato, la serie y la cantidad de cargas a asignar.')
                 ->modalWidth('xl')
                 ->form([
                     Forms\Components\Select::make('contrato_id')
@@ -147,8 +146,8 @@ class ViewSolicitudCombustible extends ViewRecord
                         ->afterStateUpdated(fn ($set) => $set('serie_vale_id', null)),
 
                     Forms\Components\Select::make('serie_vale_id')
-                        ->label('Serie de Vales')
-                        ->options(fn ($get) => SerieVale::where('contrato_id', $get('contrato_id'))
+                        ->label('Serie de Cargas')
+                        ->options(fn ($get) => SerieCarga::where('contrato_id', $get('contrato_id'))
                             ->where('activo', true)
                             ->get()
                             ->mapWithKeys(fn ($s) => [
@@ -164,7 +163,7 @@ class ViewSolicitudCombustible extends ViewRecord
                         ->helperText('Primero selecciona un contrato.'),
 
                     Forms\Components\TextInput::make('cantidad_vales')
-                        ->label('Cantidad de Vales')
+                        ->label('Cantidad de Cargas')
                         ->numeric()
                         ->required()
                         ->minValue(1)
@@ -177,7 +176,7 @@ class ViewSolicitudCombustible extends ViewRecord
                                 return null;
                             }
 
-                            $serie = SerieVale::find($serieId);
+                            $serie = SerieCarga::find($serieId);
                             if (! $serie) {
                                 return null;
                             }
@@ -201,7 +200,7 @@ class ViewSolicitudCombustible extends ViewRecord
                                 );
                             }
 
-                            $serie = SerieVale::find($serieId);
+                            $serie = SerieCarga::find($serieId);
                             if (! $serie) {
                                 return '-';
                             }
@@ -212,8 +211,8 @@ class ViewSolicitudCombustible extends ViewRecord
                             $disponibles = $serie->correlativo_fin - $inicio + 1;
 
                             $alerta = $fin > $serie->correlativo_fin
-                                ? '<span class="text-red-600 font-bold">⚠ Sin suficientes vales en esta serie.</span>'
-                                : '<span class="text-green-600">✓ Vales disponibles suficientes.</span>';
+                                ? '<span class="text-red-600 font-bold">⚠ Sin suficientes cargas en esta serie.</span>'
+                                : '<span class="text-green-600">✓ Cargas disponibles suficientes.</span>';
 
                             return new \Illuminate\Support\HtmlString("
                                 <div class='text-sm space-y-1 rounded-lg border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800 p-3'>
@@ -222,7 +221,7 @@ class ViewSolicitudCombustible extends ViewRecord
                                         <span class='font-medium'>{$serie->nombre}</span>
                                     </div>
                                     <div class='flex justify-between'>
-                                        <span class='text-gray-500'>Valor por vale:</span>
+                                        <span class='text-gray-500'>Valor por carga:</span>
                                         <span class='font-medium'>\$".number_format($serie->valor, 2)."</span>
                                     </div>
                                     <div class='flex justify-between'>
@@ -234,7 +233,7 @@ class ViewSolicitudCombustible extends ViewRecord
                                         <span class='font-bold text-primary-600'>\$".number_format($monto, 2)."</span>
                                     </div>
                                     <div class='flex justify-between'>
-                                        <span class='text-gray-500'>Vales disponibles en serie:</span>
+                                        <span class='text-gray-500'>Cargas disponibles en serie:</span>
                                         <span>{$disponibles}</span>
                                     </div>
                                     <div class='mt-1'>{$alerta}</div>
@@ -255,8 +254,8 @@ class ViewSolicitudCombustible extends ViewRecord
                         );
 
                         Notification::make()
-                            ->title('Vales asignados correctamente')
-                            ->body("Se asignaron {$data['cantidad_vales']} vales a la solicitud {$record->codigo}.")
+                            ->title('Cargas asignadas correctamente')
+                            ->body("Se asignaron {$data['cantidad_vales']} cargas a la solicitud {$record->codigo}.")
                             ->success()
                             ->send();
 

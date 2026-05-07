@@ -30,7 +30,7 @@ class ContratoCombustible extends Model
 
     public function series()
     {
-        return $this->hasMany(SerieVale::class, 'contrato_id');
+        return $this->hasMany(SerieCarga::class, 'contrato_id');
     }
 
     public function solicitudes()

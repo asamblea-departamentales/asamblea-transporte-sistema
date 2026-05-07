@@ -35,7 +35,7 @@ class SolicitudCombustible extends Model
         'fecha_aprobacion',
         'motivo_rechazo',
         'observaciones',
-        //Campos para contratos
+        // Campos para contratos
         'contrato_id',
         'serie_vale_id',
         'correlativo_inicio',
@@ -48,18 +48,18 @@ class SolicitudCombustible extends Model
     ];
 
     protected $casts = [
-        'fecha_solicitud'      => 'date',
+        'fecha_solicitud' => 'date',
         'fecha_inicio_periodo' => 'date',
-        'fecha_fin_periodo'    => 'date',
-        'fecha_aprobacion'     => 'datetime',
+        'fecha_fin_periodo' => 'date',
+        'fecha_aprobacion' => 'datetime',
         'cantidad_combustible' => 'decimal:2',
-        'valor_unitario'       => 'decimal:2',
-        'valor_total'          => 'decimal:2',
-        'comprobantes'         => 'array',
-        'estado'               => EstadoSolicitudEnum::class,
-        'prioridad'            => PrioridadSolicitudEnum::class,
+        'valor_unitario' => 'decimal:2',
+        'valor_total' => 'decimal:2',
+        'comprobantes' => 'array',
+        'estado' => EstadoSolicitudEnum::class,
+        'prioridad' => PrioridadSolicitudEnum::class,
 
-        //Casts para lo de contratos y vales
+        // Casts para lo de contratos y vales
         'valor_unitario_vale' => 'decimal:2',
         'monto_asignado' => 'decimal:2',
         'fecha_asignacion' => 'datetime',
@@ -70,14 +70,16 @@ class SolicitudCombustible extends Model
     protected static function booted()
     {
         static::creating(function ($solicitud) {
-            $year   = now()->year;
+            $year = now()->year;
             $ultima = static::where('codigo', 'like', "CB-{$year}-%")
                 ->latest('id')
                 ->first();
 
             $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
-            $solicitud->codigo = "CB-{$year}-" . str_pad($numero, 6, '0', STR_PAD_LEFT);
+            $solicitud->codigo = "CB-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+
+            app(TicketService::class)->generar($solicitud);
         });
     }
 
@@ -113,9 +115,9 @@ class SolicitudCombustible extends Model
         return $this->belongsTo(ContratoCombustible::class, 'contrato_id');
     }
 
-    public function serieVale()
+    public function serieCarga()
     {
-        return $this->belongsTo(SerieVale::class, 'serie_vale_id');
+        return $this->belongsTo(SerieCarga::class, 'serie_vale_id');
     }
 
     public function asignador()
@@ -123,22 +125,21 @@ class SolicitudCombustible extends Model
         return $this->belongsTo(User::class, 'asignado_por');
     }
 
-
     public function liquidacion(): \Illuminate\Database\Eloquent\Relations\MorphOne
-{
-    return $this->morphOne(Liquidacion::class, 'liquidable');
-}
+    {
+        return $this->morphOne(Liquidacion::class, 'liquidable');
+    }
 
-    //Relacion para incidencias
+    // Relacion para incidencias
     public function incidencias()
-{
-    return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
-}
+    {
+        return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+    }
 
     // ── Helpers ─────────────────────────────────────────────
 
     public function tieneComprobantes(): bool
     {
-        return !empty($this->comprobantes);
+        return ! empty($this->comprobantes);
     }
 }

@@ -2,21 +2,20 @@
 
 namespace App\Filament\Pages;
 
-use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Models\ContratoCombustible;
 use App\Models\Motorista;
-use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use App\Models\Vehiculo;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReporteControlMensualCombustible extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
@@ -25,32 +24,47 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Control Mensual de Combustible';
+
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
+
     protected static ?int $navigationSort = 5;
 
     protected static string $view = 'filament.pages.reporte-control-mensual-combustible';
 
     public ?string $date_field = 'fecha_solicitud';
+
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?int $vehiculo_id = null;
+
     public ?int $motorista_id = null;
+
     public ?int $contrato_id = null;
+
     public ?int $serie_vale_id = null;
+
     public ?string $estado = null;
 
     public int $kpi_total = 0;
+
     public float $kpi_galones = 0;
+
     public float $kpi_valor_total = 0;
+
     public float $kpi_monto_asignado = 0;
+
     public int $kpi_asignadas = 0;
+
     public int $kpi_completadas = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -151,8 +165,8 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\Select::make('serie_vale_id')
-                                ->label('Serie de vale')
-                                ->options(fn () => SerieVale::orderBy('nombre')->pluck('nombre', 'id'))
+                                ->label('Serie de carga')
+                                ->options(fn () => SerieCarga::orderBy('nombre')->pluck('nombre', 'id'))
                                 ->searchable()
                                 ->native(false)
                                 ->live()
@@ -172,7 +186,7 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                                     ->label('Mes actual')
                                     ->action(function () {
                                         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -219,8 +233,7 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
 
                 Tables\Columns\TextColumn::make('vehiculo_id')
                     ->label('Vehículo')
-                    ->getStateUsing(fn (SolicitudCombustible $record) =>
-                        app(ReporteControlMensualCombustibleService::class)->resolverVehiculo($record))
+                    ->getStateUsing(fn (SolicitudCombustible $record) => app(ReporteControlMensualCombustibleService::class)->resolverVehiculo($record))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('motorista.nombre')
@@ -232,18 +245,17 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                     ->label('Contrato')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('serieVale.nombre')
+                Tables\Columns\TextColumn::make('serieCarga.nombre')
                     ->label('Serie')
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('correlativo')
                     ->label('Correlativo')
-                    ->getStateUsing(fn (SolicitudCombustible $record) =>
-                        app(ReporteControlMensualCombustibleService::class)->resolverCorrelativo($record))
+                    ->getStateUsing(fn (SolicitudCombustible $record) => app(ReporteControlMensualCombustibleService::class)->resolverCorrelativo($record))
                     ->toggleable(),
 
                 Tables\Columns\TextColumn::make('cantidad_vales')
-                    ->label('Vales')
+                    ->label('Cargas')
                     ->numeric()
                     ->toggleable(),
 
@@ -254,7 +266,7 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
 
                 Tables\Columns\TextColumn::make('cantidad_combustible')
                     ->label('Galones')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' gal')
                     ->badge()
                     ->color('info'),
 
@@ -308,7 +320,7 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
     public function rangeLabel(): string
     {
         $from = $this->date_from ? \Carbon\Carbon::parse($this->date_from)->format('d/m/Y') : 'Inicio';
-        $to   = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
+        $to = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
 
         return "Periodo: {$from} al {$to}";
     }

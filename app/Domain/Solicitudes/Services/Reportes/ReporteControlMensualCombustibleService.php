@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Domain\Solicitudes\Services\Reportes;
+
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\SolicitudCombustible;
 use Illuminate\Database\Eloquent\Builder;
@@ -18,7 +19,7 @@ class ReporteControlMensualCombustibleService
                 'motorista',
                 'solicitante',
                 'contrato',
-                'serieVale',
+                'serieCarga',
             ])
             ->when($filtros['date_from'] ?? null, function ($query, $dateFrom) use ($column) {
                 $query->where($column, '>=', $dateFrom);

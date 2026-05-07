@@ -514,7 +514,7 @@
 
                 @if(isset($payload['solicitud']['numero_vale_ticket']))
                     <div class="detail-item">
-                        <div class="detail-label">Número de vale/ticket</div>
+                        <div class="detail-label">Número de carga/ticket</div>
                         <div class="detail-value">{{ $payload['solicitud']['numero_vale_ticket'] }}</div>
                     </div>
                 @endif

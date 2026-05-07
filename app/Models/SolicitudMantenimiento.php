@@ -66,6 +66,8 @@ class SolicitudMantenimiento extends Model
             $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
             $solicitud->codigo = "SM-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+
+            app(TicketService::class)->generar($solicitud);
         });
     }
 

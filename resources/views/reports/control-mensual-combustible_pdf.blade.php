@@ -147,7 +147,7 @@
                 <th width="8%">Contrato</th>
                 <th width="8%">Serie</th>
                 <th width="8%">Correlativo</th>
-                <th width="6%">Vales</th>
+                <th width="6%">Cargas</th>
                 <th width="8%">Monto Asignado</th>
                 <th width="7%">Galones</th>
                 <th width="8%">Valor Total</th>

@@ -8,7 +8,6 @@ use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoCombustible;
 use App\Models\HistorialEstado;
-use App\Models\SerieVale;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -248,11 +247,11 @@ class SolicitudCombustibleService
     public function asignarVales(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
     {
         if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-            throw new \DomainException('Solo se pueden asignar vales a una solicitud Aprobada.');
+            throw new \DomainException('Solo se pueden asignar cargas a una solicitud Aprobada.');
         }
 
         $contrato = ContratoCombustible::findOrFail($data['contrato_id']);
-        $serie = SerieVale::findOrFail($data['serie_vale_id']);
+        $serie = SerieCarga::findOrFail($data['serie_vale_id']);
 
         if ((int) $serie->contrato_id !== (int) $contrato->id) {
             throw new \DomainException('La serie seleccionada no pertenece al contrato indicado.');
@@ -269,14 +268,14 @@ class SolicitudCombustibleService
         $cantidadVales = (int) ($data['cantidad_vales'] ?? 0);
 
         if ($cantidadVales <= 0) {
-            throw new \DomainException('La cantidad de vales debe ser mayor a cero.');
+            throw new \DomainException('La cantidad de cargas debe ser mayor a cero.');
         }
 
         $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
         $fin = $inicio + $cantidadVales - 1;
 
         if ($fin > $serie->correlativo_fin) {
-            throw new \DomainException('La serie no tiene suficientes vales disponibles.');
+            throw new \DomainException('La serie no tiene suficientes cargas disponibles.');
         }
 
         $valorUnitario = (float) $serie->valor;
@@ -314,7 +313,7 @@ class SolicitudCombustibleService
 
             $this->registrarCambioEstado(
                 $solicitud, $anterior, $solicitud->estado, $userId,
-                "Asignación de {$cantidadVales} vales. Serie {$serie->nombre}. Rango {$inicio}-{$fin}. Monto: $".number_format($montoAsignado, 2)
+                "Asignación de {$cantidadVales} cargas. Serie {$serie->nombre}. Rango {$inicio}-{$fin}. Monto: $".number_format($montoAsignado, 2)
             );
 
             $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR->value, $userId, [

@@ -5,21 +5,21 @@ use App\Exports\SolicitudesMantenimientoExport;
 use App\Http\Controllers\LiquidacionCombustibleController;
 use App\Http\Controllers\LiquidacionMantenimientoController;
 use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
-use App\Http\Controllers\Reportes\ReporteDistribucionValesCombustibleController;
+use App\Http\Controllers\Reportes\ReporteDistribucionCargasCombustibleController;
 use App\Http\Controllers\Reportes\ReporteFlotaVehicularController;
 use App\Http\Controllers\Reportes\ReporteGeneralServiciosController;
 use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteOrdenTrabajoController;
+use App\Http\Controllers\Reportes\ReportePlanDiarioController;
 use App\Http\Controllers\Reportes\ReporteRecepcionEntregaVehiculoController;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use Barryvdh\DomPDF\Facade\Pdf;
-use FontLib\Table\Type\name;
-use Illuminate\Http\Request; // Asegúrate de que el controlador exista
+use FontLib\Table\Type\name; // Asegúrate de que el controlador exista
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
-use App\Http\Controllers\Reportes\ReportePlanDiarioController;
 
 Route::get('/', function () {
     return redirect('/admin');
@@ -275,8 +275,11 @@ Route::get('/reportes/flota-vehicular/pdf', [ReporteFlotaVehicularController::cl
 Route::get('/reportes/control-mensual-combustible/pdf', [ReporteControlMensualCombustibleController::class, 'pdf'])
     ->name('reportes.control-mensual-combustible.pdf');
 
-Route::get('/reportes/distribucion-vales/pdf', [ReporteDistribucionValesCombustibleController::class, 'pdf'])
-    ->name('reportes.distribucion-vales.pdf');
+Route::get('/reportes/distribucion-cargas/pdf', [ReporteDistribucionCargasCombustibleController::class, 'pdf'])
+    ->name('reportes.distribucion-cargas.pdf');
+
+Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleController::class, 'pdf'])
+    ->name('reportes.lote-combustible.pdf');
 
 Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController::class, 'pdf'])
     ->name('reportes.general-servicios.pdf');
@@ -298,8 +301,7 @@ Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::c
 Route::get('/liquidacion/mantenimiento/{id}', [LiquidacionMantenimientoController::class, 'pdf'])
     ->name('liquidacion.mantenimiento.pdf');
 
-
-//----------------------- NUEVOS REPORTES FILAMENT -----------------------//
+// ----------------------- NUEVOS REPORTES FILAMENT -----------------------//
 Route::get('/reportes/plan-diario', [ReportePlanDiarioController::class, 'index'])
     ->name('reportes.plan-diario.index');
 

@@ -372,11 +372,11 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             Notification::make()
                 ->title('Solicitud de combustible aprobada')
-                ->body('Los vales/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+                ->body('Las cargas/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
                 ->success()
                 ->actions([
                     \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                        ->label('Asignar vales ahora →')
+                        ->label('Asignar cargas ahora →')
                         ->url($urlAsignacion)
                         ->button()
                         ->color('primary'),

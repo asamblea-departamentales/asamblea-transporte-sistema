@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Informe de Distribución de Cupones / Vales de Combustible</title>
+    <title>Informe de Distribución de Cupones / Cargas de Combustible</title>
     <style>
         body {
             font-family: 'DejaVu Sans', sans-serif;
@@ -164,7 +164,7 @@
         <div class="title-container">
             <h2>Transporte y Logística</h2>
             <p style="margin:4px 0 0; color:#6b7280;">
-                Informe de Distribución de Cupones / Vales de Combustible
+                Informe de Distribución de Cupones / Cargas de Combustible
             </p>
         </div>
 
@@ -182,8 +182,8 @@
             </td>
             <td>
                 <div class="kpi-box">
-                    <span class="kpi-label">Total vales</span>
-                    <span class="kpi-value">{{ number_format((float) ($kpis['total_vales'] ?? 0), 0) }}</span>
+                    <span class="kpi-label">Total cargas</span>
+                    <span class="kpi-value">{{ number_format((float) ($kpis['total_cargas'] ?? 0), 0) }}</span>
                 </div>
             </td>
             <td>
@@ -226,7 +226,7 @@
                 <th width="9%">Solicitud</th>
                 <th width="10%">Fecha inicio</th>
                 <th width="6%">Hora</th>
-                <th width="9%">N° Vale / Ticket</th>
+                <th width="9%">N° Carga / Ticket</th>
                 <th width="10%">Solicitante</th>
                 <th width="7%">Placa</th>
                 <th width="8%">Serie</th>
@@ -270,7 +270,7 @@
                     <td>{{ $r->numero_vale_ticket ?? '—' }}</td>
                     <td>{{ mb_convert_encoding($r->solicitante?->name ?? '—', 'UTF-8', 'UTF-8') }}</td>
                     <td>{{ $r->vehiculo?->placa ?? '—' }}</td>
-                    <td>{{ $r->serieVale?->nombre ?? '—' }}</td>
+                    <td>{{ $r->serieCarga?->nombre ?? '—' }}</td>
                     <td>{{ $service->correlativo($r) }}</td>
                     <td class="text-right">{{ $r->cantidad_vales ?? '—' }}</td>
                     <td class="text-right">
