@@ -3,346 +3,157 @@
 <head>
     <meta charset="utf-8">
     <style>
+        /* Configuración de página horizontal */
+        @page {
+            size: A4 landscape;
+            margin: 10mm;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'DejaVu Sans', sans-serif;
-            font-size: 8px;
+            font-family: 'Helvetica', 'Arial', sans-serif;
+            font-size: 8.5pt;
             color: #000;
             background: #fff;
+            line-height: 1.2;
         }
 
-        /* ══ ENCABEZADO ══ */
-        .header-wrapper {
+        /* ENCABEZADO */
+        .header-container {
             width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        .header-container td {
             border: 1.5px solid #000;
-            margin-bottom: 4px;
-        }
-
-        .header-top {
-            display: table;
-            width: 100%;
-            border-bottom: 1px solid #000;
-        }
-
-        .header-top-logo,
-        .header-top-title,
-        .header-top-meta {
-            display: table-cell;
+            padding: 8px;
             vertical-align: middle;
-            padding: 5px 7px;
         }
 
-        .header-top-logo {
-            width: 80px;
+        .inst-title {
             text-align: center;
-            border-right: 1px solid #000;
-        }
-
-        .header-top-logo img {
-            width: 65px;
-            height: auto;
-        }
-
-        .header-top-title {
-            text-align: center;
-        }
-
-        .header-top-title .institution {
-            font-size: 9.5px;
-            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .header-top-title .department {
-            font-size: 8px;
-            text-transform: uppercase;
-            margin-top: 2px;
-            color: #333;
-        }
-
-        .header-top-title .doc-title {
-            font-size: 11px;
-            font-weight: bold;
-            text-transform: uppercase;
-            margin-top: 4px;
-            text-decoration: underline;
-        }
-
-        .header-top-meta {
-            width: 110px;
-            border-left: 1px solid #000;
-            padding: 0;
-        }
-
-        .header-top-meta table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .header-top-meta td {
-            border-bottom: 1px solid #000;
-            padding: 2.5px 4px;
-            font-size: 7.5px;
-        }
-
-        .header-top-meta tr:last-child td {
-            border-bottom: none;
-        }
-
-        .header-top-meta .meta-label {
-            background: #e0e0e0;
-            font-weight: bold;
-            width: 42px;
-            border-right: 1px solid #000;
-        }
-
-        .header-bottom {
-            padding: 2.5px 8px;
-            font-size: 8px;
-            text-align: center;
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        /* ══ KPIs ══ */
-        .kpis-wrapper { margin-bottom: 4px; }
-
-        .kpis-table {
-            width: 100%;
-            border-collapse: collapse;
-            border: 1px solid #000;
-        }
-
-        .kpis-table td {
-            border: 1px solid #000;
-            padding: 3px 5px;
-            text-align: center;
-            width: 25%;
-        }
-
-        .kpi-label {
-            font-size: 6.5px;
-            text-transform: uppercase;
-            color: #444;
-            margin-bottom: 1px;
-        }
-
-        .kpi-value {
-            font-size: 13px;
             font-weight: bold;
         }
 
-        /* ══ TABLA PRINCIPAL ══ */
+        /* TABLA PRINCIPAL - ESTILO LAS FOTOS */
         .main-table {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 5px;
+            table-layout: fixed; /* Mantiene los anchos fijos */
         }
 
-        .main-table thead tr {
-            background-color: #d0d0d0;
+        .main-table th, .main-table td {
+            border: 1px solid #000;
+            padding: 5px 3px;
+            text-align: center;
+            vertical-align: middle;
+            word-wrap: break-word;
         }
 
         .main-table th {
-            border: 1px solid #000;
-            padding: 4px 2px;
-            text-align: center;
-            font-size: 7px;
-            font-weight: bold;
+            background-color: #f0f0f0;
+            font-size: 7.5pt;
             text-transform: uppercase;
-            letter-spacing: 0.1px;
+            font-weight: bold;
+            height: 30px;
         }
 
         .main-table td {
-            border: 1px solid #000;
-            padding: 4px 2px;
-            text-align: center;
-            vertical-align: middle;
-            font-size: 7.5px;
-            color: #000;
+            height: 38px; /* Altura generosa para que se vea como el formulario físico */
         }
 
-        .main-table td.destino {
-            text-align: left;
-            padding-left: 4px;
-            font-size: 7px;
-        }
+        .text-left { text-align: left !important; padding-left: 6px !important; }
 
-        .main-table td.hora {
-            font-weight: bold;
-            white-space: nowrap;
-        }
-
-        .main-table td.vehiculo {
-            font-family: 'DejaVu Sans Mono', monospace;
-            font-size: 7px;
-        }
-
-        .main-table tr.empty-row td {
-            height: 17px;
-        }
-
-        /* ══ PIE ══ */
+        /* PIE DE PÁGINA (TURNO Y FIRMA) */
         .footer {
-            margin-top: 5px;
-            border-top: 1.5px solid #000;
-            padding-top: 4px;
-            display: table;
+            margin-top: 15px;
             width: 100%;
         }
 
-        .footer-left,
-        .footer-center,
-        .footer-right {
-            display: table-cell;
-            vertical-align: bottom;
-            width: 33.33%;
-        }
-
-        .footer-left {
-            font-size: 7.5px;
+        .turno-line {
             font-weight: bold;
+            font-size: 10pt;
             text-transform: uppercase;
         }
 
-        .footer-center {
+        .signature-area {
+            margin-top: 30px;
             text-align: center;
-            font-size: 7.5px;
         }
 
-        .firma-line {
-            border-top: 1px solid #000;
-            width: 120px;
-            margin: 22px auto 3px;
-        }
-
-        .footer-right {
-            text-align: right;
-            font-size: 7px;
-            color: #555;
+        .signature-line {
+            border-top: 1.5px solid #000;
+            width: 250px;
+            margin: 0 auto 5px;
         }
     </style>
 </head>
 <body>
 
-    {{-- ══ ENCABEZADO ══ --}}
-    <div class="header-wrapper">
-        <div class="header-top">
-            <div class="header-top-logo">
-                <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Logo Asamblea">
-            </div>
-            <div class="header-top-title">
-                <div class="institution">Asamblea Legislativa de El Salvador</div>
-                <div class="department">Departamento de Transporte</div>
-                <div class="doc-title">Plan Diario de Transporte</div>
-            </div>
-            <div class="header-top-meta">
-                <table>
-                    <tr>
-                        <td class="meta-label">Fecha</td>
-                        <td>{{ $fecha->format('d/m/Y') }}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Día</td>
-                        <td>{{ ucfirst($fecha->locale('es')->isoFormat('dddd')) }}</td>
-                    </tr>
-                    <tr>
-                        <td class="meta-label">Turno</td>
-                        <td>{{ $turno ?? '—' }}</td>
-                    </tr>
-                </table>
-            </div>
-        </div>
-        <div class="header-bottom">
-            {{ ucfirst($fecha->locale('es')->isoFormat('dddd, D [de] MMMM [de] YYYY')) }}
-        </div>
-    </div>
+    <table class="header-container">
+        <tr>
+            <td style="width: 15%; text-align: center;">
+                <strong>LOGO</strong>
+            </td>
+            <td class="inst-title">
+                <div style="font-size: 12pt;">Asamblea Legislativa de El Salvador</div>
+                <div style="font-size: 10pt; margin-top: 3px;">Departamento de Transporte</div>
+                <div style="font-size: 11pt; text-decoration: underline; margin-top: 8px;">PLAN DIARIO DE TRANSPORTE</div>
+            </td>
+            <td style="width: 22%; font-size: 8pt;">
+                <strong>FECHA:</strong> {{ $fecha->format('d/m/Y') }}<br>
+                <strong>DÍA:</strong> {{ ucfirst($fecha->locale('es')->isoFormat('dddd')) }}<br>
+                <strong>GENERADO:</strong> {{ now()->format('h:i A') }}
+            </td>
+        </tr>
+    </table>
 
-    {{-- ══ KPIs ══ --}}
-    @if(isset($kpis))
-    <div class="kpis-wrapper">
-        <table class="kpis-table">
-            <tr>
-                <td>
-                    <div class="kpi-label">Total Misiones</div>
-                    <div class="kpi-value">{{ $kpis['total'] ?? 0 }}</div>
-                </td>
-                <td>
-                    <div class="kpi-label">Programadas</div>
-                    <div class="kpi-value">{{ $kpis['programadas'] ?? 0 }}</div>
-                </td>
-                <td>
-                    <div class="kpi-label">Asignadas</div>
-                    <div class="kpi-value">{{ $kpis['asignadas'] ?? 0 }}</div>
-                </td>
-                <td>
-                    <div class="kpi-label">Completadas</div>
-                    <div class="kpi-value">{{ $kpis['completadas'] ?? 0 }}</div>
-                </td>
-            </tr>
-        </table>
-    </div>
-    @endif
-
-    {{-- ══ TABLA PRINCIPAL ══ --}}
     <table class="main-table">
         <thead>
             <tr>
-                <th style="width:9%">Hora de<br>Salida</th>
-                <th style="width:15%">Unidad<br>Solicitante</th>
-                <th style="width:31%">Destino</th>
-                <th style="width:11%">Vehículo</th>
-                <th style="width:11%">Motorista</th>
-                <th style="width:11%">Usuario</th>
-                <th style="width:6%">Estado</th>
-                <th style="width:6%">Comuni-<br>cado</th>
+                <th style="width: 8%;">Hora de Salida</th>
+                <th style="width: 14%;">Unidad Solicitante</th>
+                <th style="width: 28%;">Destino</th>
+                <th style="width: 11%;">Vehículo</th>
+                <th style="width: 13%;">Motorista</th>
+                <th style="width: 13%;">Usuario</th>
+                <th style="width: 13%;">Comunicado</th>
             </tr>
         </thead>
         <tbody>
-            @forelse($rows as $row)
-                <tr>
-                    <td class="hora">{{ $row['hora'] }}</td>
-                    <td>{{ $row['unidad'] }}</td>
-                    <td class="destino">{{ $row['destino'] }}</td>
-                    <td class="vehiculo">{{ $row['vehiculo'] }}</td>
-                    <td>{{ $row['motorista'] }}</td>
-                    <td>{{ $row['solicitante'] }}</td>
-                    <td>{{ ucfirst(str_replace('_', ' ', $row['estado'])) }}</td>
-                    <td>{{ $row['comunicado'] ?? '' }}</td>
-                </tr>
-            @empty
-                <tr>
-                    <td colspan="8" style="text-align:center; padding:12px; font-style:italic; color:#666;">
-                        No hay misiones programadas para esta fecha.
-                    </td>
-                </tr>
-            @endforelse
+            @foreach($rows as $row)
+            <tr>
+                <td style="font-weight: bold;">{{ $row['hora'] }}</td>
+                <td class="text-left">{{ $row['unidad'] }}</td>
+                <td class="text-left" style="font-size: 7.5pt;">{{ $row['destino'] }}</td>
+                <td style="font-family: monospace; font-weight: bold;">{{ $row['vehiculo'] }}</td>
+                <td>{{ $row['motorista'] }}</td>
+                <td>{{ $row['solicitante'] }}</td>
+                <td>{{ $row['comunicado'] ?? '' }}</td>
+            </tr>
+            @endforeach
 
-            {{-- Relleno hasta 14 filas --}}
-            @php $rellenar = max(0, 14 - count($rows)); @endphp
-            @for($i = 0; $i < $rellenar; $i++)
-                <tr class="empty-row">
-                    <td></td><td></td><td></td><td></td>
-                    <td></td><td></td><td></td><td></td>
-                </tr>
+            {{-- Rellenar con filas vacías hasta completar 12 filas (como en tu foto) --}}
+            @for($i = count($rows); $i < 12; $i++)
+            <tr>
+                <td></td><td></td><td></td><td></td><td></td><td></td><td></td>
+            </tr>
             @endfor
         </tbody>
     </table>
 
-    {{-- ══ PIE ══ --}}
     <div class="footer">
-        <div class="footer-left">
-            TURNO: {{ $turno ?? 'Sin asignar' }}
+        <div class="turno-line">
+            TURNO: __________________________________________________________________
         </div>
-        <div class="footer-center">
-            <div class="firma-line"></div>
-            Jefe de Transporte
-        </div>
-        <div class="footer-right">
-            Generado: {{ now()->format('d/m/Y H:i') }}
+
+        <div class="signature-area">
+            <div class="signature-line"></div>
+            <strong>JEFE DE DEPARTAMENTO DE TRANSPORTE</strong><br>
+            <span style="font-size: 7pt;">Firma y Sello</span>
         </div>
     </div>
 
