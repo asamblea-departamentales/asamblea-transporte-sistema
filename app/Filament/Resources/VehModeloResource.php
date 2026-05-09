@@ -2,57 +2,59 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\VehModeloResource\Pages;
-use App\Filament\Resources\VehModeloResource\RelationManagers;
-use App\Models\VehModelo;
-use Filament\Clusters\Cluster;
-use Filament\Forms;
 use App\Filament\Clusters\VehiculosCatalogos;
+use App\Filament\Resources\VehModeloResource\Pages;
+use App\Models\VehModelo;
+use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VehModeloResource extends Resource
 {
     protected static ?string $model = VehModelo::class;
+
     protected static ?string $cluster = VehiculosCatalogos::class;
+
     protected static ?string $navigationLabel = 'Modelos de Vehículos';
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?string $modelLabel = 'Modelo';
+
     protected static ?string $pluralModelLabel = 'Modelos';
+
     protected static ?int $navigationSort = 2;
 
-        public static function canViewAny(): bool
-        {
-            return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
-        }
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make()->schema([
-                Forms\Components\TextInput::make('nombre')
-                    ->label('Nombre')
-                    ->required()
-                    ->maxLength(100)
-                    ->unique(ignoreRecord: true),
+                    Forms\Components\TextInput::make('nombre')
+                        ->label('Nombre')
+                        ->required()
+                        ->maxLength(100)
+                        ->unique(ignoreRecord: true),
 
-                Forms\Components\Select::make('veh_marca_id')
-                    ->label('Marca')
-                    ->options(function () {
-                        return \App\Models\VehMarca::where('activo', true)->pluck('nombre', 'id');
-                    })
-                    ->searchable()
-                    ->required(),
+                    Forms\Components\Select::make('veh_marca_id')
+                        ->label('Marca')
+                        ->options(function () {
+                            return \App\Models\VehMarca::where('activo', true)->pluck('nombre', 'id');
+                        })
+                        ->searchable()
+                        ->required(),
 
-                Forms\Components\Toggle::make('activo')
-                    ->label('Activo')
-                    ->default(true),
-            ])->columns(2),
+                    Forms\Components\Toggle::make('activo')
+                        ->label('Activo')
+                        ->default(true),
+                ])->columns(2),
             ]);
     }
 
@@ -65,7 +67,7 @@ class VehModeloResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('vehMarca.nombre')
+                Tables\Columns\TextColumn::make('marca.nombre')
                     ->label('Marca')
                     ->badge()
                     ->color('info')
@@ -73,7 +75,7 @@ class VehModeloResource extends Resource
 
                 Tables\Columns\IconColumn::make('activo')
                     ->label('Activo')
-                    ->boolean()
+                    ->boolean(),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('activo')->label('Activo'),
