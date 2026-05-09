@@ -17,6 +17,7 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use App\Models\SerieCarga;
 
 class ReporteControlMensualCombustible extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
