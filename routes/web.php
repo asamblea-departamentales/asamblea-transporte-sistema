@@ -12,11 +12,12 @@ use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteOrdenTrabajoController;
 use App\Http\Controllers\Reportes\ReportePlanDiarioController;
 use App\Http\Controllers\Reportes\ReporteRecepcionEntregaVehiculoController;
+use App\Http\Controllers\Reportes\ReporteLoteCombustibleController;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use Barryvdh\DomPDF\Facade\Pdf;
-use FontLib\Table\Type\name; // Asegúrate de que el controlador exista
+use FontLib\Table\Type\name;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Maatwebsite\Excel\Facades\Excel;
@@ -307,3 +308,6 @@ Route::get('/reportes/plan-diario', [ReportePlanDiarioController::class, 'index'
 
 Route::get('/reportes/plan-diario/{fecha}/pdf', [ReportePlanDiarioController::class, 'pdf'])
     ->name('reportes.plan-diario.pdf');
+
+Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleController::class, 'pdf'])
+    ->name('reportes.lote-combustible.pdf');
