@@ -9,8 +9,8 @@ use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\Motorista;
-use App\Models\SolicitudTransporte;
 use App\Models\MotoristaEstado;
+use App\Models\SolicitudTransporte;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
@@ -24,7 +24,7 @@ class ViewSolicitudTransporte extends ViewRecord
 
     private function resolverMotorista(int $vehiculoId): array
     {
-        $vehiculo         = \App\Models\Vehiculo::with('asignacionVigenteMotorista.motorista')->find($vehiculoId);
+        $vehiculo = \App\Models\Vehiculo::with('asignacionVigenteMotorista.motorista')->find($vehiculoId);
         $motoristaTitular = $vehiculo?->asignacionVigenteMotorista?->motorista;
 
         if ($motoristaTitular) {
@@ -37,10 +37,10 @@ class ViewSolicitudTransporte extends ViewRecord
 
             if ($titularDisponible) {
                 return [
-                    'id'          => $motoristaTitular->id,
-                    'label'       => "{$motoristaTitular->nombre} — DUI: {$motoristaTitular->dui}",
-                    'disponible'  => true,
-                    'sugerido'    => false,
+                    'id' => $motoristaTitular->id,
+                    'label' => "{$motoristaTitular->nombre} — DUI: {$motoristaTitular->dui}",
+                    'disponible' => true,
+                    'sugerido' => false,
                 ];
             }
 
@@ -63,27 +63,27 @@ class ViewSolicitudTransporte extends ViewRecord
 
         if ($motoristaTitular && $sugerido) {
             return [
-                'id'         => $sugerido->id,
-                'label'      => "⚠️ {$motoristaTitular->nombre} no disponible ({$motivoBloqueo}). 💡 Sugerido: {$sugerido->nombre} — DUI: {$sugerido->dui}",
+                'id' => $sugerido->id,
+                'label' => "⚠️ {$motoristaTitular->nombre} no disponible ({$motivoBloqueo}). 💡 Sugerido: {$sugerido->nombre} — DUI: {$sugerido->dui}",
                 'disponible' => false,
-                'sugerido'   => true,
+                'sugerido' => true,
             ];
         }
 
         if ($motoristaTitular && ! $sugerido) {
             return [
-                'id'         => null,
-                'label'      => "no_disponible_sin_sustituto|{$motoristaTitular->nombre} no disponible ({$motivoBloqueo}) y no hay sustitutos.",
+                'id' => null,
+                'label' => "no_disponible_sin_sustituto|{$motoristaTitular->nombre} no disponible ({$motivoBloqueo}) y no hay sustitutos.",
                 'disponible' => false,
-                'sugerido'   => false,
+                'sugerido' => false,
             ];
         }
 
         return [
-            'id'         => null,
-            'label'      => 'sin_motorista',
+            'id' => null,
+            'label' => 'sin_motorista',
             'disponible' => false,
-            'sugerido'   => false,
+            'sugerido' => false,
         ];
     }
 
@@ -129,6 +129,7 @@ class ViewSolicitudTransporte extends ViewRecord
 
         if (str_starts_with($label, 'no_disponible_sin_sustituto|')) {
             $msg = str_replace('no_disponible_sin_sustituto|', '', $label);
+
             return new \Illuminate\Support\HtmlString("
                 <div style='background:#fef2f2;border:1.5px solid #fca5a5;border-radius:12px;padding:14px 18px;color:#dc2626;font-size:13px;font-weight:600;'>
                     ❌ {$msg}
@@ -183,25 +184,24 @@ class ViewSolicitudTransporte extends ViewRecord
 
                     if ($estadoAnterior !== $record->estado) {
                         HistorialEstado::create([
-                            'entidad_tipo'    => 'solicitud_transporte',
-                            'entidad_id'      => $record->id,
+                            'entidad_tipo' => 'solicitud_transporte',
+                            'entidad_id' => $record->id,
                             'estado_anterior' => $estadoAnterior?->value,
-                            'estado_nuevo'    => $record->estado?->value,
-                            'user_id'         => auth()->id(),
-                            'comentario'      => $data['comentario_jefe'],
+                            'estado_nuevo' => $record->estado?->value,
+                            'user_id' => auth()->id(),
+                            'comentario' => $data['comentario_jefe'],
                         ]);
                     }
 
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::OBSERVAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_id' => $record->id,
+                        'accion' => AccionBitacoraEnum::OBSERVAR->value,
+                        'user_id' => auth()->id(),
                         'datos_extras' => ['comentario' => $data['comentario_jefe']],
                     ]);
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
@@ -226,23 +226,22 @@ class ViewSolicitudTransporte extends ViewRecord
                     $record->save();
 
                     HistorialEstado::create([
-                        'entidad_tipo'    => 'solicitud_transporte',
-                        'entidad_id'      => $record->id,
+                        'entidad_tipo' => 'solicitud_transporte',
+                        'entidad_id' => $record->id,
                         'estado_anterior' => $estadoAnterior?->value,
-                        'estado_nuevo'    => $record->estado?->value,
-                        'user_id'         => auth()->id(),
-                        'comentario'      => 'Solicitud pre-aprobada en revisión inicial.',
+                        'estado_nuevo' => $record->estado?->value,
+                        'user_id' => auth()->id(),
+                        'comentario' => 'Solicitud pre-aprobada en revisión inicial.',
                     ]);
 
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::PRE_APROBAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_id' => $record->id,
+                        'accion' => AccionBitacoraEnum::PRE_APROBAR->value,
+                        'user_id' => auth()->id(),
                     ]);
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
@@ -258,8 +257,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->color('success')
                 ->icon('heroicon-o-check-circle')
                 ->modalHeading('Programar Solicitud de Transporte')
-                ->modalDescription(fn (SolicitudTransporte $record) =>
-                    "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
+                ->modalDescription(fn (SolicitudTransporte $record) => "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
                 )
                 ->modalSubmitActionLabel('✔ Confirmar programación')
                 ->modalWidth('2xl')
@@ -269,8 +267,8 @@ class ViewSolicitudTransporte extends ViewRecord
                             Forms\Components\Placeholder::make('resumen_aprobar')
                                 ->label('')
                                 ->content(function () {
-                                    $record  = $this->record;
-                                    $salida  = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
+                                    $record = $this->record;
+                                    $salida = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
                                     $retorno = optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '—';
                                     $vehiculo = $record->tipo_vehiculo_nombre ?? 'No especificado';
 
@@ -339,7 +337,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                         ->where(function ($query) use ($record) {
                                             $query->where(function ($q) use ($record) {
                                                 $q->where('fecha_salida', '<=', $record->fecha_retorno)
-                                                  ->where('fecha_retorno', '>=', $record->fecha_salida);
+                                                    ->where('fecha_retorno', '>=', $record->fecha_salida);
                                             });
                                         })
                                         ->pluck('vehiculo_id')
@@ -351,23 +349,24 @@ class ViewSolicitudTransporte extends ViewRecord
                                         ->with('tipo')
                                         ->get()
                                         ->mapWithKeys(fn ($v) => [
-                                            $v->id => "{$v->placa} — {$v->tipo->nombre}"
+                                            $v->id => "{$v->placa} — {$v->tipo->nombre}",
                                         ]);
                                 })
-                                ->hint('Solicitó: ' . ($this->record->tipo_vehiculo_nombre ?? 'N/A'))
+                                ->hint('Solicitó: '.($this->record->tipo_vehiculo_nombre ?? 'N/A'))
                                 ->hintColor('warning')
                                 ->searchable()
                                 ->required()
                                 ->live()
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (! $state) {
-                                        $set('motorista_id',     null);
+                                        $set('motorista_id', null);
                                         $set('motorista_nombre', null);
+
                                         return;
                                     }
 
                                     $resultado = $this->resolverMotorista((int) $state);
-                                    $set('motorista_id',     $resultado['id']);
+                                    $set('motorista_id', $resultado['id']);
                                     $set('motorista_nombre', $resultado['label']);
                                 })
                                 ->columnSpan(1),
@@ -400,32 +399,32 @@ class ViewSolicitudTransporte extends ViewRecord
 
                     $estadoAnterior = $record->estado;
 
-                    $record->estado          = EstadoSolicitudEnum::PROGRAMADA;
-                    $record->vehiculo_id     = $data['vehiculo_id'];
-                    $record->motorista_id    = $data['motorista_id'];
+                    $record->estado = EstadoSolicitudEnum::PROGRAMADA;
+                    $record->vehiculo_id = $data['vehiculo_id'];
+                    $record->motorista_id = $data['motorista_id'];
                     $record->comentario_jefe = $data['comentario_jefe'];
-                    $record->decidido_por    = auth()->id();
-                    $record->decidido_en     = now();
+                    $record->decidido_por = auth()->id();
+                    $record->decidido_en = now();
                     $record->firma_aprobador = $data['firma_aprobador'] ?? null; // ← nuevo
                     $record->save();
 
                     HistorialEstado::create([
-                        'entidad_tipo'    => 'solicitud_transporte',
-                        'entidad_id'      => $record->id,
+                        'entidad_tipo' => 'solicitud_transporte',
+                        'entidad_id' => $record->id,
                         'estado_anterior' => $estadoAnterior?->value,
-                        'estado_nuevo'    => EstadoSolicitudEnum::PROGRAMADA->value,
-                        'user_id'         => auth()->id(),
-                        'comentario'      => $data['comentario_jefe'],
+                        'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
+                        'user_id' => auth()->id(),
+                        'comentario' => $data['comentario_jefe'],
                     ]);
 
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::APROBAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_id' => $record->id,
+                        'accion' => AccionBitacoraEnum::APROBAR->value,
+                        'user_id' => auth()->id(),
                         'datos_extras' => [
-                            'comentario'   => $data['comentario_jefe'],
-                            'vehiculo_id'  => $data['vehiculo_id'],
+                            'comentario' => $data['comentario_jefe'],
+                            'vehiculo_id' => $data['vehiculo_id'],
                             'motorista_id' => $data['motorista_id'],
                         ],
                     ]);
@@ -434,25 +433,25 @@ class ViewSolicitudTransporte extends ViewRecord
                         $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
 
                         $payload = [
-                            'tipo'    => 'transporte',
-                            'evento'  => 'solicitud_aprobada',
+                            'tipo' => 'transporte',
+                            'evento' => 'solicitud_aprobada',
                             'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
                             'solicitud' => [
-                                'codigo'               => $record->codigo,
-                                'estado'               => 'aprobada',
+                                'codigo' => $record->codigo,
+                                'estado' => 'aprobada',
                                 'tipo_vehiculo_nombre' => $record->vehiculo?->tipo?->nombre ?? 'No asignado',
-                                'cantidad_personas'    => $record->cantidad_personas,
-                                'origen'               => $record->origen,
-                                'destino'              => $record->destino,
-                                'destino_adicional'    => $record->destino_adicional,
-                                'fecha_salida'         => $record->fecha_salida,
-                                'fecha_retorno'        => $record->fecha_retorno,
-                                'motivo_actividad'     => $record->motivo_actividad,
-                                'vehiculo_placa'       => $record->vehiculo?->placa ?? 'N/A',
-                                'motorista_nombre'     => $record->motorista?->nombre ?? 'N/A',
+                                'cantidad_personas' => $record->cantidad_personas,
+                                'origen' => $record->origen,
+                                'destino' => $record->destino,
+                                'destino_adicional' => $record->destino_adicional,
+                                'fecha_salida' => $record->fecha_salida,
+                                'fecha_retorno' => $record->fecha_retorno,
+                                'motivo_actividad' => $record->motivo_actividad,
+                                'vehiculo_placa' => $record->vehiculo?->placa ?? 'N/A',
+                                'motorista_nombre' => $record->motorista?->nombre ?? 'N/A',
                             ],
                             'solicitante' => [
-                                'name'  => $record->solicitante->name,
+                                'name' => $record->solicitante->name,
                                 'email' => $record->solicitante->email,
                                 'unidad' => [
                                     'nombre' => $record->unidad?->nombre ?? 'N/A',
@@ -466,11 +465,10 @@ class ViewSolicitudTransporte extends ViewRecord
                             new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
                         );
                     } catch (\Exception $e) {
-                        Log::error('Error enviando correo de aprobación: ' . $e->getMessage());
+                        Log::error('Error enviando correo de aprobación: '.$e->getMessage());
                     }
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
@@ -483,8 +481,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->color('info')
                 ->icon('heroicon-o-truck')
                 ->modalHeading('Asignar Vehículo y Motorista')
-                ->modalDescription(fn (SolicitudTransporte $record) =>
-                    "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
+                ->modalDescription(fn (SolicitudTransporte $record) => "Solicitud {$record->codigo} · {$record->origen} → {$record->destino}"
                 )
                 ->modalSubmitActionLabel('🚗 Confirmar asignación')
                 ->modalWidth('2xl')
@@ -494,8 +491,8 @@ class ViewSolicitudTransporte extends ViewRecord
                             Forms\Components\Placeholder::make('resumen_asignacion')
                                 ->label('')
                                 ->content(function () {
-                                    $record  = $this->record;
-                                    $salida  = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
+                                    $record = $this->record;
+                                    $salida = optional($record->fecha_salida)?->format('d/m/Y H:i') ?? '—';
                                     $retorno = optional($record->fecha_retorno)?->format('d/m/Y H:i') ?? '—';
                                     $vehiculo = $record->tipo_vehiculo_nombre ?? 'No especificado';
 
@@ -550,7 +547,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                         ->where(function ($query) use ($record) {
                                             $query->where(function ($q) use ($record) {
                                                 $q->where('fecha_salida', '<=', $record->fecha_retorno)
-                                                  ->where('fecha_retorno', '>=', $record->fecha_salida);
+                                                    ->where('fecha_retorno', '>=', $record->fecha_salida);
                                             });
                                         })
                                         ->pluck('vehiculo_id')
@@ -562,7 +559,7 @@ class ViewSolicitudTransporte extends ViewRecord
                                         ->with('tipo')
                                         ->get()
                                         ->mapWithKeys(fn ($v) => [
-                                            $v->id => "{$v->placa} — {$v->tipo->nombre}"
+                                            $v->id => "{$v->placa} — {$v->tipo->nombre}",
                                         ]);
                                 })
                                 ->searchable()
@@ -570,13 +567,14 @@ class ViewSolicitudTransporte extends ViewRecord
                                 ->live()
                                 ->afterStateUpdated(function ($state, callable $set) {
                                     if (! $state) {
-                                        $set('motorista_id',     null);
+                                        $set('motorista_id', null);
                                         $set('motorista_nombre', null);
+
                                         return;
                                     }
 
                                     $resultado = $this->resolverMotorista((int) $state);
-                                    $set('motorista_id',     $resultado['id']);
+                                    $set('motorista_id', $resultado['id']);
                                     $set('motorista_nombre', $resultado['label']);
                                 })
                                 ->columnSpan(1),
@@ -597,33 +595,32 @@ class ViewSolicitudTransporte extends ViewRecord
                     $estadoAnterior = $record->estado;
 
                     $record->update([
-                        'vehiculo_id'  => $data['vehiculo_id'],
+                        'vehiculo_id' => $data['vehiculo_id'],
                         'motorista_id' => $data['motorista_id'],
-                        'estado'       => EstadoSolicitudEnum::ASIGNADA,
+                        'estado' => EstadoSolicitudEnum::ASIGNADA,
                     ]);
 
                     HistorialEstado::create([
-                        'entidad_tipo'    => 'solicitud_transporte',
-                        'entidad_id'      => $record->id,
+                        'entidad_tipo' => 'solicitud_transporte',
+                        'entidad_id' => $record->id,
                         'estado_anterior' => $estadoAnterior->value,
-                        'estado_nuevo'    => EstadoSolicitudEnum::ASIGNADA->value,
-                        'user_id'         => auth()->id(),
-                        'comentario'      => 'Vehículo y motorista asignados.',
+                        'estado_nuevo' => EstadoSolicitudEnum::ASIGNADA->value,
+                        'user_id' => auth()->id(),
+                        'comentario' => 'Vehículo y motorista asignados.',
                     ]);
 
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::ASIGNAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_id' => $record->id,
+                        'accion' => AccionBitacoraEnum::ASIGNAR->value,
+                        'user_id' => auth()->id(),
                         'datos_extras' => [
-                            'vehiculo_id'  => $data['vehiculo_id'],
+                            'vehiculo_id' => $data['vehiculo_id'],
                             'motorista_id' => $data['motorista_id'],
                         ],
                     ]);
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     $record->estado === EstadoSolicitudEnum::PROGRAMADA
                 ),
@@ -636,8 +633,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->color('danger')
                 ->icon('heroicon-o-x-circle')
                 ->modalHeading('Rechazar Solicitud')
-                ->modalDescription(fn (SolicitudTransporte $record) =>
-                    "Solicitud {$record->codigo} — esta acción quedará registrada en el historial."
+                ->modalDescription(fn (SolicitudTransporte $record) => "Solicitud {$record->codigo} — esta acción quedará registrada en el historial."
                 )
                 ->modalSubmitActionLabel('✕ Confirmar rechazo')
                 ->modalWidth('lg')
@@ -686,26 +682,26 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->action(function (SolicitudTransporte $record, array $data) {
                     $estadoAnterior = $record->estado;
 
-                    $record->estado          = EstadoSolicitudEnum::RECHAZADA;
+                    $record->estado = EstadoSolicitudEnum::RECHAZADA;
                     $record->comentario_jefe = $data['comentario_jefe'];
-                    $record->decidido_por    = auth()->id();
-                    $record->decidido_en     = now();
+                    $record->decidido_por = auth()->id();
+                    $record->decidido_en = now();
                     $record->save();
 
                     HistorialEstado::create([
-                        'entidad_tipo'    => 'solicitud_transporte',
-                        'entidad_id'      => $record->id,
+                        'entidad_tipo' => 'solicitud_transporte',
+                        'entidad_id' => $record->id,
                         'estado_anterior' => $estadoAnterior?->value,
-                        'estado_nuevo'    => $record->estado?->value,
-                        'user_id'         => auth()->id(),
-                        'comentario'      => $data['comentario_jefe'],
+                        'estado_nuevo' => $record->estado?->value,
+                        'user_id' => auth()->id(),
+                        'comentario' => $data['comentario_jefe'],
                     ]);
 
                     BitacoraEvento::create([
                         'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id'   => $record->id,
-                        'accion'       => AccionBitacoraEnum::RECHAZAR->value,
-                        'user_id'      => auth()->id(),
+                        'entidad_id' => $record->id,
+                        'accion' => AccionBitacoraEnum::RECHAZAR->value,
+                        'user_id' => auth()->id(),
                         'datos_extras' => ['comentario' => $data['comentario_jefe']],
                     ]);
 
@@ -713,20 +709,20 @@ class ViewSolicitudTransporte extends ViewRecord
                         $record->load(['solicitante', 'unidad']);
 
                         $payload = [
-                            'tipo'    => 'transporte',
-                            'evento'  => 'solicitud_rechazada',
+                            'tipo' => 'transporte',
+                            'evento' => 'solicitud_rechazada',
                             'mensaje' => 'Tu solicitud de transporte ha sido RECHAZADA.',
                             'solicitud' => [
-                                'codigo'           => $record->codigo,
-                                'estado'           => 'rechazada',
-                                'origen'           => $record->origen,
-                                'destino'          => $record->destino,
-                                'fecha_salida'     => $record->fecha_salida,
+                                'codigo' => $record->codigo,
+                                'estado' => 'rechazada',
+                                'origen' => $record->origen,
+                                'destino' => $record->destino,
+                                'fecha_salida' => $record->fecha_salida,
                                 'motivo_actividad' => $record->motivo_actividad,
-                                'comentario_jefe'  => $data['comentario_jefe'],
+                                'comentario_jefe' => $data['comentario_jefe'],
                             ],
                             'solicitante' => [
-                                'name'  => $record->solicitante->name,
+                                'name' => $record->solicitante->name,
                                 'email' => $record->solicitante->email,
                                 'unidad' => [
                                     'nombre' => $record->unidad?->nombre ?? 'N/A',
@@ -740,11 +736,10 @@ class ViewSolicitudTransporte extends ViewRecord
                             new NotificacionEventMail('Solicitud de Transporte RECHAZADA', $payload)
                         );
                     } catch (\Exception $e) {
-                        Log::error('Error enviando correo de rechazo: ' . $e->getMessage());
+                        Log::error('Error enviando correo de rechazo: '.$e->getMessage());
                     }
                 })
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
@@ -762,8 +757,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->icon('heroicon-o-document-text')
                 ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
                 ->openUrlInNewTab()
-                ->visible(fn (SolicitudTransporte $record) =>
-                    auth()->check() &&
+                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
                     $record->vehiculo_id !== null &&
                     $record->motorista_id !== null &&
@@ -774,6 +768,19 @@ class ViewSolicitudTransporte extends ViewRecord
                         EstadoSolicitudEnum::COMPLETADA,
                     ])
                 ),
+
+            // ── DOCUMENTO OFICIAL ─────────────────────────────────────────
+            Actions\Action::make('documento_oficial')
+                ->button()
+                ->size('lg')
+                ->label('Documento Oficial')
+                ->color('success')
+                ->icon('heroicon-o-printer')
+                ->url(fn (SolicitudTransporte $record) => route(
+                    'reportes.solicitud-autorizacion.pdf',
+                    ['solicitud' => $record->id]
+                ))
+                ->openUrlInNewTab(),
         ];
     }
 
