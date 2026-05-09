@@ -4,6 +4,7 @@ namespace App\Filament\Resources\AsignacionCombustibleLoteResource\RelationManag
 
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
+use App\Filament\Resources\AsignacionCombustibleLoteResource;
 use App\Models\Vehiculo;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -99,6 +100,9 @@ class DetallesRelationManager extends RelationManager
 
                         return $detalle;
                     })
+                    ->successRedirectUrl(
+                        fn () => AsignacionCombustibleLoteResource::getUrl('index')
+                    )
                     ->visible(fn () => $this->getOwnerRecord()->estado === EstadoLoteEnum::BORRADOR),
             ])
             ->actions([
