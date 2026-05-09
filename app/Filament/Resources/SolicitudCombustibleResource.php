@@ -778,8 +778,8 @@ class SolicitudCombustibleResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         $query = parent::getEloquentQuery()->with([
-            'vehiculo.marca',
-            'vehiculo.modelo',
+            'vehiculo.vehMarca',
+            'vehiculo.vehModelo',
             'solicitante',
             'aprobador',
             'solicitudTransporte',
