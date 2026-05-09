@@ -14,7 +14,7 @@ class ReportePlanDiario extends Page
 
     protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
 
-    protected static ?string $navigationGroup = 'Reportes';
+    protected static ?string $navigationGroup = 'Operatividad Diaria';
 
     protected static string $view = 'filament.pages.reporte-plan-diario';
 
