@@ -65,7 +65,7 @@ class VehModeloResource extends Resource
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('marca.nombre')
+                Tables\Columns\TextColumn::make('vehMarca.nombre')
                     ->label('Marca')
                     ->badge()
                     ->color('info')

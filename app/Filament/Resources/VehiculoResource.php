@@ -372,11 +372,11 @@ class VehiculoResource extends Resource
                     ->label('Tipo')->badge()->color('info')
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('marca.nombre')
+                Tables\Columns\TextColumn::make('vehMarca.nombre')
                     ->label('Marca')->searchable()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 
-                Tables\Columns\TextColumn::make('modelo.nombre')
+                Tables\Columns\TextColumn::make('vehModelo.nombre')
                     ->label('Modelo')->searchable()->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
 

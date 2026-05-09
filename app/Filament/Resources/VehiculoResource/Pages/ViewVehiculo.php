@@ -43,10 +43,10 @@ class ViewVehiculo extends ViewRecord
                         ->badge()
                         ->color('info'),
 
-                    TextEntry::make('marca.nombre')
+                    TextEntry::make('vehMarca.nombre')
                         ->label('Marca'),
 
-                    TextEntry::make('modelo.nombre')
+                    TextEntry::make('vehModelo.nombre')
                         ->label('Modelo'),
 
                     TextEntry::make('anio')
