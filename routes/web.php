@@ -315,3 +315,6 @@ Route::get('/reportes/plan-diario/{fecha}/pdf', [ReportePlanDiarioController::cl
 
 Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleController::class, 'pdf'])
     ->name('reportes.lote-combustible.pdf');
+
+Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
+    ->name('reportes.solicitud-autorizacion.pdf');    
