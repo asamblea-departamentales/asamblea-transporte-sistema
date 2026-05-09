@@ -613,8 +613,8 @@ class SolicitudMantenimientoResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with([
-                'vehiculo.marca',
-                'vehiculo.modelo',
+                'vehiculo.vehMarca',
+                'vehiculo.vehModelo',
                 'tipoMantenimiento',
                 'solicitante',
                 'aprobador',
