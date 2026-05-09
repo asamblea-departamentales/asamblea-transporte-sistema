@@ -8,11 +8,12 @@ use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
 use App\Http\Controllers\Reportes\ReporteDistribucionCargasCombustibleController;
 use App\Http\Controllers\Reportes\ReporteFlotaVehicularController;
 use App\Http\Controllers\Reportes\ReporteGeneralServiciosController;
+use App\Http\Controllers\Reportes\ReporteLoteCombustibleController;
 use App\Http\Controllers\Reportes\ReporteMisionOficialController;
 use App\Http\Controllers\Reportes\ReporteOrdenTrabajoController;
 use App\Http\Controllers\Reportes\ReportePlanDiarioController;
 use App\Http\Controllers\Reportes\ReporteRecepcionEntregaVehiculoController;
-use App\Http\Controllers\Reportes\ReporteLoteCombustibleController;
+use App\Http\Controllers\Reportes\ReporteSolicitudAutorizacionController;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
@@ -288,6 +289,9 @@ Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController
 // En routes/web.php
 Route::get('/reporte-mision-oficial/{solicitud?}', [ReporteMisionOficialController::class, 'pdf'])
     ->name('reportes.mision-oficial.pdf');
+
+Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
+    ->name('reportes.solicitud-autorizacion.pdf');
 
 Route::get('/reportes/orden-trabajo/pdf', action: [ReporteOrdenTrabajoController::class, 'pdf'])
     ->name('reportes.orden-trabajo.pdf');

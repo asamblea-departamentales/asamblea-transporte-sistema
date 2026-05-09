@@ -821,6 +821,18 @@ class SolicitudTransporteResource extends Resource
                         ),
 
                     // ---------------------------------------------------------
+                    // DOCUMENTO OFICIAL
+                    // ---------------------------------------------------------
+                    Tables\Actions\Action::make('documento_oficial')
+                        ->label('Documento Oficial')
+                        ->icon('heroicon-o-printer')
+                        ->color('success')
+                        ->url(fn ($record) => route('reportes.solicitud-autorizacion.pdf', [
+                            'solicitud' => $record->id,
+                        ]))
+                        ->openUrlInNewTab(),
+
+                    // ---------------------------------------------------------
                     // RECHAZAR
                     // ---------------------------------------------------------
                     Tables\Actions\Action::make('rechazar')

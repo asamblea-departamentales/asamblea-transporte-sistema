@@ -142,6 +142,11 @@ class SolicitudTransporte extends Model
         return $this->belongsTo(User::class, 'confirmado_por');
     }
 
+    public function solicitudCombustible()
+    {
+        return $this->hasOne(SolicitudCombustible::class, 'solicitud_transporte_id');
+    }
+
     // Relacion con incidencias
     public function incidencias()
     {
