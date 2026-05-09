@@ -2,209 +2,339 @@
 <html lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Documento Oficial de Autorización</title>
+    <title>Solicitud y Autorización de Vehículos y Combustible</title>
+
     <style>
-        body {
-            font-family: 'DejaVu Sans', sans-serif;
+        body{
+            font-family: DejaVu Sans, sans-serif;
             font-size: 11px;
-            color: #000;
-            margin: 20px 30px;
+            margin: 28px 38px;
+            color:#000;
         }
 
-        .header {
-            text-align: center;
-            margin-bottom: 20px;
+        .encabezado{
+            width:100%;
+            text-align:center;
+            margin-bottom:20px;
+            position:relative;
         }
 
-        .header img {
-            width: 90px;
+        .logo{
+            width:75px;
+            margin-bottom:5px;
         }
 
-        .header h1 {
-            font-size: 14px;
-            margin: 6px 0 2px;
-            text-transform: uppercase;
-            letter-spacing: 1px;
+        .institucion{
+            font-size:10px;
+            line-height:1.2;
+            font-weight:bold;
+            text-transform:uppercase;
         }
 
-        .header h2 {
-            font-size: 13px;
-            margin: 0 0 4px;
-            text-transform: uppercase;
+        .titulo{
+            margin-top:12px;
+            font-size:22px;
+            font-weight:bold;
+            text-transform:uppercase;
         }
 
-        .header .documento-titulo {
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 10px;
-            padding-top: 8px;
-            border-top: 2px solid #000;
+        .ticket{
+            position:absolute;
+            right:0;
+            top:15px;
+            font-size:12px;
+            font-weight:bold;
         }
 
-        .header .codigo-fecha {
-            font-size: 10px;
-            margin-top: 4px;
+        .linea-principal{
+            border-top:1px solid #000;
+            margin-top:10px;
         }
 
-        .section-title {
-            background: #d9d9d9;
-            font-weight: bold;
-            padding: 5px 8px;
-            margin-top: 14px;
-            margin-bottom: 6px;
-            font-size: 11px;
-            text-transform: uppercase;
+        table.formulario{
+            width:100%;
+            border-collapse:collapse;
+            margin-top:20px;
         }
 
-        table.info {
-            width: 100%;
-            border-collapse: collapse;
-            margin-bottom: 2px;
+        table.formulario td{
+            padding:6px 4px;
+            vertical-align:bottom;
         }
 
-        table.info th, table.info td {
-            border: 1px solid #000;
-            padding: 5px 7px;
-            text-align: left;
-            font-size: 11px;
+        .label{
+            width:220px;
+            font-weight:normal;
+            white-space:nowrap;
         }
 
-        table.info th {
-            background: #d9d9d9;
-            font-weight: bold;
-            width: 30%;
+        .valor{
+            border-bottom:1px solid #000;
+            width:auto;
+            padding-left:8px;
+            font-weight:bold;
         }
 
-        table.info td {
-            width: 70%;
+        .separacion{
+            height:12px;
         }
 
-        .observaciones {
-            border: 1px solid #000;
-            padding: 8px;
-            min-height: 40px;
-            margin-bottom: 8px;
+        .dos-columnas{
+            width:100%;
+            margin-top:15px;
         }
 
-        .firmas {
-            margin-top: 30px;
-            text-align: center;
-            width: 100%;
+        .dos-columnas td{
+            vertical-align:top;
+            width:50%;
         }
 
-        .firmas table {
-            width: 100%;
-            border-collapse: collapse;
+        .firma-section{
+            margin-top:70px;
+            width:100%;
         }
 
-        .firmas td {
-            width: 33%;
-            padding: 0 10px;
-            text-align: center;
-            vertical-align: top;
+        .firma-table{
+            width:100%;
+            border-collapse:collapse;
         }
 
-        .firmas .linea {
-            border-top: 1px solid #000;
-            margin: 50px auto 6px;
-            width: 85%;
+        .firma-table td{
+            width:50%;
+            text-align:center;
+            vertical-align:top;
+            padding:0 20px;
         }
 
-        .firmas .cargo {
-            font-size: 10px;
-            font-weight: bold;
+        .firma-linea{
+            border-top:1px solid #000;
+            width:90%;
+            margin:55px auto 6px;
         }
 
-        .firmas .nombre {
-            font-size: 10px;
+        .firma-label{
+            font-size:11px;
+            font-weight:bold;
         }
 
-        .footer {
-            position: fixed;
-            bottom: -30px;
-            left: 0;
-            right: 0;
-            text-align: center;
-            font-size: 8px;
-            color: #6b7280;
-            border-top: 1px solid #d1d5db;
-            padding-top: 4px;
+        .firma-nombre{
+            font-size:10px;
+            margin-top:2px;
+        }
+
+        .observaciones{
+            margin-top:25px;
+        }
+
+        .observaciones-titulo{
+            font-weight:bold;
+            margin-bottom:6px;
+        }
+
+        .observaciones-box{
+            border-bottom:1px solid #000;
+            min-height:35px;
+            padding:4px 2px;
+        }
+
+        .footer{
+            position:fixed;
+            bottom:-10px;
+            left:0;
+            right:0;
+            text-align:center;
+            font-size:8px;
         }
     </style>
 </head>
+
 <body>
 
-    <div class="header">
-        <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Asamblea Legislativa">
-        <h1>Asamblea Legislativa de El Salvador</h1>
-        <h2>Dirección de Transporte y Logística</h2>
-        <div class="documento-titulo">Documento Oficial de Autorización</div>
-        <div class="codigo-fecha">
-            Código: {{ $datos['codigo'] }} &nbsp;|&nbsp; Fecha de emisión: {{ $datos['fecha_emision'] }}
-        </div>
+<div class="encabezado">
+
+    <div class="ticket">
+        Ticket #{{ $datos['ticket'] }}
     </div>
 
-    <div class="section-title">I. Información General de la Misión</div>
-    <table class="info">
-        <tr><th>Unidad solicitante</th><td>{{ $datos['unidad'] }}</td></tr>
-        <tr><th>Solicitante</th><td>{{ $datos['solicitante'] }}</td></tr>
-        <tr><th>Destino</th><td>{{ $datos['destino'] }}</td></tr>
-        @if ($datos['destino_adicional'] !== 'Sin destino adicional')
-        <tr><th>Destino adicional</th><td>{{ $datos['destino_adicional'] }}</td></tr>
-        @endif
-        <tr><th>Motivo de la misión</th><td>{{ $datos['motivo'] }}</td></tr>
-        <tr><th>Fecha de salida</th><td>{{ $datos['fecha_salida'] }}</td></tr>
-        <tr><th>Fecha de regreso</th><td>{{ $datos['fecha_regreso'] }}</td></tr>
-        <tr><th>Hora de salida</th><td>{{ $datos['hora_salida'] }}</td></tr>
-        <tr><th>Hora de regreso</th><td>{{ $datos['hora_regreso'] }}</td></tr>
-    </table>
+    <img
+        src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
+        class="logo"
+        alt="Logo"
+    >
 
-    <div class="section-title">II. Información del Vehículo</div>
-    <table class="info">
-        <tr><th>Vehículo</th><td>{{ $datos['placa'] }}</td></tr>
-        <tr><th>Placa</th><td>{{ $datos['placa'] }}</td></tr>
-        <tr><th>Tipo de vehículo</th><td>{{ $datos['tipo_vehiculo'] }}</td></tr>
-        <tr><th>Motorista</th><td>{{ $datos['motorista'] }}</td></tr>
-    </table>
-
-    <div class="section-title">III. Información de Combustible</div>
-    <table class="info">
-        <tr><th>Tipo de combustible</th><td>{{ $datos['tipo_combustible'] }}</td></tr>
-        <tr><th>Ticket externo</th><td>{{ $datos['ticket'] }}</td></tr>
-        <tr><th>Monto autorizado</th><td>$ {{ number_format($datos['monto_combustible'], 2) }}</td></tr>
-    </table>
-
-    <div class="section-title">IV. Observaciones</div>
-    <div class="observaciones">{{ $datos['observaciones'] }}</div>
-
-    <div class="section-title">V. Firmas de Autorización</div>
-    <div class="firmas">
-        <table>
-            <tr>
-                <td>
-                    <div class="linea"></div>
-                    <div class="cargo">Solicitante</div>
-                    <div class="nombre">{{ $datos['solicitante'] }}</div>
-                </td>
-                <td>
-                    <div class="linea"></div>
-                    <div class="cargo">Jefe de Unidad</div>
-                    <div class="nombre">&nbsp;</div>
-                </td>
-                <td>
-                    <div class="linea"></div>
-                    <div class="cargo">Autorizado Transporte</div>
-                    <div class="nombre">&nbsp;</div>
-                </td>
-            </tr>
-        </table>
+    <div class="institucion">
+        REPÚBLICA DE EL SALVADOR<br>
+        ASAMBLEA LEGISLATIVA<br>
+        DIRECCIÓN DE TRANSPORTE Y LOGÍSTICA
     </div>
 
-    <div class="footer">
-        Asamblea Legislativa de El Salvador &mdash; Sistema de Gestión de Transporte &mdash;
-        Documento generado el {{ now()->format('d/m/Y H:i') }} &mdash;
-        Página <script type="text/php">echo $PAGE_NUM . " de " . $PAGE_COUNT;</script>
+    <div class="titulo">
+        SOLICITUD Y AUTORIZACIÓN DE VEHÍCULOS Y COMBUSTIBLE
     </div>
+
+    <div class="linea-principal"></div>
+
+</div>
+
+<table class="formulario">
+
+    <tr>
+        <td class="label">Unidad o persona solicitante:</td>
+        <td class="valor">
+            {{ $datos['solicitante'] }} ,
+            {{ $datos['unidad'] }}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="label">Hora y fecha de salida:</td>
+        <td class="valor">
+            {{ $datos['fecha_salida'] }}
+            ,
+            {{ $datos['hora_salida'] }}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="label">Motorista:</td>
+        <td class="valor">
+            {{ $datos['motorista'] }}
+        </td>
+    </tr>
+
+    <tr>
+        <td class="label">Destino y actividad a realizar:</td>
+        <td class="valor">
+            {{ $datos['motivo'] }}
+            ,
+            {{ $datos['destino'] }}
+
+            @if($datos['destino_adicional'] !== 'Sin destino adicional')
+                ,
+                {{ $datos['destino_adicional'] }}
+            @endif
+        </td>
+    </tr>
+
+</table>
+
+<table class="dos-columnas">
+
+    <tr>
+
+        <td>
+
+            <table class="formulario">
+
+                <tr>
+                    <td class="label">Tipo vehículo:</td>
+                    <td class="valor">
+                        {{ $datos['tipo_vehiculo'] }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Modo de Combustible:</td>
+                    <td class="valor">
+                        {{ $datos['tipo_combustible'] }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Valor:</td>
+                    <td class="valor">
+                        $ {{ number_format($datos['monto_combustible'], 2) }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Total vales:</td>
+                    <td class="valor">
+                        1
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+
+        <td>
+
+            <table class="formulario">
+
+                <tr>
+                    <td class="label">Placa:</td>
+                    <td class="valor">
+                        {{ $datos['placa'] }}
+                    </td>
+                </tr>
+
+                <tr>
+                    <td class="label">Monto:</td>
+                    <td class="valor">
+                        $ {{ number_format($datos['monto_combustible'], 2) }}
+                    </td>
+                </tr>
+
+            </table>
+
+        </td>
+
+    </tr>
+
+</table>
+
+<div class="observaciones">
+
+    <div class="observaciones-titulo">
+        Observaciones:
+    </div>
+
+    <div class="observaciones-box">
+        {{ $datos['observaciones'] }}
+    </div>
+
+</div>
+
+<div class="firma-section">
+
+    <table class="firma-table">
+
+        <tr>
+
+            <td>
+                <div class="firma-linea"></div>
+
+                <div class="firma-label">
+                    Jefe de Unidad
+                </div>
+
+                <div class="firma-nombre">
+                    {{ $datos['solicitante'] }}
+                </div>
+            </td>
+
+            <td>
+                <div class="firma-linea"></div>
+
+                <div class="firma-label">
+                    Autorizado Transporte
+                </div>
+
+                <div class="firma-nombre">
+                    Dirección de Transporte
+                </div>
+            </td>
+
+        </tr>
+
+    </table>
+
+</div>
+
+<div class="footer">
+    Documento generado el {{ now()->format('d/m/Y H:i') }}
+</div>
 
 </body>
 </html>
