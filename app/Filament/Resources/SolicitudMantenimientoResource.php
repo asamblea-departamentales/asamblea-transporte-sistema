@@ -71,7 +71,7 @@ class SolicitudMantenimientoResource extends Resource
                     Forms\Components\Placeholder::make('vehiculo_ui')
                         ->label('Vehículo')
                         ->content(fn (SolicitudMantenimiento $record) => $record->vehiculo
-                                ? "{$record->vehiculo->placa} — {$record->vehiculo->marca?->nombre} {$record->vehiculo->modelo?->nombre}"
+                                ? "{$record->vehiculo->placa} — {$record->vehMarca?->nombre} {$record->vehiculo->vehModelo?->nombre}"
                                 : '-'
                         ),
 
@@ -392,7 +392,7 @@ class SolicitudMantenimientoResource extends Resource
                     ->wrap()
                     ->description(function (SolicitudMantenimiento $record) {
                         $placa = $record->vehiculo?->placa ?? 'Sin vehículo';
-                        $vehiculo = trim(($record->vehiculo?->marca?->nombre ?? '').' '.($record->vehiculo?->modelo?->nombre ?? ''));
+                        $vehiculo = trim(($record->vehiculo?->vehMarca?->nombre ?? '').' '.($record->vehiculo?->vehModelo?->nombre ?? ''));
                         $tipo = $record->tipoMantenimiento?->nombre ?? 'Sin tipo';
 
                         return "Vehículo: {$placa}".

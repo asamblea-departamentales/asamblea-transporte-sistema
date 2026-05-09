@@ -14,8 +14,8 @@ class ReporteControlMensualCombustibleService
 
         return SolicitudCombustible::query()
             ->with([
-                'vehiculo.marca',
-                'vehiculo.modelo',
+                'vehiculo.vehMarca',
+                'vehiculo.vehModelo',
                 'motorista',
                 'solicitante',
                 'contrato',
@@ -65,8 +65,8 @@ class ReporteControlMensualCombustibleService
         }
 
         $placa = $solicitud->vehiculo->placa ?? 'Sin placa';
-        $marca = $solicitud->vehiculo->marca?->nombre ?? $solicitud->vehiculo->getAttribute('marca') ?? '';
-        $modelo = $solicitud->vehiculo->modelo?->nombre ?? $solicitud->vehiculo->getAttribute('modelo') ?? '';
+        $marca = $solicitud->vehiculo->vehMarca?->nombre ?? $solicitud->vehiculo->getAttribute('marca') ?? '';
+        $modelo = $solicitud->vehiculo->vehModelo?->nombre ?? $solicitud->vehiculo->getAttribute('modelo') ?? '';
 
         $detalle = trim("{$marca} {$modelo}");
 

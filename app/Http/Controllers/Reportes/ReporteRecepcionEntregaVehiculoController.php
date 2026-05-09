@@ -15,8 +15,8 @@ class ReporteRecepcionEntregaVehiculoController extends Controller
 
         $movimiento = RecepcionEntregaVehiculo::query()
             ->with([
-                'vehiculo.marca',
-                'vehiculo.modelo',
+                'vehiculo.vehMarca',
+                'vehiculo.vehModelo',
                 'vehiculo.color',
                 'motorista' => fn ($q) => $q->withTrashed(),
                 'usuario',
@@ -27,8 +27,8 @@ class ReporteRecepcionEntregaVehiculoController extends Controller
         $pdf = Pdf::loadView('reports.reporte_recepcion_entrega_vehiculo_pdf', [
             'movimiento' => $movimiento,
         ])
-        ->setPaper('a4', 'portrait')
-        ->setWarnings(false);
+            ->setPaper('a4', 'portrait')
+            ->setWarnings(false);
 
         return $pdf->stream('reporte_recepcion_entrega_vehiculo.pdf');
     }

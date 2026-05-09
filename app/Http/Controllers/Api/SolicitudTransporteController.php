@@ -2,17 +2,14 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
+use App\Domain\Solicitudes\Services\SolicitudTransporteService;
+use App\Http\Controllers\Controller;
 use App\Models\SolicitudTransporte;
-use App\Models\HistorialEstado;
-use App\Models\BitacoraEvento;
-use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
-use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 
 class SolicitudTransporteController extends Controller
 {
@@ -30,7 +27,7 @@ class SolicitudTransporteController extends Controller
         $user = $request->user();
 
         $query = SolicitudTransporte::query()
-            ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']); // Carga relaciones para optimizar consultas 
+            ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']); // Carga relaciones para optimizar consultas
 
         if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
             $query->where('solicitante_id', $user->id);
@@ -43,70 +40,71 @@ class SolicitudTransporteController extends Controller
 
     /**
      * Crear solicitud (Queda como PENDIENTE tras el service)
-     */public function store(Request $request)
-{
-    $data = $request->validate([
-        'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
-        'motivo_actividad'      => ['required', 'string'],
-        'origen'                => ['required', 'string'],
-        'destino_principal'     => ['required', 'string'], 
-        'destino_adicional'     => ['nullable', 'string'],
-        'fecha_salida'          => ['required', 'date'],
-        'fecha_retorno'         => ['nullable', 'date', 'after_or_equal:fecha_salida'],
-        'hora_salida'           => ['required'], 
-        'cantidad_personas'     => ['required', 'integer', 'min:1'],
-        'prioridad'             => ['required', 'string'],
-        'tipo_vehiculo'         => ['required', 'string'],
-        'encargado'             => ['required', 'string'], 
-        'subencargado'          => ['nullable', 'string'],
-        
-        // --- NUEVOS CAMPOS DE COORDENADAS ---
-        'origen_lat'            => ['nullable', 'numeric'],
-        'origen_lng'            => ['nullable', 'numeric'],
-        'destino_lat'           => ['nullable', 'numeric'],
-        'destino_lng'           => ['nullable', 'numeric'],
-        'destino_adicional_lat' => ['nullable', 'numeric'],
-        'destino_adicional_lng' => ['nullable', 'numeric'],
-    ]);
+     */
+    public function store(Request $request)
+    {
+        $data = $request->validate([
+            'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
+            'motivo_actividad' => ['required', 'string'],
+            'origen' => ['required', 'string'],
+            'destino_principal' => ['required', 'string'],
+            'destino_adicional' => ['nullable', 'string'],
+            'fecha_salida' => ['required', 'date'],
+            'fecha_retorno' => ['nullable', 'date', 'after_or_equal:fecha_salida'],
+            'hora_salida' => ['required'],
+            'cantidad_personas' => ['required', 'integer', 'min:1'],
+            'prioridad' => ['required', 'string'],
+            'tipo_vehiculo' => ['required', 'string'],
+            'encargado' => ['required', 'string'],
+            'subencargado' => ['nullable', 'string'],
 
-    // --- MAPEO DE DATOS ---
-    $tipoVehiculoNombre = $data['tipo_vehiculo'];
-    $destinoReal = $data['destino_principal'];
-    $destinoAdicional = $data['destino_adicional'] ?? null;
+            // --- NUEVOS CAMPOS DE COORDENADAS ---
+            'origen_lat' => ['nullable', 'numeric'],
+            'origen_lng' => ['nullable', 'numeric'],
+            'destino_lat' => ['nullable', 'numeric'],
+            'destino_lng' => ['nullable', 'numeric'],
+            'destino_adicional_lat' => ['nullable', 'numeric'],
+            'destino_adicional_lng' => ['nullable', 'numeric'],
+        ]);
 
-    // Extraemos las coordenadas para que no estorben en el resto de la lógica si fuera necesario
-    // aunque al usar el spread operator (...) podemos dejarlas en $data si los nombres coinciden con la BD.
-    
-    // Limpiamos los campos que no van directo a columnas con el mismo nombre
-    unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
+        // --- MAPEO DE DATOS ---
+        $tipoVehiculoNombre = $data['tipo_vehiculo'];
+        $destinoReal = $data['destino_principal'];
+        $destinoAdicional = $data['destino_adicional'] ?? null;
 
-    $solicitud = SolicitudTransporte::create([
-        ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
-        'destino'               => $destinoReal,
-        'destino_adicional'     => $destinoAdicional,
-        'tipo_vehiculo_nombre'  => $tipoVehiculoNombre,
-        'solicitante_id'        => Auth::id(),
-        'estado'                => EstadoSolicitudEnum::BORRADOR,
-    ]);
+        // Extraemos las coordenadas para que no estorben en el resto de la lógica si fuera necesario
+        // aunque al usar el spread operator (...) podemos dejarlas en $data si los nombres coinciden con la BD.
 
-    // El service cambia el estado de BORRADOR a PENDIENTE y notifica (aquí se enviará el correo)
-    $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+        // Limpiamos los campos que no van directo a columnas con el mismo nombre
+        unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
 
-    return response()->json(
-        $solicitud->fresh()->load(['unidad', 'solicitante']), 
-        201
-    );
-}
+        $solicitud = SolicitudTransporte::create([
+            ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
+            'destino' => $destinoReal,
+            'destino_adicional' => $destinoAdicional,
+            'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
+            'solicitante_id' => Auth::id(),
+            'estado' => EstadoSolicitudEnum::BORRADOR,
+        ]);
+
+        // El service cambia el estado de BORRADOR a PENDIENTE y notifica (aquí se enviará el correo)
+        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+        return response()->json(
+            $solicitud->fresh()->load(['unidad', 'solicitante']),
+            201
+        );
+    }
 
     /**
      * Ver detalle
      */
     public function show(SolicitudTransporte $solicitud)
     {
-     $this->authorizeView($solicitud);
+        $this->authorizeView($solicitud);
 
         return response()->json(
-        $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']) //Catalogos nuevos agregados
+            $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']) // Catalogos nuevos agregados
         );
     }
 
@@ -133,32 +131,33 @@ class SolicitudTransporteController extends Controller
      * Finalizar (Acción desde el Frontend para el Solicitante)
      */
     /**
- * Finalizar (Acción desde el Frontend para el Solicitante)
- */
-public function finalizar(SolicitudTransporte $solicitud)
-{
-    // Usamos el helper de autorización para asegurar que sea el dueño
-    $this->authorizeOwner($solicitud);
+     * Finalizar (Acción desde el Frontend para el Solicitante)
+     */
+    public function finalizar(SolicitudTransporte $solicitud)
+    {
+        // Usamos el helper de autorización para asegurar que sea el dueño
+        $this->authorizeOwner($solicitud);
 
-    try {
-        //Delegamos TODA la carga al service
-        $solicitud = $this->service->finalizar($solicitud, Auth::id());
+        try {
+            // Delegamos TODA la carga al service
+            $solicitud = $this->service->finalizar($solicitud, Auth::id());
 
-        return response()->json([
-            'message' => 'Viaje finalizado con éxito.',
-            'data' => $solicitud->fresh()->load(['unidad', 'solicitante', 'confirmador'])
-        ]);
+            return response()->json([
+                'message' => 'Viaje finalizado con éxito.',
+                'data' => $solicitud->fresh()->load(['unidad', 'solicitante', 'confirmador']),
+            ]);
 
-    } catch (\DomainException $e) {
-        return response()->json([
-            'message' => $e->getMessage()
-        ], Response::HTTP_UNPROCESSABLE_ENTITY);
-    } catch (\Exception $e) {
-        // Log por si algo falla a nivel de base de datos
-        \Illuminate\Support\Facades\Log::error("Error al finalizar: " . $e->getMessage());
-        return response()->json(['message' => 'Error interno del servidor'], 500);
+        } catch (\DomainException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+        } catch (\Exception $e) {
+            // Log por si algo falla a nivel de base de datos
+            \Illuminate\Support\Facades\Log::error('Error al finalizar: '.$e->getMessage());
+
+            return response()->json(['message' => 'Error interno del servidor'], 500);
+        }
     }
-}
 
     /**
      * Observación del jefe
@@ -228,41 +227,41 @@ public function finalizar(SolicitudTransporte $solicitud)
     /**
      * Para generar PDF de mision oficial individual
      */
-public function pdf(
-    Request $request, 
-    ReporteMisionOficialService $service, 
-    \App\Models\SolicitudTransporte $solicitud = null // <-- Importante: mismo nombre que en la ruta
-) {
-    if ($solicitud && $solicitud->exists) {
-        // CASO A: Imprimir una sola misión oficial (Botón de Filament)
-        $solicitud->load([
-            'solicitante', 'autorizador', 'motorista', 'tipoVehiculo',
-            'vehiculo.marca', 'vehiculo.modelo', 'vehiculo.color', 'vehiculo.clasificacion'
-        ]);
-        
-        // Lo metemos en una colección para que el @foreach del Blade no falle
-        $rows = collect([$solicitud]); 
-        $filters = [];
-    } else {
-        // CASO B: Reporte masivo desde la pantalla de reportes
-        $filters = $request->only(['date_from', 'date_to', 'vehiculo_id', 'motorista_id', 'tipo_vehiculo_id']);
-        $rows = $service->buildQuery($filters)->orderBy('fecha_salida', 'asc')->get();
+    public function pdf(
+        Request $request,
+        ReporteMisionOficialService $service,
+        ?\App\Models\SolicitudTransporte $solicitud = null // <-- Importante: mismo nombre que en la ruta
+    ) {
+        if ($solicitud && $solicitud->exists) {
+            // CASO A: Imprimir una sola misión oficial (Botón de Filament)
+            $solicitud->load([
+                'solicitante', 'autorizador', 'motorista', 'tipoVehiculo',
+                'vehiculo.vehMarca', 'vehiculo.vehModelo', 'vehiculo.color', 'vehiculo.clasificacion',
+            ]);
+
+            // Lo metemos en una colección para que el @foreach del Blade no falle
+            $rows = collect([$solicitud]);
+            $filters = [];
+        } else {
+            // CASO B: Reporte masivo desde la pantalla de reportes
+            $filters = $request->only(['date_from', 'date_to', 'vehiculo_id', 'motorista_id', 'tipo_vehiculo_id']);
+            $rows = $service->buildQuery($filters)->orderBy('fecha_salida', 'asc')->get();
+        }
+
+        if ($rows->isEmpty()) {
+            return redirect()->back()->with('error', 'No hay datos para generar el PDF.');
+        }
+
+        $kpis = $service->getKpis($filters);
+
+        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.reporte_mision_oficial_pdf', [
+            'rows' => $rows,
+            'filters' => $filters,
+            'kpis' => $kpis,
+            'service' => $service,
+            'rangeLabel' => ($solicitud && $solicitud->exists) ? 'Misión Individual' : $this->rangeLabel($filters),
+        ])->setPaper('a4', 'portrait')->stream('mision_oficial.pdf');
     }
-
-    if ($rows->isEmpty()) {
-        return redirect()->back()->with('error', 'No hay datos para generar el PDF.');
-    }
-
-    $kpis = $service->getKpis($filters);
-
-    return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.reporte_mision_oficial_pdf', [
-        'rows' => $rows,
-        'filters' => $filters,
-        'kpis' => $kpis,
-        'service' => $service,
-        'rangeLabel' => ($solicitud && $solicitud->exists) ? "Misión Individual" : $this->rangeLabel($filters),
-    ])->setPaper('a4', 'portrait')->stream('mision_oficial.pdf');
-}
 
     // =====================================================
     // Helpers de autorización
@@ -296,15 +295,15 @@ public function pdf(
     }
 
     private function rangeLabel(array $filters): string
-{
-    $from = !empty($filters['date_from'])
-        ? \Carbon\Carbon::parse($filters['date_from'])->format('d/m/Y')
-        : 'Inicio';
+    {
+        $from = ! empty($filters['date_from'])
+            ? \Carbon\Carbon::parse($filters['date_from'])->format('d/m/Y')
+            : 'Inicio';
 
-    $to = !empty($filters['date_to'])
-        ? \Carbon\Carbon::parse($filters['date_to'])->format('d/m/Y')
-        : 'Fin';
+        $to = ! empty($filters['date_to'])
+            ? \Carbon\Carbon::parse($filters['date_to'])->format('d/m/Y')
+            : 'Fin';
 
-    return "Periodo: {$from} al {$to}";
-}
+        return "Periodo: {$from} al {$to}";
+    }
 }

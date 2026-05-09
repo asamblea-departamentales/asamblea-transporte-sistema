@@ -137,64 +137,64 @@ class VehiculoResource extends Resource
             Forms\Components\Section::make('Datos Técnicos')
                 ->icon('heroicon-o-cog-6-tooth')
                 ->schema([
-                Forms\Components\Select::make('veh_tipo_motor_id')
+                    Forms\Components\Select::make('veh_tipo_motor_id')
                         ->label('Tipo de Motor')
                         ->relationship('tipoMotor', 'nombre')
                         ->searchable()
                         ->preload(),
 
-                Forms\Components\Select::make('veh_tipo_combustible_id')
+                    Forms\Components\Select::make('veh_tipo_combustible_id')
                         ->label('Combustible')
                         ->relationship('tipoCombustible', 'nombre')
                         ->searchable()
                         ->preload(),
 
-                Forms\Components\Select::make('veh_transmision_id')
+                    Forms\Components\Select::make('veh_transmision_id')
                         ->label('Transmisión')
                         ->relationship('transmision', 'nombre')
                         ->searchable()
                         ->preload(),
 
-                Forms\Components\Select::make('veh_traccion_id')
+                    Forms\Components\Select::make('veh_traccion_id')
                         ->label('Tracción')
                         ->relationship('traccion', 'nombre')
                         ->searchable()
                         ->preload(),
 
-                Forms\Components\Select::make('veh_tipo_llanta_id')
+                    Forms\Components\Select::make('veh_tipo_llanta_id')
                         ->label('Tipo de Llanta')
                         ->relationship('tipoLlanta', 'nombre')
                         ->searchable()
                         ->preload(),
 
-                Forms\Components\TextInput::make('num_llantas')
+                    Forms\Components\TextInput::make('num_llantas')
                         ->label('Número de Llantas')
                         ->numeric()
                         ->minValue(2),
-            ])->columns(2),
+                ])->columns(2),
 
             Forms\Components\Section::make('Datos Registrales')
                 ->icon('heroicon-o-document-text')
                 ->schema([
-                Forms\Components\TextInput::make('chasis')
+                    Forms\Components\TextInput::make('chasis')
                         ->label('Chasis')
                         ->maxLength(100),
 
-                Forms\Components\TextInput::make('vin')
+                    Forms\Components\TextInput::make('vin')
                         ->label('VIN')
                         ->maxLength(100),
 
-                Forms\Components\TextInput::make('motor_numero')
+                    Forms\Components\TextInput::make('motor_numero')
                         ->label('Número de Motor')
                         ->maxLength(100),
 
-                Forms\Components\TextInput::make('activo_fijo')
+                    Forms\Components\TextInput::make('activo_fijo')
                         ->label('Activo Fijo')
                         ->maxLength(100),
 
-                Forms\Components\DatePicker::make('vencimiento_tarjeta')
+                    Forms\Components\DatePicker::make('vencimiento_tarjeta')
                         ->label('Vencimiento Tarjeta de Circulación'),
-            ])->columns(2),
+                ])->columns(2),
 
             // Para las herramientas
             Forms\Components\Section::make('Equipamiento y Herramientas')
@@ -202,7 +202,7 @@ class VehiculoResource extends Resource
                 ->description('Marque los elementos que se encuentran físicamente en el vehículo')
                 ->collapsible()
                 ->schema([
-                Forms\Components\CheckboxList::make('accesorios')
+                    Forms\Components\CheckboxList::make('accesorios')
                         ->label('') // Quitamos el label para que use el del Section
                         ->options([
                             'gato' => 'Gato Hidráulico',
@@ -218,12 +218,12 @@ class VehiculoResource extends Resource
                         ->columns(3) // Se organiza en 3 columnas para ahorrar espacio
                         ->bulkToggleable() // Botón para marcar/desmarcar todo rápido
                         ->gridDirection('column'),
-            ]),
+                ]),
 
             Forms\Components\Section::make('Fotografía y Observaciones')
                 ->icon('heroicon-o-camera')
                 ->schema([
-                Forms\Components\FileUpload::make('fotografia')
+                    Forms\Components\FileUpload::make('fotografia')
                         ->label('Fotografía')
                         ->image()
                         ->disk('public')
@@ -233,12 +233,12 @@ class VehiculoResource extends Resource
                         ->maxSize(5120)
                         ->columnSpanFull(),
 
-                Forms\Components\Textarea::make('observacion')
+                    Forms\Components\Textarea::make('observacion')
                         ->label('Observaciones')
                         ->rows(3)
                         ->maxLength(1000)
                         ->columnSpanFull(),
-            ]),
+                ]),
 
         ]);
     }
@@ -278,7 +278,7 @@ class VehiculoResource extends Resource
                         Tables\Columns\TextColumn::make('vehiculo_titulo')
                             ->weight(FontWeight::Bold)
                             ->size(TextColumnSize::Large)
-                            ->getStateUsing(fn (Vehiculo $record) => collect([$record->marca?->nombre, $record->modelo?->nombre])
+                            ->getStateUsing(fn (Vehiculo $record) => collect([$record->vehMarca?->nombre, $record->vehModelo?->nombre])
                                 ->filter()->join(' ')
                             ),
 
@@ -442,8 +442,8 @@ class VehiculoResource extends Resource
         return parent::getEloquentQuery()
             ->with([
                 'tipo',
-                'marca',
-                'modelo',
+                'vehMarca',
+                'vehModelo',
                 'color',
                 'tipoCombustible',
                 'clasificacion',

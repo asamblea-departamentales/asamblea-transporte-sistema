@@ -6,19 +6,18 @@ use App\Domain\Solicitudes\Services\Reportes\ReporteFlotaVehicularService;
 use App\Models\TipoVehiculo;
 use App\Models\VehClasificacion;
 use App\Models\VehEstadoCatalogo;
+use App\Models\Vehiculo;
 use App\Models\VehMarca;
 use App\Models\VehModelo;
 use App\Models\VehTipoCombustible;
-use App\Models\Vehiculo;
-use Barryvdh\DomPDF\Facade\Pdf;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
@@ -27,24 +26,37 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Reporte Flota Vehicular';
+
     protected static ?string $navigationIcon = 'heroicon-o-truck';
+
     protected static ?int $navigationSort = 4;
 
     protected static string $view = 'filament.pages.reporte-flota-vehicular';
 
     public ?string $placa = null;
+
     public ?int $tipo_vehiculo_id = null;
+
     public ?int $veh_marca_id = null;
+
     public ?int $veh_modelo_id = null;
+
     public ?int $veh_tipo_combustible_id = null;
+
     public ?int $veh_clasificacion_id = null;
+
     public ?int $veh_estado_catalogo_id = null;
+
     public $activo = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_activos = 0;
+
     public int $kpi_con_asignacion = 0;
+
     public int $kpi_sin_asignacion = 0;
 
     public function mount(): void
@@ -197,12 +209,12 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
                     ->searchable()
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('marca.nombre')
+                Tables\Columns\TextColumn::make('vehMarca.nombre')
                     ->label('Marca')
                     ->formatStateUsing(fn ($state, Vehiculo $record) => $state ?: ($record->getAttribute('marca') ?: '-'))
                     ->sortable(),
 
-                Tables\Columns\TextColumn::make('modelo.nombre')
+                Tables\Columns\TextColumn::make('vehModelo.nombre')
                     ->label('Modelo')
                     ->formatStateUsing(fn ($state, Vehiculo $record) => $state ?: ($record->getAttribute('modelo') ?: '-'))
                     ->sortable(),

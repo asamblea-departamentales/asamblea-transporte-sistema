@@ -67,7 +67,7 @@
         <tr>
             <td class="label">Vehículo / Placa:</td>
             <td class="value">
-                {{ $solicitud->vehiculo?->marca?->nombre }} {{ $solicitud->vehiculo?->modelo?->nombre }} 
+                {{ $solicitud->vehiculo?->vehMarca?->nombre }} {{ $solicitud->vehiculo?->vehModelo?->nombre }} 
                 ({{ $solicitud->vehiculo?->placa ?? '-' }})
             </td>
             <td class="label">Solicitante:</td>

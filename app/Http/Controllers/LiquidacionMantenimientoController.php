@@ -10,11 +10,11 @@ class LiquidacionMantenimientoController extends Controller
     public function pdf($id)
     {
         $solicitud = SolicitudMantenimiento::with([
-    'vehiculo.marca',
-    'vehiculo.modelo',
-    'solicitante',
-    'liquidacion.usuario', // ← misma relación
-])->findOrFail($id);
+            'vehiculo.vehMarca',
+            'vehiculo.vehModelo',
+            'solicitante',
+            'liquidacion.usuario', // ← misma relación
+        ])->findOrFail($id);
 
         $pdf = Pdf::loadView('reports.liquidacion_mantenimiento_pdf', [
             'solicitud' => $solicitud,

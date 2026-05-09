@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Filament\Resources\PlanificacionFlotaResource\Pages;
-use App\Models\Vehiculo;
-use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Filament\Resources\PlanificacionFlotaResource\Pages;
+use App\Models\SolicitudTransporte;
+use App\Models\Vehiculo;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -14,10 +14,14 @@ use Illuminate\Database\Eloquent\Builder;
 class PlanificacionFlotaResource extends Resource
 {
     protected static ?string $model = Vehiculo::class;
-    protected static ?string $navigationIcon  = 'heroicon-o-truck';
+
+    protected static ?string $navigationIcon = 'heroicon-o-truck';
+
     protected static ?string $navigationLabel = 'Planificación de Flota';
+
     protected static ?string $navigationGroup = 'Gestión Operativa';
-    protected static ?int    $navigationSort  = 2;
+
+    protected static ?int $navigationSort = 2;
 
     public static function table(Table $table): Table
     {
@@ -50,18 +54,18 @@ class PlanificacionFlotaResource extends Resource
                         // green ramp / amber ramp / coral ramp
                         [$accentColor, $badgeBg, $badgeText, $badgeLabel, $borderColor, $dotColor] = match ($estadoOperativo) {
                             'en_ejecucion' => ['#D85A30', '#FAECE7', '#711B0C', 'En ruta',    '#F0997B', '#D85A30'],
-                            'programado'   => ['#BA7517', '#FAEEDA', '#412402', 'Reservado',  '#FAC775', '#BA7517'],
-                            default        => ['#3B6D11', '#EAF3DE', '#173404', 'Disponible', '#C0DD97', '#3B6D11'],
+                            'programado' => ['#BA7517', '#FAEEDA', '#412402', 'Reservado',  '#FAC775', '#BA7517'],
+                            default => ['#3B6D11', '#EAF3DE', '#173404', 'Disponible', '#C0DD97', '#3B6D11'],
                         };
 
                         // ── Datos ─────────────────────────────────────────
-                        $tipo      = e($record->tipo?->nombre ?? '—');
-                        $marca     = e($record->marca?->nombre ?? ($record->marca ?? ''));
-                        $modeloNom = e($record->modelo?->nombre ?? ($record->modelo ?? ''));
+                        $tipo = e($record->tipo?->nombre ?? '—');
+                        $marca = e($record->vehMarca?->nombre ?? ($record->marca ?? ''));
+                        $modeloNom = e($record->vehModelo?->nombre ?? ($record->modelo ?? ''));
                         $capacidad = $record->capacidad_personas ?? '—';
-                        $fotoUrl   = $record->fotografia_url;
+                        $fotoUrl = $record->fotografia_url;
 
-                        $motorista    = $record->asignacionVigenteMotorista?->motorista;
+                        $motorista = $record->asignacionVigenteMotorista?->motorista;
                         $motoristaNom = $motorista ? e($motorista->nombre) : null;
                         $motoristaDui = $motorista ? e($motorista->dui) : null;
 
@@ -79,9 +83,9 @@ class PlanificacionFlotaResource extends Resource
                                     </div>
                                     <div>
                                         <div style='font-size:12px;font-weight:700;color:#0c4a6e;line-height:1.2;'>{$motoristaNom}</div>
-                                        " . ($motoristaDui ? "<div style='font-size:10px;color:#0369a1;font-family:monospace;'>DUI: {$motoristaDui}</div>" : '') . "
+                                        ".($motoristaDui ? "<div style='font-size:10px;color:#0369a1;font-family:monospace;'>DUI: {$motoristaDui}</div>" : '').'
                                     </div>
-                                </div>";
+                                </div>';
                         } else {
                             $motoristaHtml = "
                                 <div style='display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fafafa;border:1px dashed #d1d5db;border-radius:10px;'>
@@ -95,9 +99,9 @@ class PlanificacionFlotaResource extends Resource
                         // ── Solicitud activa ──────────────────────────────
                         $solicitudHtml = '';
                         if ($solicitudActiva) {
-                            $dest   = e($solicitudActiva->destino ?? '—');
-                            $orig   = e($solicitudActiva->origen ?? '—');
-                            $fecha  = $solicitudActiva->fecha_salida?->format('d M, H:i') ?? '—';
+                            $dest = e($solicitudActiva->destino ?? '—');
+                            $orig = e($solicitudActiva->origen ?? '—');
+                            $fecha = $solicitudActiva->fecha_salida?->format('d M, H:i') ?? '—';
                             $codigo = e($solicitudActiva->codigo ?? '');
 
                             [$boxBg, $boxBorder, $labelColor, $boxLabel] = $estadoOperativo === 'en_ejecucion'
@@ -166,12 +170,14 @@ class PlanificacionFlotaResource extends Resource
                 Tables\Filters\SelectFilter::make('estado_operativo')
                     ->label('Estado')
                     ->options([
-                        'disponible'   => 'Disponible',
-                        'programado'   => 'Reservado',
+                        'disponible' => 'Disponible',
+                        'programado' => 'Reservado',
                         'en_ejecucion' => 'En ruta',
                     ])
                     ->query(function (Builder $query, array $data) {
-                        if (blank($data['value'])) return;
+                        if (blank($data['value'])) {
+                            return;
+                        }
 
                         $idsActivos = SolicitudTransporte::whereIn('estado', [
                             EstadoSolicitudEnum::EN_EJECUCION->value,
@@ -183,10 +189,10 @@ class PlanificacionFlotaResource extends Resource
                             ->whereNotNull('vehiculo_id')->pluck('vehiculo_id')->unique();
 
                         match ($data['value']) {
-                            'disponible'   => $query->whereNotIn('id', $idsActivos),
-                            'programado'   => $query->whereIn('id', $idsActivos)->whereNotIn('id', $idsEjecucion),
+                            'disponible' => $query->whereNotIn('id', $idsActivos),
+                            'programado' => $query->whereIn('id', $idsActivos)->whereNotIn('id', $idsEjecucion),
                             'en_ejecucion' => $query->whereIn('id', $idsEjecucion),
-                            default        => null,
+                            default => null,
                         };
                     }),
             ])
@@ -196,10 +202,9 @@ class PlanificacionFlotaResource extends Resource
                     ->icon('heroicon-m-list-bullet')
                     ->color('gray')
                     ->size('sm')
-                    ->url(fn (Vehiculo $record) =>
-                        \App\Filament\Resources\SolicitudTransporteResource::getUrl('index', [
-                            'tableFilters[vehiculo_id][value]' => $record->id,
-                        ])
+                    ->url(fn (Vehiculo $record) => \App\Filament\Resources\SolicitudTransporteResource::getUrl('index', [
+                        'tableFilters[vehiculo_id][value]' => $record->id,
+                    ])
                     ),
             ])
             ->defaultSort('placa')
@@ -212,8 +217,8 @@ class PlanificacionFlotaResource extends Resource
             ->where('activo', true)
             ->with([
                 'tipo',
-                'marca',
-                'modelo',
+                'vehMarca',
+                'vehModelo',
                 'asignacionVigenteMotorista.motorista',
             ]);
     }

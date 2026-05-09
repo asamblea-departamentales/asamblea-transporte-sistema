@@ -125,11 +125,11 @@
         </tr>
         <tr>
             <td>Marca</td>
-            <td>{{ $movimiento->vehiculo?->marca()->first()?->nombre ?? $movimiento->vehiculo?->marca ?? '—' }}</td>
+            <td>{{ $movimiento->vehiculo?->vehMarca?->nombre ?? $movimiento->vehiculo?->marca ?? '—' }}</td>
         </tr>
         <tr>
             <td>Modelo</td>
-            <td>{{ $movimiento->vehiculo?->modelo()->first()?->nombre ?? $movimiento->vehiculo?->modelo ?? '—' }}</td>
+            <td>{{ $movimiento->vehiculo?->vehModelo?->nombre ?? $movimiento->vehiculo?->modelo ?? '—' }}</td>
         </tr>
         <tr>
             <td>Color</td>

@@ -102,11 +102,11 @@ class ViewMotorista extends ViewRecord
                         ->label('Tipo')
                         ->placeholder('—'),
 
-                    TextEntry::make('asignacionVigenteVehiculo.vehiculo.marca.nombre')
+                    TextEntry::make('asignacionVigenteVehiculo.vehiculo.vehMarca.nombre')
                         ->label('Marca')
                         ->placeholder('—'),
 
-                    TextEntry::make('asignacionVigenteVehiculo.vehiculo.modelo.nombre')
+                    TextEntry::make('asignacionVigenteVehiculo.vehiculo.vehModelo.nombre')
                         ->label('Modelo')
                         ->placeholder('—'),
 
@@ -145,7 +145,7 @@ class ViewMotorista extends ViewRecord
                                 return '<span style="color:#9ca3af;font-style:italic;">Sin evidencia adjunta</span>';
                             }
 
-                            $url = asset('storage/' . $state);
+                            $url = asset('storage/'.$state);
                             $ext = strtolower(pathinfo($state, PATHINFO_EXTENSION));
 
                             if (in_array($ext, ['jpg', 'jpeg', 'png', 'gif', 'webp'])) {
@@ -173,23 +173,23 @@ class ViewMotorista extends ViewRecord
                     TextEntry::make('estados')
                         ->label('')
                         ->formatStateUsing(function ($state, $record) {
-                            if (!$record->estados || $record->estados->isEmpty()) {
+                            if (! $record->estados || $record->estados->isEmpty()) {
                                 return '<span style="color:#9ca3af;font-style:italic;">Sin historial de estados registrado.</span>';
                             }
 
                             return $record->estados->sortByDesc('fecha_inicio')
                                 ->map(function ($estado) {
-                                    $isActivo   = $estado->activo;
-                                    $label      = $isActivo ? '🟢 Disponible' : '🔴 No disponible';
-                                    $fecha      = optional($estado->fecha_inicio)?->format('d/m/Y H:i') ?? '—';
-                                    $motivo     = e($estado->motivo ?? 'Sin motivo');
-                                    $badgeBg    = $isActivo ? '#dcfce7' : '#fee2e2';
+                                    $isActivo = $estado->activo;
+                                    $label = $isActivo ? '🟢 Disponible' : '🔴 No disponible';
+                                    $fecha = optional($estado->fecha_inicio)?->format('d/m/Y H:i') ?? '—';
+                                    $motivo = e($estado->motivo ?? 'Sin motivo');
+                                    $badgeBg = $isActivo ? '#dcfce7' : '#fee2e2';
                                     $badgeColor = $isActivo ? '#16a34a' : '#dc2626';
                                     $borderColor = $isActivo ? '#bbf7d0' : '#fecaca';
 
                                     $archivoHtml = '';
                                     if ($estado->archivo) {
-                                        $url = asset('storage/' . $estado->archivo);
+                                        $url = asset('storage/'.$estado->archivo);
                                         $archivoHtml = "
                                             <a href='{$url}' target='_blank' 
                                                style='display:inline-flex;align-items:center;gap:5px;margin-top:6px;

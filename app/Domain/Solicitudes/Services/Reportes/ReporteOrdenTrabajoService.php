@@ -12,8 +12,8 @@ class ReporteOrdenTrabajoService
     {
         return SolicitudMantenimiento::query()
             ->with([
-                'vehiculo.marca',
-                'vehiculo.modelo',
+                'vehiculo.vehMarca',
+                'vehiculo.vehModelo',
                 'vehiculo.color',
                 'vehiculo.clasificacion',
                 'tipoMantenimiento',
@@ -58,20 +58,18 @@ class ReporteOrdenTrabajoService
     }
 
     public function resolverMarca(SolicitudMantenimiento $solicitud): string
-{
-    // Usamos marca() con paréntesis para forzar la relación BelongsTo
-    return $solicitud->vehiculo?->marca()->first()?->nombre 
-        ?? $solicitud->vehiculo?->getAttribute('marca') 
-        ?? '—';
-}
+    {
+        return $solicitud->vehiculo?->vehMarca?->nombre
+            ?? $solicitud->vehiculo?->getAttribute('marca')
+            ?? '—';
+    }
 
-public function resolverModelo(SolicitudMantenimiento $solicitud): string
-{
-    // Usamos modelo() con paréntesis para forzar la relación BelongsTo
-    return $solicitud->vehiculo?->modelo()->first()?->nombre 
-        ?? $solicitud->vehiculo?->getAttribute('modelo') 
-        ?? '—';
-}
+    public function resolverModelo(SolicitudMantenimiento $solicitud): string
+    {
+        return $solicitud->vehiculo?->vehModelo?->nombre
+            ?? $solicitud->vehiculo?->getAttribute('modelo')
+            ?? '—';
+    }
 
     public function resolverColor(SolicitudMantenimiento $solicitud): string
     {
@@ -102,6 +100,6 @@ public function resolverModelo(SolicitudMantenimiento $solicitud): string
 
     public function resolverAdjuntos(SolicitudMantenimiento $solicitud): string
     {
-        return !empty($solicitud->adjuntos) ? 'Sí' : 'No';
+        return ! empty($solicitud->adjuntos) ? 'Sí' : 'No';
     }
 }

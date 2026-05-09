@@ -3,19 +3,17 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Exports\SolicitudesCombustibleExport;
 use App\Models\SolicitudCombustible;
 use App\Models\Vehiculo;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Table;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Forms\Concerns\InteractsWithForms;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Maatwebsite\Excel\Facades\Excel;
 
 class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {
@@ -23,29 +21,41 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Reporte Solicitudes Combustible';
+
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
+
     protected static ?int $navigationSort = 4;
 
     protected static string $view = 'filament.pages.reporte-solicitudes-combustible';
 
     public ?string $date_field = 'fecha_solicitud';
+
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?int $vehiculo_id = null;
+
     public ?string $estado = null;
 
     public float $kpi_galones = 0;
+
     public float $kpi_valor_total = 0;
+
     public int $kpi_total = 0;
+
     public int $kpi_pendientes = 0;
+
     public int $kpi_aprobadas = 0;
+
     public int $kpi_rechazadas = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -95,7 +105,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                 ->label('Tipo de fecha')
                                 ->options([
                                     'fecha_solicitud' => 'Fecha solicitud',
-                                    'created_at'      => 'Fecha creación',
+                                    'created_at' => 'Fecha creación',
                                 ])
                                 ->native(false)
                                 ->live()
@@ -137,7 +147,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                     ->label('Hoy')
                                     ->action(function () {
                                         $this->date_from = now()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -146,7 +156,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                     ->label('Esta semana')
                                     ->action(function () {
                                         $this->date_from = now()->startOfWeek()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfWeek()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfWeek()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -173,7 +183,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
     {
         return $table
             ->striped()
-            ->query(fn () => $this->buildQuery()->with(['vehiculo.marca', 'vehiculo.modelo', 'solicitante']))
+            ->query(fn () => $this->buildQuery()->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'solicitante']))
             ->defaultSort('fecha_solicitud', 'asc')
             ->columns([
                 Tables\Columns\TextColumn::make('codigo')
@@ -182,7 +192,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                     ->sortable()
                     ->weight('bold')
                     ->fontFamily('mono')
-                    ->description(fn ($record) => 'Vehículo: ' . ($record->vehiculo?->placa ?? 'N/A'))
+                    ->description(fn ($record) => 'Vehículo: '.($record->vehiculo?->placa ?? 'N/A'))
                     ->wrap(),
 
                 Tables\Columns\TextColumn::make('solicitante.name')
@@ -197,7 +207,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
 
                 Tables\Columns\TextColumn::make('cantidad_combustible')
                     ->label('Galones')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2) . ' gal')
+                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' gal')
                     ->badge()
                     ->color('info'),
 
@@ -221,39 +231,54 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
 
         $column = $this->date_field ?? 'fecha_solicitud';
 
-        if ($this->date_from) $q->where($column, '>=', $this->date_from);
-        if ($this->date_to)   $q->where($column, '<=', $this->date_to);
-        if ($this->vehiculo_id) $q->where('vehiculo_id', $this->vehiculo_id);
-        if ($this->estado) $q->where('estado', $this->estado);
+        if ($this->date_from) {
+            $q->where($column, '>=', $this->date_from);
+        }
+        if ($this->date_to) {
+            $q->where($column, '<=', $this->date_to);
+        }
+        if ($this->vehiculo_id) {
+            $q->where('vehiculo_id', $this->vehiculo_id);
+        }
+        if ($this->estado) {
+            $q->where('estado', $this->estado);
+        }
 
         return $q;
     }
 
     private function refreshKpis(): void
-{
-    $base = SolicitudCombustible::query();
-    $column = $this->date_field ?? 'fecha_solicitud';
+    {
+        $base = SolicitudCombustible::query();
+        $column = $this->date_field ?? 'fecha_solicitud';
 
-    if ($this->date_from) $base->where($column, '>=', $this->date_from);
-    if ($this->date_to)   $base->where($column, '<=', $this->date_to);
-    if ($this->vehiculo_id) $base->where('vehiculo_id', $this->vehiculo_id);
+        if ($this->date_from) {
+            $base->where($column, '>=', $this->date_from);
+        }
+        if ($this->date_to) {
+            $base->where($column, '<=', $this->date_to);
+        }
+        if ($this->vehiculo_id) {
+            $base->where('vehiculo_id', $this->vehiculo_id);
+        }
 
-    $this->kpi_total = (clone $base)->count();
+        $this->kpi_total = (clone $base)->count();
 
-    $this->kpi_pendientes = (clone $base)->whereIn('estado', [
-        EstadoSolicitudEnum::PENDIENTE,
-        EstadoSolicitudEnum::EN_REVISION,
-        EstadoSolicitudEnum::PRE_APROBADA,
-    ])->count();
+        $this->kpi_pendientes = (clone $base)->whereIn('estado', [
+            EstadoSolicitudEnum::PENDIENTE,
+            EstadoSolicitudEnum::EN_REVISION,
+            EstadoSolicitudEnum::PRE_APROBADA,
+        ])->count();
 
-    $this->kpi_aprobadas = (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA)->count();
+        $this->kpi_aprobadas = (clone $base)->where('estado', EstadoSolicitudEnum::APROBADA)->count();
 
-    $this->kpi_rechazadas = (clone $base)->where('estado', EstadoSolicitudEnum::RECHAZADA)->count();
+        $this->kpi_rechazadas = (clone $base)->where('estado', EstadoSolicitudEnum::RECHAZADA)->count();
 
-    $this->kpi_galones = (float) ((clone $base)->sum('cantidad_combustible') ?? 0);
+        $this->kpi_galones = (float) ((clone $base)->sum('cantidad_combustible') ?? 0);
 
-    $this->kpi_valor_total = (float) ((clone $base)->sum('valor_total') ?? 0);
-}
+        $this->kpi_valor_total = (float) ((clone $base)->sum('valor_total') ?? 0);
+    }
+
     private function getFilterState(): array
     {
         return [

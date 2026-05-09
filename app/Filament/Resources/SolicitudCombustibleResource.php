@@ -70,7 +70,7 @@ class SolicitudCombustibleResource extends Resource
                     Forms\Components\Placeholder::make('vehiculo_ui')
                         ->label('Vehículo')
                         ->content(fn (SolicitudCombustible $record) => $record->vehiculo
-                                ? "{$record->vehiculo->placa} — {$record->vehiculo->marca?->nombre} {$record->vehiculo->modelo?->nombre}"
+                                ? "{$record->vehiculo->placa} — {$record->vehMarca?->nombre} {$record->vehiculo->vehModelo?->nombre}"
                                 : '-'
                         ),
 
@@ -396,8 +396,8 @@ class SolicitudCombustibleResource extends Resource
                     ->label('Vehículo')
                     ->formatStateUsing(function ($state, $record) {
                         return trim(
-                            ($record->vehiculo?->marca?->nombre ?? '').' '.
-                            ($record->vehiculo?->modelo?->nombre ?? '')
+                            ($record->vehiculo?->vehMarca?->nombre ?? '').' '.
+                            ($record->vehiculo?->vehModelo?->nombre ?? '')
                         ) ?: 'Sin información';
                     })
                     ->description(fn ($record) => 'Placa: '.($record->vehiculo?->placa ?? 'N/A'))

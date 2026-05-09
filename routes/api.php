@@ -1,16 +1,14 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
-use Illuminate\Http\Request;
-use App\Http\Controllers\Api\TokenAuthController;
-use App\Http\Controllers\Api\SolicitudTransporteController;
-use App\Http\Controllers\Api\SolicitudMantenimientoController;
-use App\Http\Controllers\Api\SolicitudCombustibleController;
-use App\Http\Controllers\Api\MotoristaEstadoController;
-use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Http\Controllers\Api\MotoristaEstadoController;
+use App\Http\Controllers\Api\SolicitudCombustibleController;
+use App\Http\Controllers\Api\SolicitudMantenimientoController;
+use App\Http\Controllers\Api\SolicitudTransporteController;
+use App\Http\Controllers\Api\TokenAuthController;
 use App\Models\Motorista;
-use App\Models\SolicitudMantenimiento;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 // AUTH POR TOKEN (PUBLICO)
 Route::post('/auth/login', [TokenAuthController::class, 'login']);
@@ -18,28 +16,28 @@ Route::post('/auth/login', [TokenAuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // Usuario autenticado
-    Route::get('/auth/me',      [TokenAuthController::class, 'me']);
+    Route::get('/auth/me', [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
-    Route::get('/user',         [TokenAuthController::class, 'me']);
+    Route::get('/user', [TokenAuthController::class, 'me']);
 
     // Dashboard Summary (Transporte + Mantenimiento + Combustible)
     Route::get('/dashboard/summary', function () {
         $user = request()->user();
 
-        $qTransporte    = \App\Models\SolicitudTransporte::query();
+        $qTransporte = \App\Models\SolicitudTransporte::query();
         $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
-        $qCombustible   = \App\Models\SolicitudCombustible::query();
+        $qCombustible = \App\Models\SolicitudCombustible::query();
 
-        if (!$user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
             $qTransporte->where('solicitante_id', $user->id);
             $qMantenimiento->where('solicitante_id', $user->id);
             $qCombustible->where('solicitante_id', $user->id);
         }
 
-        $estadosPendientes   = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
-        $estadosEnProceso    = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
-        $estadosAprobados    = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
-        $estadoCompletado    = EstadoSolicitudEnum::COMPLETADA;
+        $estadosPendientes = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
+        $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
+        $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
+        $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
 
         return response()->json([
             'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count()
@@ -61,22 +59,22 @@ Route::middleware('auth:sanctum')->group(function () {
             // Desglose por módulo si el frontend lo necesita
             'by_module' => [
                 'transporte' => [
-                    'pending'     => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
+                    'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted'    => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count(),
-                    'completed'   => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
+                    'accepted' => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count(),
+                    'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
                 ],
                 'mantenimiento' => [
-                    'pending'     => (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count(),
+                    'pending' => (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted'    => (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count(),
-                    'completed'   => (clone $qMantenimiento)->where('estado', $estadoCompletado)->count(),
+                    'accepted' => (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count(),
+                    'completed' => (clone $qMantenimiento)->where('estado', $estadoCompletado)->count(),
                 ],
                 'combustible' => [
-                    'pending'     => (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
+                    'pending' => (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted'    => (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
-                    'completed'   => (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
+                    'accepted' => (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
+                    'completed' => (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
                 ],
             ],
         ]);
@@ -86,11 +84,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/solicitudes/recientes', function () {
         $user = request()->user();
 
-        $qTransporte    = \App\Models\SolicitudTransporte::query();
+        $qTransporte = \App\Models\SolicitudTransporte::query();
         $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
-        $qCombustible   = \App\Models\SolicitudCombustible::query();
+        $qCombustible = \App\Models\SolicitudCombustible::query();
 
-        if (!$user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
             $qTransporte->where('solicitante_id', $user->id);
             $qMantenimiento->where('solicitante_id', $user->id);
             $qCombustible->where('solicitante_id', $user->id);
@@ -98,25 +96,25 @@ Route::middleware('auth:sanctum')->group(function () {
 
         $transporte = $qTransporte->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
-                'code'   => $s->codigo,
-                'date'   => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
-                'type'   => 'Transporte',
+                'code' => $s->codigo,
+                'date' => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Transporte',
                 'status' => $s->estado?->value ?? (string) $s->estado,
             ]);
 
         $mantenimiento = $qMantenimiento->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
-                'code'   => $s->codigo,
-                'date'   => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
-                'type'   => 'Mantenimiento',
+                'code' => $s->codigo,
+                'date' => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Mantenimiento',
                 'status' => $s->estado?->value ?? (string) $s->estado,
             ]);
 
         $combustible = $qCombustible->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
-                'code'   => $s->codigo,
-                'date'   => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
-                'type'   => 'Combustible',
+                'code' => $s->codigo,
+                'date' => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Combustible',
                 'status' => $s->estado?->value ?? (string) $s->estado,
             ]);
 
@@ -136,13 +134,13 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'store', 'show'])
         ->parameters(['solicitudes-transporte' => 'solicitud']);
 
-    Route::post('solicitudes-transporte/{solicitud}/enviar',    [SolicitudTransporteController::class, 'enviar']);
+    Route::post('solicitudes-transporte/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
     Route::post('solicitudes-transporte/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
-        Route::post('solicitudes-transporte/{solicitud}/aprobar',     [SolicitudTransporteController::class, 'aprobar']);
-        Route::post('solicitudes-transporte/{solicitud}/rechazar',    [SolicitudTransporteController::class, 'rechazar']);
+        Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
+        Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
     });
 
     // ── MANTENIMIENTO ───────────────────────────────────────────────
@@ -150,14 +148,14 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'store', 'show'])
         ->parameters(['solicitudes-mantenimiento' => 'solicitud']);
 
-    Route::post('solicitudes-mantenimiento/{solicitud}/enviar',    [SolicitudMantenimientoController::class, 'enviar']);
+    Route::post('solicitudes-mantenimiento/{solicitud}/enviar', [SolicitudMantenimientoController::class, 'enviar']);
     Route::post('solicitudes-mantenimiento/{solicitud}/finalizar', [SolicitudMantenimientoController::class, 'finalizar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
-        Route::post('solicitudes-mantenimiento/{solicitud}/observacion',  [SolicitudMantenimientoController::class, 'observacion']);
-        Route::post('solicitudes-mantenimiento/{solicitud}/pre-aprobar',  [SolicitudMantenimientoController::class, 'preAprobar']);
-        Route::post('solicitudes-mantenimiento/{solicitud}/aprobar',      [SolicitudMantenimientoController::class, 'aprobar']);
-        Route::post('solicitudes-mantenimiento/{solicitud}/rechazar',     [SolicitudMantenimientoController::class, 'rechazar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/observacion', [SolicitudMantenimientoController::class, 'observacion']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/pre-aprobar', [SolicitudMantenimientoController::class, 'preAprobar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/aprobar', [SolicitudMantenimientoController::class, 'aprobar']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/rechazar', [SolicitudMantenimientoController::class, 'rechazar']);
         Route::post('solicitudes-mantenimiento/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
     });
 
@@ -166,71 +164,71 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'store', 'show'])
         ->parameters(['solicitudes-combustible' => 'solicitud']);
 
-    Route::post('solicitudes-combustible/{solicitud}/enviar',    [SolicitudCombustibleController::class, 'enviar']);
+    Route::post('solicitudes-combustible/{solicitud}/enviar', [SolicitudCombustibleController::class, 'enviar']);
     Route::post('solicitudes-combustible/{solicitud}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/observacion', [SolicitudCombustibleController::class, 'observacion']);
         Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
-        Route::post('solicitudes-combustible/{solicitud}/aprobar',     [SolicitudCombustibleController::class, 'aprobar']);
-        Route::post('solicitudes-combustible/{solicitud}/rechazar',    [SolicitudCombustibleController::class, 'rechazar']);
+        Route::post('solicitudes-combustible/{solicitud}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);
+        Route::post('solicitudes-combustible/{solicitud}/rechazar', [SolicitudCombustibleController::class, 'rechazar']);
     });
 
-    //Rutas para motoristas
-   Route::middleware(['auth:sanctum', 'role:motorista'])
-    ->prefix('motoristas')
-    ->group(function() {
+    // Rutas para motoristas
+    Route::middleware(['auth:sanctum', 'role:motorista'])
+        ->prefix('motoristas')
+        ->group(function () {
 
-        // 🔥 NUEVAS (self-service motorista)
-        Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
-        Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
-        Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
+            // 🔥 NUEVAS (self-service motorista)
+            Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
+            Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
+            Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
 
-        // 📊 Operativas (admin/jefe)
-        Route::get('/', [MotoristaEstadoController::class, 'index']);
-        Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
-        Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
-        Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
-    });
+            // 📊 Operativas (admin/jefe)
+            Route::get('/', [MotoristaEstadoController::class, 'index']);
+            Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
+            Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
+            Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
+        });
 
     // ── CATÁLOGOS (para el frontend) ────────────────────────
     Route::prefix('catalogos')->group(function () {
 
         Route::get('/vehiculos', function () {
-    return response()->json(
-        \App\Models\Vehiculo::with([
-            'marca', 
-            'modelo', 
-            'tipo', 
-            'asignacionVigenteMotorista.motorista'
-        ])
-        ->where('activo', true)
-        ->get()
-        ->map(fn ($v) => [
-            'id'     => $v->id,
-            'placa'  => $v->placa,
-            'marca'  => $v->getRelation('marca')?->nombre ?? $v->marca, 
-            'modelo' => $v->getRelation('modelo')?->nombre ?? $v->modelo,
-            'tipo'   => $v->tipo?->nombre,
-            
-            // 🔥 AGREGAR ESTA LÍNEA EXACTA AQUÍ:
-            'motorista_id'     => $v->asignacionVigenteMotorista?->motorista_id,
+            return response()->json(
+                \App\Models\Vehiculo::with([
+                    'marca',
+                    'modelo',
+                    'tipo',
+                    'asignacionVigenteMotorista.motorista',
+                ])
+                    ->where('activo', true)
+                    ->get()
+                    ->map(fn ($v) => [
+                        'id' => $v->id,
+                        'placa' => $v->placa,
+                        'marca' => $v->getRelation('vehMarca')?->nombre ?? $v->marca,
+                        'modelo' => $v->getRelation('vehModelo')?->nombre ?? $v->modelo,
+                        'tipo' => $v->tipo?->nombre,
 
-            'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
-            'motorista_dui'    => $v->asignacionVigenteMotorista?->motorista?->dui,
-            'label'  => "{$v->placa} — " . ($v->getRelation('marca')?->nombre ?? $v->marca),
-        ])
-    );
-});
+                        // 🔥 AGREGAR ESTA LÍNEA EXACTA AQUÍ:
+                        'motorista_id' => $v->asignacionVigenteMotorista?->motorista_id,
+
+                        'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
+                        'motorista_dui' => $v->asignacionVigenteMotorista?->motorista?->dui,
+                        'label' => "{$v->placa} — ".($v->getRelation('vehMarca')?->nombre ?? $v->marca),
+                    ])
+            );
+        });
 
         Route::get('/motoristas', function () {
             return response()->json(
                 \App\Models\Motorista::where('activo', true)
                     ->get()
                     ->map(fn ($m) => [
-                        'id'     => $m->id,
+                        'id' => $m->id,
                         'nombre' => $m->nombre,
-                        'dui'    => $m->dui,
+                        'dui' => $m->dui,
                     ])
             );
         });
@@ -251,7 +249,7 @@ Route::middleware('auth:sanctum')->group(function () {
             }
 
             return response()->json(
-                $query->get()->map(fn($m) => [
+                $query->get()->map(fn ($m) => [
                     'id' => $m->id,
                     'nombre' => $m->nombre,
                     'veh_marca_id' => $m->veh_marca_id,
@@ -267,7 +265,7 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
-        //Ruta para el frontend de motoristas (acceso a los viajes asignados y mostrarlos)
+        // Ruta para el frontend de motoristas (acceso a los viajes asignados y mostrarlos)
         Route::get('me/viajes', [MotoristaEstadoController::class, 'misViajes']);
 
     }); // Cierra catalogos

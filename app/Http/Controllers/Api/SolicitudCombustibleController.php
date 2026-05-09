@@ -2,12 +2,12 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Http\Controllers\Controller;
-use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
-use App\Models\SolicitudCombustible;
+use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
+use App\Http\Controllers\Controller;
 use App\Models\HistorialEstado;
+use App\Models\SolicitudCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -20,11 +20,11 @@ class SolicitudCombustibleController extends Controller
 
     public function index(Request $request)
     {
-        $user  = $request->user();
+        $user = $request->user();
         $query = SolicitudCombustible::query()
-            ->with(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte']);
+            ->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte']);
 
-        if (!$user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
             $query->where('solicitante_id', $user->id);
         }
 
@@ -35,20 +35,20 @@ class SolicitudCombustibleController extends Controller
 
     public function store(Request $request)
     {
-        if ($request->has('cantidad') && !$request->has('cantidad_combustible')) {
+        if ($request->has('cantidad') && ! $request->has('cantidad_combustible')) {
             $request->merge(['cantidad_combustible' => $request->cantidad]);
         }
 
         $data = $request->validate([
-            'vehiculo_id'             => ['required', 'exists:vehiculos,id'],
-            'motorista_id'            => ['nullable', 'exists:motoristas,id'],
+            'vehiculo_id' => ['required', 'exists:vehiculos,id'],
+            'motorista_id' => ['nullable', 'exists:motoristas,id'],
             'solicitud_transporte_id' => ['nullable', 'exists:solicitud_transportes,id'],
-            'destino_actividad'       => ['required', 'string'],
-            'fecha_solicitud'         => ['required', 'date'],
-            'fecha_inicio_periodo'    => ['nullable', 'date'],
-            'fecha_fin_periodo'       => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
-            'cantidad_combustible'    => ['required', 'numeric', 'min:0'],
-            'observaciones'           => ['nullable', 'string', 'max:2000'],
+            'destino_actividad' => ['required', 'string'],
+            'fecha_solicitud' => ['required', 'date'],
+            'fecha_inicio_periodo' => ['nullable', 'date'],
+            'fecha_fin_periodo' => ['nullable', 'date', 'after_or_equal:fecha_inicio_periodo'],
+            'cantidad_combustible' => ['required', 'numeric', 'min:0'],
+            'observaciones' => ['nullable', 'string', 'max:2000'],
             // 'prioridad' eliminado — el backend la asigna
         ]);
 
@@ -60,7 +60,7 @@ class SolicitudCombustibleController extends Controller
             $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
             return response()->json(
-                $solicitud->fresh()->load(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante']),
+                $solicitud->fresh()->load(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante']),
                 201
             );
         } catch (\Exception $e) {
@@ -73,7 +73,7 @@ class SolicitudCombustibleController extends Controller
         $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['vehiculo.marca', 'vehiculo.modelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte'])
+            $solicitud->load(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte'])
         );
     }
 
@@ -86,7 +86,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Solicitud enviada correctamente.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -102,11 +102,11 @@ class SolicitudCombustibleController extends Controller
         }
 
         $request->validate([
-            'forma_pago'         => ['required', 'in:vale,ticket,tarjeta,efectivo,otro'],
+            'forma_pago' => ['required', 'in:vale,ticket,tarjeta,efectivo,otro'],
             'numero_vale_ticket' => ['nullable', 'string'],
-            'valor_total'        => ['required', 'numeric', 'min:0'],
-            'comprobantes'       => ['required', 'array', 'min:1'],
-            'comprobantes.*'     => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
+            'valor_total' => ['required', 'numeric', 'min:0'],
+            'comprobantes' => ['required', 'array', 'min:1'],
+            'comprobantes.*' => ['file', 'mimes:jpg,jpeg,png,pdf', 'max:5120'],
         ]);
 
         $rutas = [];
@@ -114,8 +114,8 @@ class SolicitudCombustibleController extends Controller
             $rutas[] = $archivo->store('combustible/comprobantes', 'public');
         }
 
-        $estadoAnterior        = $solicitud->estado;
-        $solicitud->estado     = EstadoSolicitudEnum::COMPLETADA;
+        $estadoAnterior = $solicitud->estado;
+        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
         $solicitud->forma_pago = $request->forma_pago;
         $solicitud->valor_total = $request->valor_total;
         $solicitud->numero_vale_ticket = $request->numero_vale_ticket;
@@ -123,17 +123,17 @@ class SolicitudCombustibleController extends Controller
         $solicitud->save();
 
         HistorialEstado::create([
-            'entidad_tipo'    => 'solicitud_combustible',
-            'entidad_id'      => $solicitud->id,
+            'entidad_tipo' => 'solicitud_combustible',
+            'entidad_id' => $solicitud->id,
             'estado_anterior' => $estadoAnterior->value,
-            'estado_nuevo'    => EstadoSolicitudEnum::COMPLETADA->value,
-            'user_id'         => Auth::id(),
-            'comentario'      => 'Carga de combustible finalizada por el usuario.',
+            'estado_nuevo' => EstadoSolicitudEnum::COMPLETADA->value,
+            'user_id' => Auth::id(),
+            'comentario' => 'Carga de combustible finalizada por el usuario.',
         ]);
 
         return response()->json([
             'message' => 'Carga de combustible finalizada con éxito.',
-            'data'    => $solicitud->fresh(),
+            'data' => $solicitud->fresh(),
         ]);
     }
 
@@ -146,7 +146,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Solicitud cancelada correctamente.',
-                'data'    => $solicitud->fresh(),
+                'data' => $solicitud->fresh(),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -166,7 +166,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Observación registrada.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -182,7 +182,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Solicitud pre-aprobada exitosamente.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -202,7 +202,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Solicitud aprobada con éxito.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -222,7 +222,7 @@ class SolicitudCombustibleController extends Controller
 
             return response()->json([
                 'message' => 'Solicitud rechazada.',
-                'data'    => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
@@ -240,7 +240,7 @@ class SolicitudCombustibleController extends Controller
 
     private function authorizeJefe(): void
     {
-        if (!Auth::user()->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti'])) {
             abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal con rol de jefatura.');
         }
     }
