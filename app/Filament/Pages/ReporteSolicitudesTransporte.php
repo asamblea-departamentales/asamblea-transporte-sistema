@@ -83,12 +83,30 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     return Excel::download(new SolicitudesTransporteExport($query), $filename);
                 }),
 
+            // CSV
+            Action::make('export_csv')
+               ->label('Exportar CSV')    
+               ->icon('heroicon-o-document-text')
+               ->color('gray')
+               ->action(function () {
+
+        $query = $this->buildQuery();
+
+        $filename = 'reporte_solicitudes_' . now()->format('Ymd_His') . '.csv';
+
+        return Excel::download(
+            new SolicitudesTransporteExport($query),
+            $filename,
+            \Maatwebsite\Excel\Excel::CSV
+        );
+    }),
+
            Action::make('export_pdf')
-    ->label('Exportar PDF')
-    ->icon('heroicon-o-printer')
-    ->url(fn () => route('reportes.solicitudes-transporte.pdf', $this->getFilterState()))
-    ->openUrlInNewTab(),
-        ];
+                ->label('Exportar PDF')
+                ->icon('heroicon-o-printer')
+                ->url(fn () => route('reportes.solicitudes-transporte.pdf', $this->getFilterState()))
+                ->openUrlInNewTab(),
+            ];
     }
     public function form(Form $form): Form
 {

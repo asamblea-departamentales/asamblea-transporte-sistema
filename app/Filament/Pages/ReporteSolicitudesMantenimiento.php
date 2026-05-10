@@ -95,7 +95,17 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
 
                     return Excel::download(new SolicitudesMantenimientoExport($this->buildQuery()), $filename);
                 }),
+               
+            // CSV
+            Action::make('export_csv')
+                ->label('Exportar CSV')
+                ->icon('heroicon-o-document-text')
+                ->action(function () {
+                    $filename = 'reporte_mantenimiento_'.now()->format('Ymd_His').'.csv';
+                    return Excel::download(new SolicitudesMantenimientoExport($this->buildQuery()), $filename, \Maatwebsite\Excel\Excel::CSV);    
 
+                }),
+                
             Action::make('export_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-printer')

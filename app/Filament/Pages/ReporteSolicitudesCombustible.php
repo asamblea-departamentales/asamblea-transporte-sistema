@@ -82,6 +82,13 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                 ->url(fn () => route('reportes.solicitudes-combustible.excel', $this->getFilterState()))
                 ->openUrlInNewTab(),
 
+            //CSV
+                Action::make('export_csv')
+                    ->label('Exportar CSV')
+                    ->icon('heroicon-o-document-text')
+                    ->url(fn () => route('reportes.solicitudes-combustible.csv', $this->getFilterState()))
+                    ->openUrlInNewTab(),    
+
             Action::make('export_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-printer')

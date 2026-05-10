@@ -1,36 +1,38 @@
 <x-filament-panels::page>
-    <div class="space-y-6">
 
-        {{-- Filtros --}}
-        {{ $this->form }}
+    {{-- KPIs --}}
+    <div class="grid grid-cols-2 gap-4 sm:grid-cols-2 lg:grid-cols-4 mb-6">
 
-        {{-- KPIs --}}
-        <div class="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <x-filament::section>
-                <div class="text-sm text-gray-500">Total</div>
-                <div class="text-2xl font-semibold">{{ $kpi_total }}</div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="text-sm text-gray-500">Pendientes</div>
-                <div class="text-2xl font-semibold">{{ $kpi_pendientes }}</div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="text-sm text-gray-500">Aprobadas</div>
-                <div class="text-2xl font-semibold">{{ $kpi_aprobadas }}</div>
-            </x-filament::section>
-
-            <x-filament::section>
-                <div class="text-sm text-gray-500">Rechazadas</div>
-                <div class="text-2xl font-semibold">{{ $kpi_rechazadas }}</div>
-            </x-filament::section>
+        <div class="rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm text-center">
+            <p class="text-xs text-gray-500 uppercase tracking-wide mb-1">Total</p>
+            <p class="text-3xl font-bold text-primary-600">{{ $kpi_total }}</p>
         </div>
 
-        {{-- Tabla --}}
-        <x-filament::section>
-            {{ $this->table }}
-        </x-filament::section>
+        <div class="rounded-xl border border-amber-200 bg-amber-50 dark:bg-amber-900/20 p-4 shadow-sm text-center">
+            <p class="text-xs text-amber-600 uppercase tracking-wide mb-1">Pendientes</p>
+            <p class="text-3xl font-bold text-amber-600">{{ $kpi_pendientes }}</p>
+        </div>
+
+        <div class="rounded-xl border border-green-200 bg-green-50 dark:bg-green-900/20 p-4 shadow-sm text-center">
+            <p class="text-xs text-green-600 uppercase tracking-wide mb-1">Aprobadas</p>
+            <p class="text-3xl font-bold text-green-600">{{ $kpi_aprobadas }}</p>
+        </div>
+
+        <div class="rounded-xl border border-red-200 bg-red-50 dark:bg-red-900/20 p-4 shadow-sm text-center">
+            <p class="text-xs text-red-600 uppercase tracking-wide mb-1">Rechazadas</p>
+            <p class="text-3xl font-bold text-red-600">{{ $kpi_rechazadas }}</p>
+        </div>
 
     </div>
+
+    {{-- Filtros --}}
+    <x-filament-panels::form wire:submit="null">
+        {{ $this->form }}
+    </x-filament-panels::form>
+
+    {{-- Tabla --}}
+    <div class="mt-4">
+        {{ $this->table }}
+    </div>
+
 </x-filament-panels::page>

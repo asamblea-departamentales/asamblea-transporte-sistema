@@ -318,3 +318,135 @@ Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleContr
 
 Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
     ->name('reportes.solicitud-autorizacion.pdf');    
+
+// --------------------------------- NUEVOS REPORTES CVS --------------------------------- //
+// CSV Transporte
+Route::get('/reportes/solicitudes-transporte/csv', function (Request $request) {
+
+    abort_unless(
+        auth()->check() &&
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        403
+    );
+
+    $q = SolicitudTransporte::query();
+
+    $dateField = $request->string('date_field', 'fecha_salida')->toString();
+
+    if ($request->filled('date_from')) {
+        $q->where($dateField, '>=', $request->input('date_from'));
+    }
+
+    if ($request->filled('date_to')) {
+        $q->where($dateField, '<=', $request->input('date_to'));
+    }
+
+    if ($request->filled('unidad_solicitante_id')) {
+        $q->where('unidad_solicitante_id', $request->input('unidad_solicitante_id'));
+    }
+
+    if ($request->filled('estado')) {
+        $q->where('estado', $request->input('estado'));
+    }
+
+    if ($request->filled('prioridad')) {
+        $q->where('prioridad', $request->input('prioridad'));
+    }
+
+    $filename = 'reporte_transporte_' . now()->format('Ymd_His') . '.csv';
+
+    return Excel::download(
+        new SolicitudesTransporteExport($q),
+        $filename,
+        \Maatwebsite\Excel\Excel::CSV
+    );
+
+})->name('reportes.solicitudes-transporte.csv');
+
+// CSV Mantenimiento
+// CSV Mantenimiento
+Route::get('/reportes/solicitudes-mantenimiento/csv', function (Request $request) {
+
+    abort_unless(
+        auth()->check() &&
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        403
+    );
+
+    $q = SolicitudMantenimiento::query();
+
+    $dateField = $request->string('date_field', 'fecha_sugerida')->toString();
+
+    if ($request->filled('date_from')) {
+        $q->where($dateField, '>=', $request->input('date_from'));
+    }
+
+    if ($request->filled('date_to')) {
+        $q->where($dateField, '<=', $request->input('date_to'));
+    }
+
+    if ($request->filled('veh_tipo_mantenimiento_id')) {
+        $q->where('veh_tipo_mantenimiento_id', $request->input('veh_tipo_mantenimiento_id'));
+    }
+
+    if ($request->filled('estado')) {
+        $q->where('estado', $request->input('estado'));
+    }
+
+    if ($request->filled('prioridad')) {
+        $q->where('prioridad', $request->input('prioridad'));
+    }
+
+    if ($request->filled('tipo_solicitud')) {
+        $q->where('tipo_solicitud', $request->input('tipo_solicitud'));
+    }
+
+    $filename = 'reporte_mantenimiento_' . now()->format('Ymd_His') . '.csv';
+
+    return Excel::download(
+        new SolicitudesMantenimientoExport($q),
+        $filename,
+        \Maatwebsite\Excel\Excel::CSV
+    );
+
+})->name('reportes.solicitudes-mantenimiento.csv');
+
+// CSV Combustible
+// CSV Combustible
+Route::get('/reportes/solicitudes-combustible/csv', function (Request $request) {
+
+    abort_unless(
+        auth()->check() &&
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        403
+    );
+
+    $q = SolicitudCombustible::query();
+
+    $dateField = $request->string('date_field', 'fecha_solicitud')->toString();
+
+    if ($request->filled('date_from')) {
+        $q->where($dateField, '>=', $request->input('date_from'));
+    }
+
+    if ($request->filled('date_to')) {
+        $q->where($dateField, '<=', $request->input('date_to'));
+    }
+
+    if ($request->filled('vehiculo_id')) {
+        $q->where('vehiculo_id', $request->input('vehiculo_id'));
+    }
+
+    if ($request->filled('estado')) {
+        $q->where('estado', $request->input('estado'));
+    }
+
+    $filename = 'reporte_combustible_' . now()->format('Ymd_His') . '.csv';
+
+    return Excel::download(
+        new SolicitudesCombustibleExport($q),
+        $filename,
+        \Maatwebsite\Excel\Excel::CSV
+    );
+
+})->name('reportes.solicitudes-combustible.csv');
