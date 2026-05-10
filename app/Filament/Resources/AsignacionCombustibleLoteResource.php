@@ -24,6 +24,10 @@ class AsignacionCombustibleLoteResource extends Resource
 
     protected static ?int $navigationSort = 1;
 
+    protected static ?string $modelLabel = 'Lote';
+
+    protected static ?string $pluralModelLabel = 'Lotes';
+
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe']);
