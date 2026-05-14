@@ -42,59 +42,33 @@ const PER_PAGE = 10;
 
 function normalizeTransporte(s: any): CombinedRequest {
   return {
-    id: s.id,
-    codigo: s.codigo,
-    destino: s.destino,
-    fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus,
-    origen: s.origen,
-    unidad: s.unidad,
-    solicitante: s.solicitante,
-    modulo: "transporte",
-    motorista: s.motorista,
-    vehiculo: s.vehiculo,
-    created_at: s.created_at || s.fecha_salida,
-    updated_at: s.updated_at,
-    _raw: s as Record<string, unknown>,
+    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
+    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
+    solicitante: s.solicitante, modulo: "transporte", motorista: s.motorista,
+    vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida,
+    updated_at: s.updated_at, _raw: s as Record<string, unknown>,
   };
 }
 
 function normalizeMantenimiento(s: any): CombinedRequest {
   return {
-    id: s.id,
-    codigo: s.codigo,
-    destino: s.destino,
-    fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus,
-    origen: s.origen,
-    unidad: s.unidad,
-    solicitante: s.solicitante,
-    modulo: "mantenimiento",
-    motorista: s.motorista,
-    vehiculo: s.vehiculo,
-    created_at: s.created_at || s.fecha_salida,
-    updated_at: s.updated_at,
-    _raw: s as Record<string, unknown>,
+    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
+    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
+    solicitante: s.solicitante, modulo: "mantenimiento", motorista: s.motorista,
+    vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida,
+    updated_at: s.updated_at, _raw: s as Record<string, unknown>,
   };
 }
 
 function normalizeCombustible(s: SolicitudCombustibleNormalizada): CombinedRequest {
   return {
-    id: s.id,
-    codigo: s.codigo,
-    destino: s.destino,
-    fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus,
-    origen: s.origen,
-    unidad: s.unidad,
+    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
+    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
     solicitante: s.solicitante
       ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email }
       : undefined,
-    modulo: "combustible",
-    motorista: s.motorista,
-    vehiculo: s.vehiculo,
-    created_at: (s as any).created_at || s.fecha_salida,
-    updated_at: s.updated_at,
+    modulo: "combustible", motorista: s.motorista, vehiculo: s.vehiculo,
+    created_at: (s as any).created_at || s.fecha_salida, updated_at: s.updated_at,
     _raw: s as unknown as Record<string, unknown>,
   };
 }
@@ -105,30 +79,30 @@ async function fetchAllPages<T>(
   fetcher: (filters: any) => Promise<{ data: T[]; total: number }>,
   apiFilters: any
 ): Promise<T[]> {
-  // Primera página
   const first = await fetcher({ ...apiFilters, page: 1 });
   const all = [...first.data];
-
-  // Si ya tenemos todos, retornar
   if (all.length >= first.total) return all;
 
-  // Calcular cuántas páginas faltan
   const perPage = first.data.length || PER_PAGE;
   const totalPages = Math.ceil(first.total / perPage);
-  const maxPages = Math.min(totalPages, 5); // Límite de 5 páginas máximo
-
+  const maxPages = Math.min(totalPages, 5);
   if (maxPages <= 1) return all;
 
-  // Traer las páginas restantes EN PARALELO (mucho más rápido)
   const pagePromises = [];
   for (let p = 2; p <= maxPages; p++) {
     pagePromises.push(fetcher({ ...apiFilters, page: p }).catch(() => ({ data: [] as T[], total: 0 })));
   }
-
   const results = await Promise.all(pagePromises);
   results.forEach((r) => all.push(...r.data));
-
   return all;
+}
+
+// ─── Ordenar por fecha desc ────────────────────────────────────────────────────
+
+function sortByDate(arr: CombinedRequest[]): CombinedRequest[] {
+  return [...arr].sort(
+    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+  );
 }
 
 // ─── Hook ──────────────────────────────────────────────────────────────────────
@@ -145,6 +119,10 @@ export function useCombinedRequests() {
     search: "",
   });
 
+  // Contador para saber cuántos módulos han respondido
+  const [modulesLoaded, setModulesLoaded] = useState(0);
+  const totalModulesToLoad = useRef(3);
+
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Debounce search
@@ -157,63 +135,63 @@ export function useCombinedRequests() {
     return () => clearTimeout(searchTimer.current);
   }, [searchInput]);
 
-  // Fetch solicitudes — solo llama a los módulos necesarios
+  // Fetch solicitudes — carga incremental (muestra datos conforme llegan)
   const fetchAll = useCallback(async () => {
     setLoading(true);
     setError(null);
-    try {
-      const apiFilters = {
-        per_page: 1000,
-        page: 1,
-        estado: filters.estado || undefined,
-        search: filters.search || undefined,
-      };
+    setAllItems([]);
+    setModulesLoaded(0);
 
-      const moduloFilter = filters.modulo;
-      const combined: CombinedRequest[] = [];
+    const apiFilters = {
+      per_page: 1000,
+      page: 1,
+      estado: filters.estado || undefined,
+      search: filters.search || undefined,
+    };
 
-      // Solo llamar a los endpoints que necesitamos según el filtro de módulo
-      const shouldFetchTransporte   = !moduloFilter || moduloFilter === "transporte";
-      const shouldFetchMantenimiento = !moduloFilter || moduloFilter === "mantenimiento";
-      const shouldFetchCombustible   = !moduloFilter || moduloFilter === "combustible";
+    const moduloFilter = filters.modulo;
+    const shouldFetchTransporte    = !moduloFilter || moduloFilter === "transporte";
+    const shouldFetchMantenimiento = !moduloFilter || moduloFilter === "mantenimiento";
+    const shouldFetchCombustible   = !moduloFilter || moduloFilter === "combustible";
 
-      // Lanzar las peticiones en paralelo (solo las necesarias)
-      const promises = await Promise.allSettled([
-        shouldFetchTransporte
-          ? fetchAllPages(getAllRequests, apiFilters)
-          : Promise.resolve([]),
-        shouldFetchMantenimiento
-          ? fetchAllPages(getAllMantenimientos, apiFilters)
-          : Promise.resolve([]),
-        shouldFetchCombustible
-          ? fetchAllPages(getAllCombustibles as any, apiFilters)
-          : Promise.resolve([]),
-      ]);
+    // Contar cuántos módulos vamos a cargar
+    const count = [shouldFetchTransporte, shouldFetchMantenimiento, shouldFetchCombustible]
+      .filter(Boolean).length;
+    totalModulesToLoad.current = count;
 
-      // Normalizar resultados
-      if (promises[0].status === "fulfilled") {
-        (promises[0].value as any[]).forEach((s) => combined.push(normalizeTransporte(s)));
-      }
-      if (promises[1].status === "fulfilled") {
-        (promises[1].value as any[]).forEach((s) => combined.push(normalizeMantenimiento(s)));
-      }
-      if (promises[2].status === "fulfilled") {
-        (promises[2].value as any[]).forEach((s: SolicitudCombustibleNormalizada) =>
-          combined.push(normalizeCombustible(s))
-        );
-      }
+    // Función que agrega resultados conforme llegan y actualiza el estado
+    const addResults = (newItems: CombinedRequest[]) => {
+      setAllItems((prev) => sortByDate([...prev, ...newItems]));
+      setModulesLoaded((prev) => {
+        const next = prev + 1;
+        if (next >= totalModulesToLoad.current) setLoading(false);
+        return next;
+      });
+    };
 
-      // Ordenar por fecha de creación desc
-      combined.sort(
-        (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-      );
-
-      setAllItems(combined);
-    } catch (e: unknown) {
-      setError((e as Error)?.message ?? "Error al cargar solicitudes.");
-    } finally {
-      setLoading(false);
+    // Lanzar cada módulo de forma independiente — el primero que responda se muestra
+    if (shouldFetchTransporte) {
+      fetchAllPages(getAllRequests, apiFilters)
+        .then((data) => addResults(data.map(normalizeTransporte)))
+        .catch(() => addResults([]));
     }
+
+    if (shouldFetchMantenimiento) {
+      fetchAllPages(getAllMantenimientos, apiFilters)
+        .then((data) => addResults(data.map(normalizeMantenimiento)))
+        .catch(() => addResults([]));
+    }
+
+    if (shouldFetchCombustible) {
+      fetchAllPages(getAllCombustibles as any, apiFilters)
+        .then((data: any) =>
+          addResults(data.map((s: SolicitudCombustibleNormalizada) => normalizeCombustible(s)))
+        )
+        .catch(() => addResults([]));
+    }
+
+    // Si no hay módulos que cargar (no debería pasar)
+    if (count === 0) setLoading(false);
   }, [filters.estado, filters.search, filters.modulo]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
@@ -224,6 +202,10 @@ export function useCombinedRequests() {
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
   const safePage   = Math.min(page, totalPages);
   const requests   = allItems.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+
+  // ─── Estado de progreso ──────────────────────────────────────────────────────
+
+  const isPartiallyLoaded = modulesLoaded > 0 && modulesLoaded < totalModulesToLoad.current;
 
   // ─── Handlers ────────────────────────────────────────────────────────────────
 
@@ -245,6 +227,7 @@ export function useCombinedRequests() {
 
   return {
     loading,
+    isPartiallyLoaded,
     error,
     requests,
     total,

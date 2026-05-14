@@ -353,11 +353,14 @@ export default function MyRequestsPage() {
   const [expandedId,  setExpandedId]  = useState<number | null>(null);
 
   const {
-    loading, error, requests, total, totalPages, page,
+    loading, isPartiallyLoaded, error, requests, total, totalPages, page,
     filters, searchInput,
     setPage, setSearchInput,
     handleEstadoChange, handleModuloChange, clearFilters,
   } = useCombinedRequests();
+
+  // Solo mostrar spinner completo cuando NO hay datos todavía
+  const showFullSpinner = loading && requests.length === 0;
 
   const hasFilters = filters.estado !== "" || filters.modulo !== "";
 
@@ -467,11 +470,22 @@ export default function MyRequestsPage() {
         </div>
       )}
 
+      {/* Indicador de carga parcial */}
+      {isPartiallyLoaded && (
+        <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-2.5">
+          <svg className="h-4 w-4 animate-spin text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none">
+            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+          </svg>
+          <span className="text-xs font-semibold text-blue-600">Cargando más módulos...</span>
+        </div>
+      )}
+
       {/* ── TARJETAS (mobile + tablet) ── */}
       <div className="block space-y-3 lg:hidden">
-        {loading
+        {showFullSpinner
           ? <InnerLoading message="Cargando solicitudes..." />
-          : requests.length === 0
+          : requests.length === 0 && !loading
             ? <EmptyState message={emptyMessage} />
             : requests.map((req) => (
               <RequestCard
@@ -501,9 +515,9 @@ export default function MyRequestsPage() {
             </tr>
           </thead>
           <tbody>
-            {loading
+            {showFullSpinner
               ? <tr><td colSpan={6}><InnerLoading message="Cargando solicitudes..." /></td></tr>
-              : requests.length === 0
+              : requests.length === 0 && !loading
                 ? (
                   <tr>
                     <td colSpan={6} className="py-16">
