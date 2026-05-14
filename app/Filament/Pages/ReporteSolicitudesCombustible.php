@@ -40,6 +40,8 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
 
     public ?string $estado = null;
 
+    public ?string $ticket = null;
+
     public float $kpi_galones = 0;
 
     public float $kpi_valor_total = 0;
@@ -68,7 +70,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
 
     public function updated($propertyName): void
     {
-        if (in_array($propertyName, ['date_field', 'date_from', 'date_to', 'vehiculo_id', 'estado'])) {
+        if (in_array($propertyName, ['date_field', 'date_from', 'date_to', 'vehiculo_id', 'estado', 'ticket'])) {
             $this->refreshKpis();
         }
     }
@@ -82,12 +84,12 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                 ->url(fn () => route('reportes.solicitudes-combustible.excel', $this->getFilterState()))
                 ->openUrlInNewTab(),
 
-            //CSV
-                Action::make('export_csv')
-                    ->label('Exportar CSV')
-                    ->icon('heroicon-o-document-text')
-                    ->url(fn () => route('reportes.solicitudes-combustible.csv', $this->getFilterState()))
-                    ->openUrlInNewTab(),    
+            // CSV
+            Action::make('export_csv')
+                ->label('Exportar CSV')
+                ->icon('heroicon-o-document-text')
+                ->url(fn () => route('reportes.solicitudes-combustible.csv', $this->getFilterState()))
+                ->openUrlInNewTab(),
 
             Action::make('export_pdf')
                 ->label('Exportar PDF')
@@ -149,6 +151,12 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
+                            Forms\Components\TextInput::make('ticket')
+                                ->label('Ticket')
+                                ->numeric()
+                                ->live()
+                                ->columnSpan(['default' => 12, 'md' => 3]),
+
                             Forms\Components\Actions::make([
                                 Forms\Components\Actions\Action::make('hoy')
                                     ->label('Hoy')
@@ -176,6 +184,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                         $this->date_to = null;
                                         $this->vehiculo_id = null;
                                         $this->estado = null;
+                                        $this->ticket = null;
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -201,6 +210,21 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                     ->fontFamily('mono')
                     ->description(fn ($record) => 'Vehículo: '.($record->vehiculo?->placa ?? 'N/A'))
                     ->wrap(),
+
+                Tables\Columns\TextColumn::make('ticket')
+                    ->label('Ticket')
+                    ->sortable()
+                    ->searchable()
+                    ->fontFamily('mono')
+                    ->copyable(),
+
+                Tables\Columns\TextColumn::make('numero_vale_ticket')
+                    ->label('Vale gasolinera')
+                    ->sortable()
+                    ->searchable()
+                    ->fontFamily('mono')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('solicitante.name')
                     ->label('Solicitante')
@@ -250,6 +274,9 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
         if ($this->estado) {
             $q->where('estado', $this->estado);
         }
+        if ($this->ticket) {
+            $q->where('ticket', $this->ticket);
+        }
 
         return $q;
     }
@@ -294,6 +321,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
             'date_to' => $this->date_to,
             'vehiculo_id' => $this->vehiculo_id,
             'estado' => $this->estado,
+            'ticket' => $this->ticket,
         ];
     }
 }

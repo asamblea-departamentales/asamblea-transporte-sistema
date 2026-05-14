@@ -179,17 +179,19 @@
     <table class="main">
         <thead>
             <tr>
-                <th width="9%">Código</th>
-                <th width="10%">Vehículo</th>
-                <th width="10%">Motorista</th>
-                <th width="8%">Fecha</th>
+                <th width="6%">Ticket</th>
+                <th width="8%">Código</th>
+                <th width="9%">Vehículo</th>
+                <th width="9%">Motorista</th>
+                <th width="7%">Fecha</th>
                 <th>Destino / Actividad</th>
-                <th width="7%">Galones</th>
-                <th width="7%">$/gal</th>
-                <th width="8%">Total</th>
-                <th width="7%">Pago</th>
-                <th width="7%">Prioridad</th>
-                <th width="9%">Estado</th>
+                <th width="6%">Galones</th>
+                <th width="6%">$/gal</th>
+                <th width="7%">Total</th>
+                <th width="6%">Pago</th>
+                <th width="6%">Prioridad</th>
+                <th width="8%">Vale #</th>
+                <th width="7%">Estado</th>
             </tr>
         </thead>
         <tbody>
@@ -199,6 +201,7 @@
                 $prioridad = $r->prioridad instanceof \UnitEnum ? $r->prioridad->value : (string) $r->prioridad;
             @endphp
             <tr>
+                <td style="font-family:monospace; font-size:9px;">{{ $r->ticket ?? '—' }}</td>
                 <td style="font-family:monospace; font-size:9px;">{{ $r->codigo }}</td>
                 <td>
                     <strong>{{ $r->vehiculo?->placa ?? 'N/A' }}</strong><br>
@@ -214,6 +217,7 @@
                 <td style="text-align:right; font-weight:bold;">${{ $r->valor_total ? number_format($r->valor_total, 2) : '—' }}</td>
                 <td style="font-size:9px;">{{ ucfirst($r->forma_pago ?? '—') }}</td>
                 <td><span class="badge p-{{ $prioridad }}">{{ strtoupper($prioridad) }}</span></td>
+                <td style="font-family:monospace; font-size:9px;">{{ $r->numero_vale_ticket ?? '—' }}</td>
                 <td><span class="badge s-{{ $estado }}">{{ ucfirst(str_replace('_', ' ', $estado)) }}</span></td>
             </tr>
             @endforeach

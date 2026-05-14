@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Reportes;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteSolicitudAutorizacionService;
 use App\Http\Controllers\Controller;
 use App\Models\SolicitudTransporte;
@@ -19,6 +21,12 @@ class ReporteSolicitudAutorizacionController extends Controller
 
         $service = app(ReporteSolicitudAutorizacionService::class);
         $datos = $service->getDatosOficiales($solicitudId);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_transporte',
+            ['solicitud_id' => $solicitud->id, 'ticket' => $solicitud->ticket, 'tipo' => 'documento_autorizacion']
+        );
 
         $pdf = Pdf::loadView('reports.solicitud_autorizacion_vehiculo_combustible', compact('datos'))
             ->setPaper('letter', 'portrait');

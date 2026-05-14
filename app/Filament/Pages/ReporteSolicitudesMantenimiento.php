@@ -2,8 +2,10 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Exports\SolicitudesMantenimientoExport;
 use App\Models\SolicitudMantenimiento;
 use App\Models\VehTipoMantenimiento;
@@ -48,6 +50,8 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
 
     public ?string $tipo_solicitud = null;
 
+    public ?string $ticket = null;
+
     // KPIs
     public int $kpi_total = 0;
 
@@ -78,7 +82,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
     {
         if (in_array($propertyName, [
             'date_field', 'date_from', 'date_to',
-            'veh_tipo_mantenimiento_id', 'estado', 'prioridad', 'tipo_solicitud',
+            'veh_tipo_mantenimiento_id', 'estado', 'prioridad', 'tipo_solicitud', 'ticket',
         ])) {
             $this->refreshKpis();
         }
@@ -93,19 +97,36 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                 ->action(function () {
                     $filename = 'reporte_mantenimiento_'.now()->format('Ymd_His').'.xlsx';
 
-                    return Excel::download(new SolicitudesMantenimientoExport($this->buildQuery()), $filename);
+                    $query = $this->buildQuery();
+
+                    app(AuditoriaService::class)->registrar(
+                        AccionBitacoraEnum::EXPORTAR_EXCEL,
+                        'solicitudes_mantenimiento',
+                        ['cantidad_registros' => $query->count()]
+                    );
+
+                    return Excel::download(new SolicitudesMantenimientoExport($query), $filename);
                 }),
-               
+
             // CSV
             Action::make('export_csv')
                 ->label('Exportar CSV')
                 ->icon('heroicon-o-document-text')
                 ->action(function () {
                     $filename = 'reporte_mantenimiento_'.now()->format('Ymd_His').'.csv';
-                    return Excel::download(new SolicitudesMantenimientoExport($this->buildQuery()), $filename, \Maatwebsite\Excel\Excel::CSV);    
+
+                    $query = $this->buildQuery();
+
+                    app(AuditoriaService::class)->registrar(
+                        AccionBitacoraEnum::EXPORTAR_CSV,
+                        'solicitudes_mantenimiento',
+                        ['cantidad_registros' => $query->count()]
+                    );
+
+                    return Excel::download(new SolicitudesMantenimientoExport($query), $filename, \Maatwebsite\Excel\Excel::CSV);
 
                 }),
-                
+
             Action::make('export_pdf')
                 ->label('Exportar PDF')
                 ->icon('heroicon-o-printer')
@@ -173,6 +194,12 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                                 ->native(false)->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
+                            Forms\Components\TextInput::make('ticket')
+                                ->label('Ticket')
+                                ->numeric()
+                                ->live()
+                                ->columnSpan(['default' => 12, 'md' => 3]),
+
                             Forms\Components\Actions::make([
                                 Forms\Components\Actions\Action::make('este_mes')
                                     ->label('Este mes')
@@ -205,6 +232,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                                         $this->estado = null;
                                         $this->prioridad = null;
                                         $this->tipo_solicitud = null;
+                                        $this->ticket = null;
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -223,6 +251,13 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
             ->columns([
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Código')->sortable()->searchable()->fontFamily('mono'),
+
+                Tables\Columns\TextColumn::make('ticket')
+                    ->label('Ticket')
+                    ->sortable()
+                    ->searchable()
+                    ->fontFamily('mono')
+                    ->copyable(),
 
                 Tables\Columns\TextColumn::make('vehiculo.placa')
                     ->label('Vehículo')
@@ -298,6 +333,9 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
         if ($this->tipo_solicitud) {
             $q->where('tipo_solicitud', $this->tipo_solicitud);
         }
+        if ($this->ticket) {
+            $q->where('ticket', $this->ticket);
+        }
 
         return $q;
     }
@@ -343,6 +381,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
             'estado' => $this->estado,
             'prioridad' => $this->prioridad,
             'tipo_solicitud' => $this->tipo_solicitud,
+            'ticket' => $this->ticket,
         ];
     }
 }

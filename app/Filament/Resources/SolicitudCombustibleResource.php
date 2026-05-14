@@ -124,6 +124,10 @@ class SolicitudCombustibleResource extends Resource
                         ->content(fn (SolicitudCombustible $record) => $record->valor_total !== null ? '$'.number_format($record->valor_total, 2) : '-'
                         ),
 
+                    Forms\Components\Placeholder::make('numero_vale_ui')
+                        ->label('Vale gasolinera')
+                        ->content(fn (SolicitudCombustible $record) => $record->numero_vale_ticket ?? '—'),
+
                     Forms\Components\Placeholder::make('observaciones_ui')
                         ->label('Observaciones')
                         ->content(fn (SolicitudCombustible $record) => $record->observaciones ?? '-')
@@ -390,7 +394,16 @@ class SolicitudCombustibleResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->weight('bold')
-                    ->fontFamily('mono'),
+                    ->fontFamily('mono')
+                    ->copyable(),
+
+                Tables\Columns\TextColumn::make('numero_vale_ticket')
+                    ->label('Vale gasolinera')
+                    ->sortable()
+                    ->searchable()
+                    ->fontFamily('mono')
+                    ->placeholder('—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('vehiculo')
                     ->label('Vehículo')

@@ -149,15 +149,34 @@
         </tr>
         <tr>
             <td>Nivel de combustible</td>
-            <td>{{ $movimiento->nivel_combustible ? strtoupper($movimiento->nivel_combustible) : '—' }}</td>
+            <td>
+                @if($movimiento->nivel_combustible !== null)
+                    {!! \App\Support\FuelBar::render($movimiento->nivel_combustible) !!}
+                @else
+                    —
+                @endif
+            </td>
         </tr>
         <tr>
-            <td>Herramientas completas</td>
-            <td>{{ $movimiento->herramientas_completas ? 'Sí' : 'No' }}</td>
-        </tr>
-        <tr>
-            <td>Accesorios completos</td>
-            <td>{{ $movimiento->accesorios_completos ? 'Sí' : 'No' }}</td>
+            <td>Herramientas y accesorios</td>
+            <td>
+                @php
+                    $opciones = \App\Models\RecepcionEntregaVehiculo::opcionesHerramientas();
+                    $verificadas = $movimiento->herramientas_verificadas ?? [];
+                @endphp
+                @if(!empty($verificadas))
+                    @foreach($verificadas as $key)
+                        <span style="color:#16a34a;">✅</span> {{ $opciones[$key] ?? $key }}<br>
+                    @endforeach
+                @else
+                    <span style="color:#9ca3af;">Ninguna herramienta verificada</span>
+                @endif
+                @if($movimiento->herramientasFaltantes)
+                    @foreach($movimiento->herramientasFaltantes as $key)
+                        <span style="color:#dc2626;">❌</span> {{ $opciones[$key] ?? $key }}<br>
+                    @endforeach
+                @endif
+            </td>
         </tr>
     </table>
 

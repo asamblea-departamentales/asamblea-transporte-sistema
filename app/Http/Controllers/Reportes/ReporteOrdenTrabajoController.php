@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Reportes;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Http\Controllers\Controller;
 use App\Domain\Solicitudes\Services\Reportes\ReporteOrdenTrabajoService;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -28,6 +30,25 @@ class ReporteOrdenTrabajoController extends Controller
         if ($rows->isEmpty()) {
             abort(404, 'No se encontró una solicitud válida para generar la orden de trabajo.');
         }
+
+        $kpis = $service->getKpis($filters);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_mantenimiento',
+            ['cantidad_registros' => $rows->count(), 'tipo' => 'orden_trabajo']
+        );
+
+        $pdf = Pdf::loadView('reports.reporte_orden_trabajo_pdf', [
+            'rows' => $rows,
+            'filters' => $filters,
+            'kpis' => $kpis,
+            'service' => $service,
+            'rangeLabel' => $this->rangeLabel($filters),
+        ])->setPaper('a4', 'portrait');
+
+        return $pdf->stream('orden_trabajo_mantenimiento.pdf');
+    }
 
         $kpis = $service->getKpis($filters);
 

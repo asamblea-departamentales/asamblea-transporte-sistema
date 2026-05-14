@@ -17,10 +17,15 @@ class RecepcionEntregaVehiculoResource extends Resource
     protected static ?string $model = RecepcionEntregaVehiculo::class;
 
     protected static ?string $navigationGroup = 'Operaciones';
+
     protected static ?string $navigationLabel = 'Recepción / Entrega Vehículos';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+
     protected static ?string $modelLabel = 'Recepción / Entrega';
+
     protected static ?string $pluralModelLabel = 'Recepciones / Entregas';
+
     protected static ?int $navigationSort = 20;
 
     public static function canViewAny(): bool
@@ -67,23 +72,23 @@ class RecepcionEntregaVehiculoResource extends Resource
 
                     // En RecepcionEntregaVehiculoResource.php — dentro del form()
 
-Forms\Components\Select::make('solicitud_transporte_id')
-    ->label('Solicitud de Transporte')
-    ->relationship(
-        name: 'solicitud',
-        titleAttribute: 'codigo',
-        modifyQueryUsing: fn ($query) => $query
-            ->whereIn('estado', [
-                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::APROBADA,
-                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::ASIGNADA,
-                \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::PROGRAMADA,
-            ])
-            ->orderByDesc('fecha_salida')
-    )
-    ->searchable()
-    ->preload()
-    ->nullable()
-    ->helperText('Opcional. Vincula esta entrega/recepción a una solicitud activa.'),    
+                    Forms\Components\Select::make('solicitud_transporte_id')
+                        ->label('Solicitud de Transporte')
+                        ->relationship(
+                            name: 'solicitud',
+                            titleAttribute: 'codigo',
+                            modifyQueryUsing: fn ($query) => $query
+                                ->whereIn('estado', [
+                                    \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::APROBADA,
+                                    \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::ASIGNADA,
+                                    \App\Domain\Solicitudes\Enums\EstadoSolicitudEnum::PROGRAMADA,
+                                ])
+                                ->orderByDesc('fecha_salida')
+                        )
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->helperText('Opcional. Vincula esta entrega/recepción a una solicitud activa.'),
                 ])
                 ->columns(2),
 
@@ -96,22 +101,17 @@ Forms\Components\Select::make('solicitud_transporte_id')
 
                     Forms\Components\Select::make('nivel_combustible')
                         ->label('Nivel de combustible')
-                        ->options([
-                            'vacio' => 'Vacío',
-                            '1/4' => '1/4',
-                            '1/2' => '1/2',
-                            '3/4' => '3/4',
-                            'lleno' => 'Lleno',
-                        ])
-                        ->native(false),
+                        ->options(\App\Domain\Solicitudes\Enums\NivelCombustibleEnum::options())
+                        ->native(false)
+                        ->helperText('0% = Vacío | 25% = ¼ | 50% = ½ | 75% = ¾ | 100% = Lleno'),
 
-                    Forms\Components\Toggle::make('herramientas_completas')
-                        ->label('Herramientas completas')
-                        ->default(false),
-
-                    Forms\Components\Toggle::make('accesorios_completos')
-                        ->label('Accesorios completos')
-                        ->default(false),
+                    Forms\Components\CheckboxList::make('herramientas_verificadas')
+                        ->label('Herramientas y accesorios verificados')
+                        ->options(\App\Models\RecepcionEntregaVehiculo::opcionesHerramientas())
+                        ->columns(3)
+                        ->bulkToggleable()
+                        ->gridDirection('column')
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
 
@@ -191,15 +191,22 @@ Forms\Components\Select::make('solicitud_transporte_id')
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('nivel_combustible')
-                    ->label('Combustible'),
+                    ->label('Combustible')
+                    ->formatStateUsing(fn ($state) => $state !== null ? "{$state}%" : '—')
+                    ->badge()
+                    ->color(fn ($state) => match (true) {
+                        $state === null => 'gray',
+                        $state <= 25 => 'danger',
+                        $state <= 50 => 'warning',
+                        $state <= 75 => 'info',
+                        default => 'success',
+                    }),
 
-                Tables\Columns\IconColumn::make('herramientas_completas')
+                Tables\Columns\TextColumn::make('herramientas_verificadas')
                     ->label('Herramientas')
-                    ->boolean(),
-
-                Tables\Columns\IconColumn::make('accesorios_completos')
-                    ->label('Accesorios')
-                    ->boolean(),
+                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state).'/9' : '—')
+                    ->badge()
+                    ->color(fn ($state) => is_array($state) && count($state) === 9 ? 'success' : 'warning'),
 
                 Tables\Columns\TextColumn::make('usuario.name')
                     ->label('Registrado por')
@@ -246,7 +253,7 @@ Forms\Components\Select::make('solicitud_transporte_id')
         return [
             'index' => Pages\ListRecepcionEntregaVehiculos::route('/'),
             'create' => Pages\CreateRecepcionEntregaVehiculo::route('/create'),
-            //'view' => Pages\ViewRecepcionEntregaVehiculo::route('/{record}'),
+            // 'view' => Pages\ViewRecepcionEntregaVehiculo::route('/{record}'),
             'edit' => Pages\EditRecepcionEntregaVehiculo::route('/{record}/edit'),
         ];
     }

@@ -364,7 +364,8 @@ class SolicitudTransporteResource extends Resource
                     ->sortable()
                     ->searchable()
                     ->weight('bold')
-                    ->fontFamily('mono'),
+                    ->fontFamily('mono')
+                    ->copyable(),
 
                 Tables\Columns\TextColumn::make('unidad.nombre')
                     ->label('Unidad')

@@ -16,4 +16,10 @@ enum AccionBitacoraEnum: string
     case COMPLETAR = 'completar';
 
     case ASIGNAR = 'asignar';
+
+    //Nuevos Estados para trazabilidad en los reportes
+    case EXPORTAR_PDF = 'exportar_pdf';
+    case EXPORTAR_EXCEL = 'exportar_excel';
+    case EXPORTAR_CSV = 'exportar_csv';
+    case IMPRIMIR = 'imprimir';
 }

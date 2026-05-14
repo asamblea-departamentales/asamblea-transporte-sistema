@@ -93,6 +93,12 @@
         <div class="titulo">ORDEN DE TRABAJO</div>
         <div class="subtitulo">Sistema de Gestión de Transporte - Mantenimiento</div>
 
+        @if(!empty($r->ticket))
+        <div style="text-align:center; font-size:13px; font-weight:bold; color:#1a56db; margin-bottom:12px;">
+            Ticket #{{ $r->ticket }}
+        </div>
+        @endif
+
         <table class="tabla">
             <tr>
                 <td>N° Orden / Solicitud</td>
@@ -201,23 +207,22 @@
         </div>
 
         <div class="firma">
-    @if(!empty($r->firma_aprobador))
-        <img
-            src="{{ $r->firma_aprobador }}"
-            style="height:70px; max-width:280px; display:block; margin:0 auto 4px auto;"
-            alt="Firma"
-        >
-    @else
-        <div style="height:70px;"></div>
-    @endif
-    <div class="linea"></div>
-    <div>{{ $r->aprobador?->name ?? '—' }}</div>
-    <div>Jefe / Aprobador</div>
-</div>
+            <div style="margin-top:60px; text-align:center;">
+                <strong>Autoriza</strong>
+            </div>
+            <div style="margin-top:50px;"></div>
+            <div class="linea"></div>
+            <div>Jose Alexander Portillo Hernandez</div>
+            <div>Administrador de Contrato</div>
+        </div>
 
         @if(!$loop->last)
             <div class="salto"></div>
         @endif
     @endforeach
+
+    <div style="position: fixed; bottom: -30px; left: 0; right: 0; text-align: center; font-size: 8px; color: #9ca3af; border-top: 1px solid #e5e7eb; padding-top: 4px;">
+        Palacio Legislativo, Centro de Gobierno Jose Simeón Cañas, San Salvador &mdash; Tel: (503) 2281-9116
+    </div>
 </body>
 </html>

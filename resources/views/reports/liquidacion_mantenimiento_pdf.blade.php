@@ -47,6 +47,7 @@
             <td class="header-title">
                 <h1>Comprobante de Liquidación</h1>
                 <p>Asamblea Legislativa de El Salvador | Sistema de Gestión de Mantenimiento</p>
+                <p style="margin:2px 0 0; color:#1a56db; font-size:12px; font-weight:bold;">Ticket #{{ $solicitud->ticket }}</p>
             </td>
             <td style="text-align: right; width: 100px; color: #666; font-size: 8px;">
                 Generado:<br>

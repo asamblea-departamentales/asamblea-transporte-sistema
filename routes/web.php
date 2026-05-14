@@ -1,7 +1,10 @@
 <?php
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Exports\SolicitudesCombustibleExport;
 use App\Exports\SolicitudesMantenimientoExport;
+use App\Exports\SolicitudesTransporteExport;
 use App\Http\Controllers\LiquidacionCombustibleController;
 use App\Http\Controllers\LiquidacionMantenimientoController;
 use App\Http\Controllers\Reportes\ReporteControlMensualCombustibleController;
@@ -76,6 +79,12 @@ Route::get('/reportes/solicitudes-transporte/pdf', function (Request $request) {
     $to = $request->filled('date_to') ? \Carbon\Carbon::parse($request->input('date_to'))->format('d/m/Y') : 'Fin';
     $rangeLabel = "Periodo: {$from} al {$to}";
 
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_PDF,
+        'solicitudes_transporte',
+        ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
+    );
+
     $pdf = Pdf::loadView('reports.solicitudes_transporte_pdf', [
         'rows' => $rows,
         'rangeLabel' => $rangeLabel,
@@ -133,6 +142,12 @@ Route::get('/reportes/solicitudes-mantenimiento/pdf', function (Request $request
     $from = $request->filled('date_from') ? \Carbon\Carbon::parse($request->input('date_from'))->format('d/m/Y') : 'Inicio';
     $to = $request->filled('date_to') ? \Carbon\Carbon::parse($request->input('date_to'))->format('d/m/Y') : 'Fin';
     $rangeLabel = "Periodo: {$from} al {$to}";
+
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_PDF,
+        'solicitudes_mantenimiento',
+        ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
+    );
 
     $pdf = Pdf::loadView('reports.solicitudes_mantenimiento_pdf', [
         'rows' => $rows,
@@ -192,6 +207,12 @@ Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) 
     $to = $request->filled('date_to') ? \Carbon\Carbon::parse($request->input('date_to'))->format('d/m/Y') : 'Fin';
     $rangeLabel = "Periodo: {$from} al {$to}";
 
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_PDF,
+        'solicitudes_combustible',
+        ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
+    );
+
     $pdf = Pdf::loadView('reports.solicitudes_combustible_pdf', [
         'rows' => $rows,
         'rangeLabel' => $rangeLabel,
@@ -234,6 +255,12 @@ Route::get('/reportes/solicitudes-combustible/excel', function (Request $request
 
     $filename = 'reporte_combustible_'.now()->format('Ymd_His').'.xlsx';
 
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_EXCEL,
+        'solicitudes_combustible',
+        ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
+    );
+
     return Excel::download(new SolicitudesCombustibleExport($q), $filename);
 })->name('reportes.solicitudes-combustible.excel');
 
@@ -266,6 +293,12 @@ Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $reque
     }
 
     $filename = 'reporte_mantenimiento_'.now()->format('Ymd_His').'.xlsx';
+
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_EXCEL,
+        'solicitudes_mantenimiento',
+        ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
+    );
 
     return Excel::download(new SolicitudesMantenimientoExport($q), $filename);
 })->name('reportes.solicitudes-mantenimiento.excel');
@@ -317,7 +350,7 @@ Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleContr
     ->name('reportes.lote-combustible.pdf');
 
 Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
-    ->name('reportes.solicitud-autorizacion.pdf');    
+    ->name('reportes.solicitud-autorizacion.pdf');
 
 // --------------------------------- NUEVOS REPORTES CVS --------------------------------- //
 // CSV Transporte
@@ -353,7 +386,13 @@ Route::get('/reportes/solicitudes-transporte/csv', function (Request $request) {
         $q->where('prioridad', $request->input('prioridad'));
     }
 
-    $filename = 'reporte_transporte_' . now()->format('Ymd_His') . '.csv';
+    $filename = 'reporte_transporte_'.now()->format('Ymd_His').'.csv';
+
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_CSV,
+        'solicitudes_transporte',
+        ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
+    );
 
     return Excel::download(
         new SolicitudesTransporteExport($q),
@@ -401,7 +440,13 @@ Route::get('/reportes/solicitudes-mantenimiento/csv', function (Request $request
         $q->where('tipo_solicitud', $request->input('tipo_solicitud'));
     }
 
-    $filename = 'reporte_mantenimiento_' . now()->format('Ymd_His') . '.csv';
+    $filename = 'reporte_mantenimiento_'.now()->format('Ymd_His').'.csv';
+
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_CSV,
+        'solicitudes_mantenimiento',
+        ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
+    );
 
     return Excel::download(
         new SolicitudesMantenimientoExport($q),
@@ -411,7 +456,6 @@ Route::get('/reportes/solicitudes-mantenimiento/csv', function (Request $request
 
 })->name('reportes.solicitudes-mantenimiento.csv');
 
-// CSV Combustible
 // CSV Combustible
 Route::get('/reportes/solicitudes-combustible/csv', function (Request $request) {
 
@@ -441,7 +485,13 @@ Route::get('/reportes/solicitudes-combustible/csv', function (Request $request) 
         $q->where('estado', $request->input('estado'));
     }
 
-    $filename = 'reporte_combustible_' . now()->format('Ymd_His') . '.csv';
+    $filename = 'reporte_combustible_'.now()->format('Ymd_His').'.csv';
+
+    app(AuditoriaService::class)->registrar(
+        AccionBitacoraEnum::EXPORTAR_CSV,
+        'solicitudes_combustible',
+        ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
+    );
 
     return Excel::download(
         new SolicitudesCombustibleExport($q),

@@ -77,6 +77,12 @@
 
         <div class="titulo">MISIÓN OFICIAL</div>
 
+        @if(!empty($r->ticket))
+        <div style="text-align:center; font-size:13px; font-weight:bold; color:#1a56db; margin-bottom:12px;">
+            Ticket #{{ $r->ticket }}
+        </div>
+        @endif
+
         <div class="bloque-texto">
             EL SUSCRITO SEÑOR <strong>{{ mb_strtoupper($r->autorizador?->name ?? '—') }}</strong>,
             EN SU CALIDAD DE <strong>{{ mb_strtoupper($service->resolverAutorizadorCargo($r)) }}</strong>

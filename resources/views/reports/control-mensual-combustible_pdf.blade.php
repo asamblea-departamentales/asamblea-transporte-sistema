@@ -139,19 +139,21 @@
     <table class="main">
         <thead>
             <tr>
-                <th width="7%">Fecha</th>
-                <th width="9%">Código</th>
-                <th width="13%">Vehículo</th>
-                <th width="10%">Motorista</th>
+                <th width="5%">Ticket</th>
+                <th width="6%">Fecha</th>
+                <th width="7%">Código</th>
+                <th width="11%">Vehículo</th>
+                <th width="9%">Motorista</th>
                 <th>Destino / Actividad</th>
-                <th width="8%">Contrato</th>
-                <th width="8%">Serie</th>
-                <th width="8%">Correlativo</th>
-                <th width="6%">Cargas</th>
-                <th width="8%">Monto Asignado</th>
-                <th width="7%">Galones</th>
-                <th width="8%">Valor Total</th>
-                <th width="8%">Estado</th>
+                <th width="6%">Contrato</th>
+                <th width="6%">Serie</th>
+                <th width="6%">Correlativo</th>
+                <th width="5%">Cargas</th>
+                <th width="7%">Monto Asig.</th>
+                <th width="5%">Galones</th>
+                <th width="6%">Valor Total</th>
+                <th width="5%">Vale #</th>
+                <th width="6%">Estado</th>
             </tr>
         </thead>
         <tbody>
@@ -160,6 +162,7 @@
                 $estado = $r->estado instanceof \UnitEnum ? $r->estado->value : (string) $r->estado;
             @endphp
             <tr>
+                <td style="font-family:monospace;">{{ $r->ticket ?? '—' }}</td>
                 <td>{{ optional($r->fecha_solicitud)->format('d/m/Y') ?? '—' }}</td>
                 <td style="font-family:monospace;">{{ $r->codigo }}</td>
                 <td>{{ $service->resolverVehiculo($r) }}</td>
@@ -172,6 +175,7 @@
                 <td style="text-align:right;">${{ $r->monto_asignado ? number_format($r->monto_asignado, 2) : '—' }}</td>
                 <td style="text-align:right;">{{ $r->cantidad_combustible ? number_format($r->cantidad_combustible, 2) : '—' }}</td>
                 <td style="text-align:right; font-weight:bold;">${{ $r->valor_total ? number_format($r->valor_total, 2) : '—' }}</td>
+                <td style="font-family:monospace;">{{ $r->numero_vale_ticket ?? '—' }}</td>
                 <td><span class="badge">{{ ucfirst(str_replace('_', ' ', $estado)) }}</span></td>
             </tr>
             @endforeach

@@ -38,6 +38,7 @@ class SolicitudesTransporteExport implements
     {
         return [
             'Código',
+            'Ticket', //NUEVO - para mostrar el número de ticket en el reporte
             'Unidad',
             'Solicitante',
             'Motivo',
@@ -66,6 +67,7 @@ class SolicitudesTransporteExport implements
 
         return [
             $clean($row->codigo),
+            $clean($row->ticket ?? ''),
             $clean($row->unidad?->nombre ?? ''),
             $clean($row->solicitante?->name ?? ''),
             $clean($row->motivo_actividad ?? ''),

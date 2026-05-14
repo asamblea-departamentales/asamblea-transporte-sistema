@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers\Reportes;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -26,6 +28,12 @@ class ReporteControlMensualCombustibleController extends Controller
             ->orderBy('fecha_solicitud')
             ->get();
 
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_combustible',
+            ['cantidad_registros' => $rows->count(), 'tipo' => 'control_mensual']
+        );
+
         $pdf = Pdf::loadView('reports.control-mensual-combustible_pdf', [
             'rows' => $rows,
             'filtros' => $filtros,
@@ -38,8 +46,8 @@ class ReporteControlMensualCombustibleController extends Controller
 
     private function rangeLabel(array $filtros): string
     {
-        $from = !empty($filtros['date_from']) ? \Carbon\Carbon::parse($filtros['date_from'])->format('d/m/Y') : 'Inicio';
-        $to   = !empty($filtros['date_to']) ? \Carbon\Carbon::parse($filtros['date_to'])->format('d/m/Y') : 'Fin';
+        $from = ! empty($filtros['date_from']) ? \Carbon\Carbon::parse($filtros['date_from'])->format('d/m/Y') : 'Inicio';
+        $to = ! empty($filtros['date_to']) ? \Carbon\Carbon::parse($filtros['date_to'])->format('d/m/Y') : 'Fin';
 
         return "Periodo: {$from} al {$to}";
     }
