@@ -97,6 +97,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $transporte = $qTransporte->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
                 'code' => $s->codigo,
+                'ticket' => $s->ticket,
                 'date' => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
                 'type' => 'Transporte',
                 'status' => $s->estado?->value ?? (string) $s->estado,
@@ -105,6 +106,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $mantenimiento = $qMantenimiento->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
                 'code' => $s->codigo,
+                'ticket' => $s->ticket,
                 'date' => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
                 'type' => 'Mantenimiento',
                 'status' => $s->estado?->value ?? (string) $s->estado,
@@ -113,6 +115,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $combustible = $qCombustible->latest('created_at')->take(5)->get()
             ->map(fn ($s) => [
                 'code' => $s->codigo,
+                'ticket' => $s->ticket,
                 'date' => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
                 'type' => 'Combustible',
                 'status' => $s->estado?->value ?? (string) $s->estado,
