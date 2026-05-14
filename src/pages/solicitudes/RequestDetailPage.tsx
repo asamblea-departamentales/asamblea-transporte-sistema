@@ -692,8 +692,11 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     if (!containerRef.current || mapRef.current) return;
     const map = L.map(containerRef.current, {
       zoomControl: true,
-      dragging: !L.Browser.mobile,
+      dragging: true,
+      touchZoom: true,
       scrollWheelZoom: true,
+      doubleClickZoom: true,
+      tap: true,
     }).setView([13.7942, -88.8965], 9);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
@@ -758,11 +761,11 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
 
         const osrm = await getOSRMRoute(roundTripCoords);
         if (osrm?.geometry?.length) {
-          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.8 }).addTo(mapRef.current);
+          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#3b82f6", weight: 6, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(mapRef.current);
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin });
         } else {
           const pts: L.LatLngExpression[] = roundTripCoords.map(c => [c.lat, c.lng]);
-          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.6, dashArray: "10,10" }).addTo(mapRef.current);
+          routeLayerRef.current = L.polyline(pts, { color: "#94a3b8", weight: 4, opacity: 0.8, dashArray: "8, 8", lineCap: "round" }).addTo(mapRef.current);
           let d = 0;
           for (let i = 0; i < roundTripCoords.length - 1; i++) d += haversineKm(roundTripCoords[i].lat, roundTripCoords[i].lng, roundTripCoords[i + 1].lat, roundTripCoords[i + 1].lng);
           setRouteInfo({ distance: d, duration: (d / 45) * 60 });
@@ -800,20 +803,31 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
         )}
 
         {routeInfo && !loading && (
-          <div className="absolute bottom-4 right-4 left-4 z-[400] flex items-center justify-between gap-3 rounded-2xl bg-white/95 px-5 py-3 shadow-2xl backdrop-blur-md ring-1 ring-black/5 sm:bottom-6 sm:right-6 sm:left-auto sm:w-auto sm:justify-start">
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Distancia (Ida y Vuelta)</span>
-              <span className="mt-1.5 text-sm font-bold text-slate-900">{routeInfo.distance.toFixed(1)} km</span>
+          <div className="absolute bottom-4 right-4 left-4 z-[400] flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/90 px-6 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl ring-1 ring-white/50 sm:bottom-6 sm:right-6 sm:left-auto sm:w-auto sm:justify-start transition-all hover:bg-white/95">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Kilometraje</span>
+                <span className="mt-1 text-base font-extrabold text-slate-900 tracking-tight">{routeInfo.distance.toFixed(1)} <span className="text-xs font-bold text-slate-500">km</span></span>
+              </div>
             </div>
-            <div className="h-8 w-[1px] bg-slate-200" />
-            <div className="flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo (Redondo)</span>
-              <span className="mt-1.5 text-sm font-bold text-slate-900">{routeInfo.duration.toFixed(0)} min</span>
-            </div>
-            <div className="hidden sm:block h-8 w-[1px] bg-slate-200" />
-            <div className="hidden sm:flex flex-col">
-              <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Puntos</span>
-              <span className="mt-1.5 text-sm font-bold text-slate-900">{markersRef.current.length}</span>
+            
+            <div className="h-10 w-[1px] bg-slate-200/60 hidden sm:block" />
+            
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo Redondo</span>
+                <span className="mt-1 text-base font-extrabold text-slate-900 tracking-tight">{routeInfo.duration.toFixed(0)} <span className="text-xs font-bold text-slate-500">min</span></span>
+              </div>
             </div>
           </div>
         )}
