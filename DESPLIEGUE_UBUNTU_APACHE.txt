@@ -1,64 +1,280 @@
-GUIA DE DESPLIEGUE EN UBUNTU SERVER CON APACHE
+================================================================================
+  GUIA DE DESPLIEGUE - FRONTEND TRANSPORTE
+  Sistema: Ubuntu Server + Apache
+  Proyecto: Asamblea Legislativa - Sistema de Transporte
+================================================================================
 
-Este documento describe el procedimiento tecnico para realizar el despliegue de la aplicacion frontend en un entorno de produccion utilizando el servidor web Apache sobre el sistema operativo Ubuntu Server.
+REQUISITOS:
+- Ubuntu Server (20.04, 22.04 o 24.04)
+- Acceso SSH con usuario que tenga permisos sudo
+- Los archivos de la carpeta "dist" del proyecto ya generados
 
-1. REQUISITOS DEL SISTEMA
-El servidor debe contar con Ubuntu Server instalado y acceso a internet. Se requiere un usuario con privilegios de administrador (sudo).
+================================================================================
+  PASO 1: ACTUALIZAR EL SISTEMA
+================================================================================
 
-2. INSTALACION DEL SERVIDOR WEB
-El administrador debe actualizar los indices de paquetes e instalar el servidor Apache mediante los siguientes comandos:
 sudo apt update
+sudo apt upgrade -y
+
+
+================================================================================
+  PASO 2: INSTALAR APACHE
+================================================================================
+
 sudo apt install apache2 -y
 
-3. PREPARACION DE LOS ARCHIVOS DE LA APLICACION
-En el equipo de desarrollo, se debe generar la version de produccion del proyecto. Para esto, el usuario ejecuta el comando:
-npm run build
-Este proceso crea una carpeta denominada "dist" que contiene los archivos estaticos optimizados.
+Verificar que Apache esta corriendo:
 
-4. TRANSFERENCIA DE ARCHIVOS AL SERVIDOR
-El contenido de la carpeta "dist" debe ser transferido al servidor Ubuntu. Se recomienda utilizar el protocolo SCP o herramientas como FileZilla. La ruta de destino estandar en el servidor es /var/www/html/transporte.
+sudo systemctl status apache2
 
-Para crear el directorio y ajustar los permisos, se ejecutan estos comandos en el servidor:
-sudo mkdir -p /var/www/html/transporte
-sudo chown -r $USER:$USER /var/www/html/transporte
+Deberia decir "active (running)".
+Si abres la IP del servidor en un navegador, veras la pagina por defecto de Apache.
 
-5. CONFIGURACION DEL SITIO EN APACHE
-Se debe crear un archivo de configuracion para el sitio. El administrador utiliza un editor de texto como nano:
-sudo nano /etc/apache2/sites-available/transporte.conf
 
-Dentro del archivo, se añade la siguiente estructura:
-<VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/html/transporte
-    ErrorLog ${APACHE_LOG_DIR}/error.log
-    CustomLog ${APACHE_LOG_DIR}/access.log combined
+================================================================================
+  PASO 3: HABILITAR LOS MODULOS NECESARIOS
+================================================================================
 
-    <Directory /var/www/html/transporte>
-        Options Indexes FollowSymLinks
-        AllowOverride All
-        Require all granted
-    </Directory>
-</VirtualHost>
+Estos modulos son obligatorios para que funcione la aplicacion:
 
-6. SOPORTE PARA RUTAS DE REACT (SPA)
-Dado que la aplicacion utiliza React Router, es indispensable habilitar el modulo rewrite de Apache para que todas las peticiones sean redirigidas al archivo index.html.
+  - rewrite    : Para que React Router funcione (SPA routing)
+  - proxy      : Para redirigir peticiones de mapas
+  - proxy_http : Complemento del proxy
+  - headers    : Para cabeceras de seguridad
+  - ssl        : Para HTTPS (si lo necesitas)
 
-Se habilita el modulo con el comando:
-sudo a2enmod rewrite
+Ejecutar todo en una sola linea:
 
-Posteriormente, se debe crear un archivo denominado .htaccess dentro de la carpeta /var/www/html/transporte con el siguiente contenido:
+sudo a2enmod rewrite proxy proxy_http headers ssl
+
+Reiniciar Apache despues de activar modulos:
+
+sudo systemctl restart apache2
+
+
+================================================================================
+  PASO 4: CREAR EL DIRECTORIO Y SUBIR LOS ARCHIVOS
+================================================================================
+
+Crear el directorio donde vivira la aplicacion:
+
+sudo mkdir -p /var/www/transporte
+
+Subir los archivos del "dist" al servidor. Desde tu PC de desarrollo:
+
+scp -r dist/* usuario@IP_DEL_SERVIDOR:/var/www/transporte/
+
+Si usas FileZilla o WinSCP:
+  - Conectarte al servidor por SFTP
+  - Navegar a /var/www/transporte/
+  - Subir TODO el contenido de la carpeta dist (no la carpeta, sino lo de adentro)
+
+Despues de subir, ajustar los permisos:
+
+sudo chown -R www-data:www-data /var/www/transporte
+sudo chmod -R 755 /var/www/transporte
+
+Verificar que los archivos estan ahi:
+
+ls -la /var/www/transporte/
+
+Deberias ver: index.html, assets/, icons/, sw.js, etc.
+
+
+================================================================================
+  PASO 5: CREAR EL ARCHIVO .htaccess
+================================================================================
+
+Este archivo es CRITICO. Sin el, al recargar cualquier pagina que no sea
+la principal, Apache mostrara error 404.
+
+sudo nano /var/www/transporte/.htaccess
+
+Copiar y pegar este contenido exacto:
+
 RewriteEngine On
 RewriteBase /
-RewriteRule ^index\.html$ - [L]
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteRule . /index.html [L]
 
-7. ACTIVACION DEL SITIO Y REINICIO DE SERVICIOS
-Para finalizar, el administrador deshabilita el sitio por defecto de Apache, activa la nueva configuracion y reinicia el servicio:
+Guardar: Ctrl+O, Enter, Ctrl+X
+
+Explicacion:
+  - Si el archivo solicitado existe (CSS, JS, imagenes), se sirve directo.
+  - Si NO existe (rutas como /dashboard, /mis-solicitudes), redirige a
+    index.html y React Router se encarga de mostrar la pagina correcta.
+
+
+================================================================================
+  PASO 6: CREAR LA CONFIGURACION DEL SITIO EN APACHE
+================================================================================
+
+Crear el archivo de configuracion:
+
+sudo nano /etc/apache2/sites-available/transporte.conf
+
+Copiar y pegar este contenido EXACTO:
+
+---------- INICIO DEL ARCHIVO ----------
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/transporte
+
+    <Directory /var/www/transporte>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ProxyPreserveHost Off
+    ProxyPass /nominatim/ https://nominatim.openstreetmap.org/
+    ProxyPassReverse /nominatim/ https://nominatim.openstreetmap.org/
+    ProxyPass /osrm/ https://router.project-osrm.org/
+    ProxyPassReverse /osrm/ https://router.project-osrm.org/
+
+    ErrorLog ${APACHE_LOG_DIR}/transporte-error.log
+    CustomLog ${APACHE_LOG_DIR}/transporte-access.log combined
+</VirtualHost>
+
+---------- FIN DEL ARCHIVO ----------
+
+Guardar: Ctrl+O, Enter, Ctrl+X
+
+NOTA SOBRE EL PROXY:
+  Las lineas de ProxyPass son necesarias para que los MAPAS funcionen.
+  El frontend hace peticiones a /nominatim/ y /osrm/ para geocodificar
+  direcciones y calcular rutas. Apache redirige esas peticiones a los
+  servidores publicos de OpenStreetMap.
+
+
+================================================================================
+  PASO 7: ACTIVAR EL SITIO Y DESACTIVAR EL PREDETERMINADO
+================================================================================
+
+Desactivar el sitio por defecto de Apache:
+
 sudo a2dissite 000-default.conf
+
+Activar el nuevo sitio:
+
 sudo a2ensite transporte.conf
+
+Verificar que no hay errores de sintaxis:
+
+sudo apache2ctl configtest
+
+Si dice "Syntax OK", continuar. Si hay error, revisar el archivo del Paso 6.
+
+Reiniciar Apache:
+
 sudo systemctl restart apache2
 
-8. VERIFICACION
-El sistema deberia estar accesible a traves de la direccion IP del servidor desde cualquier navegador web.
+
+================================================================================
+  PASO 8: VERIFICACION
+================================================================================
+
+1. Abrir un navegador web
+2. Escribir la IP del servidor: http://IP_DEL_SERVIDOR
+3. Deberia cargar la pantalla de login del sistema
+
+Pruebas adicionales:
+  - Navegar a /dashboard y recargar la pagina (F5). NO debe dar 404.
+  - Abrir el detalle de una solicitud de transporte. El mapa debe cargar.
+  - Probar en el celular. El mapa debe responder a gestos tactiles.
+
+
+================================================================================
+  PASO 9 (OPCIONAL): CONFIGURAR HTTPS CON CERTIFICADO AUTO-FIRMADO
+================================================================================
+
+Si necesitas HTTPS (recomendado), sigue estos pasos:
+
+9.1 Generar el certificado auto-firmado:
+
+sudo openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/ssl/private/transporte.key \
+  -out /etc/ssl/certs/transporte.crt
+
+Te pedira datos (pais, organizacion, etc). Puedes poner lo que quieras.
+
+9.2 Crear la configuracion SSL:
+
+sudo nano /etc/apache2/sites-available/transporte-ssl.conf
+
+Copiar y pegar:
+
+---------- INICIO DEL ARCHIVO ----------
+
+<VirtualHost *:443>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/transporte
+
+    SSLEngine on
+    SSLCertificateFile /etc/ssl/certs/transporte.crt
+    SSLCertificateKeyFile /etc/ssl/private/transporte.key
+
+    <Directory /var/www/transporte>
+        AllowOverride All
+        Require all granted
+    </Directory>
+
+    ProxyPreserveHost Off
+    ProxyPass /nominatim/ https://nominatim.openstreetmap.org/
+    ProxyPassReverse /nominatim/ https://nominatim.openstreetmap.org/
+    ProxyPass /osrm/ https://router.project-osrm.org/
+    ProxyPassReverse /osrm/ https://router.project-osrm.org/
+
+    Header always set X-Content-Type-Options "nosniff"
+    Header always set X-Frame-Options "DENY"
+    Header always set Strict-Transport-Security "max-age=31536000"
+
+    ErrorLog ${APACHE_LOG_DIR}/transporte-ssl-error.log
+    CustomLog ${APACHE_LOG_DIR}/transporte-ssl-access.log combined
+</VirtualHost>
+
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    Redirect permanent / https://IP_DEL_SERVIDOR/
+</VirtualHost>
+
+---------- FIN DEL ARCHIVO ----------
+
+9.3 Activar el sitio SSL:
+
+sudo a2dissite transporte.conf
+sudo a2ensite transporte-ssl.conf
+sudo apache2ctl configtest
+sudo systemctl restart apache2
+
+
+================================================================================
+  SOLUCION DE PROBLEMAS
+================================================================================
+
+PROBLEMA: Pantalla en blanco al abrir la IP
+SOLUCION: Verificar que index.html esta directamente en /var/www/transporte/
+          y no dentro de una subcarpeta (ej. /var/www/transporte/dist/).
+
+PROBLEMA: Error 404 al recargar paginas como /dashboard
+SOLUCION: Verificar que el .htaccess existe en /var/www/transporte/
+          y que AllowOverride All esta en el VirtualHost.
+          Verificar que mod_rewrite esta activo: sudo a2enmod rewrite
+
+PROBLEMA: Los mapas no cargan (error en consola del navegador)
+SOLUCION: Verificar que mod_proxy y mod_proxy_http estan activos.
+          Verificar que las lineas ProxyPass estan en el VirtualHost.
+          Comando: sudo a2enmod proxy proxy_http && sudo systemctl restart apache2
+
+PROBLEMA: Error "VITE_API_BASE_URL" en consola
+SOLUCION: El build se genero sin el archivo .env.production.
+          Crear el archivo en el proyecto con:
+          VITE_API_BASE_URL=https://phplaravel-1581457-6197806.cloudwaysapps.com
+          Y ejecutar "npm run build" nuevamente.
+
+PROBLEMA: Apache no inicia despues de cambios
+SOLUCION: Revisar errores: sudo apache2ctl configtest
+          Ver logs: sudo tail -20 /var/log/apache2/transporte-error.log
+
+================================================================================
