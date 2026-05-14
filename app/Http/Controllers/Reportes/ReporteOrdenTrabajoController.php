@@ -40,19 +40,6 @@ class ReporteOrdenTrabajoController extends Controller
         );
 
         $pdf = Pdf::loadView('reports.reporte_orden_trabajo_pdf', [
-            'rows' => $rows,
-            'filters' => $filters,
-            'kpis' => $kpis,
-            'service' => $service,
-            'rangeLabel' => $this->rangeLabel($filters),
-        ])->setPaper('a4', 'portrait');
-
-        return $pdf->stream('orden_trabajo_mantenimiento.pdf');
-    }
-
-        $kpis = $service->getKpis($filters);
-
-        $pdf = Pdf::loadView('reports.reporte_orden_trabajo_pdf', [
             'rows'       => $rows,
             'filters'    => $filters,
             'kpis'       => $kpis,
