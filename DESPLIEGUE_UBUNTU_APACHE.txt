@@ -1,0 +1,64 @@
+GUIA DE DESPLIEGUE EN UBUNTU SERVER CON APACHE
+
+Este documento describe el procedimiento tecnico para realizar el despliegue de la aplicacion frontend en un entorno de produccion utilizando el servidor web Apache sobre el sistema operativo Ubuntu Server.
+
+1. REQUISITOS DEL SISTEMA
+El servidor debe contar con Ubuntu Server instalado y acceso a internet. Se requiere un usuario con privilegios de administrador (sudo).
+
+2. INSTALACION DEL SERVIDOR WEB
+El administrador debe actualizar los indices de paquetes e instalar el servidor Apache mediante los siguientes comandos:
+sudo apt update
+sudo apt install apache2 -y
+
+3. PREPARACION DE LOS ARCHIVOS DE LA APLICACION
+En el equipo de desarrollo, se debe generar la version de produccion del proyecto. Para esto, el usuario ejecuta el comando:
+npm run build
+Este proceso crea una carpeta denominada "dist" que contiene los archivos estaticos optimizados.
+
+4. TRANSFERENCIA DE ARCHIVOS AL SERVIDOR
+El contenido de la carpeta "dist" debe ser transferido al servidor Ubuntu. Se recomienda utilizar el protocolo SCP o herramientas como FileZilla. La ruta de destino estandar en el servidor es /var/www/html/transporte.
+
+Para crear el directorio y ajustar los permisos, se ejecutan estos comandos en el servidor:
+sudo mkdir -p /var/www/html/transporte
+sudo chown -r $USER:$USER /var/www/html/transporte
+
+5. CONFIGURACION DEL SITIO EN APACHE
+Se debe crear un archivo de configuracion para el sitio. El administrador utiliza un editor de texto como nano:
+sudo nano /etc/apache2/sites-available/transporte.conf
+
+Dentro del archivo, se añade la siguiente estructura:
+<VirtualHost *:80>
+    ServerAdmin webmaster@localhost
+    DocumentRoot /var/www/html/transporte
+    ErrorLog ${APACHE_LOG_DIR}/error.log
+    CustomLog ${APACHE_LOG_DIR}/access.log combined
+
+    <Directory /var/www/html/transporte>
+        Options Indexes FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+</VirtualHost>
+
+6. SOPORTE PARA RUTAS DE REACT (SPA)
+Dado que la aplicacion utiliza React Router, es indispensable habilitar el modulo rewrite de Apache para que todas las peticiones sean redirigidas al archivo index.html.
+
+Se habilita el modulo con el comando:
+sudo a2enmod rewrite
+
+Posteriormente, se debe crear un archivo denominado .htaccess dentro de la carpeta /var/www/html/transporte con el siguiente contenido:
+RewriteEngine On
+RewriteBase /
+RewriteRule ^index\.html$ - [L]
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule . /index.html [L]
+
+7. ACTIVACION DEL SITIO Y REINICIO DE SERVICIOS
+Para finalizar, el administrador deshabilita el sitio por defecto de Apache, activa la nueva configuracion y reinicia el servicio:
+sudo a2dissite 000-default.conf
+sudo a2ensite transporte.conf
+sudo systemctl restart apache2
+
+8. VERIFICACION
+El sistema deberia estar accesible a traves de la direccion IP del servidor desde cualquier navegador web.
