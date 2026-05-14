@@ -50,6 +50,9 @@ class DepartamentalResource extends Resource
                 Tables\Columns\IconColumn::make('activo')->boolean(),
                 Tables\Columns\TextColumn::make('users_count')
                     ->label('Usuarios')->counts('users')->sortable(),
+                Tables\Columns\TextColumn::make('vehiculos_count')
+                    ->label('Vehículos')->counts('vehiculos')->sortable()
+                    ->badge()->color('info'),
                 Tables\Columns\TextColumn::make('created_at')->dateTime()->since()->label('Creado'),
             ])
             ->filters([

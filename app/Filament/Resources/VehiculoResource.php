@@ -83,6 +83,14 @@ class VehiculoResource extends Resource
                     Forms\Components\Toggle::make('activo')
                         ->label('Activo')
                         ->default(true),
+
+                    Forms\Components\Select::make('departamental_id')
+                        ->label('Oficina Departamental')
+                        ->relationship('departamental', 'nombre')
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->helperText('Opcional. Asigna este vehículo a una oficina departamental.'),
                 ])->columns(2),
 
             Forms\Components\Section::make('Marca y Modelo')
@@ -335,6 +343,13 @@ class VehiculoResource extends Resource
                                 ->color('info')
                                 ->icon('heroicon-o-users')
                                 ->formatStateUsing(fn ($state) => $state ? "{$state} personas" : null)
+                                ->size(TextColumnSize::Small)
+                                ->grow(false),
+
+                            Tables\Columns\TextColumn::make('departamental.nombre')
+                                ->badge()
+                                ->color('info')
+                                ->icon('heroicon-o-building-office')
                                 ->size(TextColumnSize::Small)
                                 ->grow(false),
 

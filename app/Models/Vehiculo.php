@@ -48,6 +48,7 @@ class Vehiculo extends Model
         'activo_fijo',
         'fotografia',
         'observacion',
+        'departamental_id',
     ];
 
     protected $casts = [
@@ -141,5 +142,10 @@ class Vehiculo extends Model
     public function estadoCatalogo(): BelongsTo
     {
         return $this->belongsTo(VehEstadoCatalogo::class, 'veh_estado_catalogo_id');
+    }
+
+    public function departamental(): BelongsTo
+    {
+        return $this->belongsTo(Departamental::class, 'departamental_id');
     }
 }

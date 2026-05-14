@@ -15,4 +15,9 @@ class Departamental extends Model
     {
         return $this->hasMany(User::class);
     }
+
+    public function vehiculos()
+    {
+        return $this->hasMany(Vehiculo::class);
+    }
 }
