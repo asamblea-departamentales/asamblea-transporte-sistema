@@ -7,15 +7,21 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
-    {
-        Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
-            $table->unsignedTinyInteger('nivel_combustible')->nullable()->change();
-            $table->json('herramientas_verificadas')->nullable()->after('nivel_combustible');
-        });
+   public function up(): void
+{
+    // 1. Add the new JSON column first
+    Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
+        $table->json('herramientas_verificadas')->nullable()->after('nivel_combustible');
+    });
 
-        $this->migrarDatosExistentes();
-    }
+    // 2. Migrate the data WHILE the column is still a string
+    $this->migrarDatosExistentes();
+
+    // 3. NOW change the column type to integer
+    Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
+        $table->unsignedTinyInteger('nivel_combustible')->nullable()->change();
+    });
+}
 
     public function down(): void
     {
