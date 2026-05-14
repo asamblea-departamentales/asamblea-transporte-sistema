@@ -696,7 +696,6 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       touchZoom: true,
       scrollWheelZoom: true,
       doubleClickZoom: true,
-      tap: true,
     }).setView([13.7942, -88.8965], 9);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
