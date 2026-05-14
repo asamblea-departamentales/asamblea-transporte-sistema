@@ -687,6 +687,12 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
     iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
   });
 
+  // Límites geográficos de El Salvador (con margen)
+  const SV_BOUNDS: L.LatLngBoundsExpression = [
+    [12.97, -90.20], // Suroeste
+    [14.55, -87.60], // Noreste
+  ];
+
   // 1. Inicializar Mapa (Solo una vez)
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
@@ -696,6 +702,9 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       touchZoom: true,
       scrollWheelZoom: true,
       doubleClickZoom: true,
+      maxBounds: SV_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 8,
     }).setView([13.7942, -88.8965], 9);
 
     L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {

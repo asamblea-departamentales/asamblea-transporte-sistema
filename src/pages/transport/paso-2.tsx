@@ -127,14 +127,30 @@ export default function TransportStep2Page() {
     return () => window.removeEventListener("map:click", onMapClick);
   }, []);
 
+  // Límites geográficos de El Salvador (con margen)
+  const SV_BOUNDS: L.LatLngBoundsExpression = [
+    [12.97, -90.20], // Suroeste
+    [14.55, -87.60], // Noreste
+  ];
+
   // Inicializar Mapa
   useEffect(() => {
     if (!mapContainerRef.current || mapRef.current) return;
-    mapRef.current = L.map(mapContainerRef.current, { zoomControl: true, dragging: true, scrollWheelZoom: false })
-      .setView([13.7942, -88.8965], 9);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
+    mapRef.current = L.map(mapContainerRef.current, {
+      zoomControl: true,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      maxBounds: SV_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 8,
+    }).setView([13.7942, -88.8965], 9);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20,
     }).addTo(mapRef.current);
 
     mapRef.current.on("click", (e: L.LeafletMouseEvent) => {
@@ -174,7 +190,7 @@ export default function TransportStep2Page() {
     const withCoords = destinos.filter(d => d.lat && d.lng);
     if (origenCoords && withCoords.length > 0) {
       const pts: L.LatLngExpression[] = [[origenCoords.lat, origenCoords.lng], ...withCoords.map(d => [d.lat!, d.lng!] as L.LatLngExpression)];
-      routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current);
+      routeLayerRef.current = L.polyline(pts, { color: "#3b82f6", weight: 5, opacity: 0.85, dashArray: "8, 8", lineCap: "round" }).addTo(mapRef.current);
     }
     
     if (bounds.length > 0) mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50] });
@@ -262,7 +278,7 @@ export default function TransportStep2Page() {
 
         <div className="p-4 sm:p-6">
           <SectionTitle 
-            label="Detinos de la Ruta"
+            label="Destinos de la Ruta"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9" /></svg>}
           />
 
@@ -301,8 +317,8 @@ export default function TransportStep2Page() {
             label="Vista Previa de Ruta"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
           />
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50">
-            <div ref={mapContainerRef} className="h-[280px] w-full" />
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
+            <div ref={mapContainerRef} className="h-[340px] sm:h-[420px] w-full" />
           </div>
           <p className="mt-3 text-center text-[11px] text-slate-400 italic">
             Puedes hacer clic en el mapa para fijar el origen y los destinos automáticamente.

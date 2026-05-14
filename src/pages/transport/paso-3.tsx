@@ -135,16 +135,32 @@ export default function TransportStep3Page() {
     setLoading(false);
   }, [navigate]);
 
+  // Límites geográficos de El Salvador (con margen)
+  const SV_BOUNDS: L.LatLngBoundsExpression = [
+    [12.97, -90.20], // Suroeste
+    [14.55, -87.60], // Noreste
+  ];
+
   useEffect(() => {
     if (loading) return;
     const mapDiv = document.getElementById("map-resumen");
     if (!mapDiv || mapRef.current) return;
     
-    const map = L.map(mapDiv, { zoomControl: true, dragging: true, scrollWheelZoom: false })
-      .setView([13.7942, -88.8965], 9);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-      maxZoom: 19,
+    const map = L.map(mapDiv, {
+      zoomControl: true,
+      dragging: true,
+      touchZoom: true,
+      scrollWheelZoom: true,
+      doubleClickZoom: true,
+      maxBounds: SV_BOUNDS,
+      maxBoundsViscosity: 1.0,
+      minZoom: 8,
+    }).setView([13.7942, -88.8965], 9);
+
+    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
+      subdomains: 'abcd',
+      maxZoom: 20,
     }).addTo(map);
     mapRef.current = map;
     
@@ -194,11 +210,11 @@ export default function TransportStep3Page() {
         const osrm = await getOSRMRoute(allPoints);
         if (!mapRef.current) return;
         if (osrm?.geometry?.length) {
-          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#0f2548", weight: 5, opacity: 0.85 }).addTo(mapRef.current);
+          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#3b82f6", weight: 6, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(mapRef.current);
           setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin, isReal: true });
         } else {
           const pts: L.LatLngExpression[] = allPoints.map((p) => [p.lat, p.lng]);
-          routeLayerRef.current = L.polyline(pts, { color: "#0f2548", weight: 4, opacity: 0.7, dashArray: "10,10" }).addTo(mapRef.current);
+          routeLayerRef.current = L.polyline(pts, { color: "#94a3b8", weight: 4, opacity: 0.8, dashArray: "8, 8", lineCap: "round" }).addTo(mapRef.current);
           let km = 0, prev = origenCoords;
           destinosCoords.forEach((d) => { km += haversineKm(prev.lat, prev.lng, d.lat, d.lng); prev = d; });
           if (km > 0) setRouteInfo({ distance: km, duration: (km / 45) * 60, isReal: false });
@@ -336,13 +352,33 @@ export default function TransportStep3Page() {
             label="Vista de Mapa"
             icon={<svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" /></svg>}
           />
-          <div className="overflow-hidden rounded-2xl border border-slate-100 bg-slate-50 relative">
-            <div id="map-resumen" className="h-[280px] w-full" />
+          <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 relative shadow-sm">
+            <div id="map-resumen" className="h-[340px] sm:h-[400px] w-full" />
             {routeInfo && (
-              <div className="absolute top-3 right-3 flex items-center gap-2 rounded-lg bg-white/90 px-3 py-1.5 shadow-sm backdrop-blur-sm ring-1 ring-black/5">
-                <span className="text-[11px] font-black text-slate-700">{routeInfo.distance.toFixed(1)} km</span>
-                <div className="h-3 w-[1px] bg-slate-200" />
-                <span className="text-[11px] font-black text-slate-700">{routeInfo.duration.toFixed(0)} min</span>
+              <div className="absolute bottom-4 left-4 right-4 z-[400] flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/90 px-5 py-3.5 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl ring-1 ring-white/50 sm:left-auto sm:right-4 sm:w-auto sm:justify-start transition-all hover:bg-white/95">
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">Distancia</span>
+                    <span className="mt-0.5 text-sm font-extrabold text-slate-900 tracking-tight">{routeInfo.distance.toFixed(1)} <span className="text-[10px] font-bold text-slate-400">km</span></span>
+                  </div>
+                </div>
+                <div className="h-8 w-[1px] bg-slate-200/60 hidden sm:block" />
+                <div className="flex items-center gap-2.5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-[9px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo est.</span>
+                    <span className="mt-0.5 text-sm font-extrabold text-slate-900 tracking-tight">{routeInfo.duration.toFixed(0)} <span className="text-[10px] font-bold text-slate-400">min</span></span>
+                  </div>
+                </div>
               </div>
             )}
           </div>
