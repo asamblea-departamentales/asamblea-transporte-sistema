@@ -108,6 +108,7 @@ class RecepcionEntregaVehiculoResource extends Resource
                     Forms\Components\CheckboxList::make('herramientas_verificadas')
                         ->label('Herramientas y accesorios verificados')
                         ->options(\App\Models\RecepcionEntregaVehiculo::opcionesHerramientas())
+                        ->default(array_keys(\App\Models\RecepcionEntregaVehiculo::opcionesHerramientas()))
                         ->columns(3)
                         ->bulkToggleable()
                         ->gridDirection('column')
@@ -204,7 +205,14 @@ class RecepcionEntregaVehiculoResource extends Resource
 
                 Tables\Columns\TextColumn::make('herramientas_verificadas')
                     ->label('Herramientas')
-                    ->formatStateUsing(fn ($state) => is_array($state) ? count($state).'/9' : '—')
+                    ->formatStateUsing(function ($state) {
+                        if (! is_array($state) || empty($state)) {
+                            return '—';
+                        }
+                        $opciones = \App\Models\RecepcionEntregaVehiculo::opcionesHerramientas();
+
+                        return collect($state)->map(fn ($k) => $opciones[$k] ?? $k)->implode(', ');
+                    })
                     ->badge()
                     ->color(fn ($state) => is_array($state) && count($state) === 9 ? 'success' : 'warning'),
 

@@ -7,7 +7,7 @@ use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Models\TicketService;
+use App\Domain\Solicitudes\Services\TicketService;
 
 class SolicitudTransporte extends Model
 {
