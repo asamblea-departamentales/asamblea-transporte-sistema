@@ -12,11 +12,17 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
-            // Fix unique constraint: de vehiculo_id → solicitud_combustible_id
+            // 1. Eliminar la clave foránea que amarra al índice original
+            // Nota: Si el nombre automático es diferente, usa: 'asignaciones_combustibles_lote_detalles_vehiculo_id_foreign'
+            $table->dropForeign(['vehiculo_id']);
+
+            // 2. Ahora ya puedes borrar el índice único sin bloqueos de MySQL
             $table->dropUnique('lote_detalle_vehiculo_unique');
+
+            // 3. Crear el nuevo índice único
             $table->unique(['lote_id', 'solicitud_combustible_id'], 'lote_detalle_solicitud_unique');
 
-            // Campos operativos
+            // Campos operativos nuevos
             $table->foreignId('asignado_por')->nullable()
                 ->after('solicitud_combustible_id')
                 ->constrained('users')->nullOnDelete();
@@ -41,11 +47,18 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
+            // Eliminar llaves foráneas creadas en el up()
             $table->dropForeign(['asignado_por']);
             $table->dropForeign(['tipo_combustible_id']);
+            
+            // Revertir el índice único nuevo
             $table->dropUnique('lote_detalle_solicitud_unique');
-            $table->unique(['lote_id', 'vehiculo_id'], 'lote_detalle_vehiculo_unique');
 
+            // Revertir el índice único original y re-enlazar su FK
+            $table->unique(['lote_id', 'vehiculo_id'], 'lote_detalle_vehiculo_unique');
+            $table->foreign('vehiculo_id')->references('id')->on('vehiculos'); // Ajusta tu tabla destino si no es 'vehiculos'
+
+            // Eliminar las columnas creadas
             $table->dropColumn([
                 'asignado_por', 'fecha_asignacion', 'numero_serie',
                 'numero_contrato', 'tipo_combustible_id', 'cantidad_galones',
