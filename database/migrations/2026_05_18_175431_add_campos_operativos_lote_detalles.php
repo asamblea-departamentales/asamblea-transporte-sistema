@@ -10,10 +10,10 @@ return new class extends Migration
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
             
-            // 1. Eliminar la FK que está amarrada al índice único viejo
+            // 1. Eliminar la FK amarrada al índice único viejo
             $table->dropForeign('asignaciones_combustibles_lote_detalles_lote_id_foreign');
 
-            // 2. Ahora MySQL te dejará borrar el índice único viejo libremente
+            // 2. Borrar índice único viejo
             $table->dropUnique('lote_detalle_vehiculo_unique');
 
             // 3. Crear el nuevo índice único
@@ -22,17 +22,19 @@ return new class extends Migration
                 'lote_detalle_solicitud_unique'
             );
 
-            // 4. Volver a crear la FK de lote_id (vuelve a la normalidad con cascada)
+            // 4. Volver a crear la FK de lote_id
             $table->foreign('lote_id')
                 ->references('id')
                 ->on('asignaciones_combustibles_lotes')
                 ->onDelete('cascade');
 
             // --- Campos operativos adicionales ---
+            
+            // Nombre personalizado para evitar el límite de 64 caracteres
             $table->foreignId('asignado_por')
                 ->nullable()
                 ->after('solicitud_combustible_id')
-                ->constrained('users')
+                ->constrained('users', indexName: 'lote_detalles_asignado_por_fk')
                 ->nullOnDelete();
 
             $table->timestamp('fecha_asignacion')
@@ -47,10 +49,11 @@ return new class extends Migration
                 ->nullable()
                 ->after('numero_serie');
 
+            // Solución al error: Nombre manual corto de la FK como segundo parámetro en constrained()
             $table->foreignId('tipo_combustible_id')
                 ->nullable()
                 ->after('numero_contrato')
-                ->constrained('tipo_combustibles')
+                ->constrained('tipo_combustibles', indexName: 'lote_detalles_tipo_comb_fk')
                 ->nullOnDelete();
 
             $table->decimal('cantidad_galones', 10, 2)
@@ -71,10 +74,10 @@ return new class extends Migration
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
 
-            $table->dropForeign(['asignado_por']);
-            $table->dropForeign(['tipo_combustible_id']);
+            // Usamos los nombres manuales para eliminarlas en el down
+            $table->dropForeign('lote_detalles_asignado_por_fk');
+            $table->dropForeign('lote_detalles_tipo_comb_fk');
             
-            // El proceso inverso para el método down
             $table->dropForeign('asignaciones_combustibles_lote_detalles_lote_id_foreign');
             $table->dropUnique('lote_detalle_solicitud_unique');
 
