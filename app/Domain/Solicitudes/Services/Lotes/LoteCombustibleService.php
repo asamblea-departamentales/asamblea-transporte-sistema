@@ -3,6 +3,7 @@
 namespace App\Domain\Solicitudes\Services\Lotes;
 
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\SolicitudCombustible;
@@ -33,13 +34,13 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::CREATE,
-                modelo: 'AsignacionCombustibleLote',
-                datos: [
-                    'lote_id' => $lote->id,
-                    'fecha' => $lote->fecha,
-            ]
-    );
+                    accion: AccionBitacoraEnum::CREAR, // <-- Corregido (Antes CREATE)
+                    modelo: 'AsignacionCombustibleLote',
+                    datos: [
+                        'lote_id' => $lote->id,
+                        'fecha' => $lote->fecha,
+                    ]
+                );
 
             return $lote;
         });
@@ -97,7 +98,7 @@ class LoteCombustibleService
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // IMPORTAR SOLICITUDES DEL DÍA (nuevo)
+    // IMPORTAR SOLICITUDES DEL DÍA
     // ─────────────────────────────────────────────────────────────────────────
 
     /**
@@ -123,37 +124,37 @@ class LoteCombustibleService
 
             $solicitudes = SolicitudCombustible::query()
                 ->whereDate('fecha_solicitud', $lote->fecha)
-                ->where('estado', 'aprobada')          // ← ajusta si tu enum usa otro valor
+                ->where('estado', 'aprobada')
                 ->whereNotNull('numero_ticket')
                 ->whereNotNull('vehiculo_id')
                 ->whereNotIn('id', $yaImportados)
                 ->with('vehiculo')
                 ->get();
 
-           $imported = 0;
-$skipped  = 0;
+            $imported = 0;
+            $skipped  = 0;
 
-if ($solicitudes->isEmpty()) {
+            if ($solicitudes->isEmpty()) {
 
-    Log::info('Importación de solicitudes: ninguna pendiente', [
-        'lote_id' => $loteId,
-        'fecha'   => $lote->fecha,
-    ]);
+                Log::info('Importación de solicitudes: ninguna pendiente', [
+                    'lote_id' => $loteId,
+                    'fecha'   => $lote->fecha,
+                ]);
 
-    app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
-        ->registrar(
-            accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
-            modelo: 'AsignacionCombustibleLote',
-            datos: [
-                'lote_id' => $lote->id,
-                'accion' => 'importar_solicitudes',
-                'importadas' => $imported,
-                'omitidas' => $skipped,
-            ]
-        );
+                app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+                    ->registrar(
+                        accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
+                        modelo: 'AsignacionCombustibleLote',
+                        datos: [
+                            'lote_id' => $lote->id,
+                            'accion' => 'importar_solicitudes_vacio',
+                            'importadas' => $imported,
+                            'omitidas' => $skipped,
+                        ]
+                    );
 
-    return ['imported' => 0, 'skipped' => 0];
-}
+                return ['imported' => 0, 'skipped' => 0];
+            }
 
             foreach ($solicitudes as $solicitud) {
                 // Seguridad extra: evitar duplicado por vehiculo en el mismo lote
@@ -184,18 +185,19 @@ if ($solicitudes->isEmpty()) {
                 'skipped'    => $skipped,
                 'importado_por' => $userId,
             ]);
+
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
+                    accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
-                            'lote_id' => $lote->id,
-                            'accion' => 'importar_solicitudes',
-                            'importadas' => $imported,
-                            'omitidas' => $skipped,
-                            'fecha_lote' => $lote->fecha,
-                        ]
-    );
+                        'lote_id' => $lote->id,
+                        'accion' => 'importar_solicitudes',
+                        'importadas' => $imported,
+                        'omitidas' => $skipped,
+                        'fecha_lote' => $lote->fecha,
+                    ]
+                );
 
             return ['imported' => $imported, 'skipped' => $skipped];
         });
@@ -236,22 +238,22 @@ if ($solicitudes->isEmpty()) {
             ]);
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
-    ->registrar(
-        accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
-        modelo: 'AsignacionCombustibleLote',
-        datos: [
-            'lote_id' => $lote->id,
-            'estado' => 'FINALIZADO',
-            'monto_total' => $lote->total_monto,
-        ]
-    );
+                ->registrar(
+                    accion: AccionBitacoraEnum::COMPLETAR, // <-- Adaptado a tu enum
+                    modelo: 'AsignacionCombustibleLote',
+                    datos: [
+                        'lote_id' => $lote->id,
+                        'estado' => 'FINALIZADO',
+                        'monto_total' => $lote->total_monto,
+                    ]
+                );
 
             return $lote;
         });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // INICIAR ASIGNACIÓN (FINALIZADO → EN_PROCESO) — nuevo
+    // INICIAR ASIGNACIÓN (FINALIZADO → EN_PROCESO)
     // ─────────────────────────────────────────────────────────────────────────
 
     public function iniciarAsignacion(int $loteId, int $userId): AsignacionCombustibleLote
@@ -272,21 +274,21 @@ if ($solicitudes->isEmpty()) {
             ]);
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
-    ->registrar(
-        accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
-        modelo: 'AsignacionCombustibleLote',
-        datos: [
-            'lote_id' => $lote->id,
-            'estado' => 'EN_PROCESO',
-        ]
-    );
+                ->registrar(
+                    accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
+                    modelo: 'AsignacionCombustibleLote',
+                    datos: [
+                        'lote_id' => $lote->id,
+                        'estado' => 'EN_PROCESO',
+                    ]
+                );
 
             return $lote;
         });
     }
 
     // ─────────────────────────────────────────────────────────────────────────
-    // COMPLETAR LOTE (EN_PROCESO → COMPLETADO) — nuevo
+    // COMPLETAR LOTE (EN_PROCESO → COMPLETADO)
     // ─────────────────────────────────────────────────────────────────────────
 
     public function completarLote(int $loteId, int $userId): AsignacionCombustibleLote
@@ -317,15 +319,15 @@ if ($solicitudes->isEmpty()) {
             ]);
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
-    ->registrar(
-        accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
-        modelo: 'AsignacionCombustibleLote',
-        datos: [
-            'lote_id' => $lote->id,
-            'estado' => 'COMPLETADO',
-            'total_galones' => $lote->total_galones,
-        ]
-    );
+                ->registrar(
+                    accion: AccionBitacoraEnum::COMPLETAR, // <-- Adaptado a tu enum
+                    modelo: 'AsignacionCombustibleLote',
+                    datos: [
+                        'lote_id' => $lote->id,
+                        'estado' => 'COMPLETADO',
+                        'total_galones' => $lote->total_galones,
+                    ]
+                );
 
             return $lote;
         });
