@@ -8,29 +8,47 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // 1. Limpieza segura del índice viejo si aún existiera
+        Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
+            $sm = Schema::getManager();
+            $doctrineTable = $sm->introspectTable('asignaciones_combustibles_lote_detalles');
+            
+            // Si la FK todavía existe de milagro, la borramos
+            if ($doctrineTable->hasForeignKey('asignaciones_combustibles_lote_detalles_lote_id_foreign')) {
+                $table->dropForeign('asignaciones_combustibles_lote_detalles_lote_id_foreign');
+            }
+            
+            // Si el índice único todavía existe, lo borramos
+            if ($doctrineTable->hasIndex('lote_detalle_vehiculo_unique')) {
+                $table->dropUnique('lote_detalle_vehiculo_unique');
+            }
+        });
+
+        // 2. Ejecutar el resto de la migración con normalidad
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
             
-            // 1. Eliminar la FK amarrada al índice único viejo
-            $table->dropForeign('asignaciones_combustibles_lote_detalles_lote_id_foreign');
+            // Crear el nuevo índice único (solo si no se creó antes)
+            // Para ir sobre seguro usando MySQL nativo sin fallar si ya existe:
+            // Laravel tirará error si ya existe, así que nos aseguramos de crearlo limpiamente:
+            $sm = Schema::getManager();
+            $doctrineTable = $sm->introspectTable('asignaciones_combustibles_lote_detalles');
 
-            // 2. Borrar índice único viejo
-            $table->dropUnique('lote_detalle_vehiculo_unique');
+            if (!$doctrineTable->hasIndex('lote_detalle_solicitud_unique')) {
+                $table->unique(
+                    ['lote_id', 'solicitud_combustible_id'],
+                    'lote_detalle_solicitud_unique'
+                );
+            }
 
-            // 3. Crear el nuevo índice único
-            $table->unique(
-                ['lote_id', 'solicitud_combustible_id'],
-                'lote_detalle_solicitud_unique'
-            );
-
-            // 4. Volver a crear la FK de lote_id
-            $table->foreign('lote_id')
-                ->references('id')
-                ->on('asignaciones_combustibles_lotes')
-                ->onDelete('cascade');
+            // Volver a vincular la FK de lote_id si se había borrado
+            if (!$doctrineTable->hasForeignKey('asignaciones_combustibles_lote_detalles_lote_id_foreign')) {
+                $table->foreign('lote_id')
+                    ->references('id')
+                    ->on('asignaciones_combustibles_lotes')
+                    ->onDelete('cascade');
+            }
 
             // --- Campos operativos adicionales ---
-            
-            // Nombre personalizado para evitar el límite de 64 caracteres
             $table->foreignId('asignado_por')
                 ->nullable()
                 ->after('solicitud_combustible_id')
@@ -49,7 +67,6 @@ return new class extends Migration
                 ->nullable()
                 ->after('numero_serie');
 
-            // Solución al error: Nombre manual corto de la FK como segundo parámetro en constrained()
             $table->foreignId('tipo_combustible_id')
                 ->nullable()
                 ->after('numero_contrato')
@@ -73,8 +90,6 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
-
-            // Usamos los nombres manuales para eliminarlas en el down
             $table->dropForeign('lote_detalles_asignado_por_fk');
             $table->dropForeign('lote_detalles_tipo_comb_fk');
             
