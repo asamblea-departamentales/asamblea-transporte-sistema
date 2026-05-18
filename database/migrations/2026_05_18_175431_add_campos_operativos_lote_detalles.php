@@ -6,33 +6,12 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    /**
-     * Run the migrations.
-     */
     public function up(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
 
-            // ─────────────────────────────────────────────────────────────
-            // FIX UNIQUE CONSTRAINT
-            // Antes:
-            // unique(lote_id, vehiculo_id)
-            //
-            // Nuevo:
-            // unique(lote_id, solicitud_combustible_id)
-            // ─────────────────────────────────────────────────────────────
-
-            // eliminar FK que usa el índice actual
-            $table->dropForeign(['vehiculo_id']);
-
-            // eliminar índice unique viejo
+            // eliminar unique viejo
             $table->dropUnique('lote_detalle_vehiculo_unique');
-
-            // restaurar FK
-            $table->foreign('vehiculo_id')
-                ->references('id')
-                ->on('vehiculos')
-                ->cascadeOnDelete();
 
             // nuevo unique
             $table->unique(
@@ -40,10 +19,7 @@ return new class extends Migration
                 'lote_detalle_solicitud_unique'
             );
 
-            // ─────────────────────────────────────────────────────────────
-            // CAMPOS OPERATIVOS
-            // ─────────────────────────────────────────────────────────────
-
+            // Campos operativos
             $table->foreignId('asignado_por')
                 ->nullable()
                 ->after('solicitud_combustible_id')
@@ -82,45 +58,19 @@ return new class extends Migration
         });
     }
 
-    /**
-     * Reverse the migrations.
-     */
     public function down(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
 
-            // ─────────────────────────────────────────────────────────────
-            // ELIMINAR FOREIGN KEYS NUEVAS
-            // ─────────────────────────────────────────────────────────────
-
             $table->dropForeign(['asignado_por']);
             $table->dropForeign(['tipo_combustible_id']);
 
-            // ─────────────────────────────────────────────────────────────
-            // REVERTIR UNIQUE
-            // ─────────────────────────────────────────────────────────────
-
-            // eliminar FK antes de restaurar índice anterior
-            $table->dropForeign(['vehiculo_id']);
-
-            // eliminar unique nuevo
             $table->dropUnique('lote_detalle_solicitud_unique');
 
-            // restaurar unique anterior
             $table->unique(
                 ['lote_id', 'vehiculo_id'],
                 'lote_detalle_vehiculo_unique'
             );
-
-            // restaurar FK
-            $table->foreign('vehiculo_id')
-                ->references('id')
-                ->on('vehiculos')
-                ->cascadeOnDelete();
-
-            // ─────────────────────────────────────────────────────────────
-            // ELIMINAR CAMPOS OPERATIVOS
-            // ─────────────────────────────────────────────────────────────
 
             $table->dropColumn([
                 'asignado_por',
