@@ -34,7 +34,7 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: AccionBitacoraEnum::CREAR, // <-- Corregido (Antes CREATE)
+                    accion: AccionBitacoraEnum::CREAR,
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
                         'lote_id' => $lote->id,
@@ -125,7 +125,7 @@ class LoteCombustibleService
             $solicitudes = SolicitudCombustible::query()
                 ->whereDate('fecha_solicitud', $lote->fecha)
                 ->where('estado', 'aprobada')
-                ->whereNotNull('numero_ticket')
+                ->whereNotNull('ticket') // <-- Cambiado de numero_ticket a ticket
                 ->whereNotNull('vehiculo_id')
                 ->whereNotIn('id', $yaImportados)
                 ->with('vehiculo')
@@ -143,7 +143,7 @@ class LoteCombustibleService
 
                 app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                     ->registrar(
-                        accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
+                        accion: AccionBitacoraEnum::ASIGNAR,
                         modelo: 'AsignacionCombustibleLote',
                         datos: [
                             'lote_id' => $lote->id,
@@ -171,7 +171,7 @@ class LoteCombustibleService
                     'vehiculo_id'              => $solicitud->vehiculo_id,
                     'solicitud_combustible_id' => $solicitud->id,
                     'placa_cache'              => $solicitud->vehiculo->placa ?? '',
-                    'numero_ticket'            => $solicitud->numero_ticket,
+                    'numero_ticket'            => $solicitud->ticket, // <-- Mapeado de ticket origen a numero_ticket destino
                     'monto_asignado'           => 0,
                     'estado_asignacion'        => 'pendiente',
                 ]);
@@ -188,7 +188,7 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
+                    accion: AccionBitacoraEnum::ASIGNAR,
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
                         'lote_id' => $lote->id,
@@ -239,7 +239,7 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: AccionBitacoraEnum::COMPLETAR, // <-- Adaptado a tu enum
+                    accion: AccionBitacoraEnum::COMPLETAR,
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
                         'lote_id' => $lote->id,
@@ -275,7 +275,7 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: AccionBitacoraEnum::ASIGNAR, // <-- Adaptado a tu enum
+                    accion: AccionBitacoraEnum::ASIGNAR,
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
                         'lote_id' => $lote->id,
@@ -320,7 +320,7 @@ class LoteCombustibleService
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
                 ->registrar(
-                    accion: AccionBitacoraEnum::COMPLETAR, // <-- Adaptado a tu enum
+                    accion: AccionBitacoraEnum::COMPLETAR,
                     modelo: 'AsignacionCombustibleLote',
                     datos: [
                         'lote_id' => $lote->id,
