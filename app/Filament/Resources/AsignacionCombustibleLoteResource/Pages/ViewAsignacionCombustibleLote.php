@@ -24,6 +24,57 @@ class ViewAsignacionCombustibleLote extends ViewRecord
 
             Actions\EditAction::make()
                 ->visible(fn ($record) => $record->estado === EstadoLoteEnum::BORRADOR),
+
+            //NUEVO: Accion para iniciar asignacion operativa
+            Actions\Action::make('iniciarAsignacion')
+    ->label('Iniciar Asignación')
+    ->icon('heroicon-o-play')
+    ->color('warning')
+    ->requiresConfirmation()
+    ->modalHeading('Iniciar asignación operativa')
+    ->modalDescription(
+        'El lote pasará a EN PROCESO y el personal operativo podrá registrar cargas.'
+    )
+    ->action(function ($record) {
+
+        app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)
+            ->iniciarAsignacion($record->id, auth()->id());
+
+        return redirect(
+            $this->getResource()::getUrl('view', ['record' => $record])
+        );
+    })
+    ->visible(
+        fn ($record) =>
+            $record->estado === EstadoLoteEnum::FINALIZADO
+            && auth()->user()->hasAnyRole([
+                'operativo',
+                'admin',
+                'super_admin',
+            ])
+    ),    
+            //NUEVO: Accion para completar lote con montos ya asignados  
+            Actions\Action::make('completarLote')
+                ->label('Completar Lote')
+                ->icon('heroicon-o-check-badge')
+                ->color('success')
+                ->requiresConfirmation()
+                ->modalHeading('Completar lote')
+                ->modalDescription('El lote será marcado como COMPLETADO y ya no podrá modificarse.')
+                ->action(function ($record) {
+
+                app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)
+                ->completarLote($record->id, auth()->id());
+
+            return redirect(
+                $this->getResource()::getUrl('view', ['record' => $record])
+            );
+        })
+            ->visible(
+                fn ($record) =>
+                $record->estado === EstadoLoteEnum::EN_PROCESO
+                && auth()->user()->hasAnyRole(['operativo', 'admin', 'super_admin'])
+            ),  
         ];
     }
 
@@ -42,13 +93,10 @@ class ViewAsignacionCombustibleLote extends ViewRecord
                         ->label('Monto Total Asignado')
                         ->money('USD', true),
                     Infolists\Components\TextEntry::make('estado')
-                        ->label('Estado del Lote')
-                        ->badge()
-                        ->color(fn (EstadoLoteEnum $state) => match ($state) {
-                            EstadoLoteEnum::BORRADOR => 'warning',
-                            EstadoLoteEnum::FINALIZADO => 'success',
-                        })
-                        ->formatStateUsing(fn (EstadoLoteEnum $state) => ucfirst($state->value)),
+    ->label('Estado del Lote')
+    ->badge()
+    ->color(fn (EstadoLoteEnum $state) => $state->color())
+    ->formatStateUsing(fn (EstadoLoteEnum $state) => $state->label()),
                 ]),
 
                 Infolists\Components\Section::make('Observaciones')

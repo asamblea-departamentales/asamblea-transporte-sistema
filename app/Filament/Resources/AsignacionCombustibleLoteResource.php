@@ -35,17 +35,31 @@ class AsignacionCombustibleLoteResource extends Resource
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe']);
-    }
+        return auth()->user()->hasAnyRole([
+            'admin',
+            'super_admin',
+            'jefe',
+        ]);
+    }   
 
     public static function canEdit(Model $record): bool
     {
-        return $record->estado === EstadoLoteEnum::BORRADOR && auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe']);
+        return $record->estado === EstadoLoteEnum::BORRADOR
+            && auth()->user()->hasAnyRole([
+                'admin',
+                'super_admin',
+                'jefe',
+            ]);
     }
 
     public static function canDelete(Model $record): bool
     {
-        return $record->estado === EstadoLoteEnum::BORRADOR && auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe']);
+        return $record->estado === EstadoLoteEnum::BORRADOR
+            && auth()->user()->hasAnyRole([
+                'admin',
+                'super_admin',
+                'jefe',
+            ]);
     }
 
     public static function form(Form $form): Form
@@ -83,14 +97,11 @@ class AsignacionCombustibleLoteResource extends Resource
                     ->label('Monto Total Asignado')
                     ->money('USD', true)
                     ->sortable(),
-                Tables\Columns\TextColumn::make('estado')
+               Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
-                    ->color(fn (EstadoLoteEnum $state) => match ($state) {
-                        EstadoLoteEnum::BORRADOR => 'warning',
-                        EstadoLoteEnum::FINALIZADO => 'success',
-                    })
-                    ->formatStateUsing(fn (EstadoLoteEnum $state) => ucfirst($state->value)),
+                    ->color(fn (EstadoLoteEnum $state) => $state->color())
+                    ->formatStateUsing(fn (EstadoLoteEnum $state) => $state->label()),
 
                 Tables\Columns\TextColumn::make('creador.name')
                     ->label('Creado Por')
@@ -129,9 +140,14 @@ class AsignacionCombustibleLoteResource extends Resource
     {
         return [
             'index' => Pages\ListAsignacionCombustibleLotes::route('/'),
+
+            'dashboard' => Pages\DashboardLotesCombustible::route('/dashboard'),
+
             'create' => Pages\CreateAsignacionCombustibleLote::route('/create'),
+
             'view' => Pages\ViewAsignacionCombustibleLote::route('/{record}'),
+
             'edit' => Pages\EditAsignacionCombustibleLote::route('/{record}/edit'),
         ];
-    }
+    }  
 }
