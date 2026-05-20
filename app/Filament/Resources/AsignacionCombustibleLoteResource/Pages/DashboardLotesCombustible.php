@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\AsignacionCombustibleLoteResource\Pages;
 
 use App\Filament\Resources\AsignacionCombustibleLoteResource;
+use App\Filament\Resources\SolicitudCombustibleResource\Widgets\SolicitudesPorPrioridadStats;
 use Filament\Resources\Pages\Page;
 
 class DashboardLotesCombustible extends Page
@@ -25,6 +26,7 @@ class DashboardLotesCombustible extends Page
             \App\Filament\Resources\AsignacionCombustibleLoteResource\Widgets\LotesStatsOverview::class,
             \App\Filament\Resources\AsignacionCombustibleLoteResource\Widgets\EstadoOperativoChart::class,
             \App\Filament\Resources\AsignacionCombustibleLoteResource\Widgets\UltimosLotesTable::class,
+            SolicitudesPorPrioridadStats::class, // Reutiliza el widget de solicitudes por prioridad del recurso de solicitudes
         ];
     }
 }

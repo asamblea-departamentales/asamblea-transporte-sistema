@@ -500,3 +500,10 @@ Route::get('/reportes/solicitudes-combustible/csv', function (Request $request) 
     );
 
 })->name('reportes.solicitudes-combustible.csv');
+
+// --- AGREGAR ESTAS DOS ---
+Route::get('/reportes/lote-combustible/{lote}/excel', [ReporteLoteCombustibleController::class, 'excel'])
+    ->name('reportes.lote-combustible.excel');
+ 
+Route::get('/reportes/lote-combustible/{lote}/csv', [ReporteLoteCombustibleController::class, 'csv'])
+    ->name('reportes.lote-combustible.csv');

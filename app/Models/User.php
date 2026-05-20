@@ -12,6 +12,7 @@ use Illuminate\Testing\Fluent\Concerns\Has;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Motorista;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -86,4 +87,34 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasOne(Motorista::class);
     }
 
+    //Relacion con grupo de prioridades
+    public function grupo(): BelongsTo
+    {
+        return $this->belongsTo(Grupo::class);
+    }
+
+    // -------------------------------------------------------
+    // Helpers para lo de prioridades
+    // -------------------------------------------------------
+     public function getPriorityLabel(): string
+    {
+        return $this->grupo?->label() ?? 'Baja';
+    }
+
+    public function getPriorityColor(): string
+    {
+        return $this->grupo?->color() ?? 'gray';
+    }
+
+    public function getPriorityOrder(): int
+    {
+        return $this->grupo?->orden ?? 999;
+    }
+
+    public function getPriorityEnum()
+    {
+        return $this->grupo?->nivelEnum() ?? \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::BAJA;
+    }
 }
+
+

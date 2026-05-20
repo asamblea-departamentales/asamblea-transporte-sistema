@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domain\Solicitudes\Services\TicketService;
+use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 
 class SolicitudTransporte extends Model
 {
@@ -26,6 +27,7 @@ class SolicitudTransporte extends Model
         'fecha_retorno',
         'cantidad_personas',
         'prioridad',
+        'prioridad_grupo',
         'estado',
         'decidido_por',
         'decidido_en',
@@ -49,6 +51,8 @@ class SolicitudTransporte extends Model
         'destino_lng',
         'destino_adicional_lat',
         'destino_adicional_lng',
+        //Casts para grupo y prioridad
+        'prioridad_grupo' => NivelPrioridadEnum::class,
     ];
 
     protected $casts = [
@@ -152,5 +156,11 @@ class SolicitudTransporte extends Model
     public function incidencias()
     {
         return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+    }
+
+    //Relacion con Grupo de prioridades
+    public function grupo()
+    {
+        return $this->belongsTo(Grupo::class, 'prioridad_grupo');
     }
 }

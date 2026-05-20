@@ -348,7 +348,7 @@ class SolicitudTransporteResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('fecha_salida', 'asc')
+            ->defaultSort('prioridad_orden', 'asc')
             ->contentGrid(['default' => 1, 'md' => 2, 'xl' => 3])
             ->recordUrl(fn (SolicitudTransporte $record) => static::getUrl('view', ['record' => $record]))
             ->columns([
@@ -378,6 +378,13 @@ class SolicitudTransporteResource extends Resource
                     ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('prioridad_grupo')
+                    ->label('Prioridad Grupo')
+                    ->badge()
+                    ->color(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->color() ?? 'gray')
+                    ->formatStateUsing(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->label() ?? 'Baja')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('prioridad')
                     ->label('Prioridad')
@@ -465,6 +472,15 @@ class SolicitudTransporteResource extends Resource
                         PrioridadSolicitudEnum::BAJA->value => 'BAJA',
                         PrioridadSolicitudEnum::MEDIA->value => 'MEDIA',
                         PrioridadSolicitudEnum::ALTA->value => 'ALTA',
+                    ]),
+
+                Tables\Filters\SelectFilter::make('prioridad_grupo')
+                    ->label('Nivel de prioridad (Grupo)')
+                    ->options([
+                        'critica' => 'Crítica',
+                        'alta'    => 'Alta',
+                        'media'   => 'Media',
+                        'baja'    => 'Baja',
                     ]),
 
                 Tables\Filters\SelectFilter::make('unidad_solicitante_id')

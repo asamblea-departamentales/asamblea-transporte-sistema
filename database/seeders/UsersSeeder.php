@@ -5,12 +5,22 @@ namespace Database\Seeders;
 use App\Models\UnidadSolicitante;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash; // Importante para el password
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Schema; // Importamos Schema
 
 class UsersSeeder extends Seeder
 {
     public function run(): void
     {
+        // 1. Desactivamos llaves foráneas para poder limpiar la tabla
+        Schema::disableForeignKeyConstraints();
+        
+        // 2. Limpiamos la tabla de usuarios antes de insertar
+        User::truncate(); 
+        
+        // 3. Reactivamos las restricciones inmediatamente
+        Schema::enableForeignKeyConstraints();
+
         // Buscamos la unidad (asegúrate que el seeder de unidades corra antes)
         $seg = UnidadSolicitante::where('siglas', 'SEG')->first();
         $unidadId = $seg ? $seg->id : null;
@@ -19,7 +29,7 @@ class UsersSeeder extends Seeder
         $jefe = User::create([
             'name' => 'Jefe autorizador',
             'email' => 'jefe.transporte@asamblea.gob.sv',
-            'password' => Hash::make('boss123'), // SIEMPRE con Hash::make
+            'password' => Hash::make('boss123'),
             'unidad_solicitante_id' => $unidadId,
         ]);
         $jefe->assignRole('jefe');

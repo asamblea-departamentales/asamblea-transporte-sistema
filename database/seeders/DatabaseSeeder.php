@@ -19,7 +19,8 @@ class DatabaseSeeder extends Seeder
             VehCatalogosSeeder::class, // 5. Crea los catálogos de vehículos
             VehiculosSeeder::class,  // 6. Crea vehículos de prueba
             MotoristaSeeder::class,  // 7. Crea motoristas de prueba
-            AsignacionVehiculoMotoristaSeeder::class, // 8. Crea asign
+            AsignacionVehiculoMotoristaSeeder::class, // 8. Crea asignacion
+            GruposSeeder::class,     // 9. Crea los grupos de prioridades
         ]);
     }
 }

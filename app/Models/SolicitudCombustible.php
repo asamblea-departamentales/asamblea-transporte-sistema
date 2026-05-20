@@ -6,6 +6,7 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 
 class SolicitudCombustible extends Model
 {
@@ -31,6 +32,7 @@ class SolicitudCombustible extends Model
         'comprobantes',
         'estado',
         'prioridad',
+        'prioridad_grupo',
         'aprobador_id',
         'fecha_aprobacion',
         'motivo_rechazo',
@@ -63,6 +65,9 @@ class SolicitudCombustible extends Model
         'valor_unitario_vale' => 'decimal:2',
         'monto_asignado' => 'decimal:2',
         'fecha_asignacion' => 'datetime',
+
+        // Casts para el grupo y prioridad (si se agregan)
+        'prioridad_grupo' => NivelPrioridadEnum::class,
     ];
 
     // ── Booted ──────────────────────────────────────────────
@@ -134,6 +139,12 @@ class SolicitudCombustible extends Model
     public function incidencias()
     {
         return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
+    }
+
+    //Relacion con grupo de prioridades
+    public function grupo()
+    {
+        return $this->belongsTo(Grupo::class, 'prioridad_grupo');
     }
 
     // ── Helpers ─────────────────────────────────────────────

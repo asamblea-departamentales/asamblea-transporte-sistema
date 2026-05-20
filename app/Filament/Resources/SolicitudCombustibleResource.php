@@ -367,10 +367,17 @@ class SolicitudCombustibleResource extends Resource
     public static function table(Table $table): Table
     {
         return $table
-            ->defaultSort('created_at', 'desc')
+            ->defaultSort('prioridad_orden', 'asc')
             ->striped()
             ->recordUrl(fn (SolicitudCombustible $record) => static::getUrl('view', ['record' => $record]))
             ->columns([
+
+                Tables\Columns\TextColumn::make('prioridad_grupo')
+                    ->label('Prioridad')
+                    ->badge()
+                    ->color(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->color() ?? 'gray')
+                    ->formatStateUsing(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->label() ?? 'Baja')
+                    ->sortable(),
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Solicitud')
                     ->searchable()
@@ -497,6 +504,15 @@ class SolicitudCombustibleResource extends Resource
                         collect(EstadoSolicitudEnum::cases())
                             ->mapWithKeys(fn ($e) => [$e->value => ucfirst(str_replace('_', ' ', $e->value))])
                     ),
+
+                Tables\Filters\SelectFilter::make('prioridad_grupo')
+                    ->label('Nivel de prioridad')
+                    ->options([
+                        'critica' => 'Crítica',
+                        'alta'    => 'Alta',
+                        'media'   => 'Media',
+                        'baja'    => 'Baja',
+                    ]), 
 
                 Tables\Filters\Filter::make('pendientes')
                     ->label('Solo pendientes')

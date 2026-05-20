@@ -18,39 +18,110 @@ class SolicitudCombustibleService
     // ── BORRADOR (Creación inicial) ─────────────────────────
 
     public function crear(array $data, int $userId): SolicitudCombustible
-    {
-        return DB::transaction(function () use ($data, $userId) {
-            // Lógica automática para motorista
-            if (! isset($data['motorista_id'])) {
-                $asignacion = \App\Models\AsignacionVehiculoMotorista::where('vehiculo_id', $data['vehiculo_id'])
-                    ->where('vigente', true)
-                    ->first();
+{
+    return DB::transaction(function () use ($data, $userId) {
 
-                if (! $asignacion) {
-                    throw new \DomainException('No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.');
-                }
+        $user = \App\Models\User::with('grupo')->findOrFail($userId);
 
-                $data['motorista_id'] = $asignacion->motorista_id;
+        // ─────────────────────────────────────────────────────────────────
+        // Lógica automática para motorista
+        // ─────────────────────────────────────────────────────────────────
+
+        if (! isset($data['motorista_id'])) {
+
+            $asignacion = \App\Models\AsignacionVehiculoMotorista::where(
+                'vehiculo_id',
+                $data['vehiculo_id']
+            )
+                ->where('vigente', true)
+                ->first();
+
+            if (! $asignacion) {
+                throw new \DomainException(
+                    'No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.'
+                );
             }
 
-            $data['solicitante_id'] = $userId;
-            $data['estado'] = EstadoSolicitudEnum::BORRADOR;
-            $data['cantidad_combustible'] = $data['cantidad_combustible'] ?? 0;
-            $data['valor_unitario'] = $data['valor_unitario'] ?? 0;
-            $data['valor_total'] = $data['valor_total'] ?? 0;
+            $data['motorista_id'] = $asignacion->motorista_id;
+        }
 
-            if (! isset($data['codigo'])) {
-                $data['codigo'] = $this->generarCodigoCorrelativo();
-            }
+        // ─────────────────────────────────────────────────────────────────
+        // Datos base
+        // ─────────────────────────────────────────────────────────────────
 
-            $solicitud = SolicitudCombustible::create($data);
+        $data['solicitante_id'] = $userId;
 
-            $this->registrarCambioEstado($solicitud, null, $solicitud->estado, $userId, 'Creación inicial de borrador.');
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::CREAR->value, $userId, null);
+        $data['estado'] = EstadoSolicitudEnum::BORRADOR;
 
-            return $solicitud;
-        });
-    }
+        $data['cantidad_combustible'] =
+            $data['cantidad_combustible'] ?? 0;
+
+        $data['valor_unitario'] =
+            $data['valor_unitario'] ?? 0;
+
+        $data['valor_total'] =
+            $data['valor_total'] ?? 0;
+
+        // ─────────────────────────────────────────────────────────────────
+        // Snapshot de prioridad del grupo
+        // ─────────────────────────────────────────────────────────────────
+
+        $grupo = $user->grupo;
+
+        $data['prioridad_grupo'] =
+            $grupo?->nivel_prioridad ?? 'baja';
+
+        $data['prioridad_orden'] =
+            $grupo?->orden ?? 999;
+
+        // ─────────────────────────────────────────────────────────────────
+        // Código correlativo
+        // ─────────────────────────────────────────────────────────────────
+
+        if (! isset($data['codigo'])) {
+            $data['codigo'] = $this->generarCodigoCorrelativo();
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // Crear solicitud
+        // ─────────────────────────────────────────────────────────────────
+
+        $solicitud = SolicitudCombustible::create($data);
+
+        // ─────────────────────────────────────────────────────────────────
+        // Auditoría y bitácora
+        // ─────────────────────────────────────────────────────────────────
+
+        $this->registrarCambioEstado(
+            $solicitud,
+            null,
+            $solicitud->estado,
+            $userId,
+            'Creación inicial de borrador.'
+        );
+
+        $this->registrarEvento(
+            $solicitud,
+            AccionBitacoraEnum::CREAR->value,
+            $userId,
+            [
+                'prioridad_grupo'   => $solicitud->prioridad_grupo,
+                'prioridad_orden'   => $solicitud->prioridad_orden,
+                'grupo_solicitante' => $grupo?->nombre ?? 'Sin grupo',
+            ]
+        );
+
+        Log::info('Solicitud de combustible creada', [
+            'solicitud_id'      => $solicitud->id,
+            'prioridad_grupo'   => $solicitud->prioridad_grupo,
+            'prioridad_orden'   => $solicitud->prioridad_orden,
+            'grupo'             => $grupo?->nombre,
+            'usuario_id'        => $userId,
+        ]);
+
+        return $solicitud;
+    });
+}
 
     private function generarCodigoCorrelativo(): string
     {

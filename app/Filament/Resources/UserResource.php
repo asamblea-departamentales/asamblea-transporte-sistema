@@ -65,6 +65,17 @@ class UserResource extends Resource
                         ->label('Activo')
                         ->default(true)
                         ->inline(false),
+                        
+                    Forms\Components\Select::make('grupo_id')
+                        ->label('Grupo')
+                        ->relationship('grupo', 'nombre')
+                        ->options(fn () => \App\Models\Grupo::activos()->pluck('nombre', 'id'))
+                        ->searchable()
+                        ->preload()
+                        ->nullable()
+                        ->visible(fn () =>
+                            auth()->user()->hasAnyRole(['admin', 'super_admin', 'ti', 'operativo'])
+                        ),
                 ]), 
                 
                Forms\Components\Section::make('Seguridad')
@@ -128,6 +139,13 @@ class UserResource extends Resource
                     ->separator(',')
                     ->sortable(),
 
+                Tables\Columns\TextColumn::make('grupo.nombre')
+                    ->label('Grupo')
+                    ->sortable()
+                    ->searchable()
+                    ->badge()
+                    ->color(fn ($record) => $record->grupo?->color() ?? 'gray'),
+
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creado')
                     ->dateTime('Y-m-d H:i')
@@ -142,6 +160,11 @@ class UserResource extends Resource
                         if (empty($data['value'])) return $query;
                         return $query->whereHas('roles', fn ($q) => $q->where('name', $data['value']));
                     }),
+                Tables\Filters\SelectFilter::make('grupo')
+                    ->label('Grupo')
+                    ->relationship('grupo', 'nombre')
+                    ->searchable()
+                    ->preload(),
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),

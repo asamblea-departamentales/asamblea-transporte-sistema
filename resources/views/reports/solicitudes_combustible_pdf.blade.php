@@ -180,6 +180,7 @@
         <thead>
             <tr>
                 <th width="6%">Ticket</th>
+                <th width="6%">Prioridad</th>
                 <th width="8%">Código</th>
                 <th width="9%">Vehículo</th>
                 <th width="9%">Motorista</th>
@@ -202,6 +203,7 @@
             @endphp
             <tr>
                 <td style="font-family:monospace; font-size:9px;">{{ $r->ticket ?? '—' }}</td>
+                <td>{{ ucfirst($r->prioridad_grupo ?? 'baja') }}</td>
                 <td style="font-family:monospace; font-size:9px;">{{ $r->codigo }}</td>
                 <td>
                     <strong>{{ $r->vehiculo?->placa ?? 'N/A' }}</strong><br>
