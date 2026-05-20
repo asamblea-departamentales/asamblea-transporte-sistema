@@ -15,8 +15,8 @@ class ReporteMisionOficialService
                 'solicitante',
                 'autorizador',
                 'vehiculo' => fn ($q) => $q->with([
-                    'marca:id,nombre',
-                    'modelo:id,nombre',
+                    'vehMarca:id,nombre',
+                    'vehModelo:id,nombre',
                     'color:id,nombre',
                     'clasificacion:id,nombre',
                 ]),
