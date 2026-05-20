@@ -1,6 +1,8 @@
 <?php
 
 namespace App\Domain\Solicitudes\Services;
+//Servicio encargado de gestionar la logica y las transiciones de estado de las Solicitudes de Transporte
+// aplicando un patron de servicios, sacamos la logica del controlador y del resource
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
@@ -184,7 +186,11 @@ class SolicitudTransporteService
         }
     }
 
-    // Pasamos el evento o accion de Finalizar/Completar del Controller al Service
+    /** NUEVOS MÉTODOS PARA FINALIZAR SOLICITUDES Y APLICAR CAMBIOS DE ESTADOS EN VEHÍCULOS Y MOTORISTAS
+     * Estos métodos permiten finalizar una solicitud de transporte (cambiando su estado a COMPLETADA)
+     *  y aplicar los cambios necesarios en el estado de los vehículos y motoristas asociados según el nuevo estado de la solicitud.
+     * Al finalizar/completar una solicitud, se libera el vehículo y el motorista asignados, siempre verificando que no tengan otros viajes activos antes de cambiar su estado a disponible.
+     */
     public function finalizar(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
     {
         if (! in_array($solicitud->estado, [
@@ -219,6 +225,8 @@ class SolicitudTransporteService
                 AccionBitacoraEnum::COMPLETAR->value,
                 $userId
             );
+
+            app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
 
             return $solicitud;
         });

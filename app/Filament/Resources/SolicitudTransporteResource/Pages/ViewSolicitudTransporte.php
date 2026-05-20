@@ -2,8 +2,11 @@
 
 namespace App\Filament\Resources\SolicitudTransporteResource\Pages;
 
+// Este archivo define la página de visualización detallada de una solicitud de transporte dentro del panel de administración construido con Filament. Permite a los usuarios autorizados ver los detalles completos de la solicitud, agregar observaciones, pre-aprobar, aprobar/programar y asignar transporte, todo desde una interfaz intuitiva. Además, incluye lógica para resolver la disponibilidad de motoristas según el vehículo seleccionado y muestra esta información de manera clara en la interfaz.
+
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\EstadoFlotaService;
 use App\Filament\Resources\SolicitudTransporteResource;
 use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
@@ -599,6 +602,8 @@ class ViewSolicitudTransporte extends ViewRecord
                         'motorista_id' => $data['motorista_id'],
                         'estado' => EstadoSolicitudEnum::ASIGNADA,
                     ]);
+
+                    app(EstadoFlotaService::class)->aplicarPorEstado($record);
 
                     HistorialEstado::create([
                         'entidad_tipo' => 'solicitud_transporte',

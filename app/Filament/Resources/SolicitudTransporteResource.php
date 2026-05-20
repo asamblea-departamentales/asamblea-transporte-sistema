@@ -2,10 +2,14 @@
 
 namespace App\Filament\Resources;
 
+//Resource de Filament para gestionar las Solicitudes de Transporte, con formularios personalizados, acciones específicas y 
+//lógica de negocio integrada para resolver motoristas disponibles según el vehículo seleccionado, además de incluir un historial de estados y observaciones de jefatura.
+
 // Imports para los emails
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\EstadoFlotaService;
 use App\Filament\Resources\SolicitudTransporteResource\Pages;
 use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
@@ -646,6 +650,8 @@ class SolicitudTransporteResource extends Resource
                                 'estado' => EstadoSolicitudEnum::ASIGNADA,
                             ]);
 
+                            app(EstadoFlotaService::class)->aplicarPorEstado($record);
+
                             HistorialEstado::create([
                                 'entidad_tipo' => 'solicitud_transporte',
                                 'entidad_id' => $record->id,
@@ -754,6 +760,8 @@ class SolicitudTransporteResource extends Resource
                                 'motorista_id' => $data['motorista_id'],
                                 'firma_aprobador' => $data['firma_aprobador'] ?? null,  // ← nuevo
                             ]);
+
+                            app(EstadoFlotaService::class)->aplicarPorEstado($record);
 
                             HistorialEstado::create([
                                 'entidad_tipo' => 'solicitud_transporte',

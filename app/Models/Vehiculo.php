@@ -2,6 +2,9 @@
 
 namespace App\Models;
 
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\SolicitudTransporte;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -72,7 +75,67 @@ class Vehiculo extends Model
         return Storage::disk('public')->url($this->fotografia);
     }
 
-    // Relaciones originales
+    //NUEVOS: Scopes y Accesors para estados operativos
+    public function getEstadoOperativoAttribute(): string
+    {
+        $tieneViajeActivo = SolicitudTransporte::where('vehiculo_id', $this->id)
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->exists();
+
+        if (! $tieneViajeActivo) {
+            return 'disponible';
+        }
+
+        $enEjecucion = SolicitudTransporte::where('vehiculo_id', $this->id)
+            ->where('estado', EstadoSolicitudEnum::EN_EJECUCION)
+            ->exists();
+
+        return $enEjecucion ? 'en_ruta' : 'reservado';
+    }
+
+    public function getEstaDisponibleAttribute(): bool
+    {
+        return $this->estado_operativo === 'disponible';
+    }
+
+    //Filtra vehiculos sin viajes activos (en ejecución, programada, aprobada o asignada)
+    public function scopeDisponibles(Builder $query): Builder
+    {
+        $idsOcupados = SolicitudTransporte::whereIn('estado', [
+            EstadoSolicitudEnum::EN_EJECUCION,
+            EstadoSolicitudEnum::PROGRAMADA,
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::ASIGNADA,
+        ])
+            ->whereNotNull('vehiculo_id')
+            ->pluck('vehiculo_id')
+            ->unique();
+
+        return $query->whereNotIn('id', $idsOcupados);
+    }
+
+    //Filtra vehiculos con al menos un viaje activo (en ejecución, programada, aprobada o asignada)
+    public function scopeNoDisponibles(Builder $query): Builder
+    {
+        $idsOcupados = SolicitudTransporte::whereIn('estado', [
+            EstadoSolicitudEnum::EN_EJECUCION,
+            EstadoSolicitudEnum::PROGRAMADA,
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::ASIGNADA,
+        ])
+            ->whereNotNull('vehiculo_id')
+            ->pluck('vehiculo_id')
+            ->unique();
+
+        return $query->whereIn('id', $idsOcupados);
+    }
+
+    // Relaciones con otras tablas/modelos
 
     public function tipo(): BelongsTo
     {
@@ -92,7 +155,7 @@ class Vehiculo extends Model
             ->latest('desde');
     }
 
-    // Nuevas relaciones catálogos
+    // Nuevas relaciones para los catálogos
 
     public function vehMarca(): BelongsTo
     {

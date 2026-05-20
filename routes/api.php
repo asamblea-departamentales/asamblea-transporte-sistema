@@ -197,12 +197,14 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── CATÁLOGOS (para el frontend) ────────────────────────
     Route::prefix('catalogos')->group(function () {
 
+    //Ahora incluye la informacion de disponibilidad, estado operativo y estado del catálogo, además de la información del motorista asignado actualmente (si existe) para cada vehículo. Para los motoristas, incluye su estado actual y el motivo de inactividad si no están disponibles.
         Route::get('/vehiculos', function () {
             return response()->json(
                 \App\Models\Vehiculo::with([
-                    'marca',
-                    'modelo',
+                    'vehMarca',
+                    'vehModelo',
                     'tipo',
+                    'estadoCatalogo',
                     'asignacionVigenteMotorista.motorista',
                 ])
                     ->where('activo', true)
@@ -213,10 +215,10 @@ Route::middleware('auth:sanctum')->group(function () {
                         'marca' => $v->getRelation('vehMarca')?->nombre ?? $v->marca,
                         'modelo' => $v->getRelation('vehModelo')?->nombre ?? $v->modelo,
                         'tipo' => $v->tipo?->nombre,
-
-                        // 🔥 AGREGAR ESTA LÍNEA EXACTA AQUÍ:
+                        'estado_catalogo' => $v->estadoCatalogo?->nombre,
+                        'disponible' => $v->esta_disponible,
+                        'estado_operativo' => $v->estado_operativo,
                         'motorista_id' => $v->asignacionVigenteMotorista?->motorista_id,
-
                         'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
                         'motorista_dui' => $v->asignacionVigenteMotorista?->motorista?->dui,
                         'label' => "{$v->placa} — ".($v->getRelation('vehMarca')?->nombre ?? $v->marca),
@@ -224,14 +226,64 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
+        // Ruta para obtener solo los vehículos disponibles (estado operativo disponible y estado catálogo disponible)
+        Route::get('/vehiculos/disponibles', function () {
+            return response()->json(
+                \App\Models\Vehiculo::with([
+                    'vehMarca',
+                    'vehModelo',
+                    'tipo',
+                    'estadoCatalogo',
+                    'asignacionVigenteMotorista.motorista',
+                ])
+                    ->where('activo', true)
+                    ->disponibles()
+                    ->get()
+                    ->map(fn ($v) => [
+                        'id' => $v->id,
+                        'placa' => $v->placa,
+                        'marca' => $v->getRelation('vehMarca')?->nombre ?? $v->marca,
+                        'modelo' => $v->getRelation('vehModelo')?->nombre ?? $v->modelo,
+                        'tipo' => $v->tipo?->nombre,
+                        'estado_catalogo' => $v->estadoCatalogo?->nombre,
+                        'estado_operativo' => $v->estado_operativo,
+                        'motorista_id' => $v->asignacionVigenteMotorista?->motorista_id,
+                        'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre ?? 'Sin motorista',
+                        'motorista_dui' => $v->asignacionVigenteMotorista?->motorista?->dui,
+                        'label' => "{$v->placa} — ".($v->getRelation('vehMarca')?->nombre ?? $v->marca),
+                    ])
+            );
+        });
+
+        //Ahora incluye el estado actual de cada motorista, indicando si están disponibles o no, y el motivo de inactividad si no lo están. Esto es útil para que el frontend pueda mostrar esta información directamente sin necesidad de hacer llamadas adicionales para obtener el estado de cada motorista.
         Route::get('/motoristas', function () {
             return response()->json(
-                \App\Models\Motorista::where('activo', true)
+                \App\Models\Motorista::with('estadoActual')
+                    ->where('activo', true)
                     ->get()
                     ->map(fn ($m) => [
                         'id' => $m->id,
                         'nombre' => $m->nombre,
                         'dui' => $m->dui,
+                        'telefono' => $m->telefono,
+                        'disponible' => $m->esta_disponible,
+                        'motivo_inactividad' => $m->estadoActual?->motivo,
+                    ])
+            );
+        });
+
+        Route::get('/motoristas/disponibles', function () {
+            return response()->json(
+                \App\Models\Motorista::with('estadoActual')
+                    ->where('activo', true)
+                    ->disponibles()
+                    ->get()
+                    ->map(fn ($m) => [
+                        'id' => $m->id,
+                        'nombre' => $m->nombre,
+                        'dui' => $m->dui,
+                        'telefono' => $m->telefono,
+                        'disponible' => $m->esta_disponible,
                     ])
             );
         });
