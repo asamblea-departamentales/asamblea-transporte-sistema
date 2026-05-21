@@ -157,7 +157,7 @@ class RevisionOperativaService
     private function mapTransporte(array $filters = []): Collection
     {
         $query = SolicitudTransporte::query()
-            ->with(['solicitante', 'unidad'])
+            ->with(['solicitante.grupo', 'unidad'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
         if (!empty($filters['date_from'])) {
@@ -179,6 +179,7 @@ class RevisionOperativaService
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
                 'prioridad_grupo' => $r->prioridad_grupo?->value,
+                'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
             ];
         });

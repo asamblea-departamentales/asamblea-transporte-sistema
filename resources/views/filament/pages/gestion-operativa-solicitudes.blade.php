@@ -260,13 +260,10 @@
                     'baja'    => 'badge-g-baja',
                     default   => 'badge-default',
                 };
-                $grupoLabel = match($grupoKey) {
-                    'critica' => 'CRÍTICA',
-                    'alta'    => 'ALTA',
-                    'media'   => 'MEDIA',
-                    'baja'    => 'BAJA',
-                    default   => '—',
-                };
+                $grupoNombreRaw = $row['grupo_nombre'] ?? '';
+                $grupoLabel = $grupoNombreRaw && $grupoKey
+                    ? mb_strtoupper($grupoNombreRaw) . ' (' . strtoupper($grupoKey) . ')'
+                    : ($grupoKey ? strtoupper($grupoKey) : '—');
                 $uid = $row['tipo'] . $row['id'];
                 $fechaIngreso = !empty($row['fecha_ingreso']) ? \Carbon\Carbon::parse($row['fecha_ingreso']) : null;
                 $edadHumana   = $fechaIngreso ? $fechaIngreso->diffForHumans() : null;
