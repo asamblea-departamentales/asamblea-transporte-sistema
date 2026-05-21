@@ -178,7 +178,7 @@ class RevisionOperativaService
                 'unidad' => $r->unidad?->nombre ?? '—',
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
-                'prioridad_grupo' => $r->prioridad_grupo?->value,
+                'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
                 'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
             ];
