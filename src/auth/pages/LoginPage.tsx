@@ -22,6 +22,9 @@ export default function LoginPage() {
 
     setError(null);
     setLoading(true);
+    
+    // Limpieza preventiva: asegurar que no haya rastro de sesiones previas en este navegador
+    sessionStorage.removeItem("auth_token");
 
     try {
       const user = await loginRequest({ email, password });

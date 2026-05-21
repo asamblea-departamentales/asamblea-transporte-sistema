@@ -11,6 +11,7 @@ export default function IncapacidadPage() {
   const [saving, setSaving] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [evidenceFile, setEvidenceFile] = useState<File | null>(null);
 
   useEffect(() => {
     getDisponibilidad()
@@ -31,8 +32,11 @@ export default function IncapacidadPage() {
     setError(null);
     setSuccess(false);
     try {
-      await reportarDisponibilidad(activo, motivo.trim());
+      await reportarDisponibilidad(activo, motivo.trim(), evidenceFile || undefined);
       setSuccess(true);
+      if (!activo) {
+        setEvidenceFile(null); // Limpiar despues de reportar incapacidad exitosa
+      }
     } catch {
       setError("No se pudo guardar el estado. Intente de nuevo.");
     } finally {
@@ -123,9 +127,40 @@ export default function IncapacidadPage() {
             onChange={(e) => { setMotivo(e.target.value); setError(null); setSuccess(false); }}
             placeholder={activo ? "Opcional — cualquier nota adicional" : "Describe brevemente el motivo..."}
             className="w-full rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-800 placeholder:text-slate-400
-              focus:outline-none focus:ring-2 focus:ring-[#0f2548]/30 focus:border-[#0f2548] transition resize-none"
+              focus:outline-none focus:ring-2 focus:ring-[#0f2548]/30 focus:border-[#0f2548] transition resize-none mb-5"
           />
         </div>
+
+        {/* Campo de evidencia (solo si no esta disponible) */}
+        {!activo && (
+          <div>
+            <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Opcional)</label>
+            {evidenceFile ? (
+              <div className="relative flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
+                <span className="text-sm font-semibold text-slate-700 truncate max-w-[80%]">{evidenceFile.name}</span>
+                <button 
+                  onClick={() => setEvidenceFile(null)} 
+                  className="w-8 h-8 flex items-center justify-center rounded-lg bg-red-100 text-red-600 hover:bg-red-200 transition-colors"
+                >
+                  ✕
+                </button>
+              </div>
+            ) : (
+              <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-slate-200 border-dashed rounded-xl cursor-pointer hover:bg-slate-50 hover:border-[#0f2548]/40 transition-all group">
+                <div className="flex flex-col items-center justify-center pt-5 pb-6 text-slate-400 group-hover:text-[#0f2548]">
+                  <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mb-2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="17 8 12 3 7 8" /><line x1="12" y1="3" x2="12" y2="15" /></svg>
+                  <p className="text-xs font-bold text-center px-4 uppercase tracking-wider">Haz clic para subir evidencia<br /><span className="text-[10px] opacity-60 font-medium">(Imagen o PDF)</span></p>
+                </div>
+                <input 
+                  type="file" 
+                  className="hidden" 
+                  accept="image/*,application/pdf" 
+                  onChange={(e) => e.target.files && setEvidenceFile(e.target.files[0])} 
+                />
+              </label>
+            )}
+          </div>
+        )}
 
         {/* Mensajes de feedback */}
         {error && (
