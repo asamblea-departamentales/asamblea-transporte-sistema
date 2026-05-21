@@ -22,4 +22,7 @@ enum AccionBitacoraEnum: string
     case EXPORTAR_EXCEL = 'exportar_excel';
     case EXPORTAR_CSV = 'exportar_csv';
     case IMPRIMIR = 'imprimir';
+
+    case ASIGNAR_RECURSOS = 'asignar_recursos';
+    case DESBLOQUEAR = 'desbloquear';
 }

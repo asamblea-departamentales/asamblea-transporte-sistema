@@ -446,9 +446,18 @@ class SolicitudTransporteResource extends Resource
 
                 Tables\Columns\TextColumn::make('fecha_salida')
                     ->label('Fecha Salida')
-                    ->date('d/m/Y')
-                    ->description(fn ($record) => $record->hora_salida)
+                    ->dateTime('d/m/Y H:i')
                     ->sortable(),
+
+                Tables\Columns\TextColumn::make('horas_estimadas')
+                    ->label('Horas Est.')
+                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 2) . ' h' : '—')
+                    ->toggleable(isToggledHiddenByDefault: true),
+
+                Tables\Columns\TextColumn::make('horas_reales')
+                    ->label('Horas Reales')
+                    ->formatStateUsing(fn ($state) => $state ? number_format($state, 2) . ' h' : '—')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 Tables\Columns\TextColumn::make('created_at')
                     ->label('Creada')

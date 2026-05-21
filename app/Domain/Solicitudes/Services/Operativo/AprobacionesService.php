@@ -280,7 +280,16 @@ class AprobacionesService
         $record = $this->resolverModelo($tipo, $id);
         $estadoAnterior = $record->estado;
 
-        $record->estado = EstadoSolicitudEnum::EN_REVISION;
+        $record->estado = EstadoSolicitudEnum::PENDIENTE;
+        if (array_key_exists('decision_final', $record->getAttributes())) {
+            $record->decision_final = null;
+        }
+        if (array_key_exists('vehiculo_id', $record->getAttributes())) {
+            $record->vehiculo_id = null;
+        }
+        if (array_key_exists('motorista_id', $record->getAttributes())) {
+            $record->motorista_id = null;
+        }
         $this->guardarComentario($record, $comentario);
         $record->save();
 
@@ -288,7 +297,7 @@ class AprobacionesService
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
             'entidad_id' => $record->id,
             'estado_anterior' => $this->enumValue($estadoAnterior),
-            'estado_nuevo' => EstadoSolicitudEnum::EN_REVISION->value,
+            'estado_nuevo' => EstadoSolicitudEnum::PENDIENTE->value,
             'user_id' => $userId,
             'comentario' => $comentario,
         ]);
@@ -307,8 +316,20 @@ class AprobacionesService
     private function mapTransporte(array $filters = []): Collection
     {
         $query = SolicitudTransporte::query()
-            ->with(['solicitante.grupo', 'unidad'])
-            ->where('estado', EstadoSolicitudEnum::PRE_APROBADA);
+            ->with([
+                'solicitante.grupo',
+                'unidad',
+                'sugerencia.vehiculoSugerido',
+                'sugerencia.motoristaSugerido',
+                'decisionOperativa.vehiculoFinal',
+                'decisionOperativa.motoristaFinal',
+            ])
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::PRE_APROBADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+                EstadoSolicitudEnum::EN_EJECUCION,
+            ]);
 
         if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
@@ -319,6 +340,9 @@ class AprobacionesService
         }
 
         return $query->get()->map(function (SolicitudTransporte $r) {
+            $sugerencia = $r->sugerencia;
+            $decision = $r->decisionOperativa;
+
             return [
                 'id' => $r->id,
                 'tipo' => 'transporte',
@@ -331,6 +355,26 @@ class AprobacionesService
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
                 'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
+                'asignado' => $r->motorista?->nombre ?? $r->vehiculo?->placa ?? null,
+                'fecha_salida' => $r->fecha_salida?->format('d/m/Y H:i'),
+                'fecha_retorno' => $r->fecha_retorno?->format('d/m/Y H:i'),
+                'horas_estimadas' => $r->horas_estimadas,
+                'horas_reales' => $r->horas_reales,
+                'decision_final' => $r->decision_final,
+                'sugerencia' => $sugerencia ? [
+                    'vehiculo' => $sugerencia->vehiculoSugerido?->placa ?? '—',
+                    'motorista' => $sugerencia->motoristaSugerido?->nombre ?? '—',
+                    'score_confianza' => $sugerencia->score_confianza,
+                    'combustible_porcentaje' => $sugerencia->combustible_porcentaje,
+                    'horas_motorista_periodo' => $sugerencia->horas_motorista_periodo,
+                    'bullets_tecnicos' => $sugerencia->bullets_tecnicos,
+                ] : null,
+                'decision_operativa' => $decision ? [
+                    'vehiculo' => $decision->vehiculoFinal?->placa ?? '—',
+                    'motorista' => $decision->motoristaFinal?->nombre ?? '—',
+                    'cambio_detectado' => $decision->cambio_detectado,
+                    'justificacion' => $decision->justificacion,
+                ] : null,
             ];
         });
     }
@@ -418,7 +462,7 @@ class AprobacionesService
     private function resolverEstadoAprobado(string $tipo)
     {
         return match ($tipo) {
-            'transporte' => EstadoSolicitudEnum::PROGRAMADA,
+            'transporte' => EstadoSolicitudEnum::APROBADA,
             'combustible' => EstadoSolicitudEnum::APROBADA,
             'mantenimiento' => EstadoSolicitudEnum::APROBADA,
             default => EstadoSolicitudEnum::APROBADA,

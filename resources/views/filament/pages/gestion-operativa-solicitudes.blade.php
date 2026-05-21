@@ -129,6 +129,18 @@
     .detalle-text { font-size: 13px; color: #6b7280; line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
     .sep { color: #d1d5db; }
     .section-title { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #9ca3af; margin-bottom: 10px; }
+    .comparativa-col { border-radius: 16px; border: 1.5px solid #e5e7eb; background: #fff; padding: 16px; }
+    .comparativa-col.sistema  { border-color: #c7d2fe; background: #eef2ff; }
+    .comparativa-col.operativo { border-color: #fde68a; background: #fffbeb; }
+    .comparativa-col.jefe     { border-color: #a7f3d0; background: #ecfdf5; }
+    .comp-label { font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #9ca3af; font-weight: 600; margin-bottom: 2px; }
+    .comp-value { font-size: 13px; font-weight: 500; color: #111827; }
+    .comp-score { display: inline-flex; align-items: center; gap: 4px; font-size: 12px; font-weight: 700; padding: 2px 10px; border-radius: 999px; }
+    .comp-score-alto  { background: #d1fae5; color: #065f46; }
+    .comp-score-medio { background: #fef3c7; color: #92400e; }
+    .comp-score-bajo  { background: #fee2e2; color: #991b1b; }
+    .comp-bullet { font-size: 11px; color: #6b7280; padding: 2px 0; }
+    .comp-bullet::before { content: '▹ '; color: #6366f1; }
 </style>
 
 <div class="gos-wrap space-y-5">
@@ -424,6 +436,47 @@
                                 <div class="flex justify-end pt-2"><button type="submit" class="btn-accion btn-warning"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>Confirmar derivación</button></div>
                             </form>
                         </x-filament::modal>
+
+                        @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
+                        <div x-data="{ open: false, vehiculoId: null, motoristaId: null, justificacion: '' }">
+                            <button class="btn-accion btn-indigo" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                Asignar recursos
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Asignar recursos — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <div><div class="modal-label">Vehículo <span class="text-red-400">*</span></div>
+                                    <select x-model="vehiculoId" class="modal-select">
+                                        <option value="">Seleccione un vehículo</option>
+                                        @foreach($this->vehiculosDisponibles() as $vId => $vPlaca)
+                                        <option value="{{ $vId }}">{{ $vPlaca }}</option>
+                                        @endforeach
+                                    </select></div>
+                                    <div><div class="modal-label">Motorista <span class="text-red-400">*</span></div>
+                                    <select x-model="motoristaId" class="modal-select">
+                                        <option value="">Seleccione un motorista</option>
+                                        @foreach($this->motoristasDisponibles() as $mId => $mNombre)
+                                        <option value="{{ $mId }}">{{ $mNombre }}</option>
+                                        @endforeach
+                                    </select></div>
+                                    <div><div class="modal-label">Justificación</div>
+                                    <textarea x-model="justificacion" class="modal-textarea" rows="3" placeholder="Requerida si cambias vehículo o motorista vs la sugerencia del sistema (mín. 10 caracteres)..."></textarea></div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success"
+                                            @click="$wire.asignarRecursosDesdeFilament({{ $row['id'] }}, vehiculoId, motoristaId, justificacion || null); open = false"
+                                            x-bind:disabled="!vehiculoId || !motoristaId">
+                                            Confirmar asignación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     @endif
 
                     {{-- ── APROBACIONES ────────────────────────────────── --}}
@@ -604,6 +657,175 @@
                                 <div class="flex justify-end pt-2"><button type="submit" class="btn-accion btn-gray">Confirmar reapertura</button></div>
                             </form>
                         </x-filament::modal>
+
+                        {{-- ═══ TRANSPORTE: Comparativa 3 columnas ═══ --}}
+                        @if($row['tipo'] === 'transporte' && $row['estado'] === 'pre_aprobada' && $row['sugerencia'])
+                        <div x-data="{ open: false }">
+                            <button class="btn-accion btn-gray" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+                                Comparativa
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-4xl p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Comparativa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    @php $sug = $row['sugerencia']; $dec = $row['decision_operativa']; $score = $sug['score_confianza'] ?? 0; @endphp
+                                    <div class="grid grid-cols-3 gap-4">
+                                        {{-- Col 1: Sistema --}}
+                                        <div class="comparativa-col sistema">
+                                            <div class="text-xs font-bold text-indigo-600 uppercase tracking-wider mb-3">🤖 Sistema</div>
+                                            <div class="space-y-2">
+                                                <div><div class="comp-label">Vehículo</div><div class="comp-value">{{ $sug['vehiculo'] ?? '—' }}</div></div>
+                                                <div><div class="comp-label">Motorista</div><div class="comp-value">{{ $sug['motorista'] ?? '—' }}</div></div>
+                                                <div><div class="comp-label">Confianza</div>
+                                                    <span class="comp-score {{ $score >= 70 ? 'comp-score-alto' : ($score >= 40 ? 'comp-score-medio' : 'comp-score-bajo') }}">
+                                                        {{ number_format($score, 0) }}%
+                                                    </span>
+                                                </div>
+                                                <div><div class="comp-label">Combustible</div><div class="comp-value">{{ number_format($sug['combustible_porcentaje'] ?? 0, 0) }}%</div></div>
+                                                <div><div class="comp-label">Horas (7d)</div><div class="comp-value">{{ number_format($sug['horas_motorista_periodo'] ?? 0, 1) }}h</div></div>
+                                                @if(!empty($sug['bullets_tecnicos']))
+                                                <div class="pt-2 border-t border-indigo-200">
+                                                    <div class="comp-label mb-1">Detalles técnicos</div>
+                                                    @foreach((array)$sug['bullets_tecnicos'] as $bullet)
+                                                    <div class="comp-bullet">{{ $bullet }}</div>
+                                                    @endforeach
+                                                </div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        {{-- Col 2: Operativo --}}
+                                        <div class="comparativa-col operativo">
+                                            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">👤 Operativo</div>
+                                            <div class="space-y-2">
+                                                @if($dec)
+                                                <div><div class="comp-label">Vehículo</div><div class="comp-value">{{ $dec['vehiculo'] ?? '—' }}</div></div>
+                                                <div><div class="comp-label">Motorista</div><div class="comp-value">{{ $dec['motorista'] ?? '—' }}</div></div>
+                                                <div><div class="comp-label">Cambio</div>
+                                                    <span class="text-xs font-semibold {{ $dec['cambio_detectado'] === 'ninguno' ? 'text-green-600' : 'text-red-500' }}">
+                                                        {{ $dec['cambio_detectado'] === 'ninguno' ? 'Sin cambios' : strtoupper($dec['cambio_detectado']) }}
+                                                    </span>
+                                                </div>
+                                                @if($dec['justificacion'])
+                                                <div><div class="comp-label">Justificación</div><div class="comp-value text-xs italic">{{ $dec['justificacion'] }}</div></div>
+                                                @endif
+                                                @else
+                                                <div class="text-sm text-gray-400 italic">Sin decisión operativa registrada</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        {{-- Col 3: Jefe --}}
+                                        <div class="comparativa-col jefe">
+                                            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">⚖️ Jefe</div>
+                                            <div class="space-y-2">
+                                                @if($row['decision_final'])
+                                                <div><div class="comp-label">Decisión final</div>
+                                                    <span class="text-sm font-bold {{ $row['decision_final'] === 'sistema' ? 'text-indigo-600' : 'text-amber-600' }}">
+                                                        {{ $row['decision_final'] === 'sistema' ? 'Sugerencia del Sistema' : 'Asignación del Operativo' }}
+                                                    </span>
+                                                </div>
+                                                @else
+                                                <div class="text-sm text-gray-400 italic">Pendiente de decisión</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ═══ TRANSPORTE: Aprobar con decisión ═══ --}}
+                        <div x-data="{
+                            open: false,
+                            decisionFinal: 'sistema',
+                            comentario: '',
+                            firma: null,
+                            drawing: false, lastX: 0, lastY: 0,
+                            getPos(e, c) {
+                                const rect = c.getBoundingClientRect();
+                                const src = e.touches ? e.touches[0] : e;
+                                return { x: (src.clientX - rect.left) * (c.width / rect.width), y: (src.clientY - rect.top) * (c.height / rect.height) };
+                            },
+                            startDraw(e) { e.preventDefault(); const c = document.getElementById('firma-dec-{{ $row['id'] }}'); if (!c) return; this.drawing = true; const p = this.getPos(e, c); this.lastX = p.x; this.lastY = p.y; },
+                            onDraw(e) { if (!this.drawing) return; e.preventDefault(); const c = document.getElementById('firma-dec-{{ $row['id'] }}'); if (!c) return; const ctx = c.getContext('2d'); const p = this.getPos(e, c); ctx.beginPath(); ctx.moveTo(this.lastX, this.lastY); ctx.lineTo(p.x, p.y); ctx.stroke(); this.lastX = p.x; this.lastY = p.y; },
+                            stopDraw() { if (!this.drawing) return; this.drawing = false; const c = document.getElementById('firma-dec-{{ $row['id'] }}'); if (c) this.firma = c.toDataURL('image/png'); },
+                            clearFirma() { const c = document.getElementById('firma-dec-{{ $row['id'] }}'); if (!c) return; c.getContext('2d').clearRect(0, 0, c.width, c.height); this.firma = null; },
+                            confirmar() {
+                                if (!this.comentario.trim()) return;
+                                $wire.aprobarConDecision({{ $row['id'] }}, this.decisionFinal, this.comentario, this.firma);
+                                this.open = false;
+                            }
+                        }">
+                            <button class="btn-accion btn-success" @click="openModal(); open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Aprobar con decisión
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Aprobar con decisión — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <div><div class="modal-label">Decisión final <span class="text-red-400">*</span></div>
+                                    <div class="flex gap-3 mt-1">
+                                        <label class="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium cursor-pointer transition-all"
+                                            x-bind:class="decisionFinal === 'sistema' ? 'border-indigo-500 bg-indigo-50 text-indigo-700' : 'border-gray-200 bg-white text-gray-600'">
+                                            <input type="radio" value="sistema" x-model="decisionFinal" class="accent-indigo-600">
+                                            Sugerencia del Sistema
+                                        </label>
+                                        <label class="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium cursor-pointer transition-all"
+                                            x-bind:class="decisionFinal === 'operativo' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-600'">
+                                            <input type="radio" value="operativo" x-model="decisionFinal" class="accent-amber-500">
+                                            Asignación del Operativo
+                                        </label>
+                                    </div></div>
+                                    <div><div class="modal-label">Comentario <span class="text-red-400">*</span></div>
+                                    <textarea x-model="comentario" class="modal-textarea" rows="4" placeholder="Comentario de aprobación..."></textarea></div>
+                                    <div><div class="modal-label">Firma del jefe <span class="text-gray-400 font-normal text-xs">(aparecerá en el PDF)</span></div>
+                                    <div class="border border-gray-300 rounded-lg overflow-hidden bg-white" style="touch-action: none;">
+                                        <canvas id="firma-dec-{{ $row['id'] }}" width="560" height="120" style="width:100%; height:120px; cursor:crosshair; display:block;"
+                                            @mousedown="startDraw" @mousemove="onDraw" @mouseup="stopDraw" @mouseleave="stopDraw"
+                                            @touchstart="startDraw" @touchmove="onDraw" @touchend="stopDraw"></canvas>
+                                    </div>
+                                    <button type="button" @click="clearFirma" class="mt-1 text-xs text-red-500 hover:text-red-700 underline">✕ Limpiar firma</button></div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success" @click="confirmar" x-bind:disabled="!comentario.trim()">
+                                            Confirmar aprobación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- ═══ TRANSPORTE: Desbloquear ═══ --}}
+                        @if($row['tipo'] === 'transporte' && in_array($row['estado'], ['aprobada', 'asignada', 'en_ejecucion']))
+                        <div x-data="{ open: false }">
+                            <button class="btn-accion btn-gray" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"/></svg>
+                                Desbloquear
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">Desbloquear solicitud</h2>
+                                    <p class="text-sm text-gray-500">Esta acción devolverá la solicitud a <strong>Pendiente</strong> y eliminará la asignación de recursos actual. ¿Confirmas?</p>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-danger" @click="$wire.desbloquearTransporte({{ $row['id'] }}); open = false">
+                                            Sí, desbloquear
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
 
                     @endif
 

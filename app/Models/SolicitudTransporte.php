@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domain\Solicitudes\Services\TicketService;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class SolicitudTransporte extends Model
 {
@@ -43,6 +44,13 @@ class SolicitudTransporte extends Model
         'despachado_por',
         'confirmado_por',
         'confirmado_en',
+        //NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
+        'decision_final',
+        'horas_estimadas',
+        'horas_reales',
+        'horas_espera',
+        'fecha_llegada_destino',
+        'fecha_inicio_retorno',
 
         // --- CAMPOS DE GEOLOCALIZACIÓN PARA EL MAPA ---
         'origen_lat',
@@ -51,8 +59,6 @@ class SolicitudTransporte extends Model
         'destino_lng',
         'destino_adicional_lat',
         'destino_adicional_lng',
-        //Casts para grupo y prioridad
-        'prioridad_grupo' => NivelPrioridadEnum::class,
     ];
 
     protected $casts = [
@@ -64,6 +70,11 @@ class SolicitudTransporte extends Model
         'fecha_salida_real' => 'datetime',
         'fecha_retorno_real' => 'datetime',
         'confirmado_en' => 'datetime', // Nuevo
+        'horas_estimadas' => 'decimal:2',
+        'horas_reales' => 'decimal:2',
+        'horas_espera' => 'decimal:2',
+        'fecha_llegada_destino' => 'datetime',
+        'fecha_inicio_retorno' => 'datetime',
     ];
 
     /**
@@ -162,5 +173,15 @@ class SolicitudTransporte extends Model
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'prioridad_grupo');
+    }
+
+    public function sugerencia(): HasOne
+    {
+        return $this->hasOne(SugerenciaAsignacion::class, 'solicitud_id');
+    }
+
+    public function decisionOperativa(): HasOne
+    {
+        return $this->hasOne(DecisionOperativa::class, 'solicitud_id');
     }
 }

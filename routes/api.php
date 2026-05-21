@@ -2,6 +2,7 @@
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Http\Controllers\Api\MotoristaEstadoController;
+use App\Http\Controllers\Api\MotoristaViajeController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
@@ -144,7 +145,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
         Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
         Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
+
+        // Módulo de Aprobación
+        Route::get('solicitudes-transporte/{solicitud}/comparativa', [SolicitudTransporteController::class, 'comparativa']);
+        Route::post('solicitudes-transporte/{solicitud}/aprobar-con-decision', [SolicitudTransporteController::class, 'aprobarConDecision']);
+        Route::post('solicitudes-transporte/{solicitud}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
     });
+
+    Route::post('solicitudes-transporte/{solicitud}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
+        ->middleware('role:operativo|admin|ti');
 
     // ── MANTENIMIENTO ───────────────────────────────────────────────
     Route::apiResource('solicitudes-mantenimiento', SolicitudMantenimientoController::class)
@@ -192,6 +201,12 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
             Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
             Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
+
+            // 🚗 Viajes — flujo de 4 pasos
+            Route::post('me/viajes/{solicitud}/iniciar', [MotoristaViajeController::class, 'iniciar']);
+            Route::post('me/viajes/{solicitud}/llegada', [MotoristaViajeController::class, 'llegadaDestino']);
+            Route::post('me/viajes/{solicitud}/retorno', [MotoristaViajeController::class, 'iniciarRetorno']);
+            Route::post('me/viajes/{solicitud}/finalizar', [MotoristaViajeController::class, 'finalizar']);
         });
 
     // ── CATÁLOGOS (para el frontend) ────────────────────────

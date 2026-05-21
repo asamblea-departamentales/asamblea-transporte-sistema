@@ -10,6 +10,7 @@ use App\Models\SolicitudTransporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
+use Carbon\Carbon;
 
 class SolicitudTransporteController extends Controller
 {
@@ -51,12 +52,15 @@ class SolicitudTransporteController extends Controller
             'destino_adicional' => ['nullable', 'string'],
             'fecha_salida' => ['required', 'date'],
             'fecha_retorno' => ['nullable', 'date', 'after_or_equal:fecha_salida'],
-            'hora_salida' => ['required'],
+            'hora_salida' => ['nullabe'],
             'cantidad_personas' => ['required', 'integer', 'min:1'],
             'prioridad' => ['required', 'string'],
             'tipo_vehiculo' => ['required', 'string'],
             'encargado' => ['required', 'string'],
             'subencargado' => ['nullable', 'string'],
+
+            //NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
+            'hora_retorno' => ['nullable'],
 
             // --- NUEVOS CAMPOS DE COORDENADAS ---
             'origen_lat' => ['nullable', 'numeric'],
@@ -77,6 +81,19 @@ class SolicitudTransporteController extends Controller
 
         // Limpiamos los campos que no van directo a columnas con el mismo nombre
         unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
+
+        // Mergear hora_salida en fecha_salida y hora_retorno en fecha_retorno
+        if (!empty($data['hora_salida']) && !empty($data['fecha_salida'])) {
+            $fecha = $data['fecha_salida'] instanceof Carbon ? $data['fecha_salida'] : Carbon::parse($data['fecha_salida']);
+            $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d') . ' ' . $data['hora_salida']);
+        }
+        unset($data['hora_salida']);
+
+        if (!empty($data['hora_retorno']) && !empty($data['fecha_retorno'])) {
+            $fecha = $data['fecha_retorno'] instanceof Carbon ? $data['fecha_retorno'] : Carbon::parse($data['fecha_retorno']);
+            $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d') . ' ' . $data['hora_retorno']);
+        }
+        unset($data['hora_retorno']);
 
         $user = Auth::user();
 
@@ -264,6 +281,134 @@ class SolicitudTransporteController extends Controller
             'service' => $service,
             'rangeLabel' => ($solicitud && $solicitud->exists) ? 'Misión Individual' : $this->rangeLabel($filters),
         ])->setPaper('a4', 'portrait')->stream('mision_oficial.pdf');
+    }
+
+    // ═════════════════════════════════════════════════════
+    // NUEVOS ENDPOINTS — Módulo de Aprobación
+    // ═════════════════════════════════════════════════════
+
+    public function comparativa(SolicitudTransporte $solicitud)
+    {
+        $this->authorizeJefe();
+
+        $solicitud->load([
+            'solicitante.grupo', 'unidad', 'vehiculo', 'motorista',
+            'sugerencia.vehiculoSugerido', 'sugerencia.motoristaSugerido',
+            'decisionOperativa.vehiculoFinal', 'decisionOperativa.motoristaFinal',
+            'decisionOperativa.usuarioOperativo',
+        ]);
+
+        return response()->json([
+            'solicitud' => [
+                'id' => $solicitud->codigo,
+                'solicitante' => ($solicitud->solicitante?->name ?? '') . ' (' . ($solicitud->unidad?->nombre ?? '') . ')',
+                'destino' => $solicitud->destino,
+                'prioridad' => $solicitud->prioridad?->value,
+                'prioridad_grupo' => $solicitud->prioridad_grupo?->value,
+                'fechas' => [
+                    'salida' => $solicitud->fecha_salida?->toIso8601String(),
+                    'retorno' => $solicitud->fecha_retorno?->toIso8601String(),
+                ],
+                'horas_estimadas' => $solicitud->horas_estimadas,
+                'motivo' => $solicitud->motivo_actividad,
+                'tipo_vehiculo' => $solicitud->tipo_vehiculo_nombre,
+                'cantidad_personas' => $solicitud->cantidad_personas,
+            ],
+            'operativo' => $solicitud->decisionOperativa ? [
+                'autor' => $solicitud->decisionOperativa->usuarioOperativo?->name,
+                'vehiculo' => [
+                    'id' => $solicitud->decisionOperativa->vehiculoFinal?->id,
+                    'placa' => $solicitud->decisionOperativa->vehiculoFinal?->placa,
+                ],
+                'motorista' => [
+                    'id' => $solicitud->decisionOperativa->motoristaFinal?->id,
+                    'nombre' => $solicitud->decisionOperativa->motoristaFinal?->nombre,
+                    'horas_periodo_7d' => $solicitud->decisionOperativa->motoristaFinal?->horasEnPeriodo(),
+                ],
+                'justificacion' => $solicitud->decisionOperativa->justificacion,
+                'cambio_detectado' => $solicitud->decisionOperativa->cambio_detectado,
+            ] : null,
+            'sistema' => $solicitud->sugerencia ? [
+                'score_confianza' => $solicitud->sugerencia->score_confianza,
+                'vehiculo_sugerido' => [
+                    'id' => $solicitud->sugerencia->vehiculoSugerido?->id,
+                    'placa' => $solicitud->sugerencia->vehiculoSugerido?->placa,
+                ],
+                'motorista_sugerido' => [
+                    'id' => $solicitud->sugerencia->motoristaSugerido?->id,
+                    'nombre' => $solicitud->sugerencia->motoristaSugerido?->nombre,
+                    'horas_periodo_7d' => $solicitud->sugerencia->horas_motorista_periodo,
+                ],
+                'combustible_porcentaje' => $solicitud->sugerencia->combustible_porcentaje,
+                'bullets_tecnicos' => $solicitud->sugerencia->bullets_tecnicos,
+            ] : null,
+        ]);
+    }
+
+    public function asignarRecursos(Request $request, SolicitudTransporte $solicitud)
+    {
+        $data = $request->validate([
+            'vehiculo_id' => ['required', 'exists:vehiculos,id'],
+            'motorista_id' => ['required', 'exists:motoristas,id'],
+            'justificacion' => ['nullable', 'string', 'min:10'],
+        ]);
+
+        try {
+            $result = $this->service->asignarRecursos(
+                $solicitud,
+                Auth::id(),
+                $data['vehiculo_id'],
+                $data['motorista_id'],
+                $data['justificacion'] ?? null,
+            );
+
+            return response()->json([
+                'message' => 'Recursos asignados. Solicitud enviada a aprobación del Jefe.',
+                'cambio_detectado' => $result['cambio_detectado'],
+                'estado_nuevo' => $result['estado_nuevo'],
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    public function aprobarConDecision(Request $request, SolicitudTransporte $solicitud)
+    {
+        $data = $request->validate([
+            'decision_final' => ['required', 'in:operativo,sistema'],
+            'comentario' => ['required', 'string'],
+            'firma' => ['nullable', 'string'],
+        ]);
+
+        try {
+            $result = $this->service->aprobarConDecision(
+                $solicitud,
+                Auth::id(),
+                $data['decision_final'],
+                $data['comentario'],
+                $data['firma'] ?? null,
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => "Solicitud {$solicitud->codigo} autorizada institucionalmente con éxito.",
+                'estado_final' => $result['estado_final'],
+                'recursos_consolidados' => $result['recursos_consolidados'],
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    public function desbloquear(SolicitudTransporte $solicitud)
+    {
+        try {
+            $result = $this->service->desbloquear($solicitud, Auth::id());
+
+            return response()->json($result);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
     }
 
     // =====================================================

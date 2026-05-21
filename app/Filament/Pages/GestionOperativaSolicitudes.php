@@ -7,7 +7,9 @@ use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
+use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Filament\Resources\SolicitudCombustibleResource;
+use App\Models\SolicitudTransporte;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -21,6 +23,12 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 {
     use InteractsWithForms;
     use WithPagination;
+
+    protected $listeners = [
+        'asignarRecursos' => 'asignarRecursosDesdeFilament',
+        'aprobarConDecision' => 'aprobarConDecision',
+        'desbloquearTransporte' => 'desbloquearTransporte',
+    ];
 
     protected static ?string $navigationGroup = 'Gestión Operativa';
 
@@ -318,10 +326,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
-
             return;
         }
 
+        // Para tipo 'transporte', lanzar modal de asignación de recursos
+        if ($tipo === 'transporte') {
+            $this->dispatch('abrir-asignacion-recursos', solicitudId: $id);
+            return;
+        }
+
+        // Para otros tipos, flujo actual
         app(RevisionOperativaService::class)->validarYPreaprobar(
             $tipo,
             $id,
@@ -340,46 +354,30 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     }
 
     // FIX #4d: aprobar — solo jefe
-    // FIX #4d: aprobar — solo jefe
     public function aprobar(string $tipo, int $id, array $data): void
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
-
             return;
         }
 
+        // Para tipo 'transporte', lanzar modal de decisión final
+        if ($tipo === 'transporte') {
+            $this->dispatch('abrir-decision-final', solicitudId: $id);
+            return;
+        }
+
+        // Flujo actual para otros tipos
         app(AprobacionesService::class)->aprobar(
             $tipo,
             $id,
             auth()->id(),
             $data['comentario'],
-            $data['firma'] ?? null,  // ← nuevo
+            $data['firma'] ?? null,
         );
 
         $this->refreshKpis();
         $this->resetPage();
-
-        // Notificación enriquecida para transporte
-        if ($tipo === 'transporte') {
-            $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
-
-            Notification::make()
-                ->title('Solicitud de transporte aprobada')
-                ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
-                ->success()
-                ->actions([
-                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                        ->label('Asignar transporte ahora →')
-                        ->url($urlAsignacion)
-                        ->button()
-                        ->color('primary'),
-                ])
-                ->persistent()
-                ->send();
-
-            return;
-        }
 
         // Notificación enriquecida para combustible
         if ($tipo === 'combustible') {
@@ -486,16 +484,20 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
-
             return;
         }
 
-        app(AprobacionesService::class)->reabrir(
-            $tipo,
-            $id,
-            auth()->id(),
-            $data['comentario']
-        );
+        if ($tipo === 'transporte') {
+            $solicitud = SolicitudTransporte::findOrFail($id);
+            app(SolicitudTransporteService::class)->desbloquear($solicitud, auth()->id());
+        } else {
+            app(AprobacionesService::class)->reabrir(
+                $tipo,
+                $id,
+                auth()->id(),
+                $data['comentario']
+            );
+        }
 
         $this->refreshKpis();
         $this->resetPage();
@@ -504,6 +506,104 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->title('Solicitud reabierta')
             ->success()
             ->send();
+    }
+
+    // ═════════════════════════════════════════════════════
+    // NUEVOS — Módulo de Aprobación (Filament)
+    // ═════════════════════════════════════════════════════
+
+    public function asignarRecursosDesdeFilament(int $id, int $vehiculoId, int $motoristaId, ?string $justificacion = null): void
+    {
+        if (!auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        $solicitud = SolicitudTransporte::findOrFail($id);
+
+        try {
+            $result = app(SolicitudTransporteService::class)->asignarRecursos(
+                $solicitud, auth()->id(), $vehiculoId, $motoristaId, $justificacion
+            );
+
+            $this->refreshKpis();
+            $this->resetPage();
+
+            Notification::make()
+                ->title('Recursos asignados. Solicitud enviada a pre-aprobación.')
+                ->success()
+                ->send();
+        } catch (\DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
+    }
+
+    public function aprobarConDecision(int $id, string $decisionFinal, string $comentario, ?string $firma = null): void
+    {
+        if (!auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        $solicitud = SolicitudTransporte::findOrFail($id);
+
+        try {
+            $result = app(SolicitudTransporteService::class)->aprobarConDecision(
+                $solicitud, auth()->id(), $decisionFinal, $comentario, $firma
+            );
+
+            $this->refreshKpis();
+            $this->resetPage();
+
+            Notification::make()
+                ->title('Solicitud aprobada con decisión')
+                ->success()
+                ->send();
+        } catch (\DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
+    }
+
+    public function desbloquearTransporte(int $id): void
+    {
+        if (!auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        $solicitud = SolicitudTransporte::findOrFail($id);
+
+        try {
+            app(SolicitudTransporteService::class)->desbloquear($solicitud, auth()->id());
+
+            $this->refreshKpis();
+            $this->resetPage();
+
+            Notification::make()
+                ->title('Solicitud desbloqueada para re-asignación')
+                ->success()
+                ->send();
+        } catch (\DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
+    }
+
+    public function vehiculosDisponibles(): array
+    {
+        return \App\Models\Vehiculo::disponibles()
+            ->orderBy('placa')
+            ->get()
+            ->pluck('placa', 'id')
+            ->toArray();
+    }
+
+    public function motoristasDisponibles(): array
+    {
+        return \App\Models\Motorista::disponibles()
+            ->orderBy('nombre')
+            ->get()
+            ->pluck('nombre', 'id')
+            ->toArray();
     }
 
     public function usuariosOptions(): array

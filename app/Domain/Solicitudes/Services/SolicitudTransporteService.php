@@ -8,8 +8,10 @@ use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
+use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudTransporte;
+use App\Models\SugerenciaAsignacion;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -127,6 +129,170 @@ class SolicitudTransporteService
         });
     }
 
+    public function generarSugerencia(SolicitudTransporte $solicitud): SugerenciaAsignacion
+    {
+        return app(SugerenciaAsignacionService::class)->generar($solicitud);
+    }
+
+    public function asignarRecursos(
+        SolicitudTransporte $solicitud,
+        int $userId,
+        int $vehiculoId,
+        int $motoristaId,
+        ?string $justificacion = null
+    ): array {
+        if ($solicitud->estado !== EstadoSolicitudEnum::EN_REVISION) {
+            throw new \DomainException('Solo se pueden asignar recursos a solicitudes en revisión.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $vehiculoId, $motoristaId, $justificacion) {
+            $sugerencia = $solicitud->sugerencia;
+            if (!$sugerencia) {
+                $sugerencia = $this->generarSugerencia($solicitud);
+            }
+
+            $cambio = $this->detectarCambio($sugerencia, $vehiculoId, $motoristaId);
+
+            if ($cambio !== 'ninguno' && (empty($justificacion) || strlen($justificacion) < 10)) {
+                throw new \DomainException(
+                    'El operador seleccionó recursos diferentes a la sugerencia del sistema. '
+                    . 'Es obligatorio proveer una justificación de al menos 10 caracteres.'
+                );
+            }
+
+            DecisionOperativa::create([
+                'solicitud_id' => $solicitud->id,
+                'usuario_operativo_id' => $userId,
+                'vehiculo_final_id' => $vehiculoId,
+                'motorista_final_id' => $motoristaId,
+                'cambio_detectado' => $cambio,
+                'justificacion' => $cambio !== 'ninguno' ? $justificacion : null,
+            ]);
+
+            $anterior = $solicitud->estado;
+            $solicitud->estado = EstadoSolicitudEnum::PRE_APROBADA;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $justificacion);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR_RECURSOS->value, $userId, [
+                'vehiculo_id' => $vehiculoId,
+                'motorista_id' => $motoristaId,
+                'cambio_detectado' => $cambio,
+            ]);
+
+            return [
+                'cambio_detectado' => $cambio,
+                'estado_nuevo' => EstadoSolicitudEnum::PRE_APROBADA->value,
+            ];
+        });
+    }
+
+    public function aprobarConDecision(
+        SolicitudTransporte $solicitud,
+        int $jefeId,
+        string $decisionFinal,
+        string $comentario,
+        ?string $firma = null
+    ): array {
+        if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
+            throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
+        }
+
+        if (!in_array($decisionFinal, ['operativo', 'sistema'])) {
+            throw new \InvalidArgumentException('decision_final debe ser "operativo" o "sistema".');
+        }
+
+        return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma) {
+            $anterior = $solicitud->estado;
+
+            if ($decisionFinal === 'operativo') {
+                $decision = $solicitud->decisionOperativa;
+                if (!$decision) throw new \DomainException('No hay decisión operativa registrada.');
+                $solicitud->vehiculo_id = $decision->vehiculo_final_id;
+                $solicitud->motorista_id = $decision->motorista_final_id;
+            } else {
+                $sugerencia = $solicitud->sugerencia;
+                if (!$sugerencia) throw new \DomainException('No hay sugerencia del sistema.');
+                $solicitud->vehiculo_id = $sugerencia->vehiculo_sugerido_id;
+                $solicitud->motorista_id = $sugerencia->motorista_sugerido_id;
+            }
+
+            if ($solicitud->fecha_salida && $solicitud->fecha_retorno) {
+                $solicitud->horas_estimadas = round(
+                    $solicitud->fecha_retorno->diffInMinutes($solicitud->fecha_salida) / 60, 2
+                );
+            }
+
+            $solicitud->decision_final = $decisionFinal;
+            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
+            $solicitud->decidido_por = $jefeId;
+            $solicitud->decidido_en = now();
+            $solicitud->comentario_jefe = $comentario;
+            if ($firma) $solicitud->firma_aprobador = $firma;
+            $solicitud->save();
+
+            app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
+                'decision_final' => $decisionFinal,
+            ]);
+
+            return [
+                'success' => true,
+                'estado_final' => EstadoSolicitudEnum::APROBADA->value,
+                'recursos_consolidados' => [
+                    'vehiculo_id' => $solicitud->vehiculo_id,
+                    'motorista_id' => $solicitud->motorista_id,
+                ],
+            ];
+        });
+    }
+
+    public function desbloquear(SolicitudTransporte $solicitud, int $userId): array
+    {
+        if (!in_array($solicitud->estado, [
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::RECHAZADA,
+        ], true)) {
+            throw new \DomainException('Solo se puede desbloquear una solicitud aprobada o rechazada.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado = EstadoSolicitudEnum::PENDIENTE;
+            $solicitud->decision_final = null;
+            $solicitud->vehiculo_id = null;
+            $solicitud->motorista_id = null;
+            $solicitud->decidido_por = null;
+            $solicitud->decidido_en = null;
+            $solicitud->save();
+
+            app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId,
+                'Solicitud desbloqueada para re-asignación.');
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::DESBLOQUEAR->value, $userId);
+
+            return [
+                'message' => "Solicitud {$solicitud->codigo} desbloqueada para re-asignación.",
+                'estado_nuevo' => EstadoSolicitudEnum::PENDIENTE->value,
+            ];
+        });
+    }
+
+    protected function detectarCambio(SugerenciaAsignacion $sugerencia, int $vehiculoId, int $motoristaId): string
+    {
+        $cambioV = $sugerencia->vehiculo_sugerido_id !== $vehiculoId;
+        $cambioM = $sugerencia->motorista_sugerido_id !== $motoristaId;
+
+        if ($cambioV && $cambioM) return 'ambos';
+        if ($cambioV) return 'vehiculo';
+        if ($cambioM) return 'chofer';
+        return 'ninguno';
+    }
+
     // Metodos auxiliares para registrar en la bitacora y el historial
 
     // Guarda el rastro de CÓMO cambió el estado (Línea de tiempo).
@@ -204,6 +370,21 @@ class SolicitudTransporteService
         return DB::transaction(function () use ($solicitud, $userId) {
 
             $anterior = $solicitud->estado;
+
+            // Calcular horas reales (Opción A — 4 pasos)
+            if ($solicitud->fecha_salida_real && $solicitud->fecha_retorno_real) {
+                if ($solicitud->fecha_llegada_destino && $solicitud->fecha_inicio_retorno) {
+                    $ida = $solicitud->fecha_llegada_destino->diffInMinutes($solicitud->fecha_salida_real) / 60;
+                    $ret = $solicitud->fecha_retorno_real->diffInMinutes($solicitud->fecha_inicio_retorno) / 60;
+                    $esp = $solicitud->fecha_inicio_retorno->diffInMinutes($solicitud->fecha_llegada_destino) / 60;
+                    $solicitud->horas_reales = round($ida + $ret, 2);
+                    $solicitud->horas_espera = round($esp, 2);
+                } else {
+                    $solicitud->horas_reales = round(
+                        $solicitud->fecha_retorno_real->diffInMinutes($solicitud->fecha_salida_real) / 60, 2
+                    );
+                }
+            }
 
             $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
             $solicitud->confirmado_por = $userId;

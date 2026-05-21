@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\SolicitudTransporte;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
@@ -52,6 +54,16 @@ class Motorista extends Model
     return $this->belongsTo(\App\Models\TipoLicencia::class);
 }
 
+    public function sugerencia()
+    {
+        return $this->hasOne(SugerenciaAsignacion::class, 'motorista_sugerido_id');
+    }
+
+    public function decisionOperativa()
+    {
+        return $this->hasOne(DecisionOperativa::class, 'motorista_final_id');
+    }
+
     /**
      * Vehículo vigente del motorista (si existe).
      */
@@ -90,6 +102,30 @@ class Motorista extends Model
         return $query->whereIn('id', $ids);
     }
 
+    public function horasEnPeriodo(int $dias = 7): float
+    {
+        $desde = now()->subDays($dias)->startOfDay();
+
+        return (float) SolicitudTransporte::where('motorista_id', $this->id)
+            ->where('fecha_salida', '>=', $desde)
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::COMPLETADA,
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::ASIGNADA,
+                EstadoSolicitudEnum::APROBADA,
+            ])
+            ->get()
+            ->sum(function ($viaje) {
+                if ($viaje->horas_reales !== null) return (float) $viaje->horas_reales;
+                if ($viaje->horas_estimadas !== null) return (float) $viaje->horas_estimadas;
+                if ($viaje->fecha_salida && $viaje->fecha_retorno) {
+                    return round($viaje->fecha_retorno->diffInMinutes($viaje->fecha_salida) / 60, 2);
+                }
+                return 0;
+            });
+    }
+
     //Filtra motoristas con estado inactivo (o con estado activo pero que no es el último)
     public function scopeNoDisponibles(Builder $query): Builder
     {
@@ -105,4 +141,5 @@ class Motorista extends Model
 
         return $query->whereIn('id', $noDisponiblesIds);
     }
+
 }
