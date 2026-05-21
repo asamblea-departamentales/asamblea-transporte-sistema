@@ -1,7 +1,7 @@
 // src/viajes/ViajeActivoPage.tsx
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Clock, MapPin, Shield, RefreshCw, Wifi, WifiOff, CheckCircle2, Play, CircleDot, Truck } from "lucide-react";
+import { ArrowLeft, MapPin, Shield, RefreshCw, Wifi, WifiOff, CheckCircle2, Play, CircleDot, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { getViajesMes } from "./viajes.service";
 import type { ViajeAsignado } from "./viajes.service";
@@ -20,6 +20,7 @@ export default function ViajeActivoPage() {
   
   const [viaje, setViaje] = useState<ViajeAsignado | null>(null);
   const [loadingViaje, setLoadingViaje] = useState<boolean>(true);
+  const [errorAcceso, setErrorAcceso] = useState<string | null>(null);
 
   // ─── 1. Estados del Ciclo de Vida (Fases de 0 a 4) ───
   // 0 = Programado, 1 = En ruta de ida, 2 = En destino (Espera/Charla), 3 = Regresando, 4 = Completado
@@ -42,10 +43,6 @@ export default function ViajeActivoPage() {
   const [isOnline, setIsOnline] = useState<boolean>(navigator.onLine);
   const [colaSincronizacion, setColaSincronizacion] = useState<{ fase: number; timestamp: string }[]>([]);
 
-  // ─── 3. Temporizador Inteligente ───
-  const [segundos, setSegundos] = useState<number>(0);
-  const timerRef = useRef<number | null>(null);
-
   // Cargar detalles del viaje
   useEffect(() => {
     async function loadViaje() {
@@ -66,6 +63,18 @@ export default function ViajeActivoPage() {
         const allViajes = [...dataCurrent, ...dataNext];
         const found = allViajes.find(v => String(v.id) === String(id));
         if (found) {
+          // Validar si es editable (es de hoy o ya está en ejecución)
+          const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+          const isEditable = found.fecha === todayStr || found.estado === "EN_EJECUCION";
+          
+          if (!isEditable) {
+            setErrorAcceso(`Este viaje está programado para la fecha ${found.fecha}. No es posible iniciarlo hoy (${todayStr}).`);
+            setViaje(null);
+            setLoadingViaje(false);
+            toast.error("Acceso denegado: Fecha de viaje inválida para hoy");
+            return;
+          }
+
           setViaje(found);
           
           // Inicializar fase basada en el estado del viaje si corresponde
@@ -138,34 +147,6 @@ export default function ViajeActivoPage() {
     };
   }, [colaSincronizacion]);
 
-  // Manejo del Cronómetro
-  const startTimer = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    setSegundos(0);
-    timerRef.current = window.setInterval(() => {
-      setSegundos((prev) => prev + 1);
-    }, 1000);
-  };
-
-  const stopTimer = () => {
-    if (timerRef.current) {
-      clearInterval(timerRef.current);
-      timerRef.current = null;
-    }
-  };
-
-  useEffect(() => {
-    return () => stopTimer();
-  }, []);
-
-  // Formateador del temporizador
-  const formatTimer = (totalSeconds: number) => {
-    const hrs = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
-    const mins = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
-    const secs = String(totalSeconds % 60).padStart(2, "0");
-    return `${hrs}:${mins}:${secs}`;
-  };
-
   // ─── Lógica de Clic y Transición de Estados ───
   const procesarTransicion = () => {
     const now = new Date();
@@ -193,22 +174,18 @@ export default function ViajeActivoPage() {
     if (proximaFase === 1) {
       setTiempos((t) => ({ ...t, salida: formattedTime }));
       setFaseActual(1);
-      startTimer();
       toast.success("¡Buen viaje!", { description: "Viaje iniciado. Conducción de ida en curso." });
     } else if (proximaFase === 2) {
       setTiempos((t) => ({ ...t, llegada: formattedTime }));
       setFaseActual(2);
-      startTimer(); // Reinicia cronómetro para contar el tiempo muerto (charla)
       toast.info("Llegada registrada", { description: "Iniciando tiempo de espera / actividad." });
     } else if (proximaFase === 3) {
       setTiempos((t) => ({ ...t, retorno: formattedTime }));
       setFaseActual(3);
-      startTimer(); // Cuenta la conducción de retorno
       toast.success("Retorno iniciado", { description: "Viaje de regreso hacia base central." });
     } else if (proximaFase === 4) {
       setTiempos((t) => ({ ...t, fin: formattedTime }));
       setFaseActual(4);
-      stopTimer();
       toast.success("¡Servicio concluido!", { description: "Viaje finalizado y guardado con éxito." });
       
       // Limpiar LocalStorage del viaje finalizado
@@ -280,7 +257,7 @@ export default function ViajeActivoPage() {
         </div>
         <h2 className="text-2xl font-black text-slate-800 mb-2">Error de Acceso</h2>
         <p className="text-slate-500 text-[14px] max-w-sm leading-relaxed mb-6">
-          No tienes permisos para visualizar esta ruta o la asignación no existe en la base de datos oficial.
+          {errorAcceso || "No tienes permisos para visualizar esta ruta o la asignación no existe en la base de datos oficial."}
         </p>
         <button 
           onClick={() => navigate("/dashboard")}
@@ -456,43 +433,6 @@ export default function ViajeActivoPage() {
 
         {/* Columna Derecha: Control de Tiempos y Bitácora */}
         <div className="lg:col-span-5 space-y-5 flex flex-col">
-          
-          {/* Cronómetro Circular */}
-          <div className="bg-white border border-slate-100 rounded-[24px] p-6 shadow-sm flex flex-col items-center justify-center text-center">
-            <span className={`text-[11px] font-black uppercase tracking-[0.2em] mb-2 leading-none ${
-              faseActual === 2 ? "text-amber-500 animate-pulse" : "text-slate-400"
-            }`}>
-              {faseActual === 2 ? "Tiempo de Charla/Espera" : faseActual > 0 && faseActual !== 4 ? "Tiempo Conduciendo" : "Tiempo de Viaje"}
-            </span>
-
-            <div className="relative flex items-center justify-center w-44 h-44 mt-2">
-              {/* Anillo de Carga Reactivo */}
-              <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
-                <circle 
-                  cx="50" cy="50" r="42" 
-                  stroke="#f1f5f9" strokeWidth="5.5" 
-                  fill="transparent" 
-                />
-                <circle 
-                  cx="50" cy="50" r="42" 
-                  stroke={faseActual === 2 ? "#fbbf24" : faseActual === 4 ? "#10b981" : "#3b82f6"} 
-                  strokeWidth="5.5" 
-                  fill="transparent" 
-                  strokeDasharray="264"
-                  strokeDashoffset={faseActual === 4 ? "0" : faseActual > 0 ? "80" : "264"}
-                  className="transition-all duration-1000 ease-in-out"
-                />
-              </svg>
-              <div className="absolute flex flex-col items-center">
-                <span className="text-[34px] font-black text-slate-800 tracking-tighter leading-none">
-                  {faseActual > 0 ? formatTimer(segundos) : "00:00:00"}
-                </span>
-                <Clock className={`w-5 h-5 mt-2.5 ${
-                  faseActual === 2 ? "text-amber-500 animate-bounce" : faseActual > 0 && faseActual !== 4 ? "text-blue-500 animate-spin" : "text-slate-300"
-                }`} style={{ animationDuration: faseActual === 2 ? '1s' : '4s' }} />
-              </div>
-            </div>
-          </div>
 
           {/* Línea de Tiempo / Bitácora */}
           <div className="bg-white border border-slate-100 rounded-[24px] p-6 shadow-sm flex-1 flex flex-col">

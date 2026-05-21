@@ -63,14 +63,14 @@ function StatCard({ title, value, tag, icon, accent, loading }: { title: string;
 // ────────────────────────────────────────────────
 // Componente: Tarjeta de Viaje Dinámica
 // ────────────────────────────────────────────────
-function TripCard({ viaje, isFuture }: { viaje: ViajeAsignado; isFuture: boolean }) {
+function TripCard({ viaje, isEditable }: { viaje: ViajeAsignado; isEditable: boolean }) {
   const navigate = useNavigate();
   const isPending = viaje.estado === "ASIGNADA";
   const dateObj = new Date(viaje.fecha + "T00:00:00");
   const formattedDate = dateObj.toLocaleDateString("es-SV", { weekday: "long", day: "numeric", month: "long" });
 
   const handleCardClick = () => {
-    if (!isFuture) {
+    if (isEditable) {
       navigate(`/viajes/${viaje.id}/activo`);
     }
   };
@@ -79,15 +79,15 @@ function TripCard({ viaje, isFuture }: { viaje: ViajeAsignado; isFuture: boolean
     <div 
       onClick={handleCardClick}
       className={`relative flex flex-col p-5 md:p-6 bg-white border ${
-        isFuture 
+        !isEditable 
           ? 'border-slate-100 opacity-60 cursor-not-allowed select-none bg-slate-50/50' 
           : isPending 
             ? 'border-amber-200 shadow-[0_8px_30px_rgba(245,158,11,0.1)] hover:border-amber-300 cursor-pointer active:scale-[0.99] hover:shadow-md' 
             : 'border-blue-200 shadow-[0_8px_30px_rgba(59,130,246,0.08)] hover:border-blue-300 cursor-pointer active:scale-[0.99] hover:shadow-md'
       } rounded-[20px] transition-all duration-300 group overflow-hidden`}
     >
-       {isPending && !isFuture && <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />}
-       {viaje.estado === "EN_EJECUCION" && !isFuture && <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />}
+       {isPending && isEditable && <div className="absolute top-0 right-0 w-32 h-32 bg-amber-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />}
+       {viaje.estado === "EN_EJECUCION" && isEditable && <div className="absolute top-0 right-0 w-32 h-32 bg-blue-100 rounded-full blur-[50px] opacity-40 -mr-10 -mt-10 pointer-events-none" />}
        
        <div className="flex items-center justify-between mb-5 z-10">
           <div className="flex flex-col">
@@ -95,13 +95,13 @@ function TripCard({ viaje, isFuture }: { viaje: ViajeAsignado; isFuture: boolean
             <span className="text-[18px] font-black tracking-tight text-[#0f172a] leading-none">{viaje.hora_salida}</span>
           </div>
           <div className="flex items-center gap-2">
-            {isFuture && (
+            {!isEditable && (
               <span className="px-2.5 py-0.5 text-[9px] font-black uppercase rounded bg-slate-200 text-slate-500 tracking-wider">
-                Futuro
+                Solo Lectura
               </span>
             )}
             <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full tracking-wider ${
-              isFuture 
+              !isEditable 
                 ? 'bg-slate-400' 
                 : ESTADO_COLORS[viaje.estado] || 'bg-slate-500'
             } text-white shadow-sm`}>
@@ -126,7 +126,7 @@ function TripCard({ viaje, isFuture }: { viaje: ViajeAsignado; isFuture: boolean
              </div>
           </div>
        </div>
-       {(viaje.solicitante || !isFuture) && (
+       {(viaje.solicitante || isEditable) && (
          <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between z-10 bg-slate-50/50 -mx-5 -mb-5 px-5 md:-mx-6 md:-mb-6 md:px-6 pb-5 rounded-b-[20px]">
            <div className="flex items-center gap-3">
              <div className="w-8 h-8 rounded-full bg-[#0f172a] flex items-center justify-center text-white text-[12px] font-black shadow-sm shrink-0">
@@ -142,7 +142,7 @@ function TripCard({ viaje, isFuture }: { viaje: ViajeAsignado; isFuture: boolean
              </div>
            </div>
            
-           {!isFuture ? (
+           {isEditable ? (
              <button className="flex items-center justify-center gap-1.5 px-3 py-1.5 bg-[#0f2548] text-white hover:bg-[#1a3a75] rounded-xl text-[11px] font-black uppercase tracking-wider shadow-sm transition-all shrink-0">
                 <span>Modo Conducción</span>
                 <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" /></svg>
@@ -312,9 +312,10 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className={`flex flex-col gap-4 mt-1 transition-opacity duration-300 ${loadingViajes ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                   {viajesHoy.map((v) => (
-                      <TripCard key={v.id} viaje={v} isFuture={false} />
-                   ))}
+                   {viajesHoy.map((v) => {
+                      const isEditable = v.fecha === todayStr || v.estado === "EN_EJECUCION";
+                      return <TripCard key={v.id} viaje={v} isEditable={isEditable} />;
+                   })}
                 </div>
               )}
            </div>
@@ -341,9 +342,10 @@ export default function DashboardPage() {
                 </div>
               ) : (
                 <div className={`flex flex-col gap-4 mt-1 transition-opacity duration-300 ${loadingViajes ? 'opacity-50 pointer-events-none' : 'opacity-100'}`}>
-                   {viajesFuturos.map((v) => (
-                      <TripCard key={v.id} viaje={v} isFuture={true} />
-                   ))}
+                   {viajesFuturos.map((v) => {
+                      const isEditable = v.fecha === todayStr || v.estado === "EN_EJECUCION";
+                      return <TripCard key={v.id} viaje={v} isEditable={isEditable} />;
+                   })}
                 </div>
               )}
            </div>
