@@ -78,12 +78,15 @@ class SolicitudTransporteController extends Controller
         // Limpiamos los campos que no van directo a columnas con el mismo nombre
         unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
 
+        $user = Auth::user();
+
         $solicitud = SolicitudTransporte::create([
             ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
             'destino' => $destinoReal,
             'destino_adicional' => $destinoAdicional,
             'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
-            'solicitante_id' => Auth::id(),
+            'solicitante_id' => $user->id,
+            'prioridad_grupo' => $user->grupo?->nivel_prioridad ?? 'baja',
             'estado' => EstadoSolicitudEnum::BORRADOR,
         ]);
 

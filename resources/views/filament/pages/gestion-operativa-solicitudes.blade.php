@@ -261,8 +261,8 @@
                     default   => 'badge-default',
                 };
                 $grupoNombreRaw = $row['grupo_nombre'] ?? '';
-                $grupoLabel = $grupoNombreRaw && $grupoKey
-                    ? mb_strtoupper($grupoNombreRaw) . ' (' . strtoupper($grupoKey) . ')'
+                $grupoLabel = $grupoNombreRaw
+                    ? mb_strtoupper($grupoNombreRaw) . ($grupoKey ? ' (' . strtoupper($grupoKey) . ')' : '')
                     : ($grupoKey ? strtoupper($grupoKey) : '—');
                 $uid = $row['tipo'] . $row['id'];
                 $fechaIngreso = !empty($row['fecha_ingreso']) ? \Carbon\Carbon::parse($row['fecha_ingreso']) : null;
