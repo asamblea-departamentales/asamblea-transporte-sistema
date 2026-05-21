@@ -42,6 +42,8 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public ?string $prioridad = null;
 
+    public ?string $prioridad_grupo = null;
+
     public ?string $estado = null;
 
     public int $kpi_total = 0;
@@ -90,6 +92,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             'date_to',
             'tipo',
             'prioridad',
+            'prioridad_grupo',
             'estado',
         ], true)) {
             $this->resetPage();
@@ -157,6 +160,18 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                         collect(PrioridadSolicitudEnum::cases())
                             ->mapWithKeys(fn ($c) => [$c->value => strtoupper($c->value)])
                     )
+                    ->native(false)
+                    ->live()
+                    ->columnSpan(['default' => 12, 'md' => 2]),
+
+                Forms\Components\Select::make('prioridad_grupo')
+                    ->label('Prioridad Grupo')
+                    ->options([
+                        'critica' => 'CRÍTICA',
+                        'alta' => 'ALTA',
+                        'media' => 'MEDIA',
+                        'baja' => 'BAJA',
+                    ])
                     ->native(false)
                     ->live()
                     ->columnSpan(['default' => 12, 'md' => 2]),
@@ -502,6 +517,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $this->date_to = null;
         $this->tipo = null;
         $this->prioridad = null;
+        $this->prioridad_grupo = null;
         $this->estado = null;
 
         $this->form->fill($this->getFilterState());
@@ -587,6 +603,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             'date_to' => $this->date_to,
             'tipo' => $this->tipo,
             'prioridad' => $this->prioridad,
+            'prioridad_grupo' => $this->prioridad_grupo,
             'estado' => $this->estado,
         ];
     }

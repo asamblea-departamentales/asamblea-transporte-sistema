@@ -30,6 +30,10 @@ class BandejaOperativaService
             $rows = $rows->where('prioridad', $filters['prioridad'])->values();
         }
 
+        if (!empty($filters['prioridad_grupo'])) {
+            $rows = $rows->where('prioridad_grupo', $filters['prioridad_grupo'])->values();
+        }
+
         if (!empty($filters['estado'])) {
             $rows = $rows->where('estado', $filters['estado'])->values();
         }
@@ -131,6 +135,7 @@ class BandejaOperativaService
                 'unidad' => $r->unidad?->nombre ?? '—',
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
+                'prioridad_grupo' => $r->prioridad_grupo?->value,
                 'estado' => $this->enumValue($r->estado),
             ];
         });

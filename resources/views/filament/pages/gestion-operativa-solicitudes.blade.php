@@ -64,6 +64,11 @@
     .badge-rechazada   { background: #fee2e2; color: #991b1b; }
     .badge-condicionada{ background: #fde8d0; color: #9a3412; }
     .badge-default     { background: #f3f4f6; color: #6b7280; }
+    .badge-grupo   { font-size: 12px; font-weight: 800; letter-spacing: .06em; padding: 4px 14px; border-radius: 999px; text-transform: uppercase; }
+    .badge-g-critica { background: #7c1d1d; color: #fff; border: 1.5px solid #991b1b; box-shadow: 0 0 0 2px #fca5a5; }
+    .badge-g-alta    { background: #b91c1c; color: #fff; border: 1.5px solid #dc2626; }
+    .badge-g-media   { background: #b45309; color: #fff; border: 1.5px solid #d97706; }
+    .badge-g-baja    { background: #065f46; color: #fff; border: 1.5px solid #059669; }
     .badge-alta   { background: #fee2e2; color: #b91c1c; }
     .badge-media  { background: #fef3c7; color: #b45309; }
     .badge-baja   { background: #d1fae5; color: #065f46; }
@@ -247,6 +252,21 @@
                     'baja'  => 'badge-baja',
                     default => 'badge-default',
                 };
+                $grupoKey = strtolower($row['prioridad_grupo'] ?? '');
+                $grupoBadgeClass = match($grupoKey) {
+                    'critica' => 'badge-g-critica',
+                    'alta'    => 'badge-g-alta',
+                    'media'   => 'badge-g-media',
+                    'baja'    => 'badge-g-baja',
+                    default   => 'badge-default',
+                };
+                $grupoLabel = match($grupoKey) {
+                    'critica' => 'CRÍTICA',
+                    'alta'    => 'ALTA',
+                    'media'   => 'MEDIA',
+                    'baja'    => 'BAJA',
+                    default   => '—',
+                };
                 $uid = $row['tipo'] . $row['id'];
                 $fechaIngreso = !empty($row['fecha_ingreso']) ? \Carbon\Carbon::parse($row['fecha_ingreso']) : null;
                 $edadHumana   = $fechaIngreso ? $fechaIngreso->diffForHumans() : null;
@@ -278,7 +298,8 @@
                         </span>
                     @endif
                     <span class="ml-auto flex items-center gap-2">
-                        <span class="badge {{ $prioBadgeClass }}">{{ strtoupper($prioridadKey ?: '—') }}</span>
+                        <span class="badge-grupo {{ $grupoBadgeClass }}">{{ $grupoLabel }}</span>
+                        <span class="badge {{ $prioBadgeClass }}" style="font-size:10px;">{{ strtoupper($prioridadKey ?: '—') }}</span>
                         <span class="badge {{ $estadoBadgeClass }}">{{ ucfirst(str_replace('_', ' ', $estadoKey)) }}</span>
                     </span>
                 </div>
