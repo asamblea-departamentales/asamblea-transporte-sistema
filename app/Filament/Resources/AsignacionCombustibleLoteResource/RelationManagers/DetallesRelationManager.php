@@ -5,6 +5,8 @@ namespace App\Filament\Resources\AsignacionCombustibleLoteResource\RelationManag
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
 use App\Filament\Resources\AsignacionCombustibleLoteResource;
+use App\Models\ContratoCombustible;
+use App\Models\SerieCarga;
 use App\Models\VehTipoCombustible;
 use App\Models\Vehiculo;
 use Filament\Forms;
@@ -187,14 +189,22 @@ class DetallesRelationManager extends RelationManager
                 // ── Campos operativos: inline editables por operativo en EN_PROCESO ──
 
                 ...($operativoEdita ? [
-                    TextInputColumn::make('numero_serie')
+                    SelectColumn::make('numero_serie')
                         ->label('N° Serie')
-                        ->extraAttributes(['style' => 'min-width:110px'])
+                        ->options(
+                            fn () => SerieCarga::where('activo', true)
+                                ->orderBy('nombre')
+                                ->pluck('nombre', 'nombre')
+                        )
                         ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
-                    TextInputColumn::make('numero_contrato')
+                    SelectColumn::make('numero_contrato')
                         ->label('N° Contrato')
-                        ->extraAttributes(['style' => 'min-width:120px'])
+                        ->options(
+                            fn () => ContratoCombustible::where('activo', true)
+                                ->orderBy('numero_contrato')
+                                ->pluck('numero_contrato', 'numero_contrato')
+                        )
                         ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
                     SelectColumn::make('tipo_combustible_id')

@@ -171,8 +171,9 @@ class LoteCombustibleService
                     'vehiculo_id'              => $solicitud->vehiculo_id,
                     'solicitud_combustible_id' => $solicitud->id,
                     'placa_cache'              => $solicitud->vehiculo->placa ?? '',
-                    'numero_ticket'            => $solicitud->ticket, // <-- Mapeado de ticket origen a numero_ticket destino
+                    'numero_ticket'            => $solicitud->ticket,
                     'monto_asignado'           => 0,
+                    'cantidad_galones'         => $solicitud->cantidad_combustible ?? 0,
                     'estado_asignacion'        => 'pendiente',
                 ]);
 
