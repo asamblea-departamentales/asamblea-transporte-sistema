@@ -107,7 +107,7 @@ class DetallesRelationManager extends RelationManager
             ]);
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
             ->registrar(
-                accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::UPDATE,
+                accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::ACTUALIZACION,
                 modelo: 'AsignacionCombustibleLoteDetalle',
                 datos: [
                     'detalle_id' => $record->id,

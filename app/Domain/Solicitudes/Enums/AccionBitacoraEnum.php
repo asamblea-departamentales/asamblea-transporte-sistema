@@ -17,6 +17,7 @@ enum AccionBitacoraEnum: string
 
     case ASIGNAR = 'asignar';
 
+    case ACTUALIZACION = 'actualizacion';
     //Nuevos Estados para trazabilidad en los reportes
     case EXPORTAR_PDF = 'exportar_pdf';
     case EXPORTAR_EXCEL = 'exportar_excel';
