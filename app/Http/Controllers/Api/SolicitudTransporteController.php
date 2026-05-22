@@ -52,7 +52,7 @@ class SolicitudTransporteController extends Controller
             'destino_adicional' => ['nullable', 'string'],
             'fecha_salida' => ['required', 'date'],
             'fecha_retorno' => ['nullable', 'date', 'after_or_equal:fecha_salida'],
-            'hora_salida' => ['nullabe'],
+            'hora_salida' => ['nullable'],
             'cantidad_personas' => ['required', 'integer', 'min:1'],
             'prioridad' => ['required', 'string'],
             'tipo_vehiculo' => ['required', 'string'],

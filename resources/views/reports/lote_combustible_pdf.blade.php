@@ -142,7 +142,7 @@
     <div class="meta">
 
         <strong>Estado:</strong>
-        {{ $lote->estado->label }}
+        {{ $lote->estado->label() }}
 
         &nbsp;|&nbsp;
 

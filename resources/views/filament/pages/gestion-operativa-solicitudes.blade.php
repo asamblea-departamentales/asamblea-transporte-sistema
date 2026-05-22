@@ -66,12 +66,12 @@
     .badge-default     { background: #f3f4f6; color: #6b7280; }
     .badge-grupo   { font-size: 12px; font-weight: 800; letter-spacing: .06em; padding: 4px 14px; border-radius: 999px; text-transform: uppercase; }
     .badge-g-critica { background: #7c1d1d; color: #fff; border: 1.5px solid #991b1b; box-shadow: 0 0 0 2px #fca5a5; }
-    .badge-g-alta    { background: #b91c1c; color: #fff; border: 1.5px solid #dc2626; }
-    .badge-g-media   { background: #b45309; color: #fff; border: 1.5px solid #d97706; }
-    .badge-g-baja    { background: #065f46; color: #fff; border: 1.5px solid #059669; }
-    .badge-alta   { background: #fee2e2; color: #b91c1c; }
-    .badge-media  { background: #fef3c7; color: #b45309; }
-    .badge-baja   { background: #d1fae5; color: #065f46; }
+    .badge-g-alta    { background: #92400e; color: #fff; border: 1.5px solid #d97706; }
+    .badge-g-media   { background: #c2410c; color: #fff; border: 1.5px solid #ea580c; }
+    .badge-g-baja    { background: #4b5563; color: #fff; border: 1.5px solid #6b7280; }
+    .badge-alta   { background: #fef3c7; color: #92400e; }
+    .badge-media  { background: #ffedd5; color: #c2410c; }
+    .badge-baja   { background: #f3f4f6; color: #6b7280; }
 
     .asignado-chip { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #f0f9ff; color: #0369a1; border: 1px solid #bae6fd; max-width: 160px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .asignado-chip.sin-asignar { background: #f9fafb; color: #9ca3af; border-color: #e5e7eb; }
