@@ -627,7 +627,10 @@ class ViewSolicitudTransporte extends ViewRecord
                 })
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                     auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
-                    $record->estado === EstadoSolicitudEnum::PROGRAMADA
+                    in_array($record->estado, [
+                        EstadoSolicitudEnum::PROGRAMADA,
+                        EstadoSolicitudEnum::APROBADA,
+                    ], true)
                 ),
 
             // ── RECHAZAR ─────────────────────────────────────────────────
