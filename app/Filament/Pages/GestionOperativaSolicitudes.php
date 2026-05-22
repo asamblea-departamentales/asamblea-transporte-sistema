@@ -329,13 +329,6 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             return;
         }
 
-        // Para tipo 'transporte', lanzar modal de asignación de recursos
-        if ($tipo === 'transporte') {
-            $this->dispatch('abrir-asignacion-recursos', solicitudId: $id);
-            return;
-        }
-
-        // Para otros tipos, flujo actual
         app(RevisionOperativaService::class)->validarYPreaprobar(
             $tipo,
             $id,
