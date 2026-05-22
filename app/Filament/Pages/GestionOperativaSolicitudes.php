@@ -354,13 +354,6 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             return;
         }
 
-        // Para tipo 'transporte', lanzar modal de decisión final
-        if ($tipo === 'transporte') {
-            $this->dispatch('abrir-decision-final', solicitudId: $id);
-            return;
-        }
-
-        // Flujo actual para otros tipos
         app(AprobacionesService::class)->aprobar(
             $tipo,
             $id,
@@ -371,6 +364,27 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
         $this->refreshKpis();
         $this->resetPage();
+
+        // Notificación enriquecida para transporte
+        if ($tipo === 'transporte') {
+            $urlAsignacion = \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $id]);
+
+            Notification::make()
+                ->title('Solicitud de transporte aprobada')
+                ->body('El vehículo y motorista pueden asignarse desde el detalle de la solicitud.')
+                ->success()
+                ->actions([
+                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
+                        ->label('Asignar transporte ahora →')
+                        ->url($urlAsignacion)
+                        ->button()
+                        ->color('primary'),
+                ])
+                ->persistent()
+                ->send();
+
+            return;
+        }
 
         // Notificación enriquecida para combustible
         if ($tipo === 'combustible') {
