@@ -74,16 +74,12 @@ class DetallesRelationManager extends RelationManager
                 ->required()
                 ->maxLength(50),
 
-            Forms\Components\TextInput::make('monto_asignado')
-                ->label('Monto ($)')
-                ->numeric()
-                ->required()
+            Forms\Components\TextInput::make('monto_asignado') 
+                ->label('Monto ($)') 
+                ->numeric() 
+                ->required() 
                 ->prefix('$')
-                ->minValue(0)
-                ->summarize(
-                    Tables\Columns\Summarizers\Sum::make()
-                        ->money('USD', true)
-                ),
+                 ->minValue(0),
 
             Forms\Components\Select::make('solicitud_combustible_id')
                 ->label('Solicitud (opcional)')
