@@ -145,7 +145,7 @@ class BandejaOperativaService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante'])
+            ->with(['solicitante.grupo'])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PENDIENTE,
                 EstadoSolicitudEnum::EN_REVISION,
@@ -169,6 +169,8 @@ class BandejaOperativaService
                 'unidad' => '—',
                 'detalle' => $r->destino_actividad ?? 'Solicitud de combustible',
                 'prioridad' => $this->enumValue($r->prioridad),
+                'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
+                'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
             ];
         });

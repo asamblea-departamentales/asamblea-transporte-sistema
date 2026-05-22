@@ -188,7 +188,7 @@ class RevisionOperativaService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante'])
+            ->with(['solicitante.grupo'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
         if (!empty($filters['date_from'])) {
@@ -209,6 +209,8 @@ class RevisionOperativaService
                 'unidad' => '—',
                 'detalle' => $r->destino_actividad ?? 'Solicitud de combustible',
                 'prioridad' => $this->enumValue($r->prioridad),
+                'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
+                'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
             ];
         });
