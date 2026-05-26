@@ -12,6 +12,9 @@ use Illuminate\Testing\Fluent\Concerns\Has;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
 use App\Models\Motorista;
+use App\Models\SolicitudTransporte;
+use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable implements FilamentUser
@@ -85,6 +88,22 @@ class User extends Authenticatable implements FilamentUser
     public function motorista()
     {
         return $this->hasOne(Motorista::class);
+    }
+
+    // Relaciones con solicitudes
+    public function solicitudesTransporte()
+    {
+        return $this->hasMany(SolicitudTransporte::class, 'solicitante_id');
+    }
+
+    public function solicitudesCombustible()
+    {
+        return $this->hasMany(SolicitudCombustible::class, 'solicitante_id');
+    }
+
+    public function solicitudesMantenimiento()
+    {
+        return $this->hasMany(SolicitudMantenimiento::class, 'solicitante_id');
     }
 
     //Relacion con grupo de prioridades
