@@ -28,10 +28,10 @@ class ActividadEconomicaResource extends Resource
     protected static ?string $navigationIcon  = 'heroicon-o-briefcase';
     protected static ?int    $navigationSort  = 2;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin']); }
+    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'admin', 'ti', 'jefe']); }
+    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'admin', 'ti', 'jefe']); }
+    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'admin', 'ti', 'jefe']); }
+    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'admin']); }
 
     public static function form(Form $form): Form
     {

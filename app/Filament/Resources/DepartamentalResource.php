@@ -35,7 +35,7 @@ class DepartamentalResource extends Resource
     // Solo TI
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['ti', 'superadmin', 'admin']) ?? false;
+        return auth()->user()?->hasAnyRole(['ti', 'superadmin', 'admin', 'super_admin']) ?? false;
     }
 
     public static function form(Form $form): Form

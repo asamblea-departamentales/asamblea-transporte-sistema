@@ -45,7 +45,7 @@ class SolicitudCombustibleResource extends Resource
     // Controla quién puede ver la lista de solicitudes de combustible.
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
+        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
     }
 
 

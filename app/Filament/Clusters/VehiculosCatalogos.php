@@ -13,6 +13,6 @@ class VehiculosCatalogos extends Cluster
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 }

@@ -32,22 +32,22 @@ class ContratoCombustibleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canEdit($r): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canDelete($r): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe', 'super_admin']);
     }
 
     public static function form(Form $form): Form

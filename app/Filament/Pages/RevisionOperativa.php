@@ -47,7 +47,7 @@ class RevisionOperativa extends Page implements Forms\Contracts\HasForms
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'ti', 'jefe']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']) ?? false;
     }
 
     public function updated($propertyName): void

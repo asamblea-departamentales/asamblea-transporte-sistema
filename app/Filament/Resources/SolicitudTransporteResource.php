@@ -65,7 +65,7 @@ class SolicitudTransporteResource extends Resource
     // Controla quién puede ver la lista de solicitudes.
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
+        return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
     }
 
     public static function canEdit($record): bool

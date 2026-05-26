@@ -35,9 +35,9 @@ class MotoristaResource extends Resource
         return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
-    public static function canCreate(): bool         { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']); }
-    public static function canEdit($record): bool   { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']); }
-    public static function canDelete($record): bool { return auth()->user()->hasAnyRole(['admin', 'jefe']); }
+    public static function canCreate(): bool         { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']); }
+    public static function canEdit($record): bool   { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']); }
+    public static function canDelete($record): bool { return auth()->user()->hasAnyRole(['admin', 'jefe', 'super_admin']); }
 
     public static function form(Form $form): Form
     {

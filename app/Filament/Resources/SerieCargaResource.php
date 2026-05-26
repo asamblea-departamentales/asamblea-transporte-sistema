@@ -32,12 +32,12 @@ class SerieCargaResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canEdit($r): bool

@@ -38,7 +38,7 @@ class AsignacionCombustibleLoteResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'operativo', 'jefe', 'super_admin']);
     }
 
     public static function canCreate(): bool

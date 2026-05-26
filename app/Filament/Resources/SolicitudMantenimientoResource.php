@@ -49,7 +49,7 @@ class SolicitudMantenimientoResource extends Resource
     // Controla quién puede ver la lista de solicitudes de mantenimiento.
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador']);
+        return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador', 'super_admin']);
     }
 
 

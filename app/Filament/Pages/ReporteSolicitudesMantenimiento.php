@@ -75,7 +75,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']) ?? false;
+        return auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']) ?? false;
     }
 
     public function updated($propertyName): void

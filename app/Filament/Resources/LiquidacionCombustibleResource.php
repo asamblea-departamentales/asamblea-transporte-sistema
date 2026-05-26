@@ -35,7 +35,7 @@ class LiquidacionCombustibleResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['liquidador', 'jefe', 'operativo']);
+        return auth()->user()?->hasAnyRole(['liquidador', 'jefe', 'operativo', 'super_admin', 'admin']) ?? false;
     }
 
     public static function getEloquentQuery(): Builder
