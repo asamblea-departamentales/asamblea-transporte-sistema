@@ -329,7 +329,7 @@ class PanelLiquidaciones extends Page
             'descripcion' => ['required', 'string', 'max:1000'],
         ]);
 
-        app(\App\Domain\Incidencias\Services\IncidenciaService::class)
+        app(\App\Domain\Solicitudes\Services\IncidenciaService::class)
             ->crear([
                 'entidad_tipo' => $this->incidencia_tipo,
                 'entidad_id' => $this->incidencia_id,
@@ -351,6 +351,10 @@ class PanelLiquidaciones extends Page
 
     public static function canAccess(): bool
     {
-        return auth()->user()?->hasAnyRole(['liquidador', 'jefe', 'operativo']);
+        if (auth()->check()) {
+        return auth()->user()->hasAnyRole(['liquidador', 'jefe', 'operativo', 'admin', 'super-admin', 'superadmin', 'super_admin']);
+    }
+
+        return false;
     }
 }
