@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA HISTORIAL DE ESTADOS
+// -----------------------------------------------------------------------------
+// Este recurso muestra el historial de cambios de estado de las solicitudes.
+// Por ejemplo, cuándo una solicitud pasó de "pendiente" a "aprobada" y quién
+// lo hizo. Solo los jefes y administradores pueden ver esta información.
+// No se pueden crear ni editar registros aquí; solo se consultan.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\HistorialEstadoResource\Pages;

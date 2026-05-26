@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE SOLICITUDES DE TRANSPORTE (VIAJES)
+// -----------------------------------------------------------------------------
+// Este controlador gestiona las solicitudes de transporte o viajes que hacen
+// los empleados. Permite crear una solicitud de viaje, enviarla para
+// aprobación, asignar vehículo y motorista, y generar reportes en PDF.
+// También incluye funciones avanzadas como comparar la sugerencia del
+// sistema contra la decisión del operador al asignar recursos.
+
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
@@ -406,6 +415,23 @@ class SolicitudTransporteController extends Controller
             $result = $this->service->desbloquear($solicitud, Auth::id());
 
             return response()->json($result);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    public function cancelar(Request $request, SolicitudTransporte $solicitud)
+    {
+        $data = $request->validate([
+            'motivo_cancelacion' => ['required', 'string', 'min:10', 'max:2000'],
+        ]);
+
+        try {
+            $solicitud = $this->service->cancelar($solicitud, Auth::id(), $data['motivo_cancelacion']);
+
+            return response()->json([
+                'data' => $solicitud->fresh()->load(['unidad', 'solicitante']),
+            ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }

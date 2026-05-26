@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA PROVEEDORES
+// -----------------------------------------------------------------------------
+// Administra los proveedores o empresas que prestan servicios a la
+// institución. Permite registrar su información comercial, ubicación,
+// datos fiscales (NIT, NRC, DUI), clasificación por actividad económica
+// y tamaño. Los encargados pueden ver, crear, editar y eliminar
+// proveedores, así como activarlos o desactivarlos.
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ProveedorResource\Pages;

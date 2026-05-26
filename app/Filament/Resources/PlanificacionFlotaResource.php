@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA PLANIFICACIÓN DE FLOTA
+// -----------------------------------------------------------------------------
+// Muestra todos los vehículos activos en tarjetas visuales (como fichas)
+// para que el encargado pueda ver rápidamente qué vehículos están
+// disponibles, cuáles están en ruta y cuáles tienen viajes asignados.
+// También indica el motorista asignado a cada vehículo. Es una
+// herramienta de consulta visual para la gestión operativa diaria.
 
 namespace App\Filament\Resources;
 

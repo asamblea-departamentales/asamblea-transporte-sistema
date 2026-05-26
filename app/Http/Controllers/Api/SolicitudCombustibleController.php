@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE SOLICITUDES DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Este controlador permite a los empleados crear solicitudes de combustible
+// para los vehículos. Maneja todo el proceso: crear, enviar, aprobar,
+// rechazar, finalizar y cancelar solicitudes. También permite a los jefes
+// hacer observaciones y pre-aprobar. Cada solicitud pasa por varios estados
+// (borrador, pendiente, aprobada, asignada, completada, cancelada).
+
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
@@ -137,16 +146,20 @@ class SolicitudCombustibleController extends Controller
         ]);
     }
 
-    public function cancelar(SolicitudCombustible $solicitud)
+    public function cancelar(Request $request, SolicitudCombustible $solicitud)
     {
         $this->authorizeOwner($solicitud);
 
+        $data = $request->validate([
+            'motivo_cancelacion' => ['required', 'string', 'min:10', 'max:2000'],
+        ]);
+
         try {
-            $solicitud = $this->service->cancelar($solicitud, Auth::id());
+            $solicitud = $this->service->cancelar($solicitud, Auth::id(), $data['motivo_cancelacion']);
 
             return response()->json([
                 'message' => 'Solicitud cancelada correctamente.',
-                'data' => $solicitud->fresh(),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);

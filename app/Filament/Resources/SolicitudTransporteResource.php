@@ -1,5 +1,19 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA SOLICITUDES DE TRANSPORTE
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar las solicitudes de transporte
+// dentro del sistema. Aquí se configuran los formularios, las tablas y las
+// acciones que los usuarios pueden realizar sobre las solicitudes. Está pensado
+// para que cualquier persona, incluso sin experiencia en Laravel o Filament,
+// pueda entender cómo se administra el flujo de trabajo de las solicitudes.
+//
+// Cada sección y método tiene comentarios explicativos para facilitar la
+// comprensión, especialmente para ingenieros con experiencia tradicional o que
+// no están familiarizados con frameworks modernos.
+
+
 namespace App\Filament\Resources;
 
 //Resource de Filament para gestionar las Solicitudes de Transporte, con formularios personalizados, acciones específicas y 
@@ -28,25 +42,46 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
+// Esta clase representa el "recurso" de Solicitudes de Transporte.
+// Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar registros.
 class SolicitudTransporteResource extends Resource
 {
+
+    // Indica el modelo principal que representa una solicitud de transporte en la base de datos.
     protected static ?string $model = SolicitudTransporte::class;
 
+    // "Slug" es el nombre corto que se usa en la URL para este recurso.
     protected static ?string $slug = 'solicitud-transporte';
 
+    // Agrupa este recurso en el menú bajo "Asignaciones".
     protected static ?string $navigationGroup = 'Asignaciones';
 
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Transporte';
 
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
+    // Controla quién puede ver la lista de solicitudes.
     public static function canViewAny(): bool
     {
         return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
     }
 
+    public static function canEdit($record): bool
+    {
+        return in_array($record->estado->value, [
+            EstadoSolicitudEnum::BORRADOR->value,
+            EstadoSolicitudEnum::PENDIENTE->value,
+        ]);
+    }
+
     // =========================================================================
-    // MÉTODO HELPER — resolución de motorista para un vehículo seleccionado
+    // -------------------------------------------------------------------------
+    // MÉTODO AUXILIAR: Selección automática de motorista según vehículo
+    // -------------------------------------------------------------------------
+    // Este método busca el motorista más adecuado para un vehículo específico.
+    // Si el titular no está disponible, sugiere un sustituto.
     // =========================================================================
     private static function resolverMotoristaParaVehiculo(int $vehiculoId): array
     {
@@ -122,7 +157,11 @@ class SolicitudTransporteResource extends Resource
     }
 
     // =========================================================================
-    // HELPER REUTILIZABLE — afterStateUpdated idéntico para ambos Selects
+    // -------------------------------------------------------------------------
+    // MÉTODO AUXILIAR: Actualización automática del motorista al elegir vehículo
+    // -------------------------------------------------------------------------
+    // Este método se usa para que, al seleccionar un vehículo, el sistema
+    // automáticamente sugiera el motorista más adecuado y muestre su información.
     // =========================================================================
     private static function afterVehiculoSeleccionado(): \Closure
     {
@@ -141,7 +180,10 @@ class SolicitudTransporteResource extends Resource
     }
 
     // =========================================================================
-    // HELPER REUTILIZABLE — guard de seguridad en ->action() de ambas acciones
+    // -------------------------------------------------------------------------
+    // MÉTODO AUXILIAR: Verifica que el motorista esté disponible antes de guardar
+    // -------------------------------------------------------------------------
+    // Si el motorista seleccionado está marcado como NO DISPONIBLE, bloquea la acción.
     // =========================================================================
     private static function guardarSiMotoristaDisponible(array $data): void
     {
@@ -166,12 +208,21 @@ class SolicitudTransporteResource extends Resource
     }
 
     // =========================================================================
-    // FORM
+    // -------------------------------------------------------------------------
+    // FORMULARIO PRINCIPAL
+    // -------------------------------------------------------------------------
+    // Aquí se define cómo se ve y se comporta el formulario para ver o editar
+    // una solicitud de transporte. Cada sección tiene campos específicos y
+    // explicaciones para el usuario.
     // =========================================================================
     public static function form(Form $form): Form
     {
+        // El formulario se divide en varias secciones para mostrar información relevante.
+        // Cada sección tiene un propósito claro y los campos muestran datos importantes
+        // de la solicitud, como el código, unidad solicitante, fechas, motivo, etc.
         return $form
             ->schema([
+                // Sección de resumen general de la solicitud
                 Forms\Components\Section::make('Resumen')
                     ->schema([
                         Forms\Components\Placeholder::make('codigo_ui')
@@ -968,6 +1019,7 @@ class SolicitudTransporteResource extends Resource
         return [
             'index' => Pages\ListSolicitudTransportes::route('/'),
             'view' => Pages\ViewSolicitudTransporte::route('/{record}'),
+            'edit' => Pages\EditSolicitudTransporte::route('/{record}/edit'),
         ];
     }
 }

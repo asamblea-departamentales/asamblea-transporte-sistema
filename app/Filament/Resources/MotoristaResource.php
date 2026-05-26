@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA MOTORISTAS
+// -----------------------------------------------------------------------------
+// Este recurso administra el catálogo de motoristas (conductores) de la
+// institución. Aquí se registra su información personal (nombre, DUI,
+// teléfono, licencia), se les asigna un tipo de licencia y se lleva un
+// historial de sus estados (disponible o no disponible). Los usuarios
+// autorizados pueden crear, editar y ver motoristas.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MotoristaResource\Pages;

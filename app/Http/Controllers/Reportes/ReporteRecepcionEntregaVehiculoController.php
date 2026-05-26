@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE RECEPCIÓN Y ENTREGA DE VEHÍCULO
+// -----------------------------------------------------------------------------
+// Genera un documento que registra la recepción o entrega de un vehículo.
+// Muestra los datos del movimiento (vehículo, motorista, usuario que
+// entrega/recibe). Sirve como constancia de que se realizó el traspaso
+// del vehículo entre personas.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Http\Controllers\Controller;

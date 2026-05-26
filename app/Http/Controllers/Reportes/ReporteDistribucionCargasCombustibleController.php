@@ -1,5 +1,12 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE DISTRIBUCIÓN DE CARGAS DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Genera un reporte de cómo se distribuyeron las cargas de combustible
+// entre los vehículos y motoristas. Incluye indicadores como total de
+// galones y montos asignados. Ayuda a ver quién recibió cuánto combustible.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Services\Reportes\ReporteDistribucionCargasCombustibleService;

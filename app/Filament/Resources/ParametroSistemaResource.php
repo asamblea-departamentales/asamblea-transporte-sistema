@@ -1,4 +1,11 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA PARÁMETROS DEL SISTEMA
+// -----------------------------------------------------------------------------
+// Administra las configuraciones generales del sistema de transporte.
+// Aquí se definen valores globales que afectan cómo funciona la
+// aplicación (límites, tiempos, opciones por defecto, etc.).
+// Solo se pueden ver y editar; no se crean ni eliminan desde la interfaz.
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ParametroSistemaResource\Pages;

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE ESTADO DE LOS MOTORISTAS
+// -----------------------------------------------------------------------------
+// Este controlador permite consultar y cambiar el estado de los motoristas
+// (disponible / no disponible). Los motoristas pueden marcar su propio estado
+// (por ejemplo "No Disponible" por enfermedad) y los administradores pueden
+// ver el historial de cambios de estado de cada motorista.
+
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;

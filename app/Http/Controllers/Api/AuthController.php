@@ -1,6 +1,12 @@
 <?php
 
-// Creado para fusion API y FRONTEND
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE INICIO DE SESIÓN (AUTENTICACIÓN)
+// -----------------------------------------------------------------------------
+// Este controlador maneja el inicio y cierre de sesión de los usuarios.
+// Verifica que el correo y la contraseña sean correctos, revisa que no haya
+// una sesión activa en otro dispositivo, y registra la sesión en el sistema.
+// También permite consultar los datos del usuario que inició sesión.
 
 namespace App\Http\Controllers\Api;
 

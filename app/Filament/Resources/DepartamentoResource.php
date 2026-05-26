@@ -1,4 +1,13 @@
 <?php
+
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA DEPARTAMENTOS GEOGRÁFICOS
+// -----------------------------------------------------------------------------
+// Este recurso administra el catálogo de departamentos geográficos
+// (ej: San Salvador, La Libertad, Santa Ana). Cada departamento pertenece a
+// un país. Sirve para clasificar ubicaciones en el sistema de transporte.
+// Los usuarios autorizados pueden crear, editar y activar/desactivar departamentos.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DepartamentoResource\Pages;

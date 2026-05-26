@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA BITÁCORA DE EVENTOS
+// -----------------------------------------------------------------------------
+// Este recurso muestra el registro de auditoría del sistema (bitácora).
+// Aquí se lista cada operación importante que los usuarios realizan, como
+// crear, aprobar o rechazar solicitudes. Solo los jefes y administradores
+// pueden ver esta información. No se pueden crear ni editar registros aquí.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\BitacoraEventoResource\Pages;

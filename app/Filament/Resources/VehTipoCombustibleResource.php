@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Administra los tipos de combustible que pueden usar los vehículos
+// (ej: "Gasolina", "Diésel", "Eléctrico", "Híbrido").
+// Permite crear, editar, buscar y eliminar tipos de combustible.
+// Usado por administradores, jefes y personal de TI para mantener el catálogo.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

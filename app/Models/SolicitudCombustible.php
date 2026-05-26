@@ -37,6 +37,7 @@ class SolicitudCombustible extends Model
         'aprobador_id',
         'fecha_aprobacion',
         'motivo_rechazo',
+        'motivo_cancelacion',
         'observaciones',
         // Campos para contratos
         'contrato_id',

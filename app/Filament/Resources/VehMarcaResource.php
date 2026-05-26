@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA MARCAS DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Administra el catálogo de marcas de vehículos (ej: "Toyota", "Nissan", "Ford").
+// Permite crear, editar, buscar y eliminar marcas. También evita que se borre
+// una marca si tiene modelos o vehículos asociados. Es utilizado por
+// administradores, jefes y personal de TI.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

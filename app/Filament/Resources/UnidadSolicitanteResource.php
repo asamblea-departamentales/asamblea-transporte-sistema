@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA UNIDADES SOLICITANTES
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar las unidades solicitantes,
+// es decir, los departamentos o áreas que pueden solicitar servicios dentro del sistema.
+// Los comentarios están pensados para que cualquier ingeniero, incluso sin
+// experiencia en Laravel o Filament, pueda entender cómo se administra este catálogo.
+
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\UnidadSolicitanteResource\Pages;
@@ -11,53 +20,70 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Support\Str;
 
+// Esta clase representa el "recurso" de Unidades Solicitantes.
+// Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar unidades.
 class UnidadSolicitanteResource extends Resource
 {
+
+    // Indica el modelo principal que representa una unidad solicitante en la base de datos.
     protected static ?string $model = UnidadSolicitante::class;
+    // Agrupa este recurso en el menú bajo "Catálogos Globales".
     protected static ?string $navigationGroup = 'Catálogos Globales';
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Unidades Solicitantes';
+    // Nombre plural y singular para mostrar en la interfaz.
     protected static ?string $pluralModelLabel = 'Unidades Solicitantes';
     protected static ?string $modelLabel = 'Unidad Solicitante';
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon  = 'heroicon-o-building-office-2';
+    // Orden en el que aparece en el menú.
     protected static ?int    $navigationSort  = 12;
 
+
+    // Controla quién puede ver, crear, editar o eliminar unidades solicitantes.
+    // Solo ciertos roles pueden realizar estas acciones.
     public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
     public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
     public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
     public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin']); }
 
+    // ------------------------------------------------------------------------- 
+    // FORMULARIO PRINCIPAL
+    // ------------------------------------------------------------------------- 
+    // Aquí se define cómo se ve y se comporta el formulario para crear o editar
+    // una unidad solicitante. Cada campo tiene validaciones y explicaciones.
     public static function form(Form $form): Form
-{
-    return $form->schema([
-        Forms\Components\Grid::make(3)->schema([
-            // Panel Principal
-            Forms\Components\Section::make('Detalles de la Unidad')
-                ->description('Identifique la unidad administrativa y sus siglas oficiales.')
-                ->icon('heroicon-o-building-office-2')
-                ->columnSpan(2)
-                ->schema([
-                    Forms\Components\Grid::make(2)->schema([
-                        Forms\Components\TextInput::make('codigo')
-                            ->label('Código Interno')
+    {
+        return $form->schema([
+            Forms\Components\Grid::make(3)->schema([
+                // Panel Principal: Detalles de la unidad
+                Forms\Components\Section::make('Detalles de la Unidad')
+                    ->description('Identifique la unidad administrativa y sus siglas oficiales.')
+                    ->icon('heroicon-o-building-office-2')
+                    ->columnSpan(2)
+                    ->schema([
+                        Forms\Components\Grid::make(2)->schema([
+                            Forms\Components\TextInput::make('codigo')
+                                ->label('Código Interno')
+                                ->required()
+                                ->maxLength(20)
+                                ->placeholder('010307')
+                                ->prefixIcon('heroicon-m-hashtag')
+                                ->extraInputAttributes(['class' => 'font-mono']),
+                            Forms\Components\TextInput::make('siglas')
+                                ->label('Siglas de la Unidad')
+                                ->maxLength(20)
+                                ->placeholder('DPTO. TRANS.')
+                                ->prefixIcon('heroicon-m-variable'),
+                        ]),
+                        Forms\Components\TextInput::make('nombre')
+                            ->label('Nombre Completo')
                             ->required()
-                            ->maxLength(20)
-                            ->placeholder('010307')
-                            ->prefixIcon('heroicon-m-hashtag')
-                            ->extraInputAttributes(['class' => 'font-mono']),
-                        Forms\Components\TextInput::make('siglas')
-                            ->label('Siglas de la Unidad')
-                            ->maxLength(20)
-                            ->placeholder('DPTO. TRANS.')
-                            ->prefixIcon('heroicon-m-variable'),
-                    ]),
-                    Forms\Components\TextInput::make('nombre')
-                        ->label('Nombre Completo')
-                        ->required()
-                        ->maxLength(300)
-                        ->columnSpanFull(),
-                    Forms\Components\Textarea::make('descripcion')
-                        ->label('Notas o Descripción')
-                        ->rows(3)
+                            ->maxLength(300)
+                            ->columnSpanFull(),
+                        Forms\Components\Textarea::make('descripcion')
+                            ->label('Notas o Descripción')
+                            ->rows(3)
                         ->columnSpanFull(),
                 ]),
 

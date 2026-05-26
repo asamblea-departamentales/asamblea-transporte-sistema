@@ -1,5 +1,15 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA SOLICITUDES DE MANTENIMIENTO
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar las solicitudes de mantenimiento
+// de vehículos dentro del sistema. Aquí se configuran los formularios, las tablas
+// y las acciones que los usuarios pueden realizar sobre las solicitudes de mantenimiento.
+// Los comentarios están pensados para que cualquier ingeniero, incluso sin
+// experiencia en Laravel o Filament, pueda entender cómo se administra este proceso.
+
+
 namespace App\Filament\Resources;
 
 // Imports para emails
@@ -16,27 +26,34 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
+// Esta clase representa el "recurso" de Solicitudes de Mantenimiento.
+// Un recurso es una pantalla o módulo donde se pueden ver y gestionar solicitudes de mantenimiento.
 class SolicitudMantenimientoResource extends Resource
 {
+
+    // Indica el modelo principal que representa una solicitud de mantenimiento en la base de datos.
     protected static ?string $model = SolicitudMantenimiento::class;
-
+    // Agrupa este recurso en el menú bajo "Asignaciones".
     protected static ?string $navigationGroup = 'Asignaciones';
-
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Mantenimiento';
-
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
-
+    // Nombre singular y plural para mostrar en la interfaz.
     protected static ?string $modelLabel = 'Solicitud de Mantenimiento';
-
     protected static ?string $pluralModelLabel = 'Solicitudes de Mantenimiento';
-
+    // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 2;
 
+
+    // Controla quién puede ver la lista de solicitudes de mantenimiento.
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador']);
     }
 
+
+    // En este recurso, no se permite crear, editar ni eliminar solicitudes desde la interfaz.
     public static function canCreate(): bool
     {
         return false;
@@ -44,7 +61,10 @@ class SolicitudMantenimientoResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return false;
+        return in_array($record->estado->value, [
+            EstadoSolicitudEnum::BORRADOR->value,
+            EstadoSolicitudEnum::PENDIENTE->value,
+        ]);
     }
 
     public static function canDelete($record): bool
@@ -52,7 +72,12 @@ class SolicitudMantenimientoResource extends Resource
         return false;
     }
 
-    // ── FORM ────────────────────────────────────────────────
+
+    // ------------------------------------------------------------------------- 
+    // FORMULARIO PRINCIPAL
+    // ------------------------------------------------------------------------- 
+    // Aquí se define cómo se ve y se comporta el formulario para ver una solicitud
+    // de mantenimiento. Cada campo tiene validaciones y explicaciones.
 
     public static function form(Form $form): Form
     {
@@ -659,6 +684,7 @@ class SolicitudMantenimientoResource extends Resource
             'index' => Pages\ListSolicitudMantenimientos::route('/'),
             //  'create' => Pages\CreateSolicitudMantenimiento::route('/create'),
             'view' => Pages\ViewSolicitudMantenimiento::route('/{record}'),
+            'edit' => Pages\EditSolicitudMantenimiento::route('/{record}/edit'),
         ];
     }
 }

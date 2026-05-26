@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE SOLICITUDES DE MANTENIMIENTO
+// -----------------------------------------------------------------------------
+// Este controlador permite crear solicitudes de mantenimiento para vehículos
+// (taller o llantas). Maneja todo el proceso: crear, enviar, aprobar,
+// rechazar, finalizar y cancelar. También permite a los jefes hacer
+// observaciones, pre-aprobar y evaluar si el trabajo quedó bien hecho
+// (conforme, observaciones, no conforme).
+
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
@@ -127,16 +136,20 @@ class SolicitudMantenimientoController extends Controller
     }
 
     // ── POST /api/mantenimiento/{solicitud}/cancelar ─────────
-    public function cancelar(SolicitudMantenimiento $solicitud)
+    public function cancelar(Request $request, SolicitudMantenimiento $solicitud)
     {
         $this->authorizeOwner($solicitud);
 
+        $data = $request->validate([
+            'motivo_cancelacion' => ['required', 'string', 'min:10', 'max:2000'],
+        ]);
+
         try {
-            $solicitud = $this->service->cancelar($solicitud, Auth::id());
+            $solicitud = $this->service->cancelar($solicitud, Auth::id(), $data['motivo_cancelacion']);
 
             return response()->json([
                 'message' => 'Solicitud cancelada.',
-                'data' => $solicitud->fresh(),
+                'data' => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento', 'solicitante']),
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);

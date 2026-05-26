@@ -189,6 +189,105 @@
     }
     .liq-clear:hover { color: #6b7280; }
 
+    /* Toggle modo */
+    .liq-toggle {
+        display: inline-flex;
+        background: #f3f4f6;
+        border-radius: 12px;
+        padding: 4px;
+        gap: 4px;
+    }
+    .liq-toggle-btn {
+        padding: 8px 16px;
+        border-radius: 8px;
+        border: none;
+        background: transparent;
+        font-size: 12px;
+        font-weight: 600;
+        color: #6b7280;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    .liq-toggle-btn.active {
+        background: #fff;
+        color: #111827;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    .liq-toggle-btn:hover:not(.active) { color: #374151; }
+
+    /* Dropdown acciones */
+    .liq-dropdown {
+        position: relative;
+        display: inline-block;
+    }
+    .liq-dropdown-btn {
+        padding: 7px 12px;
+        border-radius: 9px;
+        border: 1.5px solid #e5e7eb;
+        background: #fff;
+        font-size: 12px;
+        font-weight: 600;
+        color: #374151;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.15s;
+    }
+    .liq-dropdown-btn:hover { border-color: #d1d5db; background: #f9fafb; }
+    .liq-dropdown-menu {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        margin-top: 6px;
+        background: #fff;
+        border: 1.5px solid #e5e7eb;
+        border-radius: 12px;
+        box-shadow: 0 10px 40px rgba(0,0,0,0.12);
+        min-width: 180px;
+        z-index: 20;
+        overflow: hidden;
+        display: none;
+    }
+    .liq-dropdown-menu.show { display: block; }
+    .liq-dropdown-item {
+        display: block;
+        padding: 10px 14px;
+        font-size: 13px;
+        color: #374151;
+        text-decoration: none;
+        cursor: pointer;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        transition: background 0.1s;
+    }
+    .liq-dropdown-item:hover { background: #f9fafb; }
+    .liq-dropdown-item.danger { color: #dc2626; }
+    .liq-dropdown-divider {
+        height: 1px;
+        background: #f3f4f6;
+        margin: 2px 0;
+    }
+
+    /* Badges por estado */
+    .badge-borrador { background: #f3f4f6; color: #4b5563; }
+    .badge-pendiente { background: #fef3c7; color: #92400e; }
+    .badge-en_revision { background: #dbeafe; color: #1e40af; }
+    .badge-pre_aprobada { background: #dbeafe; color: #1e40af; }
+    .badge-aprobada { background: #dcfce7; color: #166534; }
+    .badge-programada { background: #dbeafe; color: #1e40af; }
+    .badge-asignada { background: #dbeafe; color: #1e40af; }
+    .badge-en_ejecucion { background: #fef3c7; color: #92400e; }
+    .badge-completada { background: #dcfce7; color: #166534; }
+    .badge-rechazada { background: #fee2e2; color: #991b1b; }
+    .badge-liquidada { background: #ede9fe; color: #5b21b6; }
+    .badge-cancelada { background: #f3f4f6; color: #4b5563; }
+
+    /* Transporte badge */
+    .liq-tipo-transporte { background: #e0e7ff; }
+
     /* ── MODAL ── */
     .liq-modal-overlay {
         position: fixed;
@@ -421,6 +520,20 @@
     }
 </style>
 
+{{-- TOGGLE DE MODO --}}
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+    <div class="liq-toggle">
+        <button class="liq-toggle-btn {{ $this->modo === 'liquidacion' ? 'active' : '' }}"
+                wire:click="alternarModo">
+            📊 Modo Liquidación
+        </button>
+        <button class="liq-toggle-btn {{ $this->modo === 'listado' ? 'active' : '' }}"
+                wire:click="alternarModo">
+            📋 Listado Completo
+        </button>
+    </div>
+</div>
+
 {{-- FILTROS --}}
 <div class="liq-filters">
     <div class="liq-filter-group">
@@ -435,6 +548,7 @@
         <label>Tipo</label>
         <select wire:model.live="tipo">
             <option value="">Todos</option>
+            <option value="transporte">🚗 Transporte (solo consulta)</option>
             <option value="combustible">⛽ Combustible</option>
             <option value="mantenimiento">🔧 Mantenimiento</option>
         </select>
@@ -443,8 +557,29 @@
         <label>Estado</label>
         <select wire:model.live="estado">
             <option value="">Todos</option>
-            <option value="pendiente">⏳ Pendiente</option>
-            <option value="liquidado">✔ Liquidado</option>
+            @foreach($this->getEstadoOptions() as $option)
+                <option value="{{ $option['value'] }}">
+                    {{ $option['label'] }}
+                </option>
+            @endforeach
+        </select>
+    </div>
+    <div class="liq-filter-group">
+        <label>Solicitante</label>
+        <select wire:model.live="solicitante_id">
+            <option value="">Todos</option>
+            @foreach($this->getSolicitantes() as $id => $name)
+                <option value="{{ $id }}">{{ $name }}</option>
+            @endforeach
+        </select>
+    </div>
+    <div class="liq-filter-group">
+        <label>Motorista</label>
+        <select wire:model.live="motorista_id">
+            <option value="">Todos</option>
+            @foreach($this->getMotoristas() as $id => $nombre)
+                <option value="{{ $id }}">{{ $nombre }}</option>
+            @endforeach
         </select>
     </div>
 </div>
@@ -499,19 +634,63 @@
 {{-- LISTA --}}
 <div class="liq-list">
     @forelse($items as $item)
+        @php
+            $estadoValor = $item['estado_raw'] ?? 'pendiente';
+            $estadoLabel = $item['estado'] ?? ucfirst($estadoValor);
+            $estadoBadgeClass = 'badge-' . strtolower($estadoValor);
+
+            // Determinar si se puede editar (BORRADOR o PENDIENTE)
+            $puedeEditar = $item['puede_editar'] ?? in_array($estadoValor, ['borrador', 'pendiente']);
+
+            // Determinar si es transporte
+            $esTransporte = $item['tipo'] === 'transporte';
+
+            // Rutas de edición
+            $rutaEditar = match($item['tipo']) {
+                'transporte' => route('filament.admin.resources.solicitud-transporte.edit', $item['id']),
+                'combustible' => route('filament.admin.resources.solicitud-combustible.edit', $item['id']),
+                'mantenimiento' => route('filament.admin.resources.solicitud-mantenimiento.edit', $item['id']),
+                default => '#',
+            };
+
+            // Rutas de vista detalle
+            $rutaVer = match($item['tipo']) {
+                'transporte' => route('filament.admin.resources.solicitud-transporte.view', $item['id']),
+                'combustible' => route('filament.admin.resources.solicitud-combustible.view', $item['id']),
+                'mantenimiento' => route('filament.admin.resources.solicitud-mantenimiento.view', $item['id']),
+                default => '#',
+            };
+        @endphp
         <div class="liq-card {{ $item['liquidado'] ? 'liquidado' : 'pendiente' }}"
-             x-data="{ id: {{ $item['id'] }}, tipo: '{{ $item['tipo'] }}' }"
-             @click="$wire.abrirDetalle(id, tipo)"
+             x-data="{ 
+                id: {{ $item['id'] }}, 
+                tipo: '{{ $item['tipo'] }}',
+                showDropdown: false 
+            }"
+             @click.outside="showDropdown = false"
              style="cursor:pointer;">
 
-            <div class="liq-tipo-badge {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : 'liq-tipo-mantenimiento' }}">
-                {{ $item['tipo'] === 'combustible' ? '⛽' : '🔧' }}
+            <div class="liq-tipo-badge 
+                {{ $item['tipo'] === 'combustible' ? 'liq-tipo-combustible' : '' }}
+                {{ $item['tipo'] === 'mantenimiento' ? 'liq-tipo-mantenimiento' : '' }}
+                {{ $esTransporte ? 'liq-tipo-transporte' : '' }}">
+                {{ $item['tipo'] === 'combustible' ? '⛽' : '' }}
+                {{ $item['tipo'] === 'mantenimiento' ? '🔧' : '' }}
+                {{ $esTransporte ? '🚗' : '' }}
             </div>
 
-            <div class="liq-info">
-                <div class="liq-codigo">{{ $item['codigo'] }}</div>
+            <div class="liq-info" @click="!showDropdown && $wire.abrirDetalle(id, tipo)">
+                <div class="liq-codigo">
+                    {{ $item['codigo'] }}
+                    @if($esTransporte)
+                        <span style="font-size:10px;color:#6366f1;margin-left:6px;">(solo consulta)</span>
+                    @endif
+                </div>
                 <div class="liq-meta">
                     {{ $item['vehiculo'] ?? '—' }} &middot; {{ $item['solicitante'] ?? '—' }}
+                    @if(!empty($item['motorista']))
+                        &middot; 🚕 {{ $item['motorista'] }}
+                    @endif
                 </div>
                 <div class="liq-fecha">
                     {{ $item['fecha'] ? \Carbon\Carbon::parse($item['fecha'])->format('d/m/Y') : '—' }}
@@ -519,11 +698,7 @@
             </div>
 
             <div style="display:flex;flex-direction:column;gap:5px;align-items:flex-end;flex-shrink:0;">
-                @if($item['liquidado'])
-                    <span class="liq-badge liq-badge-liquidado">✔ Liquidado</span>
-                @else
-                    <span class="liq-badge liq-badge-pendiente">⏳ Pendiente</span>
-                @endif
+                <span class="liq-badge {{ $estadoBadgeClass }}">{{ $estadoLabel }}</span>
                 @if($item['tiene_comprobantes'])
                     <span class="liq-badge liq-badge-comp-ok">📎 Con comp.</span>
                 @else
@@ -531,32 +706,103 @@
                 @endif
             </div>
 
-            <div class="liq-monto-valor">${{ number_format($item['monto'], 2) }}</div>
+            <div class="liq-monto-valor">
+                @if($item['monto'] > 0)
+                    ${{ number_format($item['monto'], 2) }}
+                @else
+                    <span style="color:#9ca3af;">—</span>
+                @endif
+            </div>
 
             <div class="liq-actions" @click.stop>
-
-                <button
-        wire:click="abrirModalIncidencia({{ $item['id'] }}, '{{ $item['tipo'] }}')"
-        class="liq-btn"
-        style="background:#fee2e2;color:#991b1b;">
-        ⚠ Incidencia
-    </button>
-                @if(!$item['liquidado'] && $item['tiene_comprobantes'])
-                    <button
-                        wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
-                        class="liq-btn liq-btn-liquidar">
-                        Liquidar
+                {{-- DROPDOWN DE ACCIONES --}}
+                <div class="liq-dropdown" x-data>
+                    <button class="liq-dropdown-btn" @click="showDropdown = !showDropdown">
+                        ⋮ Acciones
                     </button>
-                @endif
-                @if($item['liquidado'])
-                    <a href="{{ $item['tipo'] === 'combustible'
-                        ? route('liquidacion.combustible.pdf', $item['id'])
-                        : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
-                       target="_blank"
-                       class="liq-btn liq-btn-pdf">
-                        📄 PDF
-                    </a>
-                @endif
+                    <div class="liq-dropdown-menu" :class="{ 'show': showDropdown }">
+                        {{-- Ver detalle --}}
+                        <a href="{{ $rutaVer }}" class="liq-dropdown-item" target="_blank">
+                            👁️ Ver detalle
+                        </a>
+
+                        {{-- Editar (solo si no es transporte y está en estado editable) --}}
+                        @if(!$esTransporte && $puedeEditar)
+                            <a href="{{ $rutaEditar }}" class="liq-dropdown-item" target="_blank">
+                                ✏️ Editar
+                            </a>
+                        @endif
+
+                        {{-- PDFs --}}
+                        @if(!$esTransporte)
+                            <div class="liq-dropdown-divider"></div>
+
+                            {{-- Misión Oficial (si es transporte o ligado a transporte) --}}
+                            @if($item['tipo'] === 'transporte' || ($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id'])))
+                                <a href="{{ $item['tipo'] === 'transporte' 
+                                    ? route('reportes.mision-oficial.pdf', $item['id'])
+                                    : route('reportes.mision-oficial.pdf', $item['solicitud_transporte_id']) }}" 
+                                   target="_blank" 
+                                   class="liq-dropdown-item">
+                                    📄 Misión Oficial
+                                </a>
+                            @endif
+
+                            {{-- Documento Oficial --}}
+                            @if($item['tipo'] === 'transporte' || ($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id'])))
+                                <a href="{{ $item['tipo'] === 'transporte' 
+                                    ? route('reportes.documento-oficial.pdf', $item['id'])
+                                    : route('reportes.documento-oficial.pdf', $item['solicitud_transporte_id']) }}" 
+                                   target="_blank" 
+                                   class="liq-dropdown-item">
+                                    📄 Documento Oficial
+                                </a>
+                            @endif
+
+                            {{-- Orden de Trabajo (solo mantenimiento) --}}
+                            @if($item['tipo'] === 'mantenimiento')
+                                <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}" 
+                                   target="_blank" 
+                                   class="liq-dropdown-item">
+                                    🔧 Orden de Trabajo
+                                </a>
+                            @endif
+
+                            {{-- PDF Liquidación (si está liquidado) --}}
+                            @if($item['liquidado'])
+                                <div class="liq-dropdown-divider"></div>
+                                <a href="{{ $item['tipo'] === 'combustible'
+                                    ? route('liquidacion.combustible.pdf', $item['id'])
+                                    : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
+                                   target="_blank"
+                                   class="liq-dropdown-item">
+                                    📊 PDF Liquidación
+                                </a>
+                            @endif
+                        @endif
+
+                        {{-- Liquidar (solo si no es transporte, no liquidado, y tiene comprobantes) --}}
+                        @if(!$esTransporte && !$item['liquidado'] && $item['tiene_comprobantes'])
+                            <div class="liq-dropdown-divider"></div>
+                            <button 
+                                wire:click="abrirModalLiquidar({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+                                class="liq-dropdown-item"
+                                style="color:#6366f1;font-weight:600;">
+                                💰 Liquidar
+                            </button>
+                        @endif
+
+                        {{-- Incidencia (solo si no es transporte) --}}
+                        @if(!$esTransporte)
+                            <div class="liq-dropdown-divider"></div>
+                            <button
+                                wire:click="abrirModalIncidencia({{ $item['id'] }}, '{{ $item['tipo'] }}')"
+                                class="liq-dropdown-item danger">
+                                ⚠ Incidencia
+                            </button>
+                        @endif
+                    </div>
+                </div>
             </div>
 
         </div>

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA GRUPOS
+// -----------------------------------------------------------------------------
+// Este recurso administra los grupos de usuarios del sistema.
+// Cada grupo tiene un nombre, una prioridad (crítica, alta, media, baja) y
+// un orden de operación. Sirve para organizar a los usuarios según su función
+// y nivel de importancia en las operaciones de transporte.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\GrupoResource\Pages;

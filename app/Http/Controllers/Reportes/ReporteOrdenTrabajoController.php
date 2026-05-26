@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE ORDEN DE TRABAJO
+// -----------------------------------------------------------------------------
+// Genera una orden de trabajo para mantenimiento de vehículos. Muestra
+// los datos de la solicitud de mantenimiento, el vehículo, el tipo de
+// mantenimiento y la fecha sugerida. Sirve como documento formal para
+// autorizar y dar seguimiento a los trabajos de taller.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;

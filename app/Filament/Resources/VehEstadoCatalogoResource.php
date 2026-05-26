@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA ESTADOS DE CATÁLOGO
+// -----------------------------------------------------------------------------
+// Administra los posibles estados o condiciones que puede tener un vehículo
+// dentro del sistema (ej: "Activo", "Inactivo", "En reparación", "Dado de baja").
+// Usado por administradores y jefes para definir las opciones de estado
+// disponibles al registrar o actualizar la información de un vehículo.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

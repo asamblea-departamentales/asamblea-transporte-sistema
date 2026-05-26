@@ -1,5 +1,12 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE FLOTA VEHICULAR
+// -----------------------------------------------------------------------------
+// Genera un listado completo de todos los vehículos registrados en el sistema.
+// Muestra placa, marca, modelo, tipo de combustible, clasificación y estado.
+// Sirve para tener un inventario actualizado de la flota vehicular disponible.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Services\Reportes\ReporteFlotaVehicularService;

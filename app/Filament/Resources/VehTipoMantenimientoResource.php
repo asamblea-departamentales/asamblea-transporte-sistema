@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE MANTENIMIENTO
+// -----------------------------------------------------------------------------
+// Administra los tipos de mantenimiento que se pueden realizar a los vehículos
+// (ej: "Cambio de aceite", "Alineación", "Frenos", "Suspensión").
+// Cada tipo incluye un nombre y una descripción opcional. Permite crear, editar,
+// buscar y eliminar tipos de mantenimiento. Usado por administradores y jefes.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

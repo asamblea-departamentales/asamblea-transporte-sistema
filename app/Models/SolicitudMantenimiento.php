@@ -31,6 +31,7 @@ class SolicitudMantenimiento extends Model
         'aprobador_id',
         'fecha_aprobacion',
         'motivo_rechazo',
+        'motivo_cancelacion',
         'observaciones',
         'firma_aprobador',
         'adjuntos',

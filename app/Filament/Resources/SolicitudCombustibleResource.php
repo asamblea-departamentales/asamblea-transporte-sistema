@@ -1,5 +1,15 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA SOLICITUDES DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar las solicitudes de combustible
+// dentro del sistema. Aquí se configuran los formularios, las tablas y las acciones
+// que los usuarios pueden realizar sobre las solicitudes de combustible.
+// Los comentarios están pensados para que cualquier ingeniero, incluso sin
+// experiencia en Laravel o Filament, pueda entender cómo se administra este proceso.
+
+
 namespace App\Filament\Resources;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
@@ -15,39 +25,61 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
+// Esta clase representa el "recurso" de Solicitudes de Combustible.
+// Un recurso es una pantalla o módulo donde se pueden ver y gestionar solicitudes de combustible.
 class SolicitudCombustibleResource extends Resource
 {
+
+    // Indica el modelo principal que representa una solicitud de combustible en la base de datos.
     protected static ?string $model = SolicitudCombustible::class;
-
+    // Agrupa este recurso en el menú bajo "Asignaciones".
     protected static ?string $navigationGroup = 'Asignaciones';
-
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Combustible';
-
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
-
+    // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 3;
 
-    // FIX #4: Verificar que el usuario esté autenticado antes de llamar hasAnyRole
+
+    // Controla quién puede ver la lista de solicitudes de combustible.
     public static function canViewAny(): bool
     {
         return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']);
     }
 
+
+    // En este recurso, no se permite crear solicitudes desde la interfaz.
     public static function canCreate(): bool
     {
         return false;
     }
 
-    // FIX #7: Eliminamos canEdit() para que el EditAction con ->visible() pueda funcionar
+
+    // No se permite eliminar solicitudes desde la interfaz.
     public static function canDelete($record): bool
     {
         return false;
     }
 
+    public static function canEdit($record): bool
+    {
+        return in_array($record->estado->value, [
+            EstadoSolicitudEnum::BORRADOR->value,
+            EstadoSolicitudEnum::PENDIENTE->value,
+        ]);
+    }
+
+
+    // ------------------------------------------------------------------------- 
+    // FORMULARIO PRINCIPAL
+    // ------------------------------------------------------------------------- 
+    // Aquí se define cómo se ve y se comporta el formulario para ver una solicitud
+    // de combustible. Cada campo tiene validaciones y explicaciones.
     public static function form(Form $form): Form
     {
         return $form->schema([
-
+            // Sección de resumen general de la solicitud
             Forms\Components\Section::make('Resumen')
                 ->schema([
                     Forms\Components\Placeholder::make('codigo_ui')
@@ -865,6 +897,7 @@ class SolicitudCombustibleResource extends Resource
         return [
             'index' => Pages\ListSolicitudCombustibles::route('/'),
             'view' => Pages\ViewSolicitudCombustible::route('/{record}'),
+            'edit' => Pages\EditSolicitudCombustible::route('/{record}/edit'),
         ];
     }
 }

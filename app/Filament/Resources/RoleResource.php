@@ -1,4 +1,11 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA ROLES
+// -----------------------------------------------------------------------------
+// Administra los roles (puestos o perfiles) que existen en el sistema,
+// como "admin", "jefe", "motorista", etc. Cada rol puede tener
+// permisos específicos para acceder a diferentes partes del sistema.
+// Permite ver, crear, editar y eliminar roles, y asignarles permisos.
 
 namespace App\Filament\Resources;
 

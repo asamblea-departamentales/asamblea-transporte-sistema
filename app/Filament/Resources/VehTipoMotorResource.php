@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE MOTOR
+// -----------------------------------------------------------------------------
+// Gestiona los tipos de motor que pueden tener los vehículos
+// (ej: "Gasolina 4 cilindros", "Diésel 6 cilindros", "Eléctrico").
+// Permite crear, editar, buscar y eliminar tipos de motor.
+// Usado por administradores, jefes y personal de TI para mantener el catálogo.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

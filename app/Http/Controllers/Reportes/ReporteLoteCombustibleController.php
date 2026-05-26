@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE LOTE DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Genera el detalle de un lote de asignación de combustible. Permite
+// exportar en PDF, Excel y CSV. Cada lote agrupa varias asignaciones
+// de combustible hechas en una misma fecha. Sirve para auditar las
+// cargas de combustible por lote.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Exports\AsignacionCombustibleLoteExport;

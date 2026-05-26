@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA CONTRATOS DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Este recurso administra los contratos de combustible de la institución.
+// Cada contrato tiene un número, fechas de inicio y vencimiento, y un monto
+// presupuestado. Los usuarios pueden crear, editar y ver contratos, así como
+// monitorear el saldo disponible y el porcentaje de presupuesto usado.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ContratoCombustibleResource\Pages;

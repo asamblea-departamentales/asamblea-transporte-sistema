@@ -1,5 +1,12 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE CONTROL MENSUAL DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Genera un listado mensual de todas las solicitudes de combustible.
+// Muestra los detalles de cada vale (vehículo, motorista, galones, monto, etc.)
+// Sirve para llevar un control mensual del consumo de combustible de la flota.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA ASIGNACIONES VEHÍCULO-MOTORISTA
+// -----------------------------------------------------------------------------
+// Este recurso permite asignar un vehículo a un motorista (conductor) y
+// desasignarlo cuando sea necesario. Sirve para llevar el control de qué
+// vehículo está asignado a cada motorista y en qué fechas. Los usuarios
+// autorizados pueden crear nuevas asignaciones y finalizar las vigentes.
+
 namespace App\Filament\Resources;
 
 use App\Domain\Solicitudes\Services\AsignacionVehiculoMotoristaService;

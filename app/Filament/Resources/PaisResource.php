@@ -1,4 +1,11 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA PAÍSES
+// -----------------------------------------------------------------------------
+// Administra los países registrados en el sistema, como El Salvador,
+// Guatemala, etc. Permite ver, crear, editar y eliminar países,
+// además de indicar su nacionalidad o gentilicio. Es usado por
+// los encargados de mantener los datos geográficos de la aplicación.
 
 namespace App\Filament\Resources;
 

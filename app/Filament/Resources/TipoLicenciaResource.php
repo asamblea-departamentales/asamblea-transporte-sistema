@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE LICENCIA
+// -----------------------------------------------------------------------------
+// Administra las categorías de licencia de conducir, como
+// "Liviana", "Pesada" o "Motocicleta". Se usa para clasificar
+// a los motoristas según el tipo de licencia que poseen.
+// Permite ver, crear, editar y eliminar tipos de licencia,
+// y muestra cuántos motoristas están asignados a cada categoría.
 
 namespace App\Filament\Resources;
 

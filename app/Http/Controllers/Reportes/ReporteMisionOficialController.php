@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE MISIÓN OFICIAL
+// -----------------------------------------------------------------------------
+// Genera un documento con los datos de una misión oficial (viaje de trabajo).
+// Puede mostrar una sola misión o un listado de varias en un rango de fechas.
+// Incluye datos del solicitante, vehículo, motorista, fechas de salida y
+// regreso. Sirve como respaldo oficial de los viajes realizados.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;

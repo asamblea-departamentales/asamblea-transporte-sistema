@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE AUTENTICACIÓN POR TOKEN (API)
+// -----------------------------------------------------------------------------
+// Este controlador permite el inicio de sesión usando un "token" (una llave
+// digital) en lugar de sesiones del navegador. Se usa para que aplicaciones
+// externas, como una página web en Vercel, puedan conectarse al sistema.
+// Al iniciar sesión devuelve un token que la aplicación debe guardar y
+// enviar en cada petición para identificarse.
+
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;

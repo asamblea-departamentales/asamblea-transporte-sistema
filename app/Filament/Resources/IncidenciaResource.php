@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA INCIDENCIAS
+// -----------------------------------------------------------------------------
+// Este recurso administra el registro de incidentes o problemas (daños,
+// accidentes, fallas mecánicas, etc.) que ocurren en las operaciones de
+// transporte. Los usuarios pueden reportar incidencias, asignarlas a un
+// responsable, cambiar su estado (abierta, en proceso, resuelta, cerrada)
+// y registrar la resolución.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\IncidenciaResource\Pages;

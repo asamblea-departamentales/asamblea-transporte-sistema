@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TAMAÑOS DE PROVEEDOR
+// -----------------------------------------------------------------------------
+// Administra las categorías de tamaño de los proveedores, como
+// "Pequeño", "Mediano" o "Grande". Se usa para clasificar a los
+// proveedores registrados en el sistema. Permite ver, crear,
+// editar y eliminar categorías, y muestra cuántos proveedores
+// están registrados en cada una.
 
 namespace App\Filament\Resources;
 

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA DEPARTAMENTALES
+// -----------------------------------------------------------------------------
+// Este recurso administra las sedes departamentales (oficinas regionales).
+// Cada departamental tiene un nombre y un código. Sirve para organizar los
+// usuarios y vehículos por región. Solo el personal de TI y administradores
+// pueden gestionar estos registros.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\DepartamentalResource\Pages;

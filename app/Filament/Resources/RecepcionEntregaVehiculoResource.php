@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA RECEPCIÓN / ENTREGA DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Registra cuándo un vehículo es entregado a un motorista o recibido
+// de vuelta. Lleva control del kilometraje, nivel de combustible,
+// herramientas verificadas y condición del vehículo (interior/exterior).
+// Sirve para mantener un historial claro de quién tuvo el vehículo
+// y en qué estado se entregó y recibió. Genera un PDF de cada movimiento.
 
 namespace App\Filament\Resources;
 

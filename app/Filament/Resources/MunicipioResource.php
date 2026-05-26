@@ -1,4 +1,11 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA MUNICIPIOS
+// -----------------------------------------------------------------------------
+// Administra los municipios (ciudades o pueblos) del sistema.
+// Permite ver, crear, editar y eliminar municipios, y asociarlos
+// al departamento y país correspondiente. Lo usan los encargados
+// de mantener actualizados los datos geográficos del sistema de transporte.
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\MunicipioResource\Pages;

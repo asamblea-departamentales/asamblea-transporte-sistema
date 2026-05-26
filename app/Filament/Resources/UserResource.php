@@ -1,5 +1,15 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA USUARIOS DEL SISTEMA
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar los usuarios que pueden acceder
+// al sistema. Aquí se configuran los formularios, las tablas y las acciones
+// relacionadas con los usuarios. Los comentarios están pensados para que
+// cualquier ingeniero, incluso sin experiencia en Laravel o Filament, pueda
+// entender cómo se administra la gestión de usuarios.
+
+
 namespace App\Filament\Resources;
 
 use Illuminate\Support\Facades\Hash;
@@ -16,50 +26,65 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use PhpParser\Node\Stmt\Label;
 use Spatie\Permission\Models\Role;
 
+// Esta clase representa el "recurso" de Usuarios.
+// Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar usuarios.
 class UserResource extends Resource
 {
+
+    // Indica el modelo principal que representa un usuario en la base de datos.
     protected static ?string $model = User::class;
 
+
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+    // Agrupa este recurso en el menú bajo "Administración".
     protected static ?string $navigationGroup = 'Administracion';
+    // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 1;
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Usuarios';
 
     
-    //Restricciones de acceso a la gestión de usuarios
+    // ------------------------------------------------------------------------- 
+    // Controla quién puede ver la lista de usuarios.
+    // Solo ciertos roles pueden acceder a la gestión de usuarios.
     public static function canViewAny(): bool
-{
-    $u = auth()->user();
-    
-    // Verifica en Tinker si el nombre es 'super_admin' o 'super-admin'
-    return $u?->hasAnyRole(['super_admin', 'ti', 'admin']) ?? false;
-}
+    {
+        $u = auth()->user();
+        // Solo los usuarios con rol de super_admin, ti o admin pueden ver este recurso.
+        return $u?->hasAnyRole(['super_admin', 'ti', 'admin']) ?? false;
+    }
+    // -------------------------------------------------------------------------
+    // FORMULARIO PRINCIPAL
+    // -------------------------------------------------------------------------
+    // Aquí se define cómo se ve y se comporta el formulario para crear o editar
+    // un usuario. Cada campo tiene validaciones y explicaciones para el usuario.
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                //Formulario para crear/editar usuarios, con validaciones
+                // Sección de datos principales del usuario
                 Forms\Components\Section::make('Datos del usuario')
-                ->columns(2)
-                ->schema([
-                    Forms\Components\TextInput::make('name')
-                        ->label('Nombre')
-                        ->required()
-                        ->maxLength(150),
+                    ->columns(2)
+                    ->schema([
+                        Forms\Components\TextInput::make('name')
+                            ->label('Nombre')
+                            ->required()
+                            ->maxLength(150),
 
-                    Forms\Components\TextInput::make('email')
-                        ->label('Correo institucional')
-                        ->required()
-                        ->email()
-                        ->maxLength(150)
-                        ->unique(ignoreRecord: true),
-                        
-                    Forms\Components\Select::make('unidad_solicitante_id')
-                        ->label('Unidad solicitante')
-                        ->relationship('unidadSolicitante', 'nombre')
-                        ->searchable()
-                        ->preload()
-                        ->required(),
+                        Forms\Components\TextInput::make('email')
+                            ->label('Correo institucional')
+                            ->required()
+                            ->email()
+                            ->maxLength(150)
+                            ->unique(ignoreRecord: true),
+                        // Selección de la unidad a la que pertenece el usuario
+                        Forms\Components\Select::make('unidad_solicitante_id')
+                            ->label('Unidad solicitante')
+                            ->relationship('unidadSolicitante', 'nombre')
+                            ->searchable()
+                            ->preload()
+                            ->required(),
                         
                     Forms\Components\Toggle::make('activo')
                         ->label('Activo')

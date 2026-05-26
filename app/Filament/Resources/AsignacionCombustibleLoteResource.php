@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA LOTES DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Este recurso administra los "lotes" o grupos de asignaciones de combustible.
+// Aquí se crean lotes con una fecha y observaciones, y luego se asignan montos
+// de combustible a vehículos dentro de cada lote. Los usuarios de operaciones
+// pueden crear lotes, ver su estado (borrador, completado, etc.) y gestionarlos.
+
 namespace App\Filament\Resources;
 
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;

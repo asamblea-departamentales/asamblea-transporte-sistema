@@ -412,4 +412,35 @@ class SolicitudTransporteService
             return $solicitud;
         });
     }
+
+    public function cancelar(SolicitudTransporte $solicitud, int $userId, ?string $motivoCancelacion = null): SolicitudTransporte
+    {
+        if (! in_array($solicitud->estado, [
+            EstadoSolicitudEnum::BORRADOR,
+            EstadoSolicitudEnum::PENDIENTE,
+        ], true)) {
+            throw new \DomainException('Solo se puede cancelar una solicitud en estado Borrador o Pendiente.');
+        }
+
+        if ($solicitud->solicitante_id !== $userId) {
+            throw new \DomainException('Solo el solicitante puede cancelar esta solicitud.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $motivoCancelacion) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado = EstadoSolicitudEnum::CANCELADA;
+            $solicitud->motivo_cancelacion = $motivoCancelacion;
+            $solicitud->save();
+
+            $comentarioHistorial = $motivoCancelacion ?? 'Solicitud cancelada por el usuario.';
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $comentarioHistorial);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
+                'motivo_cancelacion' => $motivoCancelacion,
+            ]);
+
+            return $solicitud;
+        });
+    }
 }

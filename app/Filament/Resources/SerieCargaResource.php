@@ -1,4 +1,12 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA SERIES DE CARGA
+// -----------------------------------------------------------------------------
+// Administra las series o lotes de cargas de combustible. Cada serie
+// tiene un valor, fechas de emisión y vencimiento, y un rango de
+// correlativos (numeración). Puede estar asociada a un contrato
+// de combustible. Permite ver, crear, editar y eliminar series,
+// y llevar control del stock disponible de cargas.
 
 namespace App\Filament\Resources;
 

@@ -140,6 +140,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('solicitudes-transporte/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
     Route::post('solicitudes-transporte/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
+    Route::post('solicitudes-transporte/{solicitud}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
@@ -162,6 +163,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('solicitudes-mantenimiento/{solicitud}/enviar', [SolicitudMantenimientoController::class, 'enviar']);
     Route::post('solicitudes-mantenimiento/{solicitud}/finalizar', [SolicitudMantenimientoController::class, 'finalizar']);
+    Route::post('solicitudes-mantenimiento/{solicitud}/cancelar', [SolicitudMantenimientoController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('solicitudes-mantenimiento/{solicitud}/observacion', [SolicitudMantenimientoController::class, 'observacion']);
@@ -178,6 +180,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::post('solicitudes-combustible/{solicitud}/enviar', [SolicitudCombustibleController::class, 'enviar']);
     Route::post('solicitudes-combustible/{solicitud}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
+    Route::post('solicitudes-combustible/{solicitud}/cancelar', [SolicitudCombustibleController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/observacion', [SolicitudCombustibleController::class, 'observacion']);

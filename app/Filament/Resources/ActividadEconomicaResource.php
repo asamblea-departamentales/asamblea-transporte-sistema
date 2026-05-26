@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA ACTIVIDADES ECONÓMICAS
+// -----------------------------------------------------------------------------
+// Este recurso administra el catálogo de actividades económicas (rubros).
+// Sirve para clasificar a los proveedores según el tipo de negocio al que se
+// dedican (ej: ventas, construcción, transporte). Los usuarios autorizados
+// pueden crear, editar, activar/desactivar y eliminar actividades económicas.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\ActividadEconomicaResource\Pages;

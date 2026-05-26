@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR DE VIAJES DEL MOTORISTA
+// -----------------------------------------------------------------------------
+// Este controlador permite al motorista gestionar sus propios viajes desde
+// el sistema: iniciar un viaje, registrar la llegada al destino, iniciar
+// el retorno y finalizar el viaje. Cada paso registra la hora exacta en
+// que ocurrió y guarda un historial de lo que sucedió.
+
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE PLAN DIARIO DE TRANSPORTE
+// -----------------------------------------------------------------------------
+// Genera el plan de transporte del día. Muestra todas las solicitudes
+// de transporte programadas para una fecha específica, con horarios,
+// vehículos y motoristas asignados. Sirve para que el despachador
+// organice las actividades del día.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Services\Reportes\ReportePlanDiarioService;

@@ -1,5 +1,14 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA LIQUIDACIÓN DE COMBUSTIBLE
+// -----------------------------------------------------------------------------
+// Este recurso permite al liquidador revisar y cerrar las solicitudes de
+// combustible que ya fueron completadas. Aquí se valida si el monto gastado
+// coincide con los comprobantes presentados, y se genera el resultado de la
+// liquidación (coincide o tiene discrepancia). También se puede descargar
+// un reporte en PDF de cada liquidación.
+
 // app/Filament/Resources/LiquidacionCombustibleResource.php
 
 namespace App\Filament\Resources;

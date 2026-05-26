@@ -1,4 +1,14 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Administra el registro completo de todos los vehículos de la flota.
+// Permite ver, crear, editar y eliminar vehículos, con datos como
+// placa, marca, modelo, año, color, tipo de motor, combustible,
+// transmisión, capacidad de personas, número de chasis y VIN.
+// También permite asignar accesorios (gato, extintor, etc.),
+// subir fotografías y mantener un historial completo de cada unidad.
+// Los vehículos se muestran en formato de tarjetas visuales.
 
 namespace App\Filament\Resources;
 

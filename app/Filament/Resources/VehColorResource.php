@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA COLORES DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Gestiona el catálogo de colores disponibles para los vehículos del sistema.
+// Permite crear, editar, buscar y eliminar colores (ej: "Rojo", "Blanco", "Azul").
+// Los administradores, jefes y personal de TI usan esto para mantener la lista
+// de colores que se pueden asignar a cada vehículo.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

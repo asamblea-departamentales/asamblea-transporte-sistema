@@ -1,4 +1,11 @@
 <?php
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA PREFIJOS DE EMPLEADO
+// -----------------------------------------------------------------------------
+// Administra los códigos cortos (prefijos) que identifican el tipo
+// de empleado, como "EMP" para empleado de planta o "MOT" para
+// motorista. Estos prefijos se usan al generar códigos de empleado
+// en el sistema. Permite ver, crear, editar y eliminar prefijos.
 
 namespace App\Filament\Resources;
 

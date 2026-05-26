@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TRANSMISIONES DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Gestiona los tipos de transmisión que pueden tener los vehículos
+// (ej: "Automática", "Manual", "CVT", "Automática secuencial").
+// Permite crear, editar, buscar y eliminar tipos de transmisión.
+// Usado por administradores, jefes y personal de TI para mantener el catálogo.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE LLANTAS
+// -----------------------------------------------------------------------------
+// Gestiona los tipos de llantas o neumáticos que se pueden asignar a los
+// vehículos (ej: "Radiales", "Todo terreno", "Invierno").
+// Permite crear, editar, buscar y eliminar tipos de llantas.
+// Usado por administradores, jefes y personal de TI.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

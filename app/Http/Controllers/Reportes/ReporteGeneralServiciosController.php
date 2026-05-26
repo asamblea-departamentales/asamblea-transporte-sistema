@@ -1,5 +1,12 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE GENERAL DE SERVICIOS
+// -----------------------------------------------------------------------------
+// Genera un reporte con todos los servicios de transporte solicitados
+// (mantenimiento, trámites, etc.). Muestra fechas, vehículos, estados y
+// prioridades. Sirve para dar seguimiento a los servicios realizados.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Http\Controllers\Controller;

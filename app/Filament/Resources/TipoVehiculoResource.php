@@ -1,5 +1,15 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TIPOS DE VEHÍCULO
+// -----------------------------------------------------------------------------
+// Este archivo define la lógica para gestionar los tipos de vehículo
+// dentro del sistema. Aquí se configuran los formularios y las tablas para
+// administrar los diferentes tipos de vehículos disponibles.
+// Los comentarios están pensados para que cualquier ingeniero, incluso sin
+// experiencia en Laravel o Filament, pueda entender cómo se administra este catálogo.
+
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;
@@ -11,21 +21,38 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 
+// Esta clase representa el "recurso" de Tipos de Vehículo.
+// Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar tipos de vehículo.
 class TipoVehiculoResource extends Resource
 {
+
+    // Indica el modelo principal que representa un tipo de vehículo en la base de datos.
     protected static ?string $model = TipoVehiculo::class;
+    // Agrupa este recurso dentro del clúster de catálogos de vehículos.
     protected static ?string $cluster = VehiculosCatalogos::class;
+    // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Tipos de Vehículo';
+    // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-truck';
+    // Nombre singular y plural para mostrar en la interfaz.
     protected static ?string $modelLabel = 'Tipo de Vehículo';
     protected static ?string $pluralModelLabel = 'Tipos de Vehículo';
+    // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 11;
 
+
+    // Controla quién puede ver la lista de tipos de vehículo.
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
     }
 
+
+    // ------------------------------------------------------------------------- 
+    // FORMULARIO PRINCIPAL
+    // ------------------------------------------------------------------------- 
+    // Aquí se define cómo se ve y se comporta el formulario para crear o editar
+    // un tipo de vehículo. Cada campo tiene validaciones y explicaciones.
     public static function form(Form $form): Form
     {
         return $form->schema([

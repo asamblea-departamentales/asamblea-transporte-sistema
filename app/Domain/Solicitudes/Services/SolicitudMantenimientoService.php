@@ -217,20 +217,29 @@ class SolicitudMantenimientoService
     }
 
     // Cancelar: BORRADOR/PENDIENTE -> CANCELADA
-    public function cancelar(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
+    public function cancelar(SolicitudMantenimiento $solicitud, int $userId, ?string $motivoCancelacion = null): SolicitudMantenimiento
     {
         if (! in_array($solicitud->estado, [EstadoSolicitudEnum::BORRADOR, EstadoSolicitudEnum::PENDIENTE], true)) {
             throw new \DomainException('Solo se puede cancelar una solicitud en estado Borrador o Pendiente.');
         }
 
-        return DB::transaction(function () use ($solicitud, $userId) {
+        if ($solicitud->solicitante_id !== $userId) {
+            throw new \DomainException('Solo el solicitante puede cancelar esta solicitud.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $motivoCancelacion) {
             $anterior = $solicitud->estado;
 
             $solicitud->estado = EstadoSolicitudEnum::CANCELADA;
+            $solicitud->motivo_cancelacion = $motivoCancelacion;
             $solicitud->save();
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Solicitud cancelada.');
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, null);
+            $comentarioHistorial = $motivoCancelacion ?? 'Solicitud cancelada por el usuario.';
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $comentarioHistorial);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
+                'motivo_cancelacion' => $motivoCancelacion,
+            ]);
 
             return $solicitud;
         });

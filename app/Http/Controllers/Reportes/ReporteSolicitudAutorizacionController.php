@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// CONTROLADOR PARA REPORTE DE SOLICITUD DE AUTORIZACIÓN
+// -----------------------------------------------------------------------------
+// Genera el documento oficial de autorización para usar un vehículo
+// y asignar combustible. Muestra los datos del solicitante, vehículo,
+// motorista y los detalles del viaje. Sirve como comprobante oficial
+// para que el motorista pueda salir a realizar el viaje.
+
 namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;

@@ -30,6 +30,7 @@ class SolicitudTransporte extends Model
         'prioridad',
         'prioridad_grupo',
         'estado',
+        'motivo_cancelacion',
         'decidido_por',
         'decidido_en',
         'comentario_jefe',

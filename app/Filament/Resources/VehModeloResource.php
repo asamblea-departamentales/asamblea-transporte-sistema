@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA MODELOS DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Gestiona el catálogo de modelos de vehículos (ej: "Corolla", "Versa", "F-150").
+// Cada modelo está asociado a una marca (ej: Toyota, Nissan, Ford).
+// Permite crear, editar, buscar y eliminar modelos. Usado por administradores,
+// jefes y personal de TI para mantener actualizado el catálogo de modelos.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;

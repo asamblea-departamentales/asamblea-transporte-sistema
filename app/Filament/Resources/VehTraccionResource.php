@@ -1,5 +1,13 @@
 <?php
 
+// -----------------------------------------------------------------------------
+// RECURSO PRINCIPAL PARA TRACCIONES DE VEHÍCULOS
+// -----------------------------------------------------------------------------
+// Administra los tipos de tracción o transmisión que pueden tener los vehículos
+// (ej: "Tracción delantera", "Tracción trasera", "4x4", "Doble tracción").
+// Permite crear, editar, buscar y eliminar tipos de tracción.
+// Usado por administradores, jefes y personal de TI.
+
 namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos; 
