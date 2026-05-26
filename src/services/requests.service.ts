@@ -170,3 +170,11 @@ export async function completeRequest(id: number): Promise<Request> {
   const { data } = await api.post(`/api/solicitudes-transporte/${id}/finalizar`);
   return data.data;
 }
+
+export async function cancelRequest(id: string | number, motivo: string): Promise<Request> {
+  const { data } = await api.post(`/api/solicitudes-transporte/${id}/cancelar`, {
+    motivo_cancelacion: motivo,
+  });
+  return data.data;
+}
+

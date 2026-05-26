@@ -6,15 +6,20 @@ import { ESTADOS } from "../constants/requests.constants";
 import { getStatusStyle, isCompleted } from "../lib/format";
 import { InnerLoading } from "../components/InnerLoading";
 import type { RequestStatus } from "../services/requests.service";
+import { cancelRequest } from "../services/requests.service";
 import type { CombinedRequest, Modulo } from "../hooks/useCombinedRequests";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 function formatFechaLinda(fecha: string): string {
   const d = new Date(fecha);
-  const dia  = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
+  const dia = d.toLocaleDateString("es-ES", { day: "2-digit", month: "short", year: "numeric" });
   const hora = d.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: true });
   return `${dia} • ${hora}`;
+}
+
+function canUserCancel(estado: string): boolean {
+  return estado.toLowerCase() === "pendiente";
 }
 
 // ─── Módulo config ─────────────────────────────────────────────────────────────
@@ -31,38 +36,38 @@ const MODULO_CONFIG: Record<Modulo, ModuloConfig> = {
   transporte: {
     label: "Transporte",
     badgeClass: "bg-blue-50 text-blue-700 ring-blue-200/70",
-    dotClass:   "bg-blue-500",
+    dotClass: "bg-blue-500",
     borderClass: "border-l-blue-500",
     icon: (
       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 01-2 2h-.5a2 2 0 01-4 0h-4a2 2 0 01-4 0H5a2 2 0 01-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z" strokeLinejoin="round"/>
-        <path d="M6 11.5h12" strokeLinecap="round"/>
+        <path d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 01-2 2h-.5a2 2 0 01-4 0h-4a2 2 0 01-4 0H5a2 2 0 01-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z" strokeLinejoin="round" />
+        <path d="M6 11.5h12" strokeLinecap="round" />
       </svg>
     ),
   },
   mantenimiento: {
     label: "Mantenimiento",
     badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200/70",
-    dotClass:   "bg-emerald-500",
+    dotClass: "bg-emerald-500",
     borderClass: "border-l-emerald-500",
     icon: (
       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round"/>
-        <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round"/>
+        <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
+        <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round" />
       </svg>
     ),
   },
   combustible: {
     label: "Combustible",
     badgeClass: "bg-amber-50 text-amber-700 ring-amber-200/70",
-    dotClass:   "bg-amber-500",
+    dotClass: "bg-amber-500",
     borderClass: "border-l-amber-500",
     icon: (
       <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M7 3h8v18H7V3Z" strokeLinejoin="round"/>
-        <path d="M15 7h2l2 2v10a2 2 0 01-2 2h-2" strokeLinejoin="round"/>
-        <path d="M9 7h4" strokeLinecap="round"/>
-        <path d="M9 11h4" strokeLinecap="round" opacity="0.7"/>
+        <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
+        <path d="M15 7h2l2 2v10a2 2 0 01-2 2h-2" strokeLinejoin="round" />
+        <path d="M9 7h4" strokeLinecap="round" />
+        <path d="M9 11h4" strokeLinecap="round" opacity="0.7" />
       </svg>
     ),
   },
@@ -98,14 +103,14 @@ function StatusBadge({ estado }: { estado: string }) {
 // ─── Dot color por estado ──────────────────────────────────────────────────────
 
 const BG_DOT: Record<string, string> = {
-  pendiente:    "bg-amber-400",
-  aprobada:     "bg-emerald-500",
+  pendiente: "bg-amber-400",
+  aprobada: "bg-emerald-500",
   en_ejecucion: "bg-indigo-500",
-  completada:   "bg-slate-400",
-  finalizada:   "bg-slate-400",
-  rechazada:    "bg-red-400",
-  observada:    "bg-blue-400",
-  borrador:     "bg-gray-300",
+  completada: "bg-slate-400",
+  finalizada: "bg-slate-400",
+  rechazada: "bg-red-400",
+  observada: "bg-blue-400",
+  borrador: "bg-gray-300",
 };
 
 function getDotColor(estado: string): string {
@@ -159,10 +164,10 @@ function Pagination({ page, totalPages, onPageChange }: {
 // ─── Filter Modal (estado + módulo) ───────────────────────────────────────────
 
 const MODULOS_FILTER: { value: Modulo | ""; label: string }[] = [
-  { value: "",             label: "Todos los módulos" },
-  { value: "transporte",   label: "Transporte" },
-  { value: "mantenimiento",label: "Mantenimiento" },
-  { value: "combustible",  label: "Combustible" },
+  { value: "", label: "Todos los módulos" },
+  { value: "transporte", label: "Transporte" },
+  { value: "mantenimiento", label: "Mantenimiento" },
+  { value: "combustible", label: "Combustible" },
 ];
 
 function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChange, onModuloChange, onClear }: {
@@ -274,13 +279,13 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
   );
 }
 
-
 // ─── Tarjeta mobile ────────────────────────────────────────────────────────────
 
-function RequestCard({ req, isExpanded, onToggle }: {
+function RequestCard({ req, isExpanded, onToggle, onCancel }: {
   req: CombinedRequest;
   isExpanded: boolean;
   onToggle: () => void;
+  onCancel?: (req: CombinedRequest) => void;
 }) {
   const cfg = MODULO_CONFIG[req.modulo];
   return (
@@ -314,20 +319,33 @@ function RequestCard({ req, isExpanded, onToggle }: {
         </div>
 
         {/* Ver detalles */}
-        <div className="mt-3.5 flex items-center justify-between">
+        <div className="mt-3.5 flex items-center justify-between flex-wrap gap-2">
           {isExpanded && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                window.location.href = `/solicitudes/${req.modulo}/${req.id}`;
-              }}
-              className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
-            >
-              Ver detalle completo
-              <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-              </svg>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.href = `/solicitudes/${req.modulo}/${req.id}`;
+                }}
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
+              >
+                Ver detalle completo
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              {canUserCancel(req.estado) && onCancel && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onCancel(req);
+                  }}
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+                >
+                  Cancelar
+                </button>
+              )}
+            </div>
           )}
           <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
           >
@@ -349,15 +367,41 @@ function RequestCard({ req, isExpanded, onToggle }: {
 
 export default function MyRequestsPage() {
   const navigate = useNavigate();
-  const [filterOpen,  setFilterOpen]  = useState(false);
-  const [expandedId,  setExpandedId]  = useState<number | null>(null);
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<number | null>(null);
+
+  // Estados de Cancelación
+  const [cancelTarget, setCancelTarget] = useState<CombinedRequest | null>(null);
+  const [motivoCancelacion, setMotivoCancelacion] = useState("");
+  const [submittingCancel, setSubmittingCancel] = useState(false);
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   const {
     loading, isPartiallyLoaded, error, requests, total, totalPages, page,
     filters, searchInput,
     setPage, setSearchInput,
     handleEstadoChange, handleModuloChange, clearFilters,
+    refresh,
   } = useCombinedRequests();
+
+  const handleConfirmCancel = async () => {
+    if (!cancelTarget || motivoCancelacion.trim().length < 10) return;
+    setSubmittingCancel(true);
+    setCancelError(null);
+    try {
+      await cancelRequest(cancelTarget.id, motivoCancelacion.trim());
+      setCancelTarget(null);
+      setMotivoCancelacion("");
+      refresh();
+    } catch (err: any) {
+      const detail = err instanceof Error ? err.message : "Error al cancelar la solicitud.";
+      setCancelError(
+        err?.response?.data?.error || err?.response?.data?.message || detail
+      );
+    } finally {
+      setSubmittingCancel(false);
+    }
+  };
 
   // Solo mostrar spinner completo cuando NO hay datos todavía
   const showFullSpinner = loading && requests.length === 0;
@@ -493,6 +537,7 @@ export default function MyRequestsPage() {
                 req={req}
                 isExpanded={expandedId === req.id}
                 onToggle={() => toggleExpand(req.id)}
+                onCancel={(r) => setCancelTarget(r)}
               />
             ))
         }
@@ -526,94 +571,104 @@ export default function MyRequestsPage() {
                   </tr>
                 )
                 : requests.map((req) => {
-                    const cfg = MODULO_CONFIG[req.modulo];
-                    const isExpanded = expandedId === req.id;
-                    return (
-                      <>
-                        <tr
-                          key={`${req.modulo}-${req.id}`}
-                          onClick={() => toggleExpand(req.id)}
-                          className={`cursor-pointer border-b border-slate-50 transition-colors
+                  const cfg = MODULO_CONFIG[req.modulo];
+                  const isExpanded = expandedId === req.id;
+                  return (
+                    <>
+                      <tr
+                        key={`${req.modulo}-${req.id}`}
+                        onClick={() => toggleExpand(req.id)}
+                        className={`cursor-pointer border-b border-slate-50 transition-colors
                             ${isExpanded ? "bg-indigo-50/40" : "hover:bg-slate-50"}`}
-                        >
-                          {/* Código + barra de color del módulo */}
-                          <td className="px-6 py-4">
-                            <div className="flex items-center gap-3">
-                              <div className={`h-8 w-1 flex-shrink-0 rounded-full ${cfg.dotClass}`} />
-                              <span className="font-extrabold tracking-tight text-slate-900">{req.codigo}</span>
+                      >
+                        {/* Código + barra de color del módulo */}
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className={`h-8 w-1 flex-shrink-0 rounded-full ${cfg.dotClass}`} />
+                            <span className="font-extrabold tracking-tight text-slate-900">{req.codigo}</span>
+                          </div>
+                        </td>
+
+                        {/* Módulo */}
+                        <td className="px-6 py-4">
+                          <ModuloBadge modulo={req.modulo} />
+                        </td>
+
+                        {/* Fecha */}
+                        <td className="px-6 py-4 text-sm text-slate-500">
+                          {formatFechaLinda(req.fecha_salida)}
+                        </td>
+
+                        {/* Descripción / ruta */}
+                        <td className="max-w-[220px] px-6 py-4">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-300" />
+                              <span className="truncate" title={req.origen}>{req.origen}</span>
                             </div>
-                          </td>
-
-                          {/* Módulo */}
-                          <td className="px-6 py-4">
-                            <ModuloBadge modulo={req.modulo} />
-                          </td>
-
-                          {/* Fecha */}
-                          <td className="px-6 py-4 text-sm text-slate-500">
-                            {formatFechaLinda(req.fecha_salida)}
-                          </td>
-
-                          {/* Descripción / ruta */}
-                          <td className="max-w-[220px] px-6 py-4">
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-1.5 text-sm text-slate-400">
-                                <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-300" />
-                                <span className="truncate" title={req.origen}>{req.origen}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
-                                <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-800" />
-                                <span className="truncate" title={req.destino}>{req.destino}</span>
-                              </div>
+                            <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                              <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-800" />
+                              <span className="truncate" title={req.destino}>{req.destino}</span>
                             </div>
-                          </td>
+                          </div>
+                        </td>
 
-                          {/* Estado */}
-                          <td className="px-6 py-4">
-                            <StatusBadge estado={req.estado} />
-                          </td>
+                        {/* Estado */}
+                        <td className="px-6 py-4">
+                          <StatusBadge estado={req.estado} />
+                        </td>
 
-                          {/* Acción */}
-                          <td className="px-6 py-4 text-right">
-                            <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors
+                        {/* Acción */}
+                        <td className="px-6 py-4 text-right">
+                          <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors
                               ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
+                          >
+                            {isExpanded ? "Ocultar" : "Ver detalles"}
+                            <svg
+                              className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
+                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
                             >
-                              {isExpanded ? "Ocultar" : "Ver detalles"}
-                              <svg
-                                className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                                fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-                              >
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                              </svg>
-                            </span>
-                          </td>
-                        </tr>
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                            </svg>
+                          </span>
+                        </td>
+                      </tr>
 
-                        {/* Fila de detalle expandida — por ahora placeholder hasta conectar detalle por módulo */}
-                        {isExpanded && (
-                          <tr key={`detail-${req.modulo}-${req.id}`} className="border-b border-slate-100">
-                            <td colSpan={6} className="bg-slate-50/60 px-8 py-4">
-                              <p className="text-sm text-slate-500">
-                                <span className="font-bold text-slate-700">Unidad:</span>{" "}
-                                {req.unidad?.nombre ?? "—"} &nbsp;·&nbsp;
-                                <span className="font-bold text-slate-700">Solicitante:</span>{" "}
-                                {req.solicitante?.name ?? "—"}
-                              </p>
+                      {/* Fila de detalle expandida — por ahora placeholder hasta conectar detalle por módulo */}
+                      {isExpanded && (
+                        <tr key={`detail-${req.modulo}-${req.id}`} className="border-b border-slate-100">
+                          <td colSpan={6} className="bg-slate-50/60 px-8 py-4">
+                            <p className="text-sm text-slate-500">
+                              <span className="font-bold text-slate-700">Unidad:</span>{" "}
+                              {req.unidad?.nombre ?? "—"} &nbsp;·&nbsp;
+                              <span className="font-bold text-slate-700">Solicitante:</span>{" "}
+                              {req.solicitante?.name ?? "—"}
+                            </p>
+                            <div className="mt-3 flex gap-2">
                               <button
                                 onClick={() => navigate(`/solicitudes/${req.modulo}/${req.id}`)}
-                                className="mt-3 inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
                               >
                                 Ver detalle completo
                                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
                                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
                                 </svg>
                               </button>
-                            </td>
-                          </tr>
-                        )}
-                      </>
-                    );
-                  })
+                              {canUserCancel(req.estado) && (
+                                <button
+                                  onClick={() => setCancelTarget(req)}
+                                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+                                >
+                                  Cancelar
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })
             }
           </tbody>
         </table>
@@ -635,6 +690,89 @@ export default function MyRequestsPage() {
         onModuloChange={handleModuloChange}
         onClear={() => { clearFilters(); setFilterOpen(false); }}
       />
+
+      {/* Modal de Cancelación */}
+      {cancelTarget && (
+        <>
+          <div
+            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
+            onClick={() => { if (!submittingCancel) setCancelTarget(null); }}
+          />
+          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white p-6 shadow-2xl transition-all sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[480px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[24px]">
+            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+
+            <div className="flex items-start gap-4">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
+                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div className="flex-1">
+                <h3 className="text-lg font-black tracking-tight text-slate-900">¿Cancelar esta solicitud?</h3>
+                <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                  La solicitud <strong className="text-slate-800">{cancelTarget.codigo}</strong> será cancelada de forma permanente. Esta acción es irreversible.
+                </p>
+
+                {cancelError && (
+                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-100 p-3 text-xs font-semibold text-rose-600">
+                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    {cancelError}
+                  </div>
+                )}
+
+                <div className="mt-4">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">
+                    Motivo de la cancelación *
+                  </label>
+                  <textarea
+                    value={motivoCancelacion}
+                    onChange={(e) => setMotivoCancelacion(e.target.value)}
+                    placeholder="Ej. Se canceló la reunión programada o los datos fueron ingresados con errores..."
+                    disabled={submittingCancel}
+                    rows={3}
+                    className="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-xs text-slate-800 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-50/50 resize-none disabled:bg-slate-50"
+                  />
+                  <div className="mt-1.5 flex justify-between text-[10px] font-semibold text-slate-400">
+                    <span>Mínimo 10 caracteres</span>
+                    <span className={motivoCancelacion.trim().length >= 10 ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                      {motivoCancelacion.trim().length} / 10
+                    </span>
+                  </div>
+                </div>
+
+                <div className="mt-6 flex justify-end gap-3">
+                  <button
+                    onClick={() => { if (!submittingCancel) setCancelTarget(null); }}
+                    disabled={submittingCancel}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                  >
+                    Volver atrás
+                  </button>
+                  <button
+                    onClick={handleConfirmCancel}
+                    disabled={submittingCancel || motivoCancelacion.trim().length < 10}
+                    className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-200 transition hover:bg-rose-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                  >
+                    {submittingCancel ? (
+                      <>
+                        <svg className="h-3.5 w-3.5 animate-spin text-white" viewBox="0 0 24 24" fill="none">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth={4} />
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
+                        </svg>
+                        Cancelando...
+                      </>
+                    ) : (
+                      "Confirmar Cancelación"
+                    )}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   );
 }
