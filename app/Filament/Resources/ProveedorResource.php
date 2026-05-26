@@ -31,10 +31,10 @@ class ProveedorResource extends Resource
     protected static ?string $navigationIcon  = 'heroicon-o-building-storefront';
     protected static ?int    $navigationSort  = 9;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe']); }
+    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'jefe']); }
 
     public static function form(Form $form): Form
 {

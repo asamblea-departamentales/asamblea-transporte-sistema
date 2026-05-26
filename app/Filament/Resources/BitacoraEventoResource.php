@@ -35,7 +35,7 @@ class BitacoraEventoResource extends Resource
     //Restricciones de acceso a la Bitácora de Eventos
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['jefe', 'admin', 'super-admin', 'superadmin', 'super_admin']);
+        return auth()->user()->hasAnyRole(['jefe', 'admin', 'super_admin', 'super-admin', 'superadmin']);
     }
     //restricción para crear nuevos registros en la bitácora
     public static function canCreate(): bool

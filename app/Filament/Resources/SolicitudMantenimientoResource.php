@@ -620,7 +620,7 @@ class SolicitudMantenimientoResource extends Resource
                         ->color('info')
                         ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud' => $record->id]))
                         ->openUrlInNewTab()
-                        ->visible(fn ($record) => auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo']) &&
+                        ->visible(fn ($record) => auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'super_admin']) &&
                             in_array($record->estado->value, [
                                 EstadoSolicitudEnum::APROBADA->value,
                                 EstadoSolicitudEnum::EN_EJECUCION->value,

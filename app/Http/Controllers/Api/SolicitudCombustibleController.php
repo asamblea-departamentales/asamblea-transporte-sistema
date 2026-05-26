@@ -33,7 +33,7 @@ class SolicitudCombustibleController extends Controller
         $query = SolicitudCombustible::query()
             ->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte']);
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $query->where('solicitante_id', $user->id);
         }
 
@@ -253,7 +253,7 @@ class SolicitudCombustibleController extends Controller
 
     private function authorizeJefe(): void
     {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal con rol de jefatura.');
         }
     }
@@ -262,7 +262,7 @@ class SolicitudCombustibleController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             return;
         }
 

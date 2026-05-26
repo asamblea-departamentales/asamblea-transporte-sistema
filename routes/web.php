@@ -38,7 +38,7 @@ Route::get('/', function () {
 // Para los reportes PDF de Transporte
 Route::get('/reportes/solicitudes-transporte/pdf', function (Request $request) {
     // (opcional) protege la ruta
-    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']), 403);
 
     $q = SolicitudTransporte::query();
 
@@ -101,7 +101,7 @@ Route::get('/reportes/solicitudes-transporte/pdf', function (Request $request) {
 
 // PDF Mantenimiento
 Route::get('/reportes/solicitudes-mantenimiento/pdf', function (Request $request) {
-    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']), 403);
 
     $q = SolicitudMantenimiento::query();
     $dateField = $request->string('date_field', 'fecha_sugerida')->toString();
@@ -165,7 +165,7 @@ Route::get('/reportes/solicitudes-mantenimiento/pdf', function (Request $request
 
 // PDF Combustible
 Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) {
-    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']), 403);
 
     $q = SolicitudCombustible::query();
     $dateField = $request->string('date_field', 'fecha_solicitud')->toString();
@@ -229,7 +229,7 @@ Route::get('/reportes/solicitudes-combustible/pdf', function (Request $request) 
 
 // Excel Combustible
 Route::get('/reportes/solicitudes-combustible/excel', function (Request $request) {
-    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']), 403);
 
     $q = SolicitudCombustible::query();
     $dateField = $request->string('date_field', 'fecha_solicitud')->toString();
@@ -266,7 +266,7 @@ Route::get('/reportes/solicitudes-combustible/excel', function (Request $request
 
 // Excel Mantenimiento
 Route::get('/reportes/solicitudes-mantenimiento/excel', function (Request $request) {
-    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']), 403);
+    abort_unless(auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']), 403);
 
     $q = SolicitudMantenimiento::query();
 
@@ -358,7 +358,7 @@ Route::get('/reportes/solicitudes-transporte/csv', function (Request $request) {
 
     abort_unless(
         auth()->check() &&
-        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']),
         403
     );
 
@@ -408,7 +408,7 @@ Route::get('/reportes/solicitudes-mantenimiento/csv', function (Request $request
 
     abort_unless(
         auth()->check() &&
-        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']),
         403
     );
 
@@ -461,7 +461,7 @@ Route::get('/reportes/solicitudes-combustible/csv', function (Request $request) 
 
     abort_unless(
         auth()->check() &&
-        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador']),
+        auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']),
         403
     );
 

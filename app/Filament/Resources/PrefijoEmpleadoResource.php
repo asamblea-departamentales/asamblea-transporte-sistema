@@ -25,10 +25,10 @@ class PrefijoEmpleadoResource extends Resource
     protected static ?string $navigationIcon  = 'heroicon-o-tag';
     protected static ?int    $navigationSort  = 8;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin']); }
+    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']); }
 
     public static function form(Form $form): Form
     {

@@ -29,7 +29,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
         $qCombustible = \App\Models\SolicitudCombustible::query();
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $qTransporte->where('solicitante_id', $user->id);
             $qMantenimiento->where('solicitante_id', $user->id);
             $qCombustible->where('solicitante_id', $user->id);
@@ -89,7 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
         $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
         $qCombustible = \App\Models\SolicitudCombustible::query();
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $qTransporte->where('solicitante_id', $user->id);
             $qMantenimiento->where('solicitante_id', $user->id);
             $qCombustible->where('solicitante_id', $user->id);
@@ -142,7 +142,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-transporte/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
     Route::post('solicitudes-transporte/{solicitud}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
 
-    Route::middleware('role:jefe|admin|ti')->group(function () {
+    Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
         Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
         Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
         Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
@@ -154,7 +154,7 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('solicitudes-transporte/{solicitud}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
-        ->middleware('role:operativo|admin|ti');
+        ->middleware('role:operativo|admin|ti|super_admin');
 
     // ── MANTENIMIENTO ───────────────────────────────────────────────
     Route::apiResource('solicitudes-mantenimiento', SolicitudMantenimientoController::class)
@@ -165,7 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-mantenimiento/{solicitud}/finalizar', [SolicitudMantenimientoController::class, 'finalizar']);
     Route::post('solicitudes-mantenimiento/{solicitud}/cancelar', [SolicitudMantenimientoController::class, 'cancelar']);
 
-    Route::middleware('role:jefe|admin|ti')->group(function () {
+    Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
         Route::post('solicitudes-mantenimiento/{solicitud}/observacion', [SolicitudMantenimientoController::class, 'observacion']);
         Route::post('solicitudes-mantenimiento/{solicitud}/pre-aprobar', [SolicitudMantenimientoController::class, 'preAprobar']);
         Route::post('solicitudes-mantenimiento/{solicitud}/aprobar', [SolicitudMantenimientoController::class, 'aprobar']);
@@ -182,7 +182,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-combustible/{solicitud}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
     Route::post('solicitudes-combustible/{solicitud}/cancelar', [SolicitudCombustibleController::class, 'cancelar']);
 
-    Route::middleware('role:jefe|admin|ti')->group(function () {
+    Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/observacion', [SolicitudCombustibleController::class, 'observacion']);
         Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
         Route::post('solicitudes-combustible/{solicitud}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);

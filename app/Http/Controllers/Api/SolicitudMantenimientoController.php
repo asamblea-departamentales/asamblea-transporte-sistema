@@ -32,7 +32,7 @@ class SolicitudMantenimientoController extends Controller
         $query = SolicitudMantenimiento::query()
             ->with(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'tipoMantenimiento', 'solicitante', 'aprobador']);
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $query->where('solicitante_id', $user->id);
         }
 
@@ -256,7 +256,7 @@ class SolicitudMantenimientoController extends Controller
     // Agregado para el proceso de evaluacion de mantenimiento
     public function evaluar(Request $request, SolicitudMantenimiento $solicitud)
     {
-        if (! auth()->user()->hasAnyRole(['jefe', 'operativo', 'liquidador'])) {
+        if (! auth()->user()->hasAnyRole(['jefe', 'operativo', 'liquidador', 'super_admin'])) {
             abort(403);
         }
 
@@ -293,7 +293,7 @@ class SolicitudMantenimientoController extends Controller
 
     private function authorizeJefe(): void
     {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             abort(Response::HTTP_FORBIDDEN, 'Solo personal autorizado puede realizar esta acción.');
         }
     }
@@ -302,7 +302,7 @@ class SolicitudMantenimientoController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             return;
         }
 

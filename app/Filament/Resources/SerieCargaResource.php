@@ -42,12 +42,12 @@ class SerieCargaResource extends Resource
 
     public static function canEdit($r): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
     }
 
     public static function canDelete($r): bool
     {
-        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe']);
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'jefe']);
     }
 
     public static function form(Form $form): Form

@@ -42,10 +42,10 @@ class UnidadSolicitanteResource extends Resource
 
     // Controla quién puede ver, crear, editar o eliminar unidades solicitantes.
     // Solo ciertos roles pueden realizar estas acciones.
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin']); }
+    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
+    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']); }
 
     // ------------------------------------------------------------------------- 
     // FORMULARIO PRINCIPAL

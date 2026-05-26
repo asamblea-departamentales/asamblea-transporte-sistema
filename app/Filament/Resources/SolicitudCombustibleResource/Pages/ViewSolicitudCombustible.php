@@ -62,7 +62,7 @@ class ViewSolicitudCombustible extends ViewRecord
                         'user_id' => auth()->id(),
                     ]);
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
                 ),
 
@@ -116,7 +116,7 @@ class ViewSolicitudCombustible extends ViewRecord
 
                     $this->sendAprobadoEmail($record);
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
@@ -267,7 +267,7 @@ class ViewSolicitudCombustible extends ViewRecord
                             ->send();
                     }
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->estado === EstadoSolicitudEnum::APROBADA
                 ),
 
@@ -304,7 +304,7 @@ class ViewSolicitudCombustible extends ViewRecord
                         $action->halt();
                     }
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::APROBADA,
                         EstadoSolicitudEnum::COMPLETADA,
@@ -356,7 +356,7 @@ class ViewSolicitudCombustible extends ViewRecord
 
                     $this->sendRechazadoEmail($record);
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
                         EstadoSolicitudEnum::EN_REVISION,
@@ -407,7 +407,7 @@ class ViewSolicitudCombustible extends ViewRecord
                         'datos_extras' => ['comentario' => $data['observaciones']],
                     ]);
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
                 ),
         ];

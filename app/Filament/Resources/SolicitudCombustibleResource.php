@@ -587,7 +587,7 @@ class SolicitudCombustibleResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::PENDIENTE,
                                 EstadoSolicitudEnum::EN_REVISION,
@@ -610,7 +610,7 @@ class SolicitudCombustibleResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::PENDIENTE,
                                 EstadoSolicitudEnum::EN_REVISION,
@@ -638,7 +638,7 @@ class SolicitudCombustibleResource extends Resource
                                 ->success()
                                 ->send();
                         })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                         ),
 
@@ -676,7 +676,7 @@ class SolicitudCombustibleResource extends Resource
                                 $action->halt();
                             }
                         })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::APROBADA,
                                 EstadoSolicitudEnum::ASIGNADA,
@@ -814,7 +814,7 @@ class SolicitudCombustibleResource extends Resource
                             }
                         })
                         ->visible(fn ($record) => auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             $record->estado === EstadoSolicitudEnum::APROBADA
                         ),
 

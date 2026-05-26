@@ -59,7 +59,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                         ->success()
                         ->send();
                 })
-                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado->value, [
                         EstadoSolicitudEnum::PENDIENTE->value,
                         EstadoSolicitudEnum::EN_REVISION->value,
@@ -117,7 +117,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
 
                     $this->sendAprobadoEmail($record);
                 })
-                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
@@ -187,7 +187,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                 ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud_id' => $record->id]))
                 ->openUrlInNewTab()
                 ->visible(fn (SolicitudMantenimiento $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->vehiculo_id !== null &&
                     in_array($record->estado->value, [
                         EstadoSolicitudEnum::APROBADA->value,
@@ -286,7 +286,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                             ->success()
                             ->send();
                     })
-                    ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    ->visible(fn (SolicitudMantenimiento $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                                             in_array($record->estado->value, [
                                                 EstadoSolicitudEnum::PENDIENTE->value,
                                                 EstadoSolicitudEnum::EN_REVISION->value,

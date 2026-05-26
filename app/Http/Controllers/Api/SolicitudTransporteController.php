@@ -39,7 +39,7 @@ class SolicitudTransporteController extends Controller
         $query = SolicitudTransporte::query()
             ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']); // Carga relaciones para optimizar consultas
 
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $query->where('solicitante_id', $user->id);
         }
 
@@ -450,7 +450,7 @@ class SolicitudTransporteController extends Controller
 
     private function authorizeJefe(): void
     {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             abort(Response::HTTP_FORBIDDEN, 'Solo personal autorizado puede realizar esta acción.');
         }
     }
@@ -459,7 +459,7 @@ class SolicitudTransporteController extends Controller
     {
         $user = Auth::user();
 
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti'])) {
+        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             return;
         }
 

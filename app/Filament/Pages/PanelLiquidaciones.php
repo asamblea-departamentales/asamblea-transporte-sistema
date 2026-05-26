@@ -352,7 +352,7 @@ class PanelLiquidaciones extends Page
     public static function canAccess(): bool
     {
         if (auth()->check()) {
-        return auth()->user()->hasAnyRole(['liquidador', 'jefe', 'operativo', 'admin', 'super-admin', 'superadmin', 'super_admin']);
+        return auth()->user()->hasAnyRole(['liquidador', 'jefe', 'operativo', 'admin', 'super_admin', 'super-admin', 'superadmin']);
     }
 
         return false;

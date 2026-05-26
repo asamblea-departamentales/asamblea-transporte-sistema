@@ -205,7 +205,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
                 })
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
                         EstadoSolicitudEnum::EN_REVISION,
@@ -245,7 +245,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
                 })
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PENDIENTE,
                         EstadoSolicitudEnum::EN_REVISION,
@@ -472,7 +472,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     }
                 })
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                 ),
 
@@ -626,7 +626,7 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
                 })
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::PROGRAMADA,
                         EstadoSolicitudEnum::APROBADA,
@@ -766,7 +766,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
                 ->openUrlInNewTab()
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     $record->vehiculo_id !== null &&
                     $record->motorista_id !== null &&
                     in_array($record->estado, [

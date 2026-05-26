@@ -54,7 +54,7 @@ class VehiculoResource extends Resource
 
     public static function canDelete($record): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'jefe', 'super_admin']);
     }
 
     public static function form(Form $form): Form
