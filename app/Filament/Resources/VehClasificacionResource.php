@@ -47,7 +47,7 @@ class VehClasificacionResource extends Resource
     // Controla quién puede ver la lista de clasificaciones de vehículos.
     public static function canViewAny(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 
 

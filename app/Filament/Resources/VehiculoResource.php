@@ -39,17 +39,17 @@ class VehiculoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->check() && auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canCreate(): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canEdit($record): bool
     {
-        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe']);
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 
     public static function canDelete($record): bool
