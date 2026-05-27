@@ -40,12 +40,12 @@ class ContratoCombustibleResource extends Resource
         return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
-    public static function canEdit($r): bool
+    public static function canEdit($record): bool
     {
         return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
     }
 
-    public static function canDelete($r): bool
+    public static function canDelete($record): bool
     {
         return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe', 'super_admin']);
     }
