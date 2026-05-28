@@ -10,115 +10,164 @@
             color: #1f2937;
             margin: 0;
             padding: 0;
+            background: #f8fafc;
+        }
+
+        .report-container {
+            max-width: 1120px;
+            margin: 0 auto;
+            padding: 18px 20px 24px;
+            background: #ffffff;
         }
 
         .header {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
+            align-items: center;
             width: 100%;
             margin-bottom: 16px;
-            border-bottom: 2px solid #0891b2;
             padding-bottom: 10px;
+            border-bottom: 2px solid #0891b2;
         }
 
         .logo {
-            width: 150px;
-            float: left;
+            width: 170px;
+        }
+
+        .logo img {
+            width: 100%;
+            height: auto;
         }
 
         .title-container {
-            float: right;
             text-align: right;
-            width: 70%;
         }
 
         h2 {
             margin: 0;
             color: #0891b2;
-            font-size: 17px;
+            font-size: 18px;
+            line-height: 1.1;
             text-transform: uppercase;
         }
 
-        .clearfix {
-            clear: both;
+        .header p {
+            margin: 6px 0 0;
+            color: #6b7280;
+            font-size: 10px;
+            line-height: 1.4;
         }
 
         .kpis {
-            width: 100%;
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 10px;
             margin-bottom: 12px;
         }
 
         .kpi-box {
             background-color: #ecfeff;
             border: 1px solid #a5f3fc;
-            border-radius: 4px;
-            padding: 6px;
+            border-radius: 8px;
+            padding: 10px 12px;
             text-align: center;
+            min-height: 60px;
         }
 
         .kpi-label {
             font-size: 8px;
             color: #6b7280;
+            letter-spacing: 0.05em;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .kpi-value {
-            font-size: 14px;
-            font-weight: bold;
+            font-size: 15px;
+            font-weight: 700;
             color: #0891b2;
         }
 
         .meta {
-            margin-bottom: 12px;
-            padding: 7px 10px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
             background-color: #ecfeff;
-            border-left: 3px solid #0891b2;
+            border-left: 4px solid #0891b2;
+            border-radius: 6px;
         }
 
         .meta table {
             border: none;
             width: 100%;
+            border-collapse: collapse;
         }
 
         .meta td {
             border: none;
-            padding: 2px 0;
+            padding: 4px 0;
+            vertical-align: top;
+            font-size: 10px;
+        }
+
+        .meta strong {
+            color: #0f172a;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            margin-top: 4px;
         }
 
         table.main {
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
+            font-size: 9px;
+            table-layout: fixed;
         }
 
         table.main th,
         table.main td {
             border: 0.5px solid #d1d5db;
-            padding: 5px 6px;
-            text-align: left;
+            padding: 7px 8px;
             vertical-align: top;
             word-wrap: break-word;
+            white-space: normal;
         }
 
         table.main th {
             background: #0891b2;
             color: #ffffff;
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
             font-size: 8px;
+            letter-spacing: 0.04em;
             text-align: center;
+            padding: 9px 8px;
         }
 
-        table.main tr:nth-child(even) {
-            background: #f5fdff;
+        table.main tr:nth-child(odd) {
+            background: #f8feff;
+        }
+
+        table.main tr:hover {
+            background: #e0f7ff;
+        }
+
+        table.main td {
+            color: #1f2937;
         }
 
         .badge {
-            padding: 2px 5px;
-            border-radius: 3px;
+            display: inline-block;
+            padding: 3px 6px;
+            border-radius: 999px;
             font-size: 8px;
-            font-weight: bold;
+            font-weight: 700;
             text-transform: uppercase;
+            letter-spacing: 0.04em;
         }
 
         .estado-borrador { background-color: #f3f4f6; color: #374151; }
@@ -149,77 +198,66 @@
             font-size: 8px;
             color: #9ca3af;
             border-top: 1px solid #e5e7eb;
+            padding-top: 6px;
         }
     </style>
 </head>
 <body>
+    <div class="report-container">
+        <div class="header">
+            <div class="logo">
+                <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
+                     alt="Asamblea Legislativa">
+            </div>
 
-    <div class="header">
-        <div class="logo">
-            <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
-                 alt="Asamblea Legislativa"
-                 style="width:150px;">
+            <div class="title-container">
+                <h2>Transporte y Logística</h2>
+                <p>
+                    Informe de Distribución de Cupones / Cargas de Combustible
+                </p>
+            </div>
         </div>
 
-        <div class="title-container">
-            <h2>Transporte y Logística</h2>
-            <p style="margin:4px 0 0; color:#6b7280;">
-                Informe de Distribución de Cupones / Cargas de Combustible
-            </p>
+        {{-- KPIs --}}
+        <div class="kpis">
+            <div class="kpi-box">
+                <span class="kpi-label">Solicitudes atendidas</span>
+                <span class="kpi-value">{{ number_format((float) ($kpis['total_solicitudes'] ?? 0), 0) }}</span>
+            </div>
+            <div class="kpi-box">
+                <span class="kpi-label">Total cargas</span>
+                <span class="kpi-value">{{ number_format((float) ($kpis['total_cargas'] ?? 0), 0) }}</span>
+            </div>
+            <div class="kpi-box">
+                <span class="kpi-label">Total monto</span>
+                <span class="kpi-value">${{ number_format((float) ($kpis['total_monto'] ?? 0), 2) }}</span>
+            </div>
+            <div class="kpi-box">
+                <span class="kpi-label">Total galones</span>
+                <span class="kpi-value">{{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
+            </div>
         </div>
 
-        <div class="clearfix"></div>
-    </div>
+        {{-- Meta --}}
+        <div class="meta">
+            <table>
+                <tr>
+                    <td width="15%"><strong>Rango:</strong></td>
+                    <td>{{ $rangeLabel }}</td>
+                    <td width="15%" class="text-right"><strong>Generado:</strong></td>
+                    <td width="22%" class="text-right">{{ now()->format('d/m/Y H:i') }}</td>
+                </tr>
+                <tr>
+                    <td><strong>Total registros:</strong></td>
+                    <td>{{ $rows->count() }}</td>
+                    <td colspan="2"></td>
+                </tr>
+            </table>
+        </div>
 
-    {{-- KPIs --}}
-    <table class="kpis" style="border-collapse: separate; border-spacing: 6px;">
-        <tr>
-            <td>
-                <div class="kpi-box">
-                    <span class="kpi-label">Solicitudes atendidas</span>
-                    <span class="kpi-value">{{ number_format((float) ($kpis['total_solicitudes'] ?? 0), 0) }}</span>
-                </div>
-            </td>
-            <td>
-                <div class="kpi-box">
-                    <span class="kpi-label">Total cargas</span>
-                    <span class="kpi-value">{{ number_format((float) ($kpis['total_cargas'] ?? 0), 0) }}</span>
-                </div>
-            </td>
-            <td>
-                <div class="kpi-box">
-                    <span class="kpi-label">Total monto</span>
-                    <span class="kpi-value">${{ number_format((float) ($kpis['total_monto'] ?? 0), 2) }}</span>
-                </div>
-            </td>
-            <td>
-                <div class="kpi-box">
-                    <span class="kpi-label">Total galones</span>
-                    <span class="kpi-value">{{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
-                </div>
-            </td>
-        </tr>
-    </table>
-
-    {{-- Meta --}}
-    <div class="meta">
-        <table>
-            <tr>
-                <td width="15%"><strong>Rango:</strong></td>
-                <td>{{ $rangeLabel }}</td>
-                <td width="15%" style="text-align:right;"><strong>Generado:</strong></td>
-                <td width="22%" style="text-align:right;">{{ now()->format('d/m/Y H:i') }}</td>
-            </tr>
-            <tr>
-                <td><strong>Total registros:</strong></td>
-                <td>{{ $rows->count() }}</td>
-                <td colspan="2"></td>
-            </tr>
-        </table>
-    </div>
-
-    {{-- Tabla --}}
-    <table class="main">
+        {{-- Tabla --}}
+        <div class="table-wrapper">
+            <table class="main">
         <thead>
             <tr>
                 <th width="7%">Fecha</th>
@@ -301,6 +339,8 @@
             @endforelse
         </tbody>
     </table>
+        </div>
+    </div>
 
     <div class="footer">
         Asamblea Legislativa de El Salvador &mdash; Sistema de Gestión de Transporte &mdash;
