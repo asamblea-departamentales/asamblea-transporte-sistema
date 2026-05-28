@@ -654,10 +654,11 @@
             };
 
             // Rutas de vista detalle
+            // Rutas de visualización utilizando el método nativo de Filament
             $rutaVer = match($item['tipo']) {
-                'transporte' => route('filament.admin.resources.solicitud-transporte.view', $item['id']),
-                'combustible' => route('filament.admin.resources.solicitud-combustible.view', $item['id']),
-                'mantenimiento' => route('filament.admin.resources.solicitud-mantenimiento.view', $item['id']),
+                'transporte' => \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $item['id']]),
+                'combustible' => \App\Filament\Resources\SolicitudCombustibleResource::getUrl('view', ['record' => $item['id']]),
+                'mantenimiento' => \App\Filament\Resources\SolicitudMantenimientoResource::getUrl('view', ['record' => $item['id']]),
                 default => '#',
             };
         @endphp
