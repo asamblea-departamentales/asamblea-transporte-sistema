@@ -398,6 +398,7 @@ class SolicitudCombustibleResource extends Resource
 
     public static function table(Table $table): Table
     {
+        {
         return $table
             ->defaultSort('prioridad_orden', 'asc')
             ->striped()
@@ -407,8 +408,8 @@ class SolicitudCombustibleResource extends Resource
                 Tables\Columns\TextColumn::make('prioridad_grupo')
                     ->label('Prioridad')
                     ->badge()
-                    ->color(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->color() ?? 'gray')
-                    ->formatStateUsing(fn ($state) => \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state)?->label() ?? 'Baja')
+                    ->color(fn ($state) => $state?->color() ?? 'gray')
+                    ->formatStateUsing(fn ($state) => $state?->label() ?? 'Baja')
                     ->sortable(),
                 Tables\Columns\TextColumn::make('codigo')
                     ->label('Solicitud')
