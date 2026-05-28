@@ -38,7 +38,7 @@ class RecepcionEntregaVehiculoResource extends Resource
 
     public static function canViewAny(): bool
     {
-        return auth()->user()?->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']) ?? false;
+        return auth()->user()?->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin', 'operativo']) ?? false;
     }
 
     public static function form(Form $form): Form
