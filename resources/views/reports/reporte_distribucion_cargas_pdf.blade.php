@@ -10,164 +10,115 @@
             color: #1f2937;
             margin: 0;
             padding: 0;
-            background: #f8fafc;
-        }
-
-        .report-container {
-            max-width: 1120px;
-            margin: 0 auto;
-            padding: 18px 20px 24px;
-            background: #ffffff;
         }
 
         .header {
-            display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 16px;
-            align-items: center;
             width: 100%;
             margin-bottom: 16px;
-            padding-bottom: 10px;
             border-bottom: 2px solid #0891b2;
+            padding-bottom: 10px;
         }
 
         .logo {
-            width: 170px;
-        }
-
-        .logo img {
-            width: 100%;
-            height: auto;
+            width: 150px;
+            float: left;
         }
 
         .title-container {
+            float: right;
             text-align: right;
+            width: 70%;
         }
 
         h2 {
             margin: 0;
             color: #0891b2;
-            font-size: 18px;
-            line-height: 1.1;
+            font-size: 17px;
             text-transform: uppercase;
         }
 
-        .header p {
-            margin: 6px 0 0;
-            color: #6b7280;
-            font-size: 10px;
-            line-height: 1.4;
+        .clearfix {
+            clear: both;
         }
 
         .kpis {
-            display: grid;
-            grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
+            width: 100%;
             margin-bottom: 12px;
         }
 
         .kpi-box {
             background-color: #ecfeff;
             border: 1px solid #a5f3fc;
-            border-radius: 8px;
-            padding: 10px 12px;
+            border-radius: 4px;
+            padding: 6px;
             text-align: center;
-            min-height: 60px;
         }
 
         .kpi-label {
             font-size: 8px;
             color: #6b7280;
-            letter-spacing: 0.05em;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .kpi-value {
-            font-size: 15px;
-            font-weight: 700;
+            font-size: 14px;
+            font-weight: bold;
             color: #0891b2;
         }
 
         .meta {
-            margin-bottom: 14px;
-            padding: 10px 14px;
+            margin-bottom: 12px;
+            padding: 7px 10px;
             background-color: #ecfeff;
-            border-left: 4px solid #0891b2;
-            border-radius: 6px;
+            border-left: 3px solid #0891b2;
         }
 
         .meta table {
             border: none;
             width: 100%;
-            border-collapse: collapse;
         }
 
         .meta td {
             border: none;
-            padding: 4px 0;
-            vertical-align: top;
-            font-size: 10px;
-        }
-
-        .meta strong {
-            color: #0f172a;
-        }
-
-        .table-wrapper {
-            overflow-x: auto;
-            margin-top: 4px;
+            padding: 2px 0;
         }
 
         table.main {
             width: 100%;
             border-collapse: collapse;
             margin-top: 8px;
-            font-size: 9px;
-            table-layout: fixed;
         }
 
         table.main th,
         table.main td {
             border: 0.5px solid #d1d5db;
-            padding: 7px 8px;
+            padding: 5px 6px;
+            text-align: left;
             vertical-align: top;
             word-wrap: break-word;
-            white-space: normal;
         }
 
         table.main th {
             background: #0891b2;
             color: #ffffff;
-            font-weight: 700;
+            font-weight: bold;
             text-transform: uppercase;
             font-size: 8px;
-            letter-spacing: 0.04em;
             text-align: center;
-            padding: 9px 8px;
         }
 
-        table.main tr:nth-child(odd) {
-            background: #f8feff;
-        }
-
-        table.main tr:hover {
-            background: #e0f7ff;
-        }
-
-        table.main td {
-            color: #1f2937;
+        table.main tr:nth-child(even) {
+            background: #f5fdff;
         }
 
         .badge {
-            display: inline-block;
-            padding: 3px 6px;
-            border-radius: 999px;
+            padding: 2px 5px;
+            border-radius: 3px;
             font-size: 8px;
-            font-weight: 700;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.04em;
         }
 
         .estado-borrador { background-color: #f3f4f6; color: #374151; }
@@ -198,7 +149,6 @@
             font-size: 8px;
             color: #9ca3af;
             border-top: 1px solid #e5e7eb;
-            padding-top: 6px;
         }
     </style>
 </head>
