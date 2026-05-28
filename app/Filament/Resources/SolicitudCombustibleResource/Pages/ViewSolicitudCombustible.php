@@ -14,6 +14,10 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use App\Models\SerieCarga;
+use App\Mail\NotificacionEventMail;
+use Illuminate\Support\Facades\Mail;
+use Illuminate\Support\Facades\Log;
 
 class ViewSolicitudCombustible extends ViewRecord
 {
