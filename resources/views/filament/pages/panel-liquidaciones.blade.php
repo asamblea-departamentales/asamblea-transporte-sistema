@@ -939,6 +939,16 @@
             @endif
         </div>
 
+        {{-- Cantidad de galones (solo combustible) --}}
+        @if($this->detalleItem['tipo'] === 'combustible')
+        <div style="margin-bottom:16px;">
+            <div style="font-size:11px;color:#6b7280;font-weight:500;margin-bottom:2px;">Cantidad de galones</div>
+            <div style="font-size:18px;font-weight:700;color:#111827;">
+                {{ number_format($this->detalleItem['cantidad_galones'] ?? 0, 2) }} gal
+            </div>
+        </div>
+        @endif
+
         {{-- Montos --}}
         <div>
             <div class="liq-drawer-section-title">Resumen financiero</div>

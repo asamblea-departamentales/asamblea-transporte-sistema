@@ -240,6 +240,7 @@ class PanelLiquidaciones extends Page
                 'solicitante' => $record->solicitante?->name,
                 'motorista' => $record->motorista?->nombre ?? '—',
                 'monto_solicitado' => $record->valor_total,
+                'cantidad_galones' => $record->cantidad_combustible,
                 'monto_validado' => $record->liquidacion?->monto_validado,
                 'resultado' => $record->liquidacion?->resultado,
                 'observaciones' => $record->liquidacion?->observaciones,
