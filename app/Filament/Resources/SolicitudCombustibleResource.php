@@ -835,62 +835,15 @@ class SolicitudCombustibleResource extends Resource
             ]);
     }
 
-    // FIX #1: Corregido getEloquentQuery — el return prematuro dejaba todo el filtrado por rol sin ejecutar.
-    // Se extrae el query base a una variable, se aplican los filtros y se retorna al final.
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()->with([
+        return parent::getEloquentQuery()->with([
             'vehiculo.vehMarca',
             'vehiculo.vehModelo',
             'solicitante',
             'aprobador',
             'solicitudTransporte',
         ]);
-
-        $user = auth()->user();
-
-        // 1. Super admin, TI y Admin: Ven TODO.
-        if ($user->hasAnyRole(['super_admin', 'ti', 'admin'])) {
-            return $query;
-        }
-
-        // 2. SOLICITANTE (Tu colega del Frontend)
-        // Eliminamos cualquier restricción de estado.
-        // Si solo ve "unas cuantas", verifica que el campo 'solicitante_id' en la DB
-        // coincida con su ID de usuario actual.
-        if ($user->hasRole('solicitante')) {
-            return $query->where('solicitante_id', $user->id);
-        }
-
-        // 3. OPERATIVO
-        if ($user->hasRole('operativo')) {
-            return $query->whereIn('estado', [
-                EstadoSolicitudEnum::PENDIENTE->value,
-                EstadoSolicitudEnum::EN_REVISION->value,
-                EstadoSolicitudEnum::PRE_APROBADA->value,
-            ]);
-        }
-
-        // 4. JEFE
-        if ($user->hasRole('jefe')) {
-            return $query->whereIn('estado', [
-                EstadoSolicitudEnum::PRE_APROBADA->value,
-                EstadoSolicitudEnum::APROBADA->value,
-                EstadoSolicitudEnum::ASIGNADA->value,
-                EstadoSolicitudEnum::COMPLETADA->value,
-                EstadoSolicitudEnum::RECHAZADA->value,
-            ]);
-        }
-
-        // 5. LIQUIDADOR
-        if ($user->hasRole('liquidador')) {
-            return $query->whereIn('estado', [
-                EstadoSolicitudEnum::ASIGNADA->value,
-                EstadoSolicitudEnum::COMPLETADA->value,
-            ]);
-        }
-
-        return $query;
     }
 
     public static function getPages(): array

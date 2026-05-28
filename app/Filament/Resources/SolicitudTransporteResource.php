@@ -974,39 +974,8 @@ class SolicitudTransporteResource extends Resource
     // =========================================================================
     public static function getEloquentQuery(): Builder
     {
-        $query = parent::getEloquentQuery()
+        return parent::getEloquentQuery()
             ->with(['solicitante', 'unidad', 'autorizador', 'vehiculo.tipo', 'motorista']);
-
-        $user = auth()->user();
-
-        if ($user->hasAnyRole(['super_admin', 'ti'])) {
-            return $query;
-        }
-
-        if ($user->hasAnyRole('operativo')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::PENDIENTE->value,
-                EstadoSolicitudEnum::EN_REVISION->value,
-            ]);
-        }
-
-        if ($user->hasRole('jefe')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::PRE_APROBADA->value,
-                EstadoSolicitudEnum::APROBADA->value,
-                EstadoSolicitudEnum::PROGRAMADA,
-                EstadoSolicitudEnum::ASIGNADA,
-            ]);
-        }
-
-        if ($user->hasRole('liquidador')) {
-            $query->whereIn('estado', [
-                EstadoSolicitudEnum::ASIGNADA->value,
-                EstadoSolicitudEnum::COMPLETADA->value,
-            ]);
-        }
-
-        return $query;
     }
 
     public static function getRelations(): array
