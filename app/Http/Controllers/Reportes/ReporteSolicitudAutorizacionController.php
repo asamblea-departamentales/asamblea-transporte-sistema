@@ -19,16 +19,12 @@ use Barryvdh\DomPDF\Facade\Pdf;
 
 class ReporteSolicitudAutorizacionController extends Controller
 {
-    public function pdf(int $solicitudId)
+    public function pdf(int $solicitudId, ?int $combustibleId = null)
     {
         $solicitud = SolicitudTransporte::findOrFail($solicitudId);
 
-        if (! $solicitud->vehiculo_id || ! $solicitud->motorista_id) {
-            return redirect()->back()->with('error', 'La solicitud debe tener vehículo y motorista asignados para generar el documento oficial.');
-        }
-
         $service = app(ReporteSolicitudAutorizacionService::class);
-        $datos = $service->getDatosOficiales($solicitudId);
+        $datos = $service->getDatosOficiales($solicitudId, $combustibleId);
 
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,

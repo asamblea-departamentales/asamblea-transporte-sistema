@@ -51,7 +51,7 @@ class LiquidacionUnifiedService
 
         if (!$tipo || $tipo === 'combustible') {
             $q = SolicitudCombustible::query()
-                ->with(['vehiculo', 'solicitante', 'motorista', 'liquidacion']);
+                ->with(['vehiculo', 'solicitante', 'motorista', 'liquidacion', 'solicitudTransporte.vehiculo', 'solicitudTransporte.motorista']);
 
             if ($modo === 'liquidacion') {
                 $q->whereIn('estado', $estadosLiquidacion);
@@ -146,6 +146,7 @@ class LiquidacionUnifiedService
             'tiene_comprobantes'   => !empty($r->comprobantes),
             'liquidado'            => $r->liquidacion !== null,
             'solicitud_transporte_id' => $r->solicitud_transporte_id,
+            'transporte_tiene_datos' => $r->solicitudTransporte && $r->solicitudTransporte->vehiculo_id && $r->solicitudTransporte->motorista_id,
             'puede_editar'         => $this->puedeEditar($r->estado?->value ?? (string) $r->estado),
             'puede_liquidar'       => $this->puedeLiquidar($r),
             'pdf_route'            => route('liquidacion.combustible.pdf', $r->id),

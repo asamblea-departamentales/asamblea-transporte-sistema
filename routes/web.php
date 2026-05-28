@@ -323,7 +323,7 @@ Route::get('/reportes/general-servicios/pdf', [ReporteGeneralServiciosController
 Route::get('/reporte-mision-oficial/{solicitud?}', [ReporteMisionOficialController::class, 'pdf'])
     ->name('reportes.mision-oficial.pdf');
 
-Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
+Route::get('/reportes/solicitud-autorizacion/{solicitud}/{combustible?}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
     ->name('reportes.solicitud-autorizacion.pdf');
 
 Route::get('/reportes/orden-trabajo/pdf', action: [ReporteOrdenTrabajoController::class, 'pdf'])
@@ -348,9 +348,6 @@ Route::get('/reportes/plan-diario/{fecha}/pdf', [ReportePlanDiarioController::cl
 
 Route::get('/reportes/lote-combustible/{lote}/pdf', [ReporteLoteCombustibleController::class, 'pdf'])
     ->name('reportes.lote-combustible.pdf');
-
-Route::get('/reportes/solicitud-autorizacion/{solicitud}/pdf', [ReporteSolicitudAutorizacionController::class, 'pdf'])
-    ->name('reportes.solicitud-autorizacion.pdf');
 
 // --------------------------------- NUEVOS REPORTES CVS --------------------------------- //
 // CSV Transporte

@@ -730,8 +730,8 @@
                             👁️ Ver detalle
                         </button>
 
-                        {{-- Editar (solo si no es transporte y está en estado editable) --}}
-                        @if(!$esTransporte && $puedeEditar)
+                        {{-- Editar (cuando esté en estado editable) --}}
+                        @if($puedeEditar)
                             <a href="{{ $rutaEditar }}" class="liq-dropdown-item" target="_blank">
                                 ✏️ Editar
                             </a>
@@ -744,40 +744,32 @@
                                target="_blank" class="liq-dropdown-item">
                                 📄 Misión Oficial
                             </a>
-                            <a href="{{ route('reportes.solicitud-autorizacion.pdf', $item['id']) }}" 
-                               target="_blank" class="liq-dropdown-item">
-                                📄 Documento Oficial
-                            </a>
-                        @elseif($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id']))
+                        @endif
+
+                        @if($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id']))
                             <div class="liq-dropdown-divider"></div>
-                            <a href="{{ route('reportes.mision-oficial.pdf', $item['solicitud_transporte_id']) }}" 
-                               target="_blank" class="liq-dropdown-item">
-                                📄 Misión Oficial
-                            </a>
-                            <a href="{{ route('reportes.solicitud-autorizacion.pdf', $item['solicitud_transporte_id']) }}" 
+                            <a href="{{ route('reportes.solicitud-autorizacion.pdf', [$item['solicitud_transporte_id'], $item['id']]) }}" 
                                target="_blank" class="liq-dropdown-item">
                                 📄 Documento Oficial
                             </a>
                         @endif
 
-                        @if(!$esTransporte)
-                            @if($item['tipo'] === 'mantenimiento')
-                                <div class="liq-dropdown-divider"></div>
-                                <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}" 
-                                   target="_blank" class="liq-dropdown-item">
-                                    🔧 Orden de Trabajo
-                                </a>
-                            @endif
+                        @if($item['tipo'] === 'mantenimiento')
+                            <div class="liq-dropdown-divider"></div>
+                            <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}" 
+                               target="_blank" class="liq-dropdown-item">
+                                🔧 Orden de Trabajo
+                            </a>
+                        @endif
 
-                            @if($item['liquidado'])
-                                <div class="liq-dropdown-divider"></div>
-                                <a href="{{ $item['tipo'] === 'combustible'
-                                    ? route('liquidacion.combustible.pdf', $item['id'])
-                                    : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
-                                   target="_blank" class="liq-dropdown-item">
-                                    📊 PDF Liquidación
-                                </a>
-                            @endif
+                        @if(!$esTransporte && $item['liquidado'])
+                            <div class="liq-dropdown-divider"></div>
+                            <a href="{{ $item['tipo'] === 'combustible'
+                                ? route('liquidacion.combustible.pdf', $item['id'])
+                                : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
+                               target="_blank" class="liq-dropdown-item">
+                                📊 PDF Liquidación
+                            </a>
                         @endif
 
                         {{-- Liquidar (solo si no es transporte, no liquidado, y tiene comprobantes) --}}

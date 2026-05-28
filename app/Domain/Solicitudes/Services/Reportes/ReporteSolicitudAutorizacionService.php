@@ -2,11 +2,12 @@
 
 namespace App\Domain\Solicitudes\Services\Reportes;
 
+use App\Models\SolicitudCombustible;
 use App\Models\SolicitudTransporte;
 
 class ReporteSolicitudAutorizacionService
 {
-    public function getDatosOficiales(int $solicitudId): array
+    public function getDatosOficiales(int $solicitudId, ?int $combustibleId = null): array
     {
         $solicitud = SolicitudTransporte::with([
             'unidad',
@@ -17,9 +18,10 @@ class ReporteSolicitudAutorizacionService
             'solicitudCombustible',
         ])->findOrFail($solicitudId);
 
-        // numero_vale_ticket = ticket externo
-        // NO es el correlativo físico del vale
-        $combustible = $solicitud->solicitudCombustible;
+        // Usar el combustible específico si se pasa, o el ligado al transporte
+        $combustible = $combustibleId
+            ? SolicitudCombustible::with('vehiculo.tipoCombustible')->find($combustibleId)
+            : $solicitud->solicitudCombustible;
 
         return [
             'codigo' => $solicitud->codigo,
@@ -35,14 +37,16 @@ class ReporteSolicitudAutorizacionService
             'hora_regreso' => optional($solicitud->fecha_retorno)->format('H:i') ?? '—',
 
             // Vehículo
-            'placa' => $solicitud->vehiculo?->placa ?? '—',
-            'tipo_vehiculo' => $solicitud->tipoVehiculo?->nombre ?? $solicitud->tipo_vehiculo_nombre ?? '—',
+            'placa' => $solicitud->vehiculo?->placa ?? $combustible?->vehiculo?->placa ?? '—',
+            'tipo_vehiculo' => $solicitud->tipoVehiculo?->nombre ?? '—',
             'motorista' => $solicitud->motorista?->nombre ?? $solicitud->motorista?->name ?? '—',
 
             // Combustible
             'ticket' => $solicitud->ticket,
             'numero_vale_ticket' => $combustible?->numero_vale_ticket ?? '—',
-            'tipo_combustible' => $solicitud->vehiculo?->tipoCombustible?->nombre ?? '—',
+            'tipo_combustible' => $combustible?->vehiculo?->tipoCombustible?->nombre
+                ?? $solicitud->vehiculo?->tipoCombustible?->nombre
+                ?? '—',
             'monto_combustible' => $combustible?->monto_asignado ?? 0,
 
             // Extras
