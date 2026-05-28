@@ -398,7 +398,7 @@ class SolicitudCombustibleResource extends Resource
 
     public static function table(Table $table): Table
     {
-        {
+        
         return $table
             ->defaultSort('prioridad_orden', 'asc')
             ->striped()
