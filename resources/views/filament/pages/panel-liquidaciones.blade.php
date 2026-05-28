@@ -752,8 +752,8 @@
                             {{-- Documento Oficial --}}
                             @if($item['tipo'] === 'transporte' || ($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id'])))
                                 <a href="{{ $item['tipo'] === 'transporte' 
-                                    ? route('reportes.documento-oficial.pdf', $item['id'])
-                                    : route('reportes.documento-oficial.pdf', $item['solicitud_transporte_id']) }}" 
+                                    ? route('reportes.solicitud-autorizacion.pdf', $item['id'])
+                                    : route('reportes.solicitud-autorizacion.pdf', $item['solicitud_transporte_id']) }}" 
                                    target="_blank" 
                                    class="liq-dropdown-item">
                                     📄 Documento Oficial
