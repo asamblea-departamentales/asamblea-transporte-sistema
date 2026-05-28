@@ -645,7 +645,10 @@
             // Determinar si es transporte
             $esTransporte = $item['tipo'] === 'transporte';
 
-          // Rutas de edición utilizando el método nativo de Filament
+            // Datos mínimos para generar PDFs de transporte
+            $transporteCompleto = $esTransporte && !empty($item['vehiculo']) && !empty($item['motorista']);
+
+            // Rutas de edición utilizando el método nativo de Filament
             $rutaEditar = match($item['tipo']) {
                 'transporte' => \App\Filament\Resources\SolicitudTransporteResource::getUrl('edit', ['record' => $item['id']]),
                 'combustible' => \App\Filament\Resources\SolicitudCombustibleResource::getUrl('edit', ['record' => $item['id']]),
@@ -722,10 +725,10 @@
                         ⋮ Acciones
                     </button>
                     <div class="liq-dropdown-menu" :class="{ 'show': showDropdown }">
-                        {{-- Ver detalle --}}
-                        <a href="{{ $rutaVer }}" class="liq-dropdown-item" target="_blank">
+                        {{-- Ver detalle (drawer interno del panel) --}}
+                        <button wire:click="abrirDetalle({{ $item['id'] }}, '{{ $item['tipo'] }}')" class="liq-dropdown-item">
                             👁️ Ver detalle
-                        </a>
+                        </button>
 
                         {{-- Editar (solo si no es transporte y está en estado editable) --}}
                         @if(!$esTransporte && $puedeEditar)
@@ -735,48 +738,43 @@
                         @endif
 
                         {{-- PDFs --}}
-                        @if(!$esTransporte)
+                        @if($transporteCompleto)
                             <div class="liq-dropdown-divider"></div>
+                            <a href="{{ route('reportes.mision-oficial.pdf', $item['id']) }}" 
+                               target="_blank" class="liq-dropdown-item">
+                                📄 Misión Oficial
+                            </a>
+                            <a href="{{ route('reportes.solicitud-autorizacion.pdf', $item['id']) }}" 
+                               target="_blank" class="liq-dropdown-item">
+                                📄 Documento Oficial
+                            </a>
+                        @elseif($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id']))
+                            <div class="liq-dropdown-divider"></div>
+                            <a href="{{ route('reportes.mision-oficial.pdf', $item['solicitud_transporte_id']) }}" 
+                               target="_blank" class="liq-dropdown-item">
+                                📄 Misión Oficial
+                            </a>
+                            <a href="{{ route('reportes.solicitud-autorizacion.pdf', $item['solicitud_transporte_id']) }}" 
+                               target="_blank" class="liq-dropdown-item">
+                                📄 Documento Oficial
+                            </a>
+                        @endif
 
-                            {{-- Misión Oficial (si es transporte o ligado a transporte) --}}
-                            @if($item['tipo'] === 'transporte' || ($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id'])))
-                                <a href="{{ $item['tipo'] === 'transporte' 
-                                    ? route('reportes.mision-oficial.pdf', $item['id'])
-                                    : route('reportes.mision-oficial.pdf', $item['solicitud_transporte_id']) }}" 
-                                   target="_blank" 
-                                   class="liq-dropdown-item">
-                                    📄 Misión Oficial
-                                </a>
-                            @endif
-
-                            {{-- Documento Oficial --}}
-                            @if($item['tipo'] === 'transporte' || ($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id'])))
-                                <a href="{{ $item['tipo'] === 'transporte' 
-                                    ? route('reportes.solicitud-autorizacion.pdf', $item['id'])
-                                    : route('reportes.solicitud-autorizacion.pdf', $item['solicitud_transporte_id']) }}" 
-                                   target="_blank" 
-                                   class="liq-dropdown-item">
-                                    📄 Documento Oficial
-                                </a>
-                            @endif
-
-                            {{-- Orden de Trabajo (solo mantenimiento) --}}
+                        @if(!$esTransporte)
                             @if($item['tipo'] === 'mantenimiento')
+                                <div class="liq-dropdown-divider"></div>
                                 <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}" 
-                                   target="_blank" 
-                                   class="liq-dropdown-item">
+                                   target="_blank" class="liq-dropdown-item">
                                     🔧 Orden de Trabajo
                                 </a>
                             @endif
 
-                            {{-- PDF Liquidación (si está liquidado) --}}
                             @if($item['liquidado'])
                                 <div class="liq-dropdown-divider"></div>
                                 <a href="{{ $item['tipo'] === 'combustible'
                                     ? route('liquidacion.combustible.pdf', $item['id'])
                                     : route('liquidacion.mantenimiento.pdf', $item['id']) }}"
-                                   target="_blank"
-                                   class="liq-dropdown-item">
+                                   target="_blank" class="liq-dropdown-item">
                                     📊 PDF Liquidación
                                 </a>
                             @endif
