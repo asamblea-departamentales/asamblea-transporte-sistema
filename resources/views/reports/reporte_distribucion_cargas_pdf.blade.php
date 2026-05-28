@@ -203,61 +203,73 @@
     </style>
 </head>
 <body>
-    <div class="report-container">
-        <div class="header">
-            <div class="logo">
-                <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
-                     alt="Asamblea Legislativa">
-            </div>
 
-            <div class="title-container">
-                <h2>Transporte y Logística</h2>
-                <p>
-                    Informe de Distribución de Cupones / Cargas de Combustible
-                </p>
-            </div>
+    <div class="header">
+        <div class="logo">
+            <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
+                 alt="Asamblea Legislativa"
+                 style="width:150px;">
         </div>
 
-        {{-- KPIs --}}
-        <div class="kpis">
-            <div class="kpi-box">
-                <span class="kpi-label">Solicitudes atendidas</span>
-                <span class="kpi-value">{{ number_format((float) ($kpis['total_solicitudes'] ?? 0), 0) }}</span>
-            </div>
-            <div class="kpi-box">
-                <span class="kpi-label">Total cargas</span>
-                <span class="kpi-value">{{ number_format((float) ($kpis['total_cargas'] ?? 0), 0) }}</span>
-            </div>
-            <div class="kpi-box">
-                <span class="kpi-label">Total monto</span>
-                <span class="kpi-value">${{ number_format((float) ($kpis['total_monto'] ?? 0), 2) }}</span>
-            </div>
-            <div class="kpi-box">
-                <span class="kpi-label">Total galones</span>
-                <span class="kpi-value">{{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
-            </div>
+        <div class="title-container">
+            <h2>Transporte y Logística</h2>
+            <p style="margin:4px 0 0; color:#6b7280;">
+                Informe de Distribución de Cupones / Cargas de Combustible
+            </p>
         </div>
 
-        {{-- Meta --}}
-        <div class="meta">
-            <table>
-                <tr>
-                    <td width="15%"><strong>Rango:</strong></td>
-                    <td>{{ $rangeLabel }}</td>
-                    <td width="15%" class="text-right"><strong>Generado:</strong></td>
-                    <td width="22%" class="text-right">{{ now()->format('d/m/Y H:i') }}</td>
-                </tr>
-                <tr>
-                    <td><strong>Total registros:</strong></td>
-                    <td>{{ $rows->count() }}</td>
-                    <td colspan="2"></td>
-                </tr>
-            </table>
-        </div>
+        <div class="clearfix"></div>
+    </div>
 
-        {{-- Tabla --}}
-        <div class="table-wrapper">
-            <table class="main">
+    {{-- KPIs --}}
+    <table class="kpis" style="border-collapse: separate; border-spacing: 6px;">
+        <tr>
+            <td>
+                <div class="kpi-box">
+                    <span class="kpi-label">Solicitudes atendidas</span>
+                    <span class="kpi-value">{{ number_format((float) ($kpis['total_solicitudes'] ?? 0), 0) }}</span>
+                </div>
+            </td>
+            <td>
+                <div class="kpi-box">
+                    <span class="kpi-label">Total cargas</span>
+                    <span class="kpi-value">{{ number_format((float) ($kpis['total_cargas'] ?? 0), 0) }}</span>
+                </div>
+            </td>
+            <td>
+                <div class="kpi-box">
+                    <span class="kpi-label">Total monto</span>
+                    <span class="kpi-value">${{ number_format((float) ($kpis['total_monto'] ?? 0), 2) }}</span>
+                </div>
+            </td>
+            <td>
+                <div class="kpi-box">
+                    <span class="kpi-label">Total galones</span>
+                    <span class="kpi-value">{{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
+                </div>
+            </td>
+        </tr>
+    </table>
+
+    {{-- Meta --}}
+    <div class="meta">
+        <table>
+            <tr>
+                <td width="15%"><strong>Rango:</strong></td>
+                <td>{{ $rangeLabel }}</td>
+                <td width="15%" style="text-align:right;"><strong>Generado:</strong></td>
+                <td width="22%" style="text-align:right;">{{ now()->format('d/m/Y H:i') }}</td>
+            </tr>
+            <tr>
+                <td><strong>Total registros:</strong></td>
+                <td>{{ $rows->count() }}</td>
+                <td colspan="2"></td>
+            </tr>
+        </table>
+    </div>
+
+    {{-- Tabla --}}
+    <table class="main">
         <thead>
             <tr>
                 <th width="7%">Fecha</th>
@@ -339,8 +351,6 @@
             @endforelse
         </tbody>
     </table>
-        </div>
-    </div>
 
     <div class="footer">
         Asamblea Legislativa de El Salvador &mdash; Sistema de Gestión de Transporte &mdash;
