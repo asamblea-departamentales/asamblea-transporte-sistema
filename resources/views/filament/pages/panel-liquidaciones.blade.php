@@ -730,13 +730,6 @@
                             👁️ Ver detalle
                         </button>
 
-                        {{-- Editar (cuando esté en estado editable) --}}
-                        @if($puedeEditar)
-                            <a href="{{ $rutaEditar }}" class="liq-dropdown-item" target="_blank">
-                                ✏️ Editar
-                            </a>
-                        @endif
-
                         {{-- PDFs --}}
                         @if($transporteCompleto)
                             <div class="liq-dropdown-divider"></div>
