@@ -645,11 +645,11 @@
             // Determinar si es transporte
             $esTransporte = $item['tipo'] === 'transporte';
 
-            // Rutas de edición
+          // Rutas de edición utilizando el método nativo de Filament
             $rutaEditar = match($item['tipo']) {
-                'transporte' => route('filament.admin.resources.solicitud-transporte.edit', $item['id']),
-                'combustible' => route('filament.admin.resources.solicitud-combustible.edit', $item['id']),
-                'mantenimiento' => route('filament.admin.resources.solicitud-mantenimiento.edit', $item['id']),
+                'transporte' => \App\Filament\Resources\SolicitudTransporteResource::getUrl('edit', ['record' => $item['id']]),
+                'combustible' => \App\Filament\Resources\SolicitudCombustibleResource::getUrl('edit', ['record' => $item['id']]),
+                'mantenimiento' => \App\Filament\Resources\SolicitudMantenimientoResource::getUrl('edit', ['record' => $item['id']]),
                 default => '#',
             };
 
