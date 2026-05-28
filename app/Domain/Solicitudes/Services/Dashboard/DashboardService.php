@@ -69,7 +69,7 @@ class DashboardService
             'estado'      => $s->estado?->value ?? $s->estado,
             'solicitante' => $s->solicitante?->name ?? '-',
             'fecha'       => $s->created_at,
-        ]);
+        ])->toBase();
 
     $mant = SolicitudMantenimiento::with('solicitante')->latest()->take(5)->get()
         ->map(fn($s) => [
@@ -78,7 +78,7 @@ class DashboardService
             'estado'      => $s->estado?->value ?? $s->estado,
             'solicitante' => $s->solicitante?->name ?? '-',
             'fecha'       => $s->created_at,
-        ]);
+        ])->toBase();
 
     $trans = SolicitudTransporte::with('solicitante')->latest()->take(5)->get()
         ->map(fn($s) => [
@@ -87,7 +87,7 @@ class DashboardService
             'estado'      => $s->estado?->value ?? $s->estado,
             'solicitante' => $s->solicitante?->name ?? '-',
             'fecha'       => $s->created_at,
-        ]);
+        ])->toBase();
 
     return $comb->merge($mant)->merge($trans)
         ->sortByDesc('fecha')
