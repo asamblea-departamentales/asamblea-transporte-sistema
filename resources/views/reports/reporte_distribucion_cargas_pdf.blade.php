@@ -4,9 +4,14 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Informe de Distribución de Cupones / Cargas de Combustible</title>
     <style>
+        @page {
+            size: A4 landscape;
+            margin: 10px 10px 15px 10px;
+        }
+
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10px;
+            font-size: 9px;
             color: #1f2937;
             margin: 0;
             padding: 0;
@@ -14,20 +19,20 @@
         }
 
         .report-container {
-            max-width: 1120px;
+            width: 100%;
             margin: 0 auto;
-            padding: 18px 20px 24px;
+            padding: 10px 12px 14px;
             background: #ffffff;
         }
 
         .header {
             display: grid;
-            grid-template-columns: auto 1fr;
-            gap: 16px;
+            grid-template-columns: 200px 1fr;
+            gap: 12px;
             align-items: center;
             width: 100%;
-            margin-bottom: 16px;
-            padding-bottom: 10px;
+            margin-bottom: 10px;
+            padding-bottom: 8px;
             border-bottom: 2px solid #0891b2;
         }
 
@@ -62,37 +67,37 @@
         .kpis {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 10px;
-            margin-bottom: 12px;
+            gap: 8px;
+            margin-bottom: 10px;
         }
 
         .kpi-box {
             background-color: #ecfeff;
             border: 1px solid #a5f3fc;
-            border-radius: 8px;
-            padding: 10px 12px;
+            border-radius: 6px;
+            padding: 8px 10px;
             text-align: center;
-            min-height: 60px;
+            min-height: 52px;
         }
 
         .kpi-label {
-            font-size: 8px;
+            font-size: 7px;
             color: #6b7280;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .kpi-value {
-            font-size: 15px;
+            font-size: 12px;
             font-weight: 700;
             color: #0891b2;
         }
 
         .meta {
-            margin-bottom: 14px;
-            padding: 10px 14px;
+            margin-bottom: 10px;
+            padding: 8px 10px;
             background-color: #ecfeff;
             border-left: 4px solid #0891b2;
             border-radius: 6px;
@@ -106,9 +111,9 @@
 
         .meta td {
             border: none;
-            padding: 4px 0;
+            padding: 3px 0;
             vertical-align: top;
-            font-size: 10px;
+            font-size: 9px;
         }
 
         .meta strong {
@@ -123,15 +128,15 @@
         table.main {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 8px;
-            font-size: 9px;
+            margin-top: 6px;
+            font-size: 8px;
             table-layout: fixed;
         }
 
         table.main th,
         table.main td {
             border: 0.5px solid #d1d5db;
-            padding: 7px 8px;
+            padding: 4px 5px;
             vertical-align: top;
             word-wrap: break-word;
             white-space: normal;
@@ -142,14 +147,18 @@
             color: #ffffff;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 8px;
+            font-size: 7px;
             letter-spacing: 0.04em;
             text-align: center;
-            padding: 9px 8px;
+            padding: 6px 5px;
         }
 
         table.main tr:nth-child(odd) {
             background: #f8feff;
+        }
+
+        table.main tr {
+            page-break-inside: avoid;
         }
 
         table.main tr:hover {
@@ -260,24 +269,24 @@
             <table class="main">
         <thead>
             <tr>
-                <th width="7%">Fecha</th>
-                <th width="9%">Solicitud</th>
-                <th width="10%">Fecha inicio</th>
-                <th width="6%">Hora</th>
-                <th width="9%">N° Carga / Ticket</th>
-                <th width="10%">Solicitante</th>
-                <th width="7%">Placa</th>
-                <th width="8%">Serie</th>
-                <th width="8%">Correlativo</th>
-                <th width="6%">Cantidad</th>
-                <th width="8%">Total</th>
-                <th width="14%">Destino / Actividad</th>
-                <th width="9%">Contrato / Ref.</th>
-                <th width="7%">Comprobantes</th>
-                <th width="7%">Galones</th>
-                <th width="7%">Precio galón</th>
-                <th width="9%">Motorista</th>
-                <th width="8%">Estado</th>
+                <th width="5%">Fecha</th>
+                <th width="6%">Solicitud</th>
+                <th width="6%">Fecha inicio</th>
+                <th width="4%">Hora</th>
+                <th width="6%">N° Carga</th>
+                <th width="9%">Solicitante</th>
+                <th width="4%">Placa</th>
+                <th width="4%">Serie</th>
+                <th width="5%">Correlativo</th>
+                <th width="4%">Cantidad</th>
+                <th width="5%">Total</th>
+                <th width="11%">Destino / Actividad</th>
+                <th width="7%">Contrato / Ref.</th>
+                <th width="4%">Comprobantes</th>
+                <th width="4%">Galones</th>
+                <th width="4%">Precio galón</th>
+                <th width="7%">Motorista</th>
+                <th width="4%">Estado</th>
             </tr>
         </thead>
         <tbody>
