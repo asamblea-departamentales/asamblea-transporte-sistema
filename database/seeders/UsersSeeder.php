@@ -50,6 +50,16 @@ class UsersSeeder extends Seeder
             'password' => Hash::make('admin123'),
             'unidad_solicitante_id' => $unidadId,
         ]);
+
+        //Rol operativo
+        $operativo = User::create([
+            'name' => 'Operativo',
+            'email' => 'operativo@asamblea.gob.sv',
+            'password' => Hash::make('operativo123'),
+            'unidad_solicitante_id' => $unidadId,
+        ]);
+        $operativo->assignRole('operativo');
+
         $admin->assignRole('super_admin');
     }
 }
