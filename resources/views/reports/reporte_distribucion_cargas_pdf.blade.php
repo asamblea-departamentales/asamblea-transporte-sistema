@@ -4,14 +4,9 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Informe de Distribución de Cupones / Cargas de Combustible</title>
     <style>
-        @page {
-            size: A4 landscape;
-            margin: 10px 10px 15px 10px;
-        }
-
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 9px;
+            font-size: 10px;
             color: #1f2937;
             margin: 0;
             padding: 0;
@@ -19,20 +14,20 @@
         }
 
         .report-container {
-            width: 100%;
+            max-width: 1120px;
             margin: 0 auto;
-            padding: 10px 12px 14px;
+            padding: 18px 20px 24px;
             background: #ffffff;
         }
 
         .header {
             display: grid;
-            grid-template-columns: 200px 1fr;
-            gap: 12px;
+            grid-template-columns: auto 1fr;
+            gap: 16px;
             align-items: center;
             width: 100%;
-            margin-bottom: 10px;
-            padding-bottom: 8px;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
             border-bottom: 2px solid #0891b2;
         }
 
@@ -67,37 +62,37 @@
         .kpis {
             display: grid;
             grid-template-columns: repeat(4, minmax(0, 1fr));
-            gap: 8px;
-            margin-bottom: 10px;
+            gap: 10px;
+            margin-bottom: 12px;
         }
 
         .kpi-box {
             background-color: #ecfeff;
             border: 1px solid #a5f3fc;
-            border-radius: 6px;
-            padding: 8px 10px;
+            border-radius: 8px;
+            padding: 10px 12px;
             text-align: center;
-            min-height: 52px;
+            min-height: 60px;
         }
 
         .kpi-label {
-            font-size: 7px;
+            font-size: 8px;
             color: #6b7280;
             letter-spacing: 0.05em;
             text-transform: uppercase;
             display: block;
-            margin-bottom: 2px;
+            margin-bottom: 4px;
         }
 
         .kpi-value {
-            font-size: 12px;
+            font-size: 15px;
             font-weight: 700;
             color: #0891b2;
         }
 
         .meta {
-            margin-bottom: 10px;
-            padding: 8px 10px;
+            margin-bottom: 14px;
+            padding: 10px 14px;
             background-color: #ecfeff;
             border-left: 4px solid #0891b2;
             border-radius: 6px;
@@ -111,9 +106,9 @@
 
         .meta td {
             border: none;
-            padding: 3px 0;
+            padding: 4px 0;
             vertical-align: top;
-            font-size: 9px;
+            font-size: 10px;
         }
 
         .meta strong {
@@ -128,15 +123,15 @@
         table.main {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
-            font-size: 8px;
+            margin-top: 8px;
+            font-size: 9px;
             table-layout: fixed;
         }
 
         table.main th,
         table.main td {
             border: 0.5px solid #d1d5db;
-            padding: 4px 5px;
+            padding: 7px 8px;
             vertical-align: top;
             word-wrap: break-word;
             white-space: normal;
@@ -147,10 +142,10 @@
             color: #ffffff;
             font-weight: 700;
             text-transform: uppercase;
-            font-size: 7px;
+            font-size: 8px;
             letter-spacing: 0.04em;
             text-align: center;
-            padding: 6px 5px;
+            padding: 9px 8px;
         }
 
         table.main tr:nth-child(odd) {
