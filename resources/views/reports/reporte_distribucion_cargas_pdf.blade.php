@@ -157,10 +157,6 @@
             background: #f8feff;
         }
 
-        table.main tr {
-            page-break-inside: avoid;
-        }
-
         table.main tr:hover {
             background: #e0f7ff;
         }
@@ -269,24 +265,24 @@
             <table class="main">
         <thead>
             <tr>
-                <th width="5%">Fecha</th>
-                <th width="6%">Solicitud</th>
-                <th width="6%">Fecha inicio</th>
-                <th width="4%">Hora</th>
-                <th width="6%">N° Carga</th>
-                <th width="9%">Solicitante</th>
-                <th width="4%">Placa</th>
-                <th width="4%">Serie</th>
-                <th width="5%">Correlativo</th>
-                <th width="4%">Cantidad</th>
-                <th width="5%">Total</th>
-                <th width="11%">Destino / Actividad</th>
-                <th width="7%">Contrato / Ref.</th>
-                <th width="4%">Comprobantes</th>
-                <th width="4%">Galones</th>
-                <th width="4%">Precio galón</th>
-                <th width="7%">Motorista</th>
-                <th width="4%">Estado</th>
+                <th width="7%">Fecha</th>
+                <th width="9%">Solicitud</th>
+                <th width="10%">Fecha inicio</th>
+                <th width="6%">Hora</th>
+                <th width="9%">N° Carga / Ticket</th>
+                <th width="10%">Solicitante</th>
+                <th width="7%">Placa</th>
+                <th width="8%">Serie</th>
+                <th width="8%">Correlativo</th>
+                <th width="6%">Cantidad</th>
+                <th width="8%">Total</th>
+                <th width="14%">Destino / Actividad</th>
+                <th width="9%">Contrato / Ref.</th>
+                <th width="7%">Comprobantes</th>
+                <th width="7%">Galones</th>
+                <th width="7%">Precio galón</th>
+                <th width="9%">Motorista</th>
+                <th width="8%">Estado</th>
             </tr>
         </thead>
         <tbody>
