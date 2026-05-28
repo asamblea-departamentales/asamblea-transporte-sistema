@@ -94,7 +94,7 @@
         table.main th,
         table.main td {
             border: 0.5px solid #d1d5db;
-            padding: 5px 6px;
+            padding: 4px 4px;
             text-align: left;
             vertical-align: top;
             word-wrap: break-word;
@@ -105,8 +105,12 @@
             color: #ffffff;
             font-weight: bold;
             text-transform: uppercase;
-            font-size: 8px;
+            font-size: 7px;
             text-align: center;
+        }
+
+        table.main td {
+            font-size: 8px;
         }
 
         table.main tr:nth-child(even) {
@@ -222,24 +226,24 @@
     <table class="main">
         <thead>
             <tr>
-                <th width="7%">Fecha</th>
-                <th width="9%">Solicitud</th>
-                <th width="10%">Fecha inicio</th>
-                <th width="6%">Hora</th>
-                <th width="9%">N° Carga / Ticket</th>
-                <th width="10%">Solicitante</th>
-                <th width="7%">Placa</th>
-                <th width="8%">Serie</th>
-                <th width="8%">Correlativo</th>
-                <th width="6%">Cantidad</th>
-                <th width="8%">Total</th>
-                <th width="14%">Destino / Actividad</th>
-                <th width="9%">Contrato / Ref.</th>
-                <th width="7%">Comprobantes</th>
-                <th width="7%">Galones</th>
-                <th width="7%">Precio galón</th>
-                <th width="9%">Motorista</th>
-                <th width="8%">Estado</th>
+                <th width="5%">Fecha</th>
+                <th width="7%">Solicitud</th>
+                <th width="5%">F. inicio</th>
+                <th width="4%">Hora</th>
+                <th width="7%">N° Carga / Ticket</th>
+                <th width="9%">Solicitante</th>
+                <th width="5%">Placa</th>
+                <th width="5%">Serie</th>
+                <th width="6%">Correlativo</th>
+                <th width="4%">Cant.</th>
+                <th width="6%">Total</th>
+                <th width="12%">Destino / Actividad</th>
+                <th width="7%">Contrato / Ref.</th>
+                <th width="4%">Comp.</th>
+                <th width="5%">Galones</th>
+                <th width="5%">P/Galón</th>
+                <th width="8%">Motorista</th>
+                <th width="6%">Estado</th>
             </tr>
         </thead>
         <tbody>
