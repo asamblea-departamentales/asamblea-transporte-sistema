@@ -37,7 +37,7 @@ class AdminPanelProvider extends PanelProvider
             ->brandLogoHeight('3rem')
             ->favicon(asset('images/logo-blanco-fondo-transparente.png'))
             
-            ->login()
+            ->login(\App\Filament\Pages\Auth\Login::class)
             
             // Registro de Plugins
             ->plugins([

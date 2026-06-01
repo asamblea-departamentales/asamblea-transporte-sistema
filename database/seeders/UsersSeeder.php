@@ -28,6 +28,7 @@ class UsersSeeder extends Seeder
         // Usuario Jefe (autorizador)
         $jefe = User::create([
             'name' => 'Jefe autorizador',
+            'username' => 'jefe.transporte',
             'email' => 'jefe.transporte@asamblea.gob.sv',
             'password' => Hash::make('boss123'),
             'unidad_solicitante_id' => $unidadId,
@@ -37,6 +38,7 @@ class UsersSeeder extends Seeder
         // Usuario Solicitante
         $solicitante = User::create([
             'name' => 'Julian Solicitante',
+            'username' => 'julian.alvarez',
             'email' => 'julian.alvarez@asamblea.gob.sv',
             'password' => Hash::make('solicitante123'),
             'unidad_solicitante_id' => $unidadId,
@@ -46,6 +48,7 @@ class UsersSeeder extends Seeder
         // SuperAdmin (El que necesitas para entrar al panel)
         $admin = User::create([
             'name' => 'Super Administrador',
+            'username' => 'admin',
             'email' => 'admin@asamblea.gob.sv',
             'password' => Hash::make('admin123'),
             'unidad_solicitante_id' => $unidadId,
@@ -54,6 +57,7 @@ class UsersSeeder extends Seeder
         //Rol operativo
         $operativo = User::create([
             'name' => 'Operativo',
+            'username' => 'operativo',
             'email' => 'operativo@asamblea.gob.sv',
             'password' => Hash::make('operativo123'),
             'unidad_solicitante_id' => $unidadId,
