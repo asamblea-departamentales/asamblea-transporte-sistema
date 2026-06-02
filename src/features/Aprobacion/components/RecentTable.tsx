@@ -12,40 +12,48 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
   const navigate = useNavigate();
 
   // Filtrar solo las solicitudes pre-aprobadas, ya que al Jefe solo le interesan estas para aprobar
-  const preAprobadas = requests.filter(req => req.status.toLowerCase().includes('pre_aprobada') || req.status.toLowerCase().includes('pre'));
+  const getStatusBadge = (status: string) => {
+    let colorClass = "border-amber-200 text-amber-600";
+    let dotClass = "bg-amber-500";
+    let text = "pendiente";
 
-  const getStatusBadge = (_status: string) => {
-    return <span className="px-2.5 py-1 bg-amber-100 border border-amber-200 text-amber-800 rounded text-[11px] font-bold uppercase tracking-wider shadow-sm">Pre-Aprobada</span>;
+    if (status.toLowerCase().includes('pre')) {
+      colorClass = "border-emerald-200 text-emerald-600";
+      dotClass = "bg-emerald-500";
+      text = "pre_aprobada";
+    }
+
+    return (
+      <span className={`px-3 py-1 bg-white border ${colorClass} rounded-full text-[11px] font-semibold flex items-center w-max shadow-sm`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5`}></span>
+        {text}
+      </span>
+    );
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden mt-8">
-      <div className="p-5 border-b border-slate-200 flex justify-between items-center bg-slate-50">
-        <div className="flex items-center gap-3">
-          <div className="p-2 bg-amber-100 text-amber-700 rounded text-sm border border-amber-200">
-            <ShieldAlert size={18} />
-          </div>
-          <div>
-            <h3 className="font-bold text-slate-800 text-md tracking-tight">Bandeja de Autorización</h3>
-            <p className="text-xs text-slate-500 mt-0.5">Solicitudes validadas por operaciones en espera de tu firma final.</p>
-          </div>
+    <div className="bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden mt-8">
+      <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white">
+        <div>
+          <h3 className="font-extrabold text-[#182645] text-lg tracking-tight">Solicitudes recientes</h3>
+          <p className="text-xs text-slate-400 mt-1 font-medium">Últimas solicitudes registradas en el sistema</p>
         </div>
-        <span className="bg-primary text-white text-[11px] font-bold px-2.5 py-1 rounded uppercase tracking-wider shadow-sm">
-          {preAprobadas.length} pendientes
-        </span>
+        <button className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
+          Ver todas <span>&rarr;</span>
+        </button>
       </div>
       
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto p-2">
         <table className="w-full text-left border-collapse">
           <thead>
-            <tr className="bg-slate-50 border-b border-slate-200">
-              <th className="py-3 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">CÓDIGO</th>
-              <th className="py-3 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">FECHA SALIDA</th>
-              <th className="py-3 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider">TIPO</th>
-              <th className="py-3 px-6 text-[11px] font-bold text-slate-500 uppercase tracking-wider text-right">ACCIÓN REQUERIDA</th>
+            <tr className="border-b border-slate-100/80">
+              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO</th>
+              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">FECHA</th>
+              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIPO</th>
+              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ESTADO</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="divide-y divide-slate-100/80">
             {isLoading ? (
               [1, 2, 3].map(i => (
                 <tr key={i}>
@@ -58,9 +66,7 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
             ) : preAprobadas.length === 0 ? (
               <tr>
                 <td colSpan={4} className="py-12 text-center">
-                  <ShieldAlert size={40} className="mx-auto text-slate-300 mb-3" />
-                  <p className="text-slate-600 font-semibold text-sm">Bandeja limpia</p>
-                  <p className="text-xs text-slate-400 mt-1">No hay solicitudes pendientes de tu autorización.</p>
+                  <p className="text-slate-400 font-medium text-sm">No hay solicitudes recientes.</p>
                 </td>
               </tr>
             ) : (
@@ -68,24 +74,20 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
                 <tr 
                   key={idx} 
                   onClick={() => navigate(`/aprobaciones/${req.id || req.code}`)}
-                  className="hover:bg-slate-50 transition-colors duration-150 cursor-pointer group"
+                  className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"
                 >
-                  <td className="py-4 px-6">
-                    <span className="font-bold text-primary group-hover:text-primary-hover transition-colors">{req.code}</span>
+                  <td className="py-5 px-6 flex items-center gap-2">
+                    <span className="w-1.5 h-1.5 bg-[#4F46E5] rounded-full"></span>
+                    <span className="font-semibold text-[#182645] text-[13px]">{req.code}</span>
                   </td>
-                  <td className="py-4 px-6">
-                    <span className="text-sm text-slate-600 font-medium">{req.date}</span>
+                  <td className="py-5 px-6">
+                    <span className="text-[13px] text-slate-500 font-medium">{req.date}</span>
                   </td>
-                  <td className="py-4 px-6">
-                    <span className="text-sm text-slate-500">{req.type}</span>
+                  <td className="py-5 px-6">
+                    <span className="text-[13px] text-[#182645] font-medium">{req.type || 'Transporte'}</span>
                   </td>
-                  <td className="py-4 px-6">
-                    <div className="flex items-center justify-end gap-4">
-                      {getStatusBadge(req.status)}
-                      <span className="text-xs font-bold text-primary opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1">
-                        Revisar <span className="text-lg leading-none">&rarr;</span>
-                      </span>
-                    </div>
+                  <td className="py-5 px-6 flex justify-end">
+                    {getStatusBadge(req.status)}
                   </td>
                 </tr>
               ))

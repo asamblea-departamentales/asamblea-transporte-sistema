@@ -32,8 +32,9 @@ export const AprobacionDashboardPage: React.FC = () => {
     <div className="p-8 pb-12 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bandeja de Aprobación</h1>
-          <p className="text-sm text-slate-500 mt-1">Resumen operativo y solicitudes pendientes de autorización.</p>
+          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">ASAMBLEA LEGISLATIVA - TRANSPORTE</p>
+          <h1 className="text-3xl font-extrabold text-[#182645] tracking-tight font-title">Dashboard</h1>
+          <p className="text-sm text-slate-500 mt-1 font-medium">Resumen general de solicitudes de transporte</p>
         </div>
       </div>
 
