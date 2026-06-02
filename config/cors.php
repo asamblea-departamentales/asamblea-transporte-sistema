@@ -8,6 +8,7 @@ return [
     'allowed_origins' => [
         'https://asamblea-transporte.vercel.app',
         'https://asamble-transporte-motorista.vercel.app',
+        'https://asamblea-transporte-sistema.vercel.app/',
     ],
 
     'allowed_origins_patterns' => [
