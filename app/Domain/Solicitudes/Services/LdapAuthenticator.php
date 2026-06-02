@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Domain\Solicitudes\Services;
 
 use LdapRecord\Container;
 use LdapRecord\Auth\BindException;
