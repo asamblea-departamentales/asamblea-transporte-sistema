@@ -274,30 +274,6 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $this->refreshKpis();
     }
 
-    // FIX #4b: derivar — solo operativo
-    public function derivar(string $tipo, int $id, array $data): void
-    {
-        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
-            Notification::make()->title('Sin permiso')->danger()->send();
-
-            return;
-        }
-
-        app(RevisionOperativaService::class)->derivar(
-            $tipo,
-            $id,
-            auth()->id(),
-            (int) $data['derivado_a'],
-            $data['comentario'],
-            $this->armarValidaciones($data),
-        );
-
-        Notification::make()
-            ->title('Solicitud derivada')
-            ->success()
-            ->send();
-    }
-
     // observarRevision — operativo y superiores
     public function observarRevision(string $tipo, int $id, array $data): void
     {

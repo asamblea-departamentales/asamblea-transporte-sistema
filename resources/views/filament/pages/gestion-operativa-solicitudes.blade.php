@@ -405,38 +405,6 @@
                             </form>
                         </x-filament::modal>
 
-                        <x-filament::modal width="2xl">
-                            <x-slot name="trigger"><button class="btn-accion btn-warning"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>Derivar</button></x-slot>
-                            <x-slot name="heading">Derivar solicitud a otro usuario</x-slot>
-                            <form wire:submit.prevent="derivar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
-                                derivado_a: $refs.usuarioDer{{ $uid }}.value,
-                                comentario: $refs.comentarioDer{{ $uid }}.value,
-                                datos_completos: $refs.datosDer{{ $uid }}.checked,
-                                fechas_validas: $refs.fechasDer{{ $uid }}.checked,
-                                recursos_disponibles: $refs.recursosDer{{ $uid }}.checked,
-                                reglas_minimas: $refs.reglasDer{{ $uid }}.checked,
-                                hallazgos: $refs.hallazgosDer{{ $uid }}.value
-                            })" class="space-y-4 pt-2">
-                                <div><div class="modal-label">Derivar a <span class="text-red-400">*</span></div>
-                                <select x-ref="usuarioDer{{ $uid }}" class="modal-select" required>
-                                    <option value="">Seleccione un usuario</option>
-                                    @foreach($this->usuariosOptions() as $uid_u => $nombre)
-                                        <option value="{{ $uid_u }}">{{ $nombre }}</option>
-                                    @endforeach
-                                </select></div>
-                                <div><div class="modal-label">Checklist</div>
-                                <div class="modal-check-grid">
-                                    <label class="check-item"><input type="checkbox" x-ref="datosDer{{ $uid }}"> Datos completos</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="fechasDer{{ $uid }}"> Fechas válidas</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="recursosDer{{ $uid }}"> Recursos disponibles</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="reglasDer{{ $uid }}"> Reglas mínimas</label>
-                                </div></div>
-                                <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-ref="hallazgosDer{{ $uid }}" class="modal-textarea" rows="2" placeholder="Hallazgos relevantes..."></textarea></div>
-                                <div><div class="modal-label">Comentario de derivación <span class="text-red-400">*</span></div><textarea x-ref="comentarioDer{{ $uid }}" class="modal-textarea" rows="3" placeholder="Explica el motivo de la derivación..." required></textarea></div>
-                                <div class="flex justify-end pt-2"><button type="submit" class="btn-accion btn-warning"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"/></svg>Confirmar derivación</button></div>
-                            </form>
-                        </x-filament::modal>
-
                         @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
                         <div x-data="{ open: false, vehiculoId: null, motoristaId: null, justificacion: '' }">
                             <button class="btn-accion btn-indigo" @click="open = true">
