@@ -5,7 +5,7 @@ import { useAuth } from '../context/AuthContext';
 
 const LoginPage: React.FC = () => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -15,7 +15,7 @@ const LoginPage: React.FC = () => {
     setError('');
     setIsLoading(true);
     try {
-      await login({ email, password });
+      await login({ username, password });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Credenciales inválidas. Por favor intenta de nuevo.');
     } finally {
@@ -55,17 +55,17 @@ const LoginPage: React.FC = () => {
         {/* Login Form */}
         <form onSubmit={handleSubmit} className="w-full space-y-5 md:space-y-6">
           <div className="space-y-1.5">
-            <label className="block text-sm md:text-[13px] font-medium text-[#182645]">Correo institucional</label>
+            <label className="block text-sm md:text-[13px] font-medium text-[#182645]">Usuario institucional</label>
             <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Mail className="h-4 md:h-5 w-4 md:w-5 text-gray-400" />
               </div>
               <input
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
                 className="block w-full pl-10 pr-3 py-3 md:py-2.5 border border-gray-200 rounded-lg focus:ring-2 focus:ring-[#859BFF] focus:border-[#859BFF] text-base md:text-[14px] transition-all duration-200 text-gray-800 placeholder-gray-400 outline-none"
-                placeholder="usuario@asamblea.gob.sv"
+                placeholder="usuario.institucional"
                 required
               />
             </div>
