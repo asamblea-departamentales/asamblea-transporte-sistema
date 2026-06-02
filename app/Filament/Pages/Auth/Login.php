@@ -3,7 +3,7 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
-use App\Services\LdapAuthenticator;
+use App\Domain\Solicitudes\Services\LdapAuthenticator;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
