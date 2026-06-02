@@ -247,6 +247,25 @@ class SolicitudTransporteService
                 $solicitud->motorista_id = $sugerencia->motorista_sugerido_id;
             }
 
+            // Validar disponibilidad de recursos sugeridos por el sistema
+            if ($decisionFinal === 'sistema') {
+                $vehiculoSugerido = Vehiculo::find($solicitud->vehiculo_id);
+                $motoristaSugerido = Motorista::find($solicitud->motorista_id);
+
+                if ($vehiculoSugerido && !$vehiculoSugerido->esta_disponible) {
+                    throw new \DomainException(
+                        "El vehículo {$vehiculoSugerido->placa} sugerido por el sistema ya no está disponible. "
+                        . "Solicite al operativo una re-asignación."
+                    );
+                }
+                if ($motoristaSugerido && !$motoristaSugerido->esta_disponible) {
+                    throw new \DomainException(
+                        "El motorista {$motoristaSugerido->nombre} sugerido por el sistema ya no está disponible. "
+                        . "Solicite al operativo una re-asignación."
+                    );
+                }
+            }
+
             // Liberar recursos previamente consolidados
             if ($vehiculoAnteriorId) {
                 $v = Vehiculo::find($vehiculoAnteriorId);
@@ -498,6 +517,22 @@ class SolicitudTransporteService
         }
         if (!$solicitud->vehiculo_id || !$solicitud->motorista_id) {
             throw new \DomainException('La solicitud debe tener vehículo y motorista consolidados.');
+        }
+
+        // Validar disponibilidad actual de los recursos consolidados
+        $vehiculo = Vehiculo::find($solicitud->vehiculo_id);
+        $motorista = Motorista::find($solicitud->motorista_id);
+        if ($vehiculo && !$vehiculo->esta_disponible) {
+            throw new \DomainException(
+                "El vehículo {$vehiculo->placa} consolidado ya no está disponible. "
+                . "Solicite al operativo una re-asignación antes de programar."
+            );
+        }
+        if ($motorista && !$motorista->esta_disponible) {
+            throw new \DomainException(
+                "El motorista {$motorista->nombre} consolidado ya no está disponible. "
+                . "Solicite al operativo una re-asignación antes de programar."
+            );
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {

@@ -151,7 +151,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-transporte/{solicitud:codigo}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
-        Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
 
@@ -161,6 +160,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
     });
+
+    Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])
+        ->middleware('role:operativo|admin|ti|super_admin');
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
         ->middleware('role:operativo|admin|ti|super_admin');
