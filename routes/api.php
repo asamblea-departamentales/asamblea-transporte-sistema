@@ -135,25 +135,27 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ── TRANSPORTE ──────────────────────────────────────────────────
     Route::apiResource('solicitudes-transporte', SolicitudTransporteController::class)
-        ->only(['index', 'store', 'show'])
+        ->only(['index', 'store'])
         ->parameters(['solicitudes-transporte' => 'solicitud']);
 
-    Route::post('solicitudes-transporte/{solicitud}/enviar', [SolicitudTransporteController::class, 'enviar']);
-    Route::post('solicitudes-transporte/{solicitud}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
-    Route::post('solicitudes-transporte/{solicitud}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
+    Route::get('solicitudes-transporte/{solicitud:codigo}', [SolicitudTransporteController::class, 'show']);
+
+    Route::post('solicitudes-transporte/{solicitud:codigo}/enviar', [SolicitudTransporteController::class, 'enviar']);
+    Route::post('solicitudes-transporte/{solicitud:codigo}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
+    Route::post('solicitudes-transporte/{solicitud:codigo}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
-        Route::post('solicitudes-transporte/{solicitud}/observacion', [SolicitudTransporteController::class, 'observacion']);
-        Route::post('solicitudes-transporte/{solicitud}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
-        Route::post('solicitudes-transporte/{solicitud}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/aprobar', [SolicitudTransporteController::class, 'aprobar']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/rechazar', [SolicitudTransporteController::class, 'rechazar']);
 
         // Módulo de Aprobación
-        Route::get('solicitudes-transporte/{solicitud}/comparativa', [SolicitudTransporteController::class, 'comparativa']);
-        Route::post('solicitudes-transporte/{solicitud}/aprobar-con-decision', [SolicitudTransporteController::class, 'aprobarConDecision']);
-        Route::post('solicitudes-transporte/{solicitud}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
+        Route::get('solicitudes-transporte/{solicitud:codigo}/comparativa', [SolicitudTransporteController::class, 'comparativa']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/aprobar-con-decision', [SolicitudTransporteController::class, 'aprobarConDecision']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
     });
 
-    Route::post('solicitudes-transporte/{solicitud}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
+    Route::post('solicitudes-transporte/{solicitud:codigo}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
         ->middleware('role:operativo|admin|ti|super_admin');
 
     // ── MANTENIMIENTO ───────────────────────────────────────────────
