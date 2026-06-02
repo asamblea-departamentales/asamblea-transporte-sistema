@@ -1,7 +1,6 @@
 // src/services/auth.service.ts
 import { api } from "../lib/api";
-
-export type LoginPayload = { email: string; password: string };
+export type LoginPayload = { username: string; password: string };
 
 export type AuthUser = {
   id: number | string;
