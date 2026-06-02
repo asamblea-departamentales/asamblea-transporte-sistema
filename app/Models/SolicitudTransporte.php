@@ -64,6 +64,7 @@ class SolicitudTransporte extends Model
 
     protected $casts = [
         'prioridad' => PrioridadSolicitudEnum::class,
+        'prioridad_grupo' => NivelPrioridadEnum::class,
         'estado' => EstadoSolicitudEnum::class,
         'fecha_salida' => 'datetime',
         'fecha_retorno' => 'datetime',
