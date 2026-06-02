@@ -44,8 +44,8 @@ export interface SugerenciaSistema {
 
 export interface ComparativaResponse {
   solicitud: SolicitudDetalle;
-  operativo: AsignacionOperativo;
-  sistema: SugerenciaSistema;
+  operativo: AsignacionOperativo | null;
+  sistema: SugerenciaSistema | null;
 }
 
 export type DecisionType = 'operativo' | 'sistema' | 'ninguna';

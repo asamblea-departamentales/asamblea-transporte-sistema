@@ -3,13 +3,25 @@ import { SugerenciaSistema } from '../types';
 import { Car, User, Cpu, CheckCircle2 } from 'lucide-react';
 
 interface ColumnaSistemaProps {
-  data: SugerenciaSistema;
+  data: SugerenciaSistema | null;
   isSelected: boolean;
   onSelect: () => void;
   isFaded: boolean;
 }
 
 export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected, onSelect, isFaded }) => {
+  if (!data) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-dashed border-slate-200 flex flex-col h-full items-center justify-center text-center opacity-70">
+        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+          <Cpu className="text-slate-300" size={24} />
+        </div>
+        <p className="text-sm font-bold text-slate-400">Sin Sugerencia de Sistema</p>
+        <p className="text-xs text-slate-400 mt-1">El sistema no pudo generar una sugerencia para esta solicitud.</p>
+      </div>
+    );
+  }
+
   return (
     <div 
       onClick={onSelect}

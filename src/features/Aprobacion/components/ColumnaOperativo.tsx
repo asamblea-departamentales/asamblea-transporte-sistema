@@ -3,13 +3,25 @@ import { AsignacionOperativo } from '../types';
 import { Car, User, MessageSquare } from 'lucide-react';
 
 interface ColumnaOperativoProps {
-  data: AsignacionOperativo;
+  data: AsignacionOperativo | null;
   isSelected: boolean;
   onSelect: () => void;
   isFaded: boolean;
 }
 
 export const ColumnaOperativo: React.FC<ColumnaOperativoProps> = ({ data, isSelected, onSelect, isFaded }) => {
+  if (!data) {
+    return (
+      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-dashed border-slate-200 flex flex-col h-full items-center justify-center text-center opacity-70">
+        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
+          <User className="text-slate-300" size={24} />
+        </div>
+        <p className="text-sm font-bold text-slate-400">Sin Asignación Manual</p>
+        <p className="text-xs text-slate-400 mt-1">Aún no hay asignación por parte de operaciones.</p>
+      </div>
+    );
+  }
+
   return (
     <div 
       onClick={onSelect}
