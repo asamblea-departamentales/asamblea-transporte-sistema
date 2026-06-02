@@ -80,6 +80,21 @@ export function useAprobacion(id: string | undefined) {
     }
   };
 
+  const handleRechazar = async () => {
+    if (!id) return;
+    // Si queremos validar que haya comentario localmente antes de enviar:
+    // if (!comentario.trim()) { setError('Debe ingresar un comentario para rechazar'); return; }
+    try {
+      setIsSubmitting(true);
+      await solicitudApi.rechazar(id, comentario);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al rechazar la solicitud');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     data,
     isLoading,
@@ -91,6 +106,7 @@ export function useAprobacion(id: string | undefined) {
     confirmarAprobacion,
     handleDesbloquear,
     handleProgramar,
+    handleRechazar,
     isSubmitting
   };
 }

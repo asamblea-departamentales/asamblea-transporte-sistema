@@ -23,5 +23,10 @@ export const solicitudApi = {
   programar: async (id: string) => {
     const response = await axiosClient.post(`/solicitudes-transporte/${id}/programar`);
     return response.data;
+  },
+
+  rechazar: async (id: string, comentario: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${id}/rechazar`, { comentario });
+    return response.data;
   }
 };

@@ -17,6 +17,8 @@ export default function AprobacionPage() {
     setComentario,
     confirmarAprobacion,
     handleProgramar,
+    handleRechazar,
+    handleDesbloquear,
     isSubmitting 
   } = useAprobacion(id);
 
@@ -102,19 +104,31 @@ export default function AprobacionPage() {
         </div>
 
         <div className="flex items-center gap-3">
-          {decision !== 'ninguna' && (
-            <input 
-              type="text" 
-              placeholder="Comentario de aprobación (opcional)"
-              className="px-3 py-2 border border-slate-300 rounded text-sm w-64 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-              value={comentario}
-              onChange={(e) => setComentario(e.target.value)}
-            />
-          )}
+          <input 
+            type="text" 
+            placeholder="Comentario (requerido para rechazar)"
+            className="px-3 py-2 border border-slate-300 rounded text-sm w-72 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+          />
 
-          <button className="px-4 py-2 bg-white border border-danger text-danger font-medium rounded hover:bg-danger/5 transition-colors text-sm">
+          <button 
+            onClick={handleRechazar}
+            disabled={isSubmitting || !comentario.trim()}
+            className="px-4 py-2 bg-white border border-danger text-danger font-medium rounded hover:bg-danger/5 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
             Rechazar
           </button>
+          
+          {data.solicitud.decision_final && (
+            <button 
+              onClick={handleDesbloquear}
+              disabled={isSubmitting}
+              className="px-4 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors text-sm underline disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Desbloquear (Reset)
+            </button>
+          )}
           
           <button 
             onClick={confirmarAprobacion}
