@@ -1,7 +1,6 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RecentRequest } from '../api/dashboardApi';
-import { ShieldAlert } from 'lucide-react';
 
 interface RecentTableProps {
   requests: RecentRequest[];
@@ -12,6 +11,8 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
   const navigate = useNavigate();
 
   // Filtrar solo las solicitudes pre-aprobadas, ya que al Jefe solo le interesan estas para aprobar
+  const preAprobadas = requests.filter(req => req.status.toLowerCase().includes('pre_aprobada') || req.status.toLowerCase().includes('pre'));
+
   const getStatusBadge = (status: string) => {
     let colorClass = "border-amber-200 text-amber-600";
     let dotClass = "bg-amber-500";
