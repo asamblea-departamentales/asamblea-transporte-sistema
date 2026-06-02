@@ -420,6 +420,16 @@ class SolicitudTransporteController extends Controller
         }
     }
 
+    public function programar(SolicitudTransporte $solicitud)
+    {
+        try {
+            $result = $this->service->programar($solicitud, Auth::id());
+            return response()->json($result);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
     public function cancelar(Request $request, SolicitudTransporte $solicitud)
     {
         $data = $request->validate([

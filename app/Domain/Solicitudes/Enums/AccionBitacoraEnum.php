@@ -26,4 +26,5 @@ enum AccionBitacoraEnum: string
 
     case ASIGNAR_RECURSOS = 'asignar_recursos';
     case DESBLOQUEAR = 'desbloquear';
+    case PROGRAMAR = 'programar';
 }

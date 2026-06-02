@@ -49,7 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
                            + (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count()
                            + (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
 
-            'accepted' => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count()
+            'accepted' => (clone $qTransporte)
+                            ->where('estado', EstadoSolicitudEnum::PRE_APROBADA)
+                            ->whereNotNull('decision_final')
+                            ->count()
                         + (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count()
                         + (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
 
@@ -62,7 +65,10 @@ Route::middleware('auth:sanctum')->group(function () {
                 'transporte' => [
                     'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted' => (clone $qTransporte)->whereIn('estado', $estadosAprobados)->count(),
+                    'accepted' => (clone $qTransporte)
+                                    ->where('estado', EstadoSolicitudEnum::PRE_APROBADA)
+                                    ->whereNotNull('decision_final')
+                                    ->count(),
                     'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
                 ],
                 'mantenimiento' => [
@@ -153,6 +159,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('solicitudes-transporte/{solicitud:codigo}/comparativa', [SolicitudTransporteController::class, 'comparativa']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/aprobar-con-decision', [SolicitudTransporteController::class, 'aprobarConDecision']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
