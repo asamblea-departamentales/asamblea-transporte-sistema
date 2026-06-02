@@ -3,7 +3,7 @@
 namespace App\Filament\Pages\Auth;
 
 use App\Models\User;
-use App\Domain\Solicitudes\Services\LdapAuthenticator;
+use App\Services\LdapAuthenticator;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -110,9 +110,13 @@ class Login extends BaseLogin
             if (! $user->password || ! Hash::check($password, $user->password)) {
                 $this->throwFailureValidationException();
             }
-        } else {
+        } elseif (env('LDAP_ENABLED', false)) {
             $ldapAuth = app(LdapAuthenticator::class);
             if (! $ldapAuth->authenticate($username, $password)) {
+                $this->throwFailureValidationException();
+            }
+        } else {
+            if (! $user->password || ! Hash::check($password, $user->password)) {
                 $this->throwFailureValidationException();
             }
         }
@@ -124,6 +128,10 @@ class Login extends BaseLogin
 
     protected function attemptLdapAndCreateUser(string $username, string $password): bool
     {
+        if (! env('LDAP_ENABLED', false)) {
+            return false;
+        }
+
         $ldapAuth = app(LdapAuthenticator::class);
 
         if (! $ldapAuth->authenticate($username, $password)) {

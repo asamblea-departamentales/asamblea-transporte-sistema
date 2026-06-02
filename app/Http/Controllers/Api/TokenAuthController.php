@@ -12,25 +12,52 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\User;
+use App\Services\LdapAuthenticator;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class TokenAuthController extends Controller
 {
     public function login(Request $request)
     {
         $credentials = $request->validate([
-            'email' => ['required', 'email'],
+            'username' => ['required'],
             'password' => ['required'],
         ]);
 
-        if (! Auth::attempt($credentials)) {
+        $username = $credentials['username'];
+        $password = $credentials['password'];
+
+        $user = User::where('username', $username)->first();
+
+        if (! $user && env('LDAP_ENABLED', false)) {
+            $user = $this->attemptLdapAndCreateUser($username, $password);
+        }
+
+        if (! $user) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);
         }
 
-        $user = $request->user();
+        $isSuperAdmin = $user->hasRole('super_admin') || $user->hasRole('SuperAdmin');
 
-        //Solo borra tokens dentro de la misma app (ej: si tienes app móvil y web, no se matan entre sí)
+        if ($isSuperAdmin) {
+            if (! $user->password || ! Hash::check($password, $user->password)) {
+                return response()->json(['message' => 'Credenciales inválidas'], 401);
+            }
+        } elseif (env('LDAP_ENABLED', false)) {
+            $ldapAuth = app(LdapAuthenticator::class);
+            if (! $ldapAuth->authenticate($username, $password)) {
+                return response()->json(['message' => 'Credenciales inválidas'], 401);
+            }
+        } else {
+            if (! $user->password || ! Hash::check($password, $user->password)) {
+                return response()->json(['message' => 'Credenciales inválidas'], 401);
+            }
+        }
+
         $user->tokens()->where('name', 'vercel')->delete();
 
         $token = $user->createToken('vercel')->plainTextToken;
@@ -42,9 +69,47 @@ class TokenAuthController extends Controller
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
+                'username' => $user->username,
                 'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
             ],
         ]);
+    }
+
+    protected function attemptLdapAndCreateUser(string $username, string $password): ?User
+    {
+        $ldapAuth = app(LdapAuthenticator::class);
+
+        if (! $ldapAuth->authenticate($username, $password)) {
+            return null;
+        }
+
+        try {
+            $connection = \LdapRecord\Container::get('default');
+            $search = $connection->query()
+                ->where('samaccountname', '=', $username)
+                ->first();
+
+            if (! $search) {
+                return null;
+            }
+
+            $name = $search->getFirstAttribute('displayname')
+                ?? $search->getFirstAttribute('cn')
+                ?? $username;
+
+            $email = $search->getFirstAttribute('mail')
+                ?? "{$username}@asamblea.gob.sv";
+
+            return User::create([
+                'username' => $username,
+                'name' => $name,
+                'email' => $email,
+                'password' => Hash::make(Str::random(32)),
+                'activo' => true,
+            ]);
+        } catch (\Exception $e) {
+            return null;
+        }
     }
 
     public function me(Request $request)
@@ -55,6 +120,7 @@ class TokenAuthController extends Controller
             'id' => $user->id,
             'name' => $user->name,
             'email' => $user->email,
+            'username' => $user->username,
             'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
         ]);
     }
