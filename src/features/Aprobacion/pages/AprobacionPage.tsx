@@ -39,18 +39,18 @@ export default function AprobacionPage() {
   }
 
   return (
-    <div className="flex-1 p-8 pb-32 max-w-[1400px] mx-auto">
+    <div className="flex-1 p-8 pb-32 max-w-[1400px] mx-auto bg-slate-50 min-h-screen">
       {/* Header */}
-      <div className="mb-8">
-        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-4">
+      <div className="mb-6 border-b border-slate-200 pb-4">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-3">
           <ArrowLeft size={16} /> Volver al Dashboard
         </Link>
         <div className="flex justify-between items-start">
           <div>
-            <h1 className="font-title text-3xl font-extrabold text-slate-900">
-              Aprobación de Solicitud <span className="text-[#859BFF]">#{data.solicitud.id}</span>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Aprobación de Solicitud <span className="text-slate-500 font-medium">#{data.solicitud.id}</span>
             </h1>
-            <p className="text-slate-500 mt-1">Revisa la información del viaje y elige la asignación adecuada.</p>
+            <p className="text-slate-500 mt-1 text-sm">Revisa la información del viaje y elige la asignación adecuada.</p>
           </div>
         </div>
       </div>
@@ -75,45 +75,45 @@ export default function AprobacionPage() {
       </div>
 
       {/* Footer Actions */}
-      <div className="fixed bottom-0 left-[260px] right-0 bg-white border-t border-slate-200 p-5 flex justify-between items-center z-10 shadow-[0_-10px_30px_rgba(0,0,0,0.03)]">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-full bg-[#859BFF]/10 text-[#859BFF] flex items-center justify-center">
-            <CheckCircle size={24} />
+      <div className="fixed bottom-0 left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200">
+            <CheckCircle size={20} />
           </div>
           <div>
-            <h4 className="font-title font-bold text-slate-900 text-lg">Paso Final</h4>
-            <p className="text-sm text-slate-500">Selecciona una opción arriba e ingresa un comentario opcional.</p>
+            <h4 className="font-bold text-slate-800 text-md tracking-tight">Paso Final</h4>
+            <p className="text-xs text-slate-500">Selecciona una opción arriba e ingresa un comentario opcional.</p>
           </div>
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {decision !== 'ninguna' && (
             <input 
               type="text" 
               placeholder="Comentario de aprobación (opcional)"
-              className="px-4 py-2.5 border border-slate-200 rounded-lg text-sm w-64 focus:outline-none focus:border-[#859BFF] focus:ring-1 focus:ring-[#859BFF]"
+              className="px-3 py-2 border border-slate-300 rounded text-sm w-64 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
             />
           )}
 
-          <button className="px-5 py-2.5 bg-white border border-danger text-danger font-semibold rounded-lg hover:bg-danger-light transition-colors text-sm">
-            Rechazar Solicitud
+          <button className="px-4 py-2 bg-white border border-danger text-danger font-medium rounded hover:bg-danger/5 transition-colors text-sm">
+            Rechazar
           </button>
           
           <button 
             onClick={confirmarAprobacion}
             disabled={isSubmitting || decision === 'ninguna'}
-            className={`px-8 py-2.5 font-semibold rounded-lg text-white transition-all text-sm shadow-md ${
-              decision === 'operativo' ? 'bg-[#859BFF] hover:bg-[#7089f9]' :
-              decision === 'sistema' ? 'bg-success hover:bg-emerald-600' :
+            className={`px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm ${
+              decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
+              decision === 'sistema' ? 'bg-success hover:bg-success-hover' :
               'bg-slate-300 cursor-not-allowed'
-            } disabled:opacity-50 disabled:cursor-not-allowed`}
+            } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {isSubmitting ? 'Procesando...' : 
-             decision === 'operativo' ? 'Aprobar Asignación Manual' : 
-             decision === 'sistema' ? 'Aprobar Sugerencia del Sistema' : 
-             'Selecciona una opción'}
+             decision === 'operativo' ? 'Aprobar Manual' : 
+             decision === 'sistema' ? 'Aprobar Sistema' : 
+             'Seleccionar opción'}
           </button>
         </div>
       </div>

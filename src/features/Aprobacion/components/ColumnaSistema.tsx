@@ -12,12 +12,12 @@ interface ColumnaSistemaProps {
 export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected, onSelect, isFaded }) => {
   if (!data) {
     return (
-      <div className="bg-white rounded-2xl p-6 shadow-sm border-2 border-dashed border-slate-200 flex flex-col h-full items-center justify-center text-center opacity-70">
-        <div className="w-12 h-12 bg-slate-50 rounded-full flex items-center justify-center mb-3">
-          <Cpu className="text-slate-300" size={24} />
+      <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 flex flex-col h-full items-center justify-center text-center">
+        <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
+          <Cpu className="text-slate-400" size={24} />
         </div>
-        <p className="text-sm font-bold text-slate-400">Sin Sugerencia de Sistema</p>
-        <p className="text-xs text-slate-400 mt-1">El sistema no pudo generar una sugerencia para esta solicitud.</p>
+        <p className="text-sm font-bold text-slate-800">Sin Sugerencia de Sistema</p>
+        <p className="text-xs text-slate-500 mt-1">El sistema no pudo generar una sugerencia para esta solicitud.</p>
       </div>
     );
   }
@@ -25,18 +25,21 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
   return (
     <div 
       onClick={onSelect}
-      className={`bg-white rounded-2xl p-6 shadow-sm border-2 cursor-pointer transition-all flex flex-col h-full ${
-        isSelected ? 'border-success ring-4 ring-success/10' : 'border-slate-100 hover:border-success/50'
-      } ${isFaded ? 'opacity-50 grayscale-[50%]' : ''}`}
+      className={`bg-white rounded-xl p-6 shadow-sm border-2 cursor-pointer transition-colors flex flex-col h-full ${
+        isSelected ? 'border-success' : 'border-transparent hover:border-slate-300'
+      } ${isFaded ? 'opacity-60 grayscale-[30%]' : ''}`}
+      style={{
+        boxShadow: isSelected ? '0 0 0 1px rgba(16, 185, 129, 0.1)' : '0 1px 3px rgba(0, 0, 0, 0.05)'
+      }}
     >
-      <div className="flex justify-between items-start mb-4 pb-4 border-b border-slate-100">
+      <div className="flex justify-between items-start mb-5 pb-4 border-b border-slate-200">
         <div>
-          <h3 className="font-title font-bold text-slate-800 text-lg flex items-center gap-2">
+          <h3 className="font-bold text-slate-800 text-lg flex items-center gap-2 tracking-tight">
             <Cpu size={20} className="text-success" />
             Sugerencia del Sistema
           </h3>
           <p className="text-xs text-slate-500 mt-1 flex items-center gap-1 font-medium">
-            Score: <span className="text-success">{data.score_confianza}%</span> compatibilidad
+            Score: <span className="text-success font-bold">{data.score_confianza}%</span> compatibilidad
           </p>
         </div>
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -62,8 +65,8 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
           hours={data.motorista_sugerido.horas_periodo_7d || data.horas_motorista_periodo}
         />
 
-        <div className="bg-success/5 border border-success/20 p-4 rounded-xl mt-auto">
-          <p className="text-xs font-bold text-success uppercase mb-3">Razones de Selección</p>
+        <div className="bg-success/5 border border-success/20 p-4 rounded-lg mt-auto">
+          <p className="text-[11px] font-bold text-success uppercase tracking-wider mb-3">Razones de Selección</p>
           <ul className="space-y-2">
             {data.bullets_tecnicos.map((bullet, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
@@ -79,21 +82,21 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
 };
 
 const ResourceCard = ({ icon, title, name, subtitle, fuel, hours }: any) => (
-  <div className="border border-slate-100 rounded-xl p-3 flex gap-3 bg-slate-50">
-    <div className="w-10 h-10 rounded-lg bg-white shadow-sm flex items-center justify-center text-slate-400 shrink-0">
+  <div className="border border-slate-200 rounded-lg p-3 flex gap-3 bg-slate-50">
+    <div className="w-10 h-10 rounded text-slate-500 bg-white border border-slate-200 flex items-center justify-center shrink-0">
       {icon}
     </div>
     <div className="flex-1 min-w-0">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">{title}</p>
+      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{title}</p>
       <p className="text-sm font-semibold text-slate-800 truncate">{name}</p>
-      {subtitle && <p className="text-xs text-slate-500 truncate">{subtitle}</p>}
-      {hours !== undefined && <p className="text-xs text-slate-500 mt-0.5">Manejo 7D: {hours} hrs</p>}
+      {subtitle && <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>}
+      {hours !== undefined && <p className="text-xs text-slate-500 mt-0.5 font-medium">Manejo 7D: <span className="text-slate-800">{hours} hrs</span></p>}
     </div>
     {fuel !== undefined && (
       <div className="flex flex-col items-end justify-center shrink-0">
-        <span className="text-xs font-bold text-slate-700">{fuel}%</span>
-        <div className="w-8 h-1.5 bg-slate-200 rounded-full mt-1 overflow-hidden">
-          <div className={`h-full ${fuel > 20 ? 'bg-emerald-500' : 'bg-danger'}`} style={{ width: `${fuel}%` }} />
+        <span className="text-xs font-bold text-slate-800">{fuel}%</span>
+        <div className="w-8 h-1.5 bg-slate-200 rounded-sm mt-1 overflow-hidden">
+          <div className={`h-full ${fuel > 20 ? 'bg-success' : 'bg-danger'}`} style={{ width: `${fuel}%` }} />
         </div>
       </div>
     )}

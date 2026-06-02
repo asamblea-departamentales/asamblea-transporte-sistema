@@ -48,13 +48,13 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
       {cards.map((card, idx) => (
-        <div key={idx} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow">
+        <div key={idx} className="bg-white rounded-xl p-6 shadow-sm border border-slate-200 hover:bg-slate-50 transition-colors duration-200 cursor-default">
           <div className="flex justify-between items-start">
             <div>
-              <p className="text-sm font-medium text-slate-500 mb-1">{card.title}</p>
+              <p className="text-sm font-semibold text-slate-500 mb-1 tracking-tight">{card.title}</p>
               <h3 className="text-3xl font-bold text-slate-800">{card.value}</h3>
             </div>
-            <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${card.bgIcon}`}>
+            <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${card.bgIcon}`}>
               {card.icon}
             </div>
           </div>

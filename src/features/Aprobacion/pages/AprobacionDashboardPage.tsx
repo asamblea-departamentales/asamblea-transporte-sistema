@@ -32,8 +32,8 @@ export const AprobacionDashboardPage: React.FC = () => {
     <div className="p-8 pb-12 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
-          <h1 className="font-title text-3xl font-extrabold text-slate-900">Bandeja del Jefe</h1>
-          <p className="text-slate-500 mt-1">Resumen operativo y bandeja de solicitudes en espera de tu autorización.</p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Bandeja de Aprobación</h1>
+          <p className="text-sm text-slate-500 mt-1">Resumen operativo y solicitudes pendientes de autorización.</p>
         </div>
       </div>
 
