@@ -18,5 +18,10 @@ export const solicitudApi = {
   desbloquear: async (id: string) => {
     const response = await axiosClient.post(`/solicitudes-transporte/${id}/desbloquear`);
     return response.data;
+  },
+
+  programar: async (id: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${id}/programar`);
+    return response.data;
   }
 };

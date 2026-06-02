@@ -11,6 +11,8 @@ export interface SolicitudDetalle {
     retorno: string;
   };
   motivo: string;
+  decision_final?: 'operativo' | 'sistema' | null;
+  comentario_jefe?: string | null;
 }
 
 export interface VehiculoSugerido {

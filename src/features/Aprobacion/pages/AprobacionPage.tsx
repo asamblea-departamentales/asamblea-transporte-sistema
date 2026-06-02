@@ -1,5 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Info } from 'lucide-react';
 import { useAprobacion } from '../hooks/useAprobacion';
 import { ColumnaViaje } from '../components/ColumnaViaje';
 import { ColumnaOperativo } from '../components/ColumnaOperativo';
@@ -16,6 +16,7 @@ export default function AprobacionPage() {
     comentario,
     setComentario,
     confirmarAprobacion,
+    handleProgramar,
     isSubmitting 
   } = useAprobacion(id);
 
@@ -54,6 +55,20 @@ export default function AprobacionPage() {
           </div>
         </div>
       </div>
+
+      {/* Banner de decisión previa */}
+      {data.solicitud.decision_final && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start gap-3">
+          <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
+          <div>
+            <h4 className="font-bold text-blue-900">Solicitud consolidada</h4>
+            <p className="text-sm text-blue-800 mt-1">
+              Esta solicitud ya fue pre-aprobada con la opción <span className="font-bold uppercase">{data.solicitud.decision_final}</span>. 
+              Puedes actualizar la decisión o <strong>Programar el Viaje</strong> definitivamente.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* 3 Columns Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
@@ -111,10 +126,22 @@ export default function AprobacionPage() {
             } disabled:opacity-60 disabled:cursor-not-allowed`}
           >
             {isSubmitting ? 'Procesando...' : 
-             decision === 'operativo' ? 'Aprobar Manual' : 
-             decision === 'sistema' ? 'Aprobar Sistema' : 
-             'Seleccionar opción'}
+             (data.solicitud.decision_final ? 'Actualizar Aprobación' :
+              (decision === 'operativo' ? 'Aprobar Manual' : 
+               decision === 'sistema' ? 'Aprobar Sistema' : 
+               'Seleccionar opción')
+             )}
           </button>
+          
+          {data.solicitud.decision_final && (
+            <button 
+              onClick={handleProgramar}
+              disabled={isSubmitting}
+              className="px-6 py-2 font-bold rounded bg-slate-800 hover:bg-slate-900 text-white transition-all text-sm shadow-md flex items-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Programar Viaje <CheckCircle size={16} />
+            </button>
+          )}
         </div>
       </div>
     </div>

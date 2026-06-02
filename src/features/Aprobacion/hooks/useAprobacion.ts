@@ -22,6 +22,13 @@ export function useAprobacion(id: string | undefined) {
         setIsLoading(true);
         const result = await solicitudApi.getComparativa(id);
         setData(result);
+        
+        if (result.solicitud?.decision_final) {
+          setDecision(result.solicitud.decision_final);
+        }
+        if (result.solicitud?.comentario_jefe) {
+          setComentario(result.solicitud.comentario_jefe);
+        }
       } catch (err: any) {
         setError(err.response?.data?.message || 'Error al cargar la solicitud');
       } finally {
@@ -60,6 +67,19 @@ export function useAprobacion(id: string | undefined) {
      }
   };
 
+  const handleProgramar = async () => {
+    if (!id) return;
+    try {
+      setIsSubmitting(true);
+      await solicitudApi.programar(id);
+      navigate('/');
+    } catch (err: any) {
+      setError(err.response?.data?.message || 'Error al programar');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return {
     data,
     isLoading,
@@ -70,6 +90,7 @@ export function useAprobacion(id: string | undefined) {
     setComentario,
     confirmarAprobacion,
     handleDesbloquear,
+    handleProgramar,
     isSubmitting
   };
 }
