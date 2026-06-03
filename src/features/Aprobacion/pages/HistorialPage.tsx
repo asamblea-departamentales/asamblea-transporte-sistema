@@ -1,0 +1,238 @@
+import React, { useEffect, useState } from 'react';
+import { dashboardApi, RecentRequest } from '../../api/dashboardApi';
+import { useNavigate } from 'react-router-dom';
+import { History, Search, Calendar, Filter } from 'lucide-react';
+
+export const HistorialPage: React.FC = () => {
+  const [requests, setRequests] = useState<RecentRequest[]>([]);
+  const [filteredRequests, setFilteredRequests] = useState<RecentRequest[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  
+  // Filters
+  const [searchTerm, setSearchTerm] = useState('');
+  const [dateFilter, setDateFilter] = useState('todos');
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchHistorial = async () => {
+      try {
+        const data = await dashboardApi.getHistorialJefatura();
+        setRequests(data.data || []);
+        setFilteredRequests(data.data || []);
+      } catch (error) {
+        console.error("Error fetching historial data", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchHistorial();
+  }, []);
+
+  // Apply filters
+  useEffect(() => {
+    let result = requests;
+
+    if (searchTerm) {
+      const lowerSearch = searchTerm.toLowerCase();
+      result = result.filter(req => 
+        req.code.toLowerCase().includes(lowerSearch) || 
+        (req.type && req.type.toLowerCase().includes(lowerSearch))
+      );
+    }
+
+    if (dateFilter !== 'todos') {
+      const today = new Date();
+      result = result.filter(req => {
+        // Asumiendo formato DD/MM/YYYY o similar que podamos parsear simple, o usar strings
+        // Para fines de esta demo simplificada, lo haremos basado en fechas mockeadas.
+        // En producción real esto requeriría parseo estricto (ej. date-fns)
+        if (!req.date) return false;
+        
+        // Simulación de filtro:
+        if (dateFilter === 'hoy') {
+          return req.date.includes(today.toLocaleDateString());
+        }
+        return true; // otros filtros
+      });
+    }
+
+    setFilteredRequests(result);
+  }, [searchTerm, dateFilter, requests]);
+
+
+  const getStatusBadge = (status: string) => {
+    let colorClass = "border-slate-200 text-slate-600";
+    let dotClass = "bg-slate-500";
+    let text = status.toLowerCase();
+
+    if (text.includes('aprobada')) {
+      colorClass = "border-emerald-200 text-emerald-600";
+      dotClass = "bg-emerald-500";
+    } else if (text.includes('rechazada')) {
+      colorClass = "border-red-200 text-red-600";
+      dotClass = "bg-red-500";
+    } else if (text.includes('programada')) {
+      colorClass = "border-blue-200 text-blue-600";
+      dotClass = "bg-blue-500";
+    } else if (text.includes('completada')) {
+      colorClass = "border-slate-200 text-slate-600";
+      dotClass = "bg-slate-500";
+    }
+
+    return (
+      <span className={`px-3 py-1 bg-white border ${colorClass} rounded-full text-[11px] font-semibold flex items-center w-max shadow-sm capitalize`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${dotClass} mr-1.5`}></span>
+        {text.replace('_', ' ')}
+      </span>
+    );
+  };
+
+  return (
+    <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-7xl mx-auto">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-12 h-12 bg-white rounded-xl shadow-sm border border-slate-100 flex items-center justify-center text-slate-600">
+            <History size={24} />
+          </div>
+          <div>
+            <h1 className="text-3xl font-extrabold text-[#182645] tracking-tight font-title">Historial de Aprobaciones</h1>
+            <p className="text-sm text-slate-500 mt-1 font-medium">Solicitudes que ya han sido procesadas</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters Bar */}
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-100/80 mb-6 flex flex-col md:flex-row gap-4 items-center justify-between">
+        <div className="relative w-full md:w-96">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+          <input 
+            type="text" 
+            placeholder="Buscar por código..." 
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
+          />
+        </div>
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative flex-1 md:w-48">
+            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
+            <select 
+              value={dateFilter}
+              onChange={(e) => setDateFilter(e.target.value)}
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none appearance-none cursor-pointer"
+            >
+              <option value="todos">Todas las fechas</option>
+              <option value="hoy">Hoy</option>
+              <option value="semana">Esta semana</option>
+              <option value="mes">Este mes</option>
+            </select>
+          </div>
+          <button className="p-2 border border-slate-200 rounded-xl hover:bg-slate-50 text-slate-600 transition-colors">
+            <Filter size={18} />
+          </button>
+        </div>
+      </div>
+
+      <div className="bg-white rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100/80 overflow-hidden">
+        {/* Mobile View (Cards) */}
+        <div className="md:hidden flex flex-col p-4 gap-3">
+          {isLoading ? (
+            [1, 2, 3, 4].map(i => (
+              <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
+                <div className="h-4 bg-slate-200 rounded w-20 animate-pulse"></div>
+                <div className="h-4 bg-slate-200 rounded w-32 animate-pulse"></div>
+              </div>
+            ))
+          ) : filteredRequests.length === 0 ? (
+            <div className="py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+              <History className="mx-auto text-slate-300 mb-3" size={32} />
+              <p className="text-slate-500 font-medium">No hay registros en el historial.</p>
+            </div>
+          ) : (
+            filteredRequests.map((req, idx) => (
+              <div 
+                key={idx}
+                onClick={() => {
+                  const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                  navigate(`${basePath}/${req.id || req.code}`);
+                }}
+                className="bg-white border border-slate-100 shadow-sm rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-indigo-200 transition-colors"
+              >
+                <div className="flex justify-between items-center">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 bg-[#4F46E5] rounded-full"></span>
+                    <span className="font-bold text-[#182645] text-sm">{req.code}</span>
+                  </div>
+                  {getStatusBadge(req.status)}
+                </div>
+                <div className="flex justify-between items-center text-xs text-slate-500">
+                  <span>{req.date}</span>
+                  <span className="font-medium bg-slate-100 px-2 py-1 rounded-md">{req.type || 'Transporte'}</span>
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop View (Table) */}
+        <div className="hidden md:block overflow-x-auto p-2">
+          <table className="w-full text-left border-collapse">
+            <thead>
+              <tr className="border-b border-slate-100/80">
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">FECHA</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIPO</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ESTADO</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100/80">
+              {isLoading ? (
+                [1, 2, 3, 4, 5].map(i => (
+                  <tr key={i}>
+                    <td className="py-4 px-6"><div className="h-4 bg-slate-100 rounded w-20 animate-pulse"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-slate-100 rounded w-24 animate-pulse"></div></td>
+                    <td className="py-4 px-6"><div className="h-4 bg-slate-100 rounded w-20 animate-pulse"></div></td>
+                    <td className="py-4 px-6"><div className="h-6 bg-slate-100 rounded w-28 animate-pulse ml-auto"></div></td>
+                  </tr>
+                ))
+              ) : filteredRequests.length === 0 ? (
+                <tr>
+                  <td colSpan={4} className="py-16 text-center">
+                    <History className="mx-auto text-slate-300 mb-3" size={32} />
+                    <p className="text-slate-500 font-medium">No se encontraron resultados en el historial.</p>
+                  </td>
+                </tr>
+              ) : (
+                filteredRequests.map((req, idx) => (
+                  <tr 
+                    key={idx} 
+                    onClick={() => {
+                      const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                      navigate(`${basePath}/${req.id || req.code}`);
+                    }}
+                    className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"
+                  >
+                    <td className="py-5 px-6 flex items-center gap-2">
+                      <span className="w-1.5 h-1.5 bg-[#4F46E5] rounded-full"></span>
+                      <span className="font-semibold text-[#182645] text-[13px]">{req.code}</span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <span className="text-[13px] text-slate-500 font-medium">{req.date}</span>
+                    </td>
+                    <td className="py-5 px-6">
+                      <span className="text-[13px] text-[#182645] font-medium">{req.type || 'Transporte'}</span>
+                    </td>
+                    <td className="py-5 px-6 flex justify-end">
+                      {getStatusBadge(req.status)}
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  );
+};

@@ -2,6 +2,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AprobacionPage from './features/Aprobacion/pages/AprobacionPage';
 import AprobacionCombustiblePage from './features/Aprobacion/pages/AprobacionCombustiblePage';
 import { AprobacionDashboardPage } from './features/Aprobacion/pages/AprobacionDashboardPage';
+import { HistorialPage } from './features/Aprobacion/pages/HistorialPage';
 import LoginPage from './features/Auth/pages/LoginPage';
 import { useAuth } from './features/Auth/context/AuthContext';
 import { DashboardLayout } from './shared/components/DashboardLayout';
@@ -26,6 +27,7 @@ function App() {
       <Routes>
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<AprobacionDashboardPage />} />
+          <Route path="historial" element={<HistorialPage />} />
           <Route path="aprobaciones/:id" element={<AprobacionPage />} />
           <Route path="aprobaciones" element={<AprobacionPage />} />
           <Route path="combustible/aprobaciones/:id" element={<AprobacionCombustiblePage />} />
