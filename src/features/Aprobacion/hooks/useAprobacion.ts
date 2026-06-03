@@ -48,7 +48,14 @@ export function useAprobacion(id: string | undefined) {
       // Navigate back to dashboard on success
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al aprobar la solicitud');
+      const responseData = err.response?.data;
+      if (err.response?.status === 422 && responseData?.errors) {
+        // Extraer el primer mensaje de error de validación
+        const firstError = Object.values(responseData.errors)[0] as string[];
+        setError(firstError[0] || 'Datos inválidos (422)');
+      } else {
+        setError(responseData?.message || 'Error al aprobar la solicitud');
+      }
     } finally {
       setIsSubmitting(false);
     }

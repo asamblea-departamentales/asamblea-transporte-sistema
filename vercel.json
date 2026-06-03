@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://TU_BACKEND_REAL.com/api/$1"
+      "destination": "https://phplaravel-1581457-6197806.cloudwaysapps.com/api/$1"
     },
     {
       "source": "/(.*)",
