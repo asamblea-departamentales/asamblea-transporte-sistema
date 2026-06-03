@@ -108,3 +108,10 @@ export async function finalizarMantenimiento(
   );
   return data;
 }
+
+export async function cancelarMantenimiento(id: number): Promise<{ message: string; data: SolicitudMantenimiento }> {
+  const { data } = await api.post<{ message: string; data: SolicitudMantenimiento }>(
+    `/api/solicitudes-mantenimiento/${id}/cancelar`
+  );
+  return data;
+}

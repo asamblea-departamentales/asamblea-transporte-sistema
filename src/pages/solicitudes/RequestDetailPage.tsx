@@ -178,7 +178,7 @@ export default function RequestDetailPage() {
   const handleFinalizarTransporte = async () => {
     setFinalizandoTransporte(true);
     try {
-      await completeRequest(data.id);
+      await completeRequest(data.codigo);
       setShowConfirmTransporte(false);
       fetchData();
     } catch (err) {

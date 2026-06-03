@@ -6,7 +6,9 @@ import { ESTADOS } from "../constants/requests.constants";
 import { getStatusStyle, isCompleted } from "../lib/format";
 import { InnerLoading } from "../components/InnerLoading";
 import type { RequestStatus } from "../services/requests.service";
-import { cancelRequest } from "../services/requests.service";
+import { cancelRequest as cancelTransporte } from "../services/requests.service";
+import { cancelarMantenimiento } from "../services/mantenimiento.service";
+import { cancelarSolicitud as cancelCombustible } from "../services/combustible.service";
 import type { CombinedRequest, Modulo } from "../hooks/useCombinedRequests";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -325,7 +327,8 @@ function RequestCard({ req, isExpanded, onToggle, onCancel }: {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.location.href = `/solicitudes/${req.modulo}/${req.id}`;
+                  const targetId = req.modulo === "transporte" ? req.codigo : req.id;
+                  window.location.href = `/solicitudes/${req.modulo}/${targetId}`;
                 }}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
               >
@@ -389,7 +392,13 @@ export default function MyRequestsPage() {
     setSubmittingCancel(true);
     setCancelError(null);
     try {
-      await cancelRequest(cancelTarget.id, motivoCancelacion.trim());
+      if (cancelTarget.modulo === "transporte") {
+        await cancelTransporte(cancelTarget.codigo, motivoCancelacion.trim());
+      } else if (cancelTarget.modulo === "mantenimiento") {
+        await cancelarMantenimiento(cancelTarget.id);
+      } else if (cancelTarget.modulo === "combustible") {
+        await cancelCombustible(cancelTarget.id);
+      }
       setCancelTarget(null);
       setMotivoCancelacion("");
       refresh();
@@ -646,7 +655,10 @@ export default function MyRequestsPage() {
                             </p>
                             <div className="mt-3 flex gap-2">
                               <button
-                                onClick={() => navigate(`/solicitudes/${req.modulo}/${req.id}`)}
+                                onClick={() => {
+                                  const targetId = req.modulo === "transporte" ? req.codigo : req.id;
+                                  navigate(`/solicitudes/${req.modulo}/${targetId}`);
+                                }}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
                               >
                                 Ver detalle completo

@@ -166,7 +166,7 @@ export async function deleteRequest(id: string | number): Promise<void> {
   await api.delete(`/api/solicitudes-transporte/${id}`);
 }
 
-export async function completeRequest(id: number): Promise<Request> {
+export async function completeRequest(id: string | number): Promise<Request> {
   const { data } = await api.post(`/api/solicitudes-transporte/${id}/finalizar`);
   return data.data;
 }
