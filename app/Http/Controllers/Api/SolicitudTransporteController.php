@@ -354,6 +354,130 @@ class SolicitudTransporteController extends Controller
         ]);
     }
 
+    public function historialJefatura(Request $request)
+    {
+        $this->authorizeJefe();
+
+        $perPage = $request->query('per_page', 15);
+
+        $historial = SolicitudTransporte::query()
+            ->with(['unidad', 'solicitante', 'vehiculo', 'motorista', 'autorizador'])
+            ->where('decidido_por', Auth::id())
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::COMPLETADA,
+                EstadoSolicitudEnum::RECHAZADA,
+            ])
+            ->orderByDesc('decidido_en')
+            ->paginate($perPage);
+
+        return response()->json($historial);
+    }
+
+    public function recursosDisponibles(Request $request)
+    {
+        $this->authorizeJefe();
+
+        $data = $request->validate([
+            'fecha_salida' => ['required', 'date'],
+            'fecha_retorno' => ['required', 'date', 'after_or_equal:fecha_salida'],
+        ]);
+
+        $fechaSalida = Carbon::parse($data['fecha_salida']);
+        $fechaRetorno = Carbon::parse($data['fecha_retorno']);
+
+        $vehiculosOcupados = SolicitudTransporte::query()
+            ->whereNotNull('vehiculo_id')
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
+                $query->where('fecha_salida', '<=', $fechaRetorno)
+                    ->where('fecha_retorno', '>=', $fechaSalida);
+            })
+            ->pluck('vehiculo_id')
+            ->filter()
+            ->unique();
+
+        $motoristasOcupados = SolicitudTransporte::query()
+            ->whereNotNull('motorista_id')
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
+                $query->where('fecha_salida', '<=', $fechaRetorno)
+                    ->where('fecha_retorno', '>=', $fechaSalida);
+            })
+            ->pluck('motorista_id')
+            ->filter()
+            ->unique();
+
+        $vehiculos = \App\Models\Vehiculo::query()
+            ->where('activo', true)
+            ->whereNotIn('id', $vehiculosOcupados)
+            ->with('vehMarca')
+            ->get()
+            ->map(fn ($vehiculo) => [
+                'id' => $vehiculo->id,
+                'placa' => $vehiculo->placa,
+                'marca' => $vehiculo->vehMarca?->nombre,
+                'capacidad' => $vehiculo->capacidad_personas,
+            ]);
+
+        $motoristas = \App\Models\Motorista::query()
+            ->disponibles()
+            ->where('activo', true)
+            ->whereNotIn('id', $motoristasOcupados)
+            ->with('tipoLicencia')
+            ->get()
+            ->map(fn ($motorista) => [
+                'id' => $motorista->id,
+                'nombre' => $motorista->nombre,
+                'licencia' => $motorista->tipoLicencia?->nombre,
+            ]);
+
+        return response()->json([
+            'vehiculos' => $vehiculos,
+            'motoristas' => $motoristas,
+        ]);
+    }
+
+    public function reasignar(Request $request, SolicitudTransporte $solicitud)
+    {
+        $this->authorizeJefe();
+
+        $data = $request->validate([
+            'vehiculo_id' => ['required', 'exists:vehiculos,id'],
+            'motorista_id' => ['required', 'exists:motoristas,id'],
+            'motivo_reasignacion' => ['required', 'string', 'min:10'],
+        ]);
+
+        try {
+            $solicitud = $this->service->reasignar(
+                $solicitud,
+                Auth::id(),
+                $data['vehiculo_id'],
+                $data['motorista_id'],
+                $data['motivo_reasignacion'],
+            );
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Recursos reasignados correctamente.',
+                'data' => $solicitud->fresh()->load(['unidad', 'solicitante', 'vehiculo', 'motorista']),
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
     public function asignarRecursos(Request $request, SolicitudTransporte $solicitud)
     {
         $data = $request->validate([
@@ -384,9 +508,11 @@ class SolicitudTransporteController extends Controller
     public function aprobarConDecision(Request $request, SolicitudTransporte $solicitud)
     {
         $data = $request->validate([
-            'decision_final' => ['required', 'in:operativo,sistema'],
+            'decision_final' => ['required', 'in:operativo,sistema,manual'],
             'comentario' => ['required', 'string'],
             'firma' => ['nullable', 'string'],
+            'vehiculo_id' => ['required_if:decision_final,manual', 'exists:vehiculos,id'],
+            'motorista_id' => ['required_if:decision_final,manual', 'exists:motoristas,id'],
         ]);
 
         try {
@@ -396,6 +522,8 @@ class SolicitudTransporteController extends Controller
                 $data['decision_final'],
                 $data['comentario'],
                 $data['firma'] ?? null,
+                $data['vehiculo_id'] ?? null,
+                $data['motorista_id'] ?? null,
             );
 
             return response()->json([

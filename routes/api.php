@@ -155,8 +155,12 @@ Route::middleware('auth:sanctum')->group(function () {
         // Módulo de Aprobación
         Route::get('solicitudes-transporte/{solicitud:codigo}/comparativa', [SolicitudTransporteController::class, 'comparativa']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/aprobar-con-decision', [SolicitudTransporteController::class, 'aprobarConDecision']);
+        Route::put('solicitudes-transporte/{solicitud:codigo}/reasignar', [SolicitudTransporteController::class, 'reasignar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
+
+        Route::get('solicitudes/historial-jefatura', [SolicitudTransporteController::class, 'historialJefatura']);
+        Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])

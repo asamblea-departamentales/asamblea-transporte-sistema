@@ -25,6 +25,7 @@ enum AccionBitacoraEnum: string
     case IMPRIMIR = 'imprimir';
 
     case ASIGNAR_RECURSOS = 'asignar_recursos';
+    case REASIGNAR = 'reasignar';
     case DESBLOQUEAR = 'desbloquear';
     case PROGRAMAR = 'programar';
 }

@@ -212,24 +212,40 @@ class SolicitudTransporteService
         int $jefeId,
         string $decisionFinal,
         string $comentario,
-        ?string $firma = null
+        ?string $firma = null,
+        ?int $vehiculoId = null,
+        ?int $motoristaId = null
     ): array {
         if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (!in_array($decisionFinal, ['operativo', 'sistema'])) {
-            throw new \InvalidArgumentException('decision_final debe ser "operativo" o "sistema".');
+        if (!in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
+            throw new \InvalidArgumentException('decision_final debe ser "operativo", "sistema" o "manual".');
         }
 
-        return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma) {
+        return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma, $vehiculoId, $motoristaId) {
             $anterior = $solicitud->estado;
 
             // Guardar referencias a recursos viejos ANTES de pisarlos
             $vehiculoAnteriorId = $solicitud->vehiculo_id;
             $motoristaAnteriorId = $solicitud->motorista_id;
 
-            if ($decisionFinal === 'operativo') {
+            if ($decisionFinal === 'manual') {
+                if (!$vehiculoId || !$motoristaId) {
+                    throw new \DomainException('Para decisión manual debe proporcionar vehículo y motorista.');
+                }
+                $v = Vehiculo::find($vehiculoId);
+                $m = Motorista::find($motoristaId);
+                if ($v && !$v->esta_disponible) {
+                    throw new \DomainException("El vehículo {$v->placa} seleccionado ya no está disponible.");
+                }
+                if ($m && !$m->esta_disponible) {
+                    throw new \DomainException("El motorista {$m->nombre} seleccionado ya no está disponible.");
+                }
+                $solicitud->vehiculo_id = $vehiculoId;
+                $solicitud->motorista_id = $motoristaId;
+            } elseif ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
                 if (!$decision) throw new \DomainException('No hay decisión operativa registrada.');
                 $solicitud->vehiculo_id = $decision->vehiculo_final_id;
@@ -337,6 +353,70 @@ class SolicitudTransporteService
                 'message' => "Solicitud {$solicitud->codigo} desbloqueada para re-asignación.",
                 'estado_nuevo' => EstadoSolicitudEnum::PENDIENTE->value,
             ];
+        });
+    }
+
+    public function reasignar(
+        SolicitudTransporte $solicitud,
+        int $jefeId,
+        int $vehiculoId,
+        int $motoristaId,
+        string $motivoReasignacion
+    ): SolicitudTransporte {
+        if (!in_array($solicitud->estado, [
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::PROGRAMADA,
+        ], true)) {
+            throw new \DomainException('Solo se puede reasignar solicitudes aprobadas o programadas.');
+        }
+
+        if ($solicitud->fecha_salida && $solicitud->fecha_salida->isPast()) {
+            throw new \DomainException('No se puede reasignar un viaje que ya inició o pasó su fecha de salida.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $jefeId, $vehiculoId, $motoristaId, $motivoReasignacion) {
+            $anterior = $solicitud->estado;
+
+            $v = Vehiculo::find($vehiculoId);
+            $m = Motorista::find($motoristaId);
+            if ($v && !$v->esta_disponible) {
+                throw new \DomainException("El vehículo {$v->placa} seleccionado no está disponible.");
+            }
+            if ($m && !$m->esta_disponible) {
+                throw new \DomainException("El motorista {$m->nombre} seleccionado no está disponible.");
+            }
+
+            $vehiculoAnteriorId = $solicitud->vehiculo_id;
+            $motoristaAnteriorId = $solicitud->motorista_id;
+
+            $solicitud->vehiculo_id = $vehiculoId;
+            $solicitud->motorista_id = $motoristaId;
+            $solicitud->save();
+
+            if ($vehiculoAnteriorId) {
+                $vAnterior = Vehiculo::find($vehiculoAnteriorId);
+                if ($vAnterior) app(EstadoFlotaService::class)->liberarVehiculo($vAnterior);
+            }
+            if ($motoristaAnteriorId) {
+                $mAnterior = Motorista::find($motoristaAnteriorId);
+                if ($mAnterior) app(EstadoFlotaService::class)->liberarMotorista($mAnterior, $solicitud->codigo);
+            }
+
+            if ($v) app(EstadoFlotaService::class)->reservarVehiculo($v, $solicitud->codigo);
+            if ($m) app(EstadoFlotaService::class)->ocuparMotorista($m, $solicitud->codigo);
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId,
+                "Reasignación: {$motivoReasignacion}");
+
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::REASIGNAR->value, $jefeId, [
+                'vehiculo_anterior_id' => $vehiculoAnteriorId,
+                'vehiculo_nuevo_id' => $vehiculoId,
+                'motorista_anterior_id' => $motoristaAnteriorId,
+                'motorista_nuevo_id' => $motoristaId,
+                'motivo' => $motivoReasignacion,
+            ]);
+
+            return $solicitud;
         });
     }
 
