@@ -29,7 +29,7 @@ export const AprobacionDashboardPage: React.FC = () => {
   }, []);
 
   return (
-    <div className="p-8 pb-12 max-w-7xl mx-auto">
+    <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-7xl mx-auto">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
         <div>
           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2">ASAMBLEA LEGISLATIVA - LOGÍSTICA</p>

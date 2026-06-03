@@ -45,7 +45,47 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
         </button>
       </div>
       
-      <div className="overflow-x-auto p-2">
+      {/* Mobile View (Cards) */}
+      <div className="md:hidden flex flex-col p-4 gap-3">
+        {isLoading ? (
+          [1, 2, 3].map(i => (
+            <div key={i} className="bg-slate-50 border border-slate-100 rounded-xl p-4 flex flex-col gap-3">
+              <div className="h-4 bg-slate-200 rounded w-20 animate-pulse"></div>
+              <div className="h-4 bg-slate-200 rounded w-32 animate-pulse"></div>
+            </div>
+          ))
+        ) : preAprobadas.length === 0 ? (
+          <div className="py-8 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
+            <p className="text-slate-400 font-medium text-sm">No hay solicitudes recientes.</p>
+          </div>
+        ) : (
+          preAprobadas.map((req, idx) => (
+            <div 
+              key={idx}
+              onClick={() => {
+                const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                navigate(`${basePath}/${req.id || req.code}`);
+              }}
+              className="bg-white border border-slate-100 shadow-sm rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-indigo-200 transition-colors"
+            >
+              <div className="flex justify-between items-center">
+                <div className="flex items-center gap-2">
+                  <span className="w-2 h-2 bg-[#4F46E5] rounded-full"></span>
+                  <span className="font-bold text-[#182645] text-sm">{req.code}</span>
+                </div>
+                {getStatusBadge(req.status)}
+              </div>
+              <div className="flex justify-between items-center text-xs text-slate-500">
+                <span>{req.date}</span>
+                <span className="font-medium bg-slate-100 px-2 py-1 rounded-md">{req.type || 'Transporte'}</span>
+              </div>
+            </div>
+          ))
+        )}
+      </div>
+
+      {/* Desktop View (Table) */}
+      <div className="hidden md:block overflow-x-auto p-2">
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100/80">
