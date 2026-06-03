@@ -14,6 +14,7 @@ use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
 use App\Models\Motorista;
 use App\Models\Vehiculo;
+use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -154,13 +155,6 @@ class SolicitudTransporteService
             }
 
             $cambio = $this->detectarCambio($sugerencia, $vehiculoId, $motoristaId);
-
-            if ($cambio !== 'ninguno' && (empty($justificacion) || strlen($justificacion) < 10)) {
-                throw new \DomainException(
-                    'El operador seleccionó recursos diferentes a la sugerencia del sistema. '
-                    . 'Es obligatorio proveer una justificación de al menos 10 caracteres.'
-                );
-            }
 
             DecisionOperativa::updateOrCreate(
                 ['decidable_id' => $solicitud->id, 'decidable_type' => SolicitudTransporte::class],

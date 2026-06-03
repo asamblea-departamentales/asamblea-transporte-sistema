@@ -11,7 +11,9 @@ use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\SolicitudTransporte;
+use App\Models\SugerenciaAsignacion;
 use App\Models\User;
+use App\Models\Vehiculo;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
@@ -642,6 +644,35 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->get()
             ->pluck('nombre', 'id')
             ->toArray();
+    }
+
+    public function getVehiculosConMotorista(): array
+    {
+        return Vehiculo::with('asignacionVigenteMotorista.motorista')
+            ->disponibles()
+            ->orderBy('placa')
+            ->get()
+            ->map(fn ($v) => [
+                'id' => $v->id,
+                'placa' => $v->placa,
+                'motorista_id' => $v->asignacionVigenteMotorista?->motorista_id,
+                'motorista_nombre' => $v->asignacionVigenteMotorista?->motorista?->nombre,
+            ])
+            ->keyBy('id')
+            ->toArray();
+    }
+
+    public function getSugerencia(int $solicitudId): ?array
+    {
+        $sug = SugerenciaAsignacion::where('solicitud_id', $solicitudId)->first();
+        if (!$sug) return null;
+
+        return [
+            'vehiculo_sugerido_id' => $sug->vehiculo_sugerido_id,
+            'vehiculo_sugerido_placa' => $sug->vehiculoSugerido?->placa,
+            'motorista_sugerido_id' => $sug->motorista_sugerido_id,
+            'motorista_sugerido_nombre' => $sug->motoristaSugerido?->nombre,
+        ];
     }
 
     public function usuariosOptions(): array
