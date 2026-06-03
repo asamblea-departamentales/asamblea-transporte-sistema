@@ -148,7 +148,7 @@ export default function HistorialDetallePage() {
   const canReasignar = isAprobada && fechaSalida && fechaSalida > new Date();
 
   // Valores a mostrar
-  const solicitanteName = raw.solicitante?.nombre || raw.solicitante || comp.solicitante || 'N/A';
+  const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
   const destino = raw.destino || comp.destino || 'N/A';
   const horasEstimadas = raw.horas_estimadas || comp.horas_estimadas || 0;
   const motivo = raw.motivo || comp.motivo || 'Sin motivo';
