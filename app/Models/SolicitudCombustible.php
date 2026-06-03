@@ -143,6 +143,13 @@ class SolicitudCombustible extends Model
         return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
     }
 
+    // ── Relación polimórfica con DecisionOperativa ────────────
+
+    public function decisionOperativa(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(DecisionOperativa::class, 'decidable');
+    }
+
     //Relacion con grupo de prioridades
     public function grupo()
     {

@@ -382,7 +382,7 @@ class AprobacionesService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante.grupo'])
+            ->with(['solicitante.grupo', 'decisionOperativa.usuarioOperativo'])
             ->where('estado', EstadoSolicitudEnum::PRE_APROBADA);
 
         if (! empty($filters['date_from'])) {
@@ -394,6 +394,8 @@ class AprobacionesService
         }
 
         return $query->get()->map(function (SolicitudCombustible $r) {
+            $decision = $r->decisionOperativa;
+
             return [
                 'id' => $r->id,
                 'tipo' => 'combustible',
@@ -406,6 +408,11 @@ class AprobacionesService
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
                 'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
+                'decision_operativa' => $decision ? [
+                    'monto_aprobado' => $decision->monto_aprobado,
+                    'operativo' => $decision->usuarioOperativo?->name ?? '—',
+                    'justificacion' => $decision->justificacion,
+                ] : null,
             ];
         });
     }

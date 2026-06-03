@@ -163,7 +163,7 @@ class SolicitudTransporteService
             }
 
             DecisionOperativa::updateOrCreate(
-                ['solicitud_id' => $solicitud->id],
+                ['decidable_id' => $solicitud->id, 'decidable_type' => SolicitudTransporte::class],
                 [
                     'usuario_operativo_id' => $userId,
                     'vehiculo_final_id' => $vehiculoId,
@@ -287,6 +287,7 @@ class SolicitudTransporteService
             $solicitud->decidido_en = now();
             $solicitud->comentario_jefe = $comentario;
             if ($firma) $solicitud->firma_aprobador = $firma;
+            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
             $solicitud->save();
 
             // Reservar nuevos recursos consolidados
@@ -302,7 +303,7 @@ class SolicitudTransporteService
 
             return [
                 'success' => true,
-                'estado_final' => EstadoSolicitudEnum::PRE_APROBADA->value,
+                'estado_final' => EstadoSolicitudEnum::APROBADA->value,
                 'recursos_consolidados' => [
                     'vehiculo_id' => $solicitud->vehiculo_id,
                     'motorista_id' => $solicitud->motorista_id,

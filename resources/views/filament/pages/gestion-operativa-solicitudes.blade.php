@@ -445,6 +445,35 @@
                             </div>
                         </div>
                         @endif
+
+                        @if($row['tipo'] === 'combustible' && $row['estado'] === 'en_revision')
+                        <div x-data="{ open: false, monto: 0, justificacion: '' }">
+                            <button class="btn-accion btn-indigo" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Asignar carga
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Asignar carga — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <div><div class="modal-label">Monto aprobado ($) <span class="text-red-400">*</span></div>
+                                    <input type="number" step="0.01" min="0.01" x-model="monto" class="modal-select" placeholder="0.00"></div>
+                                    <div><div class="modal-label">Justificación</div>
+                                    <textarea x-model="justificacion" class="modal-textarea" rows="3" placeholder="Comentario opcional..."></textarea></div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success"
+                                            @click="$wire.asignarCargaCombustible({{ $row['id'] }}, monto, justificacion || null); open = false"
+                                            x-bind:disabled="!monto || monto <= 0">
+                                            Confirmar carga
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
                     @endif
 
                     {{-- ── APROBACIONES ────────────────────────────────── --}}
@@ -764,6 +793,102 @@
                                     <div class="flex justify-end gap-3 pt-2">
                                         <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
                                         <button type="button" class="btn-accion btn-success" @click="confirmar" x-bind:disabled="!comentario.trim()">
+                                            Confirmar aprobación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- ═══ COMBUSTIBLE: Comparativa simple ═══ --}}
+                        @if($row['tipo'] === 'combustible' && $row['estado'] === 'pre_aprobada')
+                        <div x-data="{ open: false }">
+                            <button class="btn-accion btn-gray" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+                                Comparativa
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-2xl p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Comparativa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    @php $dec = $row['decision_operativa'] ?? null; @endphp
+                                    <div class="grid grid-cols-2 gap-4">
+                                        <div class="comparativa-col operativo">
+                                            <div class="text-xs font-bold text-amber-600 uppercase tracking-wider mb-3">👤 Asignación del Operativo</div>
+                                            <div class="space-y-2">
+                                                @if($dec)
+                                                <div><div class="comp-label">Monto aprobado ($)</div><div class="comp-value">${{ number_format($dec['monto_aprobado'] ?? 0, 2) }}</div></div>
+                                                <div><div class="comp-label">Asignado por</div><div class="comp-value">{{ $dec['operativo'] ?? '—' }}</div></div>
+                                                @if(!empty($dec['justificacion']))
+                                                <div><div class="comp-label">Justificación</div><div class="comp-value text-xs italic">{{ $dec['justificacion'] }}</div></div>
+                                                @endif
+                                                @else
+                                                <div class="text-sm text-gray-400 italic">Sin asignación del operativo</div>
+                                                @endif
+                                            </div>
+                                        </div>
+                                        <div class="comparativa-col jefe">
+                                            <div class="text-xs font-bold text-emerald-600 uppercase tracking-wider mb-3">⚖️ Decisión del Jefe</div>
+                                            <div class="space-y-2">
+                                                <div class="text-sm text-gray-400 italic">Pendiente — elegir mantener o re-asignar</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="flex justify-end pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{-- ═══ COMBUSTIBLE: Aprobar con decisión ═══ --}}
+                        <div x-data="{
+                            open: false,
+                            decisionFinal: 'mantener',
+                            montoManual: 0,
+                            comentario: '',
+                            confirmar() {
+                                if (this.decisionFinal === 'manual' && (!this.montoManual || this.montoManual <= 0)) return;
+                                $wire.aprobarConDecisionCombustible({{ $row['id'] }}, this.decisionFinal, this.decisionFinal === 'manual' ? this.montoManual : null, this.comentario || null);
+                                this.open = false;
+                            }
+                        }">
+                            <button class="btn-accion btn-success" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                                Aprobar con decisión
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Aprobar con decisión — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <div><div class="modal-label">Decisión final <span class="text-red-400">*</span></div>
+                                    <div class="flex gap-3 mt-1">
+                                        <label class="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium cursor-pointer transition-all"
+                                            x-bind:class="decisionFinal === 'mantener' ? 'border-emerald-500 bg-emerald-50 text-emerald-700' : 'border-gray-200 bg-white text-gray-600'">
+                                            <input type="radio" value="mantener" x-model="decisionFinal" class="accent-emerald-500">
+                                            Mantener asignación
+                                        </label>
+                                        <label class="flex items-center gap-2 px-4 py-3 rounded-xl border text-sm font-medium cursor-pointer transition-all"
+                                            x-bind:class="decisionFinal === 'manual' ? 'border-amber-500 bg-amber-50 text-amber-700' : 'border-gray-200 bg-white text-gray-600'">
+                                            <input type="radio" value="manual" x-model="decisionFinal" class="accent-amber-500">
+                                            Re-asignar manualmente
+                                        </label>
+                                    </div></div>
+                                    <div x-show="decisionFinal === 'manual'" x-transition>
+                                        <div class="modal-label">Nuevo monto ($) <span class="text-red-400">*</span></div>
+                                        <input type="number" step="0.01" min="0.01" x-model="montoManual" class="modal-select" placeholder="0.00">
+                                    </div>
+                                    <div><div class="modal-label">Comentario</div>
+                                    <textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario opcional..."></textarea></div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success" @click="confirmar"
+                                            x-bind:disabled="decisionFinal === 'manual' && (!montoManual || montoManual <= 0)">
                                             Confirmar aprobación
                                         </button>
                                     </div>

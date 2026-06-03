@@ -50,8 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
                            + (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
 
             'accepted' => (clone $qTransporte)
-                            ->where('estado', EstadoSolicitudEnum::PRE_APROBADA)
-                            ->whereNotNull('decision_final')
+                            ->where('estado', EstadoSolicitudEnum::APROBADA)
                             ->count()
                         + (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count()
                         + (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
@@ -66,8 +65,7 @@ Route::middleware('auth:sanctum')->group(function () {
                     'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
                     'accepted' => (clone $qTransporte)
-                                    ->where('estado', EstadoSolicitudEnum::PRE_APROBADA)
-                                    ->whereNotNull('decision_final')
+                                    ->where('estado', EstadoSolicitudEnum::APROBADA)
                                     ->count(),
                     'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
                 ],
@@ -198,7 +196,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
         Route::post('solicitudes-combustible/{solicitud}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);
         Route::post('solicitudes-combustible/{solicitud}/rechazar', [SolicitudCombustibleController::class, 'rechazar']);
+
+        // Módulo de Aprobación
+        Route::get('solicitudes-combustible/{solicitud}/comparativa', [SolicitudCombustibleController::class, 'comparativa']);
+        Route::post('solicitudes-combustible/{solicitud}/aprobar-con-decision', [SolicitudCombustibleController::class, 'aprobarConDecision']);
     });
+
+    Route::post('solicitudes-combustible/{solicitud}/asignar-carga', [SolicitudCombustibleController::class, 'asignarCarga'])
+        ->middleware('role:operativo|admin|ti|super_admin');
 
     // Rutas para motoristas
     Route::middleware(['auth:sanctum', 'role:motorista'])

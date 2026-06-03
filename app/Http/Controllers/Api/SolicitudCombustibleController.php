@@ -242,6 +242,67 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
+    public function comparativa(SolicitudCombustible $solicitud)
+    {
+        $this->authorizeJefe();
+
+        return response()->json($this->service->comparativa($solicitud));
+    }
+
+    public function asignarCarga(Request $request, SolicitudCombustible $solicitud)
+    {
+        $this->authorizeOperativo();
+
+        $data = $request->validate([
+            'monto_aprobado' => ['required', 'numeric', 'min:0.01'],
+            'justificacion' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            $result = $this->service->asignarCarga(
+                $solicitud,
+                Auth::id(),
+                $data['monto_aprobado'],
+                $data['justificacion'] ?? null
+            );
+
+            return response()->json([
+                'message' => 'Carga asignada correctamente.',
+                'data' => $result,
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    public function aprobarConDecision(Request $request, SolicitudCombustible $solicitud)
+    {
+        $this->authorizeJefe();
+
+        $data = $request->validate([
+            'decision_final' => ['required', 'in:mantener,manual'],
+            'monto_aprobado' => ['nullable', 'numeric', 'min:0.01'],
+            'comentario' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        try {
+            $result = $this->service->aprobarConDecision(
+                $solicitud,
+                Auth::id(),
+                $data['decision_final'],
+                $data['monto_aprobado'] ?? null,
+                $data['comentario'] ?? null
+            );
+
+            return response()->json([
+                'message' => 'Solicitud aprobada con decisión.',
+                'data' => $result,
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
     // ── HELPERS DE AUTORIZACIÓN ─────────────────────────────────────────────
 
     private function authorizeOwner(SolicitudCombustible $solicitud): void
@@ -255,6 +316,13 @@ class SolicitudCombustibleController extends Controller
     {
         if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal con rol de jefatura.');
+        }
+    }
+
+    private function authorizeOperativo(): void
+    {
+        if (! Auth::user()->hasAnyRole(['operativo', 'admin', 'ti', 'super_admin'])) {
+            abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal operativo.');
         }
     }
 

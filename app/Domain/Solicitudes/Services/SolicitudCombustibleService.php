@@ -7,6 +7,7 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoCombustible;
+use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
@@ -470,6 +471,116 @@ class SolicitudCombustibleService
             $this->registrarEvento($solicitud, AccionBitacoraEnum::RECHAZAR->value, $jefeId, ['motivo' => $motivo]);
 
             return $solicitud;
+        });
+    }
+
+    // ── MÓDULO DE APROBACIÓN (POLIMÓRFICO CON DECISIONOPERATIVA) ──
+
+    public function comparativa(SolicitudCombustible $solicitud): array
+    {
+        $decision = $solicitud->decisionOperativa;
+
+        return [
+            'solicitud' => [
+                'id' => $solicitud->id,
+                'codigo' => $solicitud->codigo,
+                'estado' => $solicitud->estado->value,
+                'vehiculo' => $solicitud->vehiculo?->placa ?? '—',
+                'motorista' => $solicitud->motorista?->nombre ?? '—',
+                'cantidad_estimada' => $solicitud->cantidad_combustible,
+            ],
+            'decision_operativa' => $decision ? [
+                'monto_aprobado' => $decision->monto_aprobado,
+                'justificacion' => $decision->justificacion,
+                'operativo' => $decision->usuarioOperativo?->name,
+                'creado_en' => $decision->created_at?->format('Y-m-d H:i:s'),
+            ] : null,
+        ];
+    }
+
+    public function asignarCarga(
+        SolicitudCombustible $solicitud,
+        int $userId,
+        float $montoAprobado,
+        ?string $justificacion = null
+    ): array {
+        if ($solicitud->estado !== EstadoSolicitudEnum::EN_REVISION) {
+            throw new \DomainException('Solo se puede asignar carga a solicitudes en revisión.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $montoAprobado, $justificacion) {
+            DecisionOperativa::updateOrCreate(
+                [
+                    'decidable_id' => $solicitud->id,
+                    'decidable_type' => SolicitudCombustible::class,
+                ],
+                [
+                    'usuario_operativo_id' => $userId,
+                    'monto_aprobado' => $montoAprobado,
+                    'cambio_detectado' => 'ninguno',
+                    'justificacion' => $justificacion,
+                ]
+            );
+
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR_RECURSOS->value, $userId, [
+                'monto_aprobado' => $montoAprobado,
+            ]);
+
+            return [
+                'monto_aprobado' => $montoAprobado,
+                'estado' => EstadoSolicitudEnum::EN_REVISION->value,
+            ];
+        });
+    }
+
+    public function aprobarConDecision(
+        SolicitudCombustible $solicitud,
+        int $jefeId,
+        string $decisionFinal,
+        ?float $montoAprobado = null,
+        ?string $comentario = null
+    ): array {
+        if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
+            throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
+        }
+
+        if (!in_array($decisionFinal, ['mantener', 'manual'])) {
+            throw new \InvalidArgumentException('decision_final debe ser "mantener" o "manual".');
+        }
+
+        return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
+            $anterior = $solicitud->estado;
+
+            if ($decisionFinal === 'mantener') {
+                $decision = $solicitud->decisionOperativa;
+                if (!$decision) {
+                    throw new \DomainException('No hay asignación del operativo registrada.');
+                }
+                $solicitud->cantidad_combustible = $decision->monto_aprobado;
+            } else {
+                if ($montoAprobado === null || $montoAprobado <= 0) {
+                    throw new \DomainException('Debe especificar un monto aprobado válido.');
+                }
+                $solicitud->cantidad_combustible = $montoAprobado;
+            }
+
+            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
+            $solicitud->aprobador_id = $jefeId;
+            $solicitud->fecha_aprobacion = now();
+            $solicitud->observaciones = $comentario;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
+                'decision_final' => $decisionFinal,
+                'monto_aprobado' => $solicitud->cantidad_combustible,
+            ]);
+
+            return [
+                'success' => true,
+                'estado_final' => EstadoSolicitudEnum::APROBADA->value,
+                'monto_aprobado' => $solicitud->cantidad_combustible,
+            ];
         });
     }
 

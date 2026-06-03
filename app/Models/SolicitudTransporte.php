@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domain\Solicitudes\Services\TicketService;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\MorphOne;
 
 class SolicitudTransporte extends Model
 {
@@ -182,8 +183,8 @@ class SolicitudTransporte extends Model
         return $this->hasOne(SugerenciaAsignacion::class, 'solicitud_id');
     }
 
-    public function decisionOperativa(): HasOne
+    public function decisionOperativa(): MorphOne
     {
-        return $this->hasOne(DecisionOperativa::class, 'solicitud_id');
+        return $this->morphOne(DecisionOperativa::class, 'decidable');
     }
 }
