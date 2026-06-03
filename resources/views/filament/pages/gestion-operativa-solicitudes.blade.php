@@ -4,6 +4,15 @@
 <style>
     @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@400;500&display=swap');
 
+    /* Parche para corregir las flechas repetidas del Select de Filament por minificación */
+    .fi-fo-select select, 
+    .fi-select-input,
+    [multiple], select {
+        background-repeat: no-repeat !important;
+        background-position: right 0.75rem center !important;
+        background-size: 1.5em 1.5em !important;
+    }
+
     .gos-wrap * { font-family: 'DM Sans', sans-serif; }
     .gos-wrap .mono { font-family: 'DM Mono', monospace; }
 
