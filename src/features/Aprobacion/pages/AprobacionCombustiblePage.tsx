@@ -1,0 +1,155 @@
+import React from 'react';
+import { useParams, Link } from 'react-router-dom';
+import { ArrowLeft, CheckCircle, Info } from 'lucide-react';
+import { useAprobacionCombustible } from '../hooks/useAprobacionCombustible';
+import { ColumnaCombustibleSolicitud } from '../components/ColumnaCombustibleSolicitud';
+import { ColumnaCombustibleOperativo } from '../components/ColumnaCombustibleOperativo';
+import { ColumnaCombustibleJefe } from '../components/ColumnaCombustibleJefe';
+
+export default function AprobacionCombustiblePage() {
+  const { id } = useParams();
+  const { 
+    data, 
+    isLoading, 
+    error,
+    decision,
+    setDecision,
+    comentario,
+    setComentario,
+    montoManual,
+    setMontoManual,
+    confirmarAprobacion,
+    handleRechazar,
+    handleDesbloquear,
+    isSubmitting 
+  } = useAprobacionCombustible(id);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 p-8 flex items-center justify-center min-h-[50vh]">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-[#859BFF]"></div>
+      </div>
+    );
+  }
+
+  if (error || !data) {
+    return (
+      <div className="flex-1 p-8 flex flex-col items-center justify-center min-h-[50vh]">
+        <p className="text-danger mb-4 font-medium">{error || 'Solicitud no encontrada'}</p>
+        <Link to="/" className="text-[#859BFF] hover:underline flex items-center gap-2">
+          <ArrowLeft size={16} /> Volver al Dashboard
+        </Link>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex-1 p-8 pb-32 max-w-[1400px] mx-auto bg-slate-50 min-h-screen">
+      {/* Header */}
+      <div className="mb-6 border-b border-slate-200 pb-4">
+        <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-3">
+          <ArrowLeft size={16} /> Volver al Dashboard
+        </Link>
+        <div className="flex justify-between items-start">
+          <div>
+            <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
+              Aprobación de Combustible <span className="text-slate-500 font-medium">#{data.solicitud.id}</span>
+            </h1>
+            <p className="text-slate-500 mt-1 text-sm">Revisa la asignación del operativo y aprueba o modifica el monto.</p>
+          </div>
+        </div>
+      </div>
+
+      {/* Banner de decisión previa */}
+      {data.solicitud.decision_final && (
+        <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start gap-3">
+          <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
+          <div>
+            <h4 className="font-bold text-blue-900">Solicitud pre-aprobada</h4>
+            <p className="text-sm text-blue-800 mt-1">
+              Esta solicitud ya fue gestionada. Puedes modificarla o regresar al dashboard.
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* 3 Columns Layout (Combustible) */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+        <ColumnaCombustibleSolicitud solicitud={data.solicitud} />
+        
+        <ColumnaCombustibleOperativo 
+          data={data.operativo} 
+          isSelected={decision === 'operativo'}
+          isFaded={decision === 'jefe'}
+          onSelect={() => setDecision('operativo')}
+        />
+        
+        <ColumnaCombustibleJefe 
+          montoActual={montoManual}
+          onMontoChange={setMontoManual}
+          isSelected={decision === 'jefe'}
+          isFaded={decision === 'operativo'}
+          onSelect={() => setDecision('jefe')}
+        />
+      </div>
+
+      {/* Footer Actions */}
+      <div className="fixed bottom-0 left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-10 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)]">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 flex items-center justify-center border border-slate-200">
+            <CheckCircle size={20} />
+          </div>
+          <div>
+            <h4 className="font-bold text-slate-800 text-md tracking-tight">Paso Final</h4>
+            <p className="text-xs text-slate-500">Selecciona una opción arriba e ingresa un comentario opcional.</p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-3">
+          <input 
+            type="text" 
+            placeholder="Comentario (requerido para rechazar)"
+            className="px-3 py-2 border border-slate-300 rounded text-sm w-72 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
+            value={comentario}
+            onChange={(e) => setComentario(e.target.value)}
+          />
+
+          <button 
+            onClick={handleRechazar}
+            disabled={isSubmitting || !comentario.trim()}
+            className="px-4 py-2 bg-white border border-danger text-danger font-medium rounded hover:bg-danger/5 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed"
+          >
+            Rechazar
+          </button>
+          
+          {data.solicitud.decision_final && (
+            <button 
+              onClick={handleDesbloquear}
+              disabled={isSubmitting}
+              className="px-4 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors text-sm underline disabled:opacity-60 disabled:cursor-not-allowed"
+            >
+              Desbloquear (Reset)
+            </button>
+          )}
+          
+          <button 
+            onClick={confirmarAprobacion}
+            disabled={isSubmitting || decision === 'ninguna' || (decision === 'jefe' && (!montoManual || montoManual <= 0))}
+            className={`px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm ${
+              decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
+              decision === 'jefe' ? 'bg-success hover:bg-success-hover' :
+              'bg-slate-300 cursor-not-allowed'
+            } disabled:opacity-60 disabled:cursor-not-allowed`}
+          >
+            {isSubmitting ? 'Procesando...' : 
+             (data.solicitud.decision_final ? 'Actualizar Aprobación' :
+              (decision === 'operativo' ? 'Aprobar (Monto Operativo)' : 
+               decision === 'jefe' ? 'Aprobar (Nuevo Monto)' : 
+               'Seleccionar opción')
+             )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}

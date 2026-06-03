@@ -74,7 +74,10 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
               preAprobadas.map((req, idx) => (
                 <tr 
                   key={idx} 
-                  onClick={() => navigate(`/aprobaciones/${req.id || req.code}`)}
+                  onClick={() => {
+                    const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                    navigate(`${basePath}/${req.id || req.code}`);
+                  }}
                   className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"
                 >
                   <td className="py-5 px-6 flex items-center gap-2">

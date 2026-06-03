@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import AprobacionPage from './features/Aprobacion/pages/AprobacionPage';
+import AprobacionCombustiblePage from './features/Aprobacion/pages/AprobacionCombustiblePage';
 import { AprobacionDashboardPage } from './features/Aprobacion/pages/AprobacionDashboardPage';
 import LoginPage from './features/Auth/pages/LoginPage';
 import { useAuth } from './features/Auth/context/AuthContext';
@@ -27,6 +28,8 @@ function App() {
           <Route index element={<AprobacionDashboardPage />} />
           <Route path="aprobaciones/:id" element={<AprobacionPage />} />
           <Route path="aprobaciones" element={<AprobacionPage />} />
+          <Route path="combustible/aprobaciones/:id" element={<AprobacionCombustiblePage />} />
+          <Route path="combustible/aprobaciones" element={<AprobacionCombustiblePage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

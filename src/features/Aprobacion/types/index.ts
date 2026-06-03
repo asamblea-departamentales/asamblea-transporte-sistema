@@ -56,3 +56,29 @@ export interface AprobacionState {
   decision: DecisionType;
   comentario: string;
 }
+
+// === TIPOS PARA COMBUSTIBLE ===
+
+export interface SolicitudCombustibleDetalle {
+  id: string;
+  solicitante: string;
+  vehiculo: string;
+  placa: string;
+  motivo: string;
+  fecha_solicitud: string;
+  decision_final?: 'operativo' | 'jefe' | null;
+  comentario_jefe?: string | null;
+}
+
+export interface AsignacionOperativoCombustible {
+  autor: string;
+  monto_aprobado: number;
+  justificacion: string;
+}
+
+export interface ComparativaCombustibleResponse {
+  solicitud: SolicitudCombustibleDetalle;
+  operativo: AsignacionOperativoCombustible | null;
+}
+
+export type DecisionCombustibleType = 'operativo' | 'jefe' | 'ninguna';
