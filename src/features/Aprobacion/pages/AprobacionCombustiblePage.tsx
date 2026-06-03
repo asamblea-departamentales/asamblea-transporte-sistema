@@ -107,7 +107,7 @@ export default function AprobacionCombustiblePage() {
         <div className="flex items-center gap-3">
           <input 
             type="text" 
-            placeholder="Comentario (requerido para rechazar)"
+            placeholder="Comentario (obligatorio)"
             className="px-3 py-2 border border-slate-300 rounded text-sm w-72 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
             value={comentario}
             onChange={(e) => setComentario(e.target.value)}
@@ -133,7 +133,7 @@ export default function AprobacionCombustiblePage() {
           
           <button 
             onClick={confirmarAprobacion}
-            disabled={isSubmitting || decision === 'ninguna' || (decision === 'jefe' && (!montoManual || montoManual <= 0))}
+            disabled={isSubmitting || decision === 'ninguna' || !comentario.trim() || (decision === 'jefe' && (!montoManual || montoManual <= 0))}
             className={`px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm ${
               decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
               decision === 'jefe' ? 'bg-success hover:bg-success-hover' :
