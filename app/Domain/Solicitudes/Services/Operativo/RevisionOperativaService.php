@@ -176,6 +176,7 @@ class RevisionOperativaService
                 'fecha_ingreso' => optional($r->updated_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
                 'unidad' => $r->unidad?->nombre ?? '—',
+                'tipo_vehiculo_nombre' => $r->tipo_vehiculo_nombre,
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,

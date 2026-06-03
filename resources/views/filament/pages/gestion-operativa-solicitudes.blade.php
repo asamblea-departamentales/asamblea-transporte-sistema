@@ -317,6 +317,9 @@
                     <div class="meta-grid">
                         <div><div class="meta-label">Solicitante</div><div class="meta-value">{{ $row['solicitante'] }}</div></div>
                         <div><div class="meta-label">Unidad</div><div class="meta-value">{{ $row['unidad'] }}</div></div>
+                        @if($row['tipo'] === 'transporte' && !empty($row['tipo_vehiculo_nombre']))
+                        <div><div class="meta-label">Vehículo pedido</div><div class="meta-value">{{ $row['tipo_vehiculo_nombre'] }}</div></div>
+                        @endif
                         <div><div class="meta-label">ID</div><div class="meta-value mono">{{ $row['id'] }}</div></div>
                         <div>
                             <div class="meta-label">Asignado a</div>
@@ -417,6 +420,11 @@
                                     <h2 class="text-base font-semibold text-gray-900 dark:text-white">
                                         Asignar recursos — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
                                     </h2>
+                                    @if(!empty($row['tipo_vehiculo_nombre']))
+                                    <div class="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                                        Solicitó: <strong>{{ $row['tipo_vehiculo_nombre'] }}</strong>
+                                    </div>
+                                    @endif
                                     <div><div class="modal-label">Vehículo <span class="text-red-400">*</span></div>
                                     <select x-model="vehiculoId" class="modal-select">
                                         <option value="">Seleccione un vehículo</option>
