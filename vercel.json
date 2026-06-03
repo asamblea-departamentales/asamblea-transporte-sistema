@@ -1,6 +1,10 @@
 {
   "rewrites": [
     {
+      "source": "/api/(.*)",
+      "destination": "https://TU_BACKEND_REAL.com/api/$1"
+    },
+    {
       "source": "/(.*)",
       "destination": "/index.html"
     }
