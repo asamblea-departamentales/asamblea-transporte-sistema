@@ -36,7 +36,14 @@ export const dashboardApi = {
       // Intentamos llamar al nuevo endpoint dedicado
       const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
       const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-      return { data: rawData };
+      const mappedData: RecentRequest[] = rawData.map((item: any) => ({
+        id: item.id?.toString() || '',
+        code: item.codigo || item.code || '',
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
+        type: item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte'),
+        status: item.estado || item.status || ''
+      }));
+      return { data: mappedData };
     } catch (_e) {
       // Fallback temporal: usar el endpoint de recientes
       try {
