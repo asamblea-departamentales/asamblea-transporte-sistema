@@ -42,6 +42,8 @@ export default function AprobacionCombustiblePage() {
     );
   }
 
+  const solicitud = data.solicitud || data;
+
   return (
     <div className="flex-1 p-4 md:p-8 pb-48 md:pb-32 max-w-[1400px] mx-auto bg-slate-50 min-h-screen">
       {/* Header */}
@@ -52,7 +54,7 @@ export default function AprobacionCombustiblePage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Aprobación de Combustible <span className="text-slate-500 font-medium">#{data.solicitud.id}</span>
+              Aprobación de Combustible <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Revisa la asignación del operativo y aprueba o modifica el monto.</p>
           </div>
@@ -60,7 +62,7 @@ export default function AprobacionCombustiblePage() {
       </div>
 
       {/* Banner de decisión previa */}
-      {data.solicitud.decision_final && (
+      {solicitud.decision_final && (
         <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start gap-3">
           <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
           <div>
@@ -74,7 +76,7 @@ export default function AprobacionCombustiblePage() {
 
       {/* 3 Columns Layout (Combustible) */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
-        <ColumnaCombustibleSolicitud solicitud={data.solicitud} />
+        <ColumnaCombustibleSolicitud solicitud={solicitud} />
         
         <ColumnaCombustibleOperativo 
           data={data.operativo} 
@@ -122,7 +124,7 @@ export default function AprobacionCombustiblePage() {
               Rechazar
             </button>
             
-            {data.solicitud.decision_final && (
+            {solicitud.decision_final && (
               <button 
                 onClick={handleDesbloquear}
                 disabled={isSubmitting}
@@ -142,7 +144,7 @@ export default function AprobacionCombustiblePage() {
               } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               {isSubmitting ? 'Procesando...' : 
-               (data.solicitud.decision_final ? 'Actualizar' :
+               (solicitud.decision_final ? 'Actualizar' :
                 (decision === 'operativo' ? 'Aprobar (Operativo)' : 
                  decision === 'jefe' ? 'Aprobar (Nuevo)' : 
                  'Seleccionar')

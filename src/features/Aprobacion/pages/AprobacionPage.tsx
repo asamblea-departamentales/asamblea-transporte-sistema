@@ -41,6 +41,8 @@ export default function AprobacionPage() {
     );
   }
 
+  const solicitud = data.solicitud || data;
+
   return (
     <div className="flex-1 p-4 md:p-8 pb-48 md:pb-32 max-w-[1400px] mx-auto bg-slate-50 min-h-screen">
       {/* Header */}
@@ -51,7 +53,7 @@ export default function AprobacionPage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Aprobación de Solicitud <span className="text-slate-500 font-medium">#{data.solicitud.id}</span>
+              Aprobación de Solicitud <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Revisa la información del viaje y elige la asignación adecuada.</p>
           </div>
@@ -59,13 +61,13 @@ export default function AprobacionPage() {
       </div>
 
       {/* Banner de decisión previa */}
-      {data.solicitud.decision_final && (
+      {solicitud.decision_final && (
         <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start gap-3">
           <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
           <div>
             <h4 className="font-bold text-blue-900 text-sm md:text-base">Solicitud consolidada</h4>
             <p className="text-xs md:text-sm text-blue-800 mt-1">
-              Esta solicitud ya fue pre-aprobada con la opción <span className="font-bold uppercase">{data.solicitud.decision_final}</span>. 
+              Esta solicitud ya fue pre-aprobada con la opción <span className="font-bold uppercase">{solicitud.decision_final}</span>. 
               Puedes actualizar la decisión o <strong>Programar el Viaje</strong> definitivamente.
             </p>
           </div>
@@ -74,7 +76,7 @@ export default function AprobacionPage() {
 
       {/* 3 Columns Layout */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
-        <ColumnaViaje solicitud={data.solicitud} />
+        <ColumnaViaje solicitud={solicitud} />
         
         <ColumnaOperativo 
           data={data.operativo} 
@@ -121,7 +123,7 @@ export default function AprobacionPage() {
               Rechazar
             </button>
             
-            {data.solicitud.decision_final && (
+            {solicitud.decision_final && (
               <button 
                 onClick={handleDesbloquear}
                 disabled={isSubmitting}
@@ -141,14 +143,14 @@ export default function AprobacionPage() {
               } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               {isSubmitting ? 'Procesando...' : 
-               (data.solicitud.decision_final ? 'Actualizar' :
+               (solicitud.decision_final ? 'Actualizar' :
                 (decision === 'operativo' ? 'Aprobar Manual' : 
                  decision === 'sistema' ? 'Aprobar Sistema' : 
                  'Seleccionar')
                )}
             </button>
             
-            {data.solicitud.decision_final && (
+            {solicitud.decision_final && (
               <button 
                 onClick={handleProgramar}
                 disabled={isSubmitting}
