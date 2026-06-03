@@ -48,7 +48,8 @@ export const dashboardApi = {
         // Filtrar: excluir pre_aprobadas (esas son para la pantalla de "Por Aprobar")
         const filteredData = rawData.filter((req: RecentRequest) => {
           if (!req.status) return false;
-          const s = req.status.toLowerCase();
+          const statusVal = typeof req.status === 'string' ? req.status : (req.status as any).value || '';
+          const s = statusVal.toLowerCase();
           // Excluir pre_aprobada primero (contiene la palabra "aprobada")
           if (s.includes('pre')) return false;
           return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada');

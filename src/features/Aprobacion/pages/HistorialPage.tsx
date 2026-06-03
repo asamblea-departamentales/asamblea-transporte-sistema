@@ -35,10 +35,11 @@ export const HistorialPage: React.FC = () => {
 
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
-      result = result.filter(req => 
-        req.code.toLowerCase().includes(lowerSearch) || 
-        (req.type && req.type.toLowerCase().includes(lowerSearch))
-      );
+      result = result.filter(req => {
+        const code = typeof req.code === 'string' ? req.code : '';
+        const type = typeof req.type === 'string' ? req.type : '';
+        return code.toLowerCase().includes(lowerSearch) || type.toLowerCase().includes(lowerSearch);
+      });
     }
 
     if (dateFilter !== 'todos') {
@@ -61,10 +62,12 @@ export const HistorialPage: React.FC = () => {
   }, [searchTerm, dateFilter, requests]);
 
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status?: any) => {
+    if (!status) return <span className="text-slate-400">-</span>;
     let colorClass = "border-slate-200 text-slate-600";
     let dotClass = "bg-slate-500";
-    let text = status.toLowerCase();
+    const statusVal = typeof status === 'string' ? status : status.value || '';
+    let text = statusVal.toLowerCase();
 
     if (text.includes('aprobada')) {
       colorClass = "border-emerald-200 text-emerald-600";
