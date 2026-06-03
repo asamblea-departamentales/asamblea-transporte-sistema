@@ -437,8 +437,20 @@ class SolicitudTransporteResource extends Resource
                 Tables\Columns\TextColumn::make('prioridad_grupo')
                     ->label('Prioridad Grupo')
                     ->badge()
-                    ->color(fn ($state) => ($state instanceof \App\Domain\Solicitudes\Enums\NivelPrioridadEnum ? $state : \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state))?->color() ?? 'gray')
-                    ->formatStateUsing(fn ($state) => ($state instanceof \App\Domain\Solicitudes\Enums\NivelPrioridadEnum ? $state : \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($state))?->label() ?? 'Baja')
+                    ->color(function ($state) {
+                        if ($state instanceof \App\Domain\Solicitudes\Enums\NivelPrioridadEnum) {
+                            return $state->color() ?? 'gray';
+                        }
+                        $value = is_object($state) ? ($state->value ?? null) : $state;
+                        return \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($value)?->color() ?? 'gray';
+                    })
+                    ->formatStateUsing(function ($state) {
+                        if ($state instanceof \App\Domain\Solicitudes\Enums\NivelPrioridadEnum) {
+                            return $state->label() ?? 'Baja';
+                        }
+                        $value = is_object($state) ? ($state->value ?? null) : $state;
+                        return \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::tryFrom($value)?->label() ?? 'Baja';
+                    })
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('prioridad')
