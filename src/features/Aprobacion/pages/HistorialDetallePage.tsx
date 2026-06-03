@@ -170,7 +170,7 @@ export default function HistorialDetallePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Detalle de Solicitud <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
+              Detalle de Solicitud <span className="text-slate-500 font-medium">#{raw.id || comp.id || id}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Información completa del viaje procesado.</p>
           </div>
