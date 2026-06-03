@@ -11,18 +11,26 @@ export const AprobacionDashboardPage: React.FC = () => {
 
   useEffect(() => {
     const fetchData = async () => {
+      // Cargar independientemente para que si uno falla, el otro siga funcionando
       try {
-        const [sumData, reqData] = await Promise.all([
-          dashboardApi.getSummary(),
-          dashboardApi.getRecentRequests()
-        ]);
+        const sumData = await dashboardApi.getSummary();
         setSummary(sumData);
-        setRequests(reqData.data);
       } catch (error) {
-        console.error("Error fetching dashboard data", error);
-      } finally {
-        setIsLoading(false);
+        console.error("Error fetching summary", error);
+        // Mostrar valores en 0 para que no quede vacío
+        setSummary({ pending: 0, in_progress: 0, accepted: 0, completed: 0 });
       }
+
+      try {
+        const reqData = await dashboardApi.getRecentRequests();
+        const rows = Array.isArray(reqData) ? reqData : (reqData.data || []);
+        setRequests(rows);
+      } catch (error) {
+        console.error("Error fetching recent requests", error);
+        setRequests([]);
+      }
+
+      setIsLoading(false);
     };
 
     fetchData();

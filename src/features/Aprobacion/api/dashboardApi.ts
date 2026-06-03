@@ -33,21 +33,30 @@ export const dashboardApi = {
   // TODO: Reemplazar el endpoint cuando el backend libere /api/solicitudes/historial-jefatura
   getHistorialJefatura: async (): Promise<{ data: RecentRequest[] }> => {
     try {
-      // Intentamos llamar al nuevo endpoint
+      // Intentamos llamar al nuevo endpoint dedicado
       const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
-      return response.data;
-    } catch (e) {
-      // Fallback temporal: usar el endpoint de recientes y filtrar en frontend
-      const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/recientes');
-      
-      const filteredData = response.data.data.filter(req => {
-        if (!req.status) return false;
-        const s = req.status.toLowerCase();
-        // Mostrar aprobadas, rechazadas, programadas, completadas
-        return !s.includes('pre') && (s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada'));
-      });
-      
-      return { data: filteredData };
+      const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+      return { data: rawData };
+    } catch (_e) {
+      // Fallback temporal: usar el endpoint de recientes
+      try {
+        const response = await axiosClient.get('/solicitudes/recientes');
+        const rawData: RecentRequest[] = Array.isArray(response.data)
+          ? response.data
+          : (response.data?.data || []);
+
+        // Filtrar: excluir pre_aprobadas (esas son para la pantalla de "Por Aprobar")
+        const filteredData = rawData.filter((req: RecentRequest) => {
+          if (!req.status) return false;
+          const s = req.status.toLowerCase();
+          return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada');
+        });
+
+        return { data: filteredData };
+      } catch (_e2) {
+        // Si todo falla, devolvemos vacío para no crashear
+        return { data: [] };
+      }
     }
   }
 };

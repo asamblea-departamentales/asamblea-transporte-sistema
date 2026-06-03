@@ -3,6 +3,7 @@ import AprobacionPage from './features/Aprobacion/pages/AprobacionPage';
 import AprobacionCombustiblePage from './features/Aprobacion/pages/AprobacionCombustiblePage';
 import { AprobacionDashboardPage } from './features/Aprobacion/pages/AprobacionDashboardPage';
 import { HistorialPage } from './features/Aprobacion/pages/HistorialPage';
+import HistorialDetallePage from './features/Aprobacion/pages/HistorialDetallePage';
 import LoginPage from './features/Auth/pages/LoginPage';
 import { useAuth } from './features/Auth/context/AuthContext';
 import { DashboardLayout } from './shared/components/DashboardLayout';
@@ -28,6 +29,7 @@ function App() {
         <Route path="/" element={<DashboardLayout />}>
           <Route index element={<AprobacionDashboardPage />} />
           <Route path="historial" element={<HistorialPage />} />
+          <Route path="historial/:id" element={<HistorialDetallePage />} />
           <Route path="aprobaciones/:id" element={<AprobacionPage />} />
           <Route path="aprobaciones" element={<AprobacionPage />} />
           <Route path="combustible/aprobaciones/:id" element={<AprobacionCombustiblePage />} />
