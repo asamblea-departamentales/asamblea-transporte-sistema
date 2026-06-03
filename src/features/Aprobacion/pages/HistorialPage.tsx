@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { dashboardApi, RecentRequest } from '../../api/dashboardApi';
+import { dashboardApi, RecentRequest } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 import { History, Search, Calendar, Filter } from 'lucide-react';
 
