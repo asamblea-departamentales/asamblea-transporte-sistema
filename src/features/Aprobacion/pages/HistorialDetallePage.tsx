@@ -25,15 +25,33 @@ export default function HistorialDetallePage() {
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const response = await axiosClient.get(`/solicitudes-transporte/${id}/comparativa`);
-        setData(response.data);
-      } catch (_err: any) {
+        let showData = null;
+        let compData = null;
+
+        // 1. Obtener los datos reales finales (estado, asignación real)
         try {
-          const response = await axiosClient.get(`/solicitudes-transporte/${id}`);
-          setData({ solicitud: response.data.data || response.data });
-        } catch (err2: any) {
-          setError(err2.response?.data?.message || 'No se pudo cargar el detalle de la solicitud.');
+          const showRes = await axiosClient.get(`/solicitudes-transporte/${id}`);
+          showData = showRes.data.data || showRes.data;
+        } catch (e) {
+          console.error('Error fetching show data', e);
         }
+
+        // 2. Obtener la comparativa (para datos de sugerencias si aplica)
+        try {
+          const compRes = await axiosClient.get(`/solicitudes-transporte/${id}/comparativa`);
+          compData = compRes.data;
+        } catch (e) {
+          console.error('Error fetching comparativa data', e);
+        }
+
+        if (!showData && !compData) {
+          setError('No se pudo cargar el detalle de la solicitud.');
+          return;
+        }
+
+        setData({ raw: showData, comparativa: compData });
+      } catch (err: any) {
+        setError(err.response?.data?.message || 'Error inesperado al cargar.');
       } finally {
         setIsLoading(false);
       }
@@ -106,8 +124,12 @@ export default function HistorialDetallePage() {
     );
   }
 
-  const solicitud = data.solicitud || data;
-  const status = (solicitud.status || solicitud.estado || '').toLowerCase();
+  const raw = data.raw || {};
+  const comp = data.comparativa?.solicitud || {};
+  
+  // Preferimos raw porque es la fuente de la verdad para solicitudes ya aprobadas
+  const statusRaw = raw.estado || raw.status || comp.status || comp.estado || '';
+  const status = typeof statusRaw === 'string' ? statusRaw.toLowerCase() : (statusRaw.value || '').toLowerCase();
   
   const isAprobada = status.includes('aprobada') || status.includes('programada');
   const isRechazada = status.includes('rechazada');
@@ -115,12 +137,28 @@ export default function HistorialDetallePage() {
   const getStatusColor = () => {
     if (isAprobada) return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Aprobada' };
     if (isRechazada) return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', dot: 'bg-red-500', label: 'Rechazada' };
-    return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', dot: 'bg-slate-500', label: status };
+    return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', dot: 'bg-slate-500', label: status || 'Desconocido' };
   };
 
   const statusInfo = getStatusColor();
-  const fechaSalida = solicitud.fechas?.salida ? new Date(solicitud.fechas.salida) : null;
+  const fechaSalidaVal = raw.fecha_salida || comp.fechas?.salida;
+  const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
+  const fechaSalida = fechaSalidaVal ? new Date(fechaSalidaVal) : null;
+  
   const canReasignar = isAprobada && fechaSalida && fechaSalida > new Date();
+
+  // Valores a mostrar
+  const solicitanteName = raw.solicitante?.nombre || raw.solicitante || comp.solicitante || 'N/A';
+  const destino = raw.destino || comp.destino || 'N/A';
+  const horasEstimadas = raw.horas_estimadas || comp.horas_estimadas || 0;
+  const motivo = raw.motivo || comp.motivo || 'Sin motivo';
+  const decisionFinal = raw.decision_final || comp.decision_final || status;
+  
+  // Si fue aprobado manual, no tomar lo sugerido por operativo. Tomar la asignación final del motorista_id/vehiculo_id de raw
+  const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || 'Sin asignar';
+  const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
+  const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
+  const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || 'Sin comentario';
 
   return (
     <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-5xl mx-auto">
@@ -170,13 +208,13 @@ export default function HistorialDetallePage() {
           <div className="space-y-4">
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Solicitante</p>
-              <p className="text-sm text-slate-800 font-medium">{solicitud.solicitante || 'N/A'}</p>
+              <p className="text-sm text-slate-800 font-medium">{solicitanteName}</p>
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                 <MapPin size={12} /> Destino
               </p>
-              <p className="text-sm text-slate-800 font-medium">{solicitud.destino || 'N/A'}</p>
+              <p className="text-sm text-slate-800 font-medium">{destino}</p>
             </div>
             <div className="grid grid-cols-2 gap-px bg-slate-200 border border-slate-200 overflow-hidden rounded-lg">
               <div className="bg-slate-50 p-3">
@@ -184,7 +222,7 @@ export default function HistorialDetallePage() {
                   <Calendar size={12} /> Salida
                 </p>
                 <p className="text-xs text-slate-800 font-medium">
-                  {solicitud.fechas?.salida ? new Date(solicitud.fechas.salida).toLocaleString() : 'N/A'}
+                  {fechaSalidaVal ? new Date(fechaSalidaVal).toLocaleString() : 'N/A'}
                 </p>
               </div>
               <div className="bg-slate-50 p-3">
@@ -192,7 +230,7 @@ export default function HistorialDetallePage() {
                   <Calendar size={12} /> Retorno
                 </p>
                 <p className="text-xs text-slate-800 font-medium">
-                  {solicitud.fechas?.retorno ? new Date(solicitud.fechas.retorno).toLocaleString() : 'N/A'}
+                  {fechaRetornoVal ? new Date(fechaRetornoVal).toLocaleString() : 'N/A'}
                 </p>
               </div>
             </div>
@@ -200,12 +238,12 @@ export default function HistorialDetallePage() {
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
                 <Clock size={12} /> Horas Estimadas
               </p>
-              <p className="text-sm text-slate-800 font-medium">{solicitud.horas_estimadas || 0} hrs</p>
+              <p className="text-sm text-slate-800 font-medium">{horasEstimadas} hrs</p>
             </div>
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo</p>
               <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200 italic">
-                "{solicitud.motivo || 'Sin motivo'}"
+                "{motivo}"
               </p>
             </div>
           </div>
@@ -223,7 +261,7 @@ export default function HistorialDetallePage() {
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Decisión</p>
               <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold capitalize ${isAprobada ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
-                {solicitud.decision_final || status}
+                {decisionFinal}
               </span>
             </div>
 
@@ -232,7 +270,7 @@ export default function HistorialDetallePage() {
                 <User size={12} /> Motorista Asignado
               </p>
               <p className="text-sm text-slate-800 font-medium">
-                {data.operativo?.motorista?.nombre || solicitud.motorista_nombre || 'Sin asignar'}
+                {motoristaFinal}
               </p>
             </div>
 
@@ -241,11 +279,11 @@ export default function HistorialDetallePage() {
                 <Car size={12} /> Vehículo Asignado
               </p>
               <p className="text-sm text-slate-800 font-medium">
-                {data.operativo?.vehiculo?.placa || solicitud.vehiculo_placa || 'Sin asignar'}
+                {vehiculoFinal}
               </p>
-              {(data.operativo?.vehiculo?.marca || solicitud.vehiculo_marca) && (
+              {vehiculoMarca && (
                 <p className="text-xs text-slate-500">
-                  {data.operativo?.vehiculo?.marca || solicitud.vehiculo_marca}
+                  {vehiculoMarca}
                 </p>
               )}
             </div>
@@ -253,7 +291,7 @@ export default function HistorialDetallePage() {
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Comentario del Jefe</p>
               <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200 italic">
-                "{solicitud.comentario_jefe || 'Sin comentario'}"
+                "{comentarioJefe}"
               </p>
             </div>
           </div>
