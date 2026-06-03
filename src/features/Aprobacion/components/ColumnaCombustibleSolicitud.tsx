@@ -1,6 +1,6 @@
 import React from 'react';
 import { SolicitudCombustibleDetalle } from '../types';
-import { FileText, Fuel, Calendar, Car } from 'lucide-react';
+import { Fuel, Calendar, Car } from 'lucide-react';
 
 interface ColumnaCombustibleSolicitudProps {
   solicitud: SolicitudCombustibleDetalle;
