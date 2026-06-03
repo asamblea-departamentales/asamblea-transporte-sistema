@@ -49,6 +49,8 @@ export const dashboardApi = {
         const filteredData = rawData.filter((req: RecentRequest) => {
           if (!req.status) return false;
           const s = req.status.toLowerCase();
+          // Excluir pre_aprobada primero (contiene la palabra "aprobada")
+          if (s.includes('pre')) return false;
           return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada');
         });
 
