@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin, Shield, RefreshCw, Wifi, WifiOff, CheckCircle2, Play, CircleDot, Truck } from "lucide-react";
 import { toast } from "sonner";
-import { getViajesMes } from "./viajes.service";
+import { getViajesMes, iniciarViaje, registrarLlegadaViaje, iniciarRetornoViaje, finalizarViaje } from "./viajes.service";
 import type { ViajeAsignado } from "./viajes.service";
 
 // Interfaces de Tipo
@@ -77,22 +77,38 @@ export default function ViajeActivoPage() {
 
           setViaje(found);
           
-          // Inicializar fase basada en el estado del viaje si corresponde
-          if (found.estado === "EN_EJECUCION") {
-            // Leer estado guardado en localstorage para este viaje específico si existe
-            const savedFase = localStorage.getItem(`viaje_fase_${id}`);
-            const savedTiempos = localStorage.getItem(`viaje_tiempos_${id}`);
+          // Reconstruir fase con datos reales del backend
+          if (found.estado === "COMPLETADA") {
+             setFaseActual(4);
+          } else if (found.estado === "EN_EJECUCION") {
+            let fase = 1;
+            if (found.fecha_inicio_retorno) fase = 3;
+            else if (found.fecha_llegada_destino) fase = 2;
+            else if (found.fecha_salida_real) fase = 1;
             
-            if (savedFase) {
-              setFaseActual(Number(savedFase));
-            } else {
-              setFaseActual(1); // Default a Ida
-            }
-
-            if (savedTiempos) {
-              setTiempos(JSON.parse(savedTiempos));
-            }
+            setFaseActual(fase);
+          } else {
+            setFaseActual(0);
           }
+
+          // Función helper para formatear hora
+          const formatTime = (isoString?: string) => {
+            if (!isoString) return null;
+            const d = new Date(isoString.replace(' ', 'T'));
+            if (isNaN(d.getTime())) return null;
+            return d.toLocaleTimeString("es-SV", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+          };
+
+          setTiempos({
+            salida: formatTime(found.fecha_salida_real),
+            llegada: formatTime(found.fecha_llegada_destino),
+            retorno: formatTime(found.fecha_inicio_retorno),
+            fin: null // El backend aún no devuelve fecha_retorno_real
+          });
+          
+          // Cargar offline queue inicial
+          const q = JSON.parse(localStorage.getItem('viaje_offline_queue') || '[]');
+          setColaSincronizacion(q);
         } else {
           toast.error("Asignación de viaje no encontrada");
         }
@@ -114,21 +130,34 @@ export default function ViajeActivoPage() {
     }
   }, [faseActual, tiempos, id, viaje]);
 
-  // Monitor de conexión de red
+  // Monitor de conexión de red y Sincronizador Offline
   useEffect(() => {
-    const handleOnline = () => {
+    const handleOnline = async () => {
       setIsOnline(true);
-      toast.success("Señal de Internet Recuperada", {
-        description: "Conectado al servidor. Sincronizando datos de ruta...",
-      });
-      // Sincronizar cola de LocalStorage
-      if (colaSincronizacion.length > 0) {
-        setTimeout(() => {
+      
+      const q = JSON.parse(localStorage.getItem('viaje_offline_queue') || '[]');
+      if (q.length > 0) {
+        toast.info("Señal Recuperada. Sincronizando...", {
+          description: `Enviando ${q.length} registros pendientes al servidor.`,
+        });
+        
+        try {
+          for (const item of q) {
+            if (item.action === 1) await iniciarViaje(item.id);
+            else if (item.action === 2) await registrarLlegadaViaje(item.id);
+            else if (item.action === 3) await iniciarRetornoViaje(item.id);
+            else if (item.action === 4) await finalizarViaje(item.id);
+          }
+          localStorage.removeItem('viaje_offline_queue');
           setColaSincronizacion([]);
           toast.success("Sincronización Completa", {
-            description: "Todos los tiempos reales de conducción han sido consolidados.",
+            description: "Todos los tiempos de conducción han sido consolidados exitosamente.",
           });
-        }, 1500);
+        } catch (e) {
+          toast.error("Hubo un error al sincronizar algunos registros. Se reintentará luego.");
+        }
+      } else {
+        toast.success("Señal de Internet Recuperada");
       }
     };
 
@@ -148,7 +177,7 @@ export default function ViajeActivoPage() {
   }, [colaSincronizacion]);
 
   // ─── Lógica de Clic y Transición de Estados ───
-  const procesarTransicion = () => {
+  const procesarTransicion = async () => {
     const now = new Date();
     const formattedTime = now.toLocaleTimeString("es-SV", {
       hour: "2-digit",
@@ -159,18 +188,32 @@ export default function ViajeActivoPage() {
 
     const proximaFase = faseActual + 1;
     
-    // Si no hay red, guardar en la cola de LocalStorage
     if (!isOnline) {
-      setColaSincronizacion((prev) => [
-        ...prev,
-        { fase: proximaFase, timestamp: now.toISOString() }
-      ]);
-      toast.info("💾 Registro guardado en LocalStorage", {
-        description: "Clic registrado fuera de línea. Sincronización pendiente."
+      // MODO OFFLINE: Guardar acción en la cola local
+      const q = JSON.parse(localStorage.getItem('viaje_offline_queue') || '[]');
+      q.push({ id, action: proximaFase, timestamp: now.toISOString() });
+      localStorage.setItem('viaje_offline_queue', JSON.stringify(q));
+      setColaSincronizacion(q);
+      
+      toast.info("💾 Registro guardado en Cola Offline", {
+        description: "Se enviará automáticamente cuando recuperes la señal."
       });
+    } else {
+      // MODO ONLINE: Enviar acción al backend
+      try {
+        if (proximaFase === 1) await iniciarViaje(id!);
+        else if (proximaFase === 2) await registrarLlegadaViaje(id!);
+        else if (proximaFase === 3) await iniciarRetornoViaje(id!);
+        else if (proximaFase === 4) await finalizarViaje(id!);
+      } catch (err: any) {
+        toast.error("Error al conectar con el servidor", {
+           description: err.response?.data?.message || "La acción falló. Revisa tu conexión."
+        });
+        return; // Detener ejecución si falla y hay internet
+      }
     }
 
-    // Actualizar timestamps locales
+    // Actualizar timestamps locales y UI optimistamente
     if (proximaFase === 1) {
       setTiempos((t) => ({ ...t, salida: formattedTime }));
       setFaseActual(1);
