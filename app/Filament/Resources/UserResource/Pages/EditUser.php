@@ -12,9 +12,13 @@ class EditUser extends EditRecord
 
     protected function afterSave(): void
     {
-        // Usar $this->data en lugar de $this->form->getState()
         $roles = $this->data['roles'] ?? [];
         $this->record->syncRoles($roles);
+
+        if (!$this->record->username && $this->record->email) {
+            $this->record->username = str($this->record->email)->before('@')->value();
+            $this->record->save();
+        }
     }
 
     protected function getHeaderActions(): array

@@ -1,9 +1,24 @@
 <?php
 
 namespace App\Domain\Solicitudes\Enums;
-
+/**
+ * AccionBitacoraEnum
+ *
+ * Este `enum` contiene las acciones que se registran en la "bitácora" (log de actividad)
+ * cada vez que ocurre un evento relevante sobre una solicitud (crear, enviar, aprobar, etc.).
+ *
+ * Propósito:
+ * - Mantener un registro legible de "qué se hizo" y por quién.
+ * - Facilitar auditoría y trazabilidad al mostrar eventos en reportes o en la interfaz.
+ *
+ * Nota para un lector no técnico (por ejemplo, un ingeniero con mucha experiencia pero
+ * que no esté familiarizado con PHP moderno):
+ * - Un `enum` aquí es sólo una lista fija de etiquetas (cada etiqueta tiene un valor string).
+ * - Cuando el código registra un evento, usa uno de estos valores para describir la acción.
+ */
 enum AccionBitacoraEnum: string
 {
+    // Creación y envío
     case CREAR = 'crear';
     case ENVIAR = 'enviar';
     case APROBAR = 'aprobar';

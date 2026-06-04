@@ -322,6 +322,23 @@ class SolicitudTransporteService
         });
     }
 
+    /**
+     * reasignar
+     *
+     * Reasigna vehículo y motorista para una solicitud ya aprobada o programada.
+     * Explicación simple paso a paso:
+     * 1) Verifica que la solicitud esté en un estado donde la reasignación esté permitida.
+     * 2) Verifica que la nueva fecha no haya pasado (no reasignar viajes ya iniciados).
+     * 3) Comprueba que el vehículo y el motorista solicitados estén disponibles.
+     * 4) Guarda los IDs anteriores para, si aplica, liberar esos recursos.
+     * 5) Actualiza la solicitud con los nuevos recursos y marca los estados en
+     *    la tabla de flota (liberar/reservar según corresponda).
+     * 6) Registra el cambio en el historial y en la bitácora con el motivo.
+     *
+     * Este método realiza todos los cambios dentro de una transacción para
+     * garantizar que la reasignación sea atómica (todo o nada).
+     */
+
     public function desbloquear(SolicitudTransporte $solicitud, int $userId): array
     {
         if (!in_array($solicitud->estado, [

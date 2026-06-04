@@ -375,6 +375,17 @@ class SolicitudTransporteController extends Controller
         return response()->json($historial);
     }
 
+    /**
+     * historialJefatura
+     *
+     * Devuelve un listado paginado de solicitudes que fueron DECIDIDAS por el jefe
+     * actualmente autenticado. Esto sirve para que el jefe vea su propio historial
+     * de aprobaciones, rechazos y programaciones. Filtra por estados relevantes
+     * (aprobada, programada, completada, rechazada) y ordena por fecha de decisión.
+     *
+     * Nota sencillo: esto no crea ni modifica nada; sólo muestra información histórica.
+     */
+
     public function recursosDisponibles(Request $request)
     {
         $this->authorizeJefe();
@@ -449,6 +460,19 @@ class SolicitudTransporteController extends Controller
         ]);
     }
 
+    /**
+     * recursosDisponibles
+     *
+     * Calcula qué vehículos y motoristas están libres para un rango de fechas
+     * solicitado. Pasos principales:
+     * 1) Valida fechas de salida y retorno.
+     * 2) Busca solicitudes ya asignadas/ocupadas que se solapen con ese rango.
+     * 3) Excluye esos recursos y devuelve los activos restantes.
+     *
+     * Uso: el frontend lo invoca para mostrar opciones válidas al reasignar o
+     *      al planear una solicitud sin causar solapamientos.
+     */
+
     public function reasignar(Request $request, SolicitudTransporte $solicitud)
     {
         $this->authorizeJefe();
@@ -477,6 +501,18 @@ class SolicitudTransporteController extends Controller
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
+
+    /**
+     * reasignar
+     *
+     * Solicita al servicio la reasignación de vehículo y motorista para una
+     * solicitud que ya fue aprobada o programada. Reglas clave:
+     * - Sólo un `jefe` puede ejecutar esta acción (se valida arriba).
+     * - Valida que el nuevo vehículo y motorista existan.
+     * - El Servicio realizará las comprobaciones de disponibilidad y liberará
+     *   los recursos anteriores si procede. Este método sólo orquesta la petición
+     *   y devuelve el resultado al cliente.
+     */
 
     public function asignarRecursos(Request $request, SolicitudTransporte $solicitud)
     {
@@ -536,6 +572,21 @@ class SolicitudTransporteController extends Controller
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
+
+    /**
+     * aprobarConDecision
+     *
+     * Punto final que permite al jefe marcar la decisión final sobre la
+     * asignación de recursos: puede elegir la decisión propuesta por el
+     * operativo (`operativo`), la sugerida por el sistema (`sistema`) o
+     * indicar manualmente los IDs de vehículo y motorista (`manual`).
+     *
+     * Comportamiento:
+     * - Valida entrada (comentario, tipo de decisión, y recursos si es manual).
+     * - Llama al servicio para aplicar la decisión y consolidar (reservar)
+     *   los recursos seleccionados.
+     * - Devuelve el estado final y los recursos consolidados al cliente.
+     */
 
     public function desbloquear(SolicitudTransporte $solicitud)
     {

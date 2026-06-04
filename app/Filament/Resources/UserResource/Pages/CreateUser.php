@@ -13,14 +13,15 @@ class CreateUser extends CreateRecord
     //Como roles no es columna de users, hay que sincronizar en Pages
     protected function afterCreate(): void
     {
-     $roles = $this->data['roles'] ?? [];
-    
-     \Log::info('Roles a asignar:', ['roles' => $roles]);
-    
-     if (!empty($roles)) {
-        $this->record->syncRoles($roles);
-        
-        \Log::info('Roles asignados:', ['user_roles' => $this->record->getRoleNames()]);
-      }
+        $roles = $this->data['roles'] ?? [];
+
+        if (!empty($roles)) {
+            $this->record->syncRoles($roles);
+        }
+
+        if (!$this->record->username && $this->record->email) {
+            $this->record->username = str($this->record->email)->before('@')->value();
+            $this->record->save();
+        }
     }
 }
