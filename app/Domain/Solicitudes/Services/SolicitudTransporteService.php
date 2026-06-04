@@ -328,10 +328,9 @@ class SolicitudTransporteService
      * Reasigna vehículo y motorista para una solicitud ya aprobada o programada.
      * Explicación simple paso a paso:
      * 1) Verifica que la solicitud esté en un estado donde la reasignación esté permitida.
-     * 2) Verifica que la nueva fecha no haya pasado (no reasignar viajes ya iniciados).
-     * 3) Comprueba que el vehículo y el motorista solicitados estén disponibles.
-     * 4) Guarda los IDs anteriores para, si aplica, liberar esos recursos.
-     * 5) Actualiza la solicitud con los nuevos recursos y marca los estados en
+     * 2) Comprueba que el vehículo y el motorista solicitados estén disponibles.
+     * 3) Guarda los IDs anteriores para, si aplica, liberar esos recursos.
+     * 4) Actualiza la solicitud con los nuevos recursos y marca los estados en
      *    la tabla de flota (liberar/reservar según corresponda).
      * 6) Registra el cambio en el historial y en la bitácora con el motivo.
      *
@@ -387,10 +386,8 @@ class SolicitudTransporteService
             throw new \DomainException('Solo se puede reasignar solicitudes aprobadas o programadas.');
         }
 
-        if ($solicitud->fecha_salida && $solicitud->fecha_salida->isPast()) {
-            throw new \DomainException('No se puede reasignar un viaje que ya inició o pasó su fecha de salida.');
-        }
-
+        // No bloqueamos por hora pasada. Si la solicitud ya cambió a EN_EJECUCION,
+        // la validación del estado siguiente la impedirá.
         return DB::transaction(function () use ($solicitud, $jefeId, $vehiculoId, $motoristaId, $motivoReasignacion) {
             $anterior = $solicitud->estado;
 
