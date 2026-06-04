@@ -143,7 +143,6 @@ export default function HistorialDetallePage() {
   const statusInfo = getStatusColor();
   const fechaSalidaVal = raw.fecha_salida || comp.fechas?.salida;
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
-  const fechaSalida = fechaSalidaVal ? new Date(fechaSalidaVal) : null;
   
   // Reasignar solo permitido antes de la ejecución
   const canReasignar = status === 'pre_aprobada' || status === 'aprobada' || status === 'programada';
