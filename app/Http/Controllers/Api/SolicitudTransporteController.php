@@ -106,6 +106,13 @@ class SolicitudTransporteController extends Controller
 
         $user = Auth::user();
 
+        if (!empty($data['fecha_salida']) && !empty($data['fecha_retorno'])) {
+            $data['horas_estimadas'] = round(
+                Carbon::parse($data['fecha_retorno'])->diffInMinutes(Carbon::parse($data['fecha_salida'])) / 60,
+                2
+            );
+        }
+
         $solicitud = SolicitudTransporte::create([
             ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
             'destino' => $destinoReal,
