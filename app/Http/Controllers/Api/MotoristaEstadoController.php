@@ -12,9 +12,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Http\Controllers\Controller;
+use App\Mail\NotificacionEventMail;
 use App\Models\Motorista;
 use App\Models\MotoristaEstado;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 use App\Domain\Solicitudes\Services\MotoristaService;
 use App\Models\SolicitudTransporte;
 
@@ -130,12 +134,59 @@ class MotoristaEstadoController extends Controller
         }
 
         // AQUÍ ESTÁ LA CORRECCIÓN: Usamos ->boolean('activo')
+        $activo = $request->boolean('activo');
         app(MotoristaService::class)->cambiarEstado(
             $motorista,
-            $request->boolean('activo'),
+            $activo,
             $request->motivo,
             $archivoPath // -> NUEVO PARÁMETRO PARA GUARDAR LA RUTA DEL ARCHIVO
         );
+
+        if (! $activo) {
+            try {
+                $jefeEmails = User::role('jefe')
+                    ->whereNotNull('email')
+                    ->pluck('email')
+                    ->filter()
+                    ->unique()
+                    ->toArray();
+
+                if (! empty($jefeEmails)) {
+                    $archivoUrl = $archivoPath ? asset('storage/' . $archivoPath) : null;
+                    $mensaje = "El motorista {$motorista->nombre} se ha reportado no disponible.";
+
+                    if ($request->motivo) {
+                        $mensaje .= " Motivo: {$request->motivo}.";
+                    }
+
+                    if ($archivoUrl) {
+                        $mensaje .= " Comprobante: {$archivoUrl}";
+                    }
+
+                    $payload = [
+                        'tipo' => 'transporte',
+                        'evento' => 'motorista_no_disponible',
+                        'mensaje' => $mensaje,
+                        'solicitud' => [
+                            'codigo' => $motorista->dui ?? 'N/A',
+                            'estado' => 'no_disponible',
+                            'motorista' => $motorista->nombre,
+                        ],
+                        'solicitante' => [
+                            'name' => $motorista->nombre,
+                            'email' => $motorista->user?->email ?? null,
+                        ],
+                        'timestamp' => now()->toIso8601String(),
+                    ];
+
+                    Mail::to($jefeEmails)->send(
+                        new NotificacionEventMail('🚨 Motorista no disponible', $payload)
+                    );
+                }
+            } catch (\Exception $e) {
+                Log::error('Error enviando correo de motorista no disponible: '.$e->getMessage());
+            }
+        }
 
         return response()->json([
             'message' => 'Tu estado ha sido actualizado correctamente.',

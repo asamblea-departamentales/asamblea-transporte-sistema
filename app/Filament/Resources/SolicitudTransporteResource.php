@@ -724,6 +724,40 @@ class SolicitudTransporteResource extends Resource
 
                             app(EstadoFlotaService::class)->aplicarPorEstado($record);
 
+                            $record->load(['vehiculo.tipo', 'motorista.user', 'solicitante', 'unidad']);
+
+                            if ($record->motorista?->user?->email) {
+                                try {
+                                    $payload = [
+                                        'tipo' => 'transporte',
+                                        'evento' => 'motorista_asignado',
+                                        'mensaje' => 'Se te ha asignado un nuevo viaje.',
+                                        'solicitud' => [
+                                            'codigo' => $record->codigo,
+                                            'estado' => 'asignada',
+                                            'tipo_vehiculo_nombre' => $record->vehiculo?->tipo?->nombre ?? 'Vehículo asignado',
+                                            'origen' => $record->origen,
+                                            'destino' => $record->destino,
+                                            'destino_adicional' => $record->destino_adicional ?? null,
+                                            'fecha_salida' => $record->fecha_salida,
+                                            'fecha_retorno' => $record->fecha_retorno,
+                                            'motorista' => $record->motorista->nombre,
+                                        ],
+                                        'solicitante' => [
+                                            'name' => $record->solicitante->name ?? 'Solicitante',
+                                            'email' => $record->solicitante->email ?? null,
+                                        ],
+                                        'timestamp' => now()->toIso8601String(),
+                                    ];
+
+                                    Mail::to($record->motorista->user->email)->send(
+                                        new NotificacionEventMail('📌 Nuevo viaje asignado', $payload)
+                                    );
+                                } catch (\Exception $e) {
+                                    Log::error('Error en correo de asignación de viaje al motorista: '.$e->getMessage());
+                                }
+                            }
+
                             HistorialEstado::create([
                                 'entidad_tipo' => 'solicitud_transporte',
                                 'entidad_id' => $record->id,
