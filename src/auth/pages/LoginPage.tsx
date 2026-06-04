@@ -87,7 +87,7 @@ export default function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextField
               label="Usuario"
-              placeholder="jefe.transporte"
+              placeholder="motorista.juan"
               value={username}
               onChange={setUsername}
               autoComplete="username"
