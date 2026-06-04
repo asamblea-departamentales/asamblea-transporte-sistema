@@ -208,6 +208,8 @@ class MotoristaEstadoController extends Controller
             ->whereMonth('fecha_salida', $month)
             ->whereIn('estado', [
                 EstadoSolicitudEnum::ASIGNADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::PROGRAMADA,
                 EstadoSolicitudEnum::EN_EJECUCION,
                 EstadoSolicitudEnum::COMPLETADA,
                 EstadoSolicitudEnum::CANCELADA,
