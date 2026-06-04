@@ -531,15 +531,20 @@ class SolicitudTransporteService
             // Calcular horas reales (Opción A — 4 pasos)
             if ($solicitud->fecha_salida_real && $solicitud->fecha_retorno_real) {
                 if ($solicitud->fecha_llegada_destino && $solicitud->fecha_inicio_retorno) {
-                    $ida = $solicitud->fecha_llegada_destino->diffInMinutes($solicitud->fecha_salida_real) / 60;
-                    $ret = $solicitud->fecha_retorno_real->diffInMinutes($solicitud->fecha_inicio_retorno) / 60;
-                    $esp = $solicitud->fecha_inicio_retorno->diffInMinutes($solicitud->fecha_llegada_destino) / 60;
-                    $solicitud->horas_reales = round($ida + $ret, 2);
-                    $solicitud->horas_espera = round($esp, 2);
+                    $horasIda = $solicitud->fecha_salida_real
+                        ->diffInMinutes($solicitud->fecha_llegada_destino, true) / 60;
+                    $horasRet = $solicitud->fecha_inicio_retorno
+                        ->diffInMinutes($solicitud->fecha_retorno_real, true) / 60;
+                    $horasEsp = $solicitud->fecha_llegada_destino
+                        ->diffInMinutes($solicitud->fecha_inicio_retorno, true) / 60;
+                    $solicitud->horas_reales = round($horasIda + $horasRet, 2);
+                    $solicitud->horas_espera = round($horasEsp, 2);
                 } else {
                     $solicitud->horas_reales = round(
-                        $solicitud->fecha_retorno_real->diffInMinutes($solicitud->fecha_salida_real) / 60, 2
+                        $solicitud->fecha_salida_real
+                            ->diffInMinutes($solicitud->fecha_retorno_real, true) / 60, 2
                     );
+                    $solicitud->horas_espera = 0;
                 }
             }
 

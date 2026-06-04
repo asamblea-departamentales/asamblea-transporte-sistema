@@ -108,7 +108,7 @@ class SolicitudTransporteController extends Controller
 
         if (!empty($data['fecha_salida']) && !empty($data['fecha_retorno'])) {
             $data['horas_estimadas'] = round(
-                Carbon::parse($data['fecha_retorno'])->diffInMinutes(Carbon::parse($data['fecha_salida'])) / 60,
+                Carbon::parse($data['fecha_salida'])->diffInMinutes(Carbon::parse($data['fecha_retorno']), true) / 60,
                 2
             );
         }
