@@ -144,7 +144,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
           body,
           icon: '/icon-192x192.png',
           vibrate: [200, 100, 200],
-        });
+        } as any);
       });
     }
   };
