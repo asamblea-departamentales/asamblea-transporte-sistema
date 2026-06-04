@@ -33,8 +33,8 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // Si da 401 pero es la ruta de login, no redirigimos para que el LoginPage muestre el error
-    if (error.response?.status === 401 && !error.config.url?.includes("/api/auth/login")) {
+    // Si da 401 pero ya estamos en login, no redirigimos para que se muestre el error
+    if (error.response?.status === 401 && window.location.pathname !== "/login") {
       sessionStorage.removeItem("auth_token");
       window.location.href = "/login";
     }
