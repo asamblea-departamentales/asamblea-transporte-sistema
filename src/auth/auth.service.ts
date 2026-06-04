@@ -1,6 +1,6 @@
 import { api } from "../shared/lib/api";
 
-export type LoginPayload = { email: string; password: string };
+export type LoginPayload = { username: string; password: string };
 
 export type AuthUser = {
   id: number | string;

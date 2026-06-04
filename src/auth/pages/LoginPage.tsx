@@ -11,7 +11,7 @@ export default function LoginPage() {
   const { setUser } = useAuth();
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +27,7 @@ export default function LoginPage() {
     sessionStorage.removeItem("auth_token");
 
     try {
-      const user = await loginRequest({ email, password });
+      const user = await loginRequest({ username, password });
       
       // Validar que el usuario tenga el rol de motorista
       const esMorista = user.roles?.includes("motorista");
@@ -86,12 +86,12 @@ export default function LoginPage() {
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextField
-              label="Correo institucional"
-              placeholder="usuario@asamblea.gob.sv"
-              value={email}
-              onChange={setEmail}
-              autoComplete="email"
-              name="email"
+              label="Usuario"
+              placeholder="jefe.transporte"
+              value={username}
+              onChange={setUsername}
+              autoComplete="username"
+              name="username"
             />
 
             <TextField
@@ -113,7 +113,7 @@ export default function LoginPage() {
             <Button
               type="submit"
               loading={loading}
-              disabled={loading || !email || !password}
+              disabled={loading || !username || !password}
               className="min-h-12 text-base"
             >
               INICIAR SESIÓN
