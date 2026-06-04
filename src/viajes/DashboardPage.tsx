@@ -65,7 +65,7 @@ function StatCard({ title, value, tag, icon, accent, loading }: { title: string;
 // ────────────────────────────────────────────────
 function TripCard({ viaje, isEditable }: { viaje: ViajeAsignado; isEditable: boolean }) {
   const navigate = useNavigate();
-  const isPending = viaje.estado === "ASIGNADA";
+  const isPending = ["ASIGNADA", "APROBADA", "PROGRAMADA"].includes(viaje.estado);
   const dateObj = new Date(viaje.fecha + "T00:00:00");
   const formattedDate = dateObj.toLocaleDateString("es-SV", { weekday: "long", day: "numeric", month: "long" });
 
@@ -185,7 +185,7 @@ export default function DashboardPage() {
       ]);
       
       const allViajes = [...dataCurrent, ...dataNext];
-      const activeViajes = allViajes.filter(v => v.estado === "ASIGNADA" || v.estado === "EN_EJECUCION");
+      const activeViajes = allViajes.filter(v => ["ASIGNADA", "APROBADA", "PROGRAMADA", "EN_EJECUCION"].includes(v.estado));
       
       // Eliminar duplicados por si acaso el backend devuelve algo raro
       const uniqueViajes = Array.from(new Map(activeViajes.map(item => [item.id, item])).values());
@@ -215,7 +215,7 @@ export default function DashboardPage() {
   useEffect(() => {
     if (loadingViajes) return; // Wait until initial load is completely done
     
-    const countAsignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
+    const countAsignadas = viajes.filter(v => ["ASIGNADA", "APROBADA", "PROGRAMADA"].includes(v.estado)).length;
     
     // Si la cantidad de asignadas ahora es mayor que la medición de hace unos instantes...
     if (prevViajesLength.current !== null && countAsignadas > prevViajesLength.current) {
@@ -251,7 +251,7 @@ export default function DashboardPage() {
     return { viajesHoy: hoy, viajesFuturos: futuros };
   }, [sortedViajes, todayStr]);
 
-  const asignadas = viajes.filter(v => v.estado === "ASIGNADA").length;
+  const asignadas = viajes.filter(v => ["ASIGNADA", "APROBADA", "PROGRAMADA"].includes(v.estado)).length;
   const enEjecucion = viajes.filter(v => v.estado === "EN_EJECUCION").length;
 
   const FONT = "'Plus Jakarta Sans', system-ui, sans-serif";
