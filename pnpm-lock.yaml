@@ -78,6 +78,9 @@ importers:
       vite:
         specifier: ^6.0.1
         version: 6.4.3(jiti@1.21.7)(terser@5.48.0)
+      workbox-precaching:
+        specifier: ^7.4.1
+        version: 7.4.1
 
 packages:
 

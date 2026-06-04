@@ -1,5 +1,5 @@
 /// <reference lib="webworker" />
-declare let self: ServiceWorkerGlobalScope
+declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any[] }
 
 // Ignorar error de ts sobre el ámbito
 import { precacheAndRoute } from 'workbox-precaching'
