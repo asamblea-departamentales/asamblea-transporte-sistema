@@ -112,7 +112,7 @@ class SolicitudTransporteService
     // Rechaza una solicitud pendiente o en revisión indicando el motivo
     public function rechazar(SolicitudTransporte $solicitud, int $jefeId, string $comentario): SolicitudTransporte
     {
-        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)) {
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
             throw new \DomainException('Solo se puede rechazar una solicitud PENDIENTE o EN_REVISION.');
         }
 
