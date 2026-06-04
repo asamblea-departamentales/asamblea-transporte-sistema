@@ -105,18 +105,18 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const [activo, setActivo] = useState<boolean | null>(null);
   
   // Buscar si hay algún viaje activo guardado en LocalStorage
-  const [viajeActivoId, setViajeActivoId] = useState<string | null>(null);
+  const [viajeActivoId, setViajeActivoId] = useState<string | null>(localStorage.getItem("viaje_en_ejecucion_id"));
 
   useEffect(() => {
-    const keys = Object.keys(localStorage);
-    const activeKey = keys.find(k => k.startsWith("viaje_fase_"));
-    if (activeKey) {
-      const id = activeKey.replace("viaje_fase_", "");
-      setViajeActivoId(id);
-    } else {
-      setViajeActivoId(null);
-    }
-  }, [location.pathname]);
+    // Revisar periódicamente si el Dashboard ha actualizado el viaje en ejecución
+    const interval = setInterval(() => {
+      const activeId = localStorage.getItem("viaje_en_ejecucion_id");
+      if (activeId !== viajeActivoId) {
+        setViajeActivoId(activeId);
+      }
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [viajeActivoId]);
 
   // Inicializar estado del motorista
   useEffect(() => {

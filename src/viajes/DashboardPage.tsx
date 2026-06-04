@@ -187,6 +187,14 @@ export default function DashboardPage() {
       const allViajes = [...dataCurrent, ...dataNext];
       const activeViajes = allViajes.filter(v => ["ASIGNADA", "APROBADA", "PROGRAMADA", "EN_EJECUCION"].includes(v.estado));
       
+      // Sincronizar el viaje activo global
+      const enEjecucionTrip = allViajes.find(v => v.estado === "EN_EJECUCION");
+      if (enEjecucionTrip) {
+        localStorage.setItem("viaje_en_ejecucion_id", String(enEjecucionTrip.id));
+      } else {
+        localStorage.removeItem("viaje_en_ejecucion_id");
+      }
+      
       // Eliminar duplicados por si acaso el backend devuelve algo raro
       const uniqueViajes = Array.from(new Map(activeViajes.map(item => [item.id, item])).values());
       

@@ -217,6 +217,7 @@ export default function ViajeActivoPage() {
     if (proximaFase === 1) {
       setTiempos((t) => ({ ...t, salida: formattedTime }));
       setFaseActual(1);
+      localStorage.setItem("viaje_en_ejecucion_id", id!);
       toast.success("¡Buen viaje!", { description: "Viaje iniciado. Conducción de ida en curso." });
     } else if (proximaFase === 2) {
       setTiempos((t) => ({ ...t, llegada: formattedTime }));
@@ -234,6 +235,7 @@ export default function ViajeActivoPage() {
       // Limpiar LocalStorage del viaje finalizado
       localStorage.removeItem(`viaje_fase_${id}`);
       localStorage.removeItem(`viaje_tiempos_${id}`);
+      localStorage.removeItem("viaje_en_ejecucion_id");
     }
   };
 
