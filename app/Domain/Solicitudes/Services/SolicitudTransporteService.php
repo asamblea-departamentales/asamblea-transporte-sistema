@@ -514,12 +514,17 @@ class SolicitudTransporteService
      */
     public function finalizar(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
     {
+        // Permitimos que la finalización la ejecute también el motorista cuando
+        // la solicitud esté en ejecución (EN_EJECUCION). Antes sólo se aceptaban
+        // PROGRAMADA, APROBADA o ASIGNADA, pero el flujo operativo marca EN_EJECUCION
+        // al iniciar el viaje y el motorista debe poder marcarlo como finalizado.
         if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::PROGRAMADA,
             EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::ASIGNADA,
+            EstadoSolicitudEnum::EN_EJECUCION,
         ], true)) {
-            throw new \DomainException('Solo se pueden finalizar solicitudes en estado PROGRAMADA, APROBADA o ASIGNADA.');
+            throw new \DomainException('Solo se pueden finalizar solicitudes en estado PROGRAMADA, APROBADA, ASIGNADA o EN_EJECUCION.');
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {
