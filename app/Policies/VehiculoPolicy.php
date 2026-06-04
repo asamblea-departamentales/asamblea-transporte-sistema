@@ -3,10 +3,10 @@
 namespace App\Policies;
 
 use App\Models\User;
-use Spatie\Permission\Models\Role;
+use App\Models\Vehiculo;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
-class RolePolicy
+class VehiculoPolicy
 {
     use HandlesAuthorization;
 
@@ -15,15 +15,15 @@ class RolePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_role');
+        return $user->can('view_any_vehiculo');
     }
 
     /**
      * Determine whether the user can view the model.
      */
-    public function view(User $user, Role $role): bool
+    public function view(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('view_role');
+        return $user->can('view_vehiculo');
     }
 
     /**
@@ -31,23 +31,23 @@ class RolePolicy
      */
     public function create(User $user): bool
     {
-        return $user->can('create_role');
+        return $user->can('create_vehiculo');
     }
 
     /**
      * Determine whether the user can update the model.
      */
-    public function update(User $user, Role $role): bool
+    public function update(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('update_role');
+        return $user->can('update_vehiculo');
     }
 
     /**
      * Determine whether the user can delete the model.
      */
-    public function delete(User $user, Role $role): bool
+    public function delete(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('delete_role');
+        return $user->can('delete_vehiculo');
     }
 
     /**
@@ -55,15 +55,15 @@ class RolePolicy
      */
     public function deleteAny(User $user): bool
     {
-        return $user->can('delete_any_role');
+        return $user->can('delete_any_vehiculo');
     }
 
     /**
      * Determine whether the user can permanently delete.
      */
-    public function forceDelete(User $user, Role $role): bool
+    public function forceDelete(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('force_delete_role');
+        return $user->can('force_delete_vehiculo');
     }
 
     /**
@@ -71,15 +71,15 @@ class RolePolicy
      */
     public function forceDeleteAny(User $user): bool
     {
-        return $user->can('force_delete_any_role');
+        return $user->can('force_delete_any_vehiculo');
     }
 
     /**
      * Determine whether the user can restore.
      */
-    public function restore(User $user, Role $role): bool
+    public function restore(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('restore_role');
+        return $user->can('restore_vehiculo');
     }
 
     /**
@@ -87,15 +87,15 @@ class RolePolicy
      */
     public function restoreAny(User $user): bool
     {
-        return $user->can('restore_any_role');
+        return $user->can('restore_any_vehiculo');
     }
 
     /**
      * Determine whether the user can replicate.
      */
-    public function replicate(User $user, Role $role): bool
+    public function replicate(User $user, Vehiculo $vehiculo): bool
     {
-        return $user->can('replicate_role');
+        return $user->can('replicate_vehiculo');
     }
 
     /**
@@ -103,6 +103,6 @@ class RolePolicy
      */
     public function reorder(User $user): bool
     {
-        return $user->can('reorder_role');
+        return $user->can('reorder_vehiculo');
     }
 }
