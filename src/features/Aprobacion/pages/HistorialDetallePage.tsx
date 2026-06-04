@@ -145,12 +145,13 @@ export default function HistorialDetallePage() {
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
   const fechaSalida = fechaSalidaVal ? new Date(fechaSalidaVal) : null;
   
-  const canReasignar = isAprobada && fechaSalida && fechaSalida > new Date();
+  // Reasignar solo permitido antes de la ejecución
+  const canReasignar = status === 'pre_aprobada' || status === 'aprobada' || status === 'programada';
 
   // Valores a mostrar
   const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
   const destino = raw.destino || comp.destino || 'N/A';
-  const horasEstimadas = raw.horas_estimadas || comp.horas_estimadas || 0;
+  const horasEstimadas = Math.abs(raw.horas_estimadas || comp.horas_estimadas || 0);
   const motivo = raw.motivo || comp.motivo || 'Sin motivo';
   const decisionFinal = raw.decision_final || comp.decision_final || status;
   
@@ -307,7 +308,7 @@ export default function HistorialDetallePage() {
                 Reasignar Motorista / Vehículo
               </button>
               <p className="text-[11px] text-slate-400 text-center mt-2">
-                Puedes cambiar la asignación antes de la fecha de salida.
+                Puedes cambiar la asignación solo si el viaje aún no está en ejecución.
               </p>
             </div>
           )}
