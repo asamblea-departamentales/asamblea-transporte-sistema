@@ -224,6 +224,9 @@ class MotoristaEstadoController extends Controller
                     'destino' => $viaje->destino,
                     'estado' => strtoupper($viaje->estado->value),
                     'solicitante' => $viaje->solicitante?->name ?? 'Desconocido',
+                    'fecha_salida_real' => $viaje->fecha_salida_real,
+                    'fecha_llegada_destino' => $viaje->fecha_llegada_destino,
+                    'fecha_inicio_retorno' => $viaje->fecha_inicio_retorno,
                 ];
             });
 
