@@ -74,7 +74,7 @@ class Login extends BaseLogin
 
     public function getSubHeading(): string
     {
-        return 'Sistema de Gestión Departamental';
+        return 'Sistema de Gestión de Transporte Institucional';
     }
 
     protected function getFormActions(): array
