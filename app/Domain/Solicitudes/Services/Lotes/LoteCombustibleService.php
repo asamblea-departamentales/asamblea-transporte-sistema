@@ -7,6 +7,7 @@ use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\SolicitudCombustible;
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -124,7 +125,7 @@ class LoteCombustibleService
 
             $solicitudes = SolicitudCombustible::query()
                 ->whereDate('fecha_solicitud', $lote->fecha)
-                ->where('estado', 'aprobada')
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA->value, EstadoSolicitudEnum::EN_REVISION->value])
                 ->whereNotNull('ticket') // <-- Cambiado de numero_ticket a ticket
                 ->whereNotNull('vehiculo_id')
                 ->whereNotIn('id', $yaImportados)
