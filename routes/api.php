@@ -191,22 +191,22 @@ Route::middleware('auth:sanctum')->group(function () {
         ->only(['index', 'store', 'show'])
         ->parameters(['solicitudes-combustible' => 'solicitud']);
 
-    Route::post('solicitudes-combustible/{solicitud}/enviar', [SolicitudCombustibleController::class, 'enviar']);
-    Route::post('solicitudes-combustible/{solicitud}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
-    Route::post('solicitudes-combustible/{solicitud}/cancelar', [SolicitudCombustibleController::class, 'cancelar']);
+    Route::post('solicitudes-combustible/{solicitud:codigo}/enviar', [SolicitudCombustibleController::class, 'enviar']);
+    Route::post('solicitudes-combustible/{solicitud:codigo}/finalizar', [SolicitudCombustibleController::class, 'finalizar']);
+    Route::post('solicitudes-combustible/{solicitud:codigo}/cancelar', [SolicitudCombustibleController::class, 'cancelar']);
 
     Route::middleware('role:jefe|admin|ti|super_admin')->group(function () {
-        Route::post('solicitudes-combustible/{solicitud}/observacion', [SolicitudCombustibleController::class, 'observacion']);
-        Route::post('solicitudes-combustible/{solicitud}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
-        Route::post('solicitudes-combustible/{solicitud}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);
-        Route::post('solicitudes-combustible/{solicitud}/rechazar', [SolicitudCombustibleController::class, 'rechazar']);
+        Route::post('solicitudes-combustible/{solicitud:codigo}/observacion', [SolicitudCombustibleController::class, 'observacion']);
+        Route::post('solicitudes-combustible/{solicitud:codigo}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
+        Route::post('solicitudes-combustible/{solicitud:codigo}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);
+        Route::post('solicitudes-combustible/{solicitud:codigo}/rechazar', [SolicitudCombustibleController::class, 'rechazar']);
 
         // Módulo de Aprobación
-        Route::get('solicitudes-combustible/{solicitud}/comparativa', [SolicitudCombustibleController::class, 'comparativa']);
-        Route::post('solicitudes-combustible/{solicitud}/aprobar-con-decision', [SolicitudCombustibleController::class, 'aprobarConDecision']);
+        Route::get('solicitudes-combustible/{solicitud:codigo}/comparativa', [SolicitudCombustibleController::class, 'comparativa']);
+        Route::post('solicitudes-combustible/{solicitud:codigo}/aprobar-con-decision', [SolicitudCombustibleController::class, 'aprobarConDecision']);
     });
 
-    Route::post('solicitudes-combustible/{solicitud}/asignar-carga', [SolicitudCombustibleController::class, 'asignarCarga'])
+    Route::post('solicitudes-combustible/{solicitud:codigo}/asignar-carga', [SolicitudCombustibleController::class, 'asignarCarga'])
         ->middleware('role:operativo|admin|ti|super_admin');
 
     // Rutas para motoristas
