@@ -326,7 +326,6 @@ class AprobacionesService
             ])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PRE_APROBADA,
-                EstadoSolicitudEnum::APROBADA,
                 EstadoSolicitudEnum::ASIGNADA,
                 EstadoSolicitudEnum::EN_EJECUCION,
             ]);
