@@ -152,7 +152,7 @@ class AprobacionesService
             $payload['solicitud']['detalle'] = $record->detalle ?? 'N/A';
         } elseif ($tipo === 'combustible') {
             $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_galones ?? 'N/A';
+            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_combustible ?? 'N/A';
         }
 
         $subject = match ($tipo) {
@@ -198,7 +198,7 @@ class AprobacionesService
             $payload['solicitud']['descripcion_falla'] = $record->detalle;
         } elseif ($tipo === 'combustible') {
             $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_galones.' galones';
+            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_combustible;
         }
 
         return $payload;
