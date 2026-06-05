@@ -103,8 +103,7 @@ class AsignacionCombustibleLoteResource extends Resource
                     ->alignCenter(),
                 Tables\Columns\TextColumn::make('total_monto')
                     ->label('Monto Total Asignado')
-                    ->money('USD', true)
-                    ->sortable(),
+                    ->money('USD', true),
                Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
