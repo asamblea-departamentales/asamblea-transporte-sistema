@@ -515,7 +515,7 @@
                                     <div class="flex justify-end gap-3 pt-2">
                                         <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
                                         <button type="button" class="btn-accion btn-success"
-                                            @click="$wire.asignarCargaCombustible({{ $row['id'] }}, monto, justificacion || null); open = false"
+                                            @click="$wire.asignarCargaCombustibleDesdeFilament({{ $row['id'] }}, monto, justificacion || null); open = false"
                                             x-bind:disabled="!monto || monto <= 0">
                                             Confirmar carga
                                         </button>
