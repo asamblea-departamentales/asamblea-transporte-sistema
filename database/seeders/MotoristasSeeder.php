@@ -6,6 +6,7 @@ use Illuminate\Database\Seeder;
 use App\Models\Motorista;
 use App\Models\TipoLicencia;
 use App\Models\User;
+use Illuminate\Support\Str;
 
 class MotoristasSeeder extends Seeder
 {
@@ -54,44 +55,72 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Primer nombre + primer apellido para username y correo
+            | Primer nombre + primer apellido
             |--------------------------------------------------------------------------
             */
 
             $parts = array_values(array_filter(explode(' ', trim($nombre))));
+
             $firstName = $parts[0] ?? '';
             $lastName = $parts[1] ?? '';
-            $shortName = $lastName ? "{$firstName} {$lastName}" : $firstName;
+
+            $shortName = trim("{$firstName} {$lastName}");
+
+            /*
+            |--------------------------------------------------------------------------
+            | Username / correo limpio
+            |--------------------------------------------------------------------------
+            */
+
+            $baseIdentity = Str::of($shortName)
+                ->ascii()
+                ->lower()
+                ->slug('.');
+
+            /*
+            |--------------------------------------------------------------------------
+            | Correo fallback
+            |--------------------------------------------------------------------------
+            */
 
             if (empty($correo)) {
-
-                $slug = strtolower(
-                    preg_replace(
-                        '/[^a-z0-9]+/i',
-                        '.',
-                        trim($shortName)
-                    )
-                );
-
-                $correo = trim($slug, '.') . '@asamblea.gob.sv';
+                $correo = "{$baseIdentity}@asamblea.gob.sv";
             }
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar usuario o crearlo si no existe
+            | Buscar usuario o crearlo
             |--------------------------------------------------------------------------
             */
 
             $user = User::where('name', $nombre)->first();
 
             if (!$user) {
-                $username = str($shortName)->slug('.');
+
+                $username = $baseIdentity;
+
+                /*
+                |--------------------------------------------------------------------------
+                | Evitar usernames duplicados
+                |--------------------------------------------------------------------------
+                */
+
+                $counter = 1;
+
+                while (
+                    User::where('username', $username)->exists()
+                ) {
+                    $username = "{$baseIdentity}{$counter}";
+                    $counter++;
+                }
+
                 $user = User::create([
                     'name' => $nombre,
                     'username' => $username,
                     'email' => $correo,
                     'password' => bcrypt('password'),
                 ]);
+
                 $user->assignRole('motorista');
             }
 
@@ -101,37 +130,36 @@ class MotoristasSeeder extends Seeder
             |--------------------------------------------------------------------------
             */
 
-            $motorista = Motorista::updateOrCreate(
+            Motorista::updateOrCreate(
 
-    [
-        'numero_empleado' => $numeroEmpleado
-    ],
+                [
+                    'numero_empleado' => $numeroEmpleado
+                ],
 
-    [
-        'user_id' => $user?->id,
+                [
+                    'user_id' => $user->id,
 
-        'tipo_licencia_id' => $tipo->id,
+                    'tipo_licencia_id' => $tipo->id,
 
-        'nombre' => $nombre,
+                    'nombre' => $nombre,
 
-        'dui' => $numeroLicencia,
+                    'dui' => $numeroLicencia,
 
-        'numero_licencia' => $numeroLicencia,
+                    'numero_licencia' => $numeroLicencia,
 
-        'telefono' => $telefono ?? '0000-0000',
+                    'telefono' => $telefono ?? '0000-0000',
 
-        'correo' => $correo,
+                    'correo' => $correo,
 
-        'radio' => null,
+                    'radio' => null,
 
-        'fecha_vencimiento_licencia' => $fechaVencimiento,
+                    'fecha_vencimiento_licencia' => $fechaVencimiento,
 
-        'activo' => (bool) $activo,
-    ]
-);
+                    'activo' => (bool) $activo,
+                ]
+            );
         }
 
         $this->command->info('MotoristasSeeder ejecutado correctamente.');
     }
 }
-
