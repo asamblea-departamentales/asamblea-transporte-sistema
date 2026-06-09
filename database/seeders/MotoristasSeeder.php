@@ -54,14 +54,6 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar usuario
-            |--------------------------------------------------------------------------
-            */
-
-            $user = User::where('name', $nombre)->first();
-
-            /*
-            |--------------------------------------------------------------------------
             | Correo fallback
             |--------------------------------------------------------------------------
             */
@@ -77,6 +69,25 @@ class MotoristasSeeder extends Seeder
                 );
 
                 $correo = trim($slug, '.') . '@asamblea.gob.sv';
+            }
+
+            /*
+            |--------------------------------------------------------------------------
+            | Buscar usuario o crearlo si no existe
+            |--------------------------------------------------------------------------
+            */
+
+            $user = User::where('name', $nombre)->first();
+
+            if (!$user) {
+                $username = str($nombre)->slug('.');
+                $user = User::create([
+                    'name' => $nombre,
+                    'username' => $username,
+                    'email' => $correo,
+                    'password' => bcrypt('password'),
+                ]);
+                $user->assignRole('motorista');
             }
 
             /*
