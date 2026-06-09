@@ -30,7 +30,12 @@ class CreateMotorista extends CreateRecord
 
         if (!$user) {
 
-            $baseUsername = str($motorista->nombre)
+            $parts = array_values(array_filter(explode(' ', trim($motorista->nombre))));
+            $firstName = $parts[0] ?? '';
+            $lastName = $parts[1] ?? '';
+            $shortName = $lastName ? "{$firstName} {$lastName}" : $firstName;
+
+            $baseUsername = str($shortName)
                 ->lower()
                 ->ascii()
                 ->slug('.');

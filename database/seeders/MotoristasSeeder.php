@@ -54,9 +54,14 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Correo fallback
+            | Primer nombre + primer apellido para username y correo
             |--------------------------------------------------------------------------
             */
+
+            $parts = array_values(array_filter(explode(' ', trim($nombre))));
+            $firstName = $parts[0] ?? '';
+            $lastName = $parts[1] ?? '';
+            $shortName = $lastName ? "{$firstName} {$lastName}" : $firstName;
 
             if (empty($correo)) {
 
@@ -64,7 +69,7 @@ class MotoristasSeeder extends Seeder
                     preg_replace(
                         '/[^a-z0-9]+/i',
                         '.',
-                        trim($nombre)
+                        trim($shortName)
                     )
                 );
 
@@ -80,7 +85,7 @@ class MotoristasSeeder extends Seeder
             $user = User::where('name', $nombre)->first();
 
             if (!$user) {
-                $username = str($nombre)->slug('.');
+                $username = str($shortName)->slug('.');
                 $user = User::create([
                     'name' => $nombre,
                     'username' => $username,
