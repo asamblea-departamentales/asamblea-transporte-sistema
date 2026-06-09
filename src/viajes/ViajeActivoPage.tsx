@@ -328,7 +328,6 @@ export default function ViajeActivoPage() {
           </button>
           <div>
             <h1 className="text-[17px] font-extrabold text-[#0f172a] leading-none tracking-tight">Modo Conducción</h1>
-            <span className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mt-1 block">ID: {viaje.id}</span>
           </div>
         </div>
 
