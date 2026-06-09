@@ -63,11 +63,12 @@ export default function HistorialDetallePage() {
     setShowReasignarModal(true);
     setLoadingRecursos(true);
     try {
-      const solicitud = data.solicitud || data;
-      const result = await solicitudApi.getRecursosDisponibles(
-        solicitud.fechas?.salida,
-        solicitud.fechas?.retorno
-      );
+      const rawData = data.raw || {};
+      const compData = data.comparativa?.solicitud || {};
+      const fechaS = rawData.fecha_salida || compData.fechas?.salida;
+      const fechaR = rawData.fecha_retorno || compData.fechas?.retorno;
+      
+      const result = await solicitudApi.getRecursosDisponibles(fechaS, fechaR);
       setRecursos(result);
     } catch (_err) {
       // Fallback: intentar catálogos directos
