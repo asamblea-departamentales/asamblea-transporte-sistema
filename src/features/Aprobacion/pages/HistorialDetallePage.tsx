@@ -96,8 +96,14 @@ export default function HistorialDetallePage() {
       setSuccessMsg('¡Reasignación exitosa! El motorista y vehículo han sido actualizados.');
       setShowReasignarModal(false);
       // Recargar datos
-      const response = await axiosClient.get(`/solicitudes-transporte/${id}/comparativa`);
-      setData(response.data);
+      const [showRes, compRes] = await Promise.all([
+        axiosClient.get(`/solicitudes-transporte/${id}`),
+        axiosClient.get(`/solicitudes-transporte/${id}/comparativa`)
+      ]);
+      setData({ 
+        raw: showRes.data.data || showRes.data, 
+        comparativa: compRes.data 
+      });
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al reasignar recursos.');
     } finally {

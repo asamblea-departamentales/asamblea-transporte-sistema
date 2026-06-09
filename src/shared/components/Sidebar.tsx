@@ -66,28 +66,30 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               )}
             </NavLink>
           </li>
-          <li>
-            <NavLink 
-              to="/aprobaciones" 
-              onClick={onClose}
-              className={({ isActive }) => 
-                `flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-sm transition-all ${
-                  isActive 
-                    ? 'bg-[#21355e] text-white shadow-inner border border-white/5' 
-                    : 'text-slate-300 hover:bg-white/5 hover:text-white'
-                }`
-              }
-            >
-              {({ isActive }) => (
-                <>
-                  <div className={`p-1.5 rounded-lg flex items-center justify-center ${isActive ? 'bg-[#3b5998]' : 'opacity-70'}`}>
-                    <FileCheck size={18} strokeWidth={2.5} />
-                  </div>
-                  Por Aprobar
-                </>
-              )}
-            </NavLink>
-          </li>
+          {user?.roles?.some(r => ['jefe', 'admin', 'ti', 'super_admin'].includes(r)) && (
+            <li>
+              <NavLink 
+                to="/aprobaciones" 
+                onClick={onClose}
+                className={({ isActive }) => 
+                  `flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-sm transition-all ${
+                    isActive 
+                      ? 'bg-[#21355e] text-white shadow-inner border border-white/5' 
+                      : 'text-slate-300 hover:bg-white/5 hover:text-white'
+                  }`
+                }
+              >
+                {({ isActive }) => (
+                  <>
+                    <div className={`p-1.5 rounded-lg flex items-center justify-center ${isActive ? 'bg-[#3b5998]' : 'opacity-70'}`}>
+                      <FileCheck size={18} strokeWidth={2.5} />
+                    </div>
+                    Por Aprobar
+                  </>
+                )}
+              </NavLink>
+            </li>
+          )}
           <li>
             <NavLink 
               to="/historial" 
