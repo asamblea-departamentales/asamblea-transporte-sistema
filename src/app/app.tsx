@@ -73,7 +73,6 @@ export default function App() {
                 <Route path="/solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
                 <Route path="/solicitudes/transporte/paso-2" element={<Paso2 />} />
                 <Route path="/solicitudes/transporte/paso-3" element={<Paso3 />} />
-
                 {/* Otros Módulos */}
                 <Route path="/solicitudes/mantenimiento/nueva" element={<NuevaSolicitudMantenimiento />} />
                 <Route path="/solicitudes/combustible/nueva" element={<NuevaSolicitudCombustible />} />
