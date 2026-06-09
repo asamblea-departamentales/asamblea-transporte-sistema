@@ -16,8 +16,8 @@ class CalendarioFlota extends Page
     protected static ?string $navigationGroup = 'Gestión Operativa';
     protected static ?int    $navigationSort  = 3;
 
-    // Ocultar del menú lateral — se accede desde PlanificacionFlota
-    protected static bool $shouldRegisterNavigation = false;
+    // Registrar en el menú lateral para acceso directo desde Gestión Operativa
+    protected static bool $shouldRegisterNavigation = true;
 
     protected static string $view = 'filament.pages.calendario-flota';
 
