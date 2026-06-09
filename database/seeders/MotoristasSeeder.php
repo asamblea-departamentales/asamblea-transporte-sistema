@@ -9,19 +9,9 @@ use App\Models\User;
 
 class MotoristasSeeder extends Seeder
 {
-    /**
-     * Seeder corregido:
-     * - Asigna correctamente user_id
-     * - Busca usuarios por nombre
-     * - Guarda tipo_licencia_id
-     * - Guarda numero_empleado
-     * - Genera correo fallback
-     */
     public function run(): void
     {
         $rows = [
-
-            // nombre, tipo_licencia_id, empleado, licencia, correo, telefono, vencimiento, activo
 
             ['Carlos Ernesto López Martínez', 2, 1078, '0210-210957-003-3', null, '7797-1102', '2020-09-30', 1],
             ['José Antonio Pérez González', 2, 1079, '0811-101257-001-6', null, '7749-7107', '2021-12-31', 0],
@@ -50,22 +40,21 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar tipo de licencia
+            | Tipo licencia
             |--------------------------------------------------------------------------
             */
 
-            $tipo = TipoLicencia::find($tipoLicenciaId);
-
-            if (!$tipo) {
-                $tipo = TipoLicencia::create([
+            $tipo = TipoLicencia::firstOrCreate(
+                ['id' => $tipoLicenciaId],
+                [
                     'nombre' => "TLC {$tipoLicenciaId}",
                     'activo' => true,
-                ]);
-            }
+                ]
+            );
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar usuario por nombre
+            | Buscar usuario
             |--------------------------------------------------------------------------
             */
 
@@ -92,40 +81,43 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Crear motorista
+            | Crear o actualizar motorista
             |--------------------------------------------------------------------------
             */
 
-            $motorista = new Motorista();
+            Motorista::updateOrCreate(
 
-            // RELACION USER
-            if ($user) {
-                $motorista->user_id = $user->id;
-            }
+                [
+                    'numero_empleado' => $numeroEmpleado,
+                ],
 
-            $motorista->tipo_licencia_id = $tipo->id;
+                [
+                    'user_id' => $user?->id,
 
-            $motorista->nombre = $nombre;
+                    'tipo_licencia_id' => $tipo->id,
 
-            $motorista->numero_empleado = $numeroEmpleado;
+                    'nombre' => $nombre,
 
-            $motorista->dui = $numeroLicencia ?? "DUI-{$numeroEmpleado}";
+                    'numero_empleado' => $numeroEmpleado,
 
-            $motorista->numero_licencia = $numeroLicencia ?? "LIC-{$numeroEmpleado}";
+                    'dui' => $numeroLicencia ?? "DUI-{$numeroEmpleado}",
 
-            $motorista->telefono = $telefono ?? '0000-0000';
+                    'numero_licencia' => $numeroLicencia ?? "LIC-{$numeroEmpleado}",
 
-            $motorista->correo = $correo;
+                    'telefono' => $telefono ?? '0000-0000',
 
-            $motorista->radio = null;
+                    'correo' => $correo,
 
-            $motorista->fecha_vencimiento_licencia = $fechaVencimiento;
+                    'radio' => null,
 
-            $motorista->activo = (bool) $activo;
+                    'fecha_vencimiento_licencia' => $fechaVencimiento,
 
-            $motorista->save();
+                    'activo' => (bool) $activo,
+                ]
+            );
         }
 
         $this->command->info('MotoristasSeeder ejecutado correctamente.');
     }
 }
+
