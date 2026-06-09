@@ -14,6 +14,7 @@ class TipoLicenciasSeeder extends Seeder
             ['id' => 2, 'nombre' => 'PESADA',           'activo' => true],
             ['id' => 3, 'nombre' => 'LIVIANA',          'activo' => true],
             ['id' => 4, 'nombre' => 'MOTOCICLETA',      'activo' => true],
+            ['id' => 5, 'nombre' => 'PARTICULAR',             'activo' => true],
         ]);
     }
 }
