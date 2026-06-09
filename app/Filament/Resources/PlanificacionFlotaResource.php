@@ -18,6 +18,7 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Override;
 
 class PlanificacionFlotaResource extends Resource
 {
@@ -30,6 +31,16 @@ class PlanificacionFlotaResource extends Resource
     protected static ?string $navigationGroup = 'Gestión Operativa';
 
     protected static ?int $navigationSort = 2;
+
+
+    #[Override]
+    public static function canViewAny(): bool
+    {
+        return auth()->hasAnyRole([
+            'operativo', 'jefe', 'super_admin', 'admin', 'ti'
+        ]);
+    }
+    
 
     public static function table(Table $table): Table
     {
