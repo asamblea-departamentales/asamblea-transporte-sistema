@@ -261,10 +261,10 @@ export default function TransportStep2Page() {
     mapRef.current = map;
 
     L.tileLayer(
-      "https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}",
+      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
       {
-        attribution: '&copy; Google Maps',
-        maxZoom: 20,
+        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+        maxZoom: 19,
       }
     ).addTo(map);
 

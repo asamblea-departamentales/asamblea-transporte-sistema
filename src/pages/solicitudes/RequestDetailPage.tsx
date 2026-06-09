@@ -707,9 +707,9 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       minZoom: 8,
     }).setView([13.7942, -88.8965], 9);
 
-    L.tileLayer("https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}", {
-      attribution: '&copy; Google Maps',
-      maxZoom: 20
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19
     }).addTo(map);
     
     mapRef.current = map;
