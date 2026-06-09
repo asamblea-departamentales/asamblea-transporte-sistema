@@ -32,11 +32,9 @@ class PlanificacionFlotaResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-
-    #[Override]
     public static function canViewAny(): bool
     {
-        return auth()->hasAnyRole([
+        return auth()->check() && auth()->user()->hasAnyRole([
             'operativo', 'jefe', 'super_admin', 'admin', 'ti'
         ]);
     }
