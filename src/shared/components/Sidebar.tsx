@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileCheck, History, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../../features/Auth/context/AuthContext';
 
@@ -10,6 +10,10 @@ interface SidebarProps {
 
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
+  const location = useLocation();
+
+  // Verifica si estamos actualmente en una página de aprobación viendo un ID específico
+  const isAprobando = location.pathname.includes('/aprobaciones/') || location.pathname.includes('/combustible/aprobaciones/');
 
   return (
     <aside className={`
@@ -66,10 +70,10 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               )}
             </NavLink>
           </li>
-          {user?.roles?.some(r => ['jefe', 'admin', 'ti', 'super_admin'].includes(r)) && (
+          {user?.roles?.some(r => ['jefe', 'admin', 'ti', 'super_admin'].includes(r)) && isAprobando && (
             <li>
               <NavLink 
-                to="/aprobaciones" 
+                to={location.pathname} 
                 onClick={onClose}
                 className={({ isActive }) => 
                   `flex items-center gap-4 px-3 py-3 rounded-xl font-bold text-sm transition-all ${
