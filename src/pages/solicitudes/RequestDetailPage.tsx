@@ -707,9 +707,8 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       minZoom: 8,
     }).setView([13.7942, -88.8965], 9);
 
-    L.tileLayer("https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png", {
-      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-      subdomains: 'abcd',
+    L.tileLayer("https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}", {
+      attribution: '&copy; Google Maps',
       maxZoom: 20
     }).addTo(map);
     

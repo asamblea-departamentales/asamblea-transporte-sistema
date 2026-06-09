@@ -261,11 +261,9 @@ export default function TransportStep2Page() {
     mapRef.current = map;
 
     L.tileLayer(
-      "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+      "https://mt1.google.com/vt/lyrs=r&x={x}&y={y}&z={z}",
       {
-        attribution:
-          '&copy; <a href="https://www.openstreetmap.org/copyright">OSM</a> &copy; <a href="https://carto.com/">CARTO</a>',
-        subdomains: "abcd",
+        attribution: '&copy; Google Maps',
         maxZoom: 20,
       }
     ).addTo(map);
