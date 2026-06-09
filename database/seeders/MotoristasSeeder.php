@@ -85,36 +85,34 @@ class MotoristasSeeder extends Seeder
             |--------------------------------------------------------------------------
             */
 
-            Motorista::updateOrCreate(
+            $motorista = Motorista::updateOrCreate(
 
-                [
-                    'numero_empleado' => $numeroEmpleado,
-                ],
+    [
+        'numero_empleado' => $numeroEmpleado
+    ],
 
-                [
-                    'user_id' => $user?->id,
+    [
+        'user_id' => $user?->id,
 
-                    'tipo_licencia_id' => $tipo->id,
+        'tipo_licencia_id' => $tipo->id,
 
-                    'nombre' => $nombre,
+        'nombre' => $nombre,
 
-                    'numero_empleado' => $numeroEmpleado,
+        'dui' => $numeroLicencia,
 
-                    'dui' => $numeroLicencia ?? "DUI-{$numeroEmpleado}",
+        'numero_licencia' => $numeroLicencia,
 
-                    'numero_licencia' => $numeroLicencia ?? "LIC-{$numeroEmpleado}",
+        'telefono' => $telefono ?? '0000-0000',
 
-                    'telefono' => $telefono ?? '0000-0000',
+        'correo' => $correo,
 
-                    'correo' => $correo,
+        'radio' => null,
 
-                    'radio' => null,
+        'fecha_vencimiento_licencia' => $fechaVencimiento,
 
-                    'fecha_vencimiento_licencia' => $fechaVencimiento,
-
-                    'activo' => (bool) $activo,
-                ]
-            );
+        'activo' => (bool) $activo,
+    ]
+);
         }
 
         $this->command->info('MotoristasSeeder ejecutado correctamente.');
