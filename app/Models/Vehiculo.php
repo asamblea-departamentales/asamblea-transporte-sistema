@@ -211,4 +211,10 @@ class Vehiculo extends Model
     {
         return $this->belongsTo(Departamental::class, 'departamental_id');
     }
+
+    public function ultimaRecepcionEntrega(): HasOne
+    {
+        return $this->hasOne(RecepcionEntregaVehiculo::class)
+            ->latest('fecha_hora');
+    }
 }

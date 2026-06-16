@@ -7,9 +7,7 @@ use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
-use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
-use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
 use App\Models\User;
@@ -30,8 +28,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     protected $listeners = [
         'asignarRecursos' => 'asignarRecursosDesdeFilament',
         'aprobarConDecision' => 'aprobarConDecision',
-        'asignarCargaCombustible' => 'asignarCargaCombustibleDesdeFilament',
-        'aprobarConDecisionCombustible' => 'aprobarConDecisionCombustible',
+
         'desbloquearTransporte' => 'desbloquearTransporte',
     ];
 
@@ -369,16 +366,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
         // Notificación enriquecida para combustible
         if ($tipo === 'combustible') {
-            $urlAsignacion = SolicitudCombustibleResource::getUrl('view', ['record' => $id]);
+            $urlLotes = \App\Filament\Resources\AsignacionCombustibleLoteResource::getUrl('dashboard');
 
             Notification::make()
                 ->title('Solicitud de combustible aprobada')
-                ->body('Las cargas/cupones pueden asignarse desde el módulo de Solicitudes de Combustible.')
+                ->body('La asignación física se realiza desde el módulo de Lotes de Combustible.')
                 ->success()
                 ->actions([
-                    \Filament\Notifications\Actions\Action::make('ir_a_asignacion')
-                        ->label('Asignar cargas ahora →')
-                        ->url($urlAsignacion)
+                    \Filament\Notifications\Actions\Action::make('ir_a_lotes')
+                        ->label('Ir a Lotes de Combustible →')
+                        ->url($urlLotes)
                         ->button()
                         ->color('primary'),
                 ])
@@ -545,58 +542,6 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             Notification::make()
                 ->title('Solicitud aprobada con decisión')
-                ->success()
-                ->send();
-        } catch (\DomainException $e) {
-            Notification::make()->title($e->getMessage())->danger()->send();
-        }
-    }
-
-    public function asignarCargaCombustibleDesdeFilament(int $id, float $monto, ?string $justificacion = null): void
-    {
-        if (!auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
-            Notification::make()->title('Sin permiso')->danger()->send();
-            return;
-        }
-
-        $solicitud = \App\Models\SolicitudCombustible::findOrFail($id);
-
-        try {
-            $result = app(SolicitudCombustibleService::class)->asignarCarga(
-                $solicitud, auth()->id(), $monto, $justificacion
-            );
-
-            $this->refreshKpis();
-            $this->resetPage();
-
-            Notification::make()
-                ->title('Carga asignada. La solicitud queda en revisión.')
-                ->success()
-                ->send();
-        } catch (\DomainException $e) {
-            Notification::make()->title($e->getMessage())->danger()->send();
-        }
-    }
-
-    public function aprobarConDecisionCombustible(int $id, string $decisionFinal, ?float $monto = null, ?string $comentario = null): void
-    {
-        if (!auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
-            Notification::make()->title('Sin permiso')->danger()->send();
-            return;
-        }
-
-        $solicitud = \App\Models\SolicitudCombustible::findOrFail($id);
-
-        try {
-            $result = app(SolicitudCombustibleService::class)->aprobarConDecision(
-                $solicitud, auth()->id(), $decisionFinal, $monto, $comentario
-            );
-
-            $this->refreshKpis();
-            $this->resetPage();
-
-            Notification::make()
-                ->title('Solicitud de combustible aprobada con decisión')
                 ->success()
                 ->send();
         } catch (\DomainException $e) {

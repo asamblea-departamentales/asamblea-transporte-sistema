@@ -293,6 +293,68 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
+        Route::get('/vehiculos/{vehiculo}/detalle', function (\App\Models\Vehiculo $vehiculo) {
+            if (!$vehiculo->activo) {
+                return response()->json(['message' => 'Vehículo no encontrado.'], 404);
+            }
+
+            $vehiculo->load([
+                'vehMarca', 'vehModelo', 'tipo', 'color', 'tipoMotor',
+                'transmision', 'traccion', 'tipoLlanta', 'tipoCombustible',
+                'clasificacion', 'estadoCatalogo', 'departamental',
+                'asignacionVigenteMotorista.motorista',
+                'ultimaRecepcionEntrega',
+            ]);
+
+            $u = $vehiculo->ultimaRecepcionEntrega;
+
+            return response()->json([
+                'id' => $vehiculo->id,
+                'placa' => $vehiculo->placa,
+                'marca' => $vehiculo->vehMarca?->nombre ?? $vehiculo->marca,
+                'modelo' => $vehiculo->vehModelo?->nombre ?? $vehiculo->modelo,
+                'tipo' => $vehiculo->tipo?->nombre,
+                'anio' => $vehiculo->anio,
+                'color' => $vehiculo->color?->nombre,
+                'capacidad_personas' => $vehiculo->capacidad_personas,
+                'num_llantas' => $vehiculo->num_llantas,
+                'chasis' => $vehiculo->chasis,
+                'vin' => $vehiculo->vin,
+                'motor_numero' => $vehiculo->motor_numero,
+                'vencimiento_tarjeta' => $vehiculo->vencimiento_tarjeta?->format('Y-m-d'),
+                'activo_fijo' => $vehiculo->activo_fijo,
+                'fotografia_url' => $vehiculo->fotografia_url,
+                'motor' => $vehiculo->tipoMotor?->nombre,
+                'transmision' => $vehiculo->transmision?->nombre,
+                'traccion' => $vehiculo->traccion?->nombre,
+                'tipo_llanta' => $vehiculo->tipoLlanta?->nombre,
+                'tipo_combustible' => $vehiculo->tipoCombustible?->nombre,
+                'clasificacion' => $vehiculo->clasificacion?->nombre,
+                'departamental' => $vehiculo->departamental?->nombre,
+                'estado_catalogo' => $vehiculo->estadoCatalogo?->nombre,
+                'estado_operativo' => $vehiculo->estado_operativo,
+                'disponible' => $vehiculo->esta_disponible,
+                'accesorios' => $vehiculo->accesorios ?? [],
+                'motorista_asignado' => $vehiculo->asignacionVigenteMotorista ? [
+                    'id' => $vehiculo->asignacionVigenteMotorista->motorista_id,
+                    'nombre' => $vehiculo->asignacionVigenteMotorista->motorista?->nombre,
+                    'dui' => $vehiculo->asignacionVigenteMotorista->motorista?->dui,
+                ] : null,
+                'ultima_recepcion_entrega' => $u ? [
+                    'id' => $u->id,
+                    'tipo_movimiento' => $u->tipo_movimiento,
+                    'fecha_hora' => $u->fecha_hora,
+                    'kilometraje' => $u->kilometraje,
+                    'nivel_combustible' => [
+                        'valor' => $u->nivel_combustible,
+                        'label' => $u->nivel_combustible_label,
+                    ],
+                    'herramientas_faltantes' => $u->herramientas_faltantes,
+                    'observaciones' => $u->observaciones,
+                ] : null,
+            ]);
+        });
+
         //Ahora incluye el estado actual de cada motorista, indicando si están disponibles o no, y el motivo de inactividad si no lo están. Esto es útil para que el frontend pueda mostrar esta información directamente sin necesidad de hacer llamadas adicionales para obtener el estado de cada motorista.
         Route::get('/motoristas', function () {
             return response()->json(

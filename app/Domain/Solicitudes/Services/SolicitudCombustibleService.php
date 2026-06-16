@@ -478,7 +478,10 @@ class SolicitudCombustibleService
 
     public function comparativa(SolicitudCombustible $solicitud): array
     {
+        $solicitud->load('vehiculo.ultimaRecepcionEntrega');
+
         $decision = $solicitud->decisionOperativa;
+        $u = $solicitud->vehiculo?->ultimaRecepcionEntrega;
 
         return [
             'solicitud' => [
@@ -488,6 +491,10 @@ class SolicitudCombustibleService
                 'vehiculo' => $solicitud->vehiculo?->placa ?? '—',
                 'motorista' => $solicitud->motorista?->nombre ?? '—',
                 'cantidad_estimada' => $solicitud->cantidad_combustible,
+                'nivel_combustible' => $u ? [
+                    'valor' => $u->nivel_combustible,
+                    'label' => $u->nivel_combustible_label,
+                ] : null,
             ],
             'decision_operativa' => $decision ? [
                 'monto_aprobado' => $decision->monto_aprobado,

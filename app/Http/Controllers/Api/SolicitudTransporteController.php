@@ -140,7 +140,7 @@ class SolicitudTransporteController extends Controller
         $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']) // Catalogos nuevos agregados
+            $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo.ultimaRecepcionEntrega', 'motorista']) // Catalogos nuevos agregados
         );
     }
 
@@ -309,10 +309,13 @@ class SolicitudTransporteController extends Controller
 
         $solicitud->load([
             'solicitante.grupo', 'unidad', 'vehiculo', 'motorista',
-            'sugerencia.vehiculoSugerido', 'sugerencia.motoristaSugerido',
-            'decisionOperativa.vehiculoFinal', 'decisionOperativa.motoristaFinal',
+            'sugerencia.vehiculoSugerido.ultimaRecepcionEntrega', 'sugerencia.motoristaSugerido',
+            'decisionOperativa.vehiculoFinal.ultimaRecepcionEntrega', 'decisionOperativa.motoristaFinal',
             'decisionOperativa.usuarioOperativo',
         ]);
+
+        $vOp = $solicitud->decisionOperativa?->vehiculoFinal?->ultimaRecepcionEntrega;
+        $vSis = $solicitud->sugerencia?->vehiculoSugerido?->ultimaRecepcionEntrega;
 
         return response()->json([
             'solicitud' => [
@@ -335,6 +338,10 @@ class SolicitudTransporteController extends Controller
                 'vehiculo' => [
                     'id' => $solicitud->decisionOperativa->vehiculoFinal?->id,
                     'placa' => $solicitud->decisionOperativa->vehiculoFinal?->placa,
+                    'nivel_combustible' => $vOp ? [
+                        'valor' => $vOp->nivel_combustible,
+                        'label' => $vOp->nivel_combustible_label,
+                    ] : null,
                 ],
                 'motorista' => [
                     'id' => $solicitud->decisionOperativa->motoristaFinal?->id,
@@ -349,6 +356,10 @@ class SolicitudTransporteController extends Controller
                 'vehiculo_sugerido' => [
                     'id' => $solicitud->sugerencia->vehiculoSugerido?->id,
                     'placa' => $solicitud->sugerencia->vehiculoSugerido?->placa,
+                    'nivel_combustible' => $vSis ? [
+                        'valor' => $vSis->nivel_combustible,
+                        'label' => $vSis->nivel_combustible_label,
+                    ] : null,
                 ],
                 'motorista_sugerido' => [
                     'id' => $solicitud->sugerencia->motoristaSugerido?->id,
@@ -440,13 +451,17 @@ class SolicitudTransporteController extends Controller
         $vehiculos = \App\Models\Vehiculo::query()
             ->where('activo', true)
             ->whereNotIn('id', $vehiculosOcupados)
-            ->with('vehMarca')
+            ->with('vehMarca', 'ultimaRecepcionEntrega')
             ->get()
             ->map(fn ($vehiculo) => [
                 'id' => $vehiculo->id,
                 'placa' => $vehiculo->placa,
                 'marca' => $vehiculo->vehMarca?->nombre,
                 'capacidad' => $vehiculo->capacidad_personas,
+                'nivel_combustible' => $vehiculo->ultimaRecepcionEntrega ? [
+                    'valor' => $vehiculo->ultimaRecepcionEntrega->nivel_combustible,
+                    'label' => $vehiculo->ultimaRecepcionEntrega->nivel_combustible_label,
+                ] : null,
             ]);
 
         $motoristas = \App\Models\Motorista::query()

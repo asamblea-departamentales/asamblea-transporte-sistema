@@ -82,7 +82,7 @@ class SolicitudCombustibleController extends Controller
         $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte'])
+            $solicitud->load(['vehiculo.vehMarca', 'vehiculo.vehModelo', 'vehiculo.ultimaRecepcionEntrega', 'motorista', 'solicitante', 'aprobador', 'solicitudTransporte'])
         );
     }
 
