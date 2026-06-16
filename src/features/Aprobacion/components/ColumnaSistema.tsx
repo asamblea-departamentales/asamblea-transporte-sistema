@@ -82,20 +82,25 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
 };
 
 const ResourceCard = ({ icon, title, name, subtitle, fuel, hours }: any) => (
-  <div className="border border-slate-200 rounded-lg p-3 flex gap-3 bg-slate-50">
-    <div className="w-10 h-10 rounded text-slate-500 bg-white border border-slate-200 flex items-center justify-center shrink-0">
-      {icon}
-    </div>
-    <div className="flex-1 min-w-0">
-      <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{title}</p>
-      <p className="text-sm font-semibold text-slate-800 truncate">{name}</p>
-      {subtitle && <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>}
-      {hours !== undefined && <p className="text-xs text-slate-500 mt-0.5 font-medium">Manejo 7D: <span className="text-slate-800">{hours} hrs</span></p>}
+  <div className="border border-slate-200 rounded-lg p-3 flex flex-col gap-3 bg-slate-50">
+    <div className="flex gap-3">
+      <div className="w-10 h-10 rounded text-slate-500 bg-white border border-slate-200 flex items-center justify-center shrink-0">
+        {icon}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">{title}</p>
+        <p className="text-sm font-semibold text-slate-800 truncate">{name}</p>
+        {subtitle && <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>}
+        {hours !== undefined && <p className="text-xs text-slate-500 mt-0.5 font-medium">Manejo 7D: <span className="text-slate-800">{hours} hrs</span></p>}
+      </div>
     </div>
     {fuel && fuel.valor !== undefined && (
-      <div className="flex flex-col items-end justify-center shrink-0" title={`Combustible: ${fuel.label}`}>
-        <span className="text-xs font-bold text-slate-800">{fuel.label}</span>
-        <div className="w-8 h-1.5 bg-slate-200 rounded-sm mt-1 overflow-hidden">
+      <div className="pt-2 mt-1 border-t border-slate-200">
+        <div className="flex justify-between items-center mb-1.5">
+          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Nivel de Combustible</span>
+          <span className="text-xs font-bold text-slate-700">{fuel.label}</span>
+        </div>
+        <div className="w-full h-1.5 bg-slate-200 rounded-full overflow-hidden">
           <div className={`h-full ${fuel.valor > 20 ? 'bg-success' : 'bg-danger'}`} style={{ width: `${fuel.valor}%` }} />
         </div>
       </div>
