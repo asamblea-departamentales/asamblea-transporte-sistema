@@ -52,7 +52,7 @@ export default function AprobacionPage() {
   const steps = [
     { num: 1, title: 'Contexto del Viaje', icon: <MapIcon size={18} /> },
     { num: 2, title: 'Evaluación de Recursos', icon: <Users size={18} /> },
-    { num: 3, title: 'Veredicto Final', icon: <PenTool size={18} /> }
+    { num: 3, title: 'Finalización', icon: <PenTool size={18} /> }
   ];
 
   return (
@@ -150,13 +150,13 @@ export default function AprobacionPage() {
           </div>
         )}
 
-        {/* PASO 3: VEREDICTO FINAL */}
+        {/* PASO 3: FINALIZACIÓN */}
         {step === 3 && (
           <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-600">
               <PenTool size={32} />
             </div>
-            <h2 className="text-2xl font-bold text-slate-800 mb-2">Firma y Veredicto</h2>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Final de Proceso</h2>
             <p className="text-slate-500 mb-8">
               Has seleccionado la asignación del <strong className="text-primary uppercase">{decision}</strong>. 
               Por favor, ingresa un comentario o justificación final para los registros de auditoría.
@@ -236,7 +236,7 @@ export default function AprobacionPage() {
             disabled={step === 2 && decision === 'ninguna'}
             className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
-            {step === 1 ? 'Siguiente: Evaluar Recursos' : 'Siguiente: Veredicto'} <ChevronRight size={18} />
+            {step === 1 ? 'Siguiente: Evaluar Recursos' : 'Siguiente: Finalización'} <ChevronRight size={18} />
           </button>
         ) : (
           <div className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
