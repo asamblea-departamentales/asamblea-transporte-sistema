@@ -2,7 +2,7 @@ import { axiosClient } from '../../../shared/api/axiosClient';
 import { ComparativaResponse } from '../types';
 
 export interface RecursoDisponible {
-  vehiculos: Array<{ id: number; placa: string; marca: string; modelo?: string; tipo?: string; label?: string }>;
+  vehiculos: Array<{ id: number; placa: string; marca: string; modelo?: string; tipo?: string; label?: string; nivel_combustible?: { valor: number; label: string } }>;
   motoristas: Array<{ id: number; nombre: string; dui?: string; telefono?: string }>;
 }
 
