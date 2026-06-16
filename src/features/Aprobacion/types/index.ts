@@ -19,7 +19,7 @@ export interface VehiculoSugerido {
   id: number;
   placa: string;
   modelo: string;
-  combustible_porcentaje: number;
+  nivel_combustible?: { valor: number; label: string };
 }
 
 export interface MotoristaSugerido {

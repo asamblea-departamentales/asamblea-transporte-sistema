@@ -55,7 +55,7 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
           title="Vehículo Óptimo"
           name={data.vehiculo_sugerido.placa}
           subtitle={data.vehiculo_sugerido.modelo}
-          fuel={data.vehiculo_sugerido.combustible_porcentaje}
+          fuel={data.vehiculo_sugerido.nivel_combustible}
         />
 
         <ResourceCard 
@@ -92,11 +92,11 @@ const ResourceCard = ({ icon, title, name, subtitle, fuel, hours }: any) => (
       {subtitle && <p className="text-xs text-slate-500 truncate mt-0.5">{subtitle}</p>}
       {hours !== undefined && <p className="text-xs text-slate-500 mt-0.5 font-medium">Manejo 7D: <span className="text-slate-800">{hours} hrs</span></p>}
     </div>
-    {fuel !== undefined && (
-      <div className="flex flex-col items-end justify-center shrink-0">
-        <span className="text-xs font-bold text-slate-800">{fuel}%</span>
+    {fuel && fuel.valor !== undefined && (
+      <div className="flex flex-col items-end justify-center shrink-0" title={`Combustible: ${fuel.label}`}>
+        <span className="text-xs font-bold text-slate-800">{fuel.label}</span>
         <div className="w-8 h-1.5 bg-slate-200 rounded-sm mt-1 overflow-hidden">
-          <div className={`h-full ${fuel > 20 ? 'bg-success' : 'bg-danger'}`} style={{ width: `${fuel}%` }} />
+          <div className={`h-full ${fuel.valor > 20 ? 'bg-success' : 'bg-danger'}`} style={{ width: `${fuel.valor}%` }} />
         </div>
       </div>
     )}

@@ -355,7 +355,7 @@ export default function HistorialDetallePage() {
                       <option value="">-- Seleccionar vehículo --</option>
                       {recursos?.vehiculos.map(v => (
                         <option key={v.id} value={v.id}>
-                          {v.label || `${v.placa} — ${v.marca}`}
+                          {v.label || `${v.placa} — ${v.marca}`} {v.nivel_combustible ? `(Combustible: ${v.nivel_combustible.label})` : ''}
                         </option>
                       ))}
                     </select>
