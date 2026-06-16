@@ -114,6 +114,12 @@ export type CreateRequestPayload = {
   tipo_vehiculo: string;
   encargado: string;
   subencargado?: string | null;
+  origen_lat?: number | null;
+  origen_lng?: number | null;
+  destino_lat?: number | null;
+  destino_lng?: number | null;
+  destino_adicional_lat?: number | null;
+  destino_adicional_lng?: number | null;
 };
 
 export type CreateRequestResponse = {

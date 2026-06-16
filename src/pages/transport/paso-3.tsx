@@ -236,8 +236,25 @@ export default function TransportStep3Page() {
       const horaStr  = wizardData.hora || "08:00";
       const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
 
+      // Geolocalizar coordenadas antes de enviar si no están cacheadas
+      const origenCoords = (wizardData.origenLat && wizardData.origenLng) 
+        ? { lat: wizardData.origenLat, lng: wizardData.origenLng } 
+        : await geocodeAddress(wizardData.origen || "");
+        
+      const destinoPrincipal = destinosValidos[0];
+      const destinoCoords = (destinoPrincipal?.lat && destinoPrincipal?.lng)
+        ? { lat: destinoPrincipal.lat, lng: destinoPrincipal.lng }
+        : await geocodeAddress(destinoPrincipal?.address || "");
+        
+      const destinoAdicional = destinosValidos[1];
+      const destinoAdicionalCoords = destinoAdicional 
+        ? ((destinoAdicional.lat && destinoAdicional.lng) 
+            ? { lat: destinoAdicional.lat, lng: destinoAdicional.lng } 
+            : await geocodeAddress(destinoAdicional.address))
+        : null;
+
       const resp = await createRequest({
-        destino_principal:     destinosValidos[0]?.address || "Sin destino",
+        destino_principal:     destinoPrincipal?.address || "Sin destino",
         encargado:             wizardData.encargado || "Sin encargado",
         tipo_vehiculo:         wizardData.tipoVehiculo || "sedan",
         fecha_salida:          `${fechaStr}T${horaFinal}`,
@@ -250,6 +267,12 @@ export default function TransportStep3Page() {
         subencargado:          wizardData.subencargado,
         unidad_solicitante_id: 1,
         prioridad:             "media",
+        origen_lat:            origenCoords?.lat,
+        origen_lng:            origenCoords?.lng,
+        destino_lat:           destinoCoords?.lat,
+        destino_lng:           destinoCoords?.lng,
+        destino_adicional_lat: destinoAdicionalCoords?.lat,
+        destino_adicional_lng: destinoAdicionalCoords?.lng,
       });
 
       localStorage.removeItem(STORAGE_KEY);
