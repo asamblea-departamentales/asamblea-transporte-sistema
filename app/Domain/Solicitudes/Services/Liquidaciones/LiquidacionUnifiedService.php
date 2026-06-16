@@ -31,7 +31,7 @@ class LiquidacionUnifiedService
 
         $dateFieldTransporte = 'created_at';
         $dateFieldCombustible = 'fecha_solicitud';
-        $dateFieldMantenimiento = 'fecha_sugerida';
+        $dateFieldMantenimiento = 'created_at';
 
         if (!$tipo || $tipo === 'transporte') {
             $q = SolicitudTransporte::query()

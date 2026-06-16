@@ -332,6 +332,13 @@ class SolicitudTransporteController extends Controller
                 'motivo' => $solicitud->motivo_actividad,
                 'tipo_vehiculo' => $solicitud->tipo_vehiculo_nombre,
                 'cantidad_personas' => $solicitud->cantidad_personas,
+                'origen' => $solicitud->origen,
+                'origen_lat' => $solicitud->origen_lat,
+                'origen_lng' => $solicitud->origen_lng,
+                'destino_lat' => $solicitud->destino_lat,
+                'destino_lng' => $solicitud->destino_lng,
+                'destino_adicional_lat' => $solicitud->destino_adicional_lat,
+                'destino_adicional_lng' => $solicitud->destino_adicional_lng,
             ],
             'operativo' => $solicitud->decisionOperativa ? [
                 'autor' => $solicitud->decisionOperativa->usuarioOperativo?->name,

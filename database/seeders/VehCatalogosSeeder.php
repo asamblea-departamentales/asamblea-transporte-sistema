@@ -10,7 +10,7 @@ class VehCatalogosSeeder extends Seeder
     public function run(): void
     {
         // 1. MARCAS
-        $marcas = ['Mitsubishi', 'Toyota', 'International', 'Nissan', 'Comil', 'Ford', 'Suzuki', 'Isuzu', 'Ford', 'Suzuki', 'Honda', 'Futian', 'Hyundai', 'United Motors', 'Volkswagen'];
+        $marcas = ['Mitsubishi', 'Toyota', 'International', 'Nissan', 'Comil', 'Ford', 'Suzuki', 'Isuzu', 'Suzuki', 'Honda', 'Futian', 'Hyundai', 'United Motors', 'Volkswagen'];
         foreach ($marcas as $marca) {
             DB::table('veh_marcas')->insertOrIgnore(['nombre' => $marca, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
@@ -31,23 +31,41 @@ class VehCatalogosSeeder extends Seeder
         $volkswagenId = DB::table('veh_marcas')->where('nombre', 'Volkswagen')->value('id');
 
 $modelos = [
+    ['nombre' => 'Coaster',       'veh_marca_id' => $toyotaId],
     ['nombre' => 'Corolla',       'veh_marca_id' => $toyotaId],
+    ['nombre' => 'Corolla GLI',   'veh_marca_id' => $toyotaId],
+    ['nombre' => 'Hiace',         'veh_marca_id' => $toyotaId],
     ['nombre' => 'Hilux',         'veh_marca_id' => $toyotaId],
+    ['nombre' => 'Hilux 4x4',     'veh_marca_id' => $toyotaId],
     ['nombre' => 'Land Cruiser',  'veh_marca_id' => $toyotaId],
+    ['nombre' => 'DX',            'veh_marca_id' => $mitsubishiId],
     ['nombre' => 'L200',          'veh_marca_id' => $mitsubishiId],
-    ['nombre' => 'Montero',       'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'L200 4x4',      'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'L300',          'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Lancer',        'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Lancer EX',     'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Lancer GLXI',   'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Ayco',          'veh_marca_id' => $internationalId],
+    ['nombre' => 'Frontier',      'veh_marca_id' => $nissanId],
+    ['nombre' => 'Frontier LCV',  'veh_marca_id' => $nissanId],
+    ['nombre' => 'NP300 Frontier', 'veh_marca_id' => $nissanId],
+    ['nombre' => 'Tiida SE',      'veh_marca_id' => $nissanId],
     ['nombre' => 'Urvan',         'veh_marca_id' => $nissanId],
     ['nombre' => 'NV350',         'veh_marca_id' => $nissanId],
-    ['nombre' => 'Frontier',      'veh_marca_id' => $nissanId],
-    ['nombre' => 'NPR',           'veh_marca_id' => $isuzuId],
-    ['nombre' => 'Dutro',         'veh_marca_id' => $hinoId],
-    ['nombre' => 'F-150',         'veh_marca_id' => $fordId],
-    ['nombre' => 'Transit',       'veh_marca_id' => $fordId],
-    ['nombre' => 'Silverado',     'veh_marca_id' => $chevroletId],
-    ['nombre' => 'Sprinter',      'veh_marca_id' => $mercedesId],
-    ['nombre' => 'Sportage',      'veh_marca_id' => $kiaId],
-    ['nombre' => 'Tucson',        'veh_marca_id' => $hyundaiId],
-    ['nombre' => 'Accent',        'veh_marca_id' => $hyundaiId],
+    ['nombre' => 'PIA',           'veh_marca_id' => $comilId],
+    ['nombre' => 'Explorer Sport', 'veh_marca_id' => $fordId],   
+    ['nombre' => 'GN125H',         'veh_marca_id' => $suzukiId],
+    ['nombre' => 'V-Men',          'veh_marca_id' => $hondaId],
+    ['nombre' => 'CA6371',        'veh_marca_id' => $futianId],
+    ['nombre' => 'NMR',           'veh_marca_id' => $isuzuId],
+    ['nombre' => 'Santa Fe',      'veh_marca_id' => $hyundaiId],
+    ['nombre' => 'County',        'veh_marca_id' => $hyundaiId],
+    ['nombre' => 'I10',        'veh_marca_id' => $hyundaiId],
+    ['nombre' => 'FastWind 180', 'veh_marca_id' => $unitedMotorsId],
+    ['nombre' => 'MAX 200x',      'veh_marca_id' => $unitedMotorsId],
+    ['nombre' => 'Amarok',        'veh_marca_id' => $volkswagenId],
+    ['nombre' => 'Nibus',        'veh_marca_id' => $volkswagenId],
+
 ];
 
 foreach ($modelos as $modelo) {
