@@ -822,8 +822,6 @@
                         </div>
                         @endif
 
-                        @endif
-
                         {{-- ═══ TRANSPORTE: Desbloquear ═══ --}}
                         @if($row['tipo'] === 'transporte' && in_array($row['estado'], ['aprobada', 'asignada', 'en_ejecucion']))
                         <div x-data="{ open: false }">
