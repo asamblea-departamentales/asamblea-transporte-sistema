@@ -4,7 +4,12 @@ export interface SolicitudDetalle {
   id: string;
   horas_estimadas: number | null;
   solicitante: string;
+  origen?: string;
+  origen_lat?: number | null;
+  origen_lng?: number | null;
   destino: string;
+  destino_lat?: number | null;
+  destino_lng?: number | null;
   prioridad: string;
   fechas: {
     salida: string;

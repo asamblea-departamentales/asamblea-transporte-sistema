@@ -1,12 +1,15 @@
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, CheckCircle, Info } from 'lucide-react';
+import { ArrowLeft, CheckCircle, Info, Map as MapIcon, Users, PenTool, ChevronRight, ChevronLeft } from 'lucide-react';
 import { useAprobacion } from '../hooks/useAprobacion';
 import { ColumnaViaje } from '../components/ColumnaViaje';
 import { ColumnaOperativo } from '../components/ColumnaOperativo';
 import { ColumnaSistema } from '../components/ColumnaSistema';
+import { MapaViaje } from '../components/MapaViaje';
 
 export default function AprobacionPage() {
   const { id } = useParams();
+  const [step, setStep] = useState(1);
   const { 
     data, 
     isLoading, 
@@ -43,6 +46,15 @@ export default function AprobacionPage() {
 
   const solicitud = data.solicitud || data;
 
+  const nextStep = () => setStep(s => Math.min(3, s + 1));
+  const prevStep = () => setStep(s => Math.max(1, s - 1));
+
+  const steps = [
+    { num: 1, title: 'Contexto del Viaje', icon: <MapIcon size={18} /> },
+    { num: 2, title: 'Evaluación de Recursos', icon: <Users size={18} /> },
+    { num: 3, title: 'Veredicto Final', icon: <PenTool size={18} /> }
+  ];
+
   return (
     <div className="flex-1 p-4 md:p-8 pb-48 md:pb-32 max-w-[1400px] mx-auto bg-slate-50 min-h-screen">
       {/* Header */}
@@ -50,12 +62,36 @@ export default function AprobacionPage() {
         <Link to="/" className="inline-flex items-center gap-2 text-sm text-slate-500 hover:text-slate-800 transition-colors mb-3">
           <ArrowLeft size={16} /> Volver al Dashboard
         </Link>
-        <div className="flex justify-between items-start">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
               Aprobación de Solicitud <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
             </h1>
-            <p className="text-slate-500 mt-1 text-sm">Revisa la información del viaje y elige la asignación adecuada.</p>
+            <p className="text-slate-500 mt-1 text-sm">Sigue los pasos para revisar y autorizar esta solicitud.</p>
+          </div>
+          
+          {/* Stepper */}
+          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm overflow-x-auto max-w-full">
+            {steps.map((s, idx) => (
+              <React.Fragment key={s.num}>
+                <div 
+                  onClick={() => setStep(s.num)}
+                  className={`flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+                    step === s.num ? 'text-primary font-bold' : 
+                    step > s.num ? 'text-success font-medium' : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
+                    step === s.num ? 'bg-primary/10 text-primary' : 
+                    step > s.num ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'
+                  }`}>
+                    {step > s.num ? <CheckCircle size={14} /> : s.num}
+                  </div>
+                  <span className="text-sm hidden md:block">{s.title}</span>
+                </div>
+                {idx < steps.length - 1 && <div className="w-4 h-[1px] bg-slate-300 mx-2 shrink-0"></div>}
+              </React.Fragment>
+            ))}
           </div>
         </div>
       </div>
@@ -74,93 +110,139 @@ export default function AprobacionPage() {
         </div>
       )}
 
-      {/* 3 Columns Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
-        <ColumnaViaje solicitud={solicitud} />
-        
-        <ColumnaOperativo 
-          data={data.operativo} 
-          isSelected={decision === 'operativo'}
-          isFaded={decision === 'sistema'}
-          onSelect={() => setDecision('operativo')}
-        />
-        
-        <ColumnaSistema 
-          data={data.sistema} 
-          isSelected={decision === 'sistema'}
-          isFaded={decision === 'operativo'}
-          onSelect={() => setDecision('sistema')}
-        />
-      </div>
-
-      {/* Footer Actions */}
-      <div className="fixed bottom-0 left-0 md:left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex flex-col md:flex-row justify-between items-center gap-4 z-10 shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-        <div className="flex items-center gap-3 w-full md:w-auto">
-          <div className="w-10 h-10 rounded-lg bg-slate-100 text-slate-600 hidden md:flex items-center justify-center border border-slate-200 shrink-0">
-            <CheckCircle size={20} />
+      {/* Main Content Area */}
+      <div className="mb-8 min-h-[500px]">
+        {/* PASO 1: MAPA Y DATOS */}
+        {step === 1 && (
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch min-h-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="lg:col-span-3 h-full min-h-[400px]">
+              <MapaViaje 
+                origen={solicitud.origen || 'Asamblea Legislativa de El Salvador'} 
+                destino={solicitud.destino} 
+                origen_lat={solicitud.origen_lat}
+                origen_lng={solicitud.origen_lng}
+                destino_lat={solicitud.destino_lat}
+                destino_lng={solicitud.destino_lng}
+              />
+            </div>
+            <div className="lg:col-span-2 h-full">
+              <ColumnaViaje solicitud={solicitud} />
+            </div>
           </div>
-          <div className="w-full text-center md:text-left">
-            <h4 className="font-bold text-slate-800 text-md tracking-tight hidden md:block">Paso Final</h4>
-            <p className="text-xs text-slate-500">Selecciona una opción arriba y añade un comentario.</p>
+        )}
+
+        {/* PASO 2: RECURSOS */}
+        {step === 2 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <ColumnaOperativo 
+              data={data.operativo} 
+              isSelected={decision === 'operativo'}
+              isFaded={decision === 'sistema'}
+              onSelect={() => setDecision('operativo')}
+            />
+            
+            <ColumnaSistema 
+              data={data.sistema} 
+              isSelected={decision === 'sistema'}
+              isFaded={decision === 'operativo'}
+              onSelect={() => setDecision('sistema')}
+            />
           </div>
-        </div>
+        )}
 
-        <div className="flex flex-col md:flex-row items-center gap-3 w-full md:w-auto">
-          <input 
-            type="text" 
-            placeholder="Comentario (obligatorio)"
-            className="px-3 py-2 border border-slate-300 rounded text-sm w-full md:w-72 focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-colors"
-            value={comentario}
-            onChange={(e) => setComentario(e.target.value)}
-          />
+        {/* PASO 3: VEREDICTO FINAL */}
+        {step === 3 && (
+          <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-600">
+              <PenTool size={32} />
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800 mb-2">Firma y Veredicto</h2>
+            <p className="text-slate-500 mb-8">
+              Has seleccionado la asignación del <strong className="text-primary uppercase">{decision}</strong>. 
+              Por favor, ingresa un comentario o justificación final para los registros de auditoría.
+            </p>
 
-          <div className="flex flex-wrap items-center justify-center gap-2 w-full md:w-auto">
-            <button 
-              onClick={handleRechazar}
-              disabled={isSubmitting || !comentario.trim()}
-              className="flex-1 md:flex-none px-4 py-2 bg-white border border-danger text-danger font-medium rounded hover:bg-danger/5 transition-colors text-sm disabled:opacity-60 disabled:cursor-not-allowed text-center"
-            >
-              Rechazar
-            </button>
+            <div className="text-left mb-8">
+              <label className="block text-sm font-bold text-slate-700 mb-2">Comentario Final (Obligatorio)</label>
+              <textarea 
+                placeholder="Ej: Aprobado según sugerencia del sistema por bajo nivel de fatiga."
+                className="w-full px-4 py-3 border border-slate-300 rounded-lg text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[100px]"
+                value={comentario}
+                onChange={(e) => setComentario(e.target.value)}
+              />
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <button 
+                onClick={handleRechazar}
+                disabled={isSubmitting || !comentario.trim()}
+                className="w-full sm:w-auto px-6 py-3 bg-white border border-danger text-danger font-bold rounded-lg hover:bg-danger/5 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
+              >
+                Rechazar Viaje
+              </button>
+              
+              <button 
+                onClick={confirmarAprobacion}
+                disabled={isSubmitting || decision === 'ninguna' || !comentario.trim()}
+                className={`w-full sm:w-auto px-8 py-3 font-bold rounded-lg text-white transition-all shadow-md ${
+                  decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
+                  decision === 'sistema' ? 'bg-success hover:bg-success-hover' :
+                  'bg-slate-300 cursor-not-allowed'
+                } disabled:opacity-60 disabled:cursor-not-allowed`}
+              >
+                {isSubmitting ? 'Procesando...' : 
+                 (solicitud.decision_final ? 'Actualizar Decisión' : 'Aprobar Oficialmente')}
+              </button>
+            </div>
+
+            {solicitud.decision_final && (
+              <div className="mt-6 pt-6 border-t border-slate-200">
+                <button 
+                  onClick={handleProgramar}
+                  disabled={isSubmitting}
+                  className="w-full px-6 py-3 font-bold rounded-lg bg-slate-800 hover:bg-slate-900 text-white transition-all shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
+                >
+                  Programar Viaje Definitivamente <CheckCircle size={18} />
+                </button>
+              </div>
+            )}
             
             {solicitud.decision_final && (
               <button 
                 onClick={handleDesbloquear}
                 disabled={isSubmitting}
-                className="px-4 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors text-sm underline disabled:opacity-60 disabled:cursor-not-allowed"
+                className="mt-4 text-slate-500 hover:text-slate-800 font-medium transition-colors text-sm underline"
               >
-                Reset
-              </button>
-            )}
-            
-            <button 
-              onClick={confirmarAprobacion}
-              disabled={isSubmitting || decision === 'ninguna' || !comentario.trim()}
-              className={`flex-1 md:flex-none px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm text-center ${
-                decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
-                decision === 'sistema' ? 'bg-success hover:bg-success-hover' :
-                'bg-slate-300 cursor-not-allowed'
-              } disabled:opacity-60 disabled:cursor-not-allowed`}
-            >
-              {isSubmitting ? 'Procesando...' : 
-               (solicitud.decision_final ? 'Actualizar' :
-                (decision === 'operativo' ? 'Aprobar Manual' : 
-                 decision === 'sistema' ? 'Aprobar Sistema' : 
-                 'Seleccionar')
-               )}
-            </button>
-            
-            {solicitud.decision_final && (
-              <button 
-                onClick={handleProgramar}
-                disabled={isSubmitting}
-                className="w-full md:w-auto mt-2 md:mt-0 px-6 py-2 font-bold rounded bg-slate-800 hover:bg-slate-900 text-white transition-all text-sm shadow-md flex items-center justify-center gap-2 disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                Programar Viaje <CheckCircle size={16} />
+                Resetear a estado Pendiente
               </button>
             )}
           </div>
-        </div>
+        )}
+      </div>
+
+      {/* Wizard Footer Navigation */}
+      <div className="fixed bottom-0 left-0 md:left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-[100] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <button 
+          onClick={prevStep}
+          disabled={step === 1}
+          className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          <ChevronLeft size={18} /> Atrás
+        </button>
+
+        {step < 3 ? (
+          <button 
+            onClick={nextStep}
+            disabled={step === 2 && decision === 'ninguna'}
+            className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+          >
+            {step === 1 ? 'Siguiente: Evaluar Recursos' : 'Siguiente: Veredicto'} <ChevronRight size={18} />
+          </button>
+        ) : (
+          <div className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+            <CheckCircle size={16} /> Fin del Proceso
+          </div>
+        )}
       </div>
     </div>
   );
