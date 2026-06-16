@@ -8,6 +8,7 @@ use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
+use App\Models\BitacoraEvento;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
 use App\Models\User;
@@ -516,6 +517,53 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             Notification::make()
                 ->title('Recursos asignados. Solicitud enviada a pre-aprobación.')
+                ->success()
+                ->send();
+        } catch (\DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
+        }
+    }
+
+    public function validarYAsignarRecursos(int $id, array $data): void
+    {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        try {
+            $solicitud = SolicitudTransporte::findOrFail($id);
+
+            $solicitud->comentario_jefe = $data['comentario'];
+            if (array_key_exists('observaciones', $solicitud->getAttributes())) {
+                $solicitud->observaciones = $data['comentario'];
+            }
+            $solicitud->save();
+
+            BitacoraEvento::create([
+                'entidad_tipo' => 'transporte',
+                'entidad_id' => $solicitud->id,
+                'accion' => 'VALIDAR_PREAPROBAR',
+                'user_id' => auth()->id(),
+                'datos_extras' => [
+                    'comentario' => $data['comentario'],
+                    'validaciones' => $this->armarValidaciones($data),
+                ],
+            ]);
+
+            app(SolicitudTransporteService::class)->asignarRecursos(
+                $solicitud,
+                auth()->id(),
+                $data['vehiculo_id'],
+                $data['motorista_id'],
+                $data['justificacion'] ?? null,
+            );
+
+            $this->refreshKpis();
+            $this->resetPage();
+
+            Notification::make()
+                ->title('Solicitud validada y recursos asignados')
                 ->success()
                 ->send();
         } catch (\DomainException $e) {

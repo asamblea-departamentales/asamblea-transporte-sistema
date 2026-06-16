@@ -369,6 +369,9 @@
 
                     {{-- ── REVISIÓN ────────────────────────────────────── --}}
                     @if($etapa === 'revision')
+
+                        {{-- Validar — combustible / mantenimiento (sin asignación) --}}
+                        @if($row['tipo'] !== 'transporte' || $row['estado'] !== 'en_revision')
                         <x-filament::modal width="2xl">
                             <x-slot name="trigger"><button class="btn-accion btn-success"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar</button></x-slot>
                             <x-slot name="heading">Validar y enviar a preaprobación</x-slot>
@@ -392,7 +395,150 @@
                                 <div class="flex justify-end pt-2"><button type="submit" class="btn-accion btn-success"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>Enviar a preaprobación</button></div>
                             </form>
                         </x-filament::modal>
+                        @endif
 
+                        {{-- Validar + Asignar — transporte en revisión (2 pasos) --}}
+                        @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
+                        @php $sugerenciaData = $this->getSugerencia($row['id']); @endphp
+                        <div x-data="{
+                            open: false,
+                            step: 1,
+                            comentario: '',
+                            datos_completos: false,
+                            fechas_validas: false,
+                            recursos_disponibles: false,
+                            reglas_minimas: false,
+                            hallazgos: '',
+                            vehiculoId: null,
+                            motoristaId: null,
+                            justificacion: '',
+                            vehiculos: @js($this->getVehiculosConMotorista()),
+                            sugerencia: @json($sugerenciaData),
+                            get cambio() {
+                                if (!this.sugerencia) return 'ninguno';
+                                const cv = this.vehiculoId && this.sugerencia.vehiculo_sugerido_id !== this.vehiculoId;
+                                const cm = this.motoristaId && this.sugerencia.motorista_sugerido_id !== this.motoristaId;
+                                if (cv && cm) return 'ambos';
+                                if (cv) return 'vehiculo';
+                                if (cm) return 'chofer';
+                                return 'ninguno';
+                            },
+                            onVehiculoChange() {
+                                const v = this.vehiculos[this.vehiculoId];
+                                if (v && v.motorista_id) {
+                                    this.motoristaId = v.motorista_id;
+                                } else {
+                                    this.motoristaId = '';
+                                }
+                            },
+                            submit() {
+                                $wire.validarYAsignarRecursos({{ $row['id'] }}, {
+                                    comentario: this.comentario,
+                                    datos_completos: this.datos_completos,
+                                    fechas_validas: this.fechas_validas,
+                                    recursos_disponibles: this.recursos_disponibles,
+                                    reglas_minimas: this.reglas_minimas,
+                                    hallazgos: this.hallazgos,
+                                    vehiculo_id: this.vehiculoId,
+                                    motorista_id: this.motoristaId,
+                                    justificacion: this.justificacion || null
+                                });
+                                this.open = false;
+                                this.step = 1;
+                                this.comentario = '';
+                                this.datos_completos = false;
+                                this.fechas_validas = false;
+                                this.recursos_disponibles = false;
+                                this.reglas_minimas = false;
+                                this.hallazgos = '';
+                                this.vehiculoId = null;
+                                this.motoristaId = null;
+                                this.justificacion = '';
+                            }
+                        }">
+                            <button class="btn-accion btn-success" @click="open = true; step = 1">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false; step = 1" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+
+                                    {{-- Paso 1: Validación --}}
+                                    <div x-show="step === 1">
+                                        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                            Validar solicitud — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                        </h2>
+                                        <div class="space-y-4 pt-2">
+                                            <div><div class="modal-label">Checklist de validación</div>
+                                            <div class="modal-check-grid">
+                                                <label class="check-item"><input type="checkbox" x-model="datos_completos"> Datos completos</label>
+                                                <label class="check-item"><input type="checkbox" x-model="fechas_validas"> Fechas válidas</label>
+                                                <label class="check-item"><input type="checkbox" x-model="recursos_disponibles"> Recursos disponibles</label>
+                                                <label class="check-item"><input type="checkbox" x-model="reglas_minimas"> Reglas mínimas</label>
+                                            </div></div>
+                                            <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
+                                            <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
+                                        </div>
+                                        <div class="flex justify-end gap-3 pt-4">
+                                            <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
+                                            <button type="button" class="btn-accion btn-primary" @click="step = 2" x-bind:disabled="!comentario.trim()">
+                                                Continuar a asignar recursos →
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                    {{-- Paso 2: Asignación --}}
+                                    <div x-show="step === 2">
+                                        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                            Asignar recursos — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                        </h2>
+                                        @if(!empty($row['tipo_vehiculo_nombre']))
+                                        <div class="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                                            Solicitó: <strong>{{ $row['tipo_vehiculo_nombre'] }}</strong>
+                                        </div>
+                                        @endif
+                                        @if($sugerenciaData)
+                                        <div class="text-xs text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
+                                            Sistema sugiere: <strong>{{ $sugerenciaData['vehiculo_sugerido_placa'] ?? '?' }}</strong>
+                                            con <strong>{{ $sugerenciaData['motorista_sugerido_nombre'] ?? '?' }}</strong>
+                                        </div>
+                                        @endif
+                                        <div class="space-y-4 pt-2">
+                                            <div><div class="modal-label">Vehículo <span class="text-red-400">*</span></div>
+                                            <select x-model="vehiculoId" class="modal-select" @change="onVehiculoChange">
+                                                <option value="">Seleccione un vehículo</option>
+                                                @foreach($this->vehiculosDisponibles() as $vId => $vPlaca)
+                                                <option value="{{ $vId }}">{{ $vPlaca }}</option>
+                                                @endforeach
+                                            </select></div>
+                                            <div><div class="modal-label">Motorista <span class="text-red-400">*</span></div>
+                                            <select x-model="motoristaId" class="modal-select">
+                                                <option value="">Seleccione un motorista</option>
+                                                @foreach($this->motoristasDisponibles() as $mId => $mNombre)
+                                                <option value="{{ $mId }}">{{ $mNombre }}</option>
+                                                @endforeach
+                                            </select></div>
+                                            <div x-show="cambio !== 'ninguno'">
+                                                <div class="modal-label">Justificación <span class="text-red-400">*</span></div>
+                                                <textarea x-model="justificacion" class="modal-textarea" rows="3" placeholder="Indica por qué cambias los recursos sugeridos..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between pt-4">
+                                            <button type="button" class="btn-accion btn-gray" @click="step = 1">← Volver a validación</button>
+                                            <button type="button" class="btn-accion btn-success"
+                                                @click="submit()"
+                                                x-bind:disabled="!vehiculoId || !motoristaId || (cambio !== 'ninguno' && !justificacion.trim())">
+                                                Validar y asignar recursos
+                                            </button>
+                                        </div>
+                                    </div>
+
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
+                        {{-- Observar — siempre visible para todas las solicitudes --}}
                         <x-filament::modal width="2xl">
                             <x-slot name="trigger"><button class="btn-accion btn-gray"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>Observar</button></x-slot>
                             <x-slot name="heading">Registrar observación técnica</x-slot>
@@ -417,84 +563,6 @@
                             </form>
                         </x-filament::modal>
 
-                        @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
-                        @php $sugerenciaData = $this->getSugerencia($row['id']); @endphp
-                        <div x-data="{
-                            open: false,
-                            vehiculoId: null,
-                            motoristaId: null,
-                            justificacion: '',
-                            vehiculos: @js($this->getVehiculosConMotorista()),
-                            sugerencia: @json($sugerenciaData),
-                            get cambio() {
-                                if (!this.sugerencia) return 'ninguno';
-                                const cv = this.vehiculoId && this.sugerencia.vehiculo_sugerido_id !== this.vehiculoId;
-                                const cm = this.motoristaId && this.sugerencia.motorista_sugerido_id !== this.motoristaId;
-                                if (cv && cm) return 'ambos';
-                                if (cv) return 'vehiculo';
-                                if (cm) return 'chofer';
-                                return 'ninguno';
-                            },
-                            onVehiculoChange() {
-                                const v = this.vehiculos[this.vehiculoId];
-                                if (v && v.motorista_id) {
-                                    this.motoristaId = v.motorista_id;
-                                } else {
-                                    this.motoristaId = '';
-                                }
-                            }
-                        }">
-                            <button class="btn-accion btn-indigo" @click="open = true">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                Asignar recursos
-                            </button>
-                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
-                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
-                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
-                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                                        Asignar recursos — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
-                                    </h2>
-                                    @if(!empty($row['tipo_vehiculo_nombre']))
-                                    <div class="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
-                                        Solicitó: <strong>{{ $row['tipo_vehiculo_nombre'] }}</strong>
-                                    </div>
-                                    @endif
-                                    @if($sugerenciaData)
-                                    <div class="text-xs text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
-                                        Sistema sugiere: <strong>{{ $sugerenciaData['vehiculo_sugerido_placa'] ?? '?' }}</strong>
-                                        con <strong>{{ $sugerenciaData['motorista_sugerido_nombre'] ?? '?' }}</strong>
-                                    </div>
-                                    @endif
-                                    <div><div class="modal-label">Vehículo <span class="text-red-400">*</span></div>
-                                    <select x-model="vehiculoId" class="modal-select" @change="onVehiculoChange">
-                                        <option value="">Seleccione un vehículo</option>
-                                        @foreach($this->vehiculosDisponibles() as $vId => $vPlaca)
-                                        <option value="{{ $vId }}">{{ $vPlaca }}</option>
-                                        @endforeach
-                                    </select></div>
-                                    <div><div class="modal-label">Motorista <span class="text-red-400">*</span></div>
-                                    <select x-model="motoristaId" class="modal-select">
-                                        <option value="">Seleccione un motorista</option>
-                                        @foreach($this->motoristasDisponibles() as $mId => $mNombre)
-                                        <option value="{{ $mId }}">{{ $mNombre }}</option>
-                                        @endforeach
-                                    </select></div>
-                                    <div x-show="cambio !== 'ninguno'">
-                                        <div class="modal-label">Justificación <span class="text-red-400">*</span></div>
-                                        <textarea x-model="justificacion" class="modal-textarea" rows="3" placeholder="Indica por qué cambias los recursos sugeridos..."></textarea>
-                                    </div>
-                                    <div class="flex justify-end gap-3 pt-2">
-                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
-                                        <button type="button" class="btn-accion btn-success"
-                                            @click="$wire.asignarRecursosDesdeFilament({{ $row['id'] }}, vehiculoId, motoristaId, justificacion || null); open = false"
-                                            x-bind:disabled="!vehiculoId || !motoristaId || (cambio !== 'ninguno' && !justificacion.trim())">
-                                            Confirmar asignación
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        @endif
                     @endif
 
                     {{-- ── APROBACIONES ────────────────────────────────── --}}

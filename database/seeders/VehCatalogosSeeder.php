@@ -10,22 +10,25 @@ class VehCatalogosSeeder extends Seeder
     public function run(): void
     {
         // 1. MARCAS
-        $marcas = ['Toyota', 'Mitsubishi', 'Nissan', 'Hyundai', 'Ford', 'Chevrolet', 'Isuzu', 'Hino', 'Mercedes-Benz', 'Kia'];
+        $marcas = ['Mitsubishi', 'Toyota', 'International', 'Nissan', 'Comil', 'Ford', 'Suzuki', 'Isuzu', 'Ford', 'Suzuki', 'Honda', 'Futian', 'Hyundai', 'United Motors', 'Volkswagen'];
         foreach ($marcas as $marca) {
             DB::table('veh_marcas')->insertOrIgnore(['nombre' => $marca, 'activo' => true, 'created_at' => now(), 'updated_at' => now()]);
         }
 
         // 2. MODELOS (con su marca correspondiente)
-$toyotaId     = DB::table('veh_marcas')->where('nombre', 'Toyota')->value('id');
-$mitsubishiId = DB::table('veh_marcas')->where('nombre', 'Mitsubishi')->value('id');
-$nissanId     = DB::table('veh_marcas')->where('nombre', 'Nissan')->value('id');
-$isuzuId      = DB::table('veh_marcas')->where('nombre', 'Isuzu')->value('id');
-$hinoId       = DB::table('veh_marcas')->where('nombre', 'Hino')->value('id');
-$fordId       = DB::table('veh_marcas')->where('nombre', 'Ford')->value('id');
-$chevroletId  = DB::table('veh_marcas')->where('nombre', 'Chevrolet')->value('id');
-$mercedesId   = DB::table('veh_marcas')->where('nombre', 'Mercedes-Benz')->value('id');
-$kiaId        = DB::table('veh_marcas')->where('nombre', 'Kia')->value('id');
-$hyundaiId    = DB::table('veh_marcas')->where('nombre', 'Hyundai')->value('id');
+        $toyotaId = DB::table('veh_marcas')->where('nombre', 'Toyota')->value('id');
+        $mitsubishiId = DB::table('veh_marcas')->where('nombre', 'Mitsubishi')->value('id');
+        $internationalId = DB::table('veh_marcas')->where('nombre', 'International')->value('id');
+        $nissanId = DB::table('veh_marcas')->where('nombre', 'Nissan')->value('id');
+        $comilId = DB::table('veh_marcas')->where('nombre', 'Comil')->value('id');
+        $isuzuId = DB::table('veh_marcas')->where('nombre', 'Isuzu')->value('id');
+        $fordId = DB::table('veh_marcas')->where('nombre', 'Ford')->value('id');
+        $suzukiId = DB::table('veh_marcas')->where('nombre', 'Suzuki')->value('id');
+        $hondaId = DB::table('veh_marcas')->where('nombre', 'Honda')->value('id');
+        $futianId = DB::table('veh_marcas')->where('nombre', 'Futian')->value('id');
+        $hyundaiId = DB::table('veh_marcas')->where('nombre', 'Hyundai')->value('id');
+        $unitedMotorsId = DB::table('veh_marcas')->where('nombre', 'United Motors')->value('id');
+        $volkswagenId = DB::table('veh_marcas')->where('nombre', 'Volkswagen')->value('id');
 
 $modelos = [
     ['nombre' => 'Corolla',       'veh_marca_id' => $toyotaId],
