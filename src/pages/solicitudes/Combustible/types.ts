@@ -7,7 +7,7 @@ import type {
 // ══════════════════════════════════════════════════════════════════════════════
 // TIPOS LOCALES
 // ══════════════════════════════════════════════════════════════════════════════
-
+//NOo
 export interface CatalogosState {
   vehiculos: VehiculoCatalogo[];
   motoristas: MotoristaCatalogo[];
