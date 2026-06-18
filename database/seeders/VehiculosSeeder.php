@@ -10,260 +10,147 @@ class VehiculosSeeder extends Seeder
 {
     public function run(): void
     {
-        $marcaToyota     = DB::table('veh_marcas')->where('nombre', 'Toyota')->value('id');
-        $marcaMitsubishi = DB::table('veh_marcas')->where('nombre', 'Mitsubishi')->value('id');
-        $marcaHino       = DB::table('veh_marcas')->where('nombre', 'Hino')->value('id');
-        $marcaNissan     = DB::table('veh_marcas')->where('nombre', 'Nissan')->value('id');
-        $marcaIsuzu      = DB::table('veh_marcas')->where('nombre', 'Isuzu')->value('id');
+        $sedan       = TipoVehiculo::where('nombre', 'Sedán')->value('id');
+        $microbus    = TipoVehiculo::where('nombre', 'Microbús')->value('id');
+        $camion      = TipoVehiculo::where('nombre', 'Camión Pesado')->value('id');
+        $pickup      = TipoVehiculo::where('nombre', 'Pickup')->value('id');
+        $moto        = TipoVehiculo::where('nombre', 'Motocicleta')->value('id');
 
-        $modeloCorolla   = DB::table('veh_modelos')->where('nombre', 'Corolla')->value('id');
-        $modeloMontero   = DB::table('veh_modelos')->where('nombre', 'Montero')->value('id');
-        $modeloDutro     = DB::table('veh_modelos')->where('nombre', 'Dutro')->value('id');
-        $modeloUrvan     = DB::table('veh_modelos')->where('nombre', 'Urvan')->value('id');
-        $modeloNPR       = DB::table('veh_modelos')->where('nombre', 'NPR')->value('id');
+        $marcas  = DB::table('veh_marcas')->pluck('id', 'nombre');
+        $modelos = DB::table('veh_modelos')->pluck('id', 'nombre');
 
-        $colorBlanco     = DB::table('veh_colores')->where('nombre', 'BLANCO')->value('id');
-        $colorGris       = DB::table('veh_colores')->where('nombre', 'GRIS')->value('id');
-        $colorGrisOscuro = DB::table('veh_colores')->where('nombre', 'GRIS OSCURO')->value('id');
+        $disponible = DB::table('veh_estados_catalogo')->where('nombre', 'Disponible')->value('id');
+        $gris       = DB::table('veh_colores')->where('nombre', 'GRIS')->value('id');
+        $blanco     = DB::table('veh_colores')->where('nombre', 'BLANCO')->value('id');
+        $plateado   = DB::table('veh_colores')->where('nombre', 'PLATEADO')->value('id');
+        $negro      = DB::table('veh_colores')->where('nombre', 'NEGRO')->value('id');
+        $azul       = DB::table('veh_colores')->where('nombre', 'AZUL')->value('id');
+        $rojo       = DB::table('veh_colores')->where('nombre', 'ROJO')->value('id');
+        $manual     = DB::table('veh_transmisiones')->where('nombre', 'Manual')->value('id');
+        $auto       = DB::table('veh_transmisiones')->where('nombre', 'Automática')->value('id');
+        $gasolina   = DB::table('veh_tipo_combustible')->where('nombre', 'GASOLINA')->value('id');
+        $diesel     = DB::table('veh_tipo_combustible')->where('nombre', 'DIESEL')->value('id');
+        $tracc4x2   = DB::table('veh_tracciones')->where('nombre', '4x2')->value('id');
+        $tracc4x4   = DB::table('veh_tracciones')->where('nombre', '4x4')->value('id');
+        $clasifAdmin = DB::table('veh_clasificaciones')->where('nombre', 'ADMINISTRATIVO')->value('id');
+        $clasifTransp = DB::table('veh_clasificaciones')->where('nombre', 'TRANSPORTE DE PERSONAL')->value('id');
 
-        $motorGasolina   = DB::table('veh_tipos_motor')->where('nombre', 'GASOLINA')->value('id');
-        $motorDiesel     = DB::table('veh_tipos_motor')->where('nombre', 'DIESEL')->value('id');
-
-        $transManual     = DB::table('veh_transmisiones')->where('nombre', 'Manual')->value('id');
-        $transAuto       = DB::table('veh_transmisiones')->where('nombre', 'Automática')->value('id');
-
-        $traccion4x2     = DB::table('veh_tracciones')->where('nombre', '4x2')->value('id');
-        $traccion4x4     = DB::table('veh_tracciones')->where('nombre', '4x4')->value('id');
-
-        $llanta205_60R16 = DB::table('veh_tipo_llantas')->where('nombre', '205/60R16')->value('id');
-        $llanta195R14    = DB::table('veh_tipo_llantas')->where('nombre', '195R14')->value('id');
-        $llanta11R22     = DB::table('veh_tipo_llantas')->where('nombre', '11.0R22.5')->value('id');
-
-        $combGasolina    = DB::table('veh_tipo_combustible')->where('nombre', 'GASOLINA')->value('id');
-        $combDiesel      = DB::table('veh_tipo_combustible')->where('nombre', 'DIESEL')->value('id');
-
-        $clasAdmin       = DB::table('veh_clasificaciones')->where('nombre', 'ADMINISTRATIVO')->value('id');
-        $clasTransporte  = DB::table('veh_clasificaciones')->where('nombre', 'TRANSPORTE DE PERSONAL')->value('id');
-
-        $estadoDisponible = DB::table('veh_estados_catalogo')->where('nombre', 'Disponible')->value('id');
-
-        $tipoSedan    = TipoVehiculo::where('nombre', 'Sedán')->value('id');
-        $tipoMicrobus = TipoVehiculo::where('nombre', 'Microbús')->value('id');
-        $tipoCamion   = TipoVehiculo::where('nombre', 'Camión Pesado')->value('id');
+        $nrm = fn($m, $mo) => ['veh_marca_id' => $marcas[$m] ?? null, 'veh_modelo_id' => $modelos[$mo] ?? null];
 
         $vehiculos = [
             // Sedanes
-            [
-                'placa'                   => 'P-123456',
-                'tipo_vehiculo_id'        => $tipoSedan,
-                'anio'                    => 2020,
-                'capacidad_personas'      => 5,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaToyota,
-                'veh_modelo_id'           => $modeloCorolla,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorGasolina,
-                'veh_transmision_id'      => $transAuto,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta205_60R16,
-                'veh_tipo_combustible_id' => $combGasolina,
-                'veh_clasificacion_id'    => $clasAdmin,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 4,
-                'chasis'                  => 'CHS-001-2020',
-                'vin'                     => 'VIN-TOY-001',
-                'motor_numero'            => 'MOT-001',
-            ],
-            [
-                'placa'                   => 'P-234567',
-                'tipo_vehiculo_id'        => $tipoSedan,
-                'anio'                    => 2021,
-                'capacidad_personas'      => 5,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaMitsubishi,
-                'veh_modelo_id'           => $modeloMontero,
-                'veh_color_id'            => $colorGris,
-                'veh_tipo_motor_id'       => $motorGasolina,
-                'veh_transmision_id'      => $transAuto,
-                'veh_traccion_id'         => $traccion4x4,
-                'veh_tipo_llanta_id'      => $llanta205_60R16,
-                'veh_tipo_combustible_id' => $combGasolina,
-                'veh_clasificacion_id'    => $clasAdmin,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 4,
-                'chasis'                  => 'CHS-002-2021',
-                'vin'                     => 'VIN-MIT-001',
-                'motor_numero'            => 'MOT-002',
-            ],
-            [
-                'placa'                   => 'P-345678',
-                'tipo_vehiculo_id'        => $tipoSedan,
-                'anio'                    => 2019,
-                'capacidad_personas'      => 5,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaToyota,
-                'veh_modelo_id'           => $modeloCorolla,
-                'veh_color_id'            => $colorGrisOscuro,
-                'veh_tipo_motor_id'       => $motorGasolina,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta205_60R16,
-                'veh_tipo_combustible_id' => $combGasolina,
-                'veh_clasificacion_id'    => $clasAdmin,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 4,
-                'chasis'                  => 'CHS-003-2019',
-                'vin'                     => 'VIN-TOY-002',
-                'motor_numero'            => 'MOT-003',
-            ],
-
-            // Microbuses
-            [
-                'placa'                   => 'M-100001',
-                'tipo_vehiculo_id'        => $tipoMicrobus,
-                'anio'                    => 2018,
-                'capacidad_personas'      => 15,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaNissan,
-                'veh_modelo_id'           => $modeloUrvan,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta195R14,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 4,
-                'chasis'                  => 'CHS-004-2018',
-                'vin'                     => 'VIN-NIS-001',
-                'motor_numero'            => 'MOT-004',
-            ],
-            [
-                'placa'                   => 'M-100002',
-                'tipo_vehiculo_id'        => $tipoMicrobus,
-                'anio'                    => 2020,
-                'capacidad_personas'      => 20,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaNissan,
-                'veh_modelo_id'           => $modeloUrvan,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta195R14,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 4,
-                'chasis'                  => 'CHS-005-2020',
-                'vin'                     => 'VIN-NIS-002',
-                'motor_numero'            => 'MOT-005',
-            ],
-            [
-                'placa'                   => 'M-100003',
-                'tipo_vehiculo_id'        => $tipoMicrobus,
-                'anio'                    => 2019,
-                'capacidad_personas'      => 25,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaIsuzu,
-                'veh_modelo_id'           => $modeloNPR,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta195R14,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 6,
-                'chasis'                  => 'CHS-006-2019',
-                'vin'                     => 'VIN-ISU-001',
-                'motor_numero'            => 'MOT-006',
-            ],
-
-            // Camiones Pesados
-            [
-                'placa'                   => 'C-200001',
-                'tipo_vehiculo_id'        => $tipoCamion,
-                'anio'                    => 2017,
-                'capacidad_personas'      => 3,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaHino,
-                'veh_modelo_id'           => $modeloDutro,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta11R22,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 6,
-                'chasis'                  => 'CHS-007-2017',
-                'vin'                     => 'VIN-HIN-001',
-                'motor_numero'            => 'MOT-007',
-            ],
-            [
-                'placa'                   => 'C-200002',
-                'tipo_vehiculo_id'        => $tipoCamion,
-                'anio'                    => 2018,
-                'capacidad_personas'      => 3,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaHino,
-                'veh_modelo_id'           => $modeloDutro,
-                'veh_color_id'            => $colorGris,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta11R22,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 6,
-                'chasis'                  => 'CHS-008-2018',
-                'vin'                     => 'VIN-HIN-002',
-                'motor_numero'            => 'MOT-008',
-            ],
-            [
-                'placa'                   => 'C-200003',
-                'tipo_vehiculo_id'        => $tipoCamion,
-                'anio'                    => 2016,
-                'capacidad_personas'      => 3,
-                'estado'                  => 'disponible',
-                'activo'                  => true,
-                'veh_marca_id'            => $marcaIsuzu,
-                'veh_modelo_id'           => $modeloNPR,
-                'veh_color_id'            => $colorBlanco,
-                'veh_tipo_motor_id'       => $motorDiesel,
-                'veh_transmision_id'      => $transManual,
-                'veh_traccion_id'         => $traccion4x2,
-                'veh_tipo_llanta_id'      => $llanta11R22,
-                'veh_tipo_combustible_id' => $combDiesel,
-                'veh_clasificacion_id'    => $clasTransporte,
-                'veh_estado_catalogo_id'  => $estadoDisponible,
-                'num_llantas'             => 6,
-                'chasis'                  => 'CHS-009-2016',
-                'vin'                     => 'VIN-ISU-002',
-                'motor_numero'            => 'MOT-009',
-            ],
+            ['placa' => 'P42697',  'tipo_vehiculo_id' => $sedan,    'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P618426', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P636163', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P618428', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P243639', 'tipo_vehiculo_id' => $sedan,    'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Corolla GLI'),                    'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131011', 'tipo_vehiculo_id' => $microbus, 'anio' => 2011, 'capacidad_personas' => 20,...$nrm('Toyota', 'Coaster'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131644', 'tipo_vehiculo_id' => $microbus, 'anio' => 2010, 'capacidad_personas' => 15,...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'C72526',  'tipo_vehiculo_id' => $camion,   'anio' => 2012, 'capacidad_personas' => 3, ...$nrm('Isuzu', 'NMR'),                             'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'C72530',  'tipo_vehiculo_id' => $camion,   'anio' => 2012, 'capacidad_personas' => 3, ...$nrm('Isuzu', 'NMR'),                             'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P618425', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P618489', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P585521', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer GLX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P122798', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Corolla GLI'),                    'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P585513', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer GLX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P662565', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P592075', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Tiida SE'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N5351',   'tipo_vehiculo_id' => $sedan,    'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'I10'),                           'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N5388',   'tipo_vehiculo_id' => $sedan,    'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'I10'),                           'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6647',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6645',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6646',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6662',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6660',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N7375',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N21907',  'tipo_vehiculo_id' => $sedan,    'anio' => 2024, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Nivus'),                      'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N2272',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9025',   'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6702',   'tipo_vehiculo_id' => $pickup,   'anio' => 2016, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N5690',   'tipo_vehiculo_id' => $microbus, 'anio' => 2012, 'capacidad_personas' => 15,...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P8929',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P585518', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer GLXI'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P618427', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N8768',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131006', 'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P42614',  'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P645586', 'tipo_vehiculo_id' => $pickup,   'anio' => 2010, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P212307', 'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P212296', 'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P571331', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P573715', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131053', 'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P42696',  'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P501B4',  'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P125795', 'tipo_vehiculo_id' => $pickup,   'anio' => 2012, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P575210', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P574782', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P686864', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P686859', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P686861', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P686860', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P686863', 'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P732388', 'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9770',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Nissan', 'NP300 Frontier'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9768',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Nissan', 'NP300 Frontier'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9766',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Nissan', 'NP300 Frontier'),                  'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P964698', 'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9653',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P828642', 'tipo_vehiculo_id' => $pickup,   'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P951603', 'tipo_vehiculo_id' => $sedan,    'anio' => 2020, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'Santa Fe'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P951609', 'tipo_vehiculo_id' => $sedan,    'anio' => 2020, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'Santa Fe'),                       'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M104760', 'tipo_vehiculo_id' => $moto,     'anio' => 2013, 'capacidad_personas' => 2, ...$nrm('Suzuki', 'GN125H'),                         'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585805', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585997', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585795', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585996', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585802', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585808', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585811', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585801', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585810', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M586003', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585800', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'MAX 200x'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'M585792', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'MAX 200x'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P-312D2', 'tipo_vehiculo_id' => $microbus, 'anio' => 2023, 'capacidad_personas' => 14,...$nrm('Nissan', 'Urvan'),                           'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19432', 'tipo_vehiculo_id' => $microbus, 'anio' => 2022, 'capacidad_personas' => 25,...$nrm('Hyundai', 'County'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-872E2', 'tipo_vehiculo_id' => $pickup,   'anio' => 2025, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19313', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19314', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19318', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19317', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
         ];
 
-        foreach ($vehiculos as $vehiculo) {
-            DB::table('vehiculos')->insertOrIgnore(array_merge($vehiculo, [
-                'created_at' => now(),
-                'updated_at' => now(),
+        $modeloNombres = [
+            'Hilux', 'Lancer EX', 'Lancer GLX', 'Lancer GLXI', 'Corolla GLI', 'Coaster',
+            'Hiace', 'NMR', 'Tiida SE', 'I10', 'Frontier', 'Frontier LCV',
+            'NP300 Frontier', 'Nivus', 'L200', 'Santa Fe', 'GN125H',
+            'FastWind 180', 'MAX 200x', 'Urvan', 'County', 'Amarok',
+        ];
+        $modeloStr = DB::table('veh_modelos')->whereIn('nombre', $modeloNombres)->pluck('nombre', 'id');
+        $marcaStr  = DB::table('veh_marcas')->pluck('nombre', 'id');
+
+        foreach ($vehiculos as $v) {
+            $mid = $v['veh_modelo_id'] ?? null;
+            $bid = $v['veh_marca_id'] ?? null;
+            DB::table('vehiculos')->insertOrIgnore(array_merge($v, [
+                'marca'                   => $marcaStr[$bid] ?? null,
+                'modelo'                  => $modeloStr[$mid] ?? null,
+                'veh_color_id'            => null,
+                'veh_tipo_motor_id'       => null,
+                'veh_transmision_id'      => null,
+                'veh_traccion_id'         => null,
+                'veh_tipo_llanta_id'      => null,
+                'veh_tipo_combustible_id' => null,
+                'veh_clasificacion_id'    => null,
+                'veh_estado_catalogo_id'  => $disponible,
+                'created_at'              => now(),
+                'updated_at'              => now(),
             ]));
         }
 
-        $this->command->info(' Vehículos de prueba insertados correctamente.');
+        $this->command->info('Vehículos reales insertados correctamente.');
     }
 }

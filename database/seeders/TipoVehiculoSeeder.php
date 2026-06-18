@@ -13,6 +13,8 @@ class TipoVehiculoSeeder extends Seeder
             ['nombre' => 'Sedán',          'activo' => true],
             ['nombre' => 'Microbús',       'activo' => true],
             ['nombre' => 'Camión Pesado',  'activo' => true],
+            ['nombre' => 'Pickup',         'activo' => true],
+            ['nombre' => 'Motocicleta',    'activo' => true],
         ];
 
         foreach ($tipos as $tipo) {

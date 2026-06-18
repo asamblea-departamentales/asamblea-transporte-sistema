@@ -44,6 +44,7 @@ $modelos = [
     ['nombre' => 'L300',          'veh_marca_id' => $mitsubishiId],
     ['nombre' => 'Lancer',        'veh_marca_id' => $mitsubishiId],
     ['nombre' => 'Lancer EX',     'veh_marca_id' => $mitsubishiId],
+    ['nombre' => 'Lancer GLX',    'veh_marca_id' => $mitsubishiId],
     ['nombre' => 'Lancer GLXI',   'veh_marca_id' => $mitsubishiId],
     ['nombre' => 'Ayco',          'veh_marca_id' => $internationalId],
     ['nombre' => 'Frontier',      'veh_marca_id' => $nissanId],
@@ -64,7 +65,8 @@ $modelos = [
     ['nombre' => 'FastWind 180', 'veh_marca_id' => $unitedMotorsId],
     ['nombre' => 'MAX 200x',      'veh_marca_id' => $unitedMotorsId],
     ['nombre' => 'Amarok',        'veh_marca_id' => $volkswagenId],
-    ['nombre' => 'Nibus',        'veh_marca_id' => $volkswagenId],
+    ['nombre' => 'Nivus',         'veh_marca_id' => $volkswagenId],
+    ['nombre' => 'Nibus',         'veh_marca_id' => $volkswagenId],
 
 ];
 
