@@ -22,6 +22,13 @@ class Motorista extends Model
         'dui',
         'telefono',
         'activo',
+        'user_id',
+        'correo',
+        'numero_empleado',
+        'numero_licencia',
+        'tipo_licencia_id',
+        'fecha_vencimiento_licencia',
+        'radio',
     ];
 
     protected $casts = [

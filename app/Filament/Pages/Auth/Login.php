@@ -2,8 +2,8 @@
 
 namespace App\Filament\Pages\Auth;
 
+use App\Domain\Solicitudes\Services\LdapAuthenticator;
 use App\Models\User;
-use App\Services\LdapAuthenticator;
 use Filament\Forms\Components\Component;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -44,14 +44,14 @@ class Login extends BaseLogin
     protected function getPasswordFormComponent(): Component
     {
         return TextInput::make('password')
-            ->label('Contraseña')
-            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3" class="text-sm font-medium text-primary-600 hover:text-primary-500"> ¿Olvidaste tu contraseña? </x-filament::link>')) : null)
+            ->label('Contrasena')
+            ->hint(filament()->hasPasswordReset() ? new HtmlString(Blade::render('<x-filament::link :href="filament()->getRequestPasswordResetUrl()" tabindex="3" class="text-sm font-medium text-primary-600 hover:text-primary-500"> Olvidaste tu contrasena? </x-filament::link>')) : null)
             ->password()
             ->revealable(filament()->arePasswordsRevealable())
             ->autocomplete('current-password')
             ->required()
             ->extraInputAttributes(['tabindex' => 2])
-            ->placeholder('Ingresa tu contraseña')
+            ->placeholder('Ingresa tu contrasena')
             ->prefixIcon('heroicon-o-lock-closed')
             ->maxLength(255);
     }
@@ -74,14 +74,14 @@ class Login extends BaseLogin
 
     public function getSubHeading(): string
     {
-        return 'Sistema de Gestión de Transporte Institucional';
+        return 'Sistema de Gestion de Transporte Institucional';
     }
 
     protected function getFormActions(): array
     {
         return [
             $this->getAuthenticateFormAction()
-                ->label('Iniciar Sesión')
+                ->label('Iniciar Sesion')
                 ->color('primary'),
         ];
     }
@@ -110,8 +110,9 @@ class Login extends BaseLogin
             if (! $user->password || ! Hash::check($password, $user->password)) {
                 $this->throwFailureValidationException();
             }
-        } elseif (env('LDAP_ENABLED', false)) {
+        } elseif (filter_var(env('LDAP_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
             $ldapAuth = app(LdapAuthenticator::class);
+
             if (! $ldapAuth->authenticate($username, $password)) {
                 $this->throwFailureValidationException();
             }
@@ -128,7 +129,7 @@ class Login extends BaseLogin
 
     protected function attemptLdapAndCreateUser(string $username, string $password): bool
     {
-        if (! env('LDAP_ENABLED', false)) {
+        if (! filter_var(env('LDAP_ENABLED', false), FILTER_VALIDATE_BOOLEAN)) {
             return false;
         }
 
@@ -138,35 +139,21 @@ class Login extends BaseLogin
             return false;
         }
 
-        try {
-            $connection = \LdapRecord\Container::get('default');
-            $search = $connection->query()
-                ->where('samaccountname', '=', $username)
-                ->first();
+        $ldapUser = $ldapAuth->findUser($username);
 
-            if (! $search) {
-                return false;
-            }
-
-            $name = $search->getFirstAttribute('displayname')
-                ?? $search->getFirstAttribute('cn')
-                ?? $username;
-
-            $email = $search->getFirstAttribute('mail')
-                ?? "{$username}@asamblea.gob.sv";
-
-            User::create([
-                'username' => $username,
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make(Str::random(32)),
-                'activo' => true,
-            ]);
-
-            return true;
-        } catch (\Exception $e) {
+        if (! $ldapUser) {
             return false;
         }
+
+        User::create([
+            'username' => $username,
+            'name' => $ldapUser['name'],
+            'email' => $ldapUser['email'],
+            'password' => Hash::make(Str::random(32)),
+            'activo' => true,
+        ]);
+
+        return true;
     }
 
     protected function getCredentialsFromFormData(array $data): array
