@@ -66,9 +66,14 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
+        if (request()->routeIs('filament.admin.auth.logout')) {
+            return true;
+        }
+
         if (app()->environment('local')) {
             return true;
         }
+
         return !$this->hasAnyRole(['motorista', 'solicitante']);
     }
 
@@ -134,5 +139,4 @@ class User extends Authenticatable implements FilamentUser
         return $this->grupo?->nivelEnum() ?? \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::BAJA;
     }
 }
-
 
