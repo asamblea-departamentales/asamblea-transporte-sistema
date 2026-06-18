@@ -27,10 +27,10 @@
         @endphp
         @if ($isMotorista)
             <p>No puedes acceder a el panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
-            <a href="https://app-motoristas.asamblea.gob.sv" class="btn">Ir a App Motoristas</a>
+            <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn">Ir a App Motoristas</a>
         @elseif ($isSolicitante)
             <p>No puedes acceder a el panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
-            <a href="https://app-transporte.asamblea.gob.sv" class="btn">Ir a App Transporte</a>
+            <a href="https://asamblea-transporte.vercel.app/login" class="btn">Ir a App Transporte</a>
         @else
             <p>No puedes acceder a el panel de gestión.<br>Si piensas que esto es un error, contactá a tu administrador.</p>
         @endif
