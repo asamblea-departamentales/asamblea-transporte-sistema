@@ -34,12 +34,14 @@
         .code-label p:last-child { font-size: 12px; color: #6b7280; margin-top: 2px; }
         .message { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 1.75rem; padding: 0 0.5rem; }
         .actions { display: flex; flex-direction: column; gap: 10px; }
+        .actions form { width: 100%; }
         .btn {
             display: flex; align-items: center; justify-content: center;
             gap: 8px; padding: 0.65rem 1.25rem;
             border-radius: 8px; font-size: 14px; font-weight: 500;
             text-decoration: none; border: none; cursor: pointer;
             transition: background .2s, color .2s;
+            width: 100%;
         }
         .btn-primary { background: #1d4ed8; color: #fff; }
         .btn-primary:hover { background: #1e40af; }
@@ -74,36 +76,45 @@
         @endphp
 
         @if ($isMotorista)
-            <p class="message">No podés acceder al panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
+            <p class="message">No podés acceder al panel de gestión.<br>Ingresa a la aplicación de motoristas para continuar.</p>
             <div class="actions">
                 <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn btn-primary">
                     <i class="ti ti-steering-wheel"></i>
                     Ir a App Motoristas
                 </a>
-                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
-                    <i class="ti ti-arrow-left"></i>
-                    Regresar al inicio de sesión
-                </a>
+                <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost">
+                        <i class="ti ti-arrow-left"></i>
+                        Regresar al inicio de sesión
+                    </button>
+                </form>
             </div>
         @elseif ($isSolicitante)
-            <p class="message">No podés acceder al panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
+            <p class="message">No podés acceder al panel de gestión.<br>Ingresa a la aplicación de solicitudes de transporte para continuar.</p>
             <div class="actions">
                 <a href="https://asamblea-transporte.vercel.app/login" class="btn btn-primary">
                     <i class="ti ti-bus"></i>
-                    Ir a App Transporte
+                    Ir a Solicitudes de Transporte
                 </a>
-                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
-                    <i class="ti ti-arrow-left"></i>
-                    Regresar al inicio de sesión
-                </a>
+                <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost">
+                        <i class="ti ti-arrow-left"></i>
+                        Regresar al inicio de sesión
+                    </button>
+                </form>
             </div>
         @else
             <p class="message">No podés acceder al panel de gestión con esta cuenta.</p>
             <div class="actions">
-                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
-                    <i class="ti ti-arrow-left"></i>
-                    Regresar al inicio de sesión
-                </a>
+                <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost">
+                        <i class="ti ti-arrow-left"></i>
+                        Regresar al inicio de sesión
+                    </button>
+                </form>
             </div>
         @endif
 
