@@ -70,6 +70,10 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
+        if ($this->hasAnyRole(['super_admin', 'superadmin'])) {
+            return true;
+        }
+
         if (app()->environment('local')) {
             return true;
         }

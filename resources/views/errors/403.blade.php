@@ -73,6 +73,7 @@
             $user = auth()->user();
             $isMotorista = $user?->hasRole('motorista');
             $isSolicitante = $user?->hasRole('solicitante');
+            $sinRoles = $user && $user->roles->isEmpty();
         @endphp
 
         @if ($isMotorista)
@@ -97,6 +98,17 @@
                     <i class="ti ti-bus"></i>
                     Ir a Solicitudes de Transporte
                 </a>
+                <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-ghost">
+                        <i class="ti ti-arrow-left"></i>
+                        Regresar al inicio de sesión
+                    </button>
+                </form>
+            </div>
+        @elseif ($sinRoles)
+            <p class="message">No poseés roles asignados.<br>Contactá a tu administrador para que te asigne los permisos necesarios.</p>
+            <div class="actions">
                 <form method="POST" action="{{ route('filament.admin.auth.logout') }}">
                     @csrf
                     <button type="submit" class="btn btn-ghost">
