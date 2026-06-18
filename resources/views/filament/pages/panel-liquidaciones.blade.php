@@ -265,6 +265,7 @@
     }
     .liq-dropdown-item:hover { background: #f9fafb; }
     .liq-dropdown-item.danger { color: #dc2626; }
+    .liq-dropdown-item.disabled { color: #9ca3af; cursor: not-allowed; font-style: italic; }
     .liq-dropdown-divider {
         height: 1px;
         background: #f3f4f6;
@@ -749,10 +750,16 @@
 
                         @if($item['tipo'] === 'mantenimiento')
                             <div class="liq-dropdown-divider"></div>
-                            <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}" 
+                            @if(in_array($item['estado_raw'], ['aprobada', 'en_ejecucion', 'completada']))
+                            <a href="{{ route('reportes.orden-trabajo.pdf', $item['id']) }}"
                                target="_blank" class="liq-dropdown-item">
                                 🔧 Orden de Trabajo
                             </a>
+                            @else
+                            <span class="liq-dropdown-item disabled" title="Para generar la orden de trabajo la solicitud debe estar aprobada, en ejecución o completada.">
+                                🔧 Orden de Trabajo (requiere aprobación)
+                            </span>
+                            @endif
                         @endif
 
                         @if(!$esTransporte && $item['liquidado'])
