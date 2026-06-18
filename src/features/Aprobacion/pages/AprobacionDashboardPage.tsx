@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+// Componentes
 
 import { SummaryCards } from '../components/SummaryCards';
 import { RecentTable } from '../components/RecentTable';
