@@ -66,11 +66,10 @@ class User extends Authenticatable implements FilamentUser
      */
     public function canAccessPanel(Panel $panel): bool
     {
-        //Permite el acceso si estamos en local
         if (app()->environment('local')) {
             return true;
         }
-        return $this->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin', 'superadmin', 'operativo', 'liquidador']);
+        return !$this->hasAnyRole(['motorista', 'solicitante']);
     }
 
     //Relaciones

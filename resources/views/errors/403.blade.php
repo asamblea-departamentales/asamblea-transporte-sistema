@@ -32,7 +32,11 @@
             <p>No puedes acceder a el panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
             <a href="https://asamblea-transporte.vercel.app/login" class="btn">Ir a App Transporte</a>
         @else
-            <p>No puedes acceder a el panel de gestión.<br>Si piensas que esto es un error, contactá a tu administrador.</p>
+            <p>No puedes acceder al panel de gestión con esta cuenta.</p>
+            <form method="POST" action="{{ route('filament.admin.auth.logout') }}" style="display:inline">
+                @csrf
+                <button type="submit" class="btn" style="background:#6b7280">Volver al inicio de sesión</button>
+            </form>
         @endif
         <div class="footer">Asamblea Legislativa de El Salvador</div>
     </div>
