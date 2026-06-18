@@ -11,8 +11,9 @@
         .logo { height: 48px; margin-bottom: 1.5rem; }
         h1 { font-size: 4rem; margin: 0; color: #dc2626; font-weight: 800; line-height: 1; }
         p { color: #6b7280; margin: 1rem 0 1.5rem; font-size: 1rem; line-height: 1.5; }
-        .btn { display: inline-block; background: #2563eb; color: white; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background .2s; }
+        .btn { display: inline-block; background: #2563eb; color: white; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background .2s; border: none; cursor: pointer; }
         .btn:hover { background: #1d4ed8; }
+        .mt-3 { margin-top: 1rem; }
         .footer { margin-top: 2rem; font-size: .75rem; color: #9ca3af; }
     </style>
 </head>
@@ -26,18 +27,18 @@
             $isSolicitante = $user?->hasRole('solicitante');
         @endphp
         @if ($isMotorista)
-            <p>No puedes acceder a el panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
+            <p>No puedes acceder al panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
             <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn">Ir a App Motoristas</a>
         @elseif ($isSolicitante)
-            <p>No puedes acceder a el panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
+            <p>No puedes acceder al panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
             <a href="https://asamblea-transporte.vercel.app/login" class="btn">Ir a App Transporte</a>
         @else
             <p>No puedes acceder al panel de gestión con esta cuenta.</p>
-            <form method="POST" action="{{ route('filament.admin.auth.logout') }}" style="display:inline">
-                @csrf
-                <button type="submit" class="btn" style="background:#6b7280">Volver al inicio de sesión</button>
-            </form>
         @endif
+        <form method="POST" action="{{ route('filament.admin.auth.logout') }}" class="mt-3">
+            @csrf
+            <button type="submit" class="btn" style="background:#6b7280">Cerrar sesión</button>
+        </form>
         <div class="footer">Asamblea Legislativa de El Salvador</div>
     </div>
 </body>
