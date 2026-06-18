@@ -35,6 +35,7 @@ class VehiculosSeeder extends Seeder
         $clasifAdmin = DB::table('veh_clasificaciones')->where('nombre', 'ADMINISTRATIVO')->value('id');
         $clasifTransp = DB::table('veh_clasificaciones')->where('nombre', 'TRANSPORTE DE PERSONAL')->value('id');
 
+        $deptos = DB::table('departamentales')->pluck('id', 'codigo');
         $nrm = fn($m, $mo) => ['veh_marca_id' => $marcas[$m] ?? null, 'veh_modelo_id' => $modelos[$mo] ?? null];
 
         $vehiculos = [
@@ -57,22 +58,22 @@ class VehiculosSeeder extends Seeder
             ['placa' => 'P592075', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Tiida SE'),                       'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N5351',   'tipo_vehiculo_id' => $sedan,    'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'I10'),                           'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N5388',   'tipo_vehiculo_id' => $sedan,    'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'I10'),                           'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6647',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6645',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6646',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6662',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6660',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N7375',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N6647',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['CU']],
+            ['placa' => 'N6645',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SM']],
+            ['placa' => 'N6654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SA']],
+            ['placa' => 'N6646',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SO']],
+            ['placa' => 'N6662',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SV']],
+            ['placa' => 'N6660',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['LP']],
+            ['placa' => 'N7375',   'tipo_vehiculo_id' => $pickup,   'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['LU']],
             ['placa' => 'N21907',  'tipo_vehiculo_id' => $sedan,    'anio' => 2024, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Nivus'),                      'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N2272',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N9025',   'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N6702',   'tipo_vehiculo_id' => $pickup,   'anio' => 2016, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N2272',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['US']],
+            ['placa' => 'N9025',   'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SO']],
+            ['placa' => 'N6702',   'tipo_vehiculo_id' => $pickup,   'anio' => 2016, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['CA']],
             ['placa' => 'N5690',   'tipo_vehiculo_id' => $microbus, 'anio' => 2012, 'capacidad_personas' => 15,...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P8929',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P585518', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer GLXI'),                  'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P618427', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N8768',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N8768',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['LL']],
             ['placa' => 'P131006', 'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P42614',  'tipo_vehiculo_id' => $pickup,   'anio' => 2011, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P645586', 'tipo_vehiculo_id' => $pickup,   'anio' => 2010, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
@@ -96,8 +97,8 @@ class VehiculosSeeder extends Seeder
             ['placa' => 'N9768',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Nissan', 'NP300 Frontier'),                  'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N9766',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Nissan', 'NP300 Frontier'),                  'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P964698', 'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N9653',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N9654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N9653',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['CH']],
+            ['placa' => 'N9654',   'tipo_vehiculo_id' => $pickup,   'anio' => 2017, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['MO']],
             ['placa' => 'P828642', 'tipo_vehiculo_id' => $pickup,   'anio' => 2018, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier'),                       'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P951603', 'tipo_vehiculo_id' => $sedan,    'anio' => 2020, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'Santa Fe'),                       'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P951609', 'tipo_vehiculo_id' => $sedan,    'anio' => 2020, 'capacidad_personas' => 5, ...$nrm('Hyundai', 'Santa Fe'),                       'estado' => 'disponible', 'activo' => true],
