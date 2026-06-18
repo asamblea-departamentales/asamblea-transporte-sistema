@@ -124,6 +124,13 @@ class Login extends BaseLogin
 
         Auth::login($user, $data['remember'] ?? false);
 
+        if (! $user->canAccessPanel(filament()->getCurrentPanel())) {
+            Auth::logout();
+            request()->session()->invalidate();
+            request()->session()->regenerateToken();
+            abort(403);
+        }
+
         return app(LoginResponse::class);
     }
 
