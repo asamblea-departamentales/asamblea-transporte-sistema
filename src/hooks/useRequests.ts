@@ -16,7 +16,7 @@ type QueryState = {
 };
 
 // ─── Hook ─────────────────────────────────────────────────────────────────────
-//Hola
+//componentes
 export function useRequests() {
   // Un solo objeto de estado para la query → el useEffect solo se dispara UNA vez por cambio
   const [query, setQuery] = useState<QueryState>({ page: 1, estado: "", search: "" });
