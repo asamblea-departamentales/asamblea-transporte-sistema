@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call([
+            DepartamentalesSeeder::class, // 12. Crea las departamentales
             RolesSeeder::class,      // 1. Crea los permisos
             UnidadesSeeder::class,   // 2. Crea las oficinas/unidades
             UsersSeeder::class,      // 3. Crea los usuarios vinculados a lo anterior
@@ -25,7 +26,6 @@ class DatabaseSeeder extends Seeder
             AsignacionVehiculoMotoristaSeeder::class, // 9. Crea asignaciones
             GruposSeeder::class,     // 10. Crea los grupos de prioridades
             ActividadesEconomicasSeeder::class, // 11. Crea actividades económicas
-            DepartamentalesSeeder::class, // 12. Crea las departamentales
             PaisesSeeder::class, // 13. Crea los países
             MunicipiosSeeder::class, // 14. Crea los municipios
             ParametrosSistemaSeeder::class, // 15. Crea los parámetros del sistema
