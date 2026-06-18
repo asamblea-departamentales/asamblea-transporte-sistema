@@ -11,9 +11,8 @@
         .logo { height: 48px; margin-bottom: 1.5rem; }
         h1 { font-size: 4rem; margin: 0; color: #dc2626; font-weight: 800; line-height: 1; }
         p { color: #6b7280; margin: 1rem 0 1.5rem; font-size: 1rem; line-height: 1.5; }
-        .btn { display: inline-block; background: #2563eb; color: white; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background .2s; border: none; cursor: pointer; }
+        .btn { display: inline-block; background: #2563eb; color: white; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background .2s; }
         .btn:hover { background: #1d4ed8; }
-        .mt-3 { margin-top: 1rem; }
         .footer { margin-top: 2rem; font-size: .75rem; color: #9ca3af; }
     </style>
 </head>
@@ -35,10 +34,7 @@
         @else
             <p>No puedes acceder al panel de gestión con esta cuenta.</p>
         @endif
-        <form method="POST" action="{{ route('filament.admin.auth.logout') }}" class="mt-3">
-            @csrf
-            <button type="submit" class="btn" style="background:#6b7280">Cerrar sesión</button>
-        </form>
+        <a href="{{ route('filament.admin.auth.login') }}" class="btn mt-3" style="background:#6b7280">Regresar</a>
         <div class="footer">Asamblea Legislativa de El Salvador</div>
     </div>
 </body>
