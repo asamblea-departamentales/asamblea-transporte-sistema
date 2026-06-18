@@ -5,36 +5,108 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Acceso denegado</title>
     <link rel="icon" href="{{ asset('images/logo-blanco-fondo-transparente.png') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
     <style>
-        body { font-family: system-ui, -apple-system, sans-serif; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; background: #f3f4f6; }
-        .card { text-align: center; padding: 3rem 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,.1); max-width: 420px; width: 90%; }
-        .logo { height: 48px; margin-bottom: 1.5rem; }
-        h1 { font-size: 4rem; margin: 0; color: #dc2626; font-weight: 800; line-height: 1; }
-        p { color: #6b7280; margin: 1rem 0 1.5rem; font-size: 1rem; line-height: 1.5; }
-        .btn { display: inline-block; background: #2563eb; color: white; padding: .75rem 1.5rem; border-radius: 8px; text-decoration: none; font-weight: 500; transition: background .2s; }
-        .btn:hover { background: #1d4ed8; }
-        .footer { margin-top: 2rem; font-size: .75rem; color: #9ca3af; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            display: flex; justify-content: center; align-items: center;
+            min-height: 100vh; background: #f3f4f6;
+        }
+        .card {
+            background: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 14px;
+            padding: 2.5rem 2rem 2rem;
+            max-width: 400px; width: 90%;
+            text-align: center;
+        }
+        .logo-wrap { margin-bottom: 1.75rem; }
+        .logo-wrap img { height: 40px; }
+        .code-block {
+            display: flex; align-items: center; justify-content: center;
+            gap: 1rem; margin-bottom: 1.5rem;
+        }
+        .code-num { font-size: 3.5rem; font-weight: 600; color: #dc2626; line-height: 1; }
+        .divider-v { width: 1px; height: 48px; background: #e5e7eb; }
+        .code-label { text-align: left; }
+        .code-label p:first-child { font-size: 14px; font-weight: 500; color: #111827; }
+        .code-label p:last-child { font-size: 12px; color: #6b7280; margin-top: 2px; }
+        .message { font-size: 14px; color: #6b7280; line-height: 1.6; margin-bottom: 1.75rem; padding: 0 0.5rem; }
+        .actions { display: flex; flex-direction: column; gap: 10px; }
+        .btn {
+            display: flex; align-items: center; justify-content: center;
+            gap: 8px; padding: 0.65rem 1.25rem;
+            border-radius: 8px; font-size: 14px; font-weight: 500;
+            text-decoration: none; border: none; cursor: pointer;
+            transition: background .2s, color .2s;
+        }
+        .btn-primary { background: #1d4ed8; color: #fff; }
+        .btn-primary:hover { background: #1e40af; }
+        .btn-ghost { background: transparent; color: #6b7280; border: 1px solid #d1d5db; }
+        .btn-ghost:hover { background: #f9fafb; }
+        .footer {
+            margin-top: 1.75rem; padding-top: 1.25rem;
+            border-top: 1px solid #f3f4f6;
+            font-size: 11px; color: #9ca3af;
+        }
     </style>
 </head>
 <body>
     <div class="card">
-        <img src="{{ asset('images/logo-azul-fondo-transparente.png') }}" alt="Logo" class="logo">
-        <h1>403</h1>
+        <div class="logo-wrap">
+            <img src="{{ asset('images/logo-azul-fondo-transparente.png') }}" alt="Logo">
+        </div>
+
+        <div class="code-block">
+            <span class="code-num">403</span>
+            <div class="divider-v"></div>
+            <div class="code-label">
+                <p>Acceso denegado</p>
+                <p>Sin permiso para esta sección</p>
+            </div>
+        </div>
+
         @php
             $user = auth()->user();
             $isMotorista = $user?->hasRole('motorista');
             $isSolicitante = $user?->hasRole('solicitante');
         @endphp
+
         @if ($isMotorista)
-            <p>No puedes acceder al panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
-            <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn">Ir a App Motoristas</a>
+            <p class="message">No podés acceder al panel de gestión.<br>Ingresá a la aplicación de motoristas para continuar.</p>
+            <div class="actions">
+                <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn btn-primary">
+                    <i class="ti ti-steering-wheel"></i>
+                    Ir a App Motoristas
+                </a>
+                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
+                    <i class="ti ti-arrow-left"></i>
+                    Regresar al inicio de sesión
+                </a>
+            </div>
         @elseif ($isSolicitante)
-            <p>No puedes acceder al panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
-            <a href="https://asamblea-transporte.vercel.app/login" class="btn">Ir a App Transporte</a>
+            <p class="message">No podés acceder al panel de gestión.<br>Ingresá a la aplicación de solicitudes de transporte para continuar.</p>
+            <div class="actions">
+                <a href="https://asamblea-transporte.vercel.app/login" class="btn btn-primary">
+                    <i class="ti ti-bus"></i>
+                    Ir a App Transporte
+                </a>
+                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
+                    <i class="ti ti-arrow-left"></i>
+                    Regresar al inicio de sesión
+                </a>
+            </div>
         @else
-            <p>No puedes acceder al panel de gestión con esta cuenta.</p>
+            <p class="message">No podés acceder al panel de gestión con esta cuenta.</p>
+            <div class="actions">
+                <a href="{{ route('filament.admin.auth.login') }}" class="btn btn-ghost">
+                    <i class="ti ti-arrow-left"></i>
+                    Regresar al inicio de sesión
+                </a>
+            </div>
         @endif
-        <a href="{{ route('filament.admin.auth.login') }}" class="btn mt-3" style="background:#6b7280">Regresar</a>
+
         <div class="footer">Asamblea Legislativa de El Salvador</div>
     </div>
 </body>
