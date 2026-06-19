@@ -140,7 +140,8 @@ class AdminPanelProvider extends PanelProvider
                         <x-filament::dropdown.list>
                             @foreach ($manuales as $manual)
                                 <x-filament::dropdown.list.item
-                                    :href="asset('docs/' . $manual['file'])"
+                                    tag="a"
+                                    href="{{ asset('docs/' . $manual['file']) }}"
                                     target="_blank"
                                     icon="heroicon-m-document-arrow-down"
                                 >
