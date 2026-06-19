@@ -113,7 +113,7 @@ class AdminPanelProvider extends PanelProvider
 
             ->renderHook(
                 PanelsRenderHook::USER_MENU_BEFORE,
-                fn () => \Illuminate\Support\Facades\Blade::render('
+                fn () => \Illuminate\Support\Facades\Blade::render(<<<'BLADE'
                     @php
                         $manuales = [
                             ["label" => "Manual de Usuario",         "file" => "manual_usuario.pdf"],
@@ -134,22 +134,22 @@ class AdminPanelProvider extends PanelProvider
                         </x-slot>
 
                         <x-filament::dropdown.header>
-                            📖 Manuales
+                            Manuales
                         </x-filament::dropdown.header>
 
                         <x-filament::dropdown.list>
-                            @foreach ($manuales as $m)
+                            @foreach ($manuales as $manual)
                                 <x-filament::dropdown.list.item
-                                    :href="asset(\'docs/'.$m["file"].'\')"
-                                    :target="\'_blank\'"
-                                    :icon="\'heroicon-m-document-arrow-down\'"
+                                    :href="asset('docs/' . $manual['file'])"
+                                    target="_blank"
+                                    icon="heroicon-m-document-arrow-down"
                                 >
-                                    {{ $m["label"] }}
+                                    {{ $manual['label'] }}
                                 </x-filament::dropdown.list.item>
                             @endforeach
                         </x-filament::dropdown.list>
                     </x-filament::dropdown>
-                '),
+BLADE),
             );
     }
 }
