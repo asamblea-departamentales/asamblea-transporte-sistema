@@ -33,6 +33,10 @@ class SolicitudMantenimientoResource extends Resource
 
     // Indica el modelo principal que representa una solicitud de mantenimiento en la base de datos.
     protected static ?string $model = SolicitudMantenimiento::class;
+
+    // Columna que se muestra como título en la búsqueda global.
+    protected static ?string $recordTitleAttribute = 'codigo';
+
     // Agrupa este recurso en el menú bajo "Asignaciones".
     protected static ?string $navigationGroup = 'Asignaciones';
     // Nombre que aparece en el menú de navegación.
@@ -70,6 +74,12 @@ class SolicitudMantenimientoResource extends Resource
     public static function canDelete($record): bool
     {
         return false;
+    }
+
+    // Columnas por las que se puede buscar desde la barra de búsqueda global.
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['codigo', 'ticket', 'vehiculo.placa', 'solicitante.name', 'tipoMantenimiento.nombre'];
     }
 
 

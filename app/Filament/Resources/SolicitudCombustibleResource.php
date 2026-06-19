@@ -32,6 +32,10 @@ class SolicitudCombustibleResource extends Resource
 
     // Indica el modelo principal que representa una solicitud de combustible en la base de datos.
     protected static ?string $model = SolicitudCombustible::class;
+
+    // Columna que se muestra como título en la búsqueda global.
+    protected static ?string $recordTitleAttribute = 'codigo';
+
     // Agrupa este recurso en el menú bajo "Asignaciones".
     protected static ?string $navigationGroup = 'Asignaciones';
     // Nombre que aparece en el menú de navegación.
@@ -68,6 +72,12 @@ class SolicitudCombustibleResource extends Resource
             EstadoSolicitudEnum::BORRADOR->value,
             EstadoSolicitudEnum::PENDIENTE->value,
         ]);
+    }
+
+    // Columnas por las que se puede buscar desde la barra de búsqueda global.
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['codigo', 'ticket', 'numero_vale_ticket', 'vehiculo.placa', 'solicitante.name'];
     }
 
 

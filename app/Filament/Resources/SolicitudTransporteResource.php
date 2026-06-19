@@ -50,6 +50,9 @@ class SolicitudTransporteResource extends Resource
     // Indica el modelo principal que representa una solicitud de transporte en la base de datos.
     protected static ?string $model = SolicitudTransporte::class;
 
+    // Columna que se muestra como título en la búsqueda global.
+    protected static ?string $recordTitleAttribute = 'codigo';
+
     // "Slug" es el nombre corto que se usa en la URL para este recurso.
     protected static ?string $slug = 'solicitud-transporte';
 
@@ -74,6 +77,12 @@ class SolicitudTransporteResource extends Resource
             EstadoSolicitudEnum::BORRADOR->value,
             EstadoSolicitudEnum::PENDIENTE->value,
         ]);
+    }
+
+    // Columnas por las que se puede buscar desde la barra de búsqueda global.
+    public static function getGloballySearchableAttributes(): array
+    {
+        return ['codigo', 'ticket', 'origen', 'destino', 'motivo_actividad', 'unidad.nombre', 'solicitante.name', 'vehiculo.placa'];
     }
 
     // =========================================================================
