@@ -116,10 +116,10 @@ class AdminPanelProvider extends PanelProvider
                 fn () => \Illuminate\Support\Facades\Blade::render(<<<'BLADE'
                     @php
                         $manuales = [
-                            ["label" => "Manual de Usuario",         "file" => "manual_usuario.pdf"],
+                            ["label" => "Manual de Uso General",         "file" => "Manual_General_De_Uso.pdf"],
                             ["label" => "Manual Operativo",         "file" => "manual_operativo.pdf"],
                             ["label" => "Manual del Motorista",     "file" => "manual_motorista.pdf"],
-                            ["label" => "Roles y Accesos",          "file" => "manual_roles.pdf"],
+                            ["label" => "Roles y Accesos",          "file" => "Manual_Roles_Acceso.pdf"],
                         ];
                     @endphp
 
