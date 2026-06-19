@@ -143,4 +143,3 @@ class User extends Authenticatable implements FilamentUser
         return $this->grupo?->nivelEnum() ?? \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::BAJA;
     }
 }
-
