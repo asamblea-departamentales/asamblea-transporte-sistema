@@ -169,3 +169,5 @@ export function buscarSedes(query: string): SedeAsamblea[] {
     return nombre.includes(q) || depto.includes(q) || "departamental".includes(q) || "asamblea".includes(q);
   }).slice(0, 6);
 }
+
+// Función para obtener una sede por su ID
