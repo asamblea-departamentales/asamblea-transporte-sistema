@@ -144,21 +144,20 @@ class ContratoCombustibleResource extends Resource
                     ),
 
                 Tables\Columns\TextColumn::make('monto_inicial')
-                    ->label('Monto Inicial')
-                    ->money('USD', divideBy: 1, locale: 'en_US')
-                    ->sortable(),
+    ->label('Monto Inicial')
+    ->formatStateUsing(fn ($state) => '$' . number_format($state, 2, '.', ','))
+    ->sortable(),
 
-                Tables\Columns\TextColumn::make('monto_disponible')
-                    ->label('Disponible')
-                    // 'USD', decimales: 2, punto para centavos, coma para miles
-                    ->money('USD', divideBy: 1, locale: 'en_US') 
-                    ->sortable()
-                    ->weight('bold')
-                    ->color(fn ($record) => match (true) {
-                        $record->monto_disponible <= 0 => 'danger',
-                        $record->monto_disponible <= ($record->monto_inicial * 0.20) => 'warning',
-                        default => 'success',
-                    }),
+Tables\Columns\TextColumn::make('monto_disponible')
+    ->label('Disponible')
+    ->formatStateUsing(fn ($state) => '$' . number_format($state, 2, '.', ','))
+    ->sortable()
+    ->weight('bold')
+    ->color(fn ($record) => match (true) {
+        $record->monto_disponible <= 0 => 'danger',
+        $record->monto_disponible <= ($record->monto_inicial * 0.20) => 'warning',
+        default => 'success',
+    }),
 
                 Tables\Columns\TextColumn::make('porcentaje_usado')
                     ->label('% Usado')
