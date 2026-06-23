@@ -100,13 +100,17 @@ class TokenAuthController extends Controller
             $email = $search->getFirstAttribute('mail')
                 ?? "{$username}@asamblea.gob.sv";
 
-            return User::create([
+            $user = User::create([
                 'username' => $username,
                 'name' => $name,
                 'email' => $email,
                 'password' => Hash::make(Str::random(32)),
                 'activo' => true,
             ]);
+
+            $user->assignRole('solicitante');
+
+            return $user;
         } catch (\Exception $e) {
             return null;
         }

@@ -152,13 +152,15 @@ class Login extends BaseLogin
             return false;
         }
 
-        User::create([
+        $user = User::create([
             'username' => $username,
             'name' => $ldapUser['name'],
             'email' => $ldapUser['email'],
             'password' => Hash::make(Str::random(32)),
             'activo' => true,
         ]);
+
+        $user->assignRole('solicitante');
 
         return true;
     }
