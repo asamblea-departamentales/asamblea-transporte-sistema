@@ -145,11 +145,14 @@ class ContratoCombustibleResource extends Resource
 
                 Tables\Columns\TextColumn::make('monto_inicial')
                     ->label('Monto Inicial')
-                    ->money('USD')->sortable(),
+                    ->money('USD', divideBy: 1, locale: 'en_US')
+                    ->sortable(),
 
                 Tables\Columns\TextColumn::make('monto_disponible')
                     ->label('Disponible')
-                    ->money('USD')->sortable()
+                    // 'USD', decimales: 2, punto para centavos, coma para miles
+                    ->money('USD', divideBy: 1, locale: 'en_US') 
+                    ->sortable()
                     ->weight('bold')
                     ->color(fn ($record) => match (true) {
                         $record->monto_disponible <= 0 => 'danger',
