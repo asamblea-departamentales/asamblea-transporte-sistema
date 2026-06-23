@@ -64,6 +64,7 @@ class SolicitudTransporte extends Model
     ];
 
     protected $casts = [
+        'solicitante_id' => 'integer',
         'prioridad' => PrioridadSolicitudEnum::class,
         'prioridad_grupo' => NivelPrioridadEnum::class,
         'estado' => EstadoSolicitudEnum::class,
@@ -87,23 +88,25 @@ class SolicitudTransporte extends Model
      * Generar código único por usuario automáticamente
      */
     protected static function booted()
-    {
-        static::creating(function ($solicitud) {
-            $year = now()->year;
-            $userId = $solicitud->solicitante_id ?? auth()->id();
+{
+    static::creating(function ($solicitud) {
+        $year = now()->year;
 
-            $ultima = static::where('solicitante_id', $userId)
-                ->where('codigo', 'like', "TR-{$year}-%")
-                ->latest('id')
-                ->first();
+        // 1. Buscamos la última solicitud del año a nivel GLOBAL (sin filtrar por usuario)
+        $ultima = static::where('codigo', 'like', "TR-{$year}-%")
+            ->latest('id')
+            ->first();
 
-            $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+        // 2. Si hay una, extraemos los últimos 6 dígitos y sumamos 1. Si no, empezamos en 1.
+        $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
-            $solicitud->codigo = "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+        // 3. Formateamos el código único (Ej: TR-2026-000001, TR-2026-000002...)
+        $solicitud->codigo = "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
 
-            app(TicketService::class)->generar($solicitud);
-        });
-    }
+        // 4. Generamos el ticket
+        app(TicketService::class)->generar($solicitud);
+    });
+}
 
     // Este método hará la magia al mostrar el dato
     public function getDestinoAdicionalAttribute($value)
