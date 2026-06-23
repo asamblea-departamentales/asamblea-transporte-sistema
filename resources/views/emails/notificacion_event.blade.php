@@ -1,3 +1,16 @@
+{{--
+ | Vista para el correo de notificación de eventos.
+ | Recibe:
+ |   $subject (string)  - Asunto del correo
+ |   $payload (array)   - Datos estructurados con 'tipo', 'evento', 'mensaje',
+ |                        'solicitud', 'solicitante', 'timestamp', 'attachments'
+ |   $map_url (?string) - URL del mapa estático (solo para transporte)
+ |   $email_logo_embedded (?string) - Logo embebido (cuando se usa embed())
+ |
+ | Tipos de solicitud: transporte, combustible, mantenimiento
+ | Eventos: solicitud_aprobada, solicitud_rechazada, solicitud_completada,
+ |          solicitud_cancelada, solicitud_liquidada, solicitud_programada, etc.
+--}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -5,6 +18,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $subject }}</title>
     <style>
+        /* ─── Reset básico ─── */
         * { margin:0; padding:0; box-sizing:border-box; }
         body {
             font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
@@ -13,6 +27,8 @@
             color:#2c3e50;
             line-height:1.6;
         }
+
+        /* ─── Contenedor principal ─── */
         .email-container {
             max-width:600px;
             margin:0 auto;
@@ -21,6 +37,8 @@
             overflow:hidden;
             box-shadow:0 4px 20px rgba(0,0,0,0.08);
         }
+
+        /* ─── Encabezado con gradiente azul ─── */
         .email-header {
             background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);
             padding:24px 24px 18px;
@@ -54,8 +72,10 @@
             font-size:13px;
             opacity:0.9;
         }
+
         .email-body { padding:30px 24px 24px; }
 
+        /* ─── Caja de alerta / mensaje ─── */
         .alert-box {
             background-color:#eff6ff;
             border-left:4px solid #3b82f6;
@@ -66,6 +86,7 @@
             color:#1e3a8a;
         }
 
+        /* ─── Etiqueta del tipo de solicitud ─── */
         .tipo-chip {
             display:inline-block;
             padding:6px 12px;
@@ -79,6 +100,7 @@
             margin-bottom:12px;
         }
 
+        /* ─── Sección del código de solicitud ─── */
         .codigo-section {
             text-align:center;
             margin:20px 0;
@@ -103,6 +125,7 @@
             letter-spacing:2px;
         }
 
+        /* ─── Cuadrícula de detalles ─── */
         .details-grid {
             display:grid;
             grid-template-columns:1fr 1fr;
@@ -131,6 +154,7 @@
             font-weight:500;
         }
 
+        /* ─── Badge de estado ─── */
         .status-badge {
             display:inline-block;
             padding:6px 12px;
@@ -154,6 +178,7 @@
         .status-asignada { background-color:#a855f7; color:#ffffff; }
         .status-liquidada { background-color:#16a34a; color:#ffffff; }
 
+        /* ─── Sección del mapa ─── */
         .map-section {
             margin:24px 0 8px;
             background-color:#f8fafc;
@@ -193,6 +218,7 @@
             color:#64748b;
         }
 
+        /* ─── Sección del solicitante ─── */
         .solicitante-section {
             background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);
             padding:18px 18px 16px;
@@ -224,6 +250,7 @@
             font-weight:500;
         }
 
+        /* ─── Badge de extensión ─── */
         .extension-badge {
             display:inline-block;
             margin-top:8px;
@@ -237,6 +264,7 @@
             letter-spacing:0.5px;
         }
 
+        /* ─── Pie de página ─── */
         .email-footer {
             background-color:#f8fafc;
             padding:18px 20px;
@@ -254,6 +282,7 @@
             font-weight:500;
         }
 
+        /* ─── Responsive para móviles ─── */
         @media only screen and (max-width:600px) {
             body { padding:10px; }
             .email-header { padding:18px 16px 14px; }
@@ -267,16 +296,28 @@
 </head>
 <body>
 <div class="email-container">
+    {{-- ─── ENCABEZADO ─── --}}
     <div class="email-header">
         <div class="email-logo" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-    <img
-        src="{{ asset('images/logo-blanco-fondo-transparente.png') }}"
-        alt="Logo"
-        width="56"
-        height="56"
-        style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
-    >
-</div>
+        {{-- Si hay un logo embebido (desde embedLogo()), se usa; si no, se cae a asset() --}}
+        @if(isset($email_logo_embedded))
+            <img
+                src="{{ $email_logo_embedded }}"
+                alt="Logo"
+                width="56"
+                height="56"
+                style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
+            >
+        @else
+            <img
+                src="{{ asset('images/logo-blanco-fondo-transparente.png') }}"
+                alt="Logo"
+                width="56"
+                height="56"
+                style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
+            >
+        @endif
+    </div>
         <div class="email-header-text">
             <h1>{{ $subject }}</h1>
             <p>Sistema de Gestión de Solicitudes - Asamblea Legislativa de El Salvador</p>
@@ -288,6 +329,7 @@
             $tipo = $payload['tipo'] ?? 'transporte';
         @endphp
 
+        {{-- ─── TIPO DE SOLICITUD ─── --}}
         <div class="tipo-chip">
             @if($tipo === 'transporte')
                 Solicitud de transporte
@@ -300,12 +342,14 @@
             @endif
         </div>
 
+        {{-- ─── MENSAJE PRINCIPAL ─── --}}
         @if(isset($payload['mensaje']))
             <div class="alert-box">
                 {{ $payload['mensaje'] }}
             </div>
         @endif
 
+        {{-- ─── CÓDIGO DE SOLICITUD ─── --}}
         @if(isset($payload['solicitud']['codigo']))
             <div class="codigo-section">
                 <div class="codigo-label">
@@ -319,6 +363,7 @@
                     {{ $payload['solicitud']['codigo'] }}
                 </div>
 
+                {{-- Si es una extensión, muestra el código original --}}
                 @if(!empty($payload['es_extension']) && isset($payload['solicitud']['codigo_original']))
                     <div class="extension-badge">
                         Extensión de: {{ $payload['solicitud']['codigo_original'] }}
@@ -327,7 +372,9 @@
             </div>
         @endif
 
-        {{-- TRANSPORTE --}}
+        {{-- ═══════════════════════════════════════════════════════════════
+             TRANSPORTE - Detalles específicos
+             ═══════════════════════════════════════════════════════════════ --}}
         @if($tipo === 'transporte' && isset($payload['solicitud']))
             <div class="details-grid">
                 @if(isset($payload['solicitud']['estado']))
@@ -414,12 +461,12 @@
                 @endif
             </div>
 
+            {{-- Mapa de la ruta --}}
             @php
                 $origen    = $payload['solicitud']['origen'] ?? 'San Salvador';
                 $destino   = $payload['solicitud']['destino'] ?? 'Centro Histórico, San Salvador';
                 $destinoAd = $payload['solicitud']['destino_adicional'] ?? null;
 
-                // Imagen estática del mapa en public/images
                 $mapUrl = asset('images/mapa_correo.png');
             @endphp
 
@@ -448,6 +495,9 @@
             </div>
             @endif
 
+        {{-- ═══════════════════════════════════════════════════════════════
+             COMBUSTIBLE - Detalles específicos
+             ═══════════════════════════════════════════════════════════════ --}}
         @elseif($tipo === 'combustible' && isset($payload['solicitud']))
             <div class="details-grid">
                 @if(isset($payload['solicitud']['estado']))
@@ -526,6 +576,10 @@
                     </div>
                 @endif
             </div>
+
+        {{-- ═══════════════════════════════════════════════════════════════
+             MANTENIMIENTO - Detalles específicos
+             ═══════════════════════════════════════════════════════════════ --}}
         @elseif($tipo === 'mantenimiento' && isset($payload['solicitud']))
             <div class="details-grid">
                 @if(isset($payload['solicitud']['estado']))
@@ -599,6 +653,35 @@
             </div>
         @endif
 
+        {{-- ─── ARCHIVOS ADJUNTOS ─── --}}
+        @if(!empty($payload['attachments']))
+            <div class="map-section" style="margin-top:20px;">
+                <div class="map-header">Adjuntos</div>
+                <div class="map-body">
+                    <p style="font-size:13px;color:#475569;">
+                        Esta notificación incluye {{ count($payload['attachments']) }} archivo(s) adjunto(s).
+                    </p>
+                </div>
+            </div>
+        @endif
+
+        {{-- ─── DATOS DE LIQUIDACIÓN (monto validado / resultado) ─── --}}
+        @if(!empty($payload['solicitud']['monto_validado']))
+            <div class="details-grid" style="margin-top:16px;">
+                <div class="detail-item">
+                    <div class="detail-label">Monto validado</div>
+                    <div class="detail-value">${{ number_format($payload['solicitud']['monto_validado'], 2) }}</div>
+                </div>
+                @if(!empty($payload['solicitud']['resultado']))
+                    <div class="detail-item">
+                        <div class="detail-label">Resultado</div>
+                        <div class="detail-value">{{ ucfirst($payload['solicitud']['resultado']) }}</div>
+                    </div>
+                @endif
+            </div>
+        @endif
+
+        {{-- ─── INFORMACIÓN DEL SOLICITANTE ─── --}}
         @if(isset($payload['solicitante']))
             <div class="solicitante-section">
                 <h3>Información del solicitante</h3>
@@ -626,6 +709,7 @@
         @endif
     </div>
 
+    {{-- ─── PIE DE PÁGINA ─── --}}
     <div class="email-footer">
         <p><strong>Asamblea Legislativa de El Salvador</strong></p>
         <p>Unidad de Transporte y Logística</p>

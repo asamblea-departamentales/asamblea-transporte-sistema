@@ -24,8 +24,8 @@ use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\EstadoFlotaService;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Filament\Resources\SolicitudTransporteResource\Pages;
-use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\Motorista;
@@ -40,7 +40,6 @@ use Filament\Tables\Actions\Action;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 // Esta clase representa el "recurso" de Solicitudes de Transporte.
 // Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar registros.
@@ -737,30 +736,9 @@ class SolicitudTransporteResource extends Resource
 
                             if ($record->motorista?->user?->email) {
                                 try {
-                                    $payload = [
-                                        'tipo' => 'transporte',
-                                        'evento' => 'motorista_asignado',
-                                        'mensaje' => 'Se te ha asignado un nuevo viaje.',
-                                        'solicitud' => [
-                                            'codigo' => $record->codigo,
-                                            'estado' => 'asignada',
-                                            'tipo_vehiculo_nombre' => $record->vehiculo?->tipo?->nombre ?? 'Vehículo asignado',
-                                            'origen' => $record->origen,
-                                            'destino' => $record->destino,
-                                            'destino_adicional' => $record->destino_adicional ?? null,
-                                            'fecha_salida' => $record->fecha_salida,
-                                            'fecha_retorno' => $record->fecha_retorno,
-                                            'motorista' => $record->motorista->nombre,
-                                        ],
-                                        'solicitante' => [
-                                            'name' => $record->solicitante->name ?? 'Solicitante',
-                                            'email' => $record->solicitante->email ?? null,
-                                        ],
-                                        'timestamp' => now()->toIso8601String(),
-                                    ];
-
-                                    Mail::to($record->motorista->user->email)->send(
-                                        new NotificacionEventMail('📌 Nuevo viaje asignado', $payload)
+                                    app(SolicitudEmailDispatchService::class)->toEmail(
+                                        $record->motorista->user->email,
+                                        $record, 'transporte', 'motorista_asignado'
                                     );
                                 } catch (\Exception $e) {
                                     Log::error('Error en correo de asignación de viaje al motorista: '.$e->getMessage());
@@ -906,29 +884,8 @@ class SolicitudTransporteResource extends Resource
                                 ->send();
 
                             try {
-                                $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
-
-                                $payload = [
-                                    'tipo' => 'transporte',
-                                    'evento' => 'solicitud_aprobada',
-                                    'mensaje' => 'Tu solicitud de transporte ha sido APROBADA.',
-                                    'solicitud' => [
-                                        'codigo' => $record->codigo,
-                                        'estado' => 'aprobado',
-                                        'vehiculo' => $record->vehiculo->placa ?? 'N/A',
-                                        'motorista' => $record->motorista->nombre ?? 'N/A',
-                                        'fecha_salida' => $record->fecha_salida,
-                                        'destino' => $record->destino,
-                                    ],
-                                    'solicitante' => [
-                                        'name' => $record->solicitante->name,
-                                        'email' => $record->solicitante->email,
-                                    ],
-                                    'timestamp' => now()->toIso8601String(),
-                                ];
-
-                                Mail::to($record->solicitante->email)->send(
-                                    new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+                                app(SolicitudEmailDispatchService::class)->toSolicitante(
+                                    $record, 'transporte', 'solicitud_aprobada'
                                 );
                             } catch (\Exception $e) {
                                 Log::error('Error en correo de aprobación: '.$e->getMessage());

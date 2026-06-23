@@ -7,8 +7,8 @@ namespace App\Filament\Resources\SolicitudTransporteResource\Pages;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\EstadoFlotaService;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Filament\Resources\SolicitudTransporteResource;
-use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\Motorista;
@@ -19,7 +19,6 @@ use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class ViewSolicitudTransporte extends ViewRecord
 {
@@ -433,39 +432,8 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
 
                     try {
-                        $record->load(['vehiculo.tipo', 'motorista', 'solicitante', 'unidad']);
-
-                        $payload = [
-                            'tipo' => 'transporte',
-                            'evento' => 'solicitud_aprobada',
-                            'mensaje' => 'Tu solicitud de transporte ha sido APROBADA y programada exitosamente.',
-                            'solicitud' => [
-                                'codigo' => $record->codigo,
-                                'estado' => 'aprobada',
-                                'tipo_vehiculo_nombre' => $record->vehiculo?->tipo?->nombre ?? 'No asignado',
-                                'cantidad_personas' => $record->cantidad_personas,
-                                'origen' => $record->origen,
-                                'destino' => $record->destino,
-                                'destino_adicional' => $record->destino_adicional,
-                                'fecha_salida' => $record->fecha_salida,
-                                'fecha_retorno' => $record->fecha_retorno,
-                                'motivo_actividad' => $record->motivo_actividad,
-                                'vehiculo_placa' => $record->vehiculo?->placa ?? 'N/A',
-                                'motorista_nombre' => $record->motorista?->nombre ?? 'N/A',
-                            ],
-                            'solicitante' => [
-                                'name' => $record->solicitante->name,
-                                'email' => $record->solicitante->email,
-                                'unidad' => [
-                                    'nombre' => $record->unidad?->nombre ?? 'N/A',
-                                    'siglas' => $record->unidad?->siglas ?? 'N/A',
-                                ],
-                            ],
-                            'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                        ];
-
-                        Mail::to($record->solicitante->email)->send(
-                            new NotificacionEventMail('✅ Solicitud de Transporte APROBADA', $payload)
+                        app(SolicitudEmailDispatchService::class)->toSolicitante(
+                            $record, 'transporte', 'solicitud_aprobada'
                         );
                     } catch (\Exception $e) {
                         Log::error('Error enviando correo de aprobación: '.$e->getMessage());
@@ -714,34 +682,8 @@ class ViewSolicitudTransporte extends ViewRecord
                     ]);
 
                     try {
-                        $record->load(['solicitante', 'unidad']);
-
-                        $payload = [
-                            'tipo' => 'transporte',
-                            'evento' => 'solicitud_rechazada',
-                            'mensaje' => 'Tu solicitud de transporte ha sido RECHAZADA.',
-                            'solicitud' => [
-                                'codigo' => $record->codigo,
-                                'estado' => 'rechazada',
-                                'origen' => $record->origen,
-                                'destino' => $record->destino,
-                                'fecha_salida' => $record->fecha_salida,
-                                'motivo_actividad' => $record->motivo_actividad,
-                                'comentario_jefe' => $data['comentario_jefe'],
-                            ],
-                            'solicitante' => [
-                                'name' => $record->solicitante->name,
-                                'email' => $record->solicitante->email,
-                                'unidad' => [
-                                    'nombre' => $record->unidad?->nombre ?? 'N/A',
-                                    'siglas' => $record->unidad?->siglas ?? 'N/A',
-                                ],
-                            ],
-                            'timestamp' => now()->format(\DateTimeInterface::ATOM),
-                        ];
-
-                        Mail::to($record->solicitante->email)->send(
-                            new NotificacionEventMail('Solicitud de Transporte RECHAZADA', $payload)
+                        app(SolicitudEmailDispatchService::class)->toSolicitante(
+                            $record, 'transporte', 'solicitud_rechazada'
                         );
                     } catch (\Exception $e) {
                         Log::error('Error enviando correo de rechazo: '.$e->getMessage());

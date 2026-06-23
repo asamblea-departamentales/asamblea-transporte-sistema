@@ -6,7 +6,6 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Mail\NotificacionEventMail;
 use App\Models\BitacoraEvento;
 use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
@@ -17,7 +16,6 @@ use App\Models\Vehiculo;
 use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  *Archivo principal del servicio de Solicitudes de Transporte, aplicando un patron de servicios, sacamos la logica del controlador o algun otro resource
@@ -105,6 +103,8 @@ class SolicitudTransporteService
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, null);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
 
+            $this->enviarCorreoAprobada($solicitud);
+
             return $solicitud;
         });
     }
@@ -127,6 +127,8 @@ class SolicitudTransporteService
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::RECHAZAR->value, $jefeId, ['comentario' => $comentario]);
+
+            $this->enviarCorreoRechazada($solicitud);
 
             return $solicitud;
         });
@@ -311,6 +313,8 @@ class SolicitudTransporteService
                 'decision_final' => $decisionFinal,
             ]);
 
+            $this->enviarCorreoAprobada($solicitud);
+
             return [
                 'success' => true,
                 'estado_final' => EstadoSolicitudEnum::APROBADA->value,
@@ -472,36 +476,48 @@ class SolicitudTransporteService
         ]);
     }
 
-    // Enviar correo cuando se envía la solicitud (borrador -> pendiente)
+    // ── Correos ──────────────────────────────────────────
+
     private function enviarCorreoEnviada(SolicitudTransporte $solicitud): void
     {
-        try {
-            $solicitud->load(['solicitante', 'vehiculo']);
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_enviada'
+        );
+    }
 
-            $payload = [
-                'tipo' => 'transporte',
-                'evento' => 'solicitud_enviada',
-                'mensaje' => 'Tu solicitud de transporte ha sido ENVIADA y está pendiente de revisión.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => 'pendiente',
-                    'vehiculo' => $solicitud->vehiculo->placa ?? 'N/A',
-                    'fecha_salida' => $solicitud->fecha_salida,
-                    'destino' => $solicitud->destino,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante->name,
-                    'email' => $solicitud->solicitante->email,
-                ],
-                'timestamp' => now()->toIso8601String(),
-            ];
+    private function enviarCorreoAprobada(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_aprobada'
+        );
+    }
 
-            Mail::to($solicitud->solicitante->email)->send(
-                new NotificacionEventMail('📤 Solicitud de Transporte ENVIADA', $payload)
-            );
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de envío: '.$e->getMessage());
-        }
+    private function enviarCorreoRechazada(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_rechazada'
+        );
+    }
+
+    private function enviarCorreoCancelada(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_cancelada'
+        );
+    }
+
+    private function enviarCorreoCompletada(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_completada'
+        );
+    }
+
+    private function enviarCorreoProgramada(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_programada'
+        );
     }
 
     /** NUEVOS MÉTODOS PARA FINALIZAR SOLICITUDES Y APLICAR CAMBIOS DE ESTADOS EN VEHÍCULOS Y MOTORISTAS
@@ -571,6 +587,8 @@ class SolicitudTransporteService
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
 
+            $this->enviarCorreoCompletada($solicitud);
+
             return $solicitud;
         });
     }
@@ -601,6 +619,8 @@ class SolicitudTransporteService
             $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
                 'motivo_cancelacion' => $motivoCancelacion,
             ]);
+
+            $this->enviarCorreoCancelada($solicitud);
 
             return $solicitud;
         });
@@ -646,6 +666,8 @@ class SolicitudTransporteService
             $this->registrarEvento($solicitud, AccionBitacoraEnum::PROGRAMAR->value, $userId, [
                 'accion' => 'programar',
             ]);
+
+            $this->enviarCorreoProgramada($solicitud);
 
             return [
                 'message' => "Solicitud {$solicitud->codigo} programada exitosamente.",

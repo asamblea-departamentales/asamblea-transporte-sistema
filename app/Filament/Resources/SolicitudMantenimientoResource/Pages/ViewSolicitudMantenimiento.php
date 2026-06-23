@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SolicitudMantenimientoResource\Pages;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
 use App\Filament\Resources\SolicitudMantenimientoResource;
 use App\Models\BitacoraEvento;
@@ -13,6 +14,7 @@ use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Log;
 
 class ViewSolicitudMantenimiento extends ViewRecord
 {
@@ -346,78 +348,22 @@ class ViewSolicitudMantenimiento extends ViewRecord
     private function sendAprobadoEmail(SolicitudMantenimiento $solicitud): void
     {
         try {
-            $solicitud->load(['vehiculo', 'tipoMantenimiento', 'solicitante', 'solicitante.unidad']);
-
-            $payload = [
-                'tipo' => 'mantenimiento',
-                'evento' => 'solicitud_aprobada',
-                'mensaje' => 'Tu solicitud de mantenimiento ha sido APROBADA.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => $solicitud->estado->value,
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'tipo_mantenimiento' => $solicitud->tipoMantenimiento?->nombre ?? 'N/A',
-                    'prioridad' => $solicitud->prioridad->value,
-                    'detalle' => $solicitud->detalle,
-                    'fecha_sugerida' => $solicitud->fecha_sugerida,
-                    'costo_estimado' => $solicitud->costo_estimado,
-                    'observaciones' => $solicitud->observaciones,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                    'unidad' => [
-                        'nombre' => $solicitud->solicitante?->unidad?->nombre ?? 'N/A',
-                        'siglas' => $solicitud->solicitante?->unidad?->siglas ?? 'N/A',
-                    ],
-                ],
-                'timestamp' => now()->format(\DateTimeInterface::ATOM),
-            ];
-
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('✅ Solicitud de Mantenimiento APROBADA', $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $solicitud, 'mantenimiento', 'solicitud_aprobada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de aprobación mantenimiento: '.$e->getMessage());
+            Log::error('Error enviando correo de aprobación: '.$e->getMessage());
         }
     }
 
     private function sendRechazadoEmail(SolicitudMantenimiento $solicitud): void
     {
         try {
-            $solicitud->load(['vehiculo', 'tipoMantenimiento', 'solicitante', 'solicitante.unidad']);
-
-            $payload = [
-                'tipo' => 'mantenimiento',
-                'evento' => 'solicitud_rechazada',
-                'mensaje' => 'Tu solicitud de mantenimiento ha sido RECHAZADA.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => $solicitud->estado->value,
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'tipo_mantenimiento' => $solicitud->tipoMantenimiento?->nombre ?? 'N/A',
-                    'prioridad' => $solicitud->prioridad->value,
-                    'detalle' => $solicitud->detalle,
-                    'fecha_sugerida' => $solicitud->fecha_sugerida,
-                    'costo_estimado' => $solicitud->costo_estimado,
-                    'motivo_rechazo' => $solicitud->motivo_rechazo,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                    'unidad' => [
-                        'nombre' => $solicitud->solicitante?->unidad?->nombre ?? 'N/A',
-                        'siglas' => $solicitud->solicitante?->unidad?->siglas ?? 'N/A',
-                    ],
-                ],
-                'timestamp' => now()->format(\DateTimeInterface::ATOM),
-            ];
-
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('❌ Solicitud de Mantenimiento RECHAZADA', $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $solicitud, 'mantenimiento', 'solicitud_rechazada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de rechazo mantenimiento: '.$e->getMessage());
+            Log::error('Error enviando correo de rechazo: '.$e->getMessage());
         }
     }
 }

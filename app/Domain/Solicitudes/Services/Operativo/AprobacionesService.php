@@ -3,7 +3,7 @@
 namespace App\Domain\Solicitudes\Services\Operativo;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Mail\NotificacionEventMail;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
@@ -11,7 +11,6 @@ use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 class AprobacionesService
 {
@@ -98,22 +97,9 @@ class AprobacionesService
 
     private function enviarCorreoAprobacion($record, string $tipo): void
     {
-        if (! $record->solicitante || ! $record->solicitante->email) {
-            return;
-        }
-
-        $payload = $this->construirPayload($record, $tipo);
-
-        $subject = match ($tipo) {
-            'transporte' => '✅ Solicitud de Transporte APROBADA',
-            'mantenimiento' => '✅ Solicitud de Mantenimiento APROBADA',
-            'combustible' => '✅ Solicitud de Combustible APROBADA',
-            default => '✅ Solicitud APROBADA',
-        };
-
         try {
-            Mail::to($record->solicitante->email)->send(
-                new NotificacionEventMail($subject, $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $record, $tipo, 'solicitud_aprobada'
             );
         } catch (\Exception $e) {
             Log::error('Error enviando correo de aprobación: '.$e->getMessage());
@@ -122,86 +108,13 @@ class AprobacionesService
 
     private function enviarCorreoRechazo($record, string $tipo, string $motivo): void
     {
-        if (! $record->solicitante || ! $record->solicitante->email) {
-            return;
-        }
-
-        $payload = [
-            'tipo' => $tipo,
-            'evento' => 'solicitud_rechazada',
-            'mensaje' => 'Tu solicitud ha sido RECHAZADA.',
-            'solicitud' => [
-                'id' => $record->id,
-                'codigo' => $record->codigo,
-                'estado' => 'rechazado',
-                'motivo_rechazo' => $motivo,
-            ],
-            'solicitante' => [
-                'name' => $record->solicitante->name,
-                'email' => $record->solicitante->email,
-            ],
-            'timestamp' => now()->toIso8601String(),
-        ];
-
-        if ($tipo === 'transporte') {
-            $payload['solicitud']['origen'] = $record->origen ?? 'N/A';
-            $payload['solicitud']['destino'] = $record->destino ?? 'N/A';
-        } elseif ($tipo === 'mantenimiento') {
-            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['tipo_mantenimiento'] = $record->tipoMantenimiento?->nombre ?? 'General';
-            $payload['solicitud']['detalle'] = $record->detalle ?? 'N/A';
-        } elseif ($tipo === 'combustible') {
-            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_combustible ?? 'N/A';
-        }
-
-        $subject = match ($tipo) {
-            'transporte' => '❌ Solicitud de Transporte RECHAZADA',
-            'mantenimiento' => '❌ Solicitud de Mantenimiento RECHAZADA',
-            'combustible' => '❌ Solicitud de Combustible RECHAZADA',
-            default => '❌ Solicitud RECHAZADA',
-        };
-
         try {
-            Mail::to($record->solicitante->email)->send(
-                new NotificacionEventMail($subject, $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $record, $tipo, 'solicitud_rechazada'
             );
         } catch (\Exception $e) {
             Log::error('Error enviando correo de rechazo: '.$e->getMessage());
         }
-    }
-
-    private function construirPayload($record, string $tipo): array
-    {
-        $payload = [
-            'tipo' => $tipo,
-            'evento' => 'solicitud_aprobada',
-            'mensaje' => 'Tu solicitud ha sido APROBADA.',
-            'solicitud' => [
-                'id' => $record->id,
-                'codigo' => $record->codigo,
-                'estado' => 'aprobado',
-            ],
-            'solicitante' => [
-                'name' => $record->solicitante->name,
-                'email' => $record->solicitante->email,
-            ],
-            'timestamp' => now()->toIso8601String(),
-        ];
-
-        if ($tipo === 'transporte') {
-            $payload['solicitud']['origen'] = $record->origen;
-            $payload['solicitud']['destino'] = $record->destino;
-        } elseif ($tipo === 'mantenimiento') {
-            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['tipo_mantenimiento'] = $record->tipoMantenimiento?->nombre ?? 'General';
-            $payload['solicitud']['descripcion_falla'] = $record->detalle;
-        } elseif ($tipo === 'combustible') {
-            $payload['solicitud']['vehiculo'] = $record->vehiculo?->placa ?? 'N/A';
-            $payload['solicitud']['cantidad_combustible'] = $record->cantidad_combustible;
-        }
-
-        return $payload;
     }
 
     public function rechazar(string $tipo, int $id, int $userId, string $comentario): void

@@ -4,15 +4,10 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Mail\NotificacionEventMail;
-use App\Models\BitacoraEvento;
-use App\Models\ContratoCombustible;
-use App\Models\DecisionOperativa;
-use App\Models\HistorialEstado;
+use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use App\Models\SerieCarga;
 
 class SolicitudCombustibleService
@@ -312,6 +307,9 @@ class SolicitudCombustibleService
                 'monto_validado' => $data['monto_validado'],
                 'resultado' => $data['resultado'],
             ]);
+
+            $record->refresh();
+            $this->enviarCorreoLiquidada($record);
         });
     }
 
@@ -442,6 +440,8 @@ class SolicitudCombustibleService
                 'valor_total' => $data['valor_total'] ?? null,
             ]);
 
+            $this->enviarCorreoCompletada($solicitud);
+
             return $solicitud;
         });
     }
@@ -469,6 +469,8 @@ class SolicitudCombustibleService
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $motivo);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::RECHAZAR->value, $jefeId, ['motivo' => $motivo]);
+
+            $this->enviarCorreoRechazada($solicitud);
 
             return $solicitud;
         });
@@ -620,6 +622,8 @@ class SolicitudCombustibleService
                 'motivo_cancelacion' => $motivoCancelacion,
             ]);
 
+            $this->enviarCorreoCancelada($solicitud);
+
             return $solicitud;
         });
     }
@@ -650,36 +654,40 @@ class SolicitudCombustibleService
         ]);
     }
 
-    // Enviar correo cuando se envía la solicitud (borrador -> pendiente)
+    // ── Correos ──────────────────────────────────────────
+
     private function enviarCorreoEnviada(SolicitudCombustible $solicitud): void
     {
-        try {
-            $solicitud->load(['vehiculo', 'motorista', 'solicitante']);
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_enviada'
+        );
+    }
 
-            $payload = [
-                'tipo' => 'combustible',
-                'evento' => 'solicitud_enviada',
-                'mensaje' => 'Tu solicitud de combustible ha sido ENVIADA y está pendiente de revisión.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => 'pendiente',
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'motorista' => $solicitud->motorista?->nombre ?? 'N/A',
-                    'cantidad_combustible' => $solicitud->cantidad_combustible,
-                    'valor_total' => $solicitud->valor_total,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                ],
-                'timestamp' => now()->toIso8601String(),
-            ];
+    private function enviarCorreoRechazada(SolicitudCombustible $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_rechazada'
+        );
+    }
 
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('📤 Solicitud de Combustible ENVIADA', $payload)
-            );
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de envío combustible: '.$e->getMessage());
-        }
+    private function enviarCorreoCancelada(SolicitudCombustible $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_cancelada'
+        );
+    }
+
+    private function enviarCorreoCompletada(SolicitudCombustible $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_completada'
+        );
+    }
+
+    private function enviarCorreoLiquidada(SolicitudCombustible $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_liquidada'
+        );
     }
 }

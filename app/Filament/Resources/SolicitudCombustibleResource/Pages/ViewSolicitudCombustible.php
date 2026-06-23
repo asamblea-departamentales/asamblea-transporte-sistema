@@ -4,6 +4,7 @@ namespace App\Filament\Resources\SolicitudCombustibleResource\Pages;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\BitacoraEvento;
@@ -15,8 +16,6 @@ use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use App\Models\SerieCarga;
-use App\Mail\NotificacionEventMail;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
 
 class ViewSolicitudCombustible extends ViewRecord
@@ -425,78 +424,22 @@ class ViewSolicitudCombustible extends ViewRecord
     private function sendAprobadoEmail(SolicitudCombustible $solicitud): void
     {
         try {
-            $solicitud->load(['vehiculo', 'motorista', 'solicitante', 'solicitante.unidad']);
-
-            $payload = [
-                'tipo' => 'combustible',
-                'evento' => 'solicitud_aprobada',
-                'mensaje' => 'Tu solicitud de combustible ha sido APROBADA.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => $solicitud->estado->value,
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'motorista' => $solicitud->motorista?->nombre ?? 'N/A',
-                    'cantidad_combustible' => $solicitud->cantidad_combustible,
-                    'valor_total' => $solicitud->valor_total,
-                    'fecha_solicitud' => $solicitud->fecha_solicitud,
-                    'destino_actividad' => $solicitud->destino_actividad,
-                    'forma_pago' => $solicitud->forma_pago,
-                    'numero_vale_ticket' => $solicitud->numero_vale_ticket,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                    'unidad' => [
-                        'nombre' => $solicitud->solicitante?->unidad?->nombre ?? 'N/A',
-                        'siglas' => $solicitud->solicitante?->unidad?->siglas ?? 'N/A',
-                    ],
-                ],
-                'timestamp' => now()->format(\DateTimeInterface::ATOM),
-            ];
-
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('✅ Solicitud de Combustible APROBADA', $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $solicitud, 'combustible', 'solicitud_aprobada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de aprobación combustible: '.$e->getMessage());
+            Log::error('Error enviando correo de aprobación: '.$e->getMessage());
         }
     }
 
     private function sendRechazadoEmail(SolicitudCombustible $solicitud): void
     {
         try {
-            $solicitud->load(['vehiculo', 'motorista', 'solicitante', 'solicitante.unidad']);
-
-            $payload = [
-                'tipo' => 'combustible',
-                'evento' => 'solicitud_rechazada',
-                'mensaje' => 'Tu solicitud de combustible ha sido RECHAZADA.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => $solicitud->estado->value,
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'motorista' => $solicitud->motorista?->nombre ?? 'N/A',
-                    'cantidad_combustible' => $solicitud->cantidad_combustible,
-                    'valor_total' => $solicitud->valor_total,
-                    'destino_actividad' => $solicitud->destino_actividad,
-                    'motivo_rechazo' => $solicitud->motivo_rechazo,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                    'unidad' => [
-                        'nombre' => $solicitud->solicitante?->unidad?->nombre ?? 'N/A',
-                        'siglas' => $solicitud->solicitante?->unidad?->siglas ?? 'N/A',
-                    ],
-                ],
-                'timestamp' => now()->format(\DateTimeInterface::ATOM),
-            ];
-
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('❌ Solicitud de Combustible RECHAZADA', $payload)
+            app(SolicitudEmailDispatchService::class)->toSolicitante(
+                $solicitud, 'combustible', 'solicitud_rechazada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de rechazo combustible: '.$e->getMessage());
+            Log::error('Error enviando correo de rechazo: '.$e->getMessage());
         }
     }
 }

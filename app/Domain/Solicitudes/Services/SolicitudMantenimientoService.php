@@ -4,13 +4,9 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Mail\NotificacionEventMail;
-use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * Servicio encargado de gestionar la lógica y transiciones de estado de Solicitudes de Mantenimiento.
@@ -142,6 +138,8 @@ class SolicitudMantenimientoService
                 'motivo_rechazo' => $motivoRechazo,
             ]);
 
+            $this->enviarCorreoRechazada($solicitud);
+
             return $solicitud;
         });
     }
@@ -212,6 +210,8 @@ class SolicitudMantenimientoService
                 'fecha_realizada' => $data['fecha_realizada'],
             ]);
 
+            $this->enviarCorreoCompletada($solicitud);
+
             return $solicitud;
         });
     }
@@ -240,6 +240,8 @@ class SolicitudMantenimientoService
             $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
                 'motivo_cancelacion' => $motivoCancelacion,
             ]);
+
+            $this->enviarCorreoCancelada($solicitud);
 
             return $solicitud;
         });
@@ -316,6 +318,9 @@ class SolicitudMantenimientoService
                 'monto_validado' => $data['monto_validado'],
                 'resultado' => $data['resultado'],
             ]);
+
+            $solicitud->refresh();
+            $this->enviarCorreoLiquidada($solicitud);
         });
     }
 
@@ -346,38 +351,40 @@ class SolicitudMantenimientoService
         ]);
     }
 
-    // Enviar correo cuando se envía la solicitud (borrador -> pendiente)
+    // ── Correos ──────────────────────────────────────────
+
     private function enviarCorreoEnviada(SolicitudMantenimiento $solicitud): void
     {
-        try {
-            $solicitud->load(['vehiculo', 'tipoMantenimiento', 'solicitante']);
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_enviada'
+        );
+    }
 
-            $payload = [
-                'tipo' => 'mantenimiento',
-                'evento' => 'solicitud_enviada',
-                'mensaje' => 'Tu solicitud de mantenimiento ha sido ENVIADA y está pendiente de revisión.',
-                'solicitud' => [
-                    'codigo' => $solicitud->codigo,
-                    'estado' => 'pendiente',
-                    'vehiculo' => $solicitud->vehiculo?->placa ?? 'N/A',
-                    'tipo_mantenimiento' => $solicitud->tipoMantenimiento?->nombre ?? 'N/A',
-                    'prioridad' => $solicitud->prioridad->value,
-                    'detalle' => $solicitud->detalle,
-                    'fecha_sugerida' => $solicitud->fecha_sugerida,
-                    'costo_estimado' => $solicitud->costo_estimado,
-                ],
-                'solicitante' => [
-                    'name' => $solicitud->solicitante?->name,
-                    'email' => $solicitud->solicitante?->email,
-                ],
-                'timestamp' => now()->toIso8601String(),
-            ];
+    private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_rechazada'
+        );
+    }
 
-            Mail::to($solicitud->solicitante?->email)->send(
-                new NotificacionEventMail('📤 Solicitud de Mantenimiento ENVIADA', $payload)
-            );
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de envío mantenimiento: '.$e->getMessage());
-        }
+    private function enviarCorreoCancelada(SolicitudMantenimiento $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_cancelada'
+        );
+    }
+
+    private function enviarCorreoCompletada(SolicitudMantenimiento $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_completada'
+        );
+    }
+
+    private function enviarCorreoLiquidada(SolicitudMantenimiento $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_liquidada'
+        );
     }
 }
