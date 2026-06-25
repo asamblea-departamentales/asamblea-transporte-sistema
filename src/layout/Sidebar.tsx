@@ -95,6 +95,11 @@ const Icons = {
       <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
     </svg>
   ),
+  Shield: () => (
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
+    </svg>
+  ),
 };
 
 // ─── Avatar ───────────────────────────────────────────────────────────────────
@@ -374,6 +379,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const initial = (user?.name?.trim()?.[0] || "U").toUpperCase();
+  const isPrivileged = user?.roles?.some(r => ["jefe", "operativo", "superadmin", "super_admin"].includes(r.toLowerCase())) || false;
 
   const navItems: NavItem[] = [
     { to: "/dashboard",       label: "Dashboard",       mobileLabel: "Inicio",      icon: Icons.Dashboard },
@@ -433,6 +439,25 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           {navItems.map(item => (
             <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />
           ))}
+
+          {isPrivileged && (
+            <div className="pt-4 mt-4 border-t border-white/10">
+              <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">
+                Administración
+              </p>
+              <a
+                href="/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10 border border-transparent hover:border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0)] hover:shadow-[0_0_15px_rgba(251,191,36,0.15)]"
+              >
+                <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all text-amber-400/60 group-hover:text-amber-400 bg-amber-400/5 group-hover:bg-amber-400/10">
+                  <Icons.Shield />
+                </div>
+                <span className="tracking-wide">Panel Backend</span>
+              </a>
+            </div>
+          )}
         </nav>
 
         {/* Bottom Section: Profile & Logout */}
@@ -530,6 +555,24 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
         <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-1">
           <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-white/30">Navegación</p>
           {navItems.map(item => <NavLinkDrawer key={item.to} item={item} onClick={onClose} pathname={location.pathname} />)}
+
+          {isPrivileged && (
+            <div className="pt-4 mt-4 border-t border-white/10">
+              <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">Administración</p>
+              <a
+                href="/admin"
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={onClose}
+                className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10"
+              >
+                <div className="flex items-center justify-center w-8 h-8 flex-shrink-0 text-amber-400/60">
+                  <Icons.Shield />
+                </div>
+                <span>Panel Backend</span>
+              </a>
+            </div>
+          )}
         </nav>
 
         <div className="p-4 bg-white/5 border-t border-white/10">
