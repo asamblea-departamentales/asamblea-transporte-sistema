@@ -1,11 +1,5 @@
 import { useState, useRef, useEffect } from "react";
 import { Search, MapPin, Loader2, X } from "lucide-react";
-import { clsx } from "clsx";
-import { twMerge } from "tailwind-merge";
-
-function cn(...inputs: (string | undefined | null | false)[]) {
-  return twMerge(clsx(inputs));
-}
 
 type SearchResult = {
   place_id: number;
