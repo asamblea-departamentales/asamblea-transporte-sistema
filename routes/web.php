@@ -332,6 +332,9 @@ Route::get('/reportes/orden-trabajo/pdf', action: [ReporteOrdenTrabajoController
 Route::get('/reportes/recepcion-entrega-vehiculo/pdf', [ReporteRecepcionEntregaVehiculoController::class, 'pdf'])
     ->name('reportes.recepcion-entrega.pdf');
 
+Route::get('/reportes/registro-vehiculos/pdf', [\App\Http\Controllers\Reportes\ReporteRegistroVehiculosController::class, 'pdf'])
+    ->name('reportes.registro-vehiculos.pdf');
+
 // Ruta para las liquidaciones unificadas
 Route::get('/liquidacion/combustible/{id}', [LiquidacionCombustibleController::class, 'pdf'])
     ->name('liquidacion.combustible.pdf');
