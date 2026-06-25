@@ -14,6 +14,9 @@ use Illuminate\Queue\SerializesModels;
  * Implementa ShouldQueue para que los correos se envíen de forma asíncrona
  * a través de un worker de colas. Esto evita demoras en la respuesta HTTP
  * cuando se disparan notificaciones.
+ *
+ * NOTA: El logo institucional no se embeble con embed() para evitar correos
+ * pesados y problemas de SPAM. La plantilla Blade usa asset() como fallback.
  */
 class NotificacionEventMail extends Mailable implements ShouldQueue
 {
@@ -33,14 +36,13 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
     }
 
     /**
-     * Construye el mensaje: asigna la vista, pasa las variables,
-     * adjunta archivos si los hay y embeble el logo institucional.
+     * Construye el mensaje: asigna la vista, pasa las variables
+     * y adjunta archivos si los hay.
      */
     public function build()
     {
         $payload = $this->payload;
 
-        // Genera la URL del mapa estático para solicitudes de transporte
         $mapUrl = null;
 
         if (($payload['tipo'] ?? null) === 'transporte' && isset($payload['solicitud'])) {
@@ -57,8 +59,6 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
             ]);
 
         $this->attachFilesFromPayload($payload, $mail);
-
-        $this->embedLogo($mail);
 
         return $mail;
     }
@@ -116,45 +116,4 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
         return null;
     }
 
-    /**
-     * Embeble el logo institucional en el cuerpo del correo usando
-     * el método embed() de Laravel, lo que permite mostrar la imagen
-     * sin necesidad de URLs externas.
-     */
-    private function embedLogo($mail): void
-    {
-        $logoPath = public_path('images/logo-blanco-fondo-transparente.png');
-        if (file_exists($logoPath)) {
-            $mail->with([
-                'email_logo_embedded' => $mail->embed($logoPath),
-            ]);
-        }
-    }
-
-    /**
-     * Devuelve una fuente de imagen para usar en el correo.
-     * En entorno local usa una imagen embebida; en producción usa la URL real.
-     *
-     * NOTA: Actualmente este método no está siendo llamado desde la build().
-     *       Se mantiene por compatibilidad con futuros usos.
-     *
-     * @param  string|null $url URL externa de la imagen
-     * @return string|null      Ruta embebida o URL
-     */
-    public function emailImageSource(?string $url): ?string
-    {
-        if (empty($url)) {
-            return null;
-        }
-
-        if (app()->environment('local')) {
-            $mapFallback = public_path('images/mapa_correo.png');
-            if (file_exists($mapFallback)) {
-                return $mail->embed($mapFallback);
-            }
-            return null;
-        }
-
-        return $url;
-    }
 }
