@@ -15,7 +15,7 @@ class SolicitudCombustiblePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->can('view_any_solicitud::combustible');
+        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
     }
 
     /**
@@ -23,7 +23,7 @@ class SolicitudCombustiblePolicy
      */
     public function view(User $user, SolicitudCombustible $solicitudCombustible): bool
     {
-        return $user->can('view_solicitud::combustible');
+        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
     }
 
     /**
