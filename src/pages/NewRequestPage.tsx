@@ -78,7 +78,7 @@ const MODULE_DEFINITIONS: ModuleCard[] = [
     description: "Solicitudes de combustible, control de consumo y validación de entregas institucionales.",
     href:        "/solicitudes/combustible/nueva",
     accent:      "amber",
-    allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
+    allowedRoles: ["admin", "supervisor", "jefe"],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
         <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
@@ -94,7 +94,7 @@ const MODULE_DEFINITIONS: ModuleCard[] = [
     description: "Registro de mantenimientos preventivos y correctivos, historial completo y control de aprobaciones.",
     href:        "/solicitudes/mantenimiento/nueva",
     accent:      "emerald",
-    allowedRoles: ["admin", "supervisor", "jefe", "solicitante"],
+    allowedRoles: ["admin", "supervisor", "jefe"],
     icon: (
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75">
         <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
