@@ -38,9 +38,9 @@ class SolicitudEmailPayloadService
             'solicitante' => [
                 'name' => $record->solicitante?->name,
                 'email' => $record->solicitante?->email,
-                'unidad' => [
-                    'nombre' => $record->solicitante?->unidad?->nombre ?? $record->unidad?->nombre ?? 'N/A',
-                    'siglas' => $record->solicitante?->unidad?->siglas ?? $record->unidad?->siglas ?? 'N/A',
+                'unidadSolicitante' => [
+                    'nombre' => $record->solicitante?->unidadSolicitante?->nombre ?? $record->unidad?->nombre ?? 'N/A',
+                    'siglas' => $record->solicitante?->unidadSolicitante?->siglas ?? $record->unidad?->siglas ?? 'N/A',
                 ],
             ],
             'timestamp' => now()->toIso8601String(),
