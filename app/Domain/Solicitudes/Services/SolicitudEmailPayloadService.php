@@ -194,14 +194,35 @@ class SolicitudEmailPayloadService
      * Devuelve las relaciones de Eloquent que deben cargarse según el tipo.
      */
     private function relationsFor(string $tipo): array
-    {
-        return match ($tipo) {
-            'transporte' => ['solicitante.unidad', 'vehiculo.tipo', 'motorista', 'unidad'],
-            'combustible' => ['solicitante.unidad', 'vehiculo', 'motorista', 'contrato', 'serie', 'liquidacion'],
-            'mantenimiento' => ['solicitante.unidad', 'vehiculo', 'tipoMantenimiento', 'liquidacion'],
-            default => ['solicitante'],
-        };
-    }
+{
+    return match ($tipo) {
+
+        'transporte' => [
+            'solicitante.unidadSolicitante',
+            'vehiculo.tipo',
+            'motorista',
+            'unidad',
+        ],
+
+        'combustible' => [
+            'solicitante.unidadSolicitante',
+            'vehiculo',
+            'motorista',
+            'contrato',
+            'serie',
+            'liquidacion',
+        ],
+
+        'mantenimiento' => [
+            'solicitante.unidadSolicitante',
+            'vehiculo',
+            'tipoMantenimiento',
+            'liquidacion',
+        ],
+
+        default => ['solicitante'],
+    };
+}
 
     /**
      * Genera un mensaje descriptivo por defecto según el tipo y el evento.
