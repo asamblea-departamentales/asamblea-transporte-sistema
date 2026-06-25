@@ -1,255 +1,381 @@
 <!doctype html>
 <html lang="es">
+
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Hoja de Registro de Vehículos</title>
+
     <style>
         body {
-            font-family: 'DejaVu Sans', sans-serif;
+            font-family: DejaVu Sans, sans-serif;
             font-size: 9px;
-            color: #333;
-            margin: 0;
-            padding: 0;
+            margin: 20px;
+            color: #000;
         }
 
         .header {
-            width: 100%;
-            margin-bottom: 16px;
-            border-bottom: 2px solid #1e3a8a;
-            padding-bottom: 10px;
+            text-align: center;
+            margin-bottom: 10px;
         }
 
         .logo {
-            width: 90px;
-            float: left;
+            width: 80px;
+            margin-bottom: 5px;
         }
 
-        .title-container {
-            float: right;
-            text-align: right;
-            width: 75%;
-        }
-
-        h2 {
-            margin: 0;
-            color: #1e3a8a;
-            font-size: 16px;
-            text-transform: uppercase;
-        }
-
-        h3 {
-            margin: 2px 0;
+        .institucion {
             font-size: 11px;
-            font-weight: normal;
-            color: #1e3a8a;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .titulo {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .subtitulo {
+            font-size: 12px;
+            font-weight: bold;
+            margin: 3px 0;
         }
 
         .periodo {
-            margin: 4px 0 0;
-            font-size: 10px;
-            color: #555;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 8px;
         }
 
-        .clearfix { clear: both; }
-
-        .vehiculo-info {
-            margin-bottom: 12px;
-            padding: 8px 10px;
-            background-color: #f0f4f8;
-            border-radius: 5px;
-            font-size: 10px;
-        }
-
-        .vehiculo-info table {
-            border: none;
+        .info-vehiculo {
             width: 100%;
+            margin-top: 12px;
+            margin-bottom: 12px;
+            border-collapse: collapse;
         }
 
-        .vehiculo-info td {
+        .info-vehiculo td {
+            padding: 4px;
             border: none;
-            padding: 2px 8px;
-            width: 33%;
+            font-size: 10px;
         }
 
-        .vehiculo-info td:first-child {
-            padding-left: 0;
+        .info-vehiculo strong {
+            font-weight: bold;
         }
 
-        .vehiculo-info strong {
-            color: #1e3a8a;
-        }
-
-        table.data {
+        .data {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 6px;
         }
 
-        table.data th, table.data td {
-            border: 0.5px solid #ccc;
-            padding: 4px 5px;
-            text-align: left;
+        .data th,
+        .data td {
+            border: 1px solid #999;
+            padding: 4px;
             vertical-align: middle;
         }
 
-        table.data th {
-            background: #1e3a8a;
-            color: white;
+        .data th {
+            background: #f2f2f2;
+            text-align: center;
+            font-size: 8px;
             font-weight: bold;
-            text-transform: uppercase;
-            font-size: 7.5px;
+        }
+
+        .data td {
+            font-size: 8px;
+        }
+
+        .center {
             text-align: center;
         }
 
-        table.data tr:nth-child(even) {
-            background: #f8fafc;
-        }
-
-        table.data td {
-            font-size: 8.5px;
-        }
-
-        table.data td.center {
-            text-align: center;
-        }
-
-        table.data td.right {
+        .right {
             text-align: right;
+        }
+
+        .fuel-wrapper {
+            width: 100px;
+            margin: auto;
+        }
+
+        .fuel-bar {
+            width: 100px;
+            height: 12px;
+            border: 1px solid #777;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .fuel-fill {
+            height: 100%;
+            background: linear-gradient(
+                to right,
+                #d32f2f 0%,
+                #fbc02d 50%,
+                #388e3c 100%
+            );
+        }
+
+        .fuel-label {
+            font-size: 7px;
+            text-align: center;
+            margin-top: 2px;
         }
 
         .totales {
             margin-top: 10px;
-            padding: 6px 10px;
-            background-color: #f0f4f8;
-            border-radius: 5px;
+            text-align: right;
             font-size: 10px;
             font-weight: bold;
-            text-align: right;
         }
 
         .footer {
             position: fixed;
-            bottom: -30px;
+            bottom: -15px;
             left: 0;
             right: 0;
-            height: 30px;
             text-align: center;
             font-size: 8px;
-            color: #777;
         }
     </style>
 </head>
+
 <body>
+
     <div class="header">
-        <div class="logo">
-            <img src="{{ public_path('images/logo-azul-fondo-transparente.png') }}" alt="Asamblea Legislativa">
+
+        <img
+            src="{{ public_path('images/logo-azul-fondo-transparente.png') }}"
+            class="logo"
+            alt="Logo">
+
+        <div class="institucion">
+            ASAMBLEA LEGISLATIVA
         </div>
-        <div class="title-container">
-            <h2>Hoja de Registro de Vehículos</h2>
-            <h3>Departamento de Transporte - Asamblea Legislativa</h3>
-            <div class="periodo">
-                Período: Del {{ \Carbon\Carbon::parse($fechaInicio)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
-                al {{ \Carbon\Carbon::parse($fechaFin)->locale('es')->isoFormat('D [de] MMMM [de] YYYY') }}
-            </div>
+
+        <div class="titulo">
+            HOJA DE REGISTRO DE VEHÍCULOS
         </div>
-        <div class="clearfix"></div>
+
+        <div class="subtitulo">
+            Departamento de Transporte - Asamblea Legislativa
+        </div>
+
+        <div class="periodo">
+            PERÍODO:
+            DEL {{ \Carbon\Carbon::parse($fechaInicio)->locale('es')->isoFormat('D [DE] MMMM [DE] YYYY') }}
+            AL {{ \Carbon\Carbon::parse($fechaFin)->locale('es')->isoFormat('D [DE] MMMM [DE] YYYY') }}
+        </div>
+
     </div>
 
-    <div class="vehiculo-info">
-        <table>
-            <tr>
-                <td><strong>Placa:</strong> {{ $datosVehiculo['placa'] }}</td>
-                <td><strong>Tipo:</strong> {{ $datosVehiculo['tipo_nombre'] }}</td>
-                <td><strong>Combustible:</strong> {{ $datosVehiculo['combustible_nombre'] }}</td>
-            </tr>
-        </table>
-    </div>
+    <table class="info-vehiculo">
+        <tr>
+            <td>
+                <strong>Placa:</strong>
+                {{ $datosVehiculo['placa'] }}
+            </td>
+
+            <td>
+                <strong>Vehículo:</strong>
+                {{ $datosVehiculo['tipo_nombre'] }}
+            </td>
+
+            <td>
+                <strong>Tipo de Combustible:</strong>
+                {{ $datosVehiculo['combustible_nombre'] }}
+            </td>
+        </tr>
+    </table>
 
     @if($registros->isEmpty())
-        <p style="text-align:center;color:#888;margin-top:40px;font-size:12px;">
-            No se encontraron registros para el vehículo y período seleccionados.
-        </p>
-    @else
-        <table class="data">
-            <thead>
-                <tr>
-                    <th style="width:9%;">Fecha</th>
-                    <th style="width:10%;">KM Inicial</th>
-                    <th style="width:10%;">KM Final</th>
-                    <th style="width:10%;">KMs Rec.</th>
-                    <th style="width:23%;">Lugares Recorridos</th>
-                    <th style="width:16%;">Motorista</th>
-                    <th style="width:11%;">Tanque Salida</th>
-                    <th style="width:11%;">Tanque Regreso</th>
-                </tr>
-            </thead>
-            <tbody>
-                @php
-                    $totalKm = 0;
 
-                    $fuelColor = function ($pct) {
-                        if ($pct === null) return '#ccc';
-                        // rojo 0% → amarillo 50% → verde 100%
-                        $r = $pct < 50 ? 220 : (int) round(220 - (($pct - 50) / 50) * (220 - 22));
-                        $g = $pct < 50 ? (int) round((($pct) / 50) * (180 - 22) + 22) : (int) round(180 - (($pct - 50) / 50) * (180 - 130));
-                        $b = $pct < 50 ? (int) round((($pct) / 50) * 8) : 8;
-                        return "rgb({$r},{$g},{$b})";
-                    };
-                @endphp
+        <p style="text-align:center; margin-top:40px;">
+            No se encontraron registros para el período seleccionado.
+        </p>
+
+    @else
+
+        @php
+            $totalKm = 0;
+        @endphp
+
+        <table class="data">
+
+            <thead>
+
+                <tr>
+
+                    <th rowspan="2" style="width:8%;">
+                        FECHA
+                    </th>
+
+                    <th colspan="2" style="width:16%;">
+                        KILOMETRAJE
+                    </th>
+
+                    <th rowspan="2" style="width:8%;">
+                        KMS.<br>RECORRIDOS
+                    </th>
+
+                    <th rowspan="2" style="width:26%;">
+                        LUGARES RECORRIDOS
+                    </th>
+
+                    <th rowspan="2" style="width:18%;">
+                        NOMBRE DEL MOTORISTA
+                    </th>
+
+                    <th colspan="2" style="width:24%;">
+                        CONDICIÓN DEL TANQUE
+                    </th>
+
+                </tr>
+
+                <tr>
+
+                    <th>
+                        INICIAL
+                    </th>
+
+                    <th>
+                        FINAL
+                    </th>
+
+                    <th>
+                        SALIDA
+                    </th>
+
+                    <th>
+                        REGRESO
+                    </th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
                 @foreach($registros as $r)
+
                     @php
-                        $fecha = $r['fecha'] ? \Carbon\Carbon::parse($r['fecha'])->format('d/m/Y') : '—';
-                        $kmInicial = $r['km_inicial'] ?? '—';
-                        $kmFinal   = $r['km_final'] ?? '—';
-                        $kmRec     = $r['km_recorridos'];
-                        $kmRecStr  = $kmRec !== null ? number_format($kmRec, 0) : '—';
+
+                        $fecha = $r['fecha']
+                            ? \Carbon\Carbon::parse($r['fecha'])->format('d/m/Y')
+                            : '—';
+
+                        $kmInicial = $r['km_inicial'];
+                        $kmFinal   = $r['km_final'];
+
+                        $kmRec = $r['km_recorridos'];
+
                         if ($kmRec !== null) {
                             $totalKm += $kmRec;
                         }
 
-                        $combSalida  = $r['combustible_salida'];
-                        $combRegreso = $r['combustible_regreso'];
                     @endphp
+
                     <tr>
-                        <td class="center">{{ $fecha }}</td>
-                        <td class="right">{{ is_numeric($kmInicial) ? number_format($kmInicial, 0) : $kmInicial }}</td>
-                        <td class="right">{{ is_numeric($kmFinal) ? number_format($kmFinal, 0) : $kmFinal }}</td>
-                        <td class="right">{{ $kmRecStr }}</td>
-                        <td>{{ $r['lugares'] }}</td>
-                        <td>{{ $r['motorista_nombre'] }}</td>
-                        <td class="center" style="padding:3px 5px;">
-                            @if($combSalida !== null)
-                                <div style="width:100%;height:12px;background:#e5e7eb;border-radius:6px;overflow:hidden;">
-                                    <div style="width:{{ $combSalida }}%;height:100%;background:{{ $fuelColor($combSalida) }};border-radius:6px;"></div>
+
+                        <td class="center">
+                            {{ $fecha }}
+                        </td>
+
+                        <td class="right">
+                            {{ $kmInicial ? number_format($kmInicial,0) : '—' }}
+                        </td>
+
+                        <td class="right">
+                            {{ $kmFinal ? number_format($kmFinal,0) : '—' }}
+                        </td>
+
+                        <td class="center">
+                            {{ $kmRec ? number_format($kmRec,0) : '—' }}
+                        </td>
+
+                        <td>
+                            {{ $r['lugares'] }}
+                        </td>
+
+                        <td>
+                            {{ $r['motorista_nombre'] }}
+                        </td>
+
+                        <td class="center">
+
+                            @if($r['combustible_salida'] !== null)
+
+                                <div class="fuel-wrapper">
+
+                                    <div class="fuel-bar">
+                                        <div
+                                            class="fuel-fill"
+                                            style="width: {{ $r['combustible_salida'] }}%;">
+                                        </div>
+                                    </div>
+
+                                    <div class="fuel-label">
+                                        {{ $r['combustible_salida'] }}%
+                                    </div>
+
                                 </div>
-                                <span style="font-size:7px;color:#555;">{{ $combSalida }}%</span>
+
                             @else
                                 —
                             @endif
+
                         </td>
-                        <td class="center" style="padding:3px 5px;">
-                            @if($combRegreso !== null)
-                                <div style="width:100%;height:12px;background:#e5e7eb;border-radius:6px;overflow:hidden;">
-                                    <div style="width:{{ $combRegreso }}%;height:100%;background:{{ $fuelColor($combRegreso) }};border-radius:6px;"></div>
+
+                        <td class="center">
+
+                            @if($r['combustible_regreso'] !== null)
+
+                                <div class="fuel-wrapper">
+
+                                    <div class="fuel-bar">
+                                        <div
+                                            class="fuel-fill"
+                                            style="width: {{ $r['combustible_regreso'] }}%;">
+                                        </div>
+                                    </div>
+
+                                    <div class="fuel-label">
+                                        {{ $r['combustible_regreso'] }}%
+                                    </div>
+
                                 </div>
-                                <span style="font-size:7px;color:#555;">{{ $combRegreso }}%</span>
+
                             @else
                                 —
                             @endif
+
                         </td>
+
                     </tr>
+
                 @endforeach
+
             </tbody>
+
         </table>
 
         <div class="totales">
-            Total kilómetros recorridos en el período: {{ number_format($totalKm, 0) }} km
+            TOTAL DE KILÓMETROS RECORRIDOS:
+            {{ number_format($totalKm, 0) }} KM
         </div>
+
     @endif
 
     <div class="footer">
-        Asamblea Legislativa de El Salvador - Sistema de Gestión de Transporte -
-        Pág. <script type="text/php">echo $PAGE_NUM . " de " . $PAGE_COUNT;</script>
+        Asamblea Legislativa de El Salvador |
+        Sistema de Gestión de Transporte |
+        Página
+        <script type="text/php">
+            echo $PAGE_NUM . " de " . $PAGE_COUNT;
+        </script>
     </div>
+
 </body>
 </html>
