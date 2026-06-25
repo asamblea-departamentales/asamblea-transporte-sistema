@@ -189,7 +189,7 @@ class RevisionOperativaService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante.grupo'])
+            ->with(['solicitante.grupo', 'solicitante.unidadSolicitante'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
         if (!empty($filters['date_from'])) {
@@ -207,7 +207,7 @@ class RevisionOperativaService
                 'codigo' => $r->codigo,
                 'fecha_ingreso' => optional($r->updated_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
-                'unidad' => '—',
+                'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->destino_actividad ?? 'Solicitud de combustible',
                 'prioridad' => $this->enumValue($r->prioridad),
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
@@ -220,7 +220,7 @@ class RevisionOperativaService
     private function mapMantenimiento(array $filters = []): Collection
     {
         $query = SolicitudMantenimiento::query()
-            ->with(['solicitante', 'tipoMantenimiento'])
+            ->with(['solicitante.unidadSolicitante', 'tipoMantenimiento'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
         if (!empty($filters['date_from'])) {
@@ -238,7 +238,7 @@ class RevisionOperativaService
                 'codigo' => $r->codigo,
                 'fecha_ingreso' => optional($r->updated_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
-                'unidad' => '—',
+                'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->tipoMantenimiento?->nombre
                     ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
                     : $r->detalle,

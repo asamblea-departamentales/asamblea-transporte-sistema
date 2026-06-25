@@ -146,7 +146,7 @@ class BandejaOperativaService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante.grupo'])
+            ->with(['solicitante.grupo', 'solicitante.unidadSolicitante'])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PENDIENTE,
                 EstadoSolicitudEnum::EN_REVISION,
@@ -167,7 +167,7 @@ class BandejaOperativaService
                 'codigo' => $r->codigo,
                 'fecha_ingreso' => optional($r->created_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
-                'unidad' => '—',
+                'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->destino_actividad ?? 'Solicitud de combustible',
                 'prioridad' => $this->enumValue($r->prioridad),
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
@@ -180,7 +180,7 @@ class BandejaOperativaService
     private function mapMantenimiento(array $filters = []): Collection
     {
         $query = SolicitudMantenimiento::query()
-            ->with(['solicitante', 'tipoMantenimiento'])
+            ->with(['solicitante.unidadSolicitante', 'tipoMantenimiento'])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PENDIENTE,
                 EstadoSolicitudEnum::EN_REVISION,
@@ -201,7 +201,7 @@ class BandejaOperativaService
                 'codigo' => $r->codigo,
                 'fecha_ingreso' => optional($r->created_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
-                'unidad' => '—',
+                'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->tipoMantenimiento?->nombre
                     ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
                     : $r->detalle,
