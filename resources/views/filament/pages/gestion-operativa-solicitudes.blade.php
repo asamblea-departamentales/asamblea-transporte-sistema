@@ -397,6 +397,78 @@
                         </x-filament::modal>
                         @endif
 
+                        {{-- Asignación Previa — solo combustible --}}
+                        @if($row['tipo'] === 'combustible')
+                        <div x-data="{
+                            open: false,
+                            lotes: @js($this->lotesDelDia),
+                            detalleSeleccionado: null,
+                            init() {
+                                if (this.lotes.length && this.lotes[0].detalles?.length) {
+                                    this.detalleSeleccionado = this.lotes[0].detalles[0].id;
+                                }
+                            },
+                            get loteInfo() {
+                                for (const l of this.lotes) {
+                                    for (const d of l.detalles || []) {
+                                        if (d.id === this.detalleSeleccionado) {
+                                            return { id: l.id, vehiculo: d.vehiculo?.placa || d.placa_cache };
+                                        }
+                                    }
+                                }
+                                return null;
+                            }
+                        }">
+                            <button class="btn-accion btn-indigo" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                Asignación Previa
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Asignación previa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <p class="text-sm text-gray-500">Vincula esta solicitud a un lote de combustible del día para agilizar la gestión.</p>
+
+                                    <template x-if="!lotes.length">
+                                        <div class="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg">
+                                            No hay lotes disponibles para hoy. Crea uno desde
+                                            <a href="{{ url('/admin/asignacion-combustible-lotes') }}" class="text-indigo-600 underline font-medium">Lotes de Combustible</a>.
+                                        </div>
+                                    </template>
+
+                                    <template x-if="lotes.length">
+                                        <div>
+                                            <div class="modal-label">Detalle del lote</div>
+                                            <select x-model="detalleSeleccionado" class="modal-select">
+                                                <template x-for="lote in lotes" :key="lote.id">
+                                                    <optgroup :label="'Lote #' + lote.id + ' — ' + lote.estado.toUpperCase()">
+                                                        <template x-for="detalle in lote.detalles || []" :key="detalle.id">
+                                                            <option :value="detalle.id" x-text="(detalle.vehiculo?.placa || detalle.placa_cache) + ' | Ticket: ' + (detalle.numero_ticket || '—') + ' | $' + (detalle.monto_asignado || '0')"></option>
+                                                        </template>
+                                                    </optgroup>
+                                                </template>
+                                            </select>
+                                            <div class="mt-2 text-xs text-gray-400" x-show="loteInfo">
+                                                Lote <span x-text="loteInfo.id"></span> → Vehículo <strong x-text="loteInfo.vehiculo"></strong>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success"
+                                            @click="if (detalleSeleccionado) { $wire.asignacionPreviaCombustible({{ $row['id'] }}, detalleSeleccionado); open = false; }"
+                                            x-bind:disabled="!detalleSeleccionado">
+                                            Confirmar asignación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         {{-- Validar + Asignar — transporte en revisión (2 pasos) --}}
                         @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
                         @php $sugerenciaData = $this->getSugerencia($row['id']); @endphp

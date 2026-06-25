@@ -8,6 +8,8 @@ use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
+use App\Models\AsignacionCombustibleLote;
+use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\BitacoraEvento;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
@@ -666,6 +668,55 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             'motorista_sugerido_id' => $sug->motorista_sugerido_id,
             'motorista_sugerido_nombre' => $sug->motoristaSugerido?->nombre,
         ];
+    }
+
+    public function getLotesDelDiaProperty(): array
+    {
+        $lotes = AsignacionCombustibleLote::whereDate('fecha', today())
+            ->with(['detalles' => function ($q) {
+                $q->whereNull('solicitud_combustible_id')
+                  ->with('vehiculo:id,placa');
+            }])
+            ->where('estado', \App\Domain\Solicitudes\Enums\EstadoLoteEnum::BORRADOR)
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->filter(fn ($l) => $l->detalles->isNotEmpty())
+            ->values();
+
+        return $lotes->toArray();
+    }
+
+    public function asignacionPreviaCombustible(int $solicitudId, int $detalleId): void
+    {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        try {
+            $detalle = AsignacionCombustibleLoteDetalle::findOrFail($detalleId);
+
+            if ($detalle->solicitud_combustible_id) {
+                Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+                return;
+            }
+
+            $detalle->update([
+                'solicitud_combustible_id' => $solicitudId,
+                'asignado_por' => auth()->id(),
+                'fecha_asignacion' => now(),
+                'estado_asignacion' => 'asignado',
+            ]);
+
+            $this->refreshKpis();
+
+            Notification::make()
+                ->title('Solicitud asignada al lote correctamente')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()->title('Error al asignar: ' . $e->getMessage())->danger()->send();
+        }
     }
 
     public function usuariosOptions(): array
