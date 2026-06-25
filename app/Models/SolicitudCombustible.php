@@ -127,6 +127,11 @@ class SolicitudCombustible extends Model
         return $this->belongsTo(SerieCarga::class, 'serie_vale_id');
     }
 
+    public function serie()
+    {
+        return $this->serieCarga();
+    }
+
     public function asignador()
     {
         return $this->belongsTo(User::class, 'asignado_por');
