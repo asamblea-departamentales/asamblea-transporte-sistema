@@ -398,6 +398,14 @@ export default function HistorialDetallePage() {
                       rows={3}
                       className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all resize-none"
                     />
+                    <div className="flex justify-between items-center mt-1">
+                      <p className={`text-[10px] font-medium ${motivoReasignacion.trim().length < 10 ? 'text-amber-500' : 'text-emerald-500'}`}>
+                        Mínimo 10 caracteres
+                      </p>
+                      <p className={`text-[10px] font-bold ${motivoReasignacion.trim().length < 10 ? 'text-slate-400' : 'text-emerald-600'}`}>
+                        {motivoReasignacion.trim().length}/10
+                      </p>
+                    </div>
                   </div>
                 </>
               )}
@@ -412,7 +420,7 @@ export default function HistorialDetallePage() {
               </button>
               <button
                 onClick={handleReasignar}
-                disabled={isSubmitting || !selectedVehiculo || !selectedMotorista || !motivoReasignacion.trim()}
+                disabled={isSubmitting || !selectedVehiculo || !selectedMotorista || motivoReasignacion.trim().length < 10}
                 className="flex-1 px-4 py-2.5 bg-gradient-to-r from-[#4F46E5] to-[#3b32c9] text-white font-bold rounded-xl hover:shadow-lg transition-all text-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 {isSubmitting ? (

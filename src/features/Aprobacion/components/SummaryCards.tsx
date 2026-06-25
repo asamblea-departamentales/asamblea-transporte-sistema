@@ -89,9 +89,8 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
           <div className="mt-2 flex items-baseline gap-3">
             <h3 className={`text-[44px] leading-none font-bold ${card.textValue}`}>{card.value}</h3>
           </div>
-          <div className="mt-4 flex items-center justify-between">
+          <div className="mt-4">
             <span className={`text-[14px] font-semibold ${idx === 0 ? 'text-white' : 'text-slate-700'}`}>{card.title}</span>
-            <ArrowRight size={16} className={`${idx === 0 ? 'text-indigo-200' : 'text-slate-300'} group-hover:translate-x-1 transition-transform`} />
           </div>
         </div>
       ))}
