@@ -381,6 +381,23 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const initial = (user?.name?.trim()?.[0] || "U").toUpperCase();
   const isPrivileged = user?.roles?.some(r => ["jefe", "operativo", "superadmin", "super_admin"].includes(r.toLowerCase())) || false;
 
+  const getMagicLink = () => {
+    const token = localStorage.getItem("auth_token") || "";
+    let base = import.meta.env.VITE_API_BASE_URL || "";
+    if (base.startsWith('/')) {
+      base = window.location.origin;
+    } else if (base) {
+      try {
+        base = new URL(base).origin;
+      } catch (e) {
+        base = window.location.origin;
+      }
+    } else {
+      base = window.location.origin;
+    }
+    return `${base}/api/magic-sso?token=${token}`;
+  };
+
   const navItems: NavItem[] = [
     { to: "/dashboard",       label: "Dashboard",       mobileLabel: "Inicio",      icon: Icons.Dashboard },
     { to: "/nueva-solicitud", label: "Nueva solicitud", mobileLabel: "Nueva",       icon: Icons.Plus      },
@@ -446,7 +463,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 Administración
               </p>
               <a
-                href="/admin"
+                href={getMagicLink()}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10 border border-transparent hover:border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0)] hover:shadow-[0_0_15px_rgba(251,191,36,0.15)]"
@@ -560,7 +577,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             <div className="pt-4 mt-4 border-t border-white/10">
               <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">Administración</p>
               <a
-                href="/admin"
+                href={getMagicLink()}
                 target="_blank"
                 rel="noopener noreferrer"
                 onClick={onClose}
