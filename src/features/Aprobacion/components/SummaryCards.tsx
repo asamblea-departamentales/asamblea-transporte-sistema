@@ -1,5 +1,5 @@
 import React from 'react';
-import { Clock, Zap, CheckCircle, FileText, ArrowRight } from 'lucide-react';
+import { Clock, Zap, CheckCircle, FileText } from 'lucide-react';
 import { DashboardSummary } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 
