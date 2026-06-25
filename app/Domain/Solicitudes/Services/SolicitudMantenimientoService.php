@@ -8,6 +8,7 @@ use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use App\Models\BitacoraEvento;
 
 /**
  * Servicio encargado de gestionar la lógica y transiciones de estado de Solicitudes de Mantenimiento.
