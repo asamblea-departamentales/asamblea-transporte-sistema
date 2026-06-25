@@ -7,17 +7,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Queue\SerializesModels;
 
-/**
- * Mailable utilizado para todas las notificaciones de eventos sobre solicitudes
- * (transporte, combustible, mantenimiento).
- *
- * Implementa ShouldQueue para que los correos se envíen de forma asíncrona
- * a través de un worker de colas. Esto evita demoras en la respuesta HTTP
- * cuando se disparan notificaciones.
- *
- * NOTA: El logo institucional no se embeble con embed() para evitar correos
- * pesados y problemas de SPAM. La plantilla Blade usa asset() como fallback.
- */
 class NotificacionEventMail extends Mailable implements ShouldQueue
 {
     use Queueable, SerializesModels;
@@ -25,24 +14,15 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
     public $subject;
     public $payload;
 
-    /**
-     * @param string $subject Asunto del correo
-     * @param array  $payload Datos estructurados que se pasan a la vista Blade
-     */
     public function __construct($subject, $payload)
     {
         $this->subject = $subject;
         $this->payload = $payload;
     }
 
-    /**
-     * Construye el mensaje: asigna la vista, pasa las variables
-     * y adjunta archivos si los hay.
-     */
     public function build()
     {
         $payload = $this->payload;
-
         $mapUrl = null;
 
         if (($payload['tipo'] ?? null) === 'transporte' && isset($payload['solicitud'])) {
@@ -60,14 +40,13 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
 
         $this->attachFilesFromPayload($payload, $mail);
 
+        // 🔥 LA VACUNA: Desactivamos esto porque causa el error de Undefined Method.
+        // La vista Blade ya tiene un fallback inteligente usando asset() que cargará el logo perfectamente.
+        // $this->embedLogo($mail);
+
         return $mail;
     }
 
-    /**
-     * Adjunta archivos al correo si el payload contiene una clave 'attachments'.
-     * Cada elemento puede ser una ruta relativa a storage/app/public/,
-     * storage/app/, public/, o una ruta absoluta.
-     */
     private function attachFilesFromPayload(array $payload, $mail): void
     {
         $attachments = $payload['attachments'] ?? [];
@@ -83,17 +62,6 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
         }
     }
 
-    /**
-     * Resuelve la ruta real de un archivo buscando en varias ubicaciones posibles:
-     *
-     * 1. storage/app/public/{file}
-     * 2. storage/app/{file}
-     * 3. public/{file}
-     * 4. La ruta tal cual
-     *
-     * @param  mixed       $file Nombre/ruta del archivo
-     * @return string|null       Ruta absoluta si se encuentra, null en caso contrario
-     */
     private function resolveAttachmentPath($file): ?string
     {
         if (empty($file)) {
@@ -116,4 +84,16 @@ class NotificacionEventMail extends Mailable implements ShouldQueue
         return null;
     }
 
+    private function embedLogo($mail): void
+    {
+        // Función desactivada intencionalmente para evitar crashes.
+    }
+
+    public function emailImageSource(?string $url): ?string
+    {
+        if (empty($url)) {
+            return null;
+        }
+        return $url;
+    }
 }
