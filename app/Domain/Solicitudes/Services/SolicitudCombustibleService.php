@@ -3,6 +3,9 @@
 namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Models\BitacoraEvento;
+use App\Domain\Solicitudes\Models\DecisionOperativa;
+use App\Domain\Solicitudes\Models\HistorialEstado;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
 use App\Models\SolicitudCombustible;
