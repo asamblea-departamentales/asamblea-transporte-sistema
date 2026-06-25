@@ -231,6 +231,7 @@ class AprobacionesService
         $query = SolicitudTransporte::query()
             ->with([
                 'solicitante.grupo',
+                'solicitante.unidadSolicitante',
                 'unidad',
                 'sugerencia.vehiculoSugerido',
                 'sugerencia.motoristaSugerido',
@@ -261,7 +262,7 @@ class AprobacionesService
                 'codigo' => $r->codigo,
                 'fecha_ingreso' => optional($r->updated_at)?->format('Y-m-d H:i:s'),
                 'solicitante' => $r->solicitante?->name ?? '—',
-                'unidad' => $r->unidad?->nombre ?? '—',
+                'unidad' => $r->unidad?->nombre ?? $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'tipo_vehiculo_nombre' => $r->tipo_vehiculo_nombre,
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
