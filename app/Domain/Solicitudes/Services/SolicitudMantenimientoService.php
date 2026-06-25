@@ -4,6 +4,7 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
