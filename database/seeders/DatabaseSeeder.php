@@ -34,6 +34,7 @@ class DatabaseSeeder extends Seeder
 
             // Dependen de tablas ya pobladas
             ContratosCombustibleTransporteSeeder::class,
+            ContratosMantenimientoTransporteSeeder::class,
             SerieCargasSeeder::class,
         ]);
     }
