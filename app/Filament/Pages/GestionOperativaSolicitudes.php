@@ -11,6 +11,8 @@ use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\BitacoraEvento;
+use App\Models\ContratoMantenimiento;
+use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
 use App\Models\User;
@@ -712,6 +714,42 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             Notification::make()
                 ->title('Solicitud asignada al lote correctamente')
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            Notification::make()->title('Error al asignar: ' . $e->getMessage())->danger()->send();
+        }
+    }
+
+    public function getContratosActivosProperty(): array
+    {
+        return ContratoMantenimiento::where('activo', true)
+            ->where('monto_disponible', '>', 0)
+            ->with('proveedor:id,nombre')
+            ->orderBy('nombre')
+            ->get()
+            ->toArray();
+    }
+
+    public function asignacionPreviaMantenimiento(int $solicitudId, int $contratoId): void
+    {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        try {
+            $solicitud = SolicitudMantenimiento::findOrFail($solicitudId);
+
+            $solicitud->update([
+                'contrato_mantenimiento_id' => $contratoId,
+                'observaciones' => trim(($solicitud->observaciones ?? '') . "\n[Asignación previa al contrato #{$contratoId} el " . now()->format('d/m/Y H:i') . ']'),
+            ]);
+
+            $this->refreshKpis();
+
+            Notification::make()
+                ->title('Contrato asignado a la solicitud correctamente')
                 ->success()
                 ->send();
         } catch (\Exception $e) {

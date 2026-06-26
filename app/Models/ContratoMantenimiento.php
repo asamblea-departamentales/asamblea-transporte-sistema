@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class ContratoMantenimiento extends Model
 {
@@ -31,5 +32,10 @@ class ContratoMantenimiento extends Model
     public function proveedor()
     {
         return $this->belongsTo(\App\Models\Proveedor::class, 'proveedor_id');
+    }
+
+    public function solicitudes(): HasMany
+    {
+        return $this->hasMany(SolicitudMantenimiento::class);
     }
 }

@@ -469,6 +469,67 @@
                         </div>
                         @endif
 
+                        {{-- Asignación Previa — mantenimiento --}}
+                        @if($row['tipo'] === 'mantenimiento')
+                        <div x-data="{
+                            open: false,
+                            contratos: @js($this->contratosActivos),
+                            contratoSeleccionado: null,
+                            init() {
+                                if (this.contratos.length) {
+                                    this.contratoSeleccionado = this.contratos[0].id;
+                                }
+                            },
+                            get contratoInfo() {
+                                return this.contratos.find(c => c.id === this.contratoSeleccionado) || null;
+                            }
+                        }">
+                            <button class="btn-accion btn-indigo" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+                                Asignación Previa
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Asignación previa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <p class="text-sm text-gray-500">Vincula esta solicitud a un contrato de mantenimiento para agilizar la gestión.</p>
+
+                                    <template x-if="!contratos.length">
+                                        <div class="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg">
+                                            No hay contratos activos con saldo disponible. Crea uno desde
+                                            <a href="{{ url('/admin/contrato-mantenimientos') }}" class="text-indigo-600 underline font-medium">Contratos de Mantenimiento</a>.
+                                        </div>
+                                    </template>
+
+                                    <template x-if="contratos.length">
+                                        <div>
+                                            <div class="modal-label">Contrato</div>
+                                            <select x-model="contratoSeleccionado" class="modal-select">
+                                                <template x-for="c in contratos" :key="c.id">
+                                                    <option :value="c.id" x-text="c.nombre + ' — ' + (c.proveedor?.nombre || 'Sin proveedor') + ' | Disp: $' + Number(c.monto_disponible).toLocaleString('es-CR', {minimumFractionDigits:2})"></option>
+                                                </template>
+                                            </select>
+                                            <div class="mt-2 text-xs text-gray-400" x-show="contratoInfo">
+                                                Contrato <strong x-text="contratoInfo.numero_contrato"></strong> · Proveedor: <strong x-text="contratoInfo.proveedor?.nombre || '—'"></strong> · Disp: <strong x-text="Number(contratoInfo.monto_disponible).toLocaleString('es-CR', {style:'currency', currency:'CRC'})"></strong>
+                                            </div>
+                                        </div>
+                                    </template>
+
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success"
+                                            @click="if (contratoSeleccionado) { $wire.asignacionPreviaMantenimiento({{ $row['id'] }}, contratoSeleccionado); open = false; }"
+                                            x-bind:disabled="!contratoSeleccionado">
+                                            Confirmar asignación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        @endif
+
                         {{-- Validar + Asignar — transporte en revisión (2 pasos) --}}
                         @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
                         @php $sugerenciaData = $this->getSugerencia($row['id']); @endphp

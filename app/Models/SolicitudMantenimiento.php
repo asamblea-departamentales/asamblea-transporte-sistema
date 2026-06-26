@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domain\Solicitudes\Services\TicketService;
 
@@ -41,6 +42,7 @@ class SolicitudMantenimiento extends Model
         'evaluacion_comentario',
         'evaluado_por',
         'fecha_evaluacion',
+        'contrato_mantenimiento_id',
     ];
 
     protected $casts = [
@@ -72,6 +74,11 @@ class SolicitudMantenimiento extends Model
 
             app(TicketService::class)->generar($solicitud);
         });
+    }
+
+    public function contratoMantenimiento(): BelongsTo
+    {
+        return $this->belongsTo(ContratoMantenimiento::class);
     }
 
     // ── Relaciones ──────────────────────────────────────────
