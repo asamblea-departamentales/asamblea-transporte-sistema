@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ComparativaResponse, DecisionType } from '../types';
 import { solicitudApi } from '../api/solicitudApi';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export function useAprobacion(id: string | undefined) {
   const [data, setData] = useState<ComparativaResponse | null>(null);
@@ -30,7 +31,9 @@ export function useAprobacion(id: string | undefined) {
           setComentario(result.solicitud.comentario_jefe);
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Error al cargar la solicitud');
+        const msg = err.response?.data?.message || 'Error al cargar la solicitud';
+        setError(msg);
+        toast.error(msg);
       } finally {
         setIsLoading(false);
       }
@@ -45,17 +48,17 @@ export function useAprobacion(id: string | undefined) {
     try {
       setIsSubmitting(true);
       await solicitudApi.aprobarConDecision(id, decision, comentario);
-      // Navigate back to dashboard on success
+      toast.success('Solicitud procesada exitosamente');
       navigate('/');
     } catch (err: any) {
       const responseData = err.response?.data;
+      let msg = responseData?.message || 'Error al aprobar la solicitud';
       if (err.response?.status === 422 && responseData?.errors) {
-        // Extraer el primer mensaje de error de validación
         const firstError = Object.values(responseData.errors)[0] as string[];
-        setError(firstError[0] || 'Datos inválidos (422)');
-      } else {
-        setError(responseData?.message || 'Error al aprobar la solicitud');
+        msg = firstError[0] || 'Datos inválidos (422)';
       }
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -66,9 +69,12 @@ export function useAprobacion(id: string | undefined) {
      try {
        setIsSubmitting(true);
        await solicitudApi.desbloquear(id);
+       toast.success('Solicitud desbloqueada correctamente');
        navigate('/');
      } catch(err:any) {
-       setError(err.response?.data?.message || 'Error al desbloquear');
+       const msg = err.response?.data?.message || 'Error al desbloquear';
+       setError(msg);
+       toast.error(msg);
      } finally {
        setIsSubmitting(false);
      }
@@ -79,9 +85,12 @@ export function useAprobacion(id: string | undefined) {
     try {
       setIsSubmitting(true);
       await solicitudApi.programar(id);
+      toast.success('Solicitud programada exitosamente');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al programar');
+      const msg = err.response?.data?.message || 'Error al programar';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -94,9 +103,12 @@ export function useAprobacion(id: string | undefined) {
     try {
       setIsSubmitting(true);
       await solicitudApi.rechazar(id, comentario);
+      toast.success('Solicitud rechazada');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al rechazar la solicitud');
+      const msg = err.response?.data?.message || 'Error al rechazar la solicitud';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }

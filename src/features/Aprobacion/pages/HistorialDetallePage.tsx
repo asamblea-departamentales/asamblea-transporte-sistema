@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, MapPin, Calendar, Clock, FileText, User, Car, RefreshCw, CheckCircle, XCircle, X } from 'lucide-react';
 import { axiosClient } from '../../../shared/api/axiosClient';
 import { solicitudApi, RecursoDisponible } from '../api/solicitudApi';
+import { toast } from 'sonner';
 
 export default function HistorialDetallePage() {
   const { id } = useParams();
@@ -94,7 +95,7 @@ export default function HistorialDetallePage() {
     try {
       setIsSubmitting(true);
       await solicitudApi.reasignar(id, Number(selectedVehiculo), Number(selectedMotorista), motivoReasignacion);
-      setSuccessMsg('¡Reasignación exitosa! El motorista y vehículo han sido actualizados.');
+      toast.success('¡Reasignación exitosa! El motorista y vehículo han sido actualizados.');
       setShowReasignarModal(false);
       // Recargar datos
       const [showRes, compRes] = await Promise.all([
@@ -106,7 +107,7 @@ export default function HistorialDetallePage() {
         comparativa: compRes.data 
       });
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al reasignar recursos.');
+      toast.error(err.response?.data?.message || 'Error al reasignar recursos.');
     } finally {
       setIsSubmitting(false);
     }
@@ -188,21 +189,7 @@ export default function HistorialDetallePage() {
         </div>
       </div>
 
-      {/* Success message */}
-      {successMsg && (
-        <div className="mb-6 bg-emerald-50 border border-emerald-200 p-4 rounded-lg flex items-center gap-3">
-          <CheckCircle className="text-emerald-500 shrink-0" size={20} />
-          <p className="text-sm text-emerald-800 font-medium">{successMsg}</p>
-        </div>
-      )}
-
-      {/* Error message */}
-      {error && (
-        <div className="mb-6 bg-red-50 border border-red-200 p-4 rounded-lg flex items-center gap-3">
-          <XCircle className="text-red-500 shrink-0" size={20} />
-          <p className="text-sm text-red-800 font-medium">{error}</p>
-        </div>
-      )}
+      {/* Mensajes manejados por sonner toast */}
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">

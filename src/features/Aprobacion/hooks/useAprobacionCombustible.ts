@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { ComparativaCombustibleResponse, DecisionCombustibleType } from '../types';
 import { solicitudCombustibleApi } from '../api/solicitudCombustibleApi';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 export function useAprobacionCombustible(id: string | undefined) {
   const [data, setData] = useState<ComparativaCombustibleResponse | null>(null);
@@ -31,7 +32,9 @@ export function useAprobacionCombustible(id: string | undefined) {
           setComentario(result.solicitud.comentario_jefe);
         }
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Error al cargar la solicitud');
+        const msg = err.response?.data?.message || 'Error al cargar la solicitud';
+        setError(msg);
+        toast.error(msg);
       } finally {
         setIsLoading(false);
       }
@@ -45,7 +48,9 @@ export function useAprobacionCombustible(id: string | undefined) {
     
     // Si la decisión es jefe, necesitamos validar que se ingresó un monto
     if (decision === 'jefe' && (!montoManual || montoManual <= 0)) {
-      setError('Debe ingresar un monto válido para re-asignar');
+      const msg = 'Debe ingresar un monto válido para re-asignar';
+      setError(msg);
+      toast.error(msg);
       return;
     }
     
@@ -53,9 +58,12 @@ export function useAprobacionCombustible(id: string | undefined) {
       setIsSubmitting(true);
       setError(null);
       await solicitudCombustibleApi.aprobarConDecision(id, decision, comentario, montoManual);
+      toast.success('Solicitud procesada exitosamente');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al aprobar la solicitud');
+      const msg = err.response?.data?.message || 'Error al aprobar la solicitud';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -66,9 +74,12 @@ export function useAprobacionCombustible(id: string | undefined) {
      try {
        setIsSubmitting(true);
        await solicitudCombustibleApi.desbloquear(id);
+       toast.success('Solicitud desbloqueada correctamente');
        navigate('/');
      } catch(err:any) {
-       setError(err.response?.data?.message || 'Error al desbloquear');
+       const msg = err.response?.data?.message || 'Error al desbloquear';
+       setError(msg);
+       toast.error(msg);
      } finally {
        setIsSubmitting(false);
      }
@@ -77,16 +88,21 @@ export function useAprobacionCombustible(id: string | undefined) {
   const handleRechazar = async () => {
     if (!id) return;
     if (!comentario.trim()) { 
-      setError('Debe ingresar un comentario para rechazar'); 
+      const msg = 'Debe ingresar un comentario para rechazar';
+      setError(msg); 
+      toast.error(msg);
       return; 
     }
     try {
       setIsSubmitting(true);
       setError(null);
       await solicitudCombustibleApi.rechazar(id, comentario);
+      toast.success('Solicitud rechazada');
       navigate('/');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Error al rechazar la solicitud');
+      const msg = err.response?.data?.message || 'Error al rechazar la solicitud';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
