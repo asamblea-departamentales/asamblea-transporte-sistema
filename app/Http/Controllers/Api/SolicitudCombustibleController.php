@@ -275,6 +275,32 @@ class SolicitudCombustibleController extends Controller
         }
     }
 
+    public function asignarVales(Request $request, SolicitudCombustible $solicitud)
+    {
+        $this->authorizeOperativo();
+
+        $data = $request->validate([
+            'contrato_id' => ['required', 'exists:contrato_combustibles,id'],
+            'serie_vale_id' => ['required', 'exists:series_carga,id'],
+            'cantidad_vales' => ['required', 'integer', 'min:1'],
+        ]);
+
+        try {
+            $solicitud = $this->service->asignarVales(
+                $solicitud,
+                Auth::id(),
+                $data
+            );
+
+            return response()->json([
+                'message' => 'Vales asignados correctamente.',
+                'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante', 'contrato', 'serieVale']),
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
     public function aprobarConDecision(Request $request, SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();

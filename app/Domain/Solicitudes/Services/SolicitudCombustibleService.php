@@ -484,8 +484,7 @@ class SolicitudCombustibleService
 
     public function comparativa(SolicitudCombustible $solicitud): array
     {
-        $solicitud->load('vehiculo.ultimaRecepcionEntrega');
-
+        $solicitud->load(['vehiculo.ultimaRecepcionEntrega', 'solicitante', 'vehiculo.vehModelo']);
         $decision = $solicitud->decisionOperativa;
         $u = $solicitud->vehiculo?->ultimaRecepcionEntrega;
 
@@ -493,20 +492,19 @@ class SolicitudCombustibleService
             'solicitud' => [
                 'id' => $solicitud->id,
                 'codigo' => $solicitud->codigo,
+                'solicitante' => $solicitud->solicitante?->name ?? 'Desconocido',
+                'vehiculo' => $solicitud->vehiculo?->vehModelo?->nombre ?? 'Vehículo',
+                'placa' => $solicitud->vehiculo?->placa ?? '—',
+                'fecha_solicitud' => $solicitud->created_at?->toIso8601String(),
+                'motivo' => $solicitud->observaciones ?? $solicitud->destino_actividad ?? 'Sin motivo registrado',
                 'estado' => $solicitud->estado->value,
-                'vehiculo' => $solicitud->vehiculo?->placa ?? '—',
-                'motorista' => $solicitud->motorista?->nombre ?? '—',
-                'cantidad_estimada' => $solicitud->cantidad_combustible,
-                'nivel_combustible' => $u ? [
-                    'valor' => $u->nivel_combustible,
-                    'label' => $u->nivel_combustible_label,
-                ] : null,
+                'decision_final' => $solicitud->decision_final ?? null,
+                'comentario_jefe' => $solicitud->comentario_jefe ?? null,
             ],
-            'decision_operativa' => $decision ? [
-                'monto_aprobado' => $decision->monto_aprobado,
-                'justificacion' => $decision->justificacion,
-                'operativo' => $decision->usuarioOperativo?->name,
-                'creado_en' => $decision->created_at?->format('Y-m-d H:i:s'),
+            'operativo' => $decision ? [
+                'autor' => $decision->usuarioOperativo?->name ?? 'Operaciones',
+                'monto_aprobado' => (float) $decision->monto_aprobado,
+                'justificacion' => $decision->justificacion ?? 'Sin justificación',
             ] : null,
         ];
     }

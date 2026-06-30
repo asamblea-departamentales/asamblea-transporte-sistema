@@ -261,6 +261,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-combustible/{solicitud:codigo}/asignar-carga', [SolicitudCombustibleController::class, 'asignarCarga'])
         ->middleware('role:operativo|admin|ti|super_admin');
 
+    Route::post('solicitudes-combustible/{solicitud:codigo}/asignar-vales', [SolicitudCombustibleController::class, 'asignarVales'])
+        ->middleware('role:operativo|admin|ti|super_admin');
+
     // Rutas para motoristas
     Route::middleware(['auth:sanctum', 'role:motorista'])
         ->prefix('motoristas')

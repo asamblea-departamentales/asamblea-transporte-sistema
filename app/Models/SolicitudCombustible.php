@@ -39,6 +39,8 @@ class SolicitudCombustible extends Model
         'motivo_rechazo',
         'motivo_cancelacion',
         'observaciones',
+        'comentario_jefe',
+        'decision_final',
         // Campos para contratos
         'contrato_id',
         'serie_vale_id',
