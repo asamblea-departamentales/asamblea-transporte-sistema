@@ -157,18 +157,20 @@ export default function HistorialDetallePage() {
   // Reasignar solo permitido antes de la ejecución
   const canReasignar = status === 'pre_aprobada' || status === 'aprobada' || status === 'programada';
 
+  const isCombustibleView = (raw.codigo || comp.codigo || id)?.toString().startsWith('CB-');
+
   // Valores a mostrar
   const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
-  const destino = raw.destino || comp.destino || 'N/A';
+  const destino = raw.destino || comp.destino || raw.destino_actividad || 'N/A';
   const horasEstimadas = Math.abs(raw.horas_estimadas || comp.horas_estimadas || 0);
-  const motivo = raw.motivo || comp.motivo || 'Sin motivo';
+  const motivo = raw.motivo || comp.motivo || raw.observaciones || 'Sin motivo';
   const decisionFinal = raw.decision_final || comp.decision_final || status;
   
   // Si fue aprobado manual, no tomar lo sugerido por operativo. Tomar la asignación final del motorista_id/vehiculo_id de raw
-  const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || 'Sin asignar';
+  const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || data.comparativa?.operativo?.autor || 'Sin asignar';
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
   const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
-  const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || 'Sin comentario';
+  const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
 
   return (
     <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-5xl mx-auto">
@@ -180,9 +182,9 @@ export default function HistorialDetallePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Detalle de Solicitud <span className="text-slate-500 font-medium">#{raw.id || comp.id || id}</span>
+              Detalle de Solicitud <span className="text-slate-500 font-medium">#{raw.codigo || comp.codigo || id}</span>
             </h1>
-            <p className="text-slate-500 mt-1 text-sm">Información completa del viaje procesado.</p>
+            <p className="text-slate-500 mt-1 text-sm">Información completa del proceso.</p>
           </div>
           <span className={`px-4 py-1.5 ${statusInfo.bg} ${statusInfo.border} border rounded-full text-sm font-semibold ${statusInfo.text} flex items-center gap-2 shadow-sm`}>
             <span className={`w-2 h-2 rounded-full ${statusInfo.dot}`}></span>
@@ -191,53 +193,68 @@ export default function HistorialDetallePage() {
         </div>
       </div>
 
-      {/* Mensajes manejados por sonner toast */}
-
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Card: Datos del Viaje */}
+        {/* Card: Datos del Viaje / Combustible */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-200">
             <FileText className="text-slate-400" size={18} />
-            <h3 className="font-bold text-slate-800 text-lg tracking-tight">Datos del Viaje</h3>
+            <h3 className="font-bold text-slate-800 text-lg tracking-tight">{isCombustibleView ? 'Datos de Combustible' : 'Datos del Viaje'}</h3>
           </div>
           <div className="space-y-4">
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Solicitante</p>
               <p className="text-sm text-slate-800 font-medium">{solicitanteName}</p>
             </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <MapPin size={12} /> Destino
-              </p>
-              <p className="text-sm text-slate-800 font-medium">{destino}</p>
-            </div>
-            <div className="grid grid-cols-2 gap-px bg-slate-200 border border-slate-200 overflow-hidden rounded-lg">
-              <div className="bg-slate-50 p-3">
+            
+            {!isCombustibleView && (
+              <>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <MapPin size={12} /> Destino
+                  </p>
+                  <p className="text-sm text-slate-800 font-medium">{destino}</p>
+                </div>
+                <div className="grid grid-cols-2 gap-px bg-slate-200 border border-slate-200 overflow-hidden rounded-lg">
+                  <div className="bg-slate-50 p-3">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Calendar size={12} /> Salida
+                    </p>
+                    <p className="text-xs text-slate-800 font-medium">
+                      {fechaSalidaVal ? new Date(fechaSalidaVal).toLocaleString() : 'N/A'}
+                    </p>
+                  </div>
+                  <div className="bg-slate-50 p-3">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Calendar size={12} /> Retorno
+                    </p>
+                    <p className="text-xs text-slate-800 font-medium">
+                      {fechaRetornoVal ? new Date(fechaRetornoVal).toLocaleString() : 'N/A'}
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Clock size={12} /> Horas Estimadas
+                  </p>
+                  <p className="text-sm text-slate-800 font-medium">{horasEstimadas} hrs</p>
+                </div>
+              </>
+            )}
+
+            {isCombustibleView && (
+              <div>
                 <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Calendar size={12} /> Salida
+                  <Calendar size={12} /> Fecha de Solicitud
                 </p>
-                <p className="text-xs text-slate-800 font-medium">
-                  {fechaSalidaVal ? new Date(fechaSalidaVal).toLocaleString() : 'N/A'}
+                <p className="text-sm text-slate-800 font-medium">
+                  {raw.created_at ? new Date(raw.created_at).toLocaleString() : (comp.fecha_solicitud ? new Date(comp.fecha_solicitud).toLocaleString() : 'N/A')}
                 </p>
               </div>
-              <div className="bg-slate-50 p-3">
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Calendar size={12} /> Retorno
-                </p>
-                <p className="text-xs text-slate-800 font-medium">
-                  {fechaRetornoVal ? new Date(fechaRetornoVal).toLocaleString() : 'N/A'}
-                </p>
-              </div>
-            </div>
+            )}
+
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Clock size={12} /> Horas Estimadas
-              </p>
-              <p className="text-sm text-slate-800 font-medium">{horasEstimadas} hrs</p>
-            </div>
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo</p>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Motivo / Observación</p>
               <p className="text-sm text-slate-600 bg-slate-50 p-3 rounded-lg border border-slate-200 italic">
                 "{motivo}"
               </p>
