@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual del Rol Super Admin — Sistema de Transporte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #0B2545;
+    --primary-light: #134074;
+    --accent: #8A7043;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-main); background: #fff; line-height: 1.7; font-size: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    @top-center {
+      content: element(header);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+    @bottom-center {
+      content: "Confidencial — Documento Interno | Asamblea Legislativa · Depto. Transporte | Pág. " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  }
+
+  .page { max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  .cover {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 80px 40px;
+    page-break-after: always; break-after: page;
+    background: radial-gradient(circle at top right, #f1f5f9 0%, #ffffff 60%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  .cover .logo-wrap {
+    width: 280px; margin-bottom: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  }
+  .cover .logo-wrap img { width: 100%; height: auto; display: block; }
+  .cover .line {
+    width: 60px; height: 4px; background: var(--accent); border-radius: 4px; margin: 0 auto 32px;
+  }
+  .cover h1 {
+    font-size: 3rem; font-weight: 800; color: var(--primary); letter-spacing: -.03em;
+    margin-bottom: 16px; line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 1.4rem; font-weight: 600; color: var(--primary-light); margin-bottom: 36px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cover .desc {
+    font-size: 1.05rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 50px; line-height: 1.8; font-weight: 400;
+  }
+  .cover .meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px;
+    font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; background: var(--bg-light); padding: 12px 24px; border-radius: 30px; border: 1px solid var(--border-color);
+  }
+  .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
+
+  .content { padding: 40px 50px 80px; }
+
+  h2 {
+    font-size: 1.6rem; font-weight: 700; color: var(--primary);
+    margin: 56px 0 24px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
+    position: relative;
+  }
+  h2::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
+    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+  }
+  h4 {
+    font-size: 1.05rem; font-weight: 600; color: var(--accent);
+    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+  }
+
+  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
+  ul, ol { margin: 8px 0 20px 24px; }
+  li { font-size: 0.95rem; color: #334155; margin-bottom: 6px; }
+  strong { color: #0f172a; font-weight: 600; }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: #0B2545; }
+
+  .nota, .info, .tip, .warn {
+    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
+    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid transparent;
+  }
+  .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
+  .nota strong { color: #92400E; }
+  .info { background: #F8FAFC; border-left: 4px solid var(--primary); border-color: #E2E8F0 #E2E8F0 #E2E8F0 var(--primary); }
+  .info strong { color: var(--primary); }
+  .tip { background: #F0FDF4; border-left: 4px solid #16A34A; border-color: #DCFCE7 #DCFCE7 #DCFCE7 #16A34A; }
+  .tip strong { color: #14532D; }
+  .warn { background: #FEF2F2; border-left: 4px solid #DC2626; border-color: #FEE2E2 #FEE2E2 #FEE2E2 #DC2626; }
+  .warn strong { color: #991B1B; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
+    font-size: 0.85rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  th {
+    background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
+    padding: 10px 14px; font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border-color); color: #334155;
+    background: #ffffff;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+
+  .nav-card {
+    display: inline-block; background: #334155; color: #fff;
+    font-size: 0.7rem; font-weight: 600; padding: 3px 8px;
+    border-radius: 4px; margin: 1px 0; letter-spacing: 0.02em;
+  }
+  .file-path {
+    display: inline-block; font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.75rem; background: #1E293B; color: #E2E8F0;
+    padding: 2px 8px; border-radius: 4px; margin: 1px 0;
+  }
+
+  .page-break { page-break-before: always; break-before: page; }
+
+  .doc-footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+    text-align: center; font-size: 0.85rem; color: var(--text-muted);
+    page-break-before: avoid; break-before: avoid;
+  }
+  .doc-footer .line-cl { width: 50px; height: 3px; background: var(--accent); border-radius: 3px; margin: 0 auto 20px; }
+  .doc-footer p { text-align: center; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-muted); }
+
+  .tree { margin: 12px 0 20px 8px; padding-left: 8px; list-style: none; }
+  .tree li { padding: 4px 0 4px 20px; position: relative; font-size: 0.9rem; }
+  .tree li::before { content: '├──'; position: absolute; left: 0; color: #94a3b8; }
+  .tree li:last-child::before { content: '└──'; }
+  .tree .folder { font-weight: 600; color: var(--primary); }
+  .tree .folder::before { content: '▶'; position: absolute; left: 0; color: var(--accent); }
+
+  @media print {
+    body { background: #fff; font-size: 10pt; }
+    .content { padding: 0 10px; }
+    .cover { min-height: 100vh; padding-top: 80px; justify-content: flex-start; }
+    .cover .logo-wrap { width: 200px; }
+    h2 { margin-top: 32px; }
+    .nota, .info, .tip, .warn, table { break-inside: avoid; page-break-inside: avoid; }
+    th { background: #1e293b !important; color: #fff !important; }
+    code { background: #f1f5f9 !important; }
+    .file-path { background: #1e293b !important; color: #e2e8f0 !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- PORTADA -->
+  <div class="cover">
+    <div class="logo-wrap">
+      <img src="../images/logo-azul-fondo-transparente.png" alt="Logo Asamblea Legislativa">
+    </div>
+    <div class="line"></div>
+    <h1>Manual del Rol Super Admin</h1>
+    <h2>Sistema de Gestión de Transporte</h2>
+    <p class="desc">
+      Documento técnico interno con la arquitectura completa del proyecto, mapa de navegación del panel de administración, estructura de base de datos, servicios del dominio, API REST, reportes y procedimientos operativos para el equipo de desarrollo y administración del sistema.
+    </p>
+    <div class="meta">
+      <span>Versión 1.0 · Junio 2026</span>
+      <span class="bar"></span>
+      <span>Asamblea Legislativa</span>
+      <span class="bar"></span>
+      <span>Departamento de Transporte</span>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="content">
+
+    <!-- 1. INTRODUCCIÓN -->
+    <h2 id="intro">1. Introducción</h2>
+
+    <p>El rol <strong>Super Admin</strong> es el nivel más alto de acceso en el sistema. Tiene permisos totales sobre todos los recursos, páginas, reportes y operaciones del panel de administración Filament, así como acceso completo a la API REST. Este manual describe la arquitectura interna del proyecto, la estructura de navegación, los recursos disponibles y los procedimientos técnicos que un Super Admin debe conocer para administrar, mantener y depurar el sistema.</p>
+
+    <div class="info">
+      <strong>🔑 Alcance del Super Admin</strong><br>
+      ✅ Acceso total al panel <code>/admin</code> — todas las páginas y recursos.<br>
+      ✅ CRUD completo en todos los catálogos, solicitudes y configuraciones.<br>
+      ✅ Gestión de usuarios y roles (Filament Shield).<br>
+      ✅ Acceso sin restricciones a la API REST (<code>/api/*</code>).<br>
+      ✅ Exportación de reportes PDF, Excel, CSV.<br>
+      ✅ Ejecución de comandos Artisan (migraciones, seeders, shield:generate).<br>
+      ✅ Visualización de auditoría y trazabilidad completa.
+    </div>
+
+    <div class="warn">
+      <strong>⚠️ Responsabilidad:</strong> El Super Admin puede modificar cualquier registro del sistema, incluyendo roles y permisos. Las operaciones de borrado no tienen restricción. Se recomienda extremar la precaución al eliminar registros o modificar la estructura de permisos de Shield.
+    </div>
+
+    <!-- 2. ARQUITECTURA DEL PROYECTO -->
+    <h2 id="arquitectura">2. Arquitectura del proyecto</h2>
+
+    <h3>Stack tecnológico</h3>
+    <table>
+      <tr><th>Componente</th><th>Tecnología</th></tr>
+      <tr><td>Framework</td><td>Laravel 11</td></tr>
+      <tr><td>Admin Panel</td><td>Filament 3 (Panel v3.x)</td></tr>
+      <tr><td>Roles y permisos</td><td>Spatie Laravel Permission + Filament Shield 3</td></tr>
+      <tr><td>Autenticación LDAP</td><td>LdapRecord-Laravel + controladores personalizados</td></tr>
+      <tr><td>API Tokens</td><td>Laravel Sanctum</td></tr>
+      <tr><td>PDF</td><td>Barryvdh/DomPDF (Dompdf)</td></tr>
+      <tr><td>Excel/CSV</td><td>Maatwebsite/Laravel-Excel (PhpSpreadsheet)</td></tr>
+      <tr><td>Base de datos</td><td>MySQL / MariaDB del Dpto. Transporte</td></tr>
+      <tr><td>Frontend externo</td><td>React (Vercel) — app de solicitantes</td></tr>
+      <tr><td>PWA</td><td>Plugin <code>alareqi/filament-pwa</code></td></tr>
+    </table>
+
+    <h3>Estructura de directorios (app/)</h3>
+    <ul class="tree">
+      <li><span class="folder">app/Console/Commands/</span> — Comandos Artisan personalizados</li>
+      <li><span class="folder">app/Domain/Solicitudes/Enums/</span> — 9 enums del dominio</li>
+      <li><span class="folder">app/Domain/Solicitudes/Services/</span> — 14 servicios del dominio</li>
+      <li><span class="folder">app/Exports/</span> — Exportadores Excel/CSV (4)</li>
+      <li><span class="folder">app/Filament/Clusters/</span> — Clusters de navegación</li>
+      <li><span class="folder">app/Filament/Pages/</span> — 19 páginas Filament</li>
+      <li><span class="folder">app/Filament/Resources/</span> — 42 recursos Filament</li>
+      <li><span class="folder">app/Filament/Widgets/</span> — 7 widgets de dashboard</li>
+      <li><span class="folder">app/Forms/Components/</span> — Componentes de formulario personalizados</li>
+      <li><span class="folder">app/Helpers/</span> — Helpers (AuditoriaHelper, MapHelper)</li>
+      <li><span class="folder">app/Http/Controllers/Api/</span> — 7 controladores API</li>
+      <li><span class="folder">app/Http/Controllers/Reportes/</span> — 11 controladores de reportes PDF</li>
+      <li><span class="folder">app/Mail/</span> — Mailable classes</li>
+      <li><span class="folder">app/Models/</span> — 47 modelos Eloquent</li>
+      <li><span class="folder">app/Policies/</span> — 40 políticas de autorización</li>
+      <li><span class="folder">app/Providers/</span> — Service providers (incl. AdminPanelProvider)</li>
+      <li><span class="folder">app/Support/</span> — Clases de soporte (FuelBar)</li>
+    </ul>
+
+    <!-- 3. ACCESO AL SISTEMA -->
+    <h2 id="acceso">3. Acceso al sistema</h2>
+    <p>URL del panel de administración: <strong>https://[dominio]/admin</strong></p>
+    <p>La autenticación se realiza mediante LDAP (Active Directory de la Asamblea). El formulario de login (<code>app/Filament/Pages/Auth/Login.php</code>) intenta autenticar contra LDAP primero; si falla, permite login local con credenciales almacenadas en la base de datos.</p>
+
+    <div class="info">
+      <strong>Control de acceso al panel:</strong> <code>app/Models/User.php:67</code><br>
+      <code>canAccessPanel()</code> retorna <code>true</code> si el usuario tiene rol <code>super_admin</code> o <code>superadmin</code>. En entorno local (<code>APP_ENV=local</code>) retorna <code>true</code> para cualquier rol. Bloquea a <code>motorista</code> y <code>solicitante</code>.
+    </div>
+
+    <h3>Roles del sistema</h3>
+    <table>
+      <tr><th>Rol</th><th>Acceso a /admin</th><th>API</th><th>Descripción</th></tr>
+      <tr><td><code>super_admin</code></td><td>Sí (total)</td><td>Completo</td><td>Administrador total del sistema</td></tr>
+      <tr><td><code>admin</code></td><td>Sí</td><td>Completo</td><td>Administrador del día a día</td></tr>
+      <tr><td><code>ti</code></td><td>Sí</td><td>Completo</td><td>Soporte técnico</td></tr>
+      <tr><td><code>jefe</code></td><td>Sí</td><td>Aprobaciones</td><td>Jefe de Transporte</td></tr>
+      <tr><td><code>operativo</code></td><td>Sí</td><td>Operativo</td><td>Personal operativo</td></tr>
+      <tr><td><code>liquidador</code></td><td>Sí</td><td>Lectura</td><td>Liquidaciones</td></tr>
+      <tr><td><code>solicitante</code></td><td>No (403)</td><td>Solo propio</td><td>Usuarios que crean solicitudes vía React</td></tr>
+      <tr><td><code>motorista</code></td><td>No (403)</td><td>Self-service</td><td>Conductores (app móvil/React)</td></tr>
+    </table>
+
+    <div class="nota">
+      <strong>⚠️ LDAP:</strong> Los nuevos usuarios LDAP se crean automáticamente con rol <code>solicitante</code>. Un Super Admin debe cambiarles el rol manualmente desde <code>UserResource</code> si necesitan otro nivel de acceso.
+    </div>
+
+    <!-- 4. PANEL DE ADMINISTRACIÓN — MAPA COMPLETO -->
+    <div class="page-break"></div>
+    <h2 id="panel-mapa">4. Panel de administración — mapa completo</h2>
+    <p>El panel se organiza en grupos de navegación. A continuación se listan todos los recursos y páginas, con sus rutas de archivo y el grupo al que pertenecen.</p>
+
+    <h3>4.1 Panel de Control</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th><th>Descripción</th></tr>
+      <tr><td>Dashboard</td><td><span class="file-path">app/Filament/Pages/Dashboard.php</span></td><td>Resumen con widgets de actividad, alertas, finanzas y estadísticas</td></tr>
+    </table>
+    <p>Widgets del Dashboard (7):</p>
+    <ul>
+      <li><code>DashboardActividad.php</code> — Actividad reciente</li>
+      <li><code>DashboardAlertas.php</code> — Alertas del sistema</li>
+      <li><code>DashboardFinanzas.php</code> — Resumen financiero</li>
+      <li><code>DashboardStats.php</code> — Estadísticas generales</li>
+      <li><code>RecentSolicitudes.php</code> — Solicitudes recientes</li>
+      <li><code>SolicitudesPorPrioridadStats.php</code> — Solicitudes por prioridad</li>
+      <li><code>StatsOverview.php</code> — Vista general de métricas</li>
+    </ul>
+
+    <h3>4.2 Gestión Operativa</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th><th>Descripción</th></tr>
+      <tr><td>Gestión Operativa de Solicititudes</td><td><span class="file-path">app/Filament/Pages/GestionOperativaSolicitudes.php</span></td><td>Página principal del operativo (bandeja + revisión + aprobaciones)</td></tr>
+      <tr><td>Bandeja Operativa</td><td><span class="file-path">app/Filament/Pages/BandejaOperativa.php</span></td><td>Bandeja de entrada de solicitudes pendientes</td></tr>
+      <tr><td>Revisión Operativa</td><td><span class="file-path">app/Filament/Pages/RevisionOperativa.php</span></td><td>Revisión y validación de solicitudes</td></tr>
+      <tr><td>Aprobaciones</td><td><span class="file-path">app/Filament/Pages/AprobacionesSolicitudes.php</span></td><td>Pantalla de aprobaciones (jefe/super_admin)</td></tr>
+      <tr><td>Planificación de Flota</td><td><span class="file-path">app/Filament/Resources/PlanificacionFlotaResource.php</span></td><td>Gestión de planificación de la flota</td></tr>
+    </table>
+
+    <h3>4.3 Operatividad Diaria</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th><th>Descripción</th></tr>
+      <tr><td>Calendario de Flota</td><td><span class="file-path">app/Filament/Pages/CalendarioFlota.php</span></td><td>Calendario de disponibilidad de la flota</td></tr>
+      <tr><td>Panel de Liquidaciones</td><td><span class="file-path">app/Filament/Pages/PanelLiquidaciones.php</span></td><td>Panel unificado de liquidaciones</td></tr>
+      <tr><td>Lotes de Combustible</td><td><span class="file-path">app/Filament/Resources/AsignacionCombustibleLoteResource.php</span></td><td>Gestión de lotes de combustible diarios</td></tr>
+    </table>
+
+    <h3>4.4 Catálogos</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Vehículos</td><td><span class="file-path">app/Filament/Resources/VehiculoResource.php</span></td></tr>
+      <tr><td>Motoristas</td><td><span class="file-path">app/Filament/Resources/MotoristaResource.php</span></td></tr>
+    </table>
+
+    <h3>4.5 Catálogos Globales</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Países</td><td><span class="file-path">app/Filament/Resources/PaisResource.php</span></td></tr>
+      <tr><td>Departamentos</td><td><span class="file-path">app/Filament/Resources/DepartamentoResource.php</span></td></tr>
+      <tr><td>Municipios</td><td><span class="file-path">app/Filament/Resources/MunicipioResource.php</span></td></tr>
+      <tr><td>Unidades Solicitantes</td><td><span class="file-path">app/Filament/Resources/UnidadSolicitanteResource.php</span></td></tr>
+      <tr><td>Contratos de Combustible</td><td><span class="file-path">app/Filament/Resources/ContratoCombustibleResource.php</span></td></tr>
+      <tr><td>Contratos de Mantenimiento</td><td><span class="file-path">app/Filament/Resources/ContratoMantenimientoResource.php</span></td></tr>
+      <tr><td>Proveedores</td><td><span class="file-path">app/Filament/Resources/ProveedorResource.php</span></td></tr>
+      <tr><td>Tamaño Proveedor</td><td><span class="file-path">app/Filament/Resources/TamanoProveedorResource.php</span></td></tr>
+      <tr><td>Actividades Económicas</td><td><span class="file-path">app/Filament/Resources/ActividadEconomicaResource.php</span></td></tr>
+      <tr><td>Tipo Licencias</td><td><span class="file-path">app/Filament/Resources/TipoLicenciaResource.php</span></td></tr>
+      <tr><td>Prefijo Empleado</td><td><span class="file-path">app/Filament/Resources/PrefijoEmpleadoResource.php</span></td></tr>
+      <tr><td>Parámetros del Sistema</td><td><span class="file-path">app/Filament/Resources/ParametroSistemaResource.php</span></td></tr>
+      <tr><td>Serie de Cargas</td><td><span class="file-path">app/Filament/Resources/SerieCargaResource.php</span></td></tr>
+    </table>
+
+    <h3>4.6 Catálogos de Vehículos (Cluster)</h3>
+    <p>Agrupados bajo el cluster <span class="file-path">app/Filament/Clusters/VehiculosCatalogos.php</span></p>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Marcas</td><td><span class="file-path">app/Filament/Resources/VehMarcaResource.php</span></td></tr>
+      <tr><td>Modelos</td><td><span class="file-path">app/Filament/Resources/VehModeloResource.php</span></td></tr>
+      <tr><td>Tipos de Vehículo</td><td><span class="file-path">app/Filament/Resources/TipoVehiculoResource.php</span></td></tr>
+      <tr><td>Clasificaciones</td><td><span class="file-path">app/Filament/Resources/VehClasificacionResource.php</span></td></tr>
+      <tr><td>Colores</td><td><span class="file-path">app/Filament/Resources/VehColorResource.php</span></td></tr>
+      <tr><td>Estados de Catálogo</td><td><span class="file-path">app/Filament/Resources/VehEstadoCatalogoResource.php</span></td></tr>
+      <tr><td>Tipos de Combustible</td><td><span class="file-path">app/Filament/Resources/VehTipoCombustibleResource.php</span></td></tr>
+      <tr><td>Tipos de Llanta</td><td><span class="file-path">app/Filament/Resources/VehTipoLlantaResource.php</span></td></tr>
+      <tr><td>Tipos de Mantenimiento</td><td><span class="file-path">app/Filament/Resources/VehTipoMantenimientoResource.php</span></td></tr>
+      <tr><td>Tipos de Motor</td><td><span class="file-path">app/Filament/Resources/VehTipoMotorResource.php</span></td></tr>
+      <tr><td>Tracciones</td><td><span class="file-path">app/Filament/Resources/VehTraccionResource.php</span></td></tr>
+      <tr><td>Transmisiones</td><td><span class="file-path">app/Filament/Resources/VehTransmisionResource.php</span></td></tr>
+    </table>
+
+    <h3>4.7 Gestión</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Departamentales</td><td><span class="file-path">app/Filament/Resources/DepartamentalResource.php</span></td></tr>
+      <tr><td>Asignaciones Vehículo-Motorista</td><td><span class="file-path">app/Filament/Resources/AsignacionVehiculoMotoristaResource.php</span></td></tr>
+    </table>
+
+    <h3>4.8 Administración</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Usuarios</td><td><span class="file-path">app/Filament/Resources/UserResource.php</span></td></tr>
+      <tr><td>Roles</td><td><span class="file-path">app/Filament/Resources/RoleResource.php</span> (Shield)</td></tr>
+      <tr><td>Grupos de Prioridad</td><td><span class="file-path">app/Filament/Resources/GrupoResource.php</span></td></tr>
+      <tr><td>Incidencias</td><td><span class="file-path">app/Filament/Resources/IncidenciaResource.php</span></td></tr>
+    </table>
+
+    <h3>4.9 Auditoría</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Bitácora de Eventos</td><td><span class="file-path">app/Filament/Resources/BitacoraEventoResource.php</span></td></tr>
+      <tr><td>Historial de Estados</td><td><span class="file-path">app/Filament/Resources/HistorialEstadoResource.php</span></td></tr>
+    </table>
+
+    <h3>4.10 Listado / Liquidaciones</h3>
+    <table>
+      <tr><th>Nombre</th><th>Archivo</th></tr>
+      <tr><td>Solicitudes de Transporte</td><td><span class="file-path">app/Filament/Resources/SolicitudTransporteResource.php</span></td></tr>
+      <tr><td>Solicitudes de Combustible</td><td><span class="file-path">app/Filament/Resources/SolicitudCombustibleResource.php</span></td></tr>
+      <tr><td>Solicitudes de Mantenimiento</td><td><span class="file-path">app/Filament/Resources/SolicitudMantenimientoResource.php</span></td></tr>
+      <tr><td>Liquidación Combustible</td><td><span class="file-path">app/Filament/Resources/LiquidacionCombustibleResource.php</span></td></tr>
+      <tr><td>Recepción/Entrega de Vehículo</td><td><span class="file-path">app/Filament/Resources/RecepcionEntregaVehiculoResource.php</span></td></tr>
+    </table>
+
+    <h3>4.11 Reportes (10 páginas)</h3>
+    <table>
+      <tr><th>Reporte</th><th>Archivo</th></tr>
+      <tr><td>Registro de Vehículos</td><td><span class="file-path">app/Filament/Pages/ReporteRegistroVehiculos.php</span></td></tr>
+      <tr><td>Solicitudes de Transporte</td><td><span class="file-path">app/Filament/Pages/ReporteSolicitudesTransporte.php</span></td></tr>
+      <tr><td>Solicitudes de Combustible</td><td><span class="file-path">app/Filament/Pages/ReporteSolicitudesCombustible.php</span></td></tr>
+      <tr><td>Solicitudes de Mantenimiento</td><td><span class="file-path">app/Filament/Pages/ReporteSolicitudesMantenimiento.php</span></td></tr>
+      <tr><td>Reporte General de Servicios</td><td><span class="file-path">app/Filament/Pages/ReporteGeneralServicios.php</span></td></tr>
+      <tr><td>Misión Oficial</td><td><span class="file-path">app/Filament/Pages/ReporteMisionOficial.php</span></td></tr>
+      <tr><td>Orden de Trabajo</td><td><span class="file-path">app/Filament/Pages/ReporteOrdenTrabajo.php</span></td></tr>
+      <tr><td>Flota Vehicular</td><td><span class="file-path">app/Filament/Pages/ReporteFlotaVehicular.php</span></td></tr>
+      <tr><td>Control Mensual de Combustible</td><td><span class="file-path">app/Filament/Pages/ReporteControlMensualCombustible.php</span></td></tr>
+      <tr><td>Distribución de Cargas</td><td><span class="file-path">app/Filament/Pages/ReporteDistribucionCargasCombustible.php</span></td></tr>
+    </table>
+
+    <!-- 5. GESTIÓN DE USUARIOS Y ROLES -->
+    <div class="page-break"></div>
+    <h2 id="usuarios-roles">5. Gestión de usuarios y roles</h2>
+
+    <h3>5.1 UserResource</h3>
+    <p><span class="file-path">app/Filament/Resources/UserResource.php</span> — Gestión completa de usuarios del sistema.</p>
+    <p>Campos principales: name, username, email, password, activo, unidad_solicitante_id, departamental_id, roles (Filament Shield multi-select). Búsqueda global habilitada sobre name, username y email.</p>
+
+    <h3>5.2 RoleResource (Shield)</h3>
+    <p><span class="file-path">app/Filament/Resources/RoleResource.php</span> — Gestión de roles y permisos vía Filament Shield 3.</p>
+    <p>Cada rol puede tener permisos individuales para cada recurso: <code>view_any</code>, <code>view</code>, <code>create</code>, <code>update</code>, <code>delete</code>, <code>delete_any</code>, <code>force_delete</code>, <code>restore</code>, <code>replicate</code>, <code>reorder</code>.</p>
+
+    <div class="tip">
+      <strong>Regenerar permisos:</strong> Ejecutar <code>php artisan shield:generate --all</code> para sincronizar todos los permisos con las políticas existentes. Es seguro — usa <code>findOrCreate</code>, nunca elimina permisos existentes.
+    </div>
+
+    <h3>5.3 Políticas (Policies)</h3>
+    <p>El sistema tiene <strong>40 políticas</strong> en <span class="file-path">app/Policies/</span>. Shield las descubre automáticamente. Todas las políticas delegan en <code>$user->can('permiso')</code>:</p>
+    <table>
+      <tr><th>#</th><th>Policy</th><th>#</th><th>Policy</th></tr>
+      <tr><td>1</td><td>ActividadEconomicaPolicy</td><td>21</td><td>ProveedorPolicy</td></tr>
+      <tr><td>2</td><td>AsignacionCombustibleLotePolicy</td><td>22</td><td>RecepcionEntregaVehiculoPolicy</td></tr>
+      <tr><td>3</td><td>AsignacionVehiculoMotoristaPolicy</td><td>23</td><td>RolePolicy</td></tr>
+      <tr><td>4</td><td>BitacoraEventoPolicy</td><td>24</td><td>SerieCargaPolicy</td></tr>
+      <tr><td>5</td><td>ContratoCombustiblePolicy</td><td>25</td><td>SolicitudCombustiblePolicy</td></tr>
+      <tr><td>6</td><td>ContratoMantenimientoPolicy</td><td>26</td><td>SolicitudMantenimientoPolicy</td></tr>
+      <tr><td>7</td><td>DepartamentalPolicy</td><td>27</td><td>SolicitudTransportePolicy</td></tr>
+      <tr><td>8</td><td>DepartamentoPolicy</td><td>28</td><td>TamanoProveedorPolicy</td></tr>
+      <tr><td>9</td><td>GrupoPolicy</td><td>29</td><td>TipoLicenciaPolicy</td></tr>
+      <tr><td>10</td><td>HistorialEstadoPolicy</td><td>30</td><td>TipoVehiculoPolicy</td></tr>
+      <tr><td>11</td><td>IncidenciaPolicy</td><td>31</td><td>UnidadSolicitantePolicy</td></tr>
+      <tr><td>12</td><td>MotoristaPolicy</td><td>32</td><td>UserPolicy</td></tr>
+      <tr><td>13</td><td>MunicipioPolicy</td><td>33</td><td>VehClasificacionPolicy</td></tr>
+      <tr><td>14</td><td>PaisPolicy</td><td>34</td><td>VehColorPolicy</td></tr>
+      <tr><td>15</td><td>ParametroSistemaPolicy</td><td>35</td><td>VehEstadoCatalogoPolicy</td></tr>
+      <tr><td>16</td><td>PrefijoEmpleadoPolicy</td><td>36</td><td>VehMarcaPolicy</td></tr>
+      <tr><td>17</td><td>&nbsp;</td><td>37</td><td>VehModeloPolicy</td></tr>
+      <tr><td>18</td><td>&nbsp;</td><td>38</td><td>VehTipoCombustiblePolicy</td></tr>
+      <tr><td>19</td><td>&nbsp;</td><td>39</td><td>VehTipoLlantaPolicy</td></tr>
+      <tr><td>20</td><td>&nbsp;</td><td>40</td><td>VehTipoMantenimientoPolicy</td></tr>
+      <tr><td colspan="2">&nbsp;</td><td>41</td><td>VehTipoMotorPolicy</td></tr>
+      <tr><td colspan="2">&nbsp;</td><td>42</td><td>VehTraccionPolicy</td></tr>
+      <tr><td colspan="2">&nbsp;</td><td>43</td><td>VehTransmisionPolicy</td></tr>
+      <tr><td colspan="2">&nbsp;</td><td>44</td><td>VehiculoPolicy</td></tr>
+    </table>
+
+    <!-- 6. AUDITORÍA Y TRAZABILIDAD -->
+    <h2 id="auditoria">6. Auditoría y trazabilidad</h2>
+
+    <h3>6.1 Bitácora de Eventos</h3>
+    <p><span class="file-path">app/Filament/Resources/BitacoraEventoResource.php</span></p>
+    <p>Modelo: <span class="file-path">app/Models/BitacoraEvento.php</span></p>
+    <p>Registra automáticamente cada acción importante del sistema: creación, actualización, eliminación de solicitudes, cambios de estado, exportaciones, login/logout. Las acciones se definen en <span class="file-path">app/Domain/Solicitudes/Enums/AccionBitacoraEnum.php</span>.</p>
+
+    <h3>6.2 Historial de Estados</h3>
+    <p><span class="file-path">app/Filament/Resources/HistorialEstadoResource.php</span></p>
+    <p>Modelo: <span class="file-path">app/Models/HistorialEstado.php</span></p>
+    <p>Traza polimórfica del cambio de estado en solicitudes de Transporte, Combustible y Mantenimiento. Permite auditar quién cambió qué estado y cuándo.</p>
+
+    <h3>6.3 AuditoriaService</h3>
+    <p><span class="file-path">app/Domain/Solicitudes/Services/AuditoriaService.php</span></p>
+    <p>Servicio central que registra eventos en la bitácora. Usado por todos los controladores y servicios del dominio. Método principal: <code>registrar(AccionBitacoraEnum $accion, string $entidad, array $datos = [])</code>.</p>
+
+    <!-- 7. API REST -->
+    <div class="page-break"></div>
+    <h2 id="api">7. API REST</h2>
+    <p>Archivo de rutas: <span class="file-path">routes/api.php</span></p>
+    <p>Autenticación: Laravel Sanctum (tokens). Endpoint público: <code>POST /api/auth/login</code>. El resto requiere <code>auth:sanctum</code>.</p>
+
+    <h3>7.1 Controladores API</h3>
+    <table>
+      <tr><th>Controlador</th><th>Archivo</th><th>Endpoints principales</th></tr>
+      <tr><td>TokenAuthController</td><td><span class="file-path">app/Http/Controllers/Api/TokenAuthController.php</span></td><td>login, logout, me, user</td></tr>
+      <tr><td>SolicitudTransporteController</td><td><span class="file-path">app/Http/Controllers/Api/SolicitudTransporteController.php</span></td><td>CRUD, enviar, aprobar, rechazar, reasignar, programar, comparativa, aprobarConDecision, desbloquear, recursosDisponibles, historial Jefatura, observacion, asignarRecursos</td></tr>
+      <tr><td>SolicitudCombustibleController</td><td><span class="file-path">app/Http/Controllers/Api/SolicitudCombustibleController.php</span></td><td>CRUD, enviar, aprobar, rechazar, pre-aprobar, observacion, comparativa, aprobarConDecision, asignarCarga</td></tr>
+      <tr><td>SolicitudMantenimientoController</td><td><span class="file-path">app/Http/Controllers/Api/SolicitudMantenimientoController.php</span></td><td>CRUD, enviar, finalizar, cancelar, aprobar, rechazar, pre-aprobar, observacion, iniciarEjecucion</td></tr>
+      <tr><td>MotoristaEstadoController</td><td><span class="file-path">app/Http/Controllers/Api/MotoristaEstadoController.php</span></td><td>Estado de motoristas (self-service y operativo), historial, viajes</td></tr>
+      <tr><td>MotoristaViajeController</td><td><span class="file-path">app/Http/Controllers/Api/MotoristaViajeController.php</span></td><td>Flujo de 4 pasos del viaje: iniciar, llegada, retorno, finalizar</td></tr>
+      <tr><td>AuthController</td><td><span class="file-path">app/Http/Controllers/Api/AuthController.php</span></td><td>Controlador adicional de autenticación</td></tr>
+    </table>
+
+    <h3>7.2 Endpoints de catálogos (públicos con sanctum)</h3>
+    <ul>
+      <li><code>GET /api/catalogos/vehiculos</code> — Todos los vehículos activos</li>
+      <li><code>GET /api/catalogos/vehiculos/disponibles</code> — Solo disponibles</li>
+      <li><code>GET /api/catalogos/vehiculos/{id}/detalle</code> — Detalle completo de un vehículo</li>
+      <li><code>GET /api/catalogos/motoristas</code> — Todos los motoristas activos</li>
+      <li><code>GET /api/catalogos/motoristas/disponibles</code> — Solo disponibles</li>
+      <li><code>GET /api/catalogos/marcas</code> — Marcas de vehículos</li>
+      <li><code>GET /api/catalogos/modelos</code> — Modelos (filtrables por marca)</li>
+      <li><code>GET /api/catalogos/tipos-mantenimiento</code> — Tipos de mantenimiento</li>
+    </ul>
+
+    <h3>7.3 Protección por roles en API</h3>
+    <p>Las rutas de aprobación usan middleware <code>role:jefe|admin|ti|super_admin</code>.<br>
+    Las rutas de observación y asignación de recursos usan <code>role:operativo|admin|ti|super_admin</code>.<br>
+    Las rutas de motorista usan <code>role:motorista</code> (exclusivo).</p>
+
+    <!-- 8. REPORTES Y EXPORTACIONES -->
+    <h2 id="reportes">8. Reportes y exportaciones</h2>
+
+    <h3>8.1 Páginas de reportes Filament</h3>
+    <p>10 páginas de reportes (listadas en 4.11). Cada una permite filtrar por fecha y otros criterios, con exportación a PDF/Excel/CSV.</p>
+
+    <h3>8.2 Rutas web de exportación</h3>
+    <p>Archivo: <span class="file-path">routes/web.php</span></p>
+    <table>
+      <tr><th>Ruta</th><th>Formato</th><th>Descripción</th></tr>
+      <tr><td><code>/reportes/solicitudes-transporte/pdf</code></td><td>PDF</td><td>Solicitudes de transporte</td></tr>
+      <tr><td><code>/reportes/solicitudes-transporte/csv</code></td><td>CSV</td><td>Solicitudes de transporte</td></tr>
+      <tr><td><code>/reportes/solicitudes-mantenimiento/pdf</code></td><td>PDF</td><td>Solicitudes de mantenimiento</td></tr>
+      <tr><td><code>/reportes/solicitudes-mantenimiento/excel</code></td><td>XLSX</td><td>Solicitudes de mantenimiento</td></tr>
+      <tr><td><code>/reportes/solicitudes-mantenimiento/csv</code></td><td>CSV</td><td>Solicitudes de mantenimiento</td></tr>
+      <tr><td><code>/reportes/solicitudes-combustible/pdf</code></td><td>PDF</td><td>Solicitudes de combustible</td></tr>
+      <tr><td><code>/reportes/solicitudes-combustible/excel</code></td><td>XLSX</td><td>Solicitudes de combustible</td></tr>
+      <tr><td><code>/reportes/solicitudes-combustible/csv</code></td><td>CSV</td><td>Solicitudes de combustible</td></tr>
+      <tr><td><code>/reportes/flota-vehicular/pdf</code></td><td>PDF</td><td>Estado de la flota</td></tr>
+      <tr><td><code>/reportes/control-mensual-combustible/pdf</code></td><td>PDF</td><td>Consumo mensual de combustible</td></tr>
+      <tr><td><code>/reportes/distribucion-cargas/pdf</code></td><td>PDF</td><td>Distribución de cargas de combustible</td></tr>
+      <tr><td><code>/reportes/lote-combustible/{lote}/pdf</code></td><td>PDF</td><td>Detalle de lote de combustible</td></tr>
+      <tr><td><code>/reportes/lote-combustible/{lote}/excel</code></td><td>XLSX</td><td>Detalle de lote de combustible</td></tr>
+      <tr><td><code>/reportes/lote-combustible/{lote}/csv</code></td><td>CSV</td><td>Detalle de lote de combustible</td></tr>
+      <tr><td><code>/reportes/general-servicios/pdf</code></td><td>PDF</td><td>Reporte general de servicios</td></tr>
+      <tr><td><code>/reporte-mision-oficial/{solicitud?}</code></td><td>PDF</td><td>Misión oficial</td></tr>
+      <tr><td><code>/reportes/solicitud-autorizacion/{solicitud}/pdf/{combustible?}</code></td><td>PDF</td><td>Solicitud de autorización</td></tr>
+      <tr><td><code>/reportes/orden-trabajo/pdf</code></td><td>PDF</td><td>Orden de trabajo de mantenimiento</td></tr>
+      <tr><td><code>/reportes/recepcion-entrega-vehiculo/pdf</code></td><td>PDF</td><td>Recepción/entrega de vehículo</td></tr>
+      <tr><td><code>/reportes/registro-vehiculos/pdf</code></td><td>PDF</td><td>Registro de vehículos</td></tr>
+      <tr><td><code>/reportes/plan-diario/{fecha}/pdf</code></td><td>PDF</td><td>Plan diario de transporte</td></tr>
+      <tr><td><code>/liquidacion/combustible/{id}</code></td><td>PDF</td><td>Liquidación de combustible</td></tr>
+      <tr><td><code>/liquidacion/mantenimiento/{id}</code></td><td>PDF</td><td>Liquidación de mantenimiento</td></tr>
+    </table>
+
+    <h3>8.3 Export classes</h3>
+    <ul>
+      <li><span class="file-path">app/Exports/SolicitudesTransporteExport.php</span></li>
+      <li><span class="file-path">app/Exports/SolicitudesCombustibleExport.php</span></li>
+      <li><span class="file-path">app/Exports/SolicitudesMantenimientoExport.php</span></li>
+      <li><span class="file-path">app/Exports/AsignacionCombustibleLoteExport.php</span></li>
+    </ul>
+
+    <!-- 9. BASE DE DATOS -->
+    <div class="page-break"></div>
+    <h2 id="basedatos">9. Base de datos</h2>
+
+    <h3>9.1 Migraciones</h3>
+    <p>Total: <strong>88 migraciones</strong> en <span class="file-path">database/migrations/</span></p>
+    <p>Incluyen desde la creación de la tabla de usuarios (Laravel default) hasta las últimas migraciones de contratos de mantenimiento (Junio 2026). Las más relevantes:</p>
+    <table>
+      <tr><th>Migración</th><th>Propósito</th></tr>
+      <tr><td><code>0001_01_01_000000_create_users_table.php</code></td><td>Tabla users (Laravel default)</td></tr>
+      <tr><td><code>2026_01_28_050204_create_permission_tables.php</code></td><td>Tablas de Spatie Permission</td></tr>
+      <tr><td><code>2026_01_28_051433_create_solicitud_transportes_table.php</code></td><td>Solicitudes de transporte</td></tr>
+      <tr><td><code>2026_02_26_022806_create_solicitudes_mantenimiento_table.php</code></td><td>Solicitudes de mantenimiento</td></tr>
+      <tr><td><code>2026_02_26_172410_create_solicitudes_combustible_table.php</code></td><td>Solicitudes de combustible</td></tr>
+      <tr><td><code>2026_03_11_003509_create_contrato_combustibles_table.php</code></td><td>Contratos de combustible</td></tr>
+      <tr><td><code>2026_05_07_191034_create_asignaciones_combustibles_lotes_table.php</code></td><td>Lotes de combustible</td></tr>
+      <tr><td><code>2026_05_21_193100_create_decisiones_operativas_table.php</code></td><td>Decisiones operativas (polymorphic)</td></tr>
+      <tr><td><code>2026_06_25_000001_create_contratos_mantenimiento_table.php</code></td><td>Contratos de mantenimiento</td></tr>
+      <tr><td><code>2026_06_25_000002_add_contrato_mantenimiento_id...</code></td><td>FK contrato_mantenimiento en solicitudes</td></tr>
+    </table>
+
+    <h3>9.2 Modelos</h3>
+    <p>Total: <strong>47 modelos</strong> en <span class="file-path">app/Models/</span></p>
+
+    <!-- 10. SEEDERS -->
+    <h2 id="seeders">10. Seeders</h2>
+    <p>Total: <strong>22 seeders</strong> en <span class="file-path">database/seeders/</span></p>
+    <table>
+      <tr><th>Seeder</th><th>Descripción</th></tr>
+      <tr><td>RolesSeeder</td><td>Roles base del sistema (super_admin, admin, ti, jefe, operativo, liquidador, solicitante, motorista)</td></tr>
+      <tr><td>UsersSeeder</td><td>Usuarios administradores por defecto</td></tr>
+      <tr><td>PaisesSeeder</td><td>Países</td></tr>
+      <tr><td>DepartamentosSeeder</td><td>Departamentos de El Salvador</td></tr>
+      <tr><td>MunicipiosSeeder</td><td>Municipios de El Salvador</td></tr>
+      <tr><td>GruposSeeder</td><td>Grupos de prioridad</td></tr>
+      <tr><td>VehCatalogosSeeder</td><td>Catálogos de vehículos (marcas, modelos, colores, etc.)</td></tr>
+      <tr><td>TipoVehiculoSeeder</td><td>Tipos de vehículo</td></tr>
+      <tr><td>VehiculosSeeder</td><td>Vehículos de la flota</td></tr>
+      <tr><td>MotoristasSeeder</td><td>Motoristas</td></tr>
+      <tr><td>TipoLicenciasSeeder</td><td>Tipos de licencia</td></tr>
+      <tr><td>UnidadesSeeder</td><td>Unidades solicitantes</td></tr>
+      <tr><td>ActividadesEconomicasSeeder</td><td>Actividades económicas</td></tr>
+      <tr><td>ProveedoresSeeder</td><td>Proveedores</td></tr>
+      <tr><td>TamanosProveedorSeeder</td><td>Tamaños de proveedor</td></tr>
+      <tr><td>ParametrosSistemaSeeder</td><td>Parámetros del sistema</td></tr>
+      <tr><td>SerieCargasSeeder</td><td>Series de cargas</td></tr>
+      <tr><td>ContratosCombustibleTransporteSeeder</td><td>9 contratos de combustible</td></tr>
+      <tr><td>ContratosMantenimientoTransporteSeeder</td><td>29 contratos de mantenimiento</td></tr>
+      <tr><td>AsignacionVehiculoMotoristaSeeder</td><td>Asignaciones vehículo-motorista</td></tr>
+      <tr><td>DepartamentalesSeeder</td><td>Departamentales</td></tr>
+    </table>
+
+    <!-- 11. SERVICIOS DEL DOMINIO -->
+    <h2 id="servicios">11. Servicios del dominio</h2>
+    <p>Ubicación: <span class="file-path">app/Domain/Solicitudes/Services/</span></p>
+    <table>
+      <tr><th>Servicio</th><th>Archivo</th><th>Función</th></tr>
+      <tr><td>AuditoriaService</td><td><span class="file-path">Services/AuditoriaService.php</span></td><td>Registro centralizado de eventos en bitácora</td></tr>
+      <tr><td>TicketService</td><td><span class="file-path">Services/TicketService.php</span></td><td>Generación de tickets/códigos únicos</td></tr>
+      <tr><td>DashboardService</td><td><span class="file-path">Services/Dashboard/DashboardService.php</span></td><td>Datos agregados para el dashboard</td></tr>
+      <tr><td>BandejaOperativaService</td><td><span class="file-path">Services/Operativo/BandejaOperativaService.php</span></td><td>Lógica de la bandeja operativa</td></tr>
+      <tr><td>RevisionOperativaService</td><td><span class="file-path">Services/Operativo/RevisionOperativaService.php</span></td><td>Lógica de revisión y validación</td></tr>
+      <tr><td>AprobacionesService</td><td><span class="file-path">Services/Operativo/AprobacionesService.php</span></td><td>Lógica de aprobaciones</td></tr>
+      <tr><td>LoteCombustibleService</td><td><span class="file-path">Services/Lotes/LoteCombustibleService.php</span></td><td>Gestión de lotes de combustible</td></tr>
+      <tr><td>LiquidacionUnifiedService</td><td><span class="file-path">Services/Liquidaciones/LiquidacionUnifiedService.php</span></td><td>Liquidaciones unificadas</td></tr>
+      <tr><td>Reporte(Flota/Control/Distribucion/General/Mision/Orden/PlanDiario/Registro/Autorizacion)Service</td><td><span class="file-path">Services/Reportes/</span></td><td>9 servicios de reportes</td></tr>
+      <tr><td>SolicitudTransporteService</td><td><span class="file-path">Services/SolicitudTransporteService.php</span></td><td>Lógica de negocio de transporte</td></tr>
+      <tr><td>SolicitudCombustibleService</td><td><span class="file-path">Services/SolicitudCombustibleService.php</span></td><td>Lógica de negocio de combustible</td></tr>
+      <tr><td>SolicitudMantenimientoService</td><td><span class="file-path">Services/SolicitudMantenimientoService.php</span></td><td>Lógica de negocio de mantenimiento</td></tr>
+      <tr><td>AsignacionVehiculoMotoristaService</td><td><span class="file-path">Services/AsignacionVehiculoMotoristaService.php</span></td><td>Asignación de recursos</td></tr>
+      <tr><td>SugerenciaAsignacionService</td><td><span class="file-path">Services/SugerenciaAsignacionService.php</span></td><td>Sugerencias automáticas de asignación</td></tr>
+      <tr><td>EstadoFlotaService</td><td><span class="file-path">Services/EstadoFlotaService.php</span></td><td>Estado operativo de la flota</td></tr>
+      <tr><td>IncidenciaService</td><td><span class="file-path">Services/IncidenciaService.php</span></td><td>Gestión de incidencias</td></tr>
+      <tr><td>MapImageService</td><td><span class="file-path">Services/MapImageService.php</span></td><td>Generación de mapas/imágenes</td></tr>
+      <tr><td>MotoristaService</td><td><span class="file-path">Services/MotoristaService.php</span></td><td>Lógica de motoristas</td></tr>
+    </table>
+
+    <!-- 12. ENUMS -->
+    <h2 id="enums">12. Enums</h2>
+    <p>Ubicación: <span class="file-path">app/Domain/Solicitudes/Enums/</span></p>
+    <table>
+      <tr><th>Enum</th><th>Valores principales</th></tr>
+      <tr><td>AccionBitacoraEnum</td><td>CREAR, ACTUALIZAR, ELIMINAR, CAMBIAR_ESTADO, EXPORTAR_PDF, EXPORTAR_EXCEL, EXPORTAR_CSV, LOGIN, LOGOUT, etc.</td></tr>
+      <tr><td>EstadoSolicitudEnum</td><td>PENDIENTE, EN_REVISION, PRE_APROBADA, APROBADA, RECHAZADA, CONDICIONADA, PROGRAMADA, EN_EJECUCION, COMPLETADA, CANCELADA, BORRADOR</td></tr>
+      <tr><td>EstadoLoteEnum</td><td>FINALIZADO, EN_PROCESO, COMPLETADO</td></tr>
+      <tr><td>PrioridadSolicitudEnum</td><td>ALTA, MEDIA, BAJA</td></tr>
+      <tr><td>NivelPrioridadEnum</td><td>CRITICA, ALTA, MEDIA, BAJA</td></tr>
+      <tr><td>IncidenciaEstadoEnum</td><td>ABIERTA, EN_PROCESO, RESUELTA, CERRADA</td></tr>
+      <tr><td>IncidenciaSeveridadEnum</td><td>BAJA, MEDIA, ALTA, CRITICA</td></tr>
+      <tr><td>IncidenciaTipoEnum</td><td>TECNICA, ADMINISTRATIVA, OPERATIVA, OTRO</td></tr>
+      <tr><td>NivelCombustibleEnum</td><td>VACIO, BAJO, MEDIO, TRES_CUARTOS, LLENO</td></tr>
+    </table>
+
+    <!-- 13. PROCEDIMIENTOS OPERATIVOS -->
+    <div class="page-break"></div>
+    <h2 id="procedimientos">13. Procedimientos operativos</h2>
+
+    <h3>13.1 Crear un nuevo usuario LDAP</h3>
+    <ol>
+      <li>El usuario intenta iniciar sesión en <code>/admin</code>.</li>
+      <li>El login LDAP lo autentica contra AD y lo crea automáticamente con rol <code>solicitante</code> (<code>app/Filament/Pages/Auth/Login.php:156</code> y <code>app/Http/Controllers/Api/TokenAuthController.php:107</code>).</li>
+      <li>Si necesita otro rol, el Super Admin debe ir a <strong>Administración → Usuarios</strong>, buscar al usuario, editarlo y asignarle el rol correspondiente.</li>
+    </ol>
+
+    <h3>13.2 Regenerar permisos de Shield</h3>
+    <div class="tip">
+      <code>php artisan shield:generate --all</code><br>
+      Escanea todas las políticas en <code>app/Policies/</code> y crea los permisos faltantes usando <code>findOrCreate</code>. No elimina permisos existentes. Ejecutar después de crear un nuevo Resource o Policy.
+    </div>
+
+    <h3>13.3 Ejecutar migraciones y seeders</h3>
+    <p><code>php artisan migrate</code> — Ejecuta migraciones pendientes.</p>
+    <p><code>php artisan db:seed</code> — Ejecuta todos los seeders (respetando orden en <code>DatabaseSeeder.php</code>).</p>
+    <p><code>php artisan migrate:fresh --seed</code> — Borra todo y reconstruye desde cero (solo en local/desarrollo).</p>
+
+    <h3>13.4 Asignar contratos (combustible vs mantenimiento)</h3>
+    <p>Los contratos se dividen en dos tablas separadas:</p>
+    <ul>
+      <li><strong>Combustible</strong> → <code>contrato_combustibles</code> (9 contratos: solo gas/diesel). Gestión desde <strong>Catálogos Globales → Contratos de Combustible</strong>.</li>
+      <li><strong>Mantenimiento</strong> → <code>contratos_mantenimiento</code> (29 contratos: mantenimiento, llantas, seguros, transporte). Gestión desde <strong>Catálogos Globales → Contratos de Mantenimiento</strong>.</li>
+    </ul>
+
+    <h3>13.5 Asignación Previa</h3>
+    <ul>
+      <li><strong>Combustible:</strong> Desde Gestión Operativa → Revisión, vincular solicitud a un detalle de lote activo.</li>
+      <li><strong>Mantenimiento:</strong> Desde Gestión Operativa → Revisión, vincular solicitud a un contrato activo con saldo disponible.</li>
+    </ul>
+
+    <h3>13.6 Contratos con número pendiente</h3>
+    <p>4 contratos tienen placeholders (<code>SIN-NUMERO-94</code>, <code>SIN-NUMERO-101</code>, <code>SIN-NUMERO-103</code>, <code>SIN-NUMERO-104</code>) a la espera de los números reales del Departamento de Transporte.</p>
+
+    <h3>13.7 Contratos con monto en 0</h3>
+    <p>8 contratos de mantenimiento tenían monto nulo en los datos legacy. Se sembraron con <code>monto = 0.00</code> y una nota en <code>observaciones</code>. Actualizar cuando se disponga de los montos reales.</p>
+
+    <!-- 14. CONSEJOS PRÁCTICOS -->
+    <h2 id="consejos">14. Consejos prácticos</h2>
+
+    <div class="info">
+      <strong>🛡️ Shield regeneration es seguro:</strong> Ejecute <code>php artisan shield:generate --all</code> sin miedo. Usa <code>findOrCreate</code>, nunca borra permisos. Es la forma correcta de sincronizar nuevas políticas.
+    </div>
+
+    <div class="tip">
+      <strong>🔍 Búsqueda global:</strong> Los recursos <code>SolicitudTransporteResource</code>, <code>SolicitudCombustibleResource</code> y <code>SolicitudMantenimientoResource</code> tienen búsqueda global habilitada. Busca por código, ticket, nombre de solicitante, placa, etc.
+    </div>
+
+    <div class="warn">
+      <strong>⚠️ Entorno local:</strong> En <code>APP_ENV=local</code>, <code>canAccessPanel()</code> retorna <code>true</code> para todos los roles. No asuma que los permisos de Filament Shield funcionan igual en producción.
+    </div>
+
+    <div class="info">
+      <strong>📂 LDAP nuevos usuarios:</strong> Desde Junio 2026, los nuevos usuarios LDAP se crean con rol <code>solicitante</code>. Los usuarios LDAP existentes sin rol no se modifican. Si necesita cambiar el rol, hágalo manualmente desde UserResource.
+    </div>
+
+    <div class="tip">
+      <strong>🔗 Auditoría siempre activa:</strong> Toda acción importante queda registrada en <code>BitacoraEventoResource</code>. Si un usuario reporta un problema, revise la bitácora para ver qué ocurrió.
+    </div>
+
+    <div class="warn">
+      <strong>⚠️ No editar permisos en DB directamente:</strong> Siempre use el RoleResource de Filament Shield o el comando <code>shield:generate</code>. Modificar las tablas <code>permissions</code> o <code>model_has_permissions</code> directamente puede romper el sistema.
+    </div>
+
+    <div class="info">
+      <strong>📄 Manuales en el topbar:</strong> Los PDFs de manuales se sirven desde <code>public/docs/</code> y se enlazan desde un dropdown en el menú de usuario (esquina superior derecha). Configuración en <code>AdminPanelProvider.php</code>, hook <code>USER_MENU_BEFORE</code>.
+    </div>
+
+    <div class="nota">
+      <strong>✅ Resumen de lo que SÍ puede hacer el Super Admin:</strong>
+      <ul>
+        <li>Acceder a TODO el panel de administración (<code>/admin</code>) sin restricciones.</li>
+        <li>CRUD completo en los 42 recursos y acceso a las 19 páginas.</li>
+        <li>Gestionar usuarios y roles (asignar/revocar roles, crear/modificar/eliminar usuarios).</li>
+        <li>Ver y auditar todo el histórico de cambios (Bitácora de Eventos + Historial de Estados).</li>
+        <li>Aprobar, rechazar, condicionar y reabrir solicitudes de transporte, combustible y mantenimiento (actúa como Jefe de Transporte).</li>
+        <li>Realizar todas las operaciones del rol Operativo (tomar, validar, asignar recursos, asignación previa).</li>
+        <li>Ejecutar todos los endpoints de la API REST sin restricción de roles.</li>
+        <li>Exportar cualquier reporte en PDF, Excel o CSV.</li>
+        <li>Gestionar contratos (combustible y mantenimiento), lotes de combustible y liquidaciones.</li>
+        <li>Modificar parámetros del sistema, catálogos globales y catálogos de vehículos.</li>
+        <li>Gestionar incidencias, planificación de flota y asignaciones vehículo-motorista.</li>
+        <li>Ejecutar comandos Artisan: migraciones, seeders, shield:generate, etc.</li>
+        <li>Acceder a todos los reportes (10) sin filtros de datos.</li>
+        <li>Ver el dashboard con estadísticas completas de todo el sistema.</li>
+      </ul>
+    </div>
+
+    <div class="warn">
+      <strong>❌ Resumen de lo que NO puede hacer el Super Admin:</strong>
+      <ul>
+        <li>No puede crear solicitudes como solicitante desde el panel admin (eso es competencia de la app React externa).</li>
+        <li>No puede actuar como motorista en el flujo de viajes (iniciar/llegada/retorno/finalizar) desde el panel admin (solo vía API con rol motorista).</li>
+        <li>No puede acceder a las apps React de Solicitantes ni de Jefe (son sistemas separados).</li>
+        <li>No puede eliminar su propio rol super_admin desde la interfaz de Shield (Shield lo previene).</li>
+        <li>No debe modificar las tablas de permisos de Spatie directamente en la base de datos.</li>
+        <li>No puede usar la app móvil/self-service de motoristas (es exclusiva para el rol motorista).</li>
+        <li>No puede recibir notificaciones como solicitante de sus propias solicitudes (eso es del frontend React).</li>
+        <li>No puede cambiar el comportamiento de la app React externa (está en Vercel, fuera de este repositorio).</li>
+      </ul>
+    </div>
+
+    <!-- PIE -->
+    <div class="doc-footer">
+      <div class="line-cl"></div>
+      <p>Asamblea Legislativa — Departamento de Transporte</p>
+      <p>Manual del Rol Super Admin v1.0 · Junio 2026 — Documento interno · Confidencial</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

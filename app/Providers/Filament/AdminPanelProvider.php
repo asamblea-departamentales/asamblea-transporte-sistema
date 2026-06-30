@@ -117,9 +117,10 @@ class AdminPanelProvider extends PanelProvider
                     @php
                         $manuales = [
                             ["label" => "Manual de Uso General",         "file" => "Manual_General_De_Uso.pdf"],
-                            ["label" => "Manual Operativo",         "file" => "manual_operativo.pdf"],
-                            ["label" => "Manual del Motorista",     "file" => "manual_motorista.pdf"],
-                            ["label" => "Roles y Accesos",          "file" => "Manual_Roles_Acceso.pdf"],
+                            ["label" => "Manual del Rol Operativo",      "file" => "Manual del Rol Operativo — Sistema de Transporte.pdf"],
+                            ["label" => "Manual del Rol Super Admin",    "file" => "manual_super_admin.html"],
+                            ["label" => "Manual del Motorista",          "file" => "manual_motorista.pdf"],
+                            ["label" => "Roles y Accesos",               "file" => "Manual_Roles_Acceso.pdf"],
                         ];
                     @endphp
 

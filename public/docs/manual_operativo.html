@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual del Rol Operativo — Sistema de Transporte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+  
+  /* ═══ VARIABLES DE DISEÑO (Estilo Institucional) ═══ */
+  :root {
+    --primary: #0B2545;       /* Azul Institucional */
+    --primary-light: #134074; /* Azul Claro */
+    --accent: #8A7043;        /* Dorado Ejecutivo */
+    --text-main: #1E293B;     /* Gris Oscuro */
+    --text-muted: #64748B;    /* Gris Neutral */
+    --bg-light: #F8FAFC;      /* Fondo Claro */
+    --border-color: #E2E8F0;  /* Bordes Suaves */
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-main); background: #fff; line-height: 1.7; font-size: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    @top-center {
+      content: element(header);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+    @bottom-center {
+      content: "Confidencial — Documento Interno | Asamblea Legislativa · Depto. Transporte | Pág. " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  }
+
+  .page { max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  /* ═══ PORTADA MEJORADA ═══ */
+  .cover {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 80px 40px;
+    page-break-after: always; break-after: page;
+    background: radial-gradient(circle at top right, #f1f5f9 0%, #ffffff 60%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  .cover .logo-wrap {
+    width: 280px; margin-bottom: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  }
+  .cover .logo-wrap img { width: 100%; height: auto; display: block; }
+  .cover .line {
+    width: 60px; height: 4px; background: var(--accent); border-radius: 4px; margin: 0 auto 32px;
+  }
+  .cover h1 {
+    font-size: 3rem; font-weight: 800; color: var(--primary); letter-spacing: -.03em;
+    margin-bottom: 16px; line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 1.4rem; font-weight: 600; color: var(--primary-light); margin-bottom: 36px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cover .desc {
+    font-size: 1.05rem; color: var(--text-muted); max-width: 540px; margin: 0 auto 50px; line-height: 1.8; font-weight: 400;
+  }
+  .cover .meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px;
+    font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; background: var(--bg-light); padding: 12px 24px; border-radius: 30px; border: 1px solid var(--border-color);
+  }
+  .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
+
+  /* ═══ ESTILOS GENERALES Y JERARQUÍA ═══ */
+  .content { padding: 40px 50px 80px; }
+
+  h2 {
+    font-size: 1.6rem; font-weight: 700; color: var(--primary);
+    margin: 56px 0 24px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
+    position: relative;
+  }
+  h2::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
+    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+  }
+  h4 {
+    font-size: 1.05rem; font-weight: 600; color: var(--accent);
+    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+  }
+
+  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
+  ul, ol { margin: 8px 0 20px 24px; }
+  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; }
+  strong { color: #0f172a; font-weight: 600; }
+
+  /* ═══ CAJAS DE CONTENIDO (PULIDAS) ═══ */
+  .nota, .info, .tip {
+    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
+    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid transparent;
+  }
+  .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
+  .nota strong { color: #92400E; }
+  .info { background: #F8FAFC; border-left: 4px solid var(--primary); border-color: #E2E8F0 #E2E8F0 #E2E8F0 var(--primary); }
+  .info strong { color: var(--primary); }
+  .tip { background: #F0FDF4; border-left: 4px solid #16A34A; border-color: #DCFCE7 #DCFCE7 #DCFCE7 #16A34A; }
+  .tip strong { color: #14532D; }
+
+  /* ═══ TABLAS ELEGANTES ═══ */
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
+    font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  th {
+    background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: #334155;
+    background: #ffffff;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+
+  /* ═══ COMPONENTES INTERACTIVOS (BOTONES Y BADGES) ═══ */
+  .btn-sample {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; padding: 6px 14px;
+    border-radius: 6px; white-space: nowrap; letter-spacing: .03em;
+    margin: 2px; border: 1px solid transparent;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05); text-transform: uppercase;
+  }
+  .btn-green  { background: #16A34A; color: #fff; }
+  .btn-red    { background: #DCFCE7; color: #fff; }
+  .btn-amber  { background: #EA580C; color: #fff; }
+  .btn-gray   { background: #FFFFFF; color: #334155; border-color: #CBD5E1; box-shadow: none; }
+  .btn-indigo { background: var(--primary-light); color: #fff; }
+
+  .badge-sample {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 4px; letter-spacing: .05em; text-transform: uppercase; margin: 2px;
+    border: 1px solid transparent;
+  }
+  .b-pend { background: #FEF9C3; color: #713F12; border-color: #FEF08A; }
+  .b-rev  { background: #FFEDD5; color: #7C2D12; border-color: #FED7AA; }
+  .b-pre  { background: #E0F2FE; color: #0C4A6E; border-color: #BAE6FD; }
+  .b-apr  { background: #DCFCE7; color: #14532D; border-color: #BBF7D0; }
+  .b-rech { background: #FEE2E2; color: #7F1D1D; border-color: #FCA5A5; }
+
+  .nav-card {
+    display: inline-block; background: #334155; color: #fff;
+    font-size: 0.75rem; font-weight: 600; padding: 4px 10px;
+    border-radius: 4px; margin: 2px 0; letter-spacing: 0.02em;
+  }
+
+  /* ═══ PASOS NUMERADOS MODERNOS ═══ */
+  .pasos {
+    counter-reset: paso; margin: 20px 0 28px; padding: 0; list-style: none;
+  }
+  .pasos li {
+    counter-increment: paso;
+    padding: 16px 20px 16px 60px; position: relative;
+    margin-bottom: 12px; background: #FFFFFF;
+    border-radius: 8px; border: 1px solid var(--border-color);
+    page-break-inside: avoid; break-inside: avoid;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.01);
+  }
+  .pasos li::before {
+    content: counter(paso);
+    position: absolute; left: 18px; top: 50%; transform: translateY(-50%);
+    width: 28px; height: 28px; background: var(--primary); color: #fff;
+    font-size: 13px; font-weight: 700; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .pasos li ul { margin-top: 10px; margin-bottom: 0; }
+  .pasos li ul li { background: none; border: none; padding: 4px 0; margin: 0; box-shadow: none; }
+  .pasos li ul li::before { content: none; }
+
+  /* ═══ PIE DE DOCUMENTO ═══ */
+  .doc-footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+    text-align: center; font-size: 0.85rem; color: var(--text-muted);
+    page-break-before: avoid; break-before: avoid;
+  }
+  .doc-footer .line-cl { width: 50px; height: 3px; background: var(--accent); border-radius: 3px; margin: 0 auto 20px; }
+  .doc-footer p { text-align: center; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-muted); }
+
+  /* ═══ SALTO DE PÁGINA ═══ */
+  .page-break { page-break-before: always; break-before: page; }
+
+  /* ═══ AJUSTES DE IMPRESIÓN EXCLUSIVOS ═══ */
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .content { padding: 0 10px; }
+    .cover { min-height: 100vh; padding-top: 100px; justify-content: flex-start; }
+    .cover .logo-wrap { width: 240px; }
+    h2 { margin-top: 40px; }
+    .nota, .info, .tip, table, .pasos li { break-inside: avoid; page-break-inside: avoid; }
+    th { background: #1e293b !important; color: #fff !important; }
+    .nav-card { background: #475569 !important; color: #fff !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ═══════════════ PORTADA ═══════════════ -->
+  <div class="cover">
+    <div class="logo-wrap">
+      <img src="../images/logo-azul-fondo-transparente.png" alt="Logo Asamblea Legislativa">    
+    </div>
+    <div class="line"></div>
+    <h1>Manual del Rol Operativo</h1>
+    <h2>Sistema de Gestión de Transporte</h2>
+    <p class="desc">
+      Guía de uso para el personal operativo encargado de la recepción, clasificación, revisión técnica y validación de solicitudes de transporte, combustible y mantenimiento.
+    </p>
+    <div class="meta">
+      <span>📄 Versión 1.0 · Junio 2026</span>
+      <span class="bar"></span>
+      <span>🏛️ Asamblea Legislativa</span>
+      <span class="bar"></span>
+      <span>🚗 Departamento de Transporte</span>
+    </div>
+  </div>
+
+  <!-- ═══════════════ CONTENIDO ═══════════════ -->
+  <div class="content">
+
+    <!-- ══════ 1. INTRODUCCIÓN ══════ -->
+    <h2 id="intro">1. Introducción</h2>
+
+    <p>El <strong>rol Operativo</strong> es el encargado de recibir, clasificar, revisar y preparar las solicitudes para que el Jefe de Transporte las apruebe. En pocas palabras, usted es el <strong>primer filtro</strong> del sistema: se asegura de que cada solicitud tenga los datos completos, los recursos disponibles y la prioridad correcta antes de pasarla al jefe.</p>
+
+    <div class="info">
+      <strong>🔑 ¿Qué puedo hacer como Operativo?</strong><br>
+      ✅ Ver todas las solicitudes entrantes (Transporte, Combustible, Mantenimiento).<br>
+      ✅ Tomar solicitudes para revisarlas.<br>
+      ✅ Cambiar la prioridad (Alta / Media / Baja).<br>
+      ✅ Validar datos, hacer observaciones y pasar a preaprobación.<br>
+      ✅ Asignar vehículo y motorista a solicitudes de Transporte.<br>
+      ✅ Vincular solicitudes a Lotes de Combustible o Contratos de Mantenimiento.<br>
+      ✅ Ver reportes y dar seguimiento.
+    </div>
+
+    <p>Lo que <strong>no</strong> puede hacer: aprobar, rechazar, condicionar o reabrir solicitudes — esas acciones son exclusivas del Jefe de Transporte.</p>
+
+    <!-- ══════ 2. ACCESO ══════ -->
+    <h2 id="acceso">2. Cómo acceder al sistema</h2>
+
+    <ol class="pasos">
+      <li>Abra su navegador (Chrome, Edge, Firefox) y vaya a la dirección del sistema que se le proporcionó.</li>
+      <li>Verá la pantalla de inicio de sesión. Ingrese su <strong>usuario y contraseña</strong> las mismas credenciales que usa para ingresar en su computadora dentro de la Asamblea. (LDAP).</li>
+      <li>Si es la primera vez que ingresa, el sistema le asignará automáticamente el rol de <strong>Solicitante</strong>. Un administrador debe cambiarle al rol <strong>Operativo</strong> para acceder a estas funciones.</li>
+      <li>Una vez dentro, verá el <strong>Panel de Control</strong> (Dashboard) con un resumen de solicitudes recientes y estadísticas.</li>
+    </ol>
+
+    <div class="nota">
+      <strong>⚠️ Nota importante:</strong> Si al iniciar sesión ve un mensaje de "Acceso denegado", su usuario aún no tiene el rol Operativo asignado. Comuníquese con el administrador del sistema o el departamento de Sistemas.
+    </div>
+
+    <!-- ══════ 3. PANTALLA PRINCIPAL ══════ -->
+    <h2 id="pantalla-principal">3. Pantalla principal</h2>
+
+    <p>Al ingresar, verá un menú lateral izquierdo con varias secciones. Las más importantes para usted como Operativo son:</p>
+
+    <table>
+      <tr><th>Sección en el menú</th><th>¿Qué encuentra ahí?</th></tr>
+      <tr><td><span class="nav-card">Panel de Control</span></td><td>Resumen general con tarjetas de solicitudes recientes y estadísticas rápidas.</td></tr>
+      <tr><td><span class="nav-card">Gestión Operativa</span> → <span class="nav-card" style="background:var(--primary-light)">Gestión Operativa de Solicitudes</span></td><td><strong>Su página principal de trabajo.</strong> Aquí recibe, revisa y prepara las solicitudes.</td></tr>
+      <tr><td><span class="nav-card">Operatividad Diaria</span> → <span class="nav-card" style="background:var(--primary-light)">Lotes de Combustible</span></td><td>Gestiona los lotes de combustible diarios (ver detalle, iniciar asignación, completar).</td></tr>
+      <tr><td><span class="nav-card">Asignaciones</span> → Solicitud Transporte / Combustible / Mantenimiento</td><td>Listados de todas las solicitudes. Puede ver detalles y, en algunos casos, realizar acciones específicas.</td></tr>
+      <tr><td><span class="nav-card">Reportes</span></td><td>Varios reportes para consultar datos históricos y estadísticas.</td></tr>
+    </table>
+
+    <div class="info">
+      <strong>💡 Sugerencia:</strong> Fije o marque la página "Gestión Operativa de Solicitudes" en su navegador, ya que es donde pasará la mayor parte del tiempo.
+    </div>
+
+    <h3>Partes de la página "Gestión Operativa de Solicitudes"</h3>
+
+    <p>Al hacer clic en <span class="nav-card" style="background:var(--primary-light)">Gestión Operativa de Solicitudes</span>, verá:</p>
+
+    <h4>1. Encabezado</h4>
+    <p>Muestra el título <strong>"Gestión Operativa de Solicitudes"</strong> y dos botones:</p>
+    <ul>
+      <li><span class="btn-sample btn-gray">📅 Mes actual</span> — Ajusta los filtros para mostrar solo solicitudes del mes en curso.</li>
+      <li><span class="btn-sample btn-gray">✕ Limpiar filtros</span> — Borra todos los filtros aplicados.</li>
+    </ul>
+
+    <h4>2. Barra de 3 etapas (pasos)</h4>
+    <p>Hay 3 casillas horizontales que representan el flujo completo:</p>
+    <table>
+      <tr><th>Etapa</th><th>Color</th><th>¿Quién accede?</th></tr>
+      <tr><td><strong>1. Bandeja Operativa</strong></td><td>Índigo (azul)</td><td>✅ Usted (Operativo)</td></tr>
+      <tr><td><strong>2. Revisión Operativa</strong></td><td>Ámbar (naranja)</td><td>✅ Usted (Operativo)</td></tr>
+      <tr><td><strong>3. Aprobaciones</strong></td><td>Verde</td><td>❌ Solo el Jefe</td></tr>
+    </table>
+    <p>Usted como Operativo puede hacer clic en las etapas <strong>1 y 2</strong>. La etapa 3 aparecerá bloqueada con un candado 🔒.</p>
+    <p>Haga clic en cada etapa para cambiar entre la <strong>Bandeja</strong> (solicitudes que van llegando) y la <strong>Revisión</strong> (solicitudes que ya tomó para trabajar).</p>
+
+    <h4>3. Banner informativo</h4>
+    <p>Justo debajo de las 3 casillas aparece una franja de color que explica brevemente en qué consiste la etapa actual.</p>
+
+    <h4>4. Filtros</h4>
+    <p>Un formulario con 6 filtros para encontrar solicitudes rápidamente:</p>
+    <table>
+      <tr><th>Filtro</th><th>¿Qué hace?</th></tr>
+      <tr><td>Tipo</td><td>Filtra por Transporte 🚗, Combustible ⛽ o Mantenimiento 🔧.</td></tr>
+      <tr><td>Prioridad</td><td>Filtra por Alta, Media o Baja.</td></tr>
+      <tr><td>Prioridad Grupo</td><td>Filtra por Crítica, Alta, Media o Baja (es un nivel asignado automáticamente según la prioridad real que maneja el departamento de Transporte).</td></tr>
+      <tr><td>Estado</td><td>Filtra por estado: Pendiente, En revisión, etc. Las opciones cambian según la etapa.</td></tr>
+      <tr><td>Desde / Hasta</td><td>Rango de fechas. Por defecto muestra el mes actual.</td></tr>
+    </table>
+    <p>Los filtros son <strong>en vivo</strong> — al cambiar cualquier valor, la lista se actualiza sola.</p>
+
+    <h4>5. Tarjetas de indicadores (KPI)</h4>
+    <p>Cuatro tarjetas que muestran cuántas solicitudes hay en la etapa actual:</p>
+    <ul>
+      <li><strong>Total</strong> — Todas las solicitudes.</li>
+      <li><strong>Transporte</strong> — Solo las de transporte (color índigo).</li>
+      <li><strong>Combustible</strong> — Solo las de combustible (color ámbar).</li>
+      <li><strong>Mantenimiento</strong> — Solo las de mantenimiento (color esmeralda).</li>
+    </ul>
+    <p>Cada tarjeta muestra también el porcentaje que representa sobre el total.</p>
+
+    <h4>6. Lista de solicitudes (tarjetas)</h4>
+    <p>Cada solicitud se muestra como una <strong>tarjeta</strong> con:</p>
+    <ul>
+      <li><strong>Encabezado:</strong> Tipo (🚗/⛽/🔧), código único, ticket, fecha de ingreso, etc.</li>
+      <li><strong>Etiquetas:</strong> Grupo (CRÍTICA/ALTA/MEDIA/BAJA), Prioridad (ALTA/media/baja), Estado (Pendiente / En revisión / etc.).</li>
+      <li><strong>Cuerpo:</strong> Solicitante, Unidad, Detalle (si aplica).</li>
+      <li><strong>Acciones:</strong> Botones para realizar las operaciones (explicadas en las siguientes secciones).</li>
+    </ul>
+    <p>Al final de la página hay un paginador (8 solicitudes por página).</p>
+
+    <!-- ══════ 4. BANDEJA ══════ -->
+    <h2 id="bandeja">4. Etapa 1: Bandeja Operativa</h2>
+    <p>La <strong>Bandeja Operativa</strong> es donde llegan <strong>todas las solicitudes nuevas</strong> que los solicitantes envían. Aquí usted las revisa superficialmente, les asigna una prioridad y las toma para trabajarlas en la siguiente etapa.</p>
+
+    <div class="info">
+      <strong>📌 ¿Qué solicitudes aparecen aquí?</strong><br>
+      Todas las que estén en estado <span class="badge-sample b-pend">Pendiente</span> o <span class="badge-sample b-rev">En revisión</span>.
+    </div>
+
+    <h3 id="bandeja-tomar">4.1 Tomar una solicitud para revisión</h3>
+    <p>Esta es la acción más común en la Bandeja. Al "tomar" una solicitud, usted se la asigna a sí mismo y la mueve a la etapa de Revisión.</p>
+    <ol class="pasos">
+      <li>Busque la solicitud que desea atender. Puede usar los filtros para encontrarla más rápido.</li>
+      <li>En la parte inferior de la tarjeta, haga clic en el botón <span class="btn-sample btn-indigo">→ Tomar para revisión</span>.</li>
+      <li>El sistema cambiará automáticamente el estado a <span class="badge-sample b-rev">En revisión</span> y moverá la solicitud a la etapa de Revisión.</li>
+      <li>Verá un mensaje en pantalla: <em>"Solicitud enviada a revisión"</em>.</li>
+    </ol>
+    <div class="tip">
+      <strong>💡 Consejo:</strong> Puede tomar varias solicitudes a la vez, pero es recomendable ir una por una para mantener el orden. Use los filtros para enfocarse en las más urgentes (revise la etiqueta de "prioridad").
+    </div>
+
+    <h3 id="bandeja-prioridad">4.2 Cambiar la prioridad</h3>
+    <p>Usted puede ajustar la prioridad de cualquier solicitud en cualquier momento (incluso sin haberla "tomado").</p>
+    <p>En la parte superior de cada tarjeta verá tres botones circulares:</p>
+    <p>
+      <span class="btn-sample" style="background:#fee2e2;color:#b91c1c;border:1px solid #fca5a5;">Alta</span>
+      <span class="btn-sample" style="background:#fef3c7;color:#b45309;border:1px solid #fcd34d;">Media</span>
+      <span class="btn-sample" style="background:#d1fae5;color:#065f46;border:1px solid #6ee7b7;">Baja</span>
+    </p>
+    <ol class="pasos">
+      <li>Haga clic en la prioridad que desee asignar (Alta, Media o Baja).</li>
+      <li>El sistema actualizará la prioridad al instante y lo indicará con un mensaje: <em>"Prioridad actualizada"</em>.</li>
+    </ol>
+    <div class="nota">
+      <strong>⚠️ Atención:</strong> La prioridad es distinta al "Grupo" (CRÍTICA/ALTA/MEDIA/BAJA). El grupo lo asigna el sistema automáticamente según reglas internas. Usted solo controla la prioridad (Alta/Media/Baja).
+    </div>
+
+
+    <!-- ══════ 5. REVISIÓN ══════ -->
+    <h2 id="revision">5. Etapa 2: Revisión Operativa</h2>
+    <p>La <strong>Revisión Operativa</strong> es donde usted analiza cada solicitud en detalle. Aquí puede:</p>
+    <ul>
+      <li>✅ <strong>Validar</strong> que los datos estén completos y correctos, y enviar a preaprobación.</li>
+      <li>✅ <strong>Asignar recursos</strong> (vehículo y motorista) a las solicitudes de Transporte.</li>
+      <li>✅ <strong>Asignación Previa</strong> — Vincular una solicitud de Combustible a un lote del día, o una de Mantenimiento a un contrato.</li>
+      <li>✅ <strong>Observar</strong> — Devolver la solicitud al solicitante con comentarios técnicos sin cambiar su estado.</li>
+    </ul>
+    <div class="info">
+      <strong>📌 ¿Qué solicitudes aparecen aquí?</strong><br>
+      Solo las que estén en estado <span class="badge-sample b-rev">En revisión</span> (es decir, las que usted tomó desde la Bandeja).<br>
+      Si no ve ninguna solicitud, revise que haya "tomado" alguna desde la Bandeja.
+    </div>
+
+    <h3 id="revision-validar">5.1 Validar y enviar a preaprobación (Combustible / Mantenimiento)</h3>
+    <p>Cuando una solicitud de <strong>Combustible ⛽</strong> o <strong>Mantenimiento 🔧</strong> tiene todos los datos correctos, usted la valida y la envía al Jefe para que la apruebe.</p>
+    <ol class="pasos">
+      <li>Asegúrese de estar en la etapa <strong>Revisión Operativa</strong> (paso 2).</li>
+      <li>Busque la solicitud de Combustible o Mantenimiento que desea validar.</li>
+      <li>Haga clic en el botón <span class="btn-sample btn-green">✓ Validar</span>.</li>
+      <li>Se abrirá una ventana con los siguientes campos:
+        <ul>
+          <li><strong>Lista de verificación (4 puntos):</strong>
+            <ul>
+              <li>☐ Datos completos</li>
+              <li>☐ Fechas válidas</li>
+              <li>☐ Recursos disponibles</li>
+              <li>☐ Reglas mínimas</li>
+            </ul>
+            Marque cada punto según corresponda. Deben estar todos marcados para enviar.
+          </li>
+          <li><strong>Hallazgos</strong> (opcional): Si encontró algo fuera de lo común, anótelo aquí.</li>
+          <li><strong>Comentario de validación</strong> (obligatorio): Escriba un breve comentario sobre la validación.</li>
+        </ul>
+      </li>
+      <li>Haga clic en <span class="btn-sample btn-green">→ Enviar a preaprobación</span>.</li>
+      <li>El sistema cambiará el estado a <span class="badge-sample b-pre">Pre-aprobada</span> y la solicitud pasará a la etapa de Aprobaciones (donde el Jefe la verá).</li>
+    </ol>
+    <div class="tip">
+      <strong>💡 Consejo:</strong> Siempre revise los cuatro puntos de verificación antes de enviar. Si falta algún dato, mejor use la opción <strong>"Observar"</strong> (sección 5.4) para devolver la solicitud al solicitante con instrucciones claras.
+    </div>
+
+    <h3 id="revision-validar-transporte">5.2 Validar y asignar recursos (Transporte)</h3>
+    <p>Para las solicitudes de <strong>Transporte 🚗</strong>, el proceso incluye un paso adicional: <strong>asignar un vehículo y un motorista</strong>.</p>
+    <p>El botón <span class="btn-sample btn-green">✓ Validar</span> en las solicitudes de Transporte abre un proceso de <strong>2 pasos</strong>:</p>
+
+    <h4>Paso 1: Validación</h4>
+    <p>Igual que con Combustible/Mantenimiento: marque los 4 puntos, agregue hallazgos si aplica, y escriba un comentario.</p>
+    <p>Luego haga clic en <span class="btn-sample btn-indigo">→ Continuar a asignar recursos</span>.</p>
+
+    <h4>Paso 2: Asignar vehículo y motorista</h4>
+    <p>Aquí verá:</p>
+    <ul>
+      <li><strong>Tipo de vehículo solicitado</strong> (ej: "Sedán", "Pickup", "Microbús").</li>
+      <li><strong>Sugerencia del sistema</strong> (si aplica): El sistema le recomienda un vehículo y motorista basado en disponibilidad y datos históricos.</li>
+      <li><strong>Selector de vehículo:</strong> Elija de la lista de vehículos disponibles.</li>
+      <li><strong>Selector de motorista:</strong> Elija de la lista de motoristas disponibles. Si el vehículo ya tiene un motorista asignado de forma permanente, se seleccionará automáticamente.</li>
+      <li><strong>Justificación</strong> (solo si cambia lo sugerido por el sistema): Explique por qué asignó un recurso diferente al recomendado.</li>
+    </ul>
+    <p>Finalmente, haga clic en <span class="btn-sample btn-green">✓ Validar y asignar recursos</span>.</p>
+    <p>El sistema:</p>
+    <ul>
+      <li>Registra qué vehículo y motorista asignó.</li>
+      <li>Cambia el estado a <span class="badge-sample b-pre">Pre-aprobada</span>.</li>
+      <li>Mueve la solicitud a la etapa de Aprobaciones para que el Jefe decida.</li>
+    </ul>
+    <div class="nota">
+      <strong>⚠️ Importante:</strong> Si el sistema sugiere un vehículo y usted asigna otro, deberá escribir una justificación. Esto queda registrado para que el Jefe la vea al aprobar.
+    </div>
+
+    <h3 id="revision-asignacion-previa">5.3 Asignación Previa</h3>
+    <p>La <strong>Asignación Previa</strong> es una acción opcional que permite vincular una solicitud a un recurso antes de que sea aprobada, para agilizar la gestión cuando llegue el momento.</p>
+
+    <h4>Para Combustible ⛽</h4>
+    <p>Vincula la solicitud a un <strong>Lote de Combustible del día</strong> (una reserva de combustible para un vehículo específico).</p>
+    <ol class="pasos">
+      <li>Haga clic en <span class="btn-sample btn-indigo">📋 Asignación Previa</span> en una solicitud de Combustible.</li>
+      <li>Se abrirá una ventana con un selector de <strong>"Detalle del lote"</strong>.</li>
+      <li>Elija un detalle disponible (cada opción muestra la placa del vehículo, número de ticket y monto asignado).</li>
+      <li>Haga clic en <span class="btn-sample btn-green">Confirmar asignación</span>.</li>
+    </ol>
+
+    <h4>Para Mantenimiento 🔧</h4>
+    <p>Vincula la solicitud a un <strong>Contrato de Mantenimiento activo</strong> (define qué contrato cubrirá el trabajo).</p>
+    <ol class="pasos">
+      <li>Haga clic en <span class="btn-sample btn-indigo">📋 Asignación Previa</span> en una solicitud de Mantenimiento.</li>
+      <li>Se abrirá una ventana con un selector de <strong>"Contrato"</strong>.</li>
+      <li>Cada opción muestra: nombre del contrato, proveedor y saldo disponible.</li>
+      <li>Elija el contrato adecuado y haga clic en <span class="btn-sample btn-green">Confirmar asignación</span>.</li>
+    </ol>
+    <div class="info">
+      <strong>ℹ️ Nota:</strong> Si no hay lotes de combustible disponibles para hoy, la ventana le mostrará un enlace para ir a crear lotes. Si no hay contratos activos con saldo, le indicará que debe crearlos primero. En ambos casos, la solicitud puede seguir su curso sin la asignación previa.
+    </div>
+
+    <h3 id="revision-observar">5.4 Registrar observación técnica</h3>
+    <p>Si una solicitud tiene datos incompletos o algo que corregir, puede <strong>observarla</strong> — esto registra su comentario pero <strong>no cambia el estado</strong> de la solicitud. Es como dejar una nota para que el solicitante vea qué debe corregir.</p>
+    <ol class="pasos">
+      <li>Haga clic en el botón <span class="btn-sample btn-gray">👁️ Observar</span>.</li>
+      <li>Se abrirá una ventana con:
+        <ul>
+          <li>Los mismos 4 puntos de verificación (opcionales en este caso).</li>
+          <li><strong>Hallazgos técnicos</strong> (opcional).</li>
+          <li><strong>Comentario / devolución</strong> (obligatorio): Explique claramente qué debe corregir el solicitante.</li>
+        </ul>
+      </li>
+      <li>Haga clic en <span class="btn-sample btn-gray">Guardar observación</span>.</li>
+    </ol>
+    <div class="tip">
+      <strong>💡 Consejo:</strong> Sea claro y específico en sus observaciones. Por ejemplo, en lugar de "Faltan datos", escriba "Falta especificar el tipo de mantenimiento (preventivo o correctivo) en el campo de detalle."
+    </div>
+
+
+    <!-- ══════ 6. GLOSARIO DE ESTADOS ══════ -->
+    <h2 id="estados">6. Glosario de estados</h2>
+    <p>Una solicitud puede pasar por varios estados. Estos son los que usted verá con más frecuencia:</p>
+    <table>
+      <tr><th>Estado</th><th>Etiqueta</th><th>Significado</th><th>¿Qué puede hacer usted?</th></tr>
+      <tr>
+        <td>Pendiente</td>
+        <td><span class="badge-sample b-pend">Pendiente</span></td>
+        <td>La solicitud acaba de llegar, nadie la ha revisado aún.</td>
+        <td>Tomar para revisión, cambiar prioridad.</td>
+      </tr>
+      <tr>
+        <td>En revisión</td>
+        <td><span class="badge-sample b-rev">En revisión</span></td>
+        <td>Usted (u otro operativo) la tomó y está trabajando en ella.</td>
+        <td>Validar, asignar recursos, asignación previa, observar.</td>
+      </tr>
+      <tr>
+        <td>Pre-aprobada</td>
+        <td><span class="badge-sample b-pre">Pre-aprobada</span></td>
+        <td>Usted la validó y está esperando la decisión del Jefe.</td>
+        <td>Ya no puede modificarla (pasó a la etapa de Aprobaciones).</td>
+      </tr>
+      <tr>
+        <td>Aprobada</td>
+        <td><span class="badge-sample b-apr">Aprobada</span></td>
+        <td>El Jefe la aprobó. La solicitud sigue su curso.</td>
+        <td>Solo ver el detalle.</td>
+      </tr>
+      <tr>
+        <td>Rechazada</td>
+        <td><span class="badge-sample b-rech">Rechazada</span></td>
+        <td>El Jefe la rechazó (no cumple requisitos).</td>
+        <td>Solo ver el detalle.</td>
+      </tr>
+    </table>
+    <div class="nota">
+      <strong>⚠️ Nota:</strong> Cuando el Jefe "condiciona" una solicitud, esta regresa al estado <span class="badge-sample b-rev">En revisión</span> para que usted pueda corregir lo señalado y enviarla de nuevo.
+    </div>
+
+    <!-- ══════ 7. LOTES DE COMBUSTIBLE ══════ -->
+    <h2 id="lotes">7. Lotes de Combustible</h2>
+    <p>Los <strong>Lotes de Combustible</strong> representan las cargas de combustible que se entregan cada día a los vehículos. Usted puede acceder a esta sección desde el menú <span class="nav-card">Operatividad Diaria</span> → <span class="nav-card" style="background:var(--primary-light)">Lotes de Combustible</span>.</p>
+
+    <h3>¿Qué puede hacer aquí?</h3>
+    <table>
+      <tr><th>Acción</th><th>¿Cómo?</th><th>¿Cuándo?</th></tr>
+      <tr>
+        <td>Ver todos los lotes</td>
+        <td>Entre al listado de Lotes de Combustible.</td>
+        <td>Siempre.</td>
+      </tr>
+      <tr>
+        <td>Ver detalle de un lote</td>
+        <td>Haga clic en el código del lote o el ojo 👁️.</td>
+        <td>Siempre.</td>
+      </tr>
+      <tr>
+        <td>Iniciar asignación</td>
+        <td>Dentro del detalle del lote, haga clic en <span class="btn-sample btn-indigo">Iniciar Asignación</span>.</td>
+        <td>Cuando el lote esté en estado <strong>Finalizado</strong>.</td>
+      </tr>
+      <tr>
+        <td>Completar lote</td>
+        <td>Dentro del detalle, haga clic en <span class="btn-sample btn-green">Completar Lote</span>.</td>
+        <td>Cuando todas las asignaciones estén hechas y el lote esté en <strong>En Proceso</strong>.</td>
+      </tr>
+      <tr>
+        <td>Exportar PDF / Excel</td>
+        <td>Desde el detalle, use los botones correspondientes.</td>
+        <td>Siempre (Excel solo si el lote tiene datos).</td>
+      </tr>
+    </table>
+    <div class="info">
+      <strong>🔗 Relación con Asignación Previa:</strong> Recuerde que desde la Revisión Operativa puede vincular una solicitud de Combustible a un detalle de lote disponible. Esto facilita que, cuando el Jefe apruebe, la asignación ya esté lista.
+    </div>
+
+    <!-- ══════ 8. REPORTES ══════ -->
+    <h2 id="reportes">8. Reportes disponibles</h2>
+    <p>Como Operativo, puede acceder a varios reportes desde el menú <span class="nav-card">Reportes</span>. Todos son de <strong>consulta</strong> (solo lectura):</p>
+    <table>
+      <tr><th>Reporte</th><th>¿Qué muestra?</th></tr>
+      <tr><td>Registro de Vehículos</td><td>Listado completo de todos los vehículos de la flota.</td></tr>
+      <tr><td>Solicitudes de Transporte</td><td>Historial de solicitudes de transporte con filtros.</td></tr>
+      <tr><td>Solicitudes de Combustible</td><td>Historial de solicitudes de combustible.</td></tr>
+      <tr><td>Solicitudes de Mantenimiento</td><td>Historial de solicitudes de mantenimiento.</td></tr>
+      <tr><td>Reporte General de Servicios</td><td>Vista general de todos los servicios realizados.</td></tr>
+      <tr><td>Misión Oficial</td><td>Reporte específico para misiones oficiales.</td></tr>
+      <tr><td>Orden de Trabajo</td><td>Genera la orden de trabajo para mantenimiento (PDF).</td></tr>
+      <tr><td>Flota Vehicular</td><td>Estado actual de toda la flota.</td></tr>
+      <tr><td>Control Mensual de Combustible</td><td>Consumo de combustible por vehículo y periodo.</td></tr>
+    </table>
+    <p>Para usar los reportes: seleccione el que necesita, ajuste los filtros (fechas, tipo, etc.) y haga clic en <strong>"Buscar"</strong> o <strong>"Generar"</strong>. Puede exportar los resultados a PDF o Excel desde los botones en la parte superior.</p>
+
+    <!-- ══════ 9. CONSEJOS ══════ -->
+    <h2 id="consejos">9. Consejos prácticos</h2>
+
+    <div class="info">
+      <strong>🔍 Use los filtros para no perderse</strong><br>
+      Si hay muchas solicitudes, filtre por <strong>Tipo</strong> (atienda primero las más críticas) o por <strong>Prioridad Grupo</strong> (CRÍTICA primero, luego ALTA, etc.). Revise la columna de <strong>edad</strong> — las que tienen más de 24h deben atenderse con prioridad.
+    </div>
+
+    <div class="tip">
+      <strong>📝 Sea ordenado</strong><br>
+      Tome las solicitudes una por una. Al "tomar" una, el sistema la marca como suya y la mueve a Revisión, donde nadie más la tocará. Esto evita que dos operativos trabajen en la misma solicitud.
+    </div>
+
+    <div class="info">
+      <strong>🔗 Aproveche la Asignación Previa</strong><br>
+      Si sabe qué contrato o lote aplica a una solicitud, use la Asignación Previa para dejarlo listo. Esto ahorra tiempo cuando el Jefe apruebe.
+    </div>
+
+    <div class="tip">
+      <strong>✍️ Sea claro en las observaciones</strong><br>
+      Cuando observe una solicitud, escriba instrucciones precisas. Recuerde que el solicitante verá su comentario y deberá corregir antes de que usted pueda validar.
+    </div>
+
+    <div class="nota">
+      <strong>📋 Verifique los 4 puntos siempre</strong><br>
+      Antes de validar cualquier solicitud, revise: (1) datos completos, (2) fechas válidas, (3) recursos disponibles, (4) reglas mínimas. Si algo falla, use "Observar" en lugar de "Validar".
+    </div>
+
+    <div class="info">
+      <strong>❓ ¿Duda o problema técnico?</strong><br>
+      Si encuentra errores inesperados, datos que no se guardan, o cualquier comportamiento extraño, repórtelo al departamento de TI. Incluya el código de la solicitud (ej: ST-2026-000123) y describa qué estaba haciendo cuando ocurrió el problema.
+    </div>
+
+    <!-- ══════ PIE ══════ -->
+    <div class="doc-footer">
+      <div class="line-cl"></div>
+      <p>Asamblea Legislativa — Departamento de Transporte</p>
+      <p>Manual del Rol Operativo v1.0 · Junio 2026 — Documento interno · Confidencial</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>

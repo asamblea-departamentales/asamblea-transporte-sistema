@@ -1,0 +1,618 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual General de Uso — Sistema de Transporte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #0B2545;
+    --primary-light: #134074;
+    --accent: #8A7043;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-main); background: #fff; line-height: 1.7; font-size: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    @top-center {
+      content: element(header);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+    @bottom-center {
+      content: "Confidencial — Documento Interno | Asamblea Legislativa · Depto. Transporte | Pág. " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  }
+
+  .page { max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  .cover {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 80px 40px;
+    page-break-after: always; break-after: page;
+    background: radial-gradient(circle at top right, #f1f5f9 0%, #ffffff 60%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  .cover .logo-wrap {
+    width: 280px; margin-bottom: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  }
+  .cover .logo-wrap img { width: 100%; height: auto; display: block; }
+  .cover .line {
+    width: 60px; height: 4px; background: var(--accent); border-radius: 4px; margin: 0 auto 32px;
+  }
+  .cover h1 {
+    font-size: 3rem; font-weight: 800; color: var(--primary); letter-spacing: -.03em;
+    margin-bottom: 16px; line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 1.4rem; font-weight: 600; color: var(--primary-light); margin-bottom: 36px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cover .desc {
+    font-size: 1.05rem; color: var(--text-muted); max-width: 540px; margin: 0 auto 50px; line-height: 1.8; font-weight: 400;
+  }
+  .cover .meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px;
+    font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; background: var(--bg-light); padding: 12px 24px; border-radius: 30px; border: 1px solid var(--border-color);
+  }
+  .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
+
+  .content { padding: 40px 50px 80px; }
+
+  h2 {
+    font-size: 1.6rem; font-weight: 700; color: var(--primary);
+    margin: 56px 0 24px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
+    position: relative;
+  }
+  h2::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
+    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+  }
+  h4 {
+    font-size: 1.05rem; font-weight: 600; color: var(--accent);
+    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+  }
+
+  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
+  ul, ol { margin: 8px 0 20px 24px; }
+  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; }
+  strong { color: #0f172a; font-weight: 600; }
+
+  .nota, .info, .tip {
+    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
+    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid transparent;
+  }
+  .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
+  .nota strong { color: #92400E; }
+  .info { background: #F8FAFC; border-left: 4px solid var(--primary); border-color: #E2E8F0 #E2E8F0 #E2E8F0 var(--primary); }
+  .info strong { color: var(--primary); }
+  .tip { background: #F0FDF4; border-left: 4px solid #16A34A; border-color: #DCFCE7 #DCFCE7 #DCFCE7 #16A34A; }
+  .tip strong { color: #14532D; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
+    font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  th {
+    background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: #334155;
+    background: #ffffff;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+
+  .nav-card {
+    display: inline-block; background: #334155; color: #fff;
+    font-size: 0.75rem; font-weight: 600; padding: 4px 10px;
+    border-radius: 4px; margin: 2px 0; letter-spacing: 0.02em;
+  }
+
+  .btn-sample {
+    display: inline-flex; align-items: center; gap: 6px;
+    font-size: 11px; font-weight: 700; padding: 6px 14px;
+    border-radius: 6px; white-space: nowrap; letter-spacing: .03em;
+    margin: 2px; border: 1px solid transparent;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  }
+  .btn-green  { background: #16A34A; color: #fff; }
+  .btn-indigo { background: var(--primary-light); color: #fff; }
+  .btn-red    { background: #DC2626; color: #fff; }
+  .btn-amber  { background: #EA580C; color: #fff; }
+
+  .badge-sample {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 4px; letter-spacing: .05em; text-transform: uppercase; margin: 2px;
+    border: 1px solid transparent;
+  }
+  .b-pend { background: #FEF9C3; color: #713F12; border-color: #FEF08A; }
+  .b-rev  { background: #FFEDD5; color: #7C2D12; border-color: #FED7AA; }
+  .b-pre  { background: #E0F2FE; color: #0C4A6E; border-color: #BAE6FD; }
+  .b-apr  { background: #DCFCE7; color: #14532D; border-color: #BBF7D0; }
+  .b-rech { background: #FEE2E2; color: #7F1D1D; border-color: #FCA5A5; }
+
+  /* MEJORAS DE CONTENEDORES DE IMÁGENES */
+  .img-container {
+    display: block;
+    margin: 28px auto;
+    page-break-inside: avoid;
+    break-inside: avoid;
+    text-align: center;
+  }
+  .img-container figcaption {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    font-style: italic;
+  }
+
+  .img-screenshot {
+    display: block; max-width: 100%; height: auto;
+    margin: 0 auto; border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  .img-phone {
+    display: block; max-width: 240px; width: 100%; height: auto;
+    margin: 0 auto; border-radius: 20px;
+    border: 4px solid #1e293b; /* Efecto marco de dispositivo sutil */
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+  }
+  .img-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    justify-content: center;
+    align-items: start;
+    margin: 28px 0;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .img-row .img-container { margin: 0; }
+
+  .page-break { page-break-before: always; break-before: page; }
+
+  .doc-footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+    text-align: center; font-size: 0.85rem; color: var(--text-muted);
+    page-break-before: avoid; break-before: avoid;
+  }
+  .doc-footer .line-cl { width: 50px; height: 3px; background: var(--accent); border-radius: 3px; margin: 0 auto 20px; }
+  .doc-footer p { text-align: center; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-muted); }
+
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .content { padding: 0 10px; }
+    .cover { min-height: 100vh; padding-top: 100px; justify-content: flex-start; }
+    .cover .logo-wrap { width: 240px; }
+    h2 { margin-top: 40px; }
+    .nota, .info, .tip, table, .img-container, .img-row { break-inside: avoid; page-break-inside: avoid; }
+    th { background: #1e293b !important; color: #fff !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- PORTADA -->
+  <div class="cover">
+    <div class="logo-wrap">
+      <img src="../images/logo-azul-fondo-transparente.png" alt="Logo Asamblea Legislativa">
+    </div>
+    <div class="line"></div>
+    <h1>Manual General de Uso</h1>
+    <h2>Sistema de Gestión de Transporte</h2>
+    <p class="desc">
+      Guía completa del Sistema de Transporte de la Asamblea Legislativa. Aprenda a crear solicitudes, dar seguimiento, usar la aplicación de motorista y entender el flujo de aprobaciones.
+    </p>
+    <div class="meta">
+      <span>Versión 1.0 · Junio 2026</span>
+      <span class="bar"></span>
+      <span>Asamblea Legislativa</span>
+      <span class="bar"></span>
+      <span>Departamento de Transporte</span>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="content">
+
+    <!-- 1. CÓMO INGRESAR -->
+    <h2 id="ingreso">1. Cómo ingresar al sistema</h2>
+
+    <ol class="pasos" style="counter-reset: paso; margin: 20px 0 28px; padding: 0; list-style: none;">
+      <li style="counter-increment: paso; padding: 16px 20px 16px 60px; position: relative; margin-bottom: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--border-color); page-break-inside: avoid; box-shadow: 0 1px 2px rgba(0,0,0,0.01);">
+        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">1</span>
+        Abra su navegador (Chrome, Edge, Firefox).
+      </li>
+      <li style="counter-increment: paso; padding: 16px 20px 16px 60px; position: relative; margin-bottom: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--border-color); page-break-inside: avoid; box-shadow: 0 1px 2px rgba(0,0,0,0.01);">
+        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">2</span>
+        Vaya a la dirección <strong>http://intranet.asamblea.gob.sv</strong>.
+      </li>
+      <li style="counter-increment: paso; padding: 16px 20px 16px 60px; position: relative; margin-bottom: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--border-color); page-break-inside: avoid; box-shadow: 0 1px 2px rgba(0,0,0,0.01);">
+        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">3</span>
+        Seleccione la opción de <strong>E-Parlamento</strong>.
+      </li>
+      <li style="counter-increment: paso; padding: 16px 20px 16px 60px; position: relative; margin-bottom: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--border-color); page-break-inside: avoid; box-shadow: 0 1px 2px rgba(0,0,0,0.01);">
+        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">4</span>
+        Busque el ícono del <strong>Transporte Solicitudes</strong> y haga clic sobre él.
+      </li>
+      <li style="counter-increment: paso; padding: 16px 20px 16px 60px; position: relative; margin-bottom: 12px; background: #FFFFFF; border-radius: 8px; border: 1px solid var(--border-color); page-break-inside: avoid; box-shadow: 0 1px 2px rgba(0,0,0,0.01);">
+        <span style="position: absolute; left: 18px; top: 50%; transform: translateY(-50%); width: 28px; height: 28px; background: var(--primary); color: #fff; font-size: 13px; font-weight: 700; border-radius: 50%; display: flex; align-items: center; justify-content: center;">5</span>
+        Ingrese su <strong>usuario y contraseña</strong> (los mismos que usa en su computadora de la Asamblea).
+      </li>
+    </ol>
+
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p1-1.jpeg" alt="Pantalla de inicio de sesión del sistema">
+      <figcaption>Figura 1: Pantalla de inicio de sesión del sistema institucional.</figcaption>
+    </figure>
+
+    <div class="img-row">
+      <figure class="img-container">
+        <img class="img-screenshot" src="images/mu-img-p2-1.png" alt="Formulario de inicio de sesión">
+        <figcaption>Figura 2a: Formulario de accesos.</figcaption>
+      </figure>
+      <figure class="img-container">
+        <img class="img-screenshot" src="images/mu-img-p2-2.png" alt="Ingreso de credenciales">
+        <figcaption>Figura 2b: Validación de credenciales activas.</figcaption>
+      </figure>
+    </div>
+
+    <div class="info">
+      <strong>Nota:</strong> Si es la primera vez que ingresa, el sistema no le obliga a cambiar la contraseña automáticamente. Si es necesario, puede generar un tiquete para solicitar cambio de contraseña.
+    </div>
+
+    <!-- 2. QUÉ ES EL SISTEMA -->
+    <div class="page-break"></div>
+    <h2 id="que-es">2. ¿Qué es el sistema?</h2>
+
+    <p>Es una plataforma web para gestionar todo lo relacionado con la flota vehicular de la Asamblea Legislativa. Dentro del sistema se pueden hacer tres tipos de solicitudes:</p>
+
+    <table>
+      <tr><th>Tipo de solicitud</th><th>¿Para qué sirve?</th></tr>
+      <tr><td><strong>Transporte</strong> 🚗</td><td>Pedir un vehículo con motorista para una misión o viaje oficial.</td></tr>
+      <tr><td><strong>Combustible</strong> ⛽</td><td>Solicitar cargas de gasolina para los vehículos.</td></tr>
+      <tr><td><strong>Mantenimiento</strong> 🔧</td><td>Reportar averías o programar servicios (taller, llantas).</td></tr>
+    </table>
+
+    <p>El sistema está dividido en <strong>4 pantallas</strong>, cada una dedicada a un proceso específico dentro del flujo de trabajo del Departamento de Transporte. Las 4 pantallas se pueden instalar como aplicación en cualquier dispositivo móvil.</p>
+
+    <h3>Instalar el sistema en su móvil (PWA)</h3>
+    <p>Todas las pantallas del sistema tienen la capacidad de instalarse como una app en cualquier dispositivo móvil. Para hacerlo:</p>
+    <ol>
+      <li>Abra el sistema desde el navegador de su móvil (Chrome o Safari).</li>
+      <li>Toque los 3 puntos (menú) en la parte superior del navegador.</li>
+      <li>Seleccione la opción <strong>"Agregar a la pantalla principal"</strong> o <strong>"Instalar app"</strong>.</li>
+    </ol>
+    <div class="tip">
+      <strong>Consejo:</strong> Puede repetir estos pasos en las demás pantallas del sistema. Recomendamos instalar solamente las que corresponden a su rol. Por ejemplo, si usted no es motorista, no instale la app de motoristas.
+    </div>
+
+    <div class="img-row" style="grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));">
+      <figure class="img-container">
+        <img class="img-phone" src="images/mu-img-p6-2.jpeg" alt="Opción Agregar a pantalla principal">
+        <figcaption>Ajustes de navegador móvil.</figcaption>
+      </figure>
+      <figure class="img-container">
+        <img class="img-phone" src="images/mu-img-p6-3.png" alt="Confirmación de instalación">
+        <figcaption>Confirmación en el dispositivo.</figcaption>
+      </figure>
+      <figure class="img-container">
+        <img class="img-phone" src="images/mu-img-p7-1.jpeg" alt="Icono de la app instalada en el móvil">
+        <figcaption>Acceso directo en pantalla de inicio.</figcaption>
+      </figure>
+    </div>
+
+    <!-- 3. PANTALLA 1: EL SISTEMA DE TRANSPORTE -->
+    <h2 id="pantalla1">3. Pantalla 1: El Sistema de Transporte (panel principal)</h2>
+
+    <p>Cuando usted ingresa al sistema siendo operativo, jefe, administrador o liquidador, lo primero que verá es la pantalla principal. Esta no es una pantalla con una sola función, sino que es el <strong>"centro de comando"</strong> del sistema. Desde aquí puede acceder a todas las funciones a través del menú lateral izquierdo.</p>
+
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p5-1.png" alt="Pantalla principal del sistema de transporte">
+      <figcaption>Figura 3: Interfaz del centro de comando y menú lateral del sistema.</figcaption>
+    </figure>
+
+    <h3>¿Qué encuentra en esta pantalla?</h3>
+    <p>En el lado izquierdo hay un menú con varias secciones agrupadas. Cada sección contiene pantallas relacionadas con una parte del trabajo del Departamento de Transporte:</p>
+
+    <table>
+      <tr><th>Sección del menú</th><th>¿Para qué sirve?</th></tr>
+      <tr><td><span class="nav-card">Panel de Control</span></td><td>Un resumen con números y gráficos de lo que está pasando en el departamento (solicitudes pendientes, costos, alertas).</td></tr>
+      <tr><td><span class="nav-card">Gestión Operativa</span></td><td>Aquí trabajan los operativos y el jefe: revisan solicitudes, asignan vehículos, aprueban o rechazan.</td></tr>
+      <tr><td><span class="nav-card">Asignaciones</span></td><td>Aquí se crean y se ven todas las solicitudes de transporte, combustible y mantenimiento.</td></tr>
+      <tr><td><span class="nav-card">Catálogos</span></td><td>El "directorio" de la flota: vehículos y motoristas registrados.</td></tr>
+      <tr><td><span class="nav-card">Catálogos de Vehículos</span></td><td>Datos técnicos de los vehículos (marcas, modelos, colores, motores).</td></tr>
+      <tr><td><span class="nav-card">Catálogos Globales</span></td><td>Datos de toda la institución: unidades solicitantes, departamentos, proveedores, etc.</td></tr>
+      <tr><td><span class="nav-card">Operaciones</span></td><td>Control de entrada y salida de vehículos (recepción y entrega).</td></tr>
+      <tr><td><span class="nav-card">Operatividad Diaria</span></td><td>Gestión de gasolina a granel y el plan de viajes del día.</td></tr>
+      <tr><td><span class="nav-card">Liquidación</span></td><td>Cierre financiero de las solicitudes de combustible y mantenimiento.</td></tr>
+      <tr><td><span class="nav-card">Reportes</span></td><td>Descarga de documentos PDF, Excel y CSV para archivo.</td></tr>
+      <tr><td><span class="nav-card">Administración</span></td><td>Gestión de usuarios del sistema y sus roles.</td></tr>
+      <tr><td><span class="nav-card">Auditoría</span></td><td>Bitácora de todo lo que pasa en el sistema (quién hizo qué y cuándo).</td></tr>
+    </table>
+
+    <div class="info">
+      <strong>¿Quiénes acceden?</strong> Todos los usuarios del sistema, pero cada quien ve solo las secciones que le corresponden según su rol. Un operativo no verá la sección "Administración" y un liquidador no verá "Gestión Operativa".
+    </div>
+
+    <h3>Los catálogos: ¿qué son?</h3>
+    <p>Son las "listas maestras" que alimentan el sistema. Piense en ellos como los directorios telefónicos de la institución:</p>
+    <ul>
+      <li><strong>Vehículos:</strong> la lista de todos los carros de la flota con sus datos (placa, marca, modelo, color, etc.)</li>
+      <li><strong>Motoristas:</strong> la lista de los conductores autorizados.</li>
+      <li><strong>Unidades Solicitantes:</strong> las oficinas o direcciones que pueden pedir servicios.</li>
+      <li><strong>Proveedores:</strong> los talleres y estaciones de gasolina autorizados.</li>
+      <li>Y muchos más: tipos de licencia, departamentos, municipios, etc.</li>
+    </ul>
+    <p>Estos catálogos los maneja el personal autorizado. Como usuario normal, usted solo los ve cuando necesita seleccionar una opción en un formulario.</p>
+
+    <!-- 4. PANTALLA 2: PANEL DE SOLICITUDES -->
+    <div class="page-break"></div>
+    <h2 id="pantalla2">4. Pantalla 2: Panel de Solicitudes (Mis solicitudes / Nueva)</h2>
+
+    <p>Es el módulo donde los empleados de la Asamblea crean y dan seguimiento a sus solicitudes de transporte, combustible y mantenimiento.</p>
+
+    <h3>Funcionalidad práctica</h3>
+    <p>Si usted necesita:</p>
+    <ul>
+      <li>Un <strong>vehículo con motorista</strong> para realizar una misión oficial &#8594; crea una <strong>Solicitud de Transporte</strong>.</li>
+      <li><strong>Gasolina</strong> para un vehículo o misión oficial &#8594; crea una <strong>Solicitud de Combustible</strong>.</li>
+      <li><strong>Reparar o dar mantenimiento</strong> a un vehículo &#8594; crea una <strong>Solicitud de Mantenimiento</strong>.</li>
+    </ul>
+
+    <p>Cada solicitud pasa por un flujo de revisión: el equipo operativo la revisa, el jefe la aprueba y luego se ejecuta. Usted puede ver el estado de su solicitud en todo momento desde esta pantalla.</p>
+    
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p6-1.png" alt="Panel de solicitudes del sistema">
+      <figcaption>Figura 4: Listado de control y estados de las solicitudes del usuario.</figcaption>
+    </figure>
+
+    <h3>Estados de una solicitud</h3>
+    <table>
+      <tr><th>Estado</th><th>Etiqueta</th><th>¿Qué significa?</th></tr>
+      <tr><td>Pendiente</td><td><span class="badge-sample b-pend">Pendiente</span></td><td>La solicitud acaba de llegar, nadie la ha revisado aún.</td></tr>
+      <tr><td>En revisión</td><td><span class="badge-sample b-rev">En revisión</span></td><td>Un operativo la tomó y está trabajando en ella.</td></tr>
+      <tr><td>Pre-aprobada</td><td><span class="badge-sample b-pre">Pre-aprobada</span></td><td>El operativo la validó y está esperando la decisión del jefe.</td></tr>
+      <tr><td>Aprobada</td><td><span class="badge-sample b-apr">Aprobada</span></td><td>El jefe la aprobó. La solicitud sigue su curso.</td></tr>
+      <tr><td>Rechazada</td><td><span class="badge-sample b-rech">Rechazada</span></td><td>El jefe la rechazó porque no cumple requisitos.</td></tr>
+    </table>
+
+    <!-- 5. PANTALLA 3: MÓDULO DE MOTORISTA -->
+    <div class="page-break"></div>
+    <h2 id="pantalla3">5. Pantalla 3: Módulo de Motorista (disponible para móviles)</h2>
+
+    <p>Es una aplicación diseñada <strong>exclusivamente para los conductores</strong>, a la que ingresan desde su teléfono móvil o tableta. No es la misma pantalla web que usa el resto del personal &#8212; es una aplicación más sencilla, con botones grandes y pensada para usarse mientras se conduce o en la calle.</p>
+
+    <h3>¿Para qué sirve?</h3>
+    <p>Permite al motorista:</p>
+    <ul>
+      <li>Ver los viajes que le asignaron.</li>
+      <li>Registrar cada etapa del viaje (salida, llegada, retorno, finalización).</li>
+      <li>Marcarse como disponible o no disponible.</li>
+      <li>Adjuntar comprobantes (incapacidades, permisos).</li>
+    </ul>
+
+    <p>Está dividida en 4 pantallas internas a las que se accede desde un menú en la parte inferior o lateral.</p>
+
+    <h3>5.1 Pantalla 3.1 &#8212; Panel Principal (Inicio del Motorista)</h3>
+    <p>Es lo primero que ve el conductor al iniciar sesión. Muestra solo la información que le sirve en el día a día:</p>
+    <table>
+      <tr><th>¿Qué muestra?</th><th>¿Para qué sirve?</th></tr>
+      <tr><td><strong>Viajes del día</strong></td><td>Tarjetas grandes con el próximo viaje: destino, hora, solicitante. La más importante tiene un botón "Iniciar Viaje" para empezar la ruta.</td></tr>
+      <tr><td><strong>Contadores rápidos</strong></td><td>¿Cuántos viajes tiene "Por Iniciar"? ¿Cuántos "En Ejecución"? ¿Cuántos completó este mes?</td></tr>
+      <tr><td><strong>Próximas asignaciones</strong></td><td>Viajes programados para días futuros &#8212; solo para consulta, no se puede iniciar hasta el día correspondiente.</td></tr>
+      <tr><td><strong>Campana de notificaciones</strong></td><td>Si la jefatura le asigna un nuevo viaje, le llega una alerta en vivo con un número rojo en la campana.</td></tr>
+    </table>
+
+    <div class="info">
+      <strong>¿Quién accede?</strong> Solo el rol Motorista.
+    </div>
+
+    <figure class="img-container">
+      <img class="img-phone" src="images/mu-img-p8-1.jpeg" alt="Panel principal de la aplicación de motorista">
+      <figcaption>Figura 5: Vista de inicio en la app de motoristas con las asignaciones diarias.</figcaption>
+    </figure>
+
+    <h3>5.2 Pantalla 3.2 &#8212; Ruta Activa (Modo Conducción)</h3>
+    <p>Cuando el motorista hace clic en "Iniciar Viaje", se abre esta pantalla que lo guía paso a paso. La pantalla bloquea distracciones y solo muestra lo necesario para completar la ruta.</p>
+    <p>La ruta tiene <strong>4 fases obligatorias</strong> que el conductor debe ir marcando una tras otra:</p>
+    <table>
+      <tr><th>Fase</th><th>¿Qué hace el motorista?</th></tr>
+      <tr><td><strong>1. Iniciar Viaje</strong></td><td>Sale de la Asamblea. Marca la hora de salida real.</td></tr>
+      <tr><td><strong>2. Llegada a Destino</strong></td><td>Llega al lugar del viaje. Marca la hora de llegada.</td></tr>
+      <tr><td><strong>3. Iniciar Retorno</strong></td><td>Termina la misión y emprende el regreso. Marca la hora.</td></tr>
+      <tr><td><strong>4. Finalizar Viaje</strong></td><td>Regresa a la Asamblea. Marca la hora de finalización.</td></tr>
+    </table>
+    <p>Cada fase tiene un botón grande que cambia según corresponda ("Iniciar Viaje", "Registrar Llegada", "Iniciar Retorno", "Finalizar Viaje"). Conforme avanza, se va llenando una línea de tiempo que muestra las horas registradas.</p>
+    <p>Al finalizar, el sistema calcula automáticamente las horas reales del viaje y las agrega a la bitácora del motorista.</p>
+    <div class="tip">
+      <strong>Importante:</strong> Incluso si no hay internet en el momento, la aplicación guarda el registro y lo envía cuando recupere la señal.
+    </div>
+
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p8-1.jpeg" alt="Pantalla de ruta activa con las 4 fases del viaje">
+      <figcaption>Figura 6: Interfaz de monitoreo de ruta activa con los selectores de fase.</figcaption>
+    </figure>
+
+    <h3>5.3 Pantalla 3.3 &#8212; Historial de Viajes</h3>
+    <p>El archivo personal del motorista. Muestra todos sus viajes, ordenados por mes y año. Puede seleccionar un mes específico para ver:</p>
+    <ul>
+      <li>Fecha del viaje.</li>
+      <li>Destino.</li>
+      <li>Estado (Completado en verde, Cancelado en rojo, etc.).</li>
+      <li>Hora de inicio y finalización.</li>
+    </ul>
+    <p>Le sirve al conductor para auditar su propio trabajo &#8212; por ejemplo, si necesita comprobar cuántas horas manejó la semana pasada.</p>
+
+    <h3>5.4 Pantalla 3.4 &#8212; Disponibilidad e Incapacidad</h3>
+    <p>Esta pantalla le permite al motorista comunicarle al sistema si está disponible o no para trabajar. Tiene un interruptor grande:</p>
+    <ul>
+      <li><strong>Verde = Disponible</strong> &#8212; puede recibir viajes.</li>
+      <li><strong>Rojo = No Disponible</strong> &#8212; el sistema lo excluye automáticamente de las asignaciones.</li>
+    </ul>
+    <p>Al pasarlo a "No Disponible", aparecen dos campos:</p>
+    <ol>
+      <li><strong>Motivo:</strong> explica por qué no está disponible (enfermedad, permiso, cita médica, etc.).</li>
+      <li><strong>Adjuntar comprobante:</strong> puede tomar una foto o subir un archivo (incapacidad médica, permiso firmado).</li>
+    </ol>
+    <p>El sistema guarda un historial de todos los cambios de estado del motorista, para que la jefatura pueda consultar después.</p>
+
+    <div class="img-row">
+      <figure class="img-container">
+        <img class="img-phone" src="images/mu-img-p10-1.png" alt="Pantalla de disponibilidad del motorista">
+        <figcaption>Figura 7a: Estado activo (Disponible).</figcaption>
+      </figure>
+      <figure class="img-container">
+        <img class="img-phone" src="images/mu-img-p10-2.png" alt="Marcar como no disponible con motivo y comprobante">
+        <figcaption>Figura 7b: Formulario de baja temporal.</figcaption>
+      </figure>
+    </div>
+
+    <div class="info">
+      <strong>¿Qué pasa en el sistema principal cuando un motorista se marca como "No Disponible"?</strong><br>
+      Automáticamente, el motorista desaparece de las listas de selección en las pantallas de asignación del operativo y del jefe. Nadie puede asignarle un viaje mientras esté en ese estado. Cuando vuelva a marcarse como "Disponible", reaparecerá.
+    </div>
+
+    <!-- 6. PANTALLA 4: MÓDULO DE APROBACIONES -->
+    <div class="page-break"></div>
+    <h2 id="pantalla4">6. Pantalla 4: Módulo de Aprobaciones (Jefatura)</h2>
+
+    <p>Es el centro de decisiones del jefe del Departamento de Transporte. Aquí llegan todas las solicitudes que ya fueron revisadas y validadas por el equipo operativo, y que están listas para que el jefe dé el visto bueno final.</p>
+
+    <h3>¿Cómo está organizada?</h3>
+    <p>La pantalla tiene tres partes principales:</p>
+
+    <h4>Parte 1: Resumen (Tarjetas en la parte superior)</h4>
+    <p>Cuatro tarjetas que muestran de un vistazo cuántas solicitudes hay en cada estado:</p>
+    <ul>
+      <li><strong>Pendientes:</strong> las que esperan su decisión.</li>
+      <li><strong>En Ejecución:</strong> las que ya están en marcha.</li>
+      <li><strong>Aprobadas:</strong> las que ya aceptó este período.</li>
+      <li><strong>Completadas:</strong> las que ya se terminaron.</li>
+    </ul>
+
+    <h4>Parte 2: Lista de solicitudes pendientes</h4>
+    <p>Una tabla o lista con las solicitudes que están esperando su decisión. Cada una muestra: tipo (transporte, combustible o mantenimiento), código de la solicitud, solicitante, fecha y prioridad.</p>
+
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p11-1.jpeg" alt="Lista de solicitudes pendientes de aprobación">
+      <figcaption>Figura 8: Bandeja de entrada de solicitudes pendientes en la Jefatura.</figcaption>
+    </figure>
+
+    <p>Al hacer clic en una, se abre la pantalla de decisión, que tiene <strong>tres columnas</strong>:</p>
+    
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p12-1.jpeg" alt="Pantalla de decisión con tres columnas: datos del viaje, asignación del operativo y sugerencia del sistema">
+      <figcaption>Figura 9: Interfaz comparativa de decisión (Asignación manual vs. Sugerencias automatizadas).</figcaption>
+    </figure>
+
+    <table>
+      <tr><th>Columna</th><th>¿Qué muestra?</th></tr>
+      <tr><td><strong>1. Datos del Viaje</strong></td><td>La información que envió el solicitante: destino, fechas, horas estimadas, motivo. Estos datos son de solo lectura, no se pueden modificar.</td></tr>
+      <tr><td><strong>2. Asignación del Operativo</strong></td><td>Qué vehículo y qué motorista eligió manualmente el equipo operativo. También muestra las horas acumuladas que lleva el motorista en la semana (para evitar fatiga).</td></tr>
+      <tr><td><strong>3. Sugerencia del Sistema</strong></td><td>Lo que la inteligencia del sistema recomienda: un puntaje de compatibilidad (%), el vehículo óptimo y el motorista más descansado disponible.</td></tr>
+    </table>
+
+    <h4>Parte 3: Panel de Decisión</h4>
+    <p>En la parte inferior de la pantalla hay una barra fija con:</p>
+    <ul>
+      <li>Un campo para escribir un <strong>comentario</strong> (obligatorio).</li>
+      <li>Botones para decidir:</li>
+    </ul>
+    <table>
+      <tr><th>Botón</th><th>¿Qué hace?</th></tr>
+      <tr><td><span class="btn-sample btn-green">Aprobar Manual</span></td><td>Aprueba usando la asignación que eligió el operativo.</td></tr>
+      <tr><td><span class="btn-sample btn-indigo">Aprobar Sistema</span></td><td>Aprueba usando la sugerencia del sistema.</td></tr>
+      <tr><td><span class="btn-sample btn-amber">Condicionar</span></td><td>Devuelve la solicitud al operativo con observaciones para que ajuste algo.</td></tr>
+      <tr><td><span class="btn-sample btn-red">Rechazar</span></td><td>Rechaza la solicitud. El sistema notifica al solicitante con el motivo.</td></tr>
+    </table>
+
+    <figure class="img-container">
+      <img class="img-screenshot" src="images/mu-img-p13-1.jpeg" alt="Panel de decisión con botones de aprobar, condicionar y rechazar">
+      <figcaption>Figura 10: Barra de acciones críticas y comentarios del aprobador.</figcaption>
+    </figure>
+
+    <h3>¿Qué pasa después de aprobar?</h3>
+    <p>Cuando el jefe aprueba una solicitud:</p>
+    <ul>
+      <li><strong>Transporte:</strong> aparece una notificación para que el operativo asigne vehículo y motorista. Si ya estaban asignados, el sistema notifica al motorista directamente en su aplicación móvil.</li>
+      <li><strong>Combustible:</strong> el sistema queda listo para que se asignen los vales de gasolina.</li>
+      <li><strong>Mantenimiento:</strong> el sistema genera la orden de trabajo para el taller.</li>
+    </ul>
+
+    <h3>Reasignar después de aprobar</h3>
+    <p>Si el jefe aprobó una solicitud, pero después necesita cambiar el vehículo o motorista (por ejemplo, porque el motorista se enfermó), puede:</p>
+    <ol>
+      <li>Entrar al detalle de la solicitud ya aprobada.</li>
+      <li>Usar el botón <strong>"Reasignar Motorista/Vehículo"</strong> (disponible solo si el viaje aún no ha iniciado).</li>
+      <li>Seleccionar un nuevo conductor o vehículo disponible.</li>
+    </ol>
+
+    <h3>Historial de decisiones</h3>
+    <p>Cada aprobación o rechazo queda registrado en el sistema con:</p>
+    <ul>
+      <li>Quién tomó la decisión.</li>
+      <li>Cuándo se tomó.</li>
+      <li>Qué comentario se dejó.</li>
+      <li>Qué opción se eligió (manual o del sistema).</li>
+    </ul>
+    <p>Esto permite auditar cualquier viaje en el futuro.</p>
+
+    <!-- 7. RECURSOS ADICIONALES -->
+    <div class="page-break"></div>
+    <h2 id="recursos">7. Recursos adicionales</h2>
+
+    <p>Esta guía y muchas más están disponibles dentro del sistema. En la parte superior derecha de la pantalla, junto a su foto de perfil, verá un icono de <strong>libro abierto</strong> 📖. Al hacer clic, se despliega un menú con los siguientes manuales:</p>
+    <ul>
+      <li><strong>Manual de Uso General</strong> (este documento).</li>
+      <li><strong>Manual del Rol Operativo</strong> — para el personal que revisa y prepara solicitudes.</li>
+      <li><strong>Manual del Rol Super Admin</strong> — para administradores del sistema.</li>
+      <li><strong>Manual del Motorista</strong> — para conductores sobre el uso de la app móvil.</li>
+      <li><strong>Roles y Accesos</strong> — descripción de todos los roles del sistema.</li>
+    </ul>
+
+    <div class="info">
+      <strong>¿Duda o problema técnico?</strong><br>
+      Si encuentra errores inesperados, datos que no se guardan, o cualquier comportamiento extraño, repórtelo al departamento de TI. Incluya el código de la solicitud (ej: ST-2026-000123) y describa qué estaba haciendo cuando ocurrió el problema.
+    </div>
+
+    <!-- PIE -->
+    <div class="doc-footer">
+      <div class="line-cl"></div>
+      <p>Asamblea Legislativa — Departamento de Transporte</p>
+      <p>Manual General de Uso v1.0 · Junio 2026 — Documento interno · Confidencial</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
