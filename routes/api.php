@@ -179,7 +179,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
 
             $qCombustible = \App\Models\SolicitudCombustible::query()
-                ->where(fn ($q) => $q->where('aprobador_id', $user->id)->orWhere('decidido_por', $user->id))
+                ->where('aprobador_id', $user->id)
                 ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
 
             $rows = $qTransporte->get()->map(fn ($s) => [
