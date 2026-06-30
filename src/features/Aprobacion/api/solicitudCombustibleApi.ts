@@ -9,7 +9,8 @@ export const solicitudCombustibleApi = {
 
   aprobar: async (id: string, comentario?: string) => {
     const payload: any = {};
-    if (comentario) payload.comentario = comentario;
+    if (comentario) payload.observaciones = comentario;
+    else payload.observaciones = 'Aprobado por jefatura'; // Fallback por si acaso, aunque el backend lo requiere
     const response = await axiosClient.post(`/solicitudes-combustible/${id}/aprobar`, payload);
     return response.data;
   },
