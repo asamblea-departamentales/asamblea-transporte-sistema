@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
@@ -12,6 +13,7 @@ use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoMantenimiento;
+use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
@@ -744,7 +746,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 $q->whereNull('solicitud_combustible_id')
                   ->with('vehiculo:id,placa');
             }])
-            ->where('estado', \App\Domain\Solicitudes\Enums\EstadoLoteEnum::BORRADOR)
+            ->where('estado', EstadoLoteEnum::BORRADOR)
             ->orderBy('created_at', 'desc')
             ->get()
             ->filter(fn ($l) => $l->detalles->isNotEmpty())
@@ -753,7 +755,40 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         return $lotes->toArray();
     }
 
-    public function asignacionPreviaCombustible(int $solicitudId, int $detalleId): void
+    public function getDetalleSugerido(int $solicitudId): ?array
+    {
+        $solicitud = SolicitudCombustible::select('id', 'vehiculo_id', 'codigo', 'ticket', 'valor_total')
+            ->with('vehiculo:id,placa')
+            ->findOrFail($solicitudId);
+
+        if (!$solicitud->vehiculo_id) return null;
+
+        $lote = AsignacionCombustibleLote::whereDate('fecha', today())
+            ->where('estado', EstadoLoteEnum::BORRADOR)
+            ->with('creador')
+            ->first();
+
+        if (!$lote) return null;
+
+        $detalle = AsignacionCombustibleLoteDetalle::where('lote_id', $lote->id)
+            ->where('vehiculo_id', $solicitud->vehiculo_id)
+            ->whereNull('solicitud_combustible_id')
+            ->first();
+
+        if (!$detalle) return null;
+
+        return [
+            'lote_id'          => $lote->id,
+            'detalle_id'       => $detalle->id,
+            'placa'            => $solicitud->vehiculo?->placa ?? $detalle->placa_cache,
+            'ticket'           => $solicitud->ticket,
+            'codigo'           => $solicitud->codigo,
+            'monto_actual'     => (float) $detalle->monto_asignado,
+            'establecido_por'  => $this->formatNombreUsuario($lote->creador),
+        ];
+    }
+
+    public function asignacionPreviaCombustible(int $solicitudId, int $detalleId, float $monto = 0): void
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
@@ -768,22 +803,135 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 return;
             }
 
+            if ($monto <= 0) {
+                Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+                return;
+            }
+
             $detalle->update([
                 'solicitud_combustible_id' => $solicitudId,
-                'asignado_por' => auth()->id(),
-                'fecha_asignacion' => now(),
-                'estado_asignacion' => 'asignado',
+                'monto_asignado'           => $monto,
+                'asignado_por'             => auth()->id(),
+                'fecha_asignacion'         => now(),
+                'estado_asignacion'        => 'asignado',
             ]);
 
             $this->refreshKpis();
 
             Notification::make()
                 ->title('Solicitud asignada al lote correctamente')
+                ->body("Monto: \${$monto}")
                 ->success()
                 ->send();
         } catch (\Exception $e) {
             Notification::make()->title('Error al asignar: ' . $e->getMessage())->danger()->send();
         }
+    }
+
+    public function validarYAsignarCombustible(int $id, array $data): void
+    {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+            Notification::make()->title('Sin permiso')->danger()->send();
+            return;
+        }
+
+        if (empty(trim($data['comentario'] ?? ''))) {
+            Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+            return;
+        }
+
+        if (empty($data['datos_completos']) || empty($data['reglas_minimas'])) {
+            Notification::make()
+                ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $detalleId = $data['detalle_id'] ?? null;
+        if (!$detalleId) {
+            Notification::make()
+                ->title('No hay un detalle de lote disponible para asignar')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        $monto = (float) ($data['monto'] ?? 0);
+        if ($monto <= 0) {
+            Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+            return;
+        }
+
+        try {
+            $detalle = AsignacionCombustibleLoteDetalle::findOrFail($detalleId);
+
+            if ($detalle->solicitud_combustible_id) {
+                Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+                return;
+            }
+
+            \DB::beginTransaction();
+
+            app(RevisionOperativaService::class)->validarYPreaprobar(
+                'combustible',
+                $id,
+                auth()->id(),
+                $data['comentario'],
+                $this->armarValidaciones($data),
+            );
+
+            $detalle->update([
+                'solicitud_combustible_id' => $id,
+                'monto_asignado'           => $monto,
+                'asignado_por'             => auth()->id(),
+                'fecha_asignacion'         => now(),
+                'estado_asignacion'        => 'asignado',
+            ]);
+
+            \DB::commit();
+
+            $this->refreshKpis();
+            $this->resetPage();
+
+            $checks = collect($this->armarValidaciones($data))
+                ->filter(fn ($v) => is_bool($v) && $v)
+                ->keys()
+                ->map(fn ($k) => match ($k) {
+                    'datos_completos' => 'Datos completos',
+                    'fechas_validas' => 'Fechas válidas',
+                    'recursos_disponibles' => 'Recursos disponibles',
+                    'reglas_minimas' => 'Reglas mínimas',
+                    default => $k,
+                })
+                ->implode(' · ');
+
+            Notification::make()
+                ->title('Solicitud validada y asignada al lote')
+                ->body("{$checks} | Monto: \${$monto}")
+                ->success()
+                ->send();
+        } catch (\Exception $e) {
+            \DB::rollBack();
+            Notification::make()->title('Error: ' . $e->getMessage())->danger()->send();
+        }
+    }
+
+    private function formatNombreUsuario(?User $user): string
+    {
+        if (!$user) return '—';
+
+        $name = $user->name;
+        if ($name && !str_contains($name, '.') && ctype_upper(mb_substr($name, 0, 1))) {
+            return $name;
+        }
+
+        $username = $user->username ?? $name;
+        if (!$username) return '—';
+
+        return collect(explode('.', $username))
+            ->map(fn ($part) => ucfirst(strtolower(trim($part))))
+            ->implode(' ');
     }
 
     public function getContratosActivosProperty(): array

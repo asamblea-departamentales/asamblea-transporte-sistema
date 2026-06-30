@@ -370,8 +370,8 @@
                     {{-- ── REVISIÓN ────────────────────────────────────── --}}
                     @if($etapa === 'revision')
 
-                        {{-- Validar — combustible / mantenimiento (sin asignación) --}}
-                        @if($row['tipo'] !== 'transporte' || $row['estado'] !== 'en_revision')
+                        {{-- Validar — mantenimiento (sin cambio) --}}
+                        @if($row['tipo'] === 'mantenimiento')
                         <div x-data="{
                             open: false,
                             comentario: '',
@@ -423,76 +423,130 @@
                         </div>
                         @endif
 
-                        {{-- Asignación Previa — solo combustible --}}
+                        {{-- Validar + Asignación Previa — combustible (2 pasos) --}}
                         @if($row['tipo'] === 'combustible')
-                        <div x-data="{
-                            open: false,
-                            lotes: @js($this->lotesDelDia),
-                            detalleSeleccionado: null,
-                            init() {
-                                if (this.lotes.length && this.lotes[0].detalles?.length) {
-                                    this.detalleSeleccionado = this.lotes[0].detalles[0].id;
+                            @php $match = $this->getDetalleSugerido($row['id']); @endphp
+                            <div x-data="{
+                                open: false,
+                                step: 1,
+                                comentario: '',
+                                datos_completos: false,
+                                fechas_validas: false,
+                                recursos_disponibles: false,
+                                reglas_minimas: false,
+                                hallazgos: '',
+                                monto: {{ $match ? number_format($match['monto_actual'], 2, '.', '') : 0 }},
+                                submit() {
+                                    $wire.validarYAsignarCombustible({{ $row['id'] }}, {
+                                        comentario: this.comentario,
+                                        datos_completos: this.datos_completos,
+                                        fechas_validas: this.fechas_validas,
+                                        recursos_disponibles: this.recursos_disponibles,
+                                        reglas_minimas: this.reglas_minimas,
+                                        hallazgos: this.hallazgos,
+                                        detalle_id: {{ $match['detalle_id'] ?? 'null' }},
+                                        monto: this.monto,
+                                    });
+                                    this.open = false;
+                                    this.step = 1;
                                 }
-                            },
-                            get loteInfo() {
-                                for (const l of this.lotes) {
-                                    for (const d of l.detalles || []) {
-                                        if (d.id === this.detalleSeleccionado) {
-                                            return { id: l.id, vehiculo: d.vehiculo?.placa || d.placa_cache };
-                                        }
-                                    }
-                                }
-                                return null;
-                            }
-                        }">
-                            <button class="btn-accion btn-indigo" @click="open = true">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                Asignación Previa
-                            </button>
-                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
-                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
-                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
-                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                                        Asignación previa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
-                                    </h2>
-                                    <p class="text-sm text-gray-500">Vincula esta solicitud a un lote de combustible del día para agilizar la gestión.</p>
+                            }">
+                                <button class="btn-accion btn-success" @click="open = true; step = 1">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
+                                </button>
+                                <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false; step = 1" style="display:none"></div>
+                                <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                    <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
 
-                                    <template x-if="!lotes.length">
-                                        <div class="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg">
-                                            No hay lotes disponibles para hoy. Crea uno desde
-                                            <a href="{{ url('/admin/asignacion-combustible-lotes') }}" class="text-indigo-600 underline font-medium">Lotes de Combustible</a>.
-                                        </div>
-                                    </template>
-
-                                    <template x-if="lotes.length">
-                                        <div>
-                                            <div class="modal-label">Detalle del lote</div>
-                                            <select x-model="detalleSeleccionado" class="modal-select">
-                                                <template x-for="lote in lotes" :key="lote.id">
-                                                    <optgroup :label="'Lote #' + lote.id + ' — ' + lote.estado.toUpperCase()">
-                                                        <template x-for="detalle in lote.detalles || []" :key="detalle.id">
-                                                            <option :value="detalle.id" x-text="(detalle.vehiculo?.placa || detalle.placa_cache) + ' | Ticket: ' + (detalle.numero_ticket || '—') + ' | $' + (detalle.monto_asignado || '0')"></option>
-                                                        </template>
-                                                    </optgroup>
-                                                </template>
-                                            </select>
-                                            <div class="mt-2 text-xs text-gray-400" x-show="loteInfo">
-                                                Lote <span x-text="loteInfo.id"></span> → Vehículo <strong x-text="loteInfo.vehiculo"></strong>
+                                        {{-- Paso 1: Validación --}}
+                                        <div x-show="step === 1">
+                                            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                                Validar solicitud — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                            </h2>
+                                            <div class="space-y-4 pt-2">
+                                                <div><div class="modal-label">Checklist de validación</div>
+                                                <div class="modal-check-grid">
+                                                    <label class="check-item"><input type="checkbox" x-model="datos_completos"> Datos completos</label>
+                                                    <label class="check-item"><input type="checkbox" x-model="fechas_validas"> Fechas válidas</label>
+                                                    <label class="check-item"><input type="checkbox" x-model="recursos_disponibles"> Recursos disponibles</label>
+                                                    <label class="check-item"><input type="checkbox" x-model="reglas_minimas"> Reglas mínimas</label>
+                                                </div></div>
+                                                <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
+                                                <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
+                                            </div>
+                                            <div class="flex justify-end gap-3 pt-4">
+                                                <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
+                                                <button type="button" class="btn-accion btn-indigo" @click="step = 2" x-bind:disabled="!comentario.trim() || !datos_completos || !reglas_minimas">
+                                                    Continuar a Asignación Previa →
+                                                </button>
                                             </div>
                                         </div>
-                                    </template>
 
-                                    <div class="flex justify-end gap-3 pt-2">
-                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
-                                        <button type="button" class="btn-accion btn-success"
-                                            @click="if (detalleSeleccionado) { $wire.asignacionPreviaCombustible({{ $row['id'] }}, detalleSeleccionado); open = false; }"
-                                            x-bind:disabled="!detalleSeleccionado">
-                                            Confirmar asignación
-                                        </button>
+                                        {{-- Paso 2: Asignación Previa o error --}}
+                                        @if($match)
+                                        <div x-show="step === 2">
+                                            <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                                Asignación Previa — <span class="font-mono text-gray-400 text-sm">{{ $match['codigo'] }}</span>
+                                            </h2>
+                                            <div class="space-y-3 pt-2">
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-500">Vehículo:</span>
+                                                    <span class="font-semibold">{{ $match['placa'] }}</span>
+                                                </div>
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-500">Ticket:</span>
+                                                    <span class="font-mono font-semibold">{{ $match['ticket'] }}</span>
+                                                </div>
+                                                <div class="flex justify-between text-sm">
+                                                    <span class="text-gray-500">Lote:</span>
+                                                    <span class="font-semibold">#{{ $match['lote_id'] }}</span>
+                                                </div>
+                                            </div>
+                                            <hr class="border-gray-200">
+                                            <div>
+                                                <div class="modal-label">Monto establecido por {{ $match['establecido_por'] }}</div>
+                                                <div class="text-lg font-bold text-gray-900">${{ number_format($match['monto_actual'], 2) }}</div>
+                                            </div>
+                                            <div>
+                                                <div class="modal-label">Nuevo monto</div>
+                                                <input type="number" x-model="monto" step="0.01" min="0"
+                                                       class="modal-textarea text-lg font-bold">
+                                            </div>
+                                            <div class="flex justify-end gap-3 pt-2">
+                                                <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
+                                                <button type="button" class="btn-accion btn-success"
+                                                    @click="submit()"
+                                                    x-bind:disabled="monto <= 0">
+                                                    Validar y Confirmar Asignación
+                                                </button>
+                                            </div>
+                                        </div>
+                                        @else
+                                        <div x-show="step === 2">
+                                            <div class="text-center py-8 space-y-4">
+                                                <div class="text-4xl">⚠️</div>
+                                                <h2 class="text-lg font-semibold text-gray-900">Sin disponibilidad en lote del día</h2>
+                                                <p class="text-sm text-gray-500 max-w-md mx-auto">
+                                                    No hay un lote del día con espacio para el vehículo de esta solicitud.
+                                                </p>
+                                                <p class="text-sm text-gray-500 max-w-md mx-auto">
+                                                    Solicita al jefe que cree un lote e importe o agregue el vehículo antes de continuar.
+                                                </p>
+                                                <a href="{{ url('/admin/asignacion-combustible-lotes') }}" target="_blank"
+                                                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 underline">
+                                                    Ir a Lotes de Combustible →
+                                                </a>
+                                            </div>
+                                            <div class="flex justify-end gap-3 pt-2">
+                                                <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
+                                                <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cerrar</button>
+                                            </div>
+                                        </div>
+                                        @endif
+
                                     </div>
                                 </div>
                             </div>
-                        </div>
                         @endif
 
                         {{-- Asignación Previa — mantenimiento --}}

@@ -251,7 +251,7 @@
       ✅ Cambiar la prioridad (Alta / Media / Baja).<br>
       ✅ Validar datos, hacer observaciones y pasar a preaprobación.<br>
       ✅ Asignar vehículo y motorista a solicitudes de Transporte.<br>
-      ✅ Vincular solicitudes a Lotes de Combustible o Contratos de Mantenimiento.<br>
+      ✅ Vincular solicitudes de Combustible a Lotes (automático al validar) y de Mantenimiento a Contratos.<br>
       ✅ Ver reportes y dar seguimiento.
     </div>
 
@@ -390,7 +390,8 @@
     <ul>
       <li>✅ <strong>Validar</strong> que los datos estén completos y correctos, y enviar a preaprobación.</li>
       <li>✅ <strong>Asignar recursos</strong> (vehículo y motorista) a las solicitudes de Transporte.</li>
-      <li>✅ <strong>Asignación Previa</strong> — Vincular una solicitud de Combustible a un lote del día, o una de Mantenimiento a un contrato.</li>
+      <li>✅ <strong>Asignación Previa (Combustible)</strong> — Integrada en el botón Validar. Al validar combustible, el sistema asigna automáticamente la solicitud a un lote del día.</li>
+      <li>✅ <strong>Asignación Previa (Mantenimiento)</strong> — Vincular una solicitud de Mantenimiento a un contrato activo mediante botón independiente.</li>
       <li>✅ <strong>Observar</strong> — Devolver la solicitud al solicitante con comentarios técnicos sin cambiar su estado.</li>
     </ul>
     <div class="info">
@@ -399,11 +400,11 @@
       Si no ve ninguna solicitud, revise que haya "tomado" alguna desde la Bandeja.
     </div>
 
-    <h3 id="revision-validar">5.1 Validar y enviar a preaprobación (Combustible / Mantenimiento)</h3>
-    <p>Cuando una solicitud de <strong>Combustible ⛽</strong> o <strong>Mantenimiento 🔧</strong> tiene todos los datos correctos, usted la valida y la envía al Jefe para que la apruebe.</p>
+    <h3 id="revision-validar">5.1 Validar — Mantenimiento (1 paso)</h3>
+    <p>Las solicitudes de <strong>Mantenimiento 🔧</strong> usan un proceso simple de un solo paso: solo valida y envía al Jefe.</p>
     <ol class="pasos">
       <li>Asegúrese de estar en la etapa <strong>Revisión Operativa</strong> (paso 2).</li>
-      <li>Busque la solicitud de Combustible o Mantenimiento que desea validar.</li>
+      <li>Busque la solicitud de Mantenimiento que desea validar.</li>
       <li>Haga clic en el botón <span class="btn-sample btn-green">✓ Validar</span>.</li>
       <li>Se abrirá una ventana con los siguientes campos:
         <ul>
@@ -424,10 +425,45 @@
       <li>El sistema cambiará el estado a <span class="badge-sample b-pre">Pre-aprobada</span> y la solicitud pasará a la etapa de Aprobaciones (donde el Jefe la verá).</li>
     </ol>
     <div class="tip">
-      <strong>💡 Consejo:</strong> Siempre revise los cuatro puntos de verificación antes de enviar. Si falta algún dato, mejor use la opción <strong>"Observar"</strong> (sección 5.4) para devolver la solicitud al solicitante con instrucciones claras.
+      <strong>💡 Consejo:</strong> Siempre revise los cuatro puntos de verificación antes de enviar. Si falta algún dato, mejor use la opción <strong>"Observar"</strong> (sección 5.5) para devolver la solicitud al solicitante con instrucciones claras.
     </div>
 
-    <h3 id="revision-validar-transporte">5.2 Validar y asignar recursos (Transporte)</h3>
+    <h3 id="revision-validar-combustible">5.2 Validar + Asignación Previa — Combustible (2 pasos)</h3>
+    <p>Las solicitudes de <strong>Combustible ⛽</strong> integran la validación y la <strong>Asignación Previa</strong> en un mismo proceso de <strong>2 pasos</strong>. Al validar, el sistema también vincula la solicitud a un lote del día.</p>
+
+    <h4>Paso 1: Validación</h4>
+    <ol class="pasos">
+      <li>Haga clic en <span class="btn-sample btn-green">✓ Validar</span> en una solicitud de Combustible.</li>
+      <li>Aparecerá una ventana con los 4 puntos de verificación, hallazgos y comentario (igual que en Mantenimiento).</li>
+      <li>Marque los 4 puntos, agregue hallazgos si aplica, y escriba un comentario.</li>
+      <li>Haga clic en <span class="btn-sample btn-indigo">→ Continuar a Asignación Previa</span>.</li>
+    </ol>
+
+    <h4>Paso 2: Asignación Previa (automática)</h4>
+    <p>El sistema buscará automáticamente un <strong>lote del día en estado Borrador</strong> que tenga un espacio disponible para el vehículo de la solicitud.</p>
+
+    <p><strong>✓ Si hay coincidencia:</strong></p>
+    <ul>
+      <li>Verá los datos del lote encontrado: vehículo, ticket, número de lote.</li>
+      <li>El campo <strong>"Monto establecido por [nombre del Jefe]"</strong> muestra el monto que el Jefe definió en el lote.</li>
+      <li>Puede <strong>ajustar el monto</strong> en el campo "Nuevo monto" si es necesario.</li>
+      <li>Haga clic en <span class="btn-sample btn-green">Validar y Confirmar Asignación</span>.</li>
+      <li>El sistema: (a) cambia el estado a <span class="badge-sample b-pre">Pre-aprobada</span>, (b) vincula la solicitud al detalle del lote, y (c) registra el monto final.</li>
+    </ul>
+
+    <p><strong>✗ Si NO hay coincidencia:</strong></p>
+    <ul>
+      <li>Verá un mensaje indicando que <strong>no hay un lote del día disponible</strong> para ese vehículo.</li>
+      <li>No podrá continuar con la validación hasta que el Jefe cree un lote con espacio para ese vehículo.</li>
+      <li>La ventana incluye un enlace directo a <strong>Lotes de Combustible</strong> para que pueda consultar o solicitar al Jefe.</li>
+      <li>Use el botón <span class="btn-sample btn-gray">← Atrás</span> para volver y revisar los datos, o cierre la ventana.</li>
+    </ul>
+
+    <div class="nota">
+      <strong>⚠️ Importante:</strong> A diferencia de Mantenimiento, la validación de Combustible <strong>requiere</strong> un lote del día. Si no hay disponibilidad, la solicitud no puede avanzar a preaprobación. Coordine con el Jefe para que cree los lotes necesarios.
+    </div>
+
+    <h3 id="revision-validar-transporte">5.3 Validar y asignar recursos (Transporte)</h3>
     <p>Para las solicitudes de <strong>Transporte 🚗</strong>, el proceso incluye un paso adicional: <strong>asignar un vehículo y un motorista</strong>.</p>
     <p>El botón <span class="btn-sample btn-green">✓ Validar</span> en las solicitudes de Transporte abre un proceso de <strong>2 pasos</strong>:</p>
 
@@ -455,20 +491,9 @@
       <strong>⚠️ Importante:</strong> Si el sistema sugiere un vehículo y usted asigna otro, deberá escribir una justificación. Esto queda registrado para que el Jefe la vea al aprobar.
     </div>
 
-    <h3 id="revision-asignacion-previa">5.3 Asignación Previa</h3>
-    <p>La <strong>Asignación Previa</strong> es una acción opcional que permite vincular una solicitud a un recurso antes de que sea aprobada, para agilizar la gestión cuando llegue el momento.</p>
-
-    <h4>Para Combustible ⛽</h4>
-    <p>Vincula la solicitud a un <strong>Lote de Combustible del día</strong> (una reserva de combustible para un vehículo específico).</p>
-    <ol class="pasos">
-      <li>Haga clic en <span class="btn-sample btn-indigo">📋 Asignación Previa</span> en una solicitud de Combustible.</li>
-      <li>Se abrirá una ventana con un selector de <strong>"Detalle del lote"</strong>.</li>
-      <li>Elija un detalle disponible (cada opción muestra la placa del vehículo, número de ticket y monto asignado).</li>
-      <li>Haga clic en <span class="btn-sample btn-green">Confirmar asignación</span>.</li>
-    </ol>
-
-    <h4>Para Mantenimiento 🔧</h4>
-    <p>Vincula la solicitud a un <strong>Contrato de Mantenimiento activo</strong> (define qué contrato cubrirá el trabajo).</p>
+    <h3 id="revision-asignacion-previa-manto">5.4 Asignación Previa (Mantenimiento)</h3>
+    <p>La <strong>Asignación Previa</strong> para Mantenimiento 🔧 es una acción independiente que permite vincular una solicitud a un <strong>Contrato de Mantenimiento activo</strong> (define qué contrato cubrirá el trabajo).</p>
+    <p><strong>Nota:</strong> Para Combustible ⛽ la Asignación Previa está integrada en el botón Validar (sección 5.2).</p>
     <ol class="pasos">
       <li>Haga clic en <span class="btn-sample btn-indigo">📋 Asignación Previa</span> en una solicitud de Mantenimiento.</li>
       <li>Se abrirá una ventana con un selector de <strong>"Contrato"</strong>.</li>
@@ -476,10 +501,10 @@
       <li>Elija el contrato adecuado y haga clic en <span class="btn-sample btn-green">Confirmar asignación</span>.</li>
     </ol>
     <div class="info">
-      <strong>ℹ️ Nota:</strong> Si no hay lotes de combustible disponibles para hoy, la ventana le mostrará un enlace para ir a crear lotes. Si no hay contratos activos con saldo, le indicará que debe crearlos primero. En ambos casos, la solicitud puede seguir su curso sin la asignación previa.
+      <strong>ℹ️ Nota:</strong> Si no hay contratos activos con saldo, el selector estará vacío. La solicitud puede seguir su curso sin asignación previa.
     </div>
 
-    <h3 id="revision-observar">5.4 Registrar observación técnica</h3>
+    <h3 id="revision-observar">5.5 Registrar observación técnica</h3>
     <p>Si una solicitud tiene datos incompletos o algo que corregir, puede <strong>observarla</strong> — esto registra su comentario pero <strong>no cambia el estado</strong> de la solicitud. Es como dejar una nota para que el solicitante vea qué debe corregir.</p>
     <ol class="pasos">
       <li>Haga clic en el botón <span class="btn-sample btn-gray">👁️ Observar</span>.</li>
@@ -512,7 +537,7 @@
         <td>En revisión</td>
         <td><span class="badge-sample b-rev">En revisión</span></td>
         <td>Usted (u otro operativo) la tomó y está trabajando en ella.</td>
-        <td>Validar, asignar recursos, asignación previa, observar.</td>
+        <td>Validar (Manto: 1 paso / Combus: 2 pasos con asignación), asignar recursos (Transporte), observar.</td>
       </tr>
       <tr>
         <td>Pre-aprobada</td>
@@ -571,7 +596,7 @@
       </tr>
     </table>
     <div class="info">
-      <strong>🔗 Relación con Asignación Previa:</strong> Recuerde que desde la Revisión Operativa puede vincular una solicitud de Combustible a un detalle de lote disponible. Esto facilita que, cuando el Jefe apruebe, la asignación ya esté lista.
+      <strong>🔗 Relación con Validación:</strong> Recuerde que al validar una solicitud de Combustible (sección 5.2), el sistema vincula automáticamente la solicitud a un detalle de lote disponible. Una vez vinculada, usted verá la solicitud asociada en el detalle del lote y podrá iniciar la asignación física cuando el lote esté en estado Finalizado.
     </div>
 
     <!-- ══════ 8. REPORTES ══════ -->
@@ -606,7 +631,7 @@
 
     <div class="info">
       <strong>🔗 Aproveche la Asignación Previa</strong><br>
-      Si sabe qué contrato o lote aplica a una solicitud, use la Asignación Previa para dejarlo listo. Esto ahorra tiempo cuando el Jefe apruebe.
+      Para Mantenimiento, si sabe qué contrato aplica, use el botón Asignación Previa para dejarlo listo. Para Combustible, la asignación se hace automáticamente al validar. Esto ahorra tiempo cuando el Jefe apruebe.
     </div>
 
     <div class="tip">
