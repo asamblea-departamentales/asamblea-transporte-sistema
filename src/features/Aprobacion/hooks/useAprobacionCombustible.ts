@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { ComparativaCombustibleResponse, DecisionCombustibleType } from '../types';
+import { ComparativaCombustibleResponse } from '../types';
 import { solicitudCombustibleApi } from '../api/solicitudCombustibleApi';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
@@ -9,9 +9,7 @@ export function useAprobacionCombustible(id: string | undefined) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
-  const [decision, setDecision] = useState<DecisionCombustibleType>('ninguna');
   const [comentario, setComentario] = useState('');
-  const [montoManual, setMontoManual] = useState<number | undefined>(undefined);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -25,9 +23,6 @@ export function useAprobacionCombustible(id: string | undefined) {
         const result = await solicitudCombustibleApi.getComparativa(id);
         setData(result);
         
-        if (result.solicitud?.decision_final) {
-          setDecision(result.solicitud.decision_final);
-        }
         if (result.solicitud?.comentario_jefe) {
           setComentario(result.solicitud.comentario_jefe);
         }
@@ -44,20 +39,12 @@ export function useAprobacionCombustible(id: string | undefined) {
   }, [id]);
 
   const confirmarAprobacion = async () => {
-    if (!id || decision === 'ninguna') return;
-    
-    // Si la decisión es manual (Jefe), necesitamos validar que se ingresó un monto
-    if (decision === 'manual' && (!montoManual || montoManual <= 0)) {
-      const msg = 'Debe ingresar un monto válido para re-asignar';
-      setError(msg);
-      toast.error(msg);
-      return;
-    }
+    if (!id) return;
     
     try {
       setIsSubmitting(true);
       setError(null);
-      await solicitudCombustibleApi.aprobarConDecision(id, decision, comentario, montoManual);
+      await solicitudCombustibleApi.aprobar(id, comentario);
       toast.success('Solicitud procesada exitosamente');
       navigate('/');
     } catch (err: any) {
@@ -98,12 +85,8 @@ export function useAprobacionCombustible(id: string | undefined) {
     data,
     isLoading,
     error,
-    decision,
-    setDecision,
     comentario,
     setComentario,
-    montoManual,
-    setMontoManual,
     confirmarAprobacion,
     handleRechazar,
     isSubmitting

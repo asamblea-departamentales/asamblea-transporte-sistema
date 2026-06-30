@@ -3,7 +3,6 @@ import { ArrowLeft, CheckCircle, Info } from 'lucide-react';
 import { useAprobacionCombustible } from '../hooks/useAprobacionCombustible';
 import { ColumnaCombustibleSolicitud } from '../components/ColumnaCombustibleSolicitud';
 import { ColumnaCombustibleOperativo } from '../components/ColumnaCombustibleOperativo';
-import { ColumnaCombustibleJefe } from '../components/ColumnaCombustibleJefe';
 
 export default function AprobacionCombustiblePage() {
   const { id } = useParams();
@@ -11,12 +10,8 @@ export default function AprobacionCombustiblePage() {
     data, 
     isLoading, 
     error,
-    decision,
-    setDecision,
     comentario,
     setComentario,
-    montoManual,
-    setMontoManual,
     confirmarAprobacion,
     handleRechazar,
     isSubmitting 
@@ -73,23 +68,15 @@ export default function AprobacionCombustiblePage() {
         </div>
       )}
 
-      {/* 3 Columns Layout (Combustible) */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8 items-stretch">
+      {/* 2 Columns Layout (Combustible) */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8 items-stretch">
         <ColumnaCombustibleSolicitud solicitud={solicitud} />
         
         <ColumnaCombustibleOperativo 
           data={data.operativo} 
-          isSelected={decision === 'mantener'}
-          isFaded={decision === 'manual'}
-          onSelect={() => setDecision('mantener')}
-        />
-        
-        <ColumnaCombustibleJefe 
-          montoActual={montoManual}
-          onMontoChange={setMontoManual}
-          isSelected={decision === 'manual'}
-          isFaded={decision === 'mantener'}
-          onSelect={() => setDecision('manual')}
+          isSelected={true}
+          isFaded={false}
+          onSelect={() => {}}
         />
       </div>
 
@@ -125,19 +112,10 @@ export default function AprobacionCombustiblePage() {
             
             <button 
               onClick={confirmarAprobacion}
-              disabled={isSubmitting || decision === 'ninguna' || !comentario.trim() || (decision === 'manual' && (!montoManual || montoManual <= 0))}
-              className={`flex-1 md:flex-none px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm text-center ${
-                decision === 'mantener' ? 'bg-primary hover:bg-primary-hover' :
-                decision === 'manual' ? 'bg-success hover:bg-success-hover' :
-                'bg-slate-300 cursor-not-allowed'
-              } disabled:opacity-60 disabled:cursor-not-allowed`}
+              disabled={isSubmitting}
+              className={`flex-1 md:flex-none px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm text-center bg-primary hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed`}
             >
-              {isSubmitting ? 'Procesando...' : 
-               (solicitud.decision_final ? 'Actualizar' :
-                (decision === 'mantener' ? 'Aprobar (Operativo)' : 
-                 decision === 'manual' ? 'Aprobar (Nuevo)' : 
-                 'Seleccionar')
-               )}
+              {isSubmitting ? 'Procesando...' : 'Aprobar Combustible'}
             </button>
           </div>
         </div>
