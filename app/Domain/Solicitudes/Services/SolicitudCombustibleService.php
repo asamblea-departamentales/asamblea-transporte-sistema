@@ -517,11 +517,13 @@ class SolicitudCombustibleService
         float $montoAprobado,
         ?string $justificacion = null
     ): array {
-        if ($solicitud->estado !== EstadoSolicitudEnum::EN_REVISION) {
-            throw new \DomainException('Solo se puede asignar carga a solicitudes en revisión.');
+        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION])) {
+            throw new \DomainException('Solo se puede asignar carga a solicitudes pendientes o en revisión.');
         }
 
         return DB::transaction(function () use ($solicitud, $userId, $montoAprobado, $justificacion) {
+            $anterior = $solicitud->estado;
+
             DecisionOperativa::updateOrCreate(
                 [
                     'decidable_id' => $solicitud->id,
@@ -535,13 +537,17 @@ class SolicitudCombustibleService
                 ]
             );
 
+            $solicitud->estado = EstadoSolicitudEnum::PRE_APROBADA;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Carga asignada, pasa a pre-aprobación.');
             $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR_RECURSOS->value, $userId, [
                 'monto_aprobado' => $montoAprobado,
             ]);
 
             return [
                 'monto_aprobado' => $montoAprobado,
-                'estado' => EstadoSolicitudEnum::EN_REVISION->value,
+                'estado' => EstadoSolicitudEnum::PRE_APROBADA->value,
             ];
         });
     }
@@ -557,14 +563,14 @@ class SolicitudCombustibleService
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (!in_array($decisionFinal, ['mantener', 'manual'])) {
-            throw new \InvalidArgumentException('decision_final debe ser "mantener" o "manual".');
+        if (!in_array($decisionFinal, ['operativo', 'jefe'])) {
+            throw new \InvalidArgumentException('decision_final debe ser "operativo" o "jefe".');
         }
 
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
             $anterior = $solicitud->estado;
 
-            if ($decisionFinal === 'mantener') {
+            if ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
                 if (!$decision) {
                     throw new \DomainException('No hay asignación del operativo registrada.');
@@ -593,6 +599,38 @@ class SolicitudCombustibleService
                 'success' => true,
                 'estado_final' => EstadoSolicitudEnum::APROBADA->value,
                 'monto_aprobado' => $solicitud->cantidad_combustible,
+            ];
+        });
+    }
+
+    // ── DESBLOQUEAR ─────────────────────────────────────────
+
+    public function desbloquear(SolicitudCombustible $solicitud, int $userId): array
+    {
+        if (!in_array($solicitud->estado, [
+            EstadoSolicitudEnum::PRE_APROBADA,
+            EstadoSolicitudEnum::APROBADA,
+            EstadoSolicitudEnum::RECHAZADA,
+        ], true)) {
+            throw new \DomainException('Solo se puede desbloquear una solicitud pre-aprobada, aprobada o rechazada.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado = EstadoSolicitudEnum::PENDIENTE;
+            $solicitud->aprobador_id = null;
+            $solicitud->fecha_aprobacion = null;
+            $solicitud->observaciones = null;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId,
+                'Solicitud desbloqueada para re-asignación.');
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::DESBLOQUEAR->value, $userId);
+
+            return [
+                'message' => "Solicitud {$solicitud->codigo} desbloqueada para re-asignación.",
+                'estado_nuevo' => EstadoSolicitudEnum::PENDIENTE->value,
             ];
         });
     }

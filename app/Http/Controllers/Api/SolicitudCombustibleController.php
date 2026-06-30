@@ -280,7 +280,7 @@ class SolicitudCombustibleController extends Controller
         $this->authorizeJefe();
 
         $data = $request->validate([
-            'decision_final' => ['required', 'in:mantener,manual'],
+            'decision_final' => ['required', 'in:operativo,jefe'],
             'monto_aprobado' => ['nullable', 'numeric', 'min:0.01'],
             'comentario' => ['nullable', 'string', 'max:2000'],
         ]);
@@ -298,6 +298,19 @@ class SolicitudCombustibleController extends Controller
                 'message' => 'Solicitud aprobada con decisión.',
                 'data' => $result,
             ]);
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+        }
+    }
+
+    public function desbloquear(SolicitudCombustible $solicitud)
+    {
+        $this->authorizeJefe();
+
+        try {
+            $result = $this->service->desbloquear($solicitud, Auth::id());
+
+            return response()->json($result);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }

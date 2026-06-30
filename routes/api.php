@@ -163,8 +163,54 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('solicitudes-transporte/{solicitud:codigo}/reasignar', [SolicitudTransporteController::class, 'reasignar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
-        Route::get('solicitudes/historial-jefatura', [SolicitudTransporteController::class, 'historialJefatura']);
         Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
+
+        // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
+        Route::get('solicitudes/historial-jefatura', function (Request $request) {
+            $user = $request->user();
+            $perPage = $request->query('per_page', 15);
+
+            $qTransporte = \App\Models\SolicitudTransporte::query()
+                ->where(fn ($q) => $q->where('jefe_id', $user->id)->orWhere('decidido_por', $user->id))
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+
+            $qMantenimiento = \App\Models\SolicitudMantenimiento::query()
+                ->where(fn ($q) => $q->where('aprobador_id', $user->id))
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+
+            $qCombustible = \App\Models\SolicitudCombustible::query()
+                ->where(fn ($q) => $q->where('aprobador_id', $user->id)->orWhere('decidido_por', $user->id))
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+
+            $rows = $qTransporte->get()->map(fn ($s) => [
+                'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
+                'date' => optional($s->updated_at)->format('Y-m-d H:i'),
+                'type' => 'Transporte', 'status' => $s->estado?->value,
+            ])->concat(
+                $qMantenimiento->get()->map(fn ($s) => [
+                    'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
+                    'date' => optional($s->updated_at)->format('Y-m-d H:i'),
+                    'type' => 'Mantenimiento', 'status' => $s->estado?->value,
+                ])
+            )->concat(
+                $qCombustible->get()->map(fn ($s) => [
+                    'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
+                    'date' => optional($s->updated_at)->format('Y-m-d H:i'),
+                    'type' => 'Combustible', 'status' => $s->estado?->value,
+                ])
+            )->sortByDesc('date')->values();
+
+            $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
+            $total = $rows->count();
+            $slice = $rows->slice(($page - 1) * $perPage, $perPage)->values();
+
+            return response()->json(
+                new \Illuminate\Pagination\LengthAwarePaginator(
+                    $slice, $total, $perPage, $page,
+                    ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
+                )
+            );
+        });
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])
@@ -204,6 +250,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-combustible/{solicitud:codigo}/pre-aprobar', [SolicitudCombustibleController::class, 'preAprobar']);
         Route::post('solicitudes-combustible/{solicitud:codigo}/aprobar', [SolicitudCombustibleController::class, 'aprobar']);
         Route::post('solicitudes-combustible/{solicitud:codigo}/rechazar', [SolicitudCombustibleController::class, 'rechazar']);
+
+        Route::post('solicitudes-combustible/{solicitud:codigo}/desbloquear', [SolicitudCombustibleController::class, 'desbloquear']);
 
         // Módulo de Aprobación
         Route::get('solicitudes-combustible/{solicitud:codigo}/comparativa', [SolicitudCombustibleController::class, 'comparativa']);
