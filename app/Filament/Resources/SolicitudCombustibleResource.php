@@ -665,6 +665,7 @@ class SolicitudCombustibleResource extends Resource
         return [
             'index' => Pages\ListSolicitudCombustibles::route('/'),
             'view' => Pages\ViewSolicitudCombustible::route('/{record}'),
+            'edit' => Pages\EditSolicitudCombustible::route('/{record}/edit'),
         ];
     }
 }
