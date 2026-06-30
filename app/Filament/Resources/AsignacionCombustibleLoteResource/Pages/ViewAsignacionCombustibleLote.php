@@ -53,7 +53,7 @@ class ViewAsignacionCombustibleLote extends ViewRecord
                         EstadoLoteEnum::COMPLETADO,
                     ])
                     && auth()->check()
-                    && auth()->user()->hasAnyRole(['admin', 'super_admin', 'jefe'])
+                    && auth()->user()->hasAnyRole(['admin', 'super_admin', 'jefe', 'operativo'])
                 ),
 
             // ── Editar — solo BORRADOR ────────────────────────────────────────
@@ -130,7 +130,7 @@ class ViewAsignacionCombustibleLote extends ViewRecord
                 ->visible(
                     fn ($record) => $record->estado === EstadoLoteEnum::EN_PROCESO
                         && auth()->check()
-                        && auth()->user()->hasAnyRole(['operativo', 'admin', 'super_admin'])
+                        && auth()->user()->hasAnyRole(['operativo', 'admin', 'super_admin', 'jefe'])
                 ),
         ];
     }
