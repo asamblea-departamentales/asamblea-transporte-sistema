@@ -19,7 +19,6 @@ export default function HistorialDetallePage() {
   const [selectedMotorista, setSelectedMotorista] = useState<number | ''>('');
   const [motivoReasignacion, setMotivoReasignacion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [successMsg, setSuccessMsg] = useState('');
 
   useEffect(() => {
     if (!id) return;
