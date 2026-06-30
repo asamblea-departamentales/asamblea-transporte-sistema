@@ -643,7 +643,7 @@
                                         <div class="flex justify-end gap-3 pt-4">
                                             <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
                                             <button type="button" class="btn-accion btn-primary" @click="step = 2" x-bind:disabled="!comentario.trim()">
-                                                Continuar a asignar recursos →
+                                                Continuar a asignación previa →
                                             </button>
                                         </div>
                                     </div>
