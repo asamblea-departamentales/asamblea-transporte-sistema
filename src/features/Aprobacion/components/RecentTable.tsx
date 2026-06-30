@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { RecentRequest } from '../api/dashboardApi';
+import { Pagination } from '../../../shared/components/Pagination';
 
 interface RecentTableProps {
   requests: RecentRequest[];
@@ -18,6 +19,11 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
     const s = statusVal.toLowerCase();
     return s.includes('pre_aprobada') || s.includes('pre');
   });
+
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 5;
+  const totalPages = Math.ceil(preAprobadas.length / itemsPerPage);
+  const paginatedRequests = preAprobadas.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   const getStatusBadge = (status: any) => {
     let colorClass = "border-amber-200 text-amber-600";
@@ -65,7 +71,7 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
             <p className="text-slate-400 font-medium text-sm">No hay solicitudes recientes.</p>
           </div>
         ) : (
-          preAprobadas.map((req, idx) => (
+          paginatedRequests.map((req, idx) => (
             <div 
               key={idx}
               onClick={() => {
@@ -118,7 +124,7 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
                 </td>
               </tr>
             ) : (
-              preAprobadas.map((req, idx) => (
+              paginatedRequests.map((req, idx) => (
                 <tr 
                   key={idx} 
                   onClick={() => {
@@ -146,6 +152,15 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
           </tbody>
         </table>
       </div>
+
+      {totalPages > 1 && !isLoading && (
+        <Pagination 
+          currentPage={currentPage} 
+          totalPages={totalPages} 
+          onPageChange={setCurrentPage} 
+          className="rounded-b-2xl"
+        />
+      )}
     </div>
   );
 };

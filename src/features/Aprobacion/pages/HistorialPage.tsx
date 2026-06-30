@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { dashboardApi, RecentRequest } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 import { History, Search, Calendar, Filter } from 'lucide-react';
+import { Pagination } from '../../../shared/components/Pagination';
 
 export const HistorialPage: React.FC = () => {
   const [requests, setRequests] = useState<RecentRequest[]>([]);
@@ -11,6 +12,10 @@ export const HistorialPage: React.FC = () => {
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('todos');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
   const navigate = useNavigate();
 
@@ -83,7 +88,12 @@ export const HistorialPage: React.FC = () => {
     }
 
     setFilteredRequests(result);
+    setCurrentPage(1); // Reset page on filter change
   }, [searchTerm, dateFilter, requests]);
+
+  // Paginate results
+  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
+  const paginatedRequests = filteredRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
   const getStatusBadge = (status?: any) => {
@@ -177,7 +187,7 @@ export const HistorialPage: React.FC = () => {
               <p className="text-slate-500 font-medium">No hay registros en el historial.</p>
             </div>
           ) : (
-            filteredRequests.map((req, idx) => (
+            paginatedRequests.map((req, idx) => (
               <div 
                 key={idx}
                 onClick={() => {
@@ -230,7 +240,7 @@ export const HistorialPage: React.FC = () => {
                   </td>
                 </tr>
               ) : (
-                filteredRequests.map((req, idx) => (
+                paginatedRequests.map((req, idx) => (
                   <tr 
                     key={idx} 
                     onClick={() => {
@@ -258,6 +268,17 @@ export const HistorialPage: React.FC = () => {
           </table>
         </div>
       </div>
+      
+      {totalPages > 1 && !isLoading && (
+        <div className="mt-4">
+          <Pagination 
+            currentPage={currentPage} 
+            totalPages={totalPages} 
+            onPageChange={setCurrentPage} 
+            className="rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100/80"
+          />
+        </div>
+      )}
     </div>
   );
 };
