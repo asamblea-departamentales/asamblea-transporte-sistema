@@ -154,10 +154,10 @@ export default function HistorialDetallePage() {
   const fechaSalidaVal = raw.fecha_salida || comp.fechas?.salida;
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
   
-  // Reasignar solo permitido antes de la ejecución
-  const canReasignar = status === 'pre_aprobada' || status === 'aprobada' || status === 'programada';
-
   const isCombustibleView = (raw.codigo || comp.codigo || id)?.toString().startsWith('CB-');
+
+  // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible)
+  const canReasignar = !isCombustibleView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
 
   // Valores a mostrar
   const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
