@@ -372,29 +372,55 @@
 
                         {{-- Validar — combustible / mantenimiento (sin asignación) --}}
                         @if($row['tipo'] !== 'transporte' || $row['estado'] !== 'en_revision')
-                        <x-filament::modal width="2xl">
-                            <x-slot name="trigger"><button class="btn-accion btn-success"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar</button></x-slot>
-                            <x-slot name="heading">Validar y enviar a preaprobación</x-slot>
-                            <form wire:submit.prevent="validar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
-                                comentario: $refs.comentarioVal{{ $uid }}.value,
-                                datos_completos: $refs.datosVal{{ $uid }}.checked,
-                                fechas_validas: $refs.fechasVal{{ $uid }}.checked,
-                                recursos_disponibles: $refs.recursosVal{{ $uid }}.checked,
-                                reglas_minimas: $refs.reglasVal{{ $uid }}.checked,
-                                hallazgos: $refs.hallazgosVal{{ $uid }}.value
-                            })" class="space-y-4 pt-2">
-                                <div><div class="modal-label">Checklist de validación</div>
-                                <div class="modal-check-grid">
-                                    <label class="check-item"><input type="checkbox" x-ref="datosVal{{ $uid }}"> Datos completos</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="fechasVal{{ $uid }}"> Fechas válidas</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="recursosVal{{ $uid }}"> Recursos disponibles</label>
-                                    <label class="check-item"><input type="checkbox" x-ref="reglasVal{{ $uid }}"> Reglas mínimas</label>
-                                </div></div>
-                                <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-ref="hallazgosVal{{ $uid }}" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
-                                <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-ref="comentarioVal{{ $uid }}" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
-                                <div class="flex justify-end pt-2"><button type="submit" class="btn-accion btn-success"><svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>Enviar a preaprobación</button></div>
-                            </form>
-                        </x-filament::modal>
+                        <div x-data="{
+                            open: false,
+                            comentario: '',
+                            datos_completos: false,
+                            fechas_validas: false,
+                            recursos_disponibles: false,
+                            reglas_minimas: false,
+                            hallazgos: '',
+                            submit() {
+                                $wire.validar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
+                                    comentario: this.comentario,
+                                    datos_completos: this.datos_completos,
+                                    fechas_validas: this.fechas_validas,
+                                    recursos_disponibles: this.recursos_disponibles,
+                                    reglas_minimas: this.reglas_minimas,
+                                    hallazgos: this.hallazgos,
+                                });
+                            }
+                        }">
+                            <button class="btn-accion btn-success" @click="open = true">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
+                            </button>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
+                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
+                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                        Validar y enviar a preaprobación — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                    </h2>
+                                    <div class="space-y-4 pt-2">
+                                        <div><div class="modal-label">Checklist de validación</div>
+                                        <div class="modal-check-grid">
+                                            <label class="check-item"><input type="checkbox" x-model="datos_completos"> Datos completos</label>
+                                            <label class="check-item"><input type="checkbox" x-model="fechas_validas"> Fechas válidas</label>
+                                            <label class="check-item"><input type="checkbox" x-model="recursos_disponibles"> Recursos disponibles</label>
+                                            <label class="check-item"><input type="checkbox" x-model="reglas_minimas"> Reglas mínimas</label>
+                                        </div></div>
+                                        <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
+                                        <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
+                                    </div>
+                                    <div class="flex justify-end gap-3 pt-2">
+                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
+                                        <button type="button" class="btn-accion btn-success" @click="submit()" x-bind:disabled="!comentario.trim() || !datos_completos || !reglas_minimas">
+                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
+                                            Enviar a preaprobación
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         @endif
 
                         {{-- Asignación Previa — solo combustible --}}

@@ -312,6 +312,19 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             return;
         }
 
+        if (empty(trim($data['comentario'] ?? ''))) {
+            Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+            return;
+        }
+
+        if (empty($data['datos_completos']) || empty($data['reglas_minimas'])) {
+            Notification::make()
+                ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
+                ->danger()
+                ->send();
+            return;
+        }
+
         app(RevisionOperativaService::class)->validarYPreaprobar(
             $tipo,
             $id,
@@ -323,8 +336,21 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $this->refreshKpis();
         $this->resetPage();
 
+        $checks = collect($this->armarValidaciones($data))
+            ->filter(fn ($v) => is_bool($v) && $v)
+            ->keys()
+            ->map(fn ($k) => match ($k) {
+                'datos_completos' => 'Datos completos',
+                'fechas_validas' => 'Fechas válidas',
+                'recursos_disponibles' => 'Recursos disponibles',
+                'reglas_minimas' => 'Reglas mínimas',
+                default => $k,
+            })
+            ->implode(' · ');
+
         Notification::make()
             ->title('Solicitud enviada a preaprobación')
+            ->body("Validación: {$checks}")
             ->success()
             ->send();
     }
@@ -535,6 +561,29 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             return;
         }
 
+        if (empty(trim($data['comentario'] ?? ''))) {
+            Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+            return;
+        }
+
+        if (empty($data['datos_completos']) || empty($data['reglas_minimas'])) {
+            Notification::make()
+                ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if (empty($data['vehiculo_id'])) {
+            Notification::make()->title('Debe seleccionar un vehículo')->danger()->send();
+            return;
+        }
+
+        if (empty($data['motorista_id'])) {
+            Notification::make()->title('Debe seleccionar un motorista')->danger()->send();
+            return;
+        }
+
         try {
             $solicitud = SolicitudTransporte::findOrFail($id);
 
@@ -566,8 +615,24 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             $this->refreshKpis();
             $this->resetPage();
 
+            $vehiculo = \App\Models\Vehiculo::find($data['vehiculo_id']);
+            $motorista = \App\Models\Motorista::find($data['motorista_id']);
+
+            $checks = collect($this->armarValidaciones($data))
+                ->filter(fn ($v) => is_bool($v) && $v)
+                ->keys()
+                ->map(fn ($k) => match ($k) {
+                    'datos_completos' => 'Datos completos',
+                    'fechas_validas' => 'Fechas válidas',
+                    'recursos_disponibles' => 'Recursos disponibles',
+                    'reglas_minimas' => 'Reglas mínimas',
+                    default => $k,
+                })
+                ->implode(' · ');
+
             Notification::make()
                 ->title('Solicitud validada y recursos asignados')
+                ->body("{$checks} | {$vehiculo?->placa} — {$motorista?->nombre}")
                 ->success()
                 ->send();
         } catch (\DomainException $e) {
