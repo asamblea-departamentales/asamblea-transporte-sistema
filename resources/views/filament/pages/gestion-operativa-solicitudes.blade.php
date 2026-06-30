@@ -641,7 +641,7 @@
                                             <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
                                         </div>
                                         <div class="flex justify-end gap-3 pt-4">
-                                            <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
+                                            <button type="button" class="ben tn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
                                             <button type="button" class="btn-accion btn-primary" @click="step = 2" x-bind:disabled="!comentario.trim()">
                                                 Continuar a asignación previa →
                                             </button>

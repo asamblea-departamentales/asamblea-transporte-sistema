@@ -68,10 +68,7 @@ class SolicitudCombustibleResource extends Resource
 
     public static function canEdit($record): bool
     {
-        return in_array($record->estado->value, [
-            EstadoSolicitudEnum::BORRADOR->value,
-            EstadoSolicitudEnum::PENDIENTE->value,
-        ]);
+        return false;
     }
 
     // Columnas por las que se puede buscar desde la barra de búsqueda global.
@@ -573,11 +570,6 @@ class SolicitudCombustibleResource extends Resource
 
                 Tables\Actions\ActionGroup::make([
 
-                    // FIX #7: canEdit() fue eliminado, el ->visible() aquí controla la visibilidad
-                    Tables\Actions\EditAction::make()
-                        ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE
-                        ),
-
                     Tables\Actions\Action::make('observacion')
                         ->label('Observación')
                         ->icon('heroicon-o-chat-bubble-left-ellipsis')
@@ -603,54 +595,6 @@ class SolicitudCombustibleResource extends Resource
                                 EstadoSolicitudEnum::PENDIENTE,
                                 EstadoSolicitudEnum::EN_REVISION,
                             ])
-                        ),
-                    Tables\Actions\Action::make('pre_aprobar')
-                        ->label('Pre-aprobar')
-                        ->color('warning')
-                        ->icon('heroicon-o-clock')
-                        ->requiresConfirmation()
-                        ->modalHeading('¿Pre-aprobar solicitud?')
-                        ->modalDescription('La solicitud pasará al estado Pre-aprobada para su revisión final.')
-                        ->action(function (SolicitudCombustible $record) {
-                            // LLAMADA AL SERVICE (Centraliza estado, historial y bitácora)
-                            app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
-                                ->preAprobar($record, auth()->id());
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('Solicitud pre-aprobada')
-                                ->success()
-                                ->send();
-                        })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
-                            in_array($record->estado, [
-                                EstadoSolicitudEnum::PENDIENTE,
-                                EstadoSolicitudEnum::EN_REVISION,
-                            ])
-                        ),
-                    Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar final')
-                        ->color('success')
-                        ->icon('heroicon-o-check-circle')
-                        ->modalHeading('Confirmar Aprobación Final')
-                        ->modalDescription('Al aprobar, la solicitud quedará lista para la asignación de vales.')
-                        ->form([
-                            Forms\Components\Textarea::make('observaciones')
-                                ->label('Notas de aprobación')
-                                ->placeholder('Escriba aquí cualquier nota técnica final...')
-                                ->required(),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            // Ejecutamos la lógica centralizada del Service
-                            app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
-                                ->aprobar($record, auth()->id(), $data['observaciones']);
-
-                            \Filament\Notifications\Notification::make()
-                                ->title('Solicitud aprobada con éxito')
-                                ->success()
-                                ->send();
-                        })
-                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
                         ),
 
                     // Action agregada para liquidador
@@ -695,153 +639,13 @@ class SolicitudCombustibleResource extends Resource
                             ], true)
                         ),
 
-                    // FIX #2 y #3: ->action() y ->visible() ahora están dentro del Action, antes del cierre del ActionGroup
-                    Tables\Actions\Action::make('asignar_cargas')
-                        ->label('Asignar Cargas')
-                        ->color('primary')
-                        ->icon('heroicon-o-ticket')
-                        ->modalHeading('Asignar Cargas de Combustible')
-                        ->modalWidth('xl')
-                        ->form([
-                            Forms\Components\Select::make('contrato_id')
-                                ->label('Contrato')
-                                ->options(
-                                    ContratoCombustible::where('activo', true)
-                                        ->get()
-                                        ->mapWithKeys(fn ($c) => [
-                                            $c->id => "{$c->numero_contrato} — {$c->nombre} (Disponible: $".number_format($c->monto_disponible, 2).')',
-                                        ])
-                                )
-                                ->required()
-                                ->searchable()
-                                ->live()
-                                ->afterStateUpdated(fn ($set) => $set('serie_vale_id', null)),
-
-                            Forms\Components\Select::make('serie_vale_id')
-                                ->label('Serie de Cargas')
-                                ->options(fn ($get) => SerieCarga::where('contrato_id', $get('contrato_id'))
-                                    ->where('activo', true)
-                                    ->get()
-                                    ->mapWithKeys(fn ($s) => [
-                                        $s->id => "{$s->nombre} — Val: $".number_format($s->valor, 2).
-                                                  " | Correlativo: {$s->correlativo_inicio}-{$s->correlativo_fin}".
-                                                  ' | Siguiente: '.($s->correlativo_actual ?: $s->correlativo_inicio),
-                                    ])
-                                )
-                                ->required()
-                                ->searchable()
-                                ->live()
-                                // FIX #5: dehydrated(true) para que el valor se envíe aunque el campo esté disabled
-                                ->dehydrated(true)
-                                ->disabled(fn ($get) => ! $get('contrato_id'))
-                                ->helperText('Primero selecciona un contrato.'),
-
-                            Forms\Components\TextInput::make('cantidad_vales')
-                                ->label('Cantidad de Cargas')
-                                ->numeric()
-                                ->required()
-                                ->minValue(1)
-                                ->live(debounce: 500)
-                                ->helperText(function ($get) {
-                                    $serieId = $get('serie_vale_id');
-                                    $cantidad = (int) ($get('cantidad_vales') ?? 0);
-
-                                    if (! $serieId || $cantidad <= 0) {
-                                        return null;
-                                    }
-
-                                    $serie = SerieCarga::find($serieId);
-                                    if (! $serie) {
-                                        return null;
-                                    }
-
-                                    $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
-                                    $fin = $inicio + $cantidad - 1;
-                                    $monto = $cantidad * (float) $serie->valor;
-
-                                    return "Rango: {$inicio} – {$fin} | Monto total: $".number_format($monto, 2);
-                                }),
-
-                            Forms\Components\Placeholder::make('resumen_asignacion')
-                                ->label('Resumen')
-                                ->content(function ($get) {
-                                    $serieId = $get('serie_vale_id');
-                                    $cantidad = (int) ($get('cantidad_vales') ?? 0);
-
-                                    if (! $serieId || $cantidad <= 0) {
-                                        return new \Illuminate\Support\HtmlString('<span class="text-gray-400 text-sm">Selecciona una serie y cantidad para ver el resumen.</span>');
-                                    }
-
-                                    $serie = SerieCarga::find($serieId);
-                                    if (! $serie) {
-                                        return '-';
-                                    }
-
-                                    $inicio = $serie->correlativo_actual ?: $serie->correlativo_inicio;
-                                    $fin = $inicio + $cantidad - 1;
-                                    $monto = $cantidad * (float) $serie->valor;
-
-                                    $disponibles = $serie->correlativo_fin - $inicio + 1;
-                                    $alerta = $fin > $serie->correlativo_fin
-                                        ? '<span class="text-red-600 font-bold">⚠ Sin suficientes cargas en esta serie.</span>'
-                                        : '<span class="text-green-600">✓ Cargas disponibles suficientes.</span>';
-
-                                    return new \Illuminate\Support\HtmlString("
-                                        <div class='text-sm space-y-1'>
-                                            <div><span class='font-medium'>Serie:</span> {$serie->nombre}</div>
-                                            <div><span class='font-medium'>Valor por carga:</span> \$".number_format($serie->valor, 2)."</div>
-                                            <div><span class='font-medium'>Correlativo:</span> {$inicio} → {$fin}</div>
-                                            <div><span class='font-medium'>Monto total:</span> <strong>\$".number_format($monto, 2)."</strong></div>
-                                            <div><span class='font-medium'>Cargas disponibles en serie:</span> {$disponibles}</div>
-                                            <div>{$alerta}</div>
-                                        </div>
-                                    ");
-                                }),
-                        ])
-                        ->action(function (SolicitudCombustible $record, array $data) {
-                            try {
-                                app(SolicitudCombustibleService::class)->asignarVales(
-                                    $record,
-                                    auth()->id(),
-                                    [
-                                        'contrato_id' => $data['contrato_id'],
-                                        'serie_vale_id' => $data['serie_vale_id'],
-                                        'cantidad_vales' => $data['cantidad_vales'],
-                                    ]
-                                );
-
-                                Notification::make()
-                                    ->title('Cargas asignadas correctamente')
-                                    ->body("Se asignaron {$data['cantidad_vales']} cargas a la solicitud {$record->codigo}.")
-                                    ->success()
-                                    ->send();
-
-                            } catch (\DomainException $e) {
-                                Notification::make()
-                                    ->title('No se pudo asignar')
-                                    ->body($e->getMessage())
-                                    ->danger()
-                                    ->send();
-                            }
-                        })
-                        ->visible(fn ($record) => auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
-                            $record->estado === EstadoSolicitudEnum::APROBADA
-                        ),
-
-                    Tables\Actions\DeleteAction::make()
-                        ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::PENDIENTE
-                        ),
-
                 ])
                     ->label('Gestionar')
                     ->icon('heroicon-m-cog-6-tooth'),
             ])
 
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
+
             ]);
     }
 
@@ -861,7 +665,6 @@ class SolicitudCombustibleResource extends Resource
         return [
             'index' => Pages\ListSolicitudCombustibles::route('/'),
             'view' => Pages\ViewSolicitudCombustible::route('/{record}'),
-            'edit' => Pages\EditSolicitudCombustible::route('/{record}/edit'),
         ];
     }
 }
