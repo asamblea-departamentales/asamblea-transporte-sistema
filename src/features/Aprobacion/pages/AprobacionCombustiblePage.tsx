@@ -19,7 +19,6 @@ export default function AprobacionCombustiblePage() {
     setMontoManual,
     confirmarAprobacion,
     handleRechazar,
-    handleDesbloquear,
     isSubmitting 
   } = useAprobacionCombustible(id);
 
@@ -80,17 +79,17 @@ export default function AprobacionCombustiblePage() {
         
         <ColumnaCombustibleOperativo 
           data={data.operativo} 
-          isSelected={decision === 'operativo'}
-          isFaded={decision === 'jefe'}
-          onSelect={() => setDecision('operativo')}
+          isSelected={decision === 'mantener'}
+          isFaded={decision === 'manual'}
+          onSelect={() => setDecision('mantener')}
         />
         
         <ColumnaCombustibleJefe 
           montoActual={montoManual}
           onMontoChange={setMontoManual}
-          isSelected={decision === 'jefe'}
-          isFaded={decision === 'operativo'}
-          onSelect={() => setDecision('jefe')}
+          isSelected={decision === 'manual'}
+          isFaded={decision === 'mantener'}
+          onSelect={() => setDecision('manual')}
         />
       </div>
 
@@ -124,29 +123,19 @@ export default function AprobacionCombustiblePage() {
               Rechazar
             </button>
             
-            {solicitud.decision_final && (
-              <button 
-                onClick={handleDesbloquear}
-                disabled={isSubmitting}
-                className="px-4 py-2 text-slate-500 hover:text-slate-800 font-medium transition-colors text-sm underline disabled:opacity-60 disabled:cursor-not-allowed"
-              >
-                Reset
-              </button>
-            )}
-            
             <button 
               onClick={confirmarAprobacion}
-              disabled={isSubmitting || decision === 'ninguna' || !comentario.trim() || (decision === 'jefe' && (!montoManual || montoManual <= 0))}
+              disabled={isSubmitting || decision === 'ninguna' || !comentario.trim() || (decision === 'manual' && (!montoManual || montoManual <= 0))}
               className={`flex-1 md:flex-none px-6 py-2 font-medium rounded text-white transition-all text-sm shadow-sm text-center ${
-                decision === 'operativo' ? 'bg-primary hover:bg-primary-hover' :
-                decision === 'jefe' ? 'bg-success hover:bg-success-hover' :
+                decision === 'mantener' ? 'bg-primary hover:bg-primary-hover' :
+                decision === 'manual' ? 'bg-success hover:bg-success-hover' :
                 'bg-slate-300 cursor-not-allowed'
               } disabled:opacity-60 disabled:cursor-not-allowed`}
             >
               {isSubmitting ? 'Procesando...' : 
                (solicitud.decision_final ? 'Actualizar' :
-                (decision === 'operativo' ? 'Aprobar (Operativo)' : 
-                 decision === 'jefe' ? 'Aprobar (Nuevo)' : 
+                (decision === 'mantener' ? 'Aprobar (Operativo)' : 
+                 decision === 'manual' ? 'Aprobar (Nuevo)' : 
                  'Seleccionar')
                )}
             </button>

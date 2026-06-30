@@ -46,8 +46,8 @@ export function useAprobacionCombustible(id: string | undefined) {
   const confirmarAprobacion = async () => {
     if (!id || decision === 'ninguna') return;
     
-    // Si la decisión es jefe, necesitamos validar que se ingresó un monto
-    if (decision === 'jefe' && (!montoManual || montoManual <= 0)) {
+    // Si la decisión es manual (Jefe), necesitamos validar que se ingresó un monto
+    if (decision === 'manual' && (!montoManual || montoManual <= 0)) {
       const msg = 'Debe ingresar un monto válido para re-asignar';
       setError(msg);
       toast.error(msg);
@@ -69,21 +69,7 @@ export function useAprobacionCombustible(id: string | undefined) {
     }
   };
 
-  const handleDesbloquear = async () => {
-     if(!id) return;
-     try {
-       setIsSubmitting(true);
-       await solicitudCombustibleApi.desbloquear(id);
-       toast.success('Solicitud desbloqueada correctamente');
-       navigate('/');
-     } catch(err:any) {
-       const msg = err.response?.data?.message || 'Error al desbloquear';
-       setError(msg);
-       toast.error(msg);
-     } finally {
-       setIsSubmitting(false);
-     }
-  };
+
 
   const handleRechazar = async () => {
     if (!id) return;
@@ -119,7 +105,6 @@ export function useAprobacionCombustible(id: string | undefined) {
     montoManual,
     setMontoManual,
     confirmarAprobacion,
-    handleDesbloquear,
     handleRechazar,
     isSubmitting
   };

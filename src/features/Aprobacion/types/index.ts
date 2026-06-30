@@ -71,7 +71,7 @@ export interface SolicitudCombustibleDetalle {
   placa: string;
   motivo: string;
   fecha_solicitud: string;
-  decision_final?: 'operativo' | 'jefe' | null;
+  decision_final?: 'mantener' | 'manual' | null;
   comentario_jefe?: string | null;
 }
 
@@ -86,4 +86,4 @@ export interface ComparativaCombustibleResponse {
   operativo: AsignacionOperativoCombustible | null;
 }
 
-export type DecisionCombustibleType = 'operativo' | 'jefe' | 'ninguna';
+export type DecisionCombustibleType = 'mantener' | 'manual' | 'ninguna';
