@@ -17,6 +17,7 @@ export interface RecentRequest {
   code: string;
   ticket?: string;
   date: string;
+  rawDate?: string;
   type: string;
   status: string;
 }
@@ -40,6 +41,7 @@ export const dashboardApi = {
         id: item.id?.toString() || '',
         code: item.codigo || item.code || '',
         date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
+        rawDate: item.created_at || item.date || '',
         type: item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte'),
         status: item.estado || item.status || ''
       }));

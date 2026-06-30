@@ -44,17 +44,41 @@ export const HistorialPage: React.FC = () => {
 
     if (dateFilter !== 'todos') {
       const today = new Date();
+      today.setHours(0, 0, 0, 0);
+
       result = result.filter(req => {
-        // Asumiendo formato DD/MM/YYYY o similar que podamos parsear simple, o usar strings
-        // Para fines de esta demo simplificada, lo haremos basado en fechas mockeadas.
-        // En producción real esto requeriría parseo estricto (ej. date-fns)
-        if (!req.date) return false;
+        const dateStr = req.rawDate || req.date;
+        if (!dateStr) return false;
         
-        // Simulación de filtro:
+        const reqDate = new Date(dateStr);
+        if (isNaN(reqDate.getTime())) return true; // Si la fecha es inválida, mejor mostrarlo
+
+        const reqDateMidnight = new Date(reqDate);
+        reqDateMidnight.setHours(0, 0, 0, 0);
+
         if (dateFilter === 'hoy') {
-          return req.date.includes(today.toLocaleDateString());
+          return reqDateMidnight.getTime() === today.getTime();
         }
-        return true; // otros filtros
+        
+        if (dateFilter === 'semana') {
+          const currentDay = today.getDay(); // 0 = Domingo, 1 = Lunes
+          const daysToMonday = currentDay === 0 ? 6 : currentDay - 1;
+          
+          const startOfWeek = new Date(today);
+          startOfWeek.setDate(today.getDate() - daysToMonday);
+          
+          const endOfWeek = new Date(startOfWeek);
+          endOfWeek.setDate(startOfWeek.getDate() + 6);
+          
+          return reqDateMidnight.getTime() >= startOfWeek.getTime() && reqDateMidnight.getTime() <= endOfWeek.getTime();
+        }
+        
+        if (dateFilter === 'mes') {
+          return reqDateMidnight.getMonth() === today.getMonth() && 
+                 reqDateMidnight.getFullYear() === today.getFullYear();
+        }
+        
+        return true;
       });
     }
 
