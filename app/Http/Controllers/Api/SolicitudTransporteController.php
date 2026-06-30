@@ -394,7 +394,7 @@ class SolicitudTransporteController extends Controller
                 EstadoSolicitudEnum::COMPLETADA,
                 EstadoSolicitudEnum::RECHAZADA,
             ])
-            ->orderByDesc('decidido_en')
+            ->orderByDesc('updated_at')
             ->paginate($perPage);
 
         return response()->json($historial);

@@ -36,6 +36,11 @@ Route::middleware('auth:sanctum')->group(function () {
         }
 
         $estadosPendientes = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
+
+        if ($user->hasRole('jefe')) {
+            $estadosPendientes = [EstadoSolicitudEnum::PRE_APROBADA];
+        }
+
         $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
         $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
         $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
