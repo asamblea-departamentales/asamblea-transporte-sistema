@@ -28,9 +28,12 @@ export default function HistorialDetallePage() {
         let showData = null;
         let compData = null;
 
+        const isCombustible = id?.startsWith('CB-');
+        const endpoint = isCombustible ? `/solicitudes-combustible/${id}` : `/solicitudes-transporte/${id}`;
+
         // 1. Obtener los datos reales finales (estado, asignación real)
         try {
-          const showRes = await axiosClient.get(`/solicitudes-transporte/${id}`);
+          const showRes = await axiosClient.get(endpoint);
           showData = showRes.data.data || showRes.data;
         } catch (e) {
           console.error('Error fetching show data', e);
@@ -38,7 +41,7 @@ export default function HistorialDetallePage() {
 
         // 2. Obtener la comparativa (para datos de sugerencias si aplica)
         try {
-          const compRes = await axiosClient.get(`/solicitudes-transporte/${id}/comparativa`);
+          const compRes = await axiosClient.get(`${endpoint}/comparativa`);
           compData = compRes.data;
         } catch (e) {
           console.error('Error fetching comparativa data', e);
