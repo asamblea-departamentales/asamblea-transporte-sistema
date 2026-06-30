@@ -30,7 +30,7 @@ export const solicitudCombustibleApi = {
 
 
   rechazar: async (id: string, comentario: string) => {
-    const response = await axiosClient.post(`/solicitudes-combustible/${id}/rechazar`, { comentario });
+    const response = await axiosClient.post(`/solicitudes-combustible/${id}/rechazar`, { motivo: comentario });
     return response.data;
   }
 };
