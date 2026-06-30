@@ -559,6 +559,8 @@
                         {{-- Validar + Asignar — transporte en revisión (2 pasos) --}}
                         @if($row['tipo'] === 'transporte' && $row['estado'] === 'en_revision')
                         @php $sugerenciaData = $this->getSugerencia($row['id']); @endphp
+                        <script type="application/json" id="vehiculos-data-{{ $uid }}">@json($this->getVehiculosConMotorista())</script>
+                        <script type="application/json" id="sugerencia-data-{{ $uid }}">@json($sugerenciaData)</script>
                         <div x-data="{
                             open: false,
                             step: 1,
@@ -571,8 +573,8 @@
                             vehiculoId: null,
                             motoristaId: null,
                             justificacion: '',
-                            vehiculos: @js($this->getVehiculosConMotorista()),
-                            sugerencia: @json($sugerenciaData),
+                            vehiculos: JSON.parse(document.getElementById('vehiculos-data-{{ $uid }}').textContent),
+                            sugerencia: JSON.parse(document.getElementById('sugerencia-data-{{ $uid }}').textContent),
                             get cambio() {
                                 if (!this.sugerencia) return 'ninguno';
                                 const cv = this.vehiculoId && this.sugerencia.vehiculo_sugerido_id !== this.vehiculoId;

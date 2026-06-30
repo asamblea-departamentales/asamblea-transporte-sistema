@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Roles y Accesos — Sistema de Transporte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #0B2545;
+    --primary-light: #134074;
+    --accent: #8A7043;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-main); background: #fff; line-height: 1.7; font-size: 16px; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    @top-center {
+      content: element(header);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+    @bottom-center {
+      content: "Confidencial — Documento Interno | Asamblea Legislativa · Depto. Transporte | Pág. " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  }
+
+  .page { max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  .cover {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 80px 40px;
+    page-break-after: always; break-after: page;
+    background: radial-gradient(circle at top right, #f1f5f9 0%, #ffffff 60%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  .cover .logo-wrap {
+    width: 280px; margin-bottom: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  }
+  .cover .logo-wrap img { width: 100%; height: auto; display: block; }
+  .cover .line {
+    width: 60px; height: 4px; background: var(--accent); border-radius: 4px; margin: 0 auto 32px;
+  }
+  .cover h1 {
+    font-size: 3rem; font-weight: 800; color: var(--primary); letter-spacing: -.03em;
+    margin-bottom: 16px; line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 1.4rem; font-weight: 600; color: var(--primary-light); margin-bottom: 36px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cover .desc {
+    font-size: 1.05rem; color: var(--text-muted); max-width: 540px; margin: 0 auto 50px; line-height: 1.8; font-weight: 400;
+  }
+  .cover .meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px;
+    font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; background: var(--bg-light); padding: 12px 24px; border-radius: 30px; border: 1px solid var(--border-color);
+  }
+  .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
+
+  .content { padding: 40px 50px 80px; }
+
+  h2 {
+    font-size: 1.6rem; font-weight: 700; color: var(--primary);
+    margin: 56px 0 24px; padding-bottom: 12px;
+    border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
+    position: relative;
+  }
+  h2::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
+    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+  }
+  h4 {
+    font-size: 1.05rem; font-weight: 600; color: var(--accent);
+    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+  }
+
+  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
+  ul, ol { margin: 8px 0 20px 24px; }
+  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; }
+  strong { color: #0f172a; font-weight: 600; }
+
+  .nota, .info, .tip, .warn-box {
+    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
+    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid transparent;
+  }
+  .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
+  .nota strong { color: #92400E; }
+  .info { background: #F8FAFC; border-left: 4px solid var(--primary); border-color: #E2E8F0 #E2E8F0 #E2E8F0 var(--primary); }
+  .info strong { color: var(--primary); }
+  .tip { background: #F0FDF4; border-left: 4px solid #16A34A; border-color: #DCFCE7 #DCFCE7 #DCFCE7 #16A34A; }
+  .tip strong { color: #14532D; }
+  .warn-box { background: #FEF2F2; border-left: 4px solid #DC2626; border-color: #FEE2E2 #FEE2E2 #FEE2E2 #DC2626; }
+  .warn-box strong { color: #991B1B; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
+    font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  th {
+    background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
+    padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  td {
+    padding: 12px 16px; border-bottom: 1px solid var(--border-color); color: #334155;
+    background: #ffffff;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+
+  .img-screenshot {
+    display: block; max-width: 100%; height: auto;
+    margin: 24px auto; border-radius: 8px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .img-phone {
+    display: block; max-width: 280px; height: auto;
+    margin: 24px auto; border-radius: 12px;
+    border: 1px solid var(--border-color);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .img-icon {
+    display: block; max-width: 120px; height: auto;
+    margin: 16px auto; border-radius: 6px;
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .img-row {
+    display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
+    margin: 20px 0; page-break-inside: avoid; break-inside: avoid;
+  }
+
+  .badge-sample {
+    display: inline-flex; align-items: center;
+    font-size: 10px; font-weight: 700; padding: 3px 10px;
+    border-radius: 4px; letter-spacing: .05em; text-transform: uppercase; margin: 2px;
+    border: 1px solid transparent;
+  }
+  .b-pend { background: #FEF9C3; color: #713F12; border-color: #FEF08A; }
+  .b-rev  { background: #FFEDD5; color: #7C2D12; border-color: #FED7AA; }
+  .b-pre  { background: #E0F2FE; color: #0C4A6E; border-color: #BAE6FD; }
+  .b-apr  { background: #DCFCE7; color: #14532D; border-color: #BBF7D0; }
+  .b-rech { background: #FEE2E2; color: #7F1D1D; border-color: #FCA5A5; }
+
+  .rol-tag {
+    display: inline-block;
+    font-size: 0.85rem; font-weight: 700;
+    padding: 4px 14px; border-radius: 20px;
+    color: #fff; margin: 4px 0;
+  }
+  .rol-sol { background: #0EA5E9; }
+  .rol-mot { background: #8B5CF6; }
+  .rol-ope { background: #F59E0B; }
+  .rol-jef { background: #10B981; }
+  .rol-ti  { background: #6366F1; }
+  .rol-sad { background: #DC2626; }
+  .rol-liq { background: #EC4899; }
+
+  .page-break { page-break-before: always; break-before: page; }
+
+  .doc-footer {
+    margin-top: 80px; padding-top: 32px;
+    border-top: 1px solid var(--border-color);
+    text-align: center; font-size: 0.85rem; color: var(--text-muted);
+    page-break-before: avoid; break-before: avoid;
+  }
+  .doc-footer .line-cl { width: 50px; height: 3px; background: var(--accent); border-radius: 3px; margin: 0 auto 20px; }
+  .doc-footer p { text-align: center; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-muted); }
+
+  @media print {
+    body { background: #fff; font-size: 11pt; }
+    .content { padding: 0 10px; }
+    .cover { min-height: 100vh; padding-top: 100px; justify-content: flex-start; }
+    .cover .logo-wrap { width: 240px; }
+    h2 { margin-top: 40px; }
+    .nota, .info, .tip, .warn-box, table { break-inside: avoid; page-break-inside: avoid; }
+    th { background: #1e293b !important; color: #fff !important; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <!-- PORTADA -->
+  <div class="cover">
+    <div class="logo-wrap">
+      <img src="../images/logo-azul-fondo-transparente.png" alt="Logo Asamblea Legislativa">
+    </div>
+    <div class="line"></div>
+    <h1>Manual de Roles y Accesos</h1>
+    <h2>Sistema de Gestión de Transporte</h2>
+    <p class="desc">
+      Descripción de todos los roles del Sistema de Transporte de la Asamblea Legislativa: qué puede hacer cada quien, a qué pantallas accede y cuáles son sus límites dentro del sistema.
+    </p>
+    <div class="meta">
+      <span>Versión 1.0 · Junio 2026</span>
+      <span class="bar"></span>
+      <span>Asamblea Legislativa</span>
+      <span class="bar"></span>
+      <span>Departamento de Transporte</span>
+    </div>
+  </div>
+
+  <!-- CONTENIDO -->
+  <div class="content">
+
+    <!-- 1. INTRODUCCIÓN -->
+    <h2 id="intro">1. Los roles del sistema</h2>
+    <p>Cada persona que ingresa al sistema tiene un <strong>rol</strong> (un "sombrero" que le dice qué puede hacer y qué no). Su jefe o el departamento de Sistemas le asigna el rol según su cargo u operatividad dentro de su departamento.</p>
+
+    <!-- 2. SOLICITANTE -->
+    <div class="page-break"></div>
+    <h2 id="solicitante">2. Rol: <span class="rol-tag rol-sol">Solicitante</span></h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> Cualquier empleado de la Asamblea autorizado que necesite pedir un vehículo, gasolina o un mantenimiento.
+    </div>
+
+    <h3>¿Cómo ingresa?</h3>
+    <p>No ingresa al panel web. Usa la aplicación/pantalla de <strong>"Creación de Solicitudes de Transporte"</strong> para crear sus solicitudes.</p>
+    <img class="img-icon" src="images/ra-img-p1-1.jpeg" alt="Icono de Transporte Solicitudes">
+
+    <h3>Pantalla: Mis Solicitudes / Nueva Solicitud</h3>
+    <p>La pantalla tiene dos pestañas principales en la parte superior:</p>
+
+    <h4>"Mis Solicitudes"</h4>
+    <p>Aquí ve todas las solicitudes que ha creado, ordenadas de la más reciente a la más antigua. Cada solicitud se muestra como una tarjeta con:</p>
+    <ul>
+      <li>Un <strong>código único</strong> (ej: TR-2026-000001).</li>
+      <li>La <strong>fecha</strong> en que la creó.</li>
+      <li>El <strong>motivo</strong> o actividad.</li>
+      <li><strong>Ticket</strong> de gestión.</li>
+      <li>Una <strong>etiqueta de color</strong> que indica el tipo:
+        <ul>
+          <li>Azul = Transporte</li>
+          <li>Naranja = Mantenimiento</li>
+          <li>Verde = Combustible</li>
+        </ul>
+      </li>
+      <li>Una <strong>píldora de estado</strong> con el color correspondiente (Pendiente, Aprobada, Rechazada, etc.).</li>
+    </ul>
+
+    <img class="img-screenshot" src="images/ra-img-p2-1.png" alt="Pantalla Mis Solicitudes con lista de tarjetas">
+
+    <h4>"Nueva Solicitud"</h4>
+    <p>Al hacer clic aquí, se despliega un asistente paso a paso (wizard) que lo guía para crear su solicitud sin abrumarlo:</p>
+    <table>
+      <tr><th>Paso</th><th>¿Qué hace?</th></tr>
+      <tr><td><strong>1. Datos</strong></td><td>Selecciona el tipo (transporte, combustible o mantenimiento), llena los datos básicos (fechas, destino, motivo).</td></tr>
+      <tr><td><strong>2. Rutas en Mapa</strong></td><td>Marca en un mapa el origen y destino del viaje (solo para transporte). El sistema calcula la distancia.</td></tr>
+      <tr><td><strong>3. Confirmación</strong></td><td>Revisa un resumen de todo lo que ingresó y confirma. Al enviar, la solicitud queda en estado "Pendiente".</td></tr>
+    </table>
+
+    <img class="img-screenshot" src="images/ra-img-p3-1.png" alt="Asistente paso a paso para crear una nueva solicitud">
+
+    <h3>¿Quiénes acceden?</h3>
+    <table>
+      <tr><th>Rol</th><th>¿Qué ve aquí?</th></tr>
+      <tr><td>Solicitante</td><td>Solo sus propias solicitudes. Puede crear, ver detalle y cancelar.</td></tr>
+    </table>
+
+    <h3>¿Qué sigue después de crear una solicitud?</h3>
+    <p>El flujo normal es:</p>
+    <ol>
+      <li>Usted crea la solicitud &#8594; queda en <span class="badge-sample b-pend">Pendiente</span></li>
+      <li>Un operativo la toma para revisarla &#8594; pasa a <span class="badge-sample b-rev">En Revisión</span></li>
+      <li>El operativo la valida y la deja lista &#8594; pasa a <span class="badge-sample b-pre">Pre-Aprobada</span></li>
+      <li>El jefe la revisa y decide:
+        <ul>
+          <li>✅ Aprobada &#8594; se procede a asignar recursos</li>
+          <li>❌ Rechazada &#8594; se le notifica el motivo</li>
+        </ul>
+      </li>
+    </ol>
+
+    <h3>¿Qué puede hacer el rol de Solicitante?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Crear solicitudes</strong></td><td>Puede pedir transporte, combustible o mantenimiento desde la aplicación móvil.</td></tr>
+      <tr><td><strong>Enviar solicitudes</strong></td><td>Una vez creada, la envía para su revisión.</td></tr>
+      <tr><td><strong>Cancelar solicitudes</strong></td><td>Si se arrepiente o hay un error, puede cancelar la solicitud mientras no haya sido preaprobada o aprobada.</td></tr>
+      <tr><td><strong>Ver sus solicitudes</strong></td><td>Consulta el estado de todas las solicitudes realizadas (si están pendientes, aprobadas, rechazadas, etc.).</td></tr>
+      <tr><td><strong>Recibir correos</strong></td><td>Le llega un correo personalizado cuando su solicitud es aprobada ✅ o rechazada ❌.</td></tr>
+    </table>
+
+    <h3>¿Qué más puede hacer?</h3>
+    <ul>
+      <li><strong>Cancelar una solicitud:</strong> si se arrepintió o cometió un error, puede cancelar mientras la solicitud esté en estado "Borrador" o "Pendiente". Una vez que el operativo la toma en revisión, ya no puede cancelarla usted mismo.</li>
+      <li><strong>Ver el detalle:</strong> al hacer clic en una solicitud, puede ver toda la información, incluido el estado actual y los comentarios que haya dejado el operativo o el jefe.</li>
+      <li><strong>Recibir notificaciones:</strong> cuando su solicitud cambie de estado (aprobada, rechazada, devuelta con observaciones), el sistema le enviará un correo automático y podrá activar las notificaciones dentro de su propio dispositivo móvil.</li>
+    </ul>
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ No puede ver solicitudes de otras personas.<br>
+      ❌ No puede aprobar ni rechazar nada.<br>
+      ❌ No puede modificar catálogos (vehículos, motoristas, etc.).
+    </div>
+
+    <!-- 3. MOTORISTA -->
+    <div class="page-break"></div>
+    <h2 id="motorista">3. Rol: <span class="rol-tag rol-mot">Motorista</span></h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> El conductor asignado a un vehículo. Es quien maneja en las misiones oficiales.
+    </div>
+
+    <h3>¿Cómo ingresa?</h3>
+    <p>No ingresa al panel web. Ve una pantalla especial diseñada para conductores, siempre ingresando con usuario y contraseña.</p>
+
+    <img class="img-screenshot" src="images/ra-img-p5-1.png" alt="Aplicación de motorista">
+
+    <h3>¿Qué puede hacer?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Ver mis viajes</strong></td><td>Consulta los viajes que le asignaron en el mes, con fechas, horarios, origen y destino.</td></tr>
+      <tr><td><strong>Iniciar viaje</strong></td><td>Cuando sale hacia el destino, marca en el sistema que el viaje comenzó (registra la hora de salida).</td></tr>
+      <tr><td><strong>Registrar llegada</strong></td><td>Cuando llega al destino, marca la hora de llegada.</td></tr>
+      <tr><td><strong>Iniciar retorno</strong></td><td>Cuando emprende el regreso, lo registra.</td></tr>
+      <tr><td><strong>Finalizar viaje</strong></td><td>Cuando regresa a la Asamblea o al lugar de origen, marca el viaje como completado (el sistema calcula las horas reales y las agrega a su bitácora personal de manejo).</td></tr>
+      <tr><td><strong>Cambiar mi estado</strong></td><td>Puede marcarse como "No disponible" si está enfermo, de permiso, etc. Puede adjuntar un comprobante (como una incapacidad). El sistema avisa por correo a la jefatura.</td></tr>
+    </table>
+
+    <div class="img-row">
+      <img class="img-phone" src="images/ra-img-p6-1.png" alt="Pantalla de disponibilidad del motorista">
+      <img class="img-phone" src="images/ra-img-p6-2.png" alt="Marcar como no disponible con motivo">
+    </div>
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ No puede crear solicitudes de transporte.<br>
+      ❌ No puede aprobar ni rechazar nada.<br>
+      ❌ No ve información de otros motoristas.<br>
+      ❌ No puede modificar catálogos.
+    </div>
+
+    <!-- 4. OPERATIVO -->
+    <div class="page-break"></div>
+    <h2 id="operativo">4. Rol: <span class="rol-tag rol-ope">Operativo</span></h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> El personal de la unidad de transporte que revisa las solicitudes entrantes, las valida técnicamente y prepara todo para que el jefe decida. Puede realizar una asignación previa. En este caso, sí entra al panel web.
+    </div>
+
+    <h3>¿Cómo se llama su pantalla principal?</h3>
+    <p><strong>"Gestión Operativa"</strong></p>
+
+    <img class="img-phone" src="images/ra-img-p7-1.png" alt="Pantalla de gestión operativa">
+
+    <h3>¿Qué puede hacer?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Ver todas las solicitudes entrantes</strong></td><td>Ve los pedidos de transporte, combustible y mantenimiento que van llegando.</td></tr>
+      <tr><td><strong>Tomar una solicitud para revisarla</strong></td><td>Se asigna una solicitud a sí mismo para empezar a revisarla.</td></tr>
+      <tr><td><strong>Cambiar la prioridad</strong></td><td>Puede subir o bajar la prioridad de una solicitud (alta, media, baja) según el caso.</td></tr>
+      <tr><td><strong>Poner observaciones</strong></td><td>Si falta información, puede devolver la solicitud con comentarios para que el solicitante la corrija.</td></tr>
+      <tr><td><strong>Derivar a otro compañero</strong></td><td>Pasar la solicitud a otro operativo si él es quien debe revisarla.</td></tr>
+      <tr><td><strong>Validar técnicamente</strong></td><td>Revisa que todo esté correcto (fechas válidas, datos completos, recursos disponibles) y la manda a pre-aprobación.</td></tr>
+      <tr><td><strong>Ver el detalle de solicitudes</strong></td><td>Puede entrar a ver la información completa de cualquier solicitud.</td></tr>
+      <tr><td><strong>Asignar vehículo y motorista</strong></td><td>En las solicitudes de transporte, puede asignar qué vehículo y qué conductor van a realizar el viaje.</td></tr>
+      <tr><td><strong>Asignar vales de combustible</strong></td><td>Puede asignar las cargas de gasolina a las solicitudes de combustible aprobadas.</td></tr>
+      <tr><td><strong>Registrar entrega/recepción de vehículos</strong></td><td>Puede registrar cuándo se entrega un vehículo a un motorista y cuándo lo devuelve, con control de kilometraje, combustible y herramientas.</td></tr>
+      <tr><td><strong>Ver el calendario de flota</strong></td><td>Puede consultar un calendario visual con todos los viajes programados.</td></tr>
+      <tr><td><strong>Ver lotes de combustible</strong></td><td>Puede consultar los lotes de asignación de gasolina.</td></tr>
+      <tr><td><strong>Ver el panel de liquidaciones</strong></td><td>Puede consultar las liquidaciones (pero no liquidar).</td></tr>
+    </table>
+
+    <img class="img-screenshot" src="images/ra-img-p8-1.png" alt="Panel de gestión operativa con lista de solicitudes">
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ No puede dar la aprobación final (eso es del encargado).<br>
+      ❌ No puede crear ni modificar vehículos, motoristas, proveedores, contratos.<br>
+      ❌ No puede ver la bitácora de auditoría.<br>
+      ❌ No puede gestionar usuarios ni roles.<br>
+      ❌ No puede borrar solicitudes.
+    </div>
+
+    <!-- 5. JEFE -->
+    <div class="page-break"></div>
+    <h2 id="jefe">5. Rol: <span class="rol-tag rol-jef">Jefe</span></h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> La persona encargada de tomar las decisiones finales: aprobar o rechazar las solicitudes. Encargado de seleccionar las distintas opciones de asignación que el sistema proporcionará.
+    </div>
+
+    <h3>¿Qué puede hacer?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Aprobar solicitudes</strong></td><td>Da el visto bueno final a las solicitudes de transporte, combustible y mantenimiento que ya fueron revisadas por el personal operativo.</td></tr>
+      <tr><td><strong>Rechazar solicitudes</strong></td><td>Cuando una solicitud no procede, la rechaza indicando el motivo (el sistema envía un correo automático al solicitante).</td></tr>
+      <tr><td><strong>Reabrir</strong></td><td>Vuelve a abrir una solicitud que ya había sido cerrada.</td></tr>
+      <tr><td><strong>Asignar vehículo y motorista</strong></td><td>Al igual que el operativo, puede asignar recursos a los viajes, pero su asignación/decisión es la final.</td></tr>
+      <tr><td><strong>Asignar vales de combustible</strong></td><td>Puede asignar las cargas a solicitudes de combustible aprobadas.</td></tr>
+      <tr><td><strong>Firma digital</strong></td><td>Al aprobar, puede dibujar su firma con el mouse (en una pantalla táctil o con el dedo) y queda guardada en el PDF.</td></tr>
+      <tr><td><strong>Comparar sugerencias</strong></td><td>Ve una comparación entre lo que el sistema sugiere, lo que asignó el operativo, y puede decidir cuál opción es mejor.</td></tr>
+      <tr><td><strong>Ver y gestionar incidencias</strong></td><td>Puede reportar y dar seguimiento a incidentes (daños, accidentes, fallas mecánicas).</td></tr>
+      <tr><td><strong>Ver planificación de flota</strong></td><td>Panel visual con tarjetas de cada vehículo, su estado y motorista asignado.</td></tr>
+      <tr><td><strong>Ver el calendario de flota</strong></td><td>Calendario con todos los viajes programados.</td></tr>
+      <tr><td><strong>Ver bitácora de eventos</strong></td><td>Consulta el registro de todas las acciones hechas en el sistema (quién hizo qué y cuándo).</td></tr>
+      <tr><td><strong>Ver historial de estados</strong></td><td>Consulta el historial de cambios de estado de cada solicitud.</td></tr>
+      <tr><td><strong>Generar reportes</strong></td><td>Puede descargar reportes en PDF, Excel y CSV de todos los tipos de solicitudes.</td></tr>
+      <tr><td><strong>Generar PDF de misión oficial</strong></td><td>Genera el documento formal de la misión para imprimir o archivar.</td></tr>
+      <tr><td><strong>Ver el panel de liquidaciones</strong></td><td>Consulta las liquidaciones y su estado.</td></tr>
+    </table>
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ No puede gestionar usuarios (solo TI y Admin).<br>
+      ❌ No puede gestionar roles y permisos.<br>
+      ❌ No puede gestionar departamentales.<br>
+      ❌ No puede modificar parámetros del sistema.
+    </div>
+
+    <!-- 6. TI -->
+    <div class="page-break"></div>
+    <h2 id="ti">6. Rol: <span class="rol-tag rol-ti">TI</span> (Soporte Técnico)</h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> El personal de sistemas que da soporte técnico al sistema.
+    </div>
+
+    <h3>¿Qué puede hacer?</h3>
+    <p>Básicamente puede gestionar la mayoría de datos del sistema, con algunos accesos extras:</p>
+    <table>
+      <tr><th>Extra que puede hacer el TI</th><th></th></tr>
+      <tr><td>✅ Gestionar usuarios</td><td>Puede crear, editar, activar/desactivar usuarios.</td></tr>
+      <tr><td>✅ Gestionar departamentales</td><td>Puede administrar las dependencias.</td></tr>
+      <tr><td>✅ Acceso a roles (con permiso)</td><td>Puede asignar roles a los usuarios.</td></tr>
+      <tr><td>✅ Ver todo</td><td>Tiene acceso a todas las pantallas del sistema.</td></tr>
+    </table>
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ Solo puede eliminar ciertos registros (algunas funciones de borrado están reservadas para el Administrador principal del sistema).
+    </div>
+
+    <!-- 7. SUPER ADMIN -->
+    <div class="page-break"></div>
+    <h2 id="superadmin">7. Rol: <span class="rol-tag rol-sad">Super Admin</span> (Administrador)</h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> El dueño del sistema. Tiene acceso a absolutamente todo sin restricciones.
+    </div>
+
+    <h3>¿Qué puede hacer?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Todo</strong></td><td>Puede hacer todo lo que permite el sistema.</td></tr>
+      <tr><td><strong>Gestionar usuarios</strong></td><td>Crear, editar y desactivar usuarios del sistema.</td></tr>
+      <tr><td><strong>Gestionar roles</strong></td><td>Asignar roles y permisos a los usuarios.</td></tr>
+      <tr><td><strong>Gestionar parámetros</strong></td><td>Puede modificar parámetros del sistema (configuraciones globales).</td></tr>
+      <tr><td><strong>Gestionar departamentales</strong></td><td>Administrar las dependencias.</td></tr>
+      <tr><td><strong>Eliminar registros</strong></td><td>Tiene permiso de borrar en todos los catálogos.</td></tr>
+      <tr><td><strong>Crear lotes de combustible</strong></td><td>Puede crear lotes de asignación de gasolina.</td></tr>
+      <tr><td><strong>Ver bitácora e historial</strong></td><td>Acceso completo a registros de auditoría.</td></tr>
+      <tr><td><strong>Gestionar Catálogos</strong></td><td>Crear, editar, eliminar todo lo relacionado a los catálogos que tiene el sistema.</td></tr>
+    </table>
+
+    <!-- 8. LIQUIDADOR -->
+    <div class="page-break"></div>
+    <h2 id="liquidador">8. Rol: <span class="rol-tag rol-liq">Liquidador</span></h2>
+
+    <div class="info">
+      <strong>¿Quién es?</strong> La persona encargada de revisar los gastos y comprobantes para hacer la liquidación financiera de las solicitudes de combustible y mantenimiento.
+    </div>
+
+    <h3>¿Qué puede hacer?</h3>
+    <table>
+      <tr><th>Qué</th><th>Explicación</th></tr>
+      <tr><td><strong>Ver panel de liquidaciones</strong></td><td>Pantalla principal donde ve todas las solicitudes que esperan liquidación.</td></tr>
+      <tr><td><strong>Ver detalle completo</strong></td><td>Puede ver los montos solicitados, comprobantes (fotos de facturas, recibos).</td></tr>
+      <tr><td><strong>Liquidar</strong></td><td>Registrar el monto final validado y si el gasto coincide o tiene diferencias con lo solicitado.</td></tr>
+      <tr><td><strong>Reportar incidencias</strong></td><td>Si encuentra algo irregular, puede reportarlo como incidencia.</td></tr>
+      <tr><td><strong>Generar PDFs</strong></td><td>Descargar PDF de misión oficial, orden de trabajo, liquidación.</td></tr>
+      <tr><td><strong>Ver solicitudes</strong></td><td>Puede consultar las solicitudes de transporte, combustible y mantenimiento (solo lectura).</td></tr>
+    </table>
+
+    <div class="warn-box">
+      <strong>¿Qué NO puede hacer?</strong><br>
+      ❌ No puede crear, editar ni borrar nada en los catálogos.<br>
+      ❌ No puede aprobar ni rechazar solicitudes.<br>
+      ❌ No puede ver la planificación de flota.<br>
+      ❌ No puede gestionar usuarios.<br>
+      ❌ No puede ver la bitácora de auditoría.
+    </div>
+
+    <!-- 9. MAPA RÁPIDO -->
+    <div class="page-break"></div>
+    <h2 id="mapa">9. Mapa rápido: ¿qué puede ver y hacer cada quién?</h2>
+
+    <table>
+      <tr>
+        <th>Pantalla / Función</th>
+        <th><span class="rol-tag rol-sol" style="font-size:9px">Solicitante</span></th>
+        <th><span class="rol-tag rol-mot" style="font-size:9px">Motorista</span></th>
+        <th><span class="rol-tag rol-ope" style="font-size:9px">Operativo</span></th>
+        <th><span class="rol-tag rol-jef" style="font-size:9px">Jefe</span></th>
+        <th><span class="rol-tag rol-ti" style="font-size:9px">TI</span></th>
+        <th><span class="rol-tag rol-sad" style="font-size:9px">S.Admin</span></th>
+        <th><span class="rol-tag rol-liq" style="font-size:9px">Liquidador</span></th>
+      </tr>
+      <tr><td>Crear solicitudes</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Ver solicitudes de transporte</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Ver solicitudes de combustible</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Ver solicitudes de mantenimiento</td><td>✅</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Aprobar/Rechazar solicitudes</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Asignar vehículo y motorista</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Asignar vales de combustible</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar vehículos</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar motoristas</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar proveedores</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar contratos</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar usuarios</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Gestionar roles</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅*</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Ver calendario de flota</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Ver planificación de flota</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Registrar entrega/recepción vehículo</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Liquidar solicitudes</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Gestionar lotes de combustible</td><td>❌</td><td>❌</td><td>✅ (ver)</td><td>✅</td><td>❌</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Reportar incidencias</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Ver bitácora de eventos</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Generar reportes PDF/Excel/CSV</td><td>❌</td><td>❌</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td><td>✅</td></tr>
+      <tr><td>Cambiar mi estado (motorista)</td><td>❌</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>❌</td></tr>
+      <tr><td>Iniciar/Finalizar viaje</td><td>❌</td><td>✅</td><td>❌</td><td>❌</td><td>❌</td><td>✅</td><td>❌</td></tr>
+    </table>
+    <p style="font-size:0.85rem;color:var(--text-muted)">* TI = con permiso especial.</p>
+
+    <!-- 10. GLOSARIO DE ESTADOS -->
+    <div class="page-break"></div>
+    <h2 id="glosario">10. Glosario de estados</h2>
+    <p>Los estados (en orden) son:</p>
+    <table>
+      <tr><th>Estado</th><th>Significado</th></tr>
+      <tr><td>Borrador</td><td>La solicitud fue creada pero no enviada.</td></tr>
+      <tr><td><span class="badge-sample b-pend">Pendiente</span></td><td>Enviada, esperando que alguien la revise.</td></tr>
+      <tr><td><span class="badge-sample b-rev">En revisión</span></td><td>Un operativo la está revisando.</td></tr>
+      <tr><td><span class="badge-sample b-pre">Pre-aprobada</span></td><td>El operativo ya la validó, esperando la decisión del jefe.</td></tr>
+      <tr><td><span class="badge-sample b-apr">Aprobada</span></td><td>El jefe le dio el visto bueno.</td></tr>
+      <tr><td>Programada</td><td>(solo transporte) Ya aprobada, esperando asignación de vehículo.</td></tr>
+      <tr><td>Asignada</td><td>Ya tiene recursos asignados (vehículo, motorista, vales).</td></tr>
+      <tr><td>En ejecución</td><td>El viaje/mantenimiento está en proceso.</td></tr>
+      <tr><td>Completada</td><td>Finalizada exitosamente.</td></tr>
+      <tr><td>Liquidada</td><td>Ya fue revisada y cerrada financieramente.</td></tr>
+      <tr><td><span class="badge-sample b-rech">Rechazada</span></td><td>No fue aprobada (con motivo).</td></tr>
+      <tr><td>Cancelada</td><td>El solicitante la canceló.</td></tr>
+    </table>
+
+    <!-- 11. PREGUNTAS FRECUENTES -->
+    <div class="page-break"></div>
+    <h2 id="faq">11. Preguntas frecuentes</h2>
+
+    <h3>1. No veo ninguna pantalla al entrar</h3>
+    <p>Revise con su jefe o con el departamento de Sistemas qué rol tiene asignado. Si su rol es "Solicitante", usted no ingresa al panel web, sino a una aplicación diferente. Y lo mismo si usted es "Motorista".</p>
+
+    <h3>2. Quiero aprobar una solicitud, pero no me aparece el botón</h3>
+    <p>Revise que su rol sea jefe. Si es Operativo, usted solo puede revisar y validar, no aprobar.</p>
+
+    <h3>3. Recibí un correo de "solicitud aprobada" pero no sé qué sigue</h3>
+    <ul>
+      <li><strong>Si es de transporte:</strong> espere a que le asignen vehículo y motorista. Luego el motorista iniciará el viaje el día y a la hora que se solicitó.</li>
+      <li><strong>Si es de combustible:</strong> espere a que le asignen las cargas. Luego podrá completar la solicitud subiendo los comprobantes.</li>
+      <li><strong>Si es de mantenimiento:</strong> el taller procederá a hacer el trabajo.</li>
+    </ul>
+
+    <h3>4. ¿Cómo sé en qué estado está mi solicitud?</h3>
+    <p>Consulte la sección 10 (Glosario de estados) de este manual para entender cada estado. Además, el sistema le enviará un correo cada vez que su solicitud cambie de estado.</p>
+
+    <div class="info">
+      <strong>¿Duda o problema técnico?</strong><br>
+      Si encuentra errores inesperados, datos que no se guardan, o cualquier comportamiento extraño, repórtelo al departamento de TI. Incluya el código de la solicitud (ej: ST-2026-000123) y describa qué estaba haciendo cuando ocurrió el problema.
+    </div>
+
+    <!-- PIE -->
+    <div class="doc-footer">
+      <div class="line-cl"></div>
+      <p>Asamblea Legislativa — Departamento de Transporte</p>
+      <p>Manual de Roles y Accesos v1.0 · Junio 2026 — Documento interno · Confidencial</p>
+    </div>
+
+  </div>
+</div>
+</body>
+</html>
