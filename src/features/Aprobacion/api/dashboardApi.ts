@@ -28,8 +28,17 @@ export const dashboardApi = {
     return response.data;
   },
   getRecentRequests: async (): Promise<{ data: RecentRequest[] }> => {
-    const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/recientes');
-    return response.data;
+    const response = await axiosClient.get<{ data: any[] }>('/solicitudes/recientes');
+    const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+    const mappedData: RecentRequest[] = rawData.map((item: any) => ({
+      id: item.id?.toString() || '',
+      code: item.codigo || item.code || '',
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
+      rawDate: item.created_at || item.date || '',
+      type: item.modulo ? (item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1)) : (item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte')),
+      status: item.estado || item.status || ''
+    }));
+    return { data: mappedData };
   },
   // TODO: Reemplazar el endpoint cuando el backend libere /api/solicitudes/historial-jefatura
   getHistorialJefatura: async (): Promise<{ data: RecentRequest[] }> => {
