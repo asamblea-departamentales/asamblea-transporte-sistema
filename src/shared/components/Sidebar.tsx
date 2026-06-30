@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileCheck, History, LogOut, Bell } from 'lucide-react';
 import { useAuth } from '../../features/Auth/context/AuthContext';
-import { dashboardApi } from '../../features/Aprobacion/api/dashboardApi';
+import { useNotifications } from '../hooks/useNotifications';
+import { NotificationPanel } from './NotificationPanel';
 
 interface SidebarProps {
   isOpen?: boolean;
@@ -12,25 +13,8 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const [pendingCount, setPendingCount] = useState(0);
-
-  useEffect(() => {
-    if (user?.roles?.some(r => ['jefe', 'admin', 'ti', 'super_admin'].includes(r))) {
-      const fetchNotifications = async () => {
-        try {
-          const summary = await dashboardApi.getSummary();
-          setPendingCount(summary.pending || 0);
-        } catch (error) {
-          console.error("Error fetching notifications", error);
-        }
-      };
-      
-      fetchNotifications();
-      // Poll every 60 seconds
-      const interval = setInterval(fetchNotifications, 60000);
-      return () => clearInterval(interval);
-    }
-  }, [user]);
+  const { notifications, pendingCount, markAllAsRead } = useNotifications(user);
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Verifica si estamos actualmente en una página de aprobación viendo un ID específico
   const isAprobando = location.pathname.includes('/aprobaciones/') || location.pathname.includes('/combustible/aprobaciones/');
@@ -155,13 +139,26 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               </p>
             </div>
           </div>
-          <div className="relative cursor-pointer text-slate-300 hover:text-white transition-colors">
+          <div 
+            id="notif-bell"
+            onClick={() => {
+              setIsNotifOpen(!isNotifOpen);
+              if (pendingCount > 0) markAllAsRead();
+            }}
+            className="relative cursor-pointer text-slate-300 hover:text-white transition-colors"
+          >
             <Bell size={20} strokeWidth={2} />
             {pendingCount > 0 && (
               <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-amber-400 rounded-full border-2 border-[#142340] text-[8px] font-bold text-[#182a4d] flex items-center justify-center">
                 {pendingCount > 9 ? '9+' : pendingCount}
               </span>
             )}
+            
+            <NotificationPanel 
+              isOpen={isNotifOpen}
+              onClose={() => setIsNotifOpen(false)}
+              notifications={notifications}
+            />
           </div>
         </div>
         

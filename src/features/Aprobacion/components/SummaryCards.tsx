@@ -32,7 +32,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
       iconBg: 'bg-white/20',
       textValue: 'text-white',
       textLabel: 'text-indigo-100',
-      action: () => navigate('/aprobaciones')
+      action: undefined
     },
     {
       topLabel: 'EN PROGRESO',
@@ -78,7 +78,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
         <div 
           key={idx} 
           onClick={card.action}
-          className={`${card.bgClass} rounded-[20px] p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border ${card.borderClass} flex flex-col justify-between min-h-[150px] hover:-translate-y-1 hover:shadow-lg transition-all duration-300 cursor-pointer group`}
+          className={`${card.bgClass} rounded-[20px] p-6 shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border ${card.borderClass} flex flex-col justify-between min-h-[150px] transition-all duration-300 group ${card.action ? 'cursor-pointer hover:-translate-y-1 hover:shadow-lg' : ''}`}
         >
           <div className="flex justify-between items-start">
             <p className={`text-[10px] font-bold tracking-widest ${card.textLabel}`}>{card.topLabel}</p>
