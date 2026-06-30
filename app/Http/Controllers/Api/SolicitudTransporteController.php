@@ -382,12 +382,16 @@ class SolicitudTransporteController extends Controller
     public function historialJefatura(Request $request)
     {
         $this->authorizeJefe();
-
         $perPage = $request->query('per_page', 15);
+        $user = $request->user();
 
         $historial = SolicitudTransporte::query()
             ->with(['unidad', 'solicitante', 'vehiculo', 'motorista', 'autorizador'])
-            ->where('decidido_por', Auth::id())
+            // MINIMAL CHANGE: Filtrar por jefe_id (o aprobado por él) para que el front no reciba un historial vacío
+            ->where(function ($query) use ($user) {
+                $query->where('jefe_id', $user->id)
+                      ->orWhere('decidido_por', $user->id);
+            })
             ->whereIn('estado', [
                 EstadoSolicitudEnum::APROBADA,
                 EstadoSolicitudEnum::PROGRAMADA,

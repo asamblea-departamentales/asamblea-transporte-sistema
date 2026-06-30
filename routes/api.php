@@ -36,13 +36,15 @@ Route::middleware('auth:sanctum')->group(function () {
         }
 
         $estadosPendientes = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
+        $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
 
         if ($user->hasRole('jefe')) {
             $estadosPendientes = [EstadoSolicitudEnum::PRE_APROBADA];
+            // MINIMAL CHANGE: Excluir PRE_APROBADA de aprobados para evitar doble conteo en Jefes
+            $estadosAprobados = [EstadoSolicitudEnum::APROBADA];
         }
 
         $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
-        $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
         $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
 
         return response()->json([
@@ -54,9 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
                            + (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count()
                            + (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
 
-            'accepted' => (clone $qTransporte)
-                            ->where('estado', EstadoSolicitudEnum::APROBADA)
-                            ->count()
+            'accepted' => (clone $qTransporte)->where('estado', EstadoSolicitudEnum::APROBADA)->count()
                         + (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count()
                         + (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
 
@@ -69,9 +69,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 'transporte' => [
                     'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
                     'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted' => (clone $qTransporte)
-                                    ->where('estado', EstadoSolicitudEnum::APROBADA)
-                                    ->count(),
+                    'accepted' => (clone $qTransporte)->where('estado', EstadoSolicitudEnum::APROBADA)->count(),
                     'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
                 ],
                 'mantenimiento' => [
@@ -151,7 +149,6 @@ Route::middleware('auth:sanctum')->group(function () {
         ->parameters(['solicitudes-transporte' => 'solicitud']);
 
     Route::get('solicitudes-transporte/{solicitud:codigo}', [SolicitudTransporteController::class, 'show']);
-
     Route::post('solicitudes-transporte/{solicitud:codigo}/enviar', [SolicitudTransporteController::class, 'enviar']);
     Route::post('solicitudes-transporte/{solicitud:codigo}/finalizar', [SolicitudTransporteController::class, 'finalizar']);
     Route::post('solicitudes-transporte/{solicitud:codigo}/cancelar', [SolicitudTransporteController::class, 'cancelar']);
@@ -166,7 +163,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('solicitudes-transporte/{solicitud:codigo}/reasignar', [SolicitudTransporteController::class, 'reasignar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/desbloquear', [SolicitudTransporteController::class, 'desbloquear']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
-
         Route::get('solicitudes/historial-jefatura', [SolicitudTransporteController::class, 'historialJefatura']);
         Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
     });
@@ -222,18 +218,18 @@ Route::middleware('auth:sanctum')->group(function () {
         ->prefix('motoristas')
         ->group(function () {
 
-            // 🔥 NUEVAS (self-service motorista)
+            //NUEVAS (self-service motorista)
             Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
             Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
             Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
 
-            // 📊 Operativas (admin/jefe)
+            // Operativas (admin/jefe)
             Route::get('/', [MotoristaEstadoController::class, 'index']);
             Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
             Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
             Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
 
-            // 🚗 Viajes — flujo de 4 pasos
+            // Viajes — flujo de 4 pasos
             Route::post('me/viajes/{solicitud}/iniciar', [MotoristaViajeController::class, 'iniciar']);
             Route::post('me/viajes/{solicitud}/llegada', [MotoristaViajeController::class, 'llegadaDestino']);
             Route::post('me/viajes/{solicitud}/retorno', [MotoristaViajeController::class, 'iniciarRetorno']);
@@ -243,7 +239,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // ── CATÁLOGOS (para el frontend) ────────────────────────
     Route::prefix('catalogos')->group(function () {
 
-    //Ahora incluye la informacion de disponibilidad, estado operativo y estado del catálogo, además de la información del motorista asignado actualmente (si existe) para cada vehículo. Para los motoristas, incluye su estado actual y el motivo de inactividad si no están disponibles.
         Route::get('/vehiculos', function () {
             return response()->json(
                 \App\Models\Vehiculo::with([
@@ -363,7 +358,6 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
         });
 
-        //Ahora incluye el estado actual de cada motorista, indicando si están disponibles o no, y el motivo de inactividad si no lo están. Esto es útil para que el frontend pueda mostrar esta información directamente sin necesidad de hacer llamadas adicionales para obtener el estado de cada motorista.
         Route::get('/motoristas', function () {
             return response()->json(
                 \App\Models\Motorista::with('estadoActual')
@@ -428,9 +422,7 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
-        // Ruta para el frontend de motoristas (acceso a los viajes asignados y mostrarlos)
         Route::get('me/viajes', [MotoristaEstadoController::class, 'misViajes']);
+    });
 
-    }); // Cierra catalogos
-
-}); // Cierra sanctum
+});
