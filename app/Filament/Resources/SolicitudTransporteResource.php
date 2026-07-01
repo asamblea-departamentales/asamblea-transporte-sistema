@@ -215,17 +215,38 @@ class SolicitudTransporteResource extends Resource
                         Forms\Components\Placeholder::make('destino_adicional_ui')
                             ->label('Destinos Adicionales')
                             ->content(function (SolicitudTransporte $record) {
-                                if (!$record->destino_adicional) {
+                                // Destinos originales del campo texto
+                                $html = '';
+                                if ($record->destino_adicional) {
+                                    $destinos = array_map('trim', explode(' - ', $record->destino_adicional));
+                                    $html .= '<div style="margin-bottom: 8px; font-weight: 600; color: #374151;">Originales:</div>';
+                                    $html .= '<ul style="list-style-type: disc; margin-left: 20px; line-height: 1.5;">';
+                                    foreach ($destinos as $destino) {
+                                        if (!empty($destino)) {
+                                            $html .= '<li style="margin-bottom: 4px; color: #374151;">' . e($destino) . '</li>';
+                                        }
+                                    }
+                                    $html .= '</ul>';
+                                }
+
+                                // Destinos de la nueva tabla, filtrados por agregado_durante_viaje
+                                $duranteViaje = $record->destinosAdicionales->where('agregado_durante_viaje', true);
+                                if ($duranteViaje->isNotEmpty()) {
+                                    $html .= '<div style="margin-top: 8px; font-weight: 600; color: #374151;">Agregados durante el viaje:</div>';
+                                    $html .= '<ul style="list-style-type: none; margin-left: 0; line-height: 1.5;">';
+                                    foreach ($duranteViaje as $d) {
+                                        $nombreAgregador = $d->agregadoPor?->name ?? $d->agregadoPor?->username ?? 'Desconocido';
+                                        $html .= '<li style="margin-bottom: 6px; padding: 6px 10px; background: #fff7ed; border-left: 3px solid #f97316; border-radius: 4px; color: #374151;">';
+                                        $html .= '🚩 <strong>' . e($d->nombre) . '</strong>';
+                                        $html .= '<br><small style="color: #9a3412;">— El departamento de Transporte agregó este punto (' . e($nombreAgregador) . ').</small>';
+                                        $html .= '</li>';
+                                    }
+                                    $html .= '</ul>';
+                                }
+
+                                if (empty($html)) {
                                     return 'Sin destinos adicionales';
                                 }
-                                $destinos = array_map('trim', explode(' - ', $record->destino_adicional));
-                                $html = '<ul style="list-style-type: disc; margin-left: 20px; line-height: 1.5;">';
-                                foreach ($destinos as $destino) {
-                                    if (!empty($destino)) {
-                                        $html .= '<li style="margin-bottom: 8px; color: #374151;">' . e($destino) . '</li>';
-                                    }
-                                }
-                                $html .= '</ul>';
                                 return new \Illuminate\Support\HtmlString($html);
                             }),
                     ])

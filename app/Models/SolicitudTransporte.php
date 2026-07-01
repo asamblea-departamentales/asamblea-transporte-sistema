@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use App\Domain\Solicitudes\Services\TicketService;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 
@@ -167,6 +168,11 @@ class SolicitudTransporte extends Model
     public function solicitudCombustible()
     {
         return $this->hasOne(SolicitudCombustible::class, 'solicitud_transporte_id');
+    }
+
+    public function destinosAdicionales(): HasMany
+    {
+        return $this->hasMany(SolicitudDestinoAdicional::class)->orderBy('orden');
     }
 
     // Relacion con incidencias

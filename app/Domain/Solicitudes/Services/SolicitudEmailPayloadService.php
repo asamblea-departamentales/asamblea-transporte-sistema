@@ -85,6 +85,13 @@ class SolicitudEmailPayloadService
             'destino_lng' => $r->destino_lng,
             'destino_adicional_lat' => $r->destino_adicional_lat,
             'destino_adicional_lng' => $r->destino_adicional_lng,
+            'destinos_adicionales'  => $r->destinosAdicionales->map(fn ($d) => [
+                'nombre'                => $d->nombre,
+                'lat'                   => $d->lat,
+                'lng'                   => $d->lng,
+                'agregado_durante_viaje' => $d->agregado_durante_viaje,
+                'agregado_por_nombre'    => $d->agregadoPor?->name ?? $d->agregadoPor?->username ?? null,
+            ])->toArray(),
             'fecha_salida' => $r->fecha_salida,
             'fecha_retorno' => $r->fecha_retorno,
             'motivo_actividad' => $r->motivo_actividad,
@@ -202,6 +209,7 @@ class SolicitudEmailPayloadService
             'vehiculo.tipo',
             'motorista',
             'unidad',
+            'destinosAdicionales.agregadoPor',
         ],
 
         'combustible' => [

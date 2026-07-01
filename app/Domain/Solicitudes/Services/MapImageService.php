@@ -74,7 +74,7 @@ class MapImageService
      * @param  string $text Dirección o nombre del lugar a geocodificar
      * @return array        [latitud, longitud]
      */
-    protected function geocodeOrFake(string $text): array
+    public function geocodeOrFake(string $text): array
     {
         $text = trim($text);
         if ($text === '') {
@@ -126,7 +126,8 @@ class MapImageService
     }
 
     /**
-     * Genera la URL de una imagen de mapa estático con la ruta entre origen y destino.
+     * Genera la URL de una imagen de mapa estático con la ruta entre origen y destino,
+     * incluyendo destinos adicionales si existen.
      *
      * Utiliza la API Static Map de Geoapify. Si no hay API key configurada
      * devuelve null. Las coordenadas se obtienen de geocodeOrFake() si no
@@ -135,7 +136,7 @@ class MapImageService
      * El zoom se calcula automáticamente según la distancia entre los puntos.
      *
      * @param  array       $solicitud Arreglo con datos de la solicitud
-     *                                (origen, destino, coordenadas)
+     *                                (origen, destino, coordenadas, destinos_adicionales)
      * @return string|null            URL de la imagen del mapa o null si no se pudo generar
      */
     public function generateRouteImageUrl(array $solicitud): ?string
@@ -162,9 +163,39 @@ class MapImageService
             return null;
         }
 
-        // Calcula el nivel de zoom según la distancia entre los puntos
-        $distLat = abs($latOrigen - $latDestino);
-        $distLng = abs($lngOrigen - $lngDestino);
+        // Destinos adicionales (de la nueva tabla solicitud_destinos_adicionales)
+        $destinosAdicionales = $solicitud['destinos_adicionales'] ?? [];
+
+        // Recolectar todos los puntos en orden: origen -> adicionales -> destino
+        $puntos = [
+            ['lat' => $latOrigen,  'lng' => $lngOrigen,  'tipo' => 'origen'],
+        ];
+
+        foreach ($destinosAdicionales as $da) {
+            $lat = $da['lat'] ?? null;
+            $lng = $da['lng'] ?? null;
+            if (empty($lat) || empty($lng)) {
+                [$lat, $lng] = $this->geocodeOrFake($da['nombre'] ?? '');
+            }
+            if (!empty($lat) && !empty($lng)) {
+                $puntos[] = [
+                    'lat'    => $lat,
+                    'lng'    => $lng,
+                    'tipo'   => ($da['agregado_durante_viaje'] ?? false) ? 'jefe' : 'original',
+                    'nombre' => $da['nombre'] ?? '',
+                ];
+            }
+        }
+
+        $puntos[] = [
+            'lat' => $latDestino, 'lng' => $lngDestino, 'tipo' => 'destino',
+        ];
+
+        // Calcular zoom basado en todos los puntos
+        $lats = array_column($puntos, 'lat');
+        $lngs = array_column($puntos, 'lng');
+        $distLat = max($lats) - min($lats);
+        $distLng = max($lngs) - min($lngs);
         $spread  = max($distLat, $distLng);
 
         if ($spread < 0.03) {
@@ -192,31 +223,29 @@ class MapImageService
             'apiKey' => $apiKey,
         ];
 
-        // Marcadores: azul para origen, rojo para destino
+        // Marcadores: azul=origen, verde=adicional original, naranja=agregado por Jefe, rojo=destino
         $markers = [];
+        $pathCoords = [];
 
-        $markers[] = sprintf(
-            'lonlat:%.6f,%.6f;color:%s;size:large;icon:circle',
-            $lngOrigen,
-            $latOrigen,
-            'blue'
-        );
+        foreach ($puntos as $i => $p) {
+            $color = match ($p['tipo']) {
+                'origen'   => 'blue',
+                'destino'  => 'red',
+                'jefe'     => 'orange',
+                default    => 'green',
+            };
 
-        $markers[] = sprintf(
-            'lonlat:%.6f,%.6f;color:%s;size:large;icon:circle',
-            $lngDestino,
-            $latDestino,
-            'red'
-        );
+            $markers[] = sprintf(
+                'lonlat:%.6f,%.6f;color:%s;size:medium;icon:circle',
+                $p['lng'], $p['lat'], $color
+            );
+
+            $pathCoords[] = sprintf('lonlat:%.6f,%.6f', $p['lng'], $p['lat']);
+        }
 
         $params['marker'] = $markers;
 
-        // Ruta entre origen y destino
-        $pathCoords = [
-            sprintf('lonlat:%.6f,%.6f', $lngOrigen,  $latOrigen),
-            sprintf('lonlat:%.6f,%.6f', $lngDestino, $latDestino),
-        ];
-
+        // Ruta que conecta todos los puntos en orden
         $params['path'] = sprintf(
             'color:0x0066ccdd;width:4|%s',
             implode('|', $pathCoords)

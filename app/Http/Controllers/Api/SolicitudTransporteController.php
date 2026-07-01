@@ -11,10 +11,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\MapImageService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Controllers\Controller;
+use App\Models\BitacoraEvento;
+use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -123,6 +127,22 @@ class SolicitudTransporteController extends Controller
             'estado' => EstadoSolicitudEnum::BORRADOR,
         ]);
 
+        // Sincronizar destinos adicionales a la nueva tabla
+        if ($destinoAdicional) {
+            $nombres = array_map('trim', explode(' - ', $destinoAdicional));
+            $nombres = array_filter($nombres, fn ($n) => $n !== '');
+            $orden = 0;
+            foreach ($nombres as $nombre) {
+                SolicitudDestinoAdicional::create([
+                    'solicitud_transporte_id' => $solicitud->id,
+                    'nombre'                  => $nombre,
+                    'agregado_por'            => null,
+                    'agregado_durante_viaje'  => false,
+                    'orden'                   => $orden++,
+                ]);
+            }
+        }
+
         // El service cambia el estado de BORRADOR a PENDIENTE y notifica (aquí se enviará el correo)
         $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
 
@@ -133,6 +153,60 @@ class SolicitudTransporteController extends Controller
     }
 
     /**
+     * Agregar destino durante un viaje activo (solo Jefe)
+     */
+    public function agregarDestinoViaje(Request $request, SolicitudTransporte $solicitud)
+    {
+        $user = $request->user();
+
+        if (!$user->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            return response()->json(['message' => 'Solo el Jefe de Transporte puede agregar destinos durante el viaje.'], 403);
+        }
+
+        if ($solicitud->estado !== EstadoSolicitudEnum::EN_EJECUCION) {
+            return response()->json(['message' => 'Solo se pueden agregar destinos a un viaje en curso (EN_EJECUCION).'], 422);
+        }
+
+        $data = $request->validate([
+            'nombre' => ['required', 'string', 'max:255'],
+        ]);
+
+        $nombre = trim($data['nombre']);
+
+        // Geocodificar usando el mismo servicio de mapas
+        [$lat, $lng] = app(MapImageService::class)->geocodeOrFake($nombre);
+
+        // Calcular el siguiente orden
+        $ultimoOrden = SolicitudDestinoAdicional::where('solicitud_transporte_id', $solicitud->id)->max('orden') ?? -1;
+
+        $destino = SolicitudDestinoAdicional::create([
+            'solicitud_transporte_id' => $solicitud->id,
+            'nombre'                  => $nombre,
+            'lat'                     => $lat,
+            'lng'                     => $lng,
+            'agregado_por'            => $user->id,
+            'agregado_durante_viaje'  => true,
+            'orden'                   => $ultimoOrden + 1,
+        ]);
+
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id'   => $solicitud->id,
+            'accion'       => AccionBitacoraEnum::AGREGAR_DESTINO_VIAJE->value,
+            'user_id'      => $user->id,
+            'datos_extras' => [
+                'nombre'           => $nombre,
+                'lat'              => $lat,
+                'lng'              => $lng,
+                'solicitud_codigo' => $solicitud->codigo,
+                'orden'            => $ultimoOrden + 1,
+            ],
+        ]);
+
+        return response()->json($destino->load('agregadoPor'), 201);
+    }
+
+    /**
      * Ver detalle
      */
     public function show(SolicitudTransporte $solicitud)
@@ -140,7 +214,10 @@ class SolicitudTransporteController extends Controller
         $this->authorizeView($solicitud);
 
         return response()->json(
-            $solicitud->load(['unidad', 'solicitante', 'autorizador', 'vehiculo.ultimaRecepcionEntrega', 'motorista']) // Catalogos nuevos agregados
+            $solicitud->load([
+                'unidad', 'solicitante', 'autorizador', 'vehiculo.ultimaRecepcionEntrega',
+                'motorista', 'destinosAdicionales.agregadoPor',
+            ])
         );
     }
 

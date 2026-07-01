@@ -119,6 +119,16 @@ class ReporteMisionOficialService
         $destino = $solicitud->destino ?? '—';
         $destinoAdicional = $solicitud->destino_adicional ?? 'Sin destino adicional';
 
-        return "Se autoriza la misión oficial del vehículo con placas {$placa}, clase {$clase}, año {$anio}, capacidad {$capacidad}, marca {$marca}, modelo {$modelo} y color {$color}, propiedad de la Asamblea Legislativa, para ser conducido por el señor {$motorista}. Motivo: {$motivo}. Ruta: {$origen} hacia {$destino}. Destino adicional: {$destinoAdicional}.";
+        $texto = "Se autoriza la misión oficial del vehículo con placas {$placa}, clase {$clase}, año {$anio}, capacidad {$capacidad}, marca {$marca}, modelo {$modelo} y color {$color}, propiedad de la Asamblea Legislativa, para ser conducido por el señor {$motorista}. Motivo: {$motivo}. Ruta: {$origen} hacia {$destino}. Destino adicional: {$destinoAdicional}.";
+
+        // Agregar destinos añadidos durante el viaje (si los hay)
+        $solicitud->loadMissing('destinosAdicionales.agregadoPor');
+        $duranteViaje = $solicitud->destinosAdicionales->where('agregado_durante_viaje', true);
+        if ($duranteViaje->isNotEmpty()) {
+            $puntos = $duranteViaje->map(fn ($d) => $d->nombre)->implode(', ');
+            $texto .= " Durante el viaje, el departamento de Transporte agregó los siguientes puntos: {$puntos}.";
+        }
+
+        return $texto;
     }
 }

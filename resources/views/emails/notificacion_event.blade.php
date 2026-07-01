@@ -433,6 +433,26 @@
                     </div>
                 @endif
 
+                @php
+                    $destinosDuranteViaje = $payload['solicitud']['destinos_adicionales'] ?? [];
+                    $destinosDuranteViaje = array_filter($destinosDuranteViaje, fn($d) => $d['agregado_durante_viaje'] ?? false);
+                @endphp
+                @if(count($destinosDuranteViaje) > 0)
+                    <div class="detail-item-full">
+                        <div class="detail-label">Destinos agregados durante el viaje</div>
+                        <div class="detail-value" style="margin-top:4px;">
+                            <ul style="list-style-type: none; padding: 0; margin: 0;">
+                                @foreach($destinosDuranteViaje as $destino)
+                                    <li style="padding: 4px 0; border-bottom: 1px dashed #e5e7eb;">
+                                        <strong>🚩 {{ $destino['nombre'] }}</strong>
+                                        <br><small style="color:#6b7280;">— El departamento de Transporte agregó este punto.</small>
+                                    </li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    </div>
+                @endif
+
                 @if(isset($payload['solicitud']['fecha_salida']))
                     <div class="detail-item">
                         <div class="detail-label">Fecha de salida</div>
