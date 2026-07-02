@@ -567,6 +567,7 @@ class SolicitudCombustibleService
 
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
             $anterior = $solicitud->estado;
+            $montoOriginal = $solicitud->decisionOperativa?->monto_aprobado;
 
             if ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
@@ -587,11 +588,24 @@ class SolicitudCombustibleService
             $solicitud->observaciones = $comentario;
             $solicitud->save();
 
+            if ($decisionFinal === 'jefe' && $montoOriginal !== null && $montoOriginal != $montoAprobado) {
+                $solicitud->decisionOperativa->update(['monto_aprobado' => $montoAprobado]);
+            }
+
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'decision_final' => $decisionFinal,
                 'monto_aprobado' => $solicitud->cantidad_combustible,
             ]);
+
+            if ($montoOriginal !== null && $montoOriginal != $montoAprobado) {
+                $this->registrarEvento($solicitud, AccionBitacoraEnum::ACTUALIZACION->value, $jefeId, [
+                    'campo' => 'monto_aprobado (DecisionOperativa)',
+                    'valor_anterior' => $montoOriginal,
+                    'valor_nuevo' => $montoAprobado,
+                    'motivo' => 'El Jefe modificó el monto sugerido por el Operativo',
+                ]);
+            }
 
             return [
                 'success' => true,
