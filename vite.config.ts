@@ -55,9 +55,8 @@ export default defineConfig(({ mode }) => {
     build: {
       sourcemap: false, // Desactiva la generación de source maps (oculta el código en producción)
     },
-    esbuild: {
-      // Elimina todos los console.log y debugger en producción
-      drop: mode === 'production' ? ['console', 'debugger'] : [],
-    }
+    esbuild: mode === 'production' ? {
+      drop: ['console', 'debugger']
+    } : undefined
   };
 })
