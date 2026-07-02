@@ -893,10 +893,22 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             if ($crearLote) {
                 $solicitud = SolicitudCombustible::findOrFail($id);
-                $lote = app(LoteCombustibleService::class)->crearLote([
-                    'fecha'         => $data['fecha_lote'] ?? today()->format('Y-m-d'),
-                    'observaciones' => $data['observaciones_lote'] ?? null,
-                ], auth()->id());
+                $fechaLote = $data['fecha_lote'] ?? today()->format('Y-m-d');
+
+                $loteExistente = AsignacionCombustibleLote::whereDate('fecha', $fechaLote)
+                    ->where('estado', EstadoLoteEnum::BORRADOR)
+                    ->first();
+
+                if ($loteExistente) {
+                    $lote = $loteExistente;
+                    $loteReusado = true;
+                } else {
+                    $lote = app(LoteCombustibleService::class)->crearLote([
+                        'fecha'         => $fechaLote,
+                        'observaciones' => $data['observaciones_lote'] ?? null,
+                    ], auth()->id());
+                    $loteReusado = false;
+                }
 
                 $detalle = app(LoteCombustibleService::class)->agregarVehiculo($lote->id, [
                     'vehiculo_id'              => $solicitud->vehiculo_id,
@@ -991,9 +1003,15 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 $adicional = $importado > 0
                     ? " | Se importaron {$importado} solicitud(es) adicional(es) al lote."
                     : '';
+                $titulo = $loteReusado
+                    ? 'Solicitud validada y asignada a lote existente'
+                    : 'Solicitud validada y asignada a lote nuevo';
+                $cuerpo = $loteReusado
+                    ? "{$checks} | Asignado a lote #{$lote->id}. Monto: \${$monto}{$adicional}"
+                    : "{$checks} | Lote creado y asignado. Monto: \${$monto}{$adicional}";
                 Notification::make()
-                    ->title('Solicitud validada y asignada a lote nuevo')
-                    ->body("{$checks} | Lote creado y asignado. Monto: \${$monto}{$adicional}")
+                    ->title($titulo)
+                    ->body($cuerpo)
                     ->success()
                     ->send();
             } else {

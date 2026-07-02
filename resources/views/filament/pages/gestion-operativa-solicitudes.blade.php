@@ -331,7 +331,7 @@
                         @endif
                         @if($row['tipo'] === 'combustible')
                         <div><div class="meta-label">Vehículo</div><div class="meta-value">{{ $row['vehiculo_placa'] ?? '—' }}</div></div>
-                        <div><div class="meta-label">Vales solicitados</div><div class="meta-value font-semibold">{{ number_format($row['vales_solicitados'] ?? 0) }}</div></div>
+                        <div><div class="meta-label">Cargas solicitadas</div><div class="meta-value font-semibold">{{ number_format($row['vales_solicitados'] ?? 0) }}</div></div>
                         <div><div class="meta-label">Fecha solicitud</div><div class="meta-value">{{ $row['fecha_solicitud'] ?? '—' }}</div></div>
                         @endif
                         @if(in_array($row['tipo'], ['transporte', 'mantenimiento']) && !empty($row['fecha_solicitud']))
@@ -612,7 +612,7 @@
                                             <template x-if="crearLote">
                                                 <div class="space-y-4 border-t border-gray-200 pt-4 mt-2">
                                                     <div class="flex justify-between text-sm bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
-                                                        <span class="text-gray-500">Vales solicitados:</span>
+                                                        <span class="text-gray-500">Cargas solicitadas:</span>
                                                         <span class="font-semibold">{{ $row['vales_solicitados'] ?? 0 }}</span>
                                                     </div>
                                                     <div>
@@ -698,7 +698,7 @@
 
                                             <div class="space-y-4">
                                                 <div class="flex justify-between text-sm bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
-                                                    <span class="text-gray-500">Vales solicitados:</span>
+                                                    <span class="text-gray-500">Cargas solicitadas:</span>
                                                     <span class="font-semibold">{{ $row['vales_solicitados'] ?? 0 }}</span>
                                                 </div>
                                                 <div>
