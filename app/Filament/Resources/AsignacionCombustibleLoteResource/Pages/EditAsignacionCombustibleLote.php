@@ -22,7 +22,17 @@ class EditAsignacionCombustibleLote extends EditRecord
                 ->modalHeading('Finalizar lote')
                 ->modalDescription('Una vez finalizado, no se podrán realizar más cambios en este lote.')
                 ->action(function ($record) {
-                    app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)->finalizarLote($record->id, auth()->id());
+                    try {
+                        app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)
+                            ->finalizarLote($record->id, auth()->id());
+                    } catch (\DomainException $e) {
+                        \Filament\Notifications\Notification::make()
+                            ->title('Error al finalizar')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
+                        return;
+                    }
 
                     return redirect($this->getResource()::getUrl('view', ['record' => $record]));
                 })
