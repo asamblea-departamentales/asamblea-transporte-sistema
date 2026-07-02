@@ -4,13 +4,19 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Models\Incidencia;
 use App\Models\BitacoraEvento;
+use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
 class IncidenciaService
 {
-    public function crear($entidad, array $data): Incidencia
+    public function crear(array $data): Incidencia
     {
-        return DB::transaction(function () use ($entidad, $data) {
+        return DB::transaction(function () use ($data) {
+
+            $entidad = $this->resolveEntidad($data['entidad_tipo'], $data['entidad_id']);
 
             $incidencia = $entidad->incidencias()->create([
                 'tipo'          => $data['tipo'],
@@ -21,7 +27,6 @@ class IncidenciaService
                 'evidencias'    => $data['evidencias'] ?? null,
             ]);
 
-            // 🔥 BITÁCORA
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
                 'entidad_id'   => $incidencia->id,
@@ -35,6 +40,16 @@ class IncidenciaService
 
             return $incidencia;
         });
+    }
+
+    private function resolveEntidad(string $tipo, int $id): Model
+    {
+        return match ($tipo) {
+            'combustible'   => SolicitudCombustible::findOrFail($id),
+            'mantenimiento' => SolicitudMantenimiento::findOrFail($id),
+            'transporte'    => SolicitudTransporte::findOrFail($id),
+            default         => throw new \InvalidArgumentException("Tipo de entidad inválido: {$tipo}"),
+        };
     }
 
     public function asignar(Incidencia $incidencia, int $userId): void

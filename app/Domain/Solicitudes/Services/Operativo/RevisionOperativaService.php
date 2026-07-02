@@ -113,7 +113,8 @@ class RevisionOperativaService
         int $id,
         int $userId,
         string $comentario,
-        array $validaciones = []
+        array $validaciones = [],
+        ?float $montoAprobado = null,
     ): void {
         $record = $this->resolverModelo($tipo, $id);
         $estadoAnterior = $record->estado;
@@ -121,6 +122,21 @@ class RevisionOperativaService
         $record->estado = EstadoSolicitudEnum::PRE_APROBADA;
         $this->guardarComentario($record, $comentario);
         $record->save();
+
+        if ($record instanceof \App\Models\SolicitudCombustible && $montoAprobado !== null && $montoAprobado > 0) {
+            \App\Models\DecisionOperativa::updateOrCreate(
+                [
+                    'decidable_id' => $record->id,
+                    'decidable_type' => get_class($record),
+                ],
+                [
+                    'usuario_operativo_id' => $userId,
+                    'monto_aprobado' => $montoAprobado,
+                    'cambio_detectado' => 'ninguno',
+                    'justificacion' => $comentario,
+                ]
+            );
+        }
 
         HistorialEstado::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),

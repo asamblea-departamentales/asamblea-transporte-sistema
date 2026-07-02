@@ -19,7 +19,7 @@ class LiquidacionCombustible extends Model
     ];
 
     protected $casts = [
-        'fecha_liquidacion',
+        'fecha_liquidacion' => 'datetime',
     ];
 
     //Relaciones

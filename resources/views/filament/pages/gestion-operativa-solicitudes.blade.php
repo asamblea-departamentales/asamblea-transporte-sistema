@@ -425,7 +425,11 @@
 
                         {{-- Validar + Asignación Previa — combustible (2 pasos) --}}
                         @if($row['tipo'] === 'combustible')
-                            @php $match = $this->getDetalleSugerido($row['id']); @endphp
+                            @php
+                                $match = $this->matchSolicitudId === $row['id']
+                                    ? $this->matchActual
+                                    : $this->getDetalleSugerido($row['id']);
+                            @endphp
                             <div x-data="{
                                 open: false,
                                 step: 1,
@@ -435,8 +439,16 @@
                                 recursos_disponibles: false,
                                 reglas_minimas: false,
                                 hallazgos: '',
+                                errores: [],
                                 monto: {{ $match ? number_format($match['monto_actual'], 2, '.', '') : 0 }},
                                 cubrir_con_reserva: {{ $match && $match['tiene_reserva'] ? 'true' : 'false' }},
+                                validarPaso1() {
+                                    this.errores = [];
+                                    if (!this.comentario.trim()) this.errores.push('Debe escribir un comentario de validación.');
+                                    if (!this.datos_completos) this.errores.push('Debe marcar &quot;Datos completos&quot; en el checklist.');
+                                    if (!this.reglas_minimas) this.errores.push('Debe marcar &quot;Reglas mínimas&quot; en el checklist.');
+                                    if (this.errores.length === 0) this.step = 2;
+                                },
                                 submit() {
                                     $wire.validarYAsignarCombustible({{ $row['id'] }}, {
                                         comentario: this.comentario,
@@ -453,7 +465,20 @@
                                     this.step = 1;
                                 }
                             }">
-                                <button class="btn-accion btn-success" @click="open = true; step = 1">
+                                <button class="btn-accion btn-success"
+                                    @click="
+                                        $wire.cargarMatch({{ $row['id'] }}).then(() => {
+                                            open = true;
+                                            step = 1;
+                                            comentario = '';
+                                            datos_completos = false;
+                                            fechas_validas = false;
+                                            recursos_disponibles = false;
+                                            reglas_minimas = false;
+                                            hallazgos = '';
+                                            errores = [];
+                                        });
+                                    ">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
                                 </button>
                                 <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false; step = 1" style="display:none"></div>
@@ -476,9 +501,16 @@
                                                 <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
                                                 <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
                                             </div>
+                                            {{-- Errores de validación --}}
+                                            <template x-for="(err, idx) in errores" :key="idx">
+                                                <div class="flex items-start gap-2 mt-2">
+                                                    <span class="text-red-500 text-sm shrink-0">⚠️</span>
+                                                    <span class="text-red-600 dark:text-red-400 text-sm" x-text="err"></span>
+                                                </div>
+                                            </template>
                                             <div class="flex justify-end gap-3 pt-4">
                                                 <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
-                                                <button type="button" class="btn-accion btn-indigo" @click="step = 2" x-bind:disabled="!comentario.trim() || !datos_completos || !reglas_minimas">
+                                                <button type="button" class="btn-accion btn-indigo" @click="validarPaso1()">
                                                     Continuar a Asignación Previa →
                                                 </button>
                                             </div>

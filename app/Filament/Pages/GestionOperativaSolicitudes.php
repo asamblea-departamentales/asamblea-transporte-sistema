@@ -63,6 +63,11 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public ?string $estado = null;
 
+    // Cache del match actual para Asignación Previa (evita recargar página)
+    public ?int $matchSolicitudId = null;
+
+    public ?array $matchActual = null;
+
     public int $kpi_total = 0;
 
     public int $kpi_a = 0;
@@ -883,6 +888,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 auth()->id(),
                 $data['comentario'],
                 $this->armarValidaciones($data),
+                $monto,
             );
 
             if ($cubrirConReserva) {
@@ -987,6 +993,18 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $solicitud = SolicitudCombustible::with('vehiculo')->find($solicitudId);
 
         return $solicitud?->vehiculo?->tiene_reserva_activa ?? false;
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    // Carga bajo demanda del match para Asignación Previa
+    // Se invoca desde Alpine al abrir el modal, así siempre trae
+    // datos frescos aunque el Jefe haya creado el lote en otra
+    // pestaña minutos antes.
+    // ─────────────────────────────────────────────────────────────
+    public function cargarMatch(int $solicitudId): void
+    {
+        $this->matchSolicitudId = $solicitudId;
+        $this->matchActual = $this->getDetalleSugerido($solicitudId);
     }
 
     public function getContratosActivosProperty(): array

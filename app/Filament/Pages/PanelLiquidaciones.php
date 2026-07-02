@@ -36,7 +36,7 @@ class PanelLiquidaciones extends Page
     public string $estado = '';
 
     #[Url]
-    public string $modo = 'liquidacion';
+    public string $modo = 'listado';
 
     #[Url]
     public ?int $solicitante_id = null;
