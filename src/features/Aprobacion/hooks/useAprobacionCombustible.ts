@@ -44,7 +44,7 @@ export function useAprobacionCombustible(id: string | undefined) {
     if (!id) return;
     
     if (tipoDecision === 'jefe' && (!montoManual || Number(montoManual) <= 0)) {
-      const msg = 'Debe ingresar un monto válido de vales para aprobar manualmente';
+      const msg = 'Debe ingresar una cantidad válida de cargas para aprobar manualmente';
       setError(msg); 
       toast.error(msg); 
       return;

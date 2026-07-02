@@ -303,7 +303,7 @@ export default function HistorialDetallePage() {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                    <FileText size={12} /> Vales Aprobados
+                    <FileText size={12} /> Cargas Aprobadas
                   </p>
                   <p className="text-xl font-black text-emerald-600">
                     {montoFinal !== null && montoFinal !== undefined ? `$${Number(montoFinal).toFixed(2)}` : 'Sin asignar'}

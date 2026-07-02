@@ -56,7 +56,7 @@ export default function AprobacionCombustiblePage() {
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
               Aprobación de Combustible <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
             </h1>
-            <p className="text-slate-500 mt-1 text-sm">Revisa la asignación del operativo y aprueba o modifica el monto.</p>
+            <p className="text-slate-500 mt-1 text-sm">Revisa la asignación del operativo y aprueba o modifica las cargas.</p>
           </div>
         </div>
       </div>
@@ -108,15 +108,15 @@ export default function AprobacionCombustiblePage() {
               <CheckCircle size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Decisión Final (Vales)</h2>
-              <p className="text-slate-500 text-sm">Verifica la asignación y autoriza los vales de combustible.</p>
+              <h2 className="text-xl font-bold text-slate-800">Decisión Final (Cargas)</h2>
+              <p className="text-slate-500 text-sm">Verifica la asignación y autoriza las cargas de combustible.</p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
             {/* Decision Type */}
             <div className="space-y-4">
-              <label className="block text-sm font-bold text-slate-700">Monto a Aprobar</label>
+              <label className="block text-sm font-bold text-slate-700">Cargas a Aprobar</label>
               <div className="flex flex-col gap-3">
                 <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${tipoDecision === 'operativo' ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-slate-200'}`}>
                   <input 
@@ -128,7 +128,7 @@ export default function AprobacionCombustiblePage() {
                   />
                   <div className="flex flex-col">
                     <span className="font-semibold text-slate-800 text-sm">Mantener sugerido</span>
-                    <span className="text-xs text-slate-500 mt-1">Aprobar los vales solicitados/sugeridos ({data.operativo?.monto_aprobado || 0})</span>
+                    <span className="text-xs text-slate-500 mt-1">Aprobar las cargas solicitadas/sugeridas ({data.operativo?.monto_aprobado || 0})</span>
                   </div>
                 </label>
 
@@ -141,8 +141,8 @@ export default function AprobacionCombustiblePage() {
                     onChange={() => setTipoDecision('jefe')} 
                   />
                   <div className="flex flex-col w-full">
-                    <span className="font-semibold text-slate-800 text-sm">Monto manual</span>
-                    <span className="text-xs text-slate-500 mt-1 mb-3">Ingresar una cantidad distinta de vales</span>
+                    <span className="font-semibold text-slate-800 text-sm">Carga manual</span>
+                    <span className="text-xs text-slate-500 mt-1 mb-3">Ingresar una cantidad distinta de cargas</span>
                     {tipoDecision === 'jefe' && (
                       <input 
                         type="number"
@@ -190,19 +190,11 @@ export default function AprobacionCombustiblePage() {
             </button>
 
             <button 
-              onClick={handlePreAprobar}
-              disabled={isSubmitting}
-              className="w-full md:w-auto px-6 py-2.5 bg-blue-100 text-blue-800 font-bold rounded-lg hover:bg-blue-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm shadow-sm"
-            >
-              Pre-Aprobar
-            </button>
-            
-            <button 
               onClick={confirmarAprobacion}
               disabled={isSubmitting || (tipoDecision === 'jefe' && (!montoManual || montoManual <= 0))}
               className="w-full md:w-auto px-8 py-2.5 font-bold rounded-lg text-white transition-all shadow-md bg-primary hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed text-sm"
             >
-              {isSubmitting ? 'Procesando...' : 'Aprobar Vales Oficialmente'}
+              {isSubmitting ? 'Procesando...' : 'Aprobar Cargas Oficialmente'}
             </button>
           </div>
         </div>

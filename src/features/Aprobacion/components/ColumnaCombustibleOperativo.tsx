@@ -17,7 +17,7 @@ export const ColumnaCombustibleOperativo: React.FC<ColumnaCombustibleOperativoPr
           <User className="text-slate-400" size={24} />
         </div>
         <p className="text-sm font-bold text-slate-800">Sin Asignación de Carga</p>
-        <p className="text-xs text-slate-500 mt-1">Aún no hay asignación de monto por parte de operaciones.</p>
+        <p className="text-xs text-slate-500 mt-1">Aún no hay asignación de cargas por parte de operaciones.</p>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export const ColumnaCombustibleOperativo: React.FC<ColumnaCombustibleOperativoPr
     >
       <div className="flex justify-between items-start mb-5 pb-4 border-b border-slate-200">
         <div>
-          <h3 className="font-bold text-slate-800 text-lg tracking-tight">Monto del Operativo</h3>
+          <h3 className="font-bold text-slate-800 text-lg tracking-tight">Asignación del Operativo</h3>
           <p className="text-xs text-slate-500 mt-1">Sugerido por: {data.autor}</p>
         </div>
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -50,7 +50,7 @@ export const ColumnaCombustibleOperativo: React.FC<ColumnaCombustibleOperativoPr
             <DollarSign size={24} />
           </div>
           <div className="flex-1">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Monto Asignado</p>
+            <p className="text-xs font-bold text-slate-400 uppercase tracking-wider">Cargas Asignadas</p>
             <p className="text-2xl font-black text-slate-800">${data.monto_aprobado.toFixed(2)}</p>
           </div>
         </div>
