@@ -1,16 +1,3 @@
-{{--
- | Vista para el correo de notificación de eventos.
- | Recibe:
- |   $subject (string)  - Asunto del correo
- |   $payload (array)   - Datos estructurados con 'tipo', 'evento', 'mensaje',
- |                        'solicitud', 'solicitante', 'timestamp', 'attachments'
- |   $map_url (?string) - URL del mapa estático (solo para transporte)
- |   $email_logo_embedded (?string) - Logo embebido (cuando se usa embed())
- |
- | Tipos de solicitud: transporte, combustible, mantenimiento
- | Eventos: solicitud_aprobada, solicitud_rechazada, solicitud_completada,
- |          solicitud_cancelada, solicitud_liquidada, solicitud_programada, etc.
---}}
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -18,157 +5,148 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $subject }}</title>
     <style>
-        /* ─── Reset básico ─── */
-        * { margin:0; padding:0; box-sizing:border-box; }
+        * { margin:0; padding:0; }
         body {
-            font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+            font-family:Arial,Helvetica,sans-serif;
             background-color:#f4f7fa;
             padding:20px;
             color:#2c3e50;
             line-height:1.6;
         }
-
-        /* ─── Contenedor principal ─── */
         .email-container {
             max-width:600px;
             margin:0 auto;
             background-color:#ffffff;
-            border-radius:12px;
-            overflow:hidden;
-            box-shadow:0 4px 20px rgba(0,0,0,0.08);
+            border:1px solid #e2e8f0;
         }
-
-        /* ─── Encabezado con gradiente azul ─── */
         .email-header {
-            background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);
-            padding:24px 24px 18px;
-            color:#fff;
-            display:flex;
-            align-items:center;
-            gap:16px;
+            background-color:#1e3a8a;
+            padding:20px 20px 16px;
+            color:#ffffff;
+            text-align:center;
         }
-        .email-logo {
-            width:56px;
-            height:56px;
-            border-radius:50%;
-            overflow:hidden;
-            background:#0f172a;
-            display:flex;
-            align-items:center;
-            justify-content:center;
-            flex-shrink:0;
-        }
-        .email-logo img {
-            width:100%;
-            height:100%;
-            object-fit:cover;
+        .email-logo-img {
+            display:block;
+            width:180px;
+            max-width:180px;
+            height:auto;
+            border:0;
+            margin:0 auto;
         }
         .email-header-text h1 {
-            font-size:18px;
+            margin:0 0 4px;
+            font-size:20px;
+            line-height:1.3;
+            color:#ffffff;
             font-weight:700;
-            margin-bottom:4px;
         }
         .email-header-text p {
+            margin:0;
             font-size:13px;
-            opacity:0.9;
+            line-height:1.5;
+            color:#e0e7ff;
         }
-
-        .email-body { padding:30px 24px 24px; }
-
-        /* ─── Caja de alerta / mensaje ─── */
+        .email-body { padding:20px 20px 16px; }
+        @media (prefers-color-scheme:dark) {
+            body { background-color:#1a1a2e !important; color:#e2e8f0 !important; }
+            .email-container { background-color:#16213e !important; border-color:#2a2a4a !important; }
+            .email-body { background-color:#16213e !important; }
+            .email-header { background-color:#0f3460 !important; }
+            .email-header-text h1 { color:#ffffff !important; }
+            .email-header-text p { color:#c7d2fe !important; }
+            .alert-box { background-color:#1e2a4a !important; color:#93c5fd !important; border-left-color:#3b82f6 !important; }
+            .tipo-chip { background-color:#1e3a5f !important; color:#93c5fd !important; }
+            .codigo-section { background-color:#1a2744 !important; border-color:#3b82f6 !important; }
+            .codigo-value { color:#93c5fd !important; }
+            .info-card { background-color:#1e2a4a !important; border-color:#2a3a5a !important; border-left-color:#3b82f6 !important; color:#e2e8f0 !important; }
+            .info-card-title { color:#94a3b8 !important; border-bottom-color:#2a3a5a !important; }
+            .info-row { color:#e2e8f0 !important; }
+            .info-row strong { color:#94a3b8 !important; }
+            .map-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; }
+            .map-header { background-color:#1e3a5f !important; color:#93c5fd !important; }
+            .map-body { color:#cbd5e1 !important; }
+            .attachments-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; color:#e2e8f0 !important; }
+            .attachments-header { background-color:#1e3a5f !important; color:#93c5fd !important; }
+            .attachments-body { color:#cbd5e1 !important; }
+            .evidencia-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; color:#e2e8f0 !important; }
+            .evidencia-section h4 { color:#93c5fd !important; }
+            .map-note { color:#94a3b8 !important; }
+            .email-footer { background-color:#1a2744 !important; border-color:#2a2a4a !important; }
+            .email-footer p { color:#94a3b8 !important; }
+        }
         .alert-box {
             background-color:#eff6ff;
             border-left:4px solid #3b82f6;
-            padding:16px;
-            border-radius:8px;
-            margin-bottom:24px;
-            font-size:14px;
-            color:#1e3a8a;
+            padding:12px 14px;
+            margin-bottom:16px;
+            font-size:13px;
+            color:#1e40af;
         }
-
-        /* ─── Etiqueta del tipo de solicitud ─── */
         .tipo-chip {
             display:inline-block;
-            padding:6px 12px;
-            border-radius:999px;
+            padding:5px 12px;
             font-size:12px;
             font-weight:600;
-            text-transform:uppercase;
-            letter-spacing:0.6px;
-            background-color:#e0f2fe;
+            background-color:#dbeafe;
             color:#1d4ed8;
-            margin-bottom:12px;
+            margin-bottom:10px;
         }
-
-        /* ─── Sección del código de solicitud ─── */
         .codigo-section {
             text-align:center;
-            margin:20px 0;
-            padding:18px;
-            background:linear-gradient(135deg,#f0f9ff 0%,#e0f2fe 100%);
-            border-radius:10px;
+            margin:14px 0 10px;
+            padding:12px 14px;
+            background-color:#f0f9ff;
             border:2px dashed #3b82f6;
         }
         .codigo-label {
             font-size:11px;
-            text-transform:uppercase;
-            letter-spacing:1px;
             color:#64748b;
             font-weight:600;
-            margin-bottom:4px;
+            margin-bottom:2px;
         }
         .codigo-value {
-            font-size:24px;
+            font-size:22px;
             font-weight:800;
             color:#1e3a8a;
             font-family:'Courier New',monospace;
-            letter-spacing:2px;
         }
-
-        /* ─── Cuadrícula de detalles ─── */
-        .details-grid {
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:16px;
-            margin:22px 0 10px;
-        }
-        .detail-item,
-        .detail-item-full {
+        .info-card {
+            margin:0 0 10px;
             background-color:#f8fafc;
-            padding:14px 14px 12px;
-            border-radius:8px;
+            padding:10px 12px 8px;
             border:1px solid #e2e8f0;
+            border-left:3px solid #3b82f6;
         }
-        .detail-item-full { grid-column:1 / -1; }
-        .detail-label {
+        .info-card-title {
             font-size:11px;
-            text-transform:uppercase;
-            letter-spacing:0.5px;
-            color:#64748b;
             font-weight:600;
-            margin-bottom:4px;
+            color:#64748b;
+            margin-bottom:5px;
+            padding-bottom:4px;
+            border-bottom:1px solid #e2e8f0;
         }
-        .detail-value {
-            font-size:14px;
-            color:#1e293b;
-            font-weight:500;
+        .info-row {
+            font-size:13px;
+            margin-bottom:3px;
+            line-height:1.5;
         }
-
-        /* ─── Badge de estado ─── */
+        .info-row:last-child { margin-bottom:0; }
+        .info-row strong {
+            color:#475569;
+            font-weight:600;
+        }
         .status-badge {
             display:inline-block;
             padding:6px 12px;
-            border-radius:20px;
             font-size:12px;
             font-weight:700;
-            text-transform:uppercase;
-            letter-spacing:0.4px;
         }
+        .status-enviada { background-color:#dbeafe; color:#1e40af; }
         .status-pendiente { background-color:#fef3c7; color:#92400e; }
-        .status-aprobado { background-color:#d1fae5; color:#065f46; }
-        .status-rechazado { background-color:#fee2e2; color:#991b1b; }
+        .status-aprobada { background-color:#d1fae5; color:#065f46; }
+        .status-rechazada { background-color:#fee2e2; color:#991b1b; }
         .status-en_proceso { background-color:#e0f2fe; color:#1e40af; }
-        .status-completado { background-color:#e0fce7; color:#166534; }
+        .status-completada { background-color:#e0fce7; color:#166534; }
         .status-borrador { background-color:#f3f4f6; color:#374151; }
         .status-en_revision { background-color:#dbeafe; color:#1e40af; }
         .status-pre_aprobada { background-color:#dcfce7; color:#166534; }
@@ -176,35 +154,29 @@
         .status-en_ejecucion { background-color:#1e3a8a; color:#ffffff; }
         .status-cancelada { background-color:#6b7280; color:#ffffff; }
         .status-asignada { background-color:#a855f7; color:#ffffff; }
-        .status-liquidada { background-color:#16a34a; color:#ffffff; }
-
-        /* ─── Sección del mapa ─── */
+        .status-liquidada { background-color:#a855f7; color:#ffffff; }
+        .status-ruta_modificada { background-color:#f97316; color:#ffffff; }
+        .status-desconocido { background-color:#f3f4f6; color:#374151; }
         .map-section {
-            margin:24px 0 8px;
+            margin:16px 0 6px;
             background-color:#f8fafc;
-            border-radius:10px;
             border:1px solid #e2e8f0;
-            overflow:hidden;
         }
         .map-header {
-            padding:10px 14px;
+            padding:8px 12px;
             background-color:#e0f2fe;
             border-bottom:1px solid #dbeafe;
-            font-size:12px;
+            font-size:11px;
             font-weight:600;
-            text-transform:uppercase;
-            letter-spacing:0.5px;
             color:#1e3a8a;
         }
         .map-body {
-            padding:10px 14px 14px;
-            font-size:13px;
+            padding:8px 12px 10px;
+            font-size:12px;
             color:#475569;
         }
         .map-image-wrapper {
-            margin-top:8px;
-            border-radius:8px;
-            overflow:hidden;
+            margin-top:6px;
             border:1px solid #cbd5f5;
         }
         .map-image-wrapper img {
@@ -213,123 +185,106 @@
             height:auto;
         }
         .map-note {
-            margin-top:8px;
+            margin-top:6px;
             font-size:11px;
             color:#64748b;
         }
-
-        /* ─── Sección del solicitante ─── */
-        .solicitante-section {
-            background:linear-gradient(135deg,#1e3a8a 0%,#3b82f6 100%);
-            padding:18px 18px 16px;
-            border-radius:10px;
-            margin:22px 0 8px;
-            color:#ffffff;
+        .attachments-section {
+            margin:14px 0 6px;
+            background-color:#f8fafc;
+            border:1px solid #e2e8f0;
         }
-        .solicitante-section h3 {
-            font-size:13px;
-            text-transform:uppercase;
-            letter-spacing:1px;
-            margin-bottom:10px;
-            opacity:0.9;
-            font-weight:600;
-        }
-        .solicitante-info {
-            display:grid;
-            grid-template-columns:1fr 1fr;
-            gap:10px;
-        }
-        .solicitante-item {
-            font-size:13px;
-        }
-        .solicitante-item strong {
-            display:block;
+        .attachments-header {
+            padding:8px 12px;
+            background-color:#f1f5f9;
+            border-bottom:1px solid #e2e8f0;
             font-size:11px;
-            opacity:0.85;
-            margin-bottom:2px;
-            font-weight:500;
+            font-weight:600;
+            color:#475569;
+        }
+        .attachments-body {
+            padding:8px 12px 10px;
+            font-size:12px;
+            color:#475569;
         }
 
-        /* ─── Badge de extensión ─── */
         .extension-badge {
             display:inline-block;
-            margin-top:8px;
-            padding:6px 12px;
-            border-radius:999px;
+            margin-top:6px;
+            padding:4px 10px;
             background-color:#e0f2fe;
             color:#1d4ed8;
-            font-size:11px;
+            font-size:10px;
             font-weight:600;
-            text-transform:uppercase;
-            letter-spacing:0.5px;
         }
-
-        /* ─── Pie de página ─── */
+        .evidencia-section {
+            margin-top:14px;
+            padding:12px;
+            background-color:#f8fafc;
+            border:1px solid #e2e8f0;
+        }
+        .evidencia-section h4 {
+            margin:0 0 6px;
+            font-size:12px;
+            color:#1e3a8a;
+            font-weight:600;
+        }
         .email-footer {
             background-color:#f8fafc;
-            padding:18px 20px;
+            padding:14px 16px;
             text-align:center;
             border-top:1px solid #e2e8f0;
         }
         .email-footer p {
-            font-size:12px;
+            font-size:11px;
             color:#64748b;
-            margin-bottom:4px;
+            margin-bottom:2px;
         }
         .email-footer .timestamp {
-            font-size:11px;
+            font-size:10px;
             color:#94a3b8;
             font-weight:500;
         }
-
-        /* ─── Responsive para móviles ─── */
         @media only screen and (max-width:600px) {
-            body { padding:10px; }
-            .email-header { padding:18px 16px 14px; }
-            .email-header-text h1 { font-size:16px; }
-            .email-body { padding:22px 16px 18px; }
-            .details-grid { grid-template-columns:1fr; gap:12px; }
-            .solicitante-info { grid-template-columns:1fr; }
+            body { padding:6px; }
+            .email-header { padding:14px 12px 10px; }
+            .email-header-text h1 { font-size:15px; }
+            .email-body { padding:14px 12px 12px; }
+            .info-card { margin-bottom:8px; }
             .codigo-value { font-size:20px; }
         }
     </style>
 </head>
 <body>
+@php $tipo = $payload['tipo'] ?? 'transporte'; @endphp
 <div class="email-container">
-    {{-- ─── ENCABEZADO ─── --}}
     <div class="email-header">
-        <div class="email-logo" style="width:56px;height:56px;border-radius:50%;overflow:hidden;background:#0f172a;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-        {{-- Si hay un logo embebido (desde embedLogo()), se usa; si no, se cae a asset() --}}
-        @if(isset($email_logo_embedded))
-            <img
-                src="{{ $email_logo_embedded }}"
-                alt="Logo"
-                width="56"
-                height="56"
-                style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
-            >
-        @else
-            <img
-                src="{{ asset('images/logo-blanco-fondo-transparente.png') }}"
-                alt="Logo"
-                width="56"
-                height="56"
-                style="display:block;width:56px;height:56px;max-width:56px;max-height:56px;border-radius:50%;"
-            >
-        @endif
-    </div>
-        <div class="email-header-text">
-            <h1>{{ $subject }}</h1>
-            <p>Sistema de Gestión de Solicitudes - Asamblea Legislativa de El Salvador</p>
-        </div>
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
+            <tr>
+                <td align="center" style="padding:0 0 14px;">
+                    <img src="{{ $logo_src ?? 'https://placehold.co/180x60/1e3a8a/ffffff?text=AL' }}"
+                         alt="Asamblea Legislativa"
+                         width="180" height="60"
+                         class="email-logo-img"
+                         style="display:block;width:180px;max-width:180px;height:auto;border:0;margin:0 auto;">
+                </td>
+            </tr>
+            <tr>
+                <td align="center" class="email-header-text">
+                    <h1 style="margin:0 0 4px;font-size:20px;line-height:1.3;color:#ffffff;font-weight:700;">{{ $subject }}</h1>
+                    <p style="margin:0;font-size:13px;line-height:1.5;color:#e0e7ff;">
+                        @php
+                            $subs = ['transporte'=>'Transporte','combustible'=>'Combustible','mantenimiento'=>'Mantenimiento de Unidades'];
+                            $area = $subs[$tipo] ?? 'Solicitudes';
+                        @endphp
+                        Sistema de Gesti&oacute;n de {{ $area }} - Asamblea Legislativa de El Salvador
+                    </p>
+                </td>
+            </tr>
+        </table>
     </div>
 
     <div class="email-body">
-        @php
-            $tipo = $payload['tipo'] ?? 'transporte';
-        @endphp
-
-        {{-- ─── TIPO DE SOLICITUD ─── --}}
         <div class="tipo-chip">
             @if($tipo === 'transporte')
                 Solicitud de transporte
@@ -337,406 +292,319 @@
                 Solicitud de combustible
             @elseif($tipo === 'mantenimiento')
                 Solicitud de mantenimiento
+            @elseif($tipo === 'motorista_estado')
+                Estado de motorista
             @else
-                Notificación de solicitud
+                Notificaci&oacute;n de solicitud
             @endif
         </div>
 
-        {{-- ─── MENSAJE PRINCIPAL ─── --}}
         @if(isset($payload['mensaje']))
             <div class="alert-box">
                 {{ $payload['mensaje'] }}
             </div>
         @endif
 
-        {{-- ─── CÓDIGO DE SOLICITUD ─── --}}
-        @if(isset($payload['solicitud']['codigo']))
+        @if($tipo === 'motorista_estado' && isset($payload['solicitud']))
+            <div class="info-card">
+                <div class="info-card-title">Estado del motorista</div>
+                @if(isset($payload['solicitud']['estado']))
+                    <div class="info-row">
+                        <strong>Estado:</strong>
+                        <span class="status-badge status-rechazada">No disponible</span>
+                    </div>
+                @endif
+                @if(isset($payload['solicitud']['motorista']))
+                    <div class="info-row"><strong>Motorista:</strong> {{ $payload['solicitud']['motorista'] }}</div>
+                @endif
+                @if(!empty($payload['solicitud']['motivo']))
+                    <div class="info-row"><strong>Motivo reportado:</strong> {{ $payload['solicitud']['motivo'] }}</div>
+                @endif
+            </div>
+        @endif
+
+        @if(isset($payload['solicitud']['codigo']) && $tipo !== 'motorista_estado')
             <div class="codigo-section">
                 <div class="codigo-label">
                     @if(!empty($payload['es_extension']))
-                        Código de solicitud (extensión)
+                        C&oacute;digo de solicitud (extensi&oacute;n)
                     @else
-                        Código de solicitud
+                        C&oacute;digo de solicitud
                     @endif
                 </div>
                 <div class="codigo-value">
                     {{ $payload['solicitud']['codigo'] }}
                 </div>
-
-                {{-- Si es una extensión, muestra el código original --}}
                 @if(!empty($payload['es_extension']) && isset($payload['solicitud']['codigo_original']))
                     <div class="extension-badge">
-                        Extensión de: {{ $payload['solicitud']['codigo_original'] }}
+                        Extensi&oacute;n de: {{ $payload['solicitud']['codigo_original'] }}
                     </div>
                 @endif
             </div>
         @endif
 
-        {{-- ═══════════════════════════════════════════════════════════════
-             TRANSPORTE - Detalles específicos
-             ═══════════════════════════════════════════════════════════════ --}}
         @if($tipo === 'transporte' && isset($payload['solicitud']))
-            <div class="details-grid">
-                @if(isset($payload['solicitud']['estado']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Estado</div>
-                        <div class="detail-value">
-                            <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
-                                {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
-                            </span>
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['tipo_vehiculo_nombre']))
-                    <div class="detail-item">
-                        <div class="detail-label">Tipo de vehículo</div>
-                        <div class="detail-value">
-                            {{ ucfirst($payload['solicitud']['tipo_vehiculo_nombre']) }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['cantidad_personas']))
-                    <div class="detail-item">
-                        <div class="detail-label">Cantidad de personas</div>
-                        <div class="detail-value">
-                            {{ $payload['solicitud']['cantidad_personas'] }} personas
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['origen']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Origen</div>
-                        <div class="detail-value">
-                            {{ $payload['solicitud']['origen'] }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['destino']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Destino principal</div>
-                        <div class="detail-value">
-                            {{ $payload['solicitud']['destino'] }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== '')
-                    <div class="detail-item-full">
-                        <div class="detail-label">Destino adicional</div>
-                        <div class="detail-value">
-                            {{ $payload['solicitud']['destino_adicional'] }}
-                        </div>
-                    </div>
-                @endif
-
-                @php
-                    $destinosDuranteViaje = $payload['solicitud']['destinos_adicionales'] ?? [];
-                    $destinosDuranteViaje = array_filter($destinosDuranteViaje, fn($d) => $d['agregado_durante_viaje'] ?? false);
-                @endphp
-                @if(count($destinosDuranteViaje) > 0)
-                    <div class="detail-item-full">
-                        <div class="detail-label">Destinos agregados durante el viaje</div>
-                        <div class="detail-value" style="margin-top:4px;">
-                            <ul style="list-style-type: none; padding: 0; margin: 0;">
-                                @foreach($destinosDuranteViaje as $destino)
-                                    <li style="padding: 4px 0; border-bottom: 1px dashed #e5e7eb;">
-                                        <strong>🚩 {{ $destino['nombre'] }}</strong>
-                                        <br><small style="color:#6b7280;">— El departamento de Transporte agregó este punto.</small>
-                                    </li>
-                                @endforeach
-                            </ul>
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['fecha_salida']))
-                    <div class="detail-item">
-                        <div class="detail-label">Fecha de salida</div>
-                        <div class="detail-value">
-                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_salida'])->format('d/m/Y H:i') }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['fecha_retorno']))
-                    <div class="detail-item">
-                        <div class="detail-label">Fecha de retorno</div>
-                        <div class="detail-value">
-                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_retorno'])->format('d/m/Y H:i') }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['motivo_actividad']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Motivo de la actividad</div>
-                        <div class="detail-value">
-                            {{ $payload['solicitud']['motivo_actividad'] }}
-                        </div>
-                    </div>
-                @endif
-            </div>
-
-            {{-- Mapa de la ruta --}}
-            @php
-                $origen    = $payload['solicitud']['origen'] ?? 'San Salvador';
-                $destino   = $payload['solicitud']['destino'] ?? 'Centro Histórico, San Salvador';
-                $destinoAd = $payload['solicitud']['destino_adicional'] ?? null;
-
-                $mapUrl = asset('images/mapa_correo.png');
-            @endphp
-
-            @if($mapUrl)
-               <div class="map-section">
-                <div class="map-header">
-                    Mapa aproximado de la ruta
+            @if(isset($payload['solicitud']['estado']))
+                <div style="margin:0 0 12px;">
+                    <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
+                        {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
+                    </span>
                 </div>
-                <div class="map-body">
-                    <p>Esta visualización muestra una aproximación del recorrido de la solicitud.</p>
-
-                    <div class="map-image-wrapper">
-                        @if (!empty($map_url))
-                            <img src="{{ $map_url }}" alt="Mapa aproximado de la ruta">
-                        @else
-                            <p style="color:#888;">
-                                No se pudo generar el mapa para esta solicitud.
-                            </p>
-                        @endif
-                    </div>
-
-                    <p class="map-note">
-                        El mapa es ilustrativo y podría no reflejar el recorrido exacto.
-                    </p>
-                </div>
-            </div>
             @endif
 
-        {{-- ═══════════════════════════════════════════════════════════════
-             COMBUSTIBLE - Detalles específicos
-             ═══════════════════════════════════════════════════════════════ --}}
-        @elseif($tipo === 'combustible' && isset($payload['solicitud']))
-            <div class="details-grid">
-                @if(isset($payload['solicitud']['estado']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Estado</div>
-                        <div class="detail-value">
-                            <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
-                                {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
-                            </span>
-                        </div>
-                    </div>
-                @endif
+            @if(isset($payload['solicitud']['origen']) || isset($payload['solicitud']['destino']) || (isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== ''))
+                <div class="info-card">
+                    <div class="info-card-title">Ruta del viaje</div>
+                    @if(isset($payload['solicitud']['origen']))
+                        <div class="info-row"><strong>Origen:</strong> {{ $payload['solicitud']['origen'] }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['destino']))
+                        <div class="info-row"><strong>Destino:</strong> {{ $payload['solicitud']['destino'] }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== '')
+                        <div class="info-row"><strong>Destino adicional:</strong> {{ $payload['solicitud']['destino_adicional'] }}</div>
+                    @endif
 
-                @if(isset($payload['solicitud']['vehiculo']))
-                    <div class="detail-item">
-                        <div class="detail-label">Vehículo</div>
-                        <div class="detail-value">{{ $payload['solicitud']['vehiculo'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['motorista']))
-                    <div class="detail-item">
-                        <div class="detail-label">Motorista</div>
-                        <div class="detail-value">{{ $payload['solicitud']['motorista'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['cantidad_combustible']))
-                    <div class="detail-item">
-                        <div class="detail-label">Cantidad solicitada</div>
-                        <div class="detail-value">{{ $payload['solicitud']['cantidad_combustible'] }} galones</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['valor_total']))
-                    <div class="detail-item">
-                        <div class="detail-label">Valor total</div>
-                        <div class="detail-value">${{ number_format($payload['solicitud']['valor_total'], 2) }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['fecha_solicitud']))
-                    <div class="detail-item">
-                        <div class="detail-label">Fecha de solicitud</div>
-                        <div class="detail-value">
-                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_solicitud'])->format('d/m/Y') }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['destino_actividad']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Destino de actividad</div>
-                        <div class="detail-value">{{ $payload['solicitud']['destino_actividad'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['forma_pago']))
-                    <div class="detail-item">
-                        <div class="detail-label">Forma de pago</div>
-                        <div class="detail-value">{{ $payload['solicitud']['forma_pago'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['numero_vale_ticket']))
-                    <div class="detail-item">
-                        <div class="detail-label">Número de carga/ticket</div>
-                        <div class="detail-value">{{ $payload['solicitud']['numero_vale_ticket'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['motivo_rechazo']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Motivo del rechazo</div>
-                        <div class="detail-value">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
-                    </div>
-                @endif
-            </div>
-
-        {{-- ═══════════════════════════════════════════════════════════════
-             MANTENIMIENTO - Detalles específicos
-             ═══════════════════════════════════════════════════════════════ --}}
-        @elseif($tipo === 'mantenimiento' && isset($payload['solicitud']))
-            <div class="details-grid">
-                @if(isset($payload['solicitud']['estado']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Estado</div>
-                        <div class="detail-value">
-                            <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
-                                {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
-                            </span>
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['vehiculo']))
-                    <div class="detail-item">
-                        <div class="detail-label">Vehículo</div>
-                        <div class="detail-value">{{ $payload['solicitud']['vehiculo'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['tipo_mantenimiento']))
-                    <div class="detail-item">
-                        <div class="detail-label">Tipo de mantenimiento</div>
-                        <div class="detail-value">{{ $payload['solicitud']['tipo_mantenimiento'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['prioridad']))
-                    <div class="detail-item">
-                        <div class="detail-label">Prioridad</div>
-                        <div class="detail-value">{{ ucfirst($payload['solicitud']['prioridad']) }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['detalle']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Detalle</div>
-                        <div class="detail-value">{{ $payload['solicitud']['detalle'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['fecha_sugerida']))
-                    <div class="detail-item">
-                        <div class="detail-label">Fecha sugerida</div>
-                        <div class="detail-value">
-                            {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_sugerida'])->format('d/m/Y') }}
-                        </div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['costo_estimado']))
-                    <div class="detail-item">
-                        <div class="detail-label">Costo estimado</div>
-                        <div class="detail-value">${{ number_format($payload['solicitud']['costo_estimado'], 2) }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['observaciones']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Observaciones</div>
-                        <div class="detail-value">{{ $payload['solicitud']['observaciones'] }}</div>
-                    </div>
-                @endif
-
-                @if(isset($payload['solicitud']['motivo_rechazo']))
-                    <div class="detail-item-full">
-                        <div class="detail-label">Motivo del rechazo</div>
-                        <div class="detail-value">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        {{-- ─── ARCHIVOS ADJUNTOS ─── --}}
-        @if(!empty($payload['attachments']))
-            <div class="map-section" style="margin-top:20px;">
-                <div class="map-header">Adjuntos</div>
-                <div class="map-body">
-                    <p style="font-size:13px;color:#475569;">
-                        Esta notificación incluye {{ count($payload['attachments']) }} archivo(s) adjunto(s).
-                    </p>
-                </div>
-            </div>
-        @endif
-
-        {{-- ─── DATOS DE LIQUIDACIÓN (monto validado / resultado) ─── --}}
-        @if(!empty($payload['solicitud']['monto_validado']))
-            <div class="details-grid" style="margin-top:16px;">
-                <div class="detail-item">
-                    <div class="detail-label">Monto validado</div>
-                    <div class="detail-value">${{ number_format($payload['solicitud']['monto_validado'], 2) }}</div>
-                </div>
-                @if(!empty($payload['solicitud']['resultado']))
-                    <div class="detail-item">
-                        <div class="detail-label">Resultado</div>
-                        <div class="detail-value">{{ ucfirst($payload['solicitud']['resultado']) }}</div>
-                    </div>
-                @endif
-            </div>
-        @endif
-
-        {{-- ─── INFORMACIÓN DEL SOLICITANTE ─── --}}
-        @if(isset($payload['solicitante']))
-            <div class="solicitante-section">
-                <h3>Información del solicitante</h3>
-                <div class="solicitante-info">
-                    <div class="solicitante-item">
-                        <strong>Nombre</strong>
-                        {{ $payload['solicitante']['name'] ?? '' }}
-                    </div>
-                    <div class="solicitante-item">
-                        <strong>Correo</strong>
-                        {{ $payload['solicitante']['email'] ?? '' }}
-                    </div>
-                    @if(isset($payload['solicitante']['unidad']))
-                        <div class="solicitante-item">
-                            <strong>Unidad</strong>
-                            {{ $payload['solicitante']['unidad']['nombre'] ?? '' }}
-                        </div>
-                        <div class="solicitante-item">
-                            <strong>Siglas</strong>
-                            {{ $payload['solicitante']['unidad']['siglas'] ?? '' }}
+                    @if(!empty($payload['solicitud']['destinos_adicionales']))
+                        <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">
+                            <strong style="font-size:11px;color:#64748b;">Destinos adicionales:</strong>
+                            @if($ruta_description)
+                                <div style="margin:6px 0 8px;padding:8px 10px;background-color:#fff7ed;border-left:3px solid #f97316;font-size:12px;color:#9a3412;">
+                                    {!! $ruta_description !!}
+                                </div>
+                            @endif
+                            <ol style="margin:4px 0 0 20px;padding:0;font-size:12px;">
+                                @foreach($payload['solicitud']['destinos_adicionales'] as $destino)
+                                    <li style="margin-top:4px;">
+                                        {{ $destino['nombre'] }}
+                                        @if($destino['agregado_durante_viaje'] ?? false)
+                                            <span style="font-size:10px;color:#f97316;">(agregado durante el viaje)</span>
+                                        @endif
+                                    </li>
+                                @endforeach
+                            </ol>
                         </div>
                     @endif
                 </div>
+            @endif
+
+            @if(isset($payload['solicitud']['fecha_salida']) || isset($payload['solicitud']['fecha_retorno']))
+                <div class="info-card">
+                    <div class="info-card-title">Horario</div>
+                    @if(isset($payload['solicitud']['fecha_salida']))
+                        <div class="info-row"><strong>Salida:</strong> {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_salida'])->format('d/m/Y H:i') }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['fecha_retorno']))
+                        <div class="info-row"><strong>Retorno:</strong> {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_retorno'])->format('d/m/Y H:i') }}</div>
+                    @endif
+                </div>
+            @endif
+
+            @if(isset($payload['solicitud']['tipo_vehiculo_nombre']) || isset($payload['solicitud']['cantidad_personas']) || (isset($payload['solicitud']['vehiculo_placa']) && $payload['solicitud']['vehiculo_placa'] !== 'N/A') || (isset($payload['solicitud']['motorista_nombre']) && $payload['solicitud']['motorista_nombre'] !== 'N/A'))
+                <div class="info-card">
+                    <div class="info-card-title">Asignaci&oacute;n</div>
+                    @if(isset($payload['solicitud']['tipo_vehiculo_nombre']))
+                        <div class="info-row"><strong>Tipo de veh&iacute;culo:</strong> {{ ucfirst($payload['solicitud']['tipo_vehiculo_nombre']) }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['cantidad_personas']))
+                        <div class="info-row"><strong>Personas:</strong> {{ $payload['solicitud']['cantidad_personas'] }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['vehiculo_placa']) && $payload['solicitud']['vehiculo_placa'] !== 'N/A')
+                        <div class="info-row"><strong>Veh&iacute;culo:</strong> {{ $payload['solicitud']['vehiculo_placa'] }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['motorista_nombre']) && $payload['solicitud']['motorista_nombre'] !== 'N/A')
+                        <div class="info-row"><strong>Motorista:</strong> {{ $payload['solicitud']['motorista_nombre'] }}</div>
+                    @endif
+                </div>
+            @endif
+
+            @if(isset($payload['solicitud']['motivo_actividad']) || isset($payload['solicitud']['motivo_rechazo']))
+                <div class="info-card">
+                    <div class="info-card-title">Detalles</div>
+                    @if(isset($payload['solicitud']['motivo_actividad']))
+                        <div class="info-row"><strong>Actividad:</strong> {{ $payload['solicitud']['motivo_actividad'] }}</div>
+                    @endif
+                    @if(isset($payload['solicitud']['motivo_rechazo']))
+                        <div class="info-row"><strong>Motivo del rechazo:</strong> {{ $payload['solicitud']['motivo_rechazo'] }}</div>
+                    @endif
+                </div>
+            @endif
+
+            @if(!empty($map_url) || !empty($map_fallback_src))
+                <div class="map-section">
+                    <div class="map-header">Mapa aproximado de la ruta</div>
+                    <div class="map-body">
+                        <p>Esta visualizaci&oacute;n muestra una aproximaci&oacute;n del recorrido de la solicitud.</p>
+                        <div class="map-image-wrapper">
+                            <img src="{{ $map_url ?: $map_fallback_src }}" alt="Mapa aproximado de la ruta">
+                        </div>
+                        @if(!$map_url)
+                            <p class="map-note">No se pudo generar el mapa exacto; se muestra una referencia de El Salvador.</p>
+                        @else
+                            <p class="map-note">El mapa es ilustrativo y podr&iacute;a no reflejar el recorrido exacto.</p>
+                        @endif
+                    </div>
+                </div>
+            @endif
+
+        @elseif($tipo === 'combustible' && isset($payload['solicitud']))
+            @if(isset($payload['solicitud']['estado']))
+                <div style="margin:0 0 12px;">
+                    <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
+                        {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
+                    </span>
+                </div>
+            @endif
+
+            <div class="info-card">
+                <div class="info-card-title">Informaci&oacute;n general</div>
+                @if(isset($payload['solicitud']['vehiculo']))
+                    <div class="info-row"><strong>Veh&iacute;culo:</strong> {{ $payload['solicitud']['vehiculo'] }}</div>
+                @endif
+                @if(isset($payload['solicitud']['motorista']))
+                    <div class="info-row"><strong>Motorista:</strong> {{ $payload['solicitud']['motorista'] }}</div>
+                @endif
+                @if(isset($payload['solicitud']['fecha_solicitud']))
+                    <div class="info-row"><strong>Fecha de solicitud:</strong> {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_solicitud'])->format('d/m/Y') }}</div>
+                @endif
+                @if(isset($payload['solicitud']['destino_actividad']))
+                    <div class="info-row"><strong>Destino:</strong> {{ $payload['solicitud']['destino_actividad'] }}</div>
+                @endif
+            </div>
+
+            <div class="info-card">
+                <div class="info-card-title">Combustible</div>
+                @if(isset($payload['solicitud']['cantidad_combustible']))
+                    <div class="info-row"><strong>Cantidad:</strong> {{ $payload['solicitud']['cantidad_combustible'] }} galones</div>
+                @endif
+                @if(isset($payload['solicitud']['valor_total']))
+                    <div class="info-row"><strong>Valor total:</strong> ${{ number_format($payload['solicitud']['valor_total'], 2) }}</div>
+                @endif
+                @if(isset($payload['solicitud']['forma_pago']))
+                    <div class="info-row"><strong>Forma de pago:</strong> {{ $payload['solicitud']['forma_pago'] }}</div>
+                @endif
+                @if(isset($payload['solicitud']['numero_vale_ticket']))
+                    <div class="info-row"><strong>N&uacute;mero de ticket:</strong> {{ $payload['solicitud']['numero_vale_ticket'] }}</div>
+                @endif
+            </div>
+
+            @if(isset($payload['solicitud']['motivo_rechazo']))
+                <div class="info-card">
+                    <div class="info-card-title">Motivo del rechazo</div>
+                    <div class="info-row">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
+                </div>
+            @endif
+
+        @elseif($tipo === 'mantenimiento' && isset($payload['solicitud']))
+            @if(isset($payload['solicitud']['estado']))
+                <div style="margin:0 0 12px;">
+                    <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
+                        {{ ucfirst(str_replace('_',' ', $payload['solicitud']['estado'])) }}
+                    </span>
+                </div>
+            @endif
+
+            <div class="info-card">
+                <div class="info-card-title">Informaci&oacute;n general</div>
+                @if(isset($payload['solicitud']['vehiculo']))
+                    <div class="info-row"><strong>Veh&iacute;culo:</strong> {{ $payload['solicitud']['vehiculo'] }}</div>
+                @endif
+                @if(isset($payload['solicitud']['tipo_mantenimiento']))
+                    <div class="info-row"><strong>Tipo de mantenimiento:</strong> {{ $payload['solicitud']['tipo_mantenimiento'] }}</div>
+                @endif
+                @if(isset($payload['solicitud']['prioridad']))
+                    <div class="info-row"><strong>Prioridad:</strong> {{ ucfirst($payload['solicitud']['prioridad']) }}</div>
+                @endif
+                @if(isset($payload['solicitud']['fecha_sugerida']))
+                    <div class="info-row"><strong>Fecha sugerida:</strong> {{ \Carbon\Carbon::parse($payload['solicitud']['fecha_sugerida'])->format('d/m/Y') }}</div>
+                @endif
+                @if(isset($payload['solicitud']['costo_estimado']))
+                    <div class="info-row"><strong>Costo estimado:</strong> ${{ number_format($payload['solicitud']['costo_estimado'], 2) }}</div>
+                @endif
+            </div>
+
+            @if(isset($payload['solicitud']['detalle']))
+                <div class="info-card">
+                    <div class="info-card-title">Detalle</div>
+                    <div class="info-row">{{ $payload['solicitud']['detalle'] }}</div>
+                </div>
+            @endif
+
+            @if(isset($payload['solicitud']['observaciones']))
+                <div class="info-card">
+                    <div class="info-card-title">Observaciones</div>
+                    <div class="info-row">{{ $payload['solicitud']['observaciones'] }}</div>
+                </div>
+            @endif
+
+            @if(isset($payload['solicitud']['motivo_rechazo']))
+                <div class="info-card">
+                    <div class="info-card-title">Motivo del rechazo</div>
+                    <div class="info-row">{{ $payload['solicitud']['motivo_rechazo'] }}</div>
+                </div>
+            @endif
+        @endif
+
+        @if(!empty($payload['evidencia']))
+            <div class="evidencia-section">
+                <h4>Evidencia adjunta</h4>
+                @if(!empty($evidencia_src))
+                    <img src="{{ $evidencia_src }}" alt="{{ $payload['evidencia']['nombre'] ?? 'Evidencia' }}" style="max-width:100%;height:auto;">
+                @else
+                    <p style="font-size:13px;color:#475569;">{{ $payload['evidencia']['nombre'] ?? 'Archivo adjunto' }}</p>
+                @endif
+            </div>
+        @endif
+
+        @if(!empty($payload['attachments']))
+            <div class="attachments-section">
+                <div class="attachments-header">Adjuntos</div>
+                <div class="attachments-body">
+                    @foreach($payload['attachments'] as $attachment)
+                        @php
+                            $name = is_array($attachment) ? ($attachment['name'] ?? basename($attachment['path'] ?? '')) : basename($attachment);
+                        @endphp
+                        <div style="font-size:13px;padding:2px 0;">{{ $name }}</div>
+                    @endforeach
+                </div>
+            </div>
+        @endif
+
+        @if(!empty($payload['solicitud']['monto_validado']))
+            <div class="info-card" style="margin-top:12px;">
+                <div class="info-card-title">Validaci&oacute;n</div>
+                <div class="info-row"><strong>Monto validado:</strong> ${{ number_format($payload['solicitud']['monto_validado'], 2) }}</div>
+                @if(!empty($payload['solicitud']['resultado']))
+                    <div class="info-row"><strong>Resultado:</strong> {{ ucfirst($payload['solicitud']['resultado']) }}</div>
+                @endif
+            </div>
+        @endif
+
+        @if(!empty($payload['mostrar_solicitante']) && isset($payload['solicitante']))
+            <div class="info-card" style="margin-top:12px;">
+                <div class="info-card-title">Solicitante</div>
+                @if(!empty($payload['solicitante']['name']))
+                    <div class="info-row"><strong>Nombre:</strong> {{ $payload['solicitante']['name'] }}</div>
+                @endif
+                @if(!empty($payload['solicitante']['email']))
+                    <div class="info-row"><strong>Correo:</strong> {{ $payload['solicitante']['email'] }}</div>
+                @endif
+                @php
+                    $unidadNombre = $payload['solicitante']['unidadSolicitante']['nombre'] ?? $payload['solicitante']['unidad']['nombre'] ?? '';
+                    $unidadSiglas = $payload['solicitante']['unidadSolicitante']['siglas'] ?? $payload['solicitante']['unidad']['siglas'] ?? '';
+                @endphp
+                @if(!empty($unidadNombre))
+                    <div class="info-row"><strong>Unidad:</strong> {{ $unidadNombre }}@if(!empty($unidadSiglas)) ({{ $unidadSiglas }})@endif</div>
+                @endif
             </div>
         @endif
     </div>
 
-    {{-- ─── PIE DE PÁGINA ─── --}}
     <div class="email-footer">
         <p><strong>Asamblea Legislativa de El Salvador</strong></p>
-        <p>Unidad de Transporte y Logística</p>
+        <p>Unidad de Transporte y Log&iacute;stica</p>
         @if(isset($payload['timestamp']))
-            <p class="timestamp">
-                {{ \Carbon\Carbon::parse($payload['timestamp'])->format('d/m/Y H:i:s') }}
-            </p>
+            <p class="timestamp">{{ \Carbon\Carbon::parse($payload['timestamp'])->format('d/m/Y H:i:s') }}</p>
         @endif
     </div>
 </div>

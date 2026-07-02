@@ -11,14 +11,14 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
+use App\Domain\Solicitudes\Services\SolicitudEmailPayloadService;
 use App\Http\Controllers\Controller;
-use App\Mail\NotificacionEventMail;
 use App\Models\Motorista;
 use App\Models\MotoristaEstado;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Mail;
 use App\Domain\Solicitudes\Services\MotoristaService;
 use App\Models\SolicitudTransporte;
 
@@ -130,7 +130,7 @@ class MotoristaEstadoController extends Controller
 
         //Guardar el archivo si se ha subido
         if ($request->hasFile('archivo')) {
-            $archivoPath = $request->file('archivo')->store('motoristas/incapacidades', 'public');
+            $archivoPath = $request->file('archivo')->store('motoristas/no-disponibilidad', 'public');
         }
 
         // AQUÍ ESTÁ LA CORRECCIÓN: Usamos ->boolean('activo')
@@ -139,7 +139,7 @@ class MotoristaEstadoController extends Controller
             $motorista,
             $activo,
             $request->motivo,
-            $archivoPath // -> NUEVO PARÁMETRO PARA GUARDAR LA RUTA DEL ARCHIVO
+            $archivoPath
         );
 
         if (! $activo) {
@@ -152,35 +152,13 @@ class MotoristaEstadoController extends Controller
                     ->toArray();
 
                 if (! empty($jefeEmails)) {
-                    $archivoUrl = $archivoPath ? asset('storage/' . $archivoPath) : null;
-                    $mensaje = "El motorista {$motorista->nombre} se ha reportado no disponible.";
+                    $payloadService = app(SolicitudEmailPayloadService::class);
+                    $payload = $payloadService->motoristaNoDisponible($motorista, $request->motivo, $archivoPath);
 
-                    if ($request->motivo) {
-                        $mensaje .= " Motivo: {$request->motivo}.";
-                    }
-
-                    if ($archivoUrl) {
-                        $mensaje .= " Comprobante: {$archivoUrl}";
-                    }
-
-                    $payload = [
-                        'tipo' => 'transporte',
-                        'evento' => 'motorista_no_disponible',
-                        'mensaje' => $mensaje,
-                        'solicitud' => [
-                            'codigo' => $motorista->dui ?? 'N/A',
-                            'estado' => 'no_disponible',
-                            'motorista' => $motorista->nombre,
-                        ],
-                        'solicitante' => [
-                            'name' => $motorista->nombre,
-                            'email' => $motorista->user?->email ?? null,
-                        ],
-                        'timestamp' => now()->toIso8601String(),
-                    ];
-
-                    Mail::to($jefeEmails)->send(
-                        new NotificacionEventMail('🚨 Motorista no disponible', $payload)
+                    app(SolicitudEmailDispatchService::class)->withPayload(
+                        $payloadService->subjectFor('motorista_estado', 'motorista_no_disponible'),
+                        $payload,
+                        $jefeEmails
                     );
                 }
             } catch (\Exception $e) {

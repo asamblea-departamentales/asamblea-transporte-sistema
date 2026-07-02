@@ -15,6 +15,8 @@ use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\MapImageService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
+use App\Domain\Solicitudes\Services\SolicitudEmailPayloadService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Controllers\Controller;
 use App\Models\BitacoraEvento;
@@ -22,6 +24,7 @@ use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 use Carbon\Carbon;
 
@@ -202,6 +205,27 @@ class SolicitudTransporteController extends Controller
                 'orden'            => $ultimoOrden + 1,
             ],
         ]);
+
+        // ── Notificar modificación de ruta ──
+        dispatch(function () use ($solicitud, $nombre, $user) {
+            try {
+                $dispatch = app(SolicitudEmailDispatchService::class);
+                $payloadService = app(SolicitudEmailPayloadService::class);
+                $subject = "Ruta modificada - {$solicitud->codigo}";
+
+                $payload = $payloadService->build($solicitud, 'transporte', 'ruta_modificada');
+                $payload['destino_nuevo'] = $nombre;
+                $payload['modificado_por'] = $user->name;
+
+                // ponytail: solo al solicitante, el jefe es quien modifica la ruta
+                if ($solicitud->solicitante?->email) {
+                    $payload['mostrar_solicitante'] = false;
+                    $dispatch->withPayload($subject, $payload, $solicitud->solicitante->email);
+                }
+            } catch (\Exception $e) {
+                Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: " . $e->getMessage());
+            }
+        });
 
         return response()->json($destino->load('agregadoPor'), 201);
     }

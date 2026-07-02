@@ -28,13 +28,18 @@ class SolicitudEmailDispatchService
      * @param  string      $evento   Evento ocurrido (ej. 'solicitud_aprobada')
      * @param  string|null $mensaje  Mensaje personalizado (opcional)
      */
-    public function toSolicitante($record, string $tipo, string $evento, ?string $mensaje = null): void
+    public function toSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
+        $payload['mostrar_solicitante'] = false;
+        if (!empty($attachments)) {
+            $payload['attachments'] = $attachments;
+        }
         $subject = $this->payloadService->subjectFor($tipo, $evento);
 
         $email = $record->solicitante?->email;
         if (empty($email)) {
+            Log::warning("Correo no enviado [{$tipo}/{$evento}]: solicitante #{$record->solicitante_id} sin email");
             return;
         }
 
@@ -50,9 +55,13 @@ class SolicitudEmailDispatchService
      * @param  string      $evento   Evento ocurrido
      * @param  string|null $mensaje  Mensaje personalizado (opcional)
      */
-    public function queueToSolicitante($record, string $tipo, string $evento, ?string $mensaje = null): void
+    public function queueToSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
+        $payload['mostrar_solicitante'] = false;
+        if (!empty($attachments)) {
+            $payload['attachments'] = $attachments;
+        }
         $subject = $this->payloadService->subjectFor($tipo, $evento);
 
         $email = $record->solicitante?->email;
@@ -71,9 +80,13 @@ class SolicitudEmailDispatchService
      * @param  string      $evento   Evento ocurrido
      * @param  string|null $mensaje  Mensaje personalizado (opcional)
      */
-    public function toJefatura($record, string $tipo, string $evento, ?string $mensaje = null): void
+    public function toJefatura($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
+        $payload['mostrar_solicitante'] = true;
+        if (!empty($attachments)) {
+            $payload['attachments'] = $attachments;
+        }
         $subject = $this->payloadService->subjectFor($tipo, $evento);
 
         // Obtiene todos los usuarios con rol 'jefe' que tengan correo
@@ -100,9 +113,13 @@ class SolicitudEmailDispatchService
      * @param  string|array       $email    Dirección o arreglo de direcciones de correo
      * @param  string|null        $mensaje  Mensaje personalizado (opcional)
      */
-    public function toEmail($record, string $tipo, string $evento, string|array $email, ?string $mensaje = null): void
+    public function toEmail($record, string $tipo, string $evento, string|array $email, ?string $mensaje = null, array $attachments = []): void
     {
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
+        $payload['mostrar_solicitante'] = true;
+        if (!empty($attachments)) {
+            $payload['attachments'] = $attachments;
+        }
         $subject = $this->payloadService->subjectFor($tipo, $evento);
 
         $this->send($subject, $payload, $email);

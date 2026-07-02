@@ -741,7 +741,8 @@ class SolicitudCombustibleService
     private function enviarCorreoLiquidada(SolicitudCombustible $solicitud): void
     {
         app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_liquidada'
+            $solicitud, 'combustible', 'solicitud_liquidada',
+            attachments: $solicitud->comprobantes ?? []
         );
     }
 }

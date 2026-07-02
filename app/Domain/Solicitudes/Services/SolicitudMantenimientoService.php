@@ -386,7 +386,8 @@ class SolicitudMantenimientoService
     private function enviarCorreoLiquidada(SolicitudMantenimiento $solicitud): void
     {
         app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_liquidada'
+            $solicitud, 'mantenimiento', 'solicitud_liquidada',
+            attachments: $solicitud->adjuntos ?? []
         );
     }
 }

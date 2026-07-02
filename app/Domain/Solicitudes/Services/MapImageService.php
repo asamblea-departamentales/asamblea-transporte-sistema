@@ -69,7 +69,7 @@ class MapImageService
      * El Salvador, recurre a fakeGeocode().
      *
      * La búsqueda se limita a El Salvador agregando el sufijo ", El Salvador"
-     * y el parámetro countrycode=sv.
+     * y el filtro oficial countrycode:sv de Geoapify.
      *
      * @param  string $text Dirección o nombre del lugar a geocodificar
      * @return array        [latitud, longitud]
@@ -92,7 +92,7 @@ class MapImageService
                 'text'   => $text . ', El Salvador',
                 'limit'  => 1,
                 'apiKey' => $apiKey,
-                'countrycode' => 'sv',  // Filtra resultados solo de El Salvador
+                'filter' => 'countrycode:sv',
             ]);
         } catch (\Exception $e) {
             // Si hay error de conexión, usa fake
@@ -116,9 +116,10 @@ class MapImageService
 
         $lat = (float) $props['lat'];
         $lng = (float) $props['lon'];
+        $countryCode = strtolower((string) ($props['country_code'] ?? ''));
 
         // Valida que el resultado esté dentro de El Salvador
-        if (!$this->isInsideElSalvador($lat, $lng)) {
+        if (($countryCode && $countryCode !== 'sv') || !$this->isInsideElSalvador($lat, $lng)) {
             return $this->fakeGeocode($text);
         }
 
@@ -126,77 +127,80 @@ class MapImageService
     }
 
     /**
-     * Genera la URL de una imagen de mapa estático con la ruta entre origen y destino,
-     * incluyendo destinos adicionales si existen.
+     * Genera la URL de un mapa estático con la ruta entre todos los puntos
+     * (origen, destino_adicional, destinos_adicionales[], destino).
      *
      * Utiliza la API Static Map de Geoapify. Si no hay API key configurada
      * devuelve null. Las coordenadas se obtienen de geocodeOrFake() si no
      * vienen pre-cargadas en la solicitud.
      *
-     * El zoom se calcula automáticamente según la distancia entre los puntos.
+     * El zoom se calcula automáticamente según la extensión geográfica de los waypoints.
      *
      * @param  array       $solicitud Arreglo con datos de la solicitud
-     *                                (origen, destino, coordenadas, destinos_adicionales)
      * @return string|null            URL de la imagen del mapa o null si no se pudo generar
      */
     public function generateRouteImageUrl(array $solicitud): ?string
     {
+        $apiKey = config('services.geoapify.api_key');
+        if (empty($apiKey)) {
+            return null;
+        }
+
         $origenTexto  = $solicitud['origen']  ?? 'San Salvador';
         $destinoTexto = $solicitud['destino'] ?? 'San Salvador';
 
-        // Coordenadas pre-cargadas en la solicitud, o null si no existen
         $latOrigen  = $solicitud['origen_lat']  ?? null;
         $lngOrigen  = $solicitud['origen_lng']  ?? null;
         $latDestino = $solicitud['destino_lat'] ?? null;
         $lngDestino = $solicitud['destino_lng'] ?? null;
 
-        // Si faltan coordenadas, se geocodifican
-        if (empty($latOrigen) || empty($lngOrigen)) {
+        if ($latOrigen === null || $latOrigen === '' || $lngOrigen === null || $lngOrigen === '') {
             [$latOrigen, $lngOrigen] = $this->geocodeOrFake($origenTexto);
         }
-
-        if (empty($latDestino) || empty($lngDestino)) {
+        if ($latDestino === null || $latDestino === '' || $lngDestino === null || $lngDestino === '') {
             [$latDestino, $lngDestino] = $this->geocodeOrFake($destinoTexto);
         }
 
-        if (empty($latOrigen) || empty($lngOrigen) || empty($latDestino) || empty($lngDestino)) {
+        // Waypoints ordenados: origen -> destino_adicional -> destinos_adicionales -> destino
+        $waypoints = [];
+
+        $waypoints[] = ['lat' => $latOrigen, 'lng' => $lngOrigen, 'color' => 'blue', 'size' => 'large'];
+
+        $adicional = $solicitud['destino_adicional'] ?? '';
+        if ($adicional !== '') {
+            $latAd = $solicitud['destino_adicional_lat'] ?? null;
+            $lngAd = $solicitud['destino_adicional_lng'] ?? null;
+            if ($latAd === null || $latAd === '' || $lngAd === null || $lngAd === '') {
+                [$latAd, $lngAd] = $this->geocodeOrFake($adicional);
+            }
+            if ($latAd !== null && $latAd !== '' && $lngAd !== null && $lngAd !== '') {
+                $waypoints[] = ['lat' => $latAd, 'lng' => $lngAd, 'color' => 'green', 'size' => 'medium'];
+            }
+        }
+
+        $destinosAdicionales = $solicitud['destinos_adicionales'] ?? [];
+        foreach ($destinosAdicionales as $d) {
+            $lat = $d['lat'] ?? null;
+            $lng = $d['lng'] ?? null;
+            if ($lat === null || $lng === null) {
+                [$lat, $lng] = $this->geocodeOrFake($d['nombre'] ?? '');
+            }
+            if ($lat !== null && $lng !== null) {
+                $esDurante = $d['agregado_durante_viaje'] ?? false;
+                $waypoints[] = ['lat' => $lat, 'lng' => $lng, 'color' => $esDurante ? 'orange' : 'green', 'size' => 'medium'];
+            }
+        }
+
+        $waypoints[] = ['lat' => $latDestino, 'lng' => $lngDestino, 'color' => 'red', 'size' => 'large'];
+
+        if (count($waypoints) < 2) {
             return null;
         }
 
-        // Destinos adicionales (de la nueva tabla solicitud_destinos_adicionales)
-        $destinosAdicionales = $solicitud['destinos_adicionales'] ?? [];
-
-        // Recolectar todos los puntos en orden: origen -> adicionales -> destino
-        $puntos = [
-            ['lat' => $latOrigen,  'lng' => $lngOrigen,  'tipo' => 'origen'],
-        ];
-
-        foreach ($destinosAdicionales as $da) {
-            $lat = $da['lat'] ?? null;
-            $lng = $da['lng'] ?? null;
-            if (empty($lat) || empty($lng)) {
-                [$lat, $lng] = $this->geocodeOrFake($da['nombre'] ?? '');
-            }
-            if (!empty($lat) && !empty($lng)) {
-                $puntos[] = [
-                    'lat'    => $lat,
-                    'lng'    => $lng,
-                    'tipo'   => ($da['agregado_durante_viaje'] ?? false) ? 'jefe' : 'original',
-                    'nombre' => $da['nombre'] ?? '',
-                ];
-            }
-        }
-
-        $puntos[] = [
-            'lat' => $latDestino, 'lng' => $lngDestino, 'tipo' => 'destino',
-        ];
-
-        // Calcular zoom basado en todos los puntos
-        $lats = array_column($puntos, 'lat');
-        $lngs = array_column($puntos, 'lng');
-        $distLat = max($lats) - min($lats);
-        $distLng = max($lngs) - min($lngs);
-        $spread  = max($distLat, $distLng);
+        // Zoom dinámico según la extensión geográfica
+        $allLats = array_column($waypoints, 'lat');
+        $allLngs = array_column($waypoints, 'lng');
+        $spread  = max(abs(max($allLats) - min($allLats)), abs(max($allLngs) - min($allLngs)));
 
         if ($spread < 0.03) {
             $zoom = 13;
@@ -208,13 +212,6 @@ class MapImageService
             $zoom = 9;
         }
 
-        $apiKey = config('services.geoapify.api_key');
-        if (empty($apiKey)) {
-            return null;
-        }
-
-        $baseUrl = 'https://maps.geoapify.com/v1/staticmap';
-
         $params = [
             'style'  => 'osm-carto',
             'width'  => 600,
@@ -223,35 +220,24 @@ class MapImageService
             'apiKey' => $apiKey,
         ];
 
-        // Marcadores: azul=origen, verde=adicional original, naranja=agregado por Jefe, rojo=destino
         $markers = [];
         $pathCoords = [];
-
-        foreach ($puntos as $i => $p) {
-            $color = match ($p['tipo']) {
-                'origen'   => 'blue',
-                'destino'  => 'red',
-                'jefe'     => 'orange',
-                default    => 'green',
-            };
-
+        foreach ($waypoints as $wp) {
             $markers[] = sprintf(
-                'lonlat:%.6f,%.6f;color:%s;size:medium;icon:circle',
-                $p['lng'], $p['lat'], $color
+                'lonlat:%.6f,%.6f;color:%s;size:%s;icon:circle',
+                $wp['lng'], $wp['lat'], $wp['color'], $wp['size']
             );
-
-            $pathCoords[] = sprintf('lonlat:%.6f,%.6f', $p['lng'], $p['lat']);
+            $pathCoords[] = sprintf('lonlat:%.6f,%.6f', $wp['lng'], $wp['lat']);
         }
 
-        $params['marker'] = $markers;
+        $params['path'] = sprintf('color:0x0066ccdd;width:4|%s', implode('|', $pathCoords));
 
-        // Ruta que conecta todos los puntos en orden
-        $params['path'] = sprintf(
-            'color:0x0066ccdd;width:4|%s',
-            implode('|', $pathCoords)
-        );
+        $query = http_build_query($params);
+        foreach ($markers as $m) {
+            $query .= '&marker=' . $m;
+        }
 
-        return $baseUrl . '?' . http_build_query($params);
+        return 'https://maps.geoapify.com/v1/staticmap?' . $query;
     }
 
 }

@@ -54,12 +54,18 @@ class SolicitudEmailPayloadService
      */
     private function buildSolicitudData($record, string $tipo, string $evento): array
     {
-        return match ($tipo) {
+        $data = match ($tipo) {
             'transporte' => $this->buildTransporte($record, $evento),
             'combustible' => $this->buildCombustible($record, $evento),
             'mantenimiento' => $this->buildMantenimiento($record, $evento),
             default => ['codigo' => $record->codigo, 'estado' => $record->estado?->value ?? 'desconocido'],
         };
+        $data['estado'] = match ($evento) {
+            'solicitud_enviada' => 'enviada',
+            'ruta_modificada' => 'ruta_modificada',
+            default => $data['estado'],
+        };
+        return $data;
     }
 
     /**
@@ -150,7 +156,8 @@ class SolicitudEmailPayloadService
             $data['correlativo_fin'] = $r->correlativo_fin;
             $data['monto_asignado'] = $r->monto_asignado;
             $data['contrato'] = $r->contrato?->numero_contrato ?? 'N/A';
-            $data['serie'] = $r->serie?->nombre ?? 'N/A';
+            $serie = $r->serieCarga ?? $r->serie ?? null;
+            $data['serie'] = $serie?->nombre ?? 'N/A';
         }
 
         // Cuando se liquida, se agregan los datos de la liquidación
@@ -217,7 +224,7 @@ class SolicitudEmailPayloadService
             'vehiculo',
             'motorista',
             'contrato',
-            'serie',
+            'serieCarga',
             'liquidacion',
         ],
 
@@ -256,8 +263,39 @@ class SolicitudEmailPayloadService
             'solicitud_programada' => "Tu solicitud de {$label} ha sido PROGRAMADA.",
             'motorista_asignado' => 'Se te ha asignado un nuevo viaje.',
             'motorista_no_disponible' => 'Un motorista se ha reportado no disponible.',
+            'ruta_modificada' => "La ruta de tu solicitud de {$label} ha sido modificada.",
             default => "Tu solicitud de {$label} ha sido actualizada.",
         };
+    }
+
+    public function motoristaNoDisponible($motorista, ?string $motivo = null, ?string $archivoPath = null): array
+    {
+        $payload = [
+            'tipo' => 'motorista_estado',
+            'evento' => 'motorista_no_disponible',
+            'mensaje' => "El motorista {$motorista->nombre} se ha reportado no disponible.",
+            'solicitud' => [
+                'estado' => 'no_disponible',
+                'motorista' => $motorista->nombre,
+                'motivo' => $motivo,
+            ],
+            'timestamp' => now()->toIso8601String(),
+        ];
+
+        if ($motivo) {
+            $payload['mensaje'] .= " Motivo: {$motivo}.";
+        }
+
+        if ($archivoPath) {
+            $payload['evidencia'] = [
+                'nombre' => basename(str_replace('\\', '/', $archivoPath)),
+                'ruta' => $archivoPath,
+                'url' => asset('storage/' . ltrim($archivoPath, '/')),
+            ];
+            $payload['attachments'] = [$archivoPath];
+        }
+
+        return $payload;
     }
 
     /**
@@ -276,16 +314,17 @@ class SolicitudEmailPayloadService
         $label = $labels[$tipo] ?? 'Solicitud';
 
         return match ($evento) {
-            'solicitud_enviada' => "📤 Solicitud de {$label} ENVIADA",
-            'solicitud_aprobada' => "✅ Solicitud de {$label} APROBADA",
-            'solicitud_rechazada' => "❌ Solicitud de {$label} RECHAZADA",
-            'solicitud_completada' => "✅ Solicitud de {$label} COMPLETADA",
-            'solicitud_cancelada' => "🚫 Solicitud de {$label} CANCELADA",
-            'solicitud_asignada' => "🚗 Solicitud de {$label} ASIGNADA",
-            'solicitud_liquidada' => "💰 Solicitud de {$label} LIQUIDADA",
-            'solicitud_programada' => "📅 Solicitud de {$label} PROGRAMADA",
-            'motorista_asignado' => '📌 Nuevo viaje asignado',
-            'motorista_no_disponible' => '🚨 Motorista no disponible',
+            'solicitud_enviada' => "Solicitud de {$label} ENVIADA",
+            'solicitud_aprobada' => "Solicitud de {$label} APROBADA",
+            'solicitud_rechazada' => "Solicitud de {$label} RECHAZADA",
+            'solicitud_completada' => "Solicitud de {$label} COMPLETADA",
+            'solicitud_cancelada' => "Solicitud de {$label} CANCELADA",
+            'solicitud_asignada' => "Solicitud de {$label} ASIGNADA",
+            'solicitud_liquidada' => "Solicitud de {$label} LIQUIDADA",
+            'solicitud_programada' => "Solicitud de {$label} PROGRAMADA",
+            'motorista_asignado' => 'Nuevo viaje asignado',
+            'motorista_no_disponible' => 'Motorista no disponible',
+            'ruta_modificada' => "Ruta modificada - {$label}",
             default => "Notificación de {$label}",
         };
     }
