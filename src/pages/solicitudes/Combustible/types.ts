@@ -72,8 +72,8 @@ export function validate(step: number, data: FormData): Partial<Record<keyof For
       e.destino_actividad = "El destino o actividad es requerido.";
     if (!data.fecha_solicitud)
       e.fecha_solicitud = "La fecha de solicitud es requerida.";
-    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0)
-      e.cantidad_combustible = "Ingrese una cantidad válida mayor a 0.";
+    if (!data.cantidad_combustible || isNaN(Number(data.cantidad_combustible)) || Number(data.cantidad_combustible) <= 0 || !Number.isInteger(Number(data.cantidad_combustible)))
+      e.cantidad_combustible = "Ingrese una cantidad de cargas entera mayor a 0.";
     if (data.fecha_inicio_periodo && data.fecha_fin_periodo && data.fecha_fin_periodo < data.fecha_inicio_periodo)
       e.fecha_fin_periodo = "Debe ser posterior a la fecha de inicio.";
   }

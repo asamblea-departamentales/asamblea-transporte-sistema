@@ -43,14 +43,14 @@ export function Step2({
           <FieldError msg={errors.fecha_solicitud} />
         </div>
         <div>
-          <Label required>Cantidad (galones)</Label>
+          <Label required>Cantidad (cargas)</Label>
           <input
             type="number"
-            min="0"
-            step="0.01"
+            min="1"
+            step="1"
             value={data.cantidad_combustible}
             onChange={(e) => update("cantidad_combustible", e.target.value)}
-            placeholder="0.00"
+            placeholder="1"
             className={inputCls(errors.cantidad_combustible)}
           />
           <FieldError msg={errors.cantidad_combustible} />

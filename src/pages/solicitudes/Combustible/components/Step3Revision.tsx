@@ -37,7 +37,7 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
           <ReviewRow
             label="Cantidad"
             value={data.cantidad_combustible
-              ? `${parseFloat(data.cantidad_combustible).toFixed(2)} gal`
+              ? `${parseInt(data.cantidad_combustible, 10)} carga(s)`
               : ""}
           />
           {data.fecha_inicio_periodo && (

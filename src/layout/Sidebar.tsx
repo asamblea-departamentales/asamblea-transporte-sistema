@@ -471,7 +471,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all text-amber-400/60 group-hover:text-amber-400 bg-amber-400/5 group-hover:bg-amber-400/10">
                   <Icons.Shield />
                 </div>
-                <span className="tracking-wide">Administracion</span>
+                <span className="tracking-wide">Administración</span>
               </a>
             </div>
           )}
