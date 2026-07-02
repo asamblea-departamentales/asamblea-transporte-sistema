@@ -329,6 +329,9 @@
                         @if($row['tipo'] === 'transporte' && !empty($row['tipo_vehiculo_nombre']))
                         <div><div class="meta-label">Vehículo pedido</div><div class="meta-value">{{ $row['tipo_vehiculo_nombre'] }}</div></div>
                         @endif
+                        @if($row['tipo'] === 'combustible')
+                        <div><div class="meta-label">Monto solicitado</div><div class="meta-value font-semibold">${{ number_format($row['monto_solicitado'] ?? 0, 2) }}</div></div>
+                        @endif
                         <div><div class="meta-label">ID</div><div class="meta-value mono">{{ $row['id'] }}</div></div>
                         <div>
                             <div class="meta-label">Asignado a</div>

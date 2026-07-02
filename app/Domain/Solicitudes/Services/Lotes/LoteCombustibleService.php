@@ -170,7 +170,7 @@ class LoteCombustibleService
 
                 $lote->detalles()->create([
                     'vehiculo_id'              => $solicitud->vehiculo_id,
-                    'solicitud_combustible_id' => null,
+                    'solicitud_combustible_id' => $solicitud->id,
                     'placa_cache'              => $solicitud->vehiculo->placa ?? '',
                     'numero_ticket'            => $solicitud->ticket,
                     'monto_asignado'           => 0,

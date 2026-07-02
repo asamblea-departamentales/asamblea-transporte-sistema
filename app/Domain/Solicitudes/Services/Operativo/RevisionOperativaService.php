@@ -229,6 +229,7 @@ class RevisionOperativaService
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
                 'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
+                'monto_solicitado' => (float) ($r->cantidad_combustible ?? 0),
             ];
         });
     }

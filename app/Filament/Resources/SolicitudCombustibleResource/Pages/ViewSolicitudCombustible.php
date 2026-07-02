@@ -122,6 +122,19 @@ class ViewSolicitudCombustible extends ViewRecord
                 ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
                 ),
+
+            Actions\Action::make('documento_oficial')
+                ->button()
+                ->size('lg')
+                ->label('Documento Oficial')
+                ->color('success')
+                ->icon('heroicon-o-printer')
+                ->url(fn (SolicitudCombustible $record) => $record->solicitud_transporte_id
+                    ? route('reportes.solicitud-autorizacion.pdf', [$record->solicitud_transporte_id, $record->id])
+                    : '#'
+                )
+                ->openUrlInNewTab()
+                ->visible(fn (SolicitudCombustible $record) => $record->solicitud_transporte_id !== null),
         ];
     }
 

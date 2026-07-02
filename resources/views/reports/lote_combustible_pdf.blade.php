@@ -166,7 +166,7 @@
 
         &nbsp;|&nbsp;
 
-        <strong>Total galones:</strong>
+        <strong>Total vales:</strong>
         {{ number_format($lote->total_galones ?? 0, 2) }}
 
         &nbsp;|&nbsp;
@@ -194,7 +194,7 @@
                 <th width="12%">Serie</th>
                 <th width="12%">Contrato</th>
                 <th width="14%">Combustible</th>
-                <th width="8%">Galones</th>
+                <th width="8%">Vales</th>
                 <th width="10%">Estado</th>
                 <th width="8%">Solicitud</th>
             </tr>
@@ -276,7 +276,7 @@
                     </td>
 
                     <td colspan="3" class="text-right">
-                        Galones:
+                        Vales:
                         {{ number_format($lote->total_galones ?? 0, 2) }}
                     </td>
 

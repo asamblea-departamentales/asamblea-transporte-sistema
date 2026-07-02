@@ -217,7 +217,7 @@ class DetallesRelationManager extends RelationManager
                         ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
                     TextInputColumn::make('cantidad_galones')
-                        ->label('Galones')
+                        ->label('Vales')
                         ->type('number')
                         ->rules(['numeric', 'min:0'])
                         ->extraAttributes(['style' => 'min-width:90px'])
@@ -241,7 +241,7 @@ class DetallesRelationManager extends RelationManager
                         ->placeholder('—'),
 
                     TextColumn::make('cantidad_galones')
-                        ->label('Galones')
+                        ->label('Vales')
                         ->numeric(2)
                         ->placeholder('—')
                         ->summarize(

@@ -590,6 +590,13 @@ class SolicitudCombustibleService
 
             if ($decisionFinal === 'jefe' && $montoOriginal !== null && $montoOriginal != $montoAprobado) {
                 $solicitud->decisionOperativa->update(['monto_aprobado' => $montoAprobado]);
+
+                $detalle = \App\Models\AsignacionCombustibleLoteDetalle::where('solicitud_combustible_id', $solicitud->id)->first();
+                if ($detalle) {
+                    $detalle->update(['monto_asignado' => $montoAprobado]);
+                    $obs = trim(($detalle->observaciones_operativas ?? '') . "\nEl jefe cambió el monto de \${$montoOriginal} a \${$montoAprobado}.");
+                    $detalle->update(['observaciones_operativas' => $obs]);
+                }
             }
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
