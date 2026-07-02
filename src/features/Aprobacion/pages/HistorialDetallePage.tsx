@@ -170,7 +170,9 @@ export default function HistorialDetallePage() {
   const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || data.comparativa?.operativo?.autor || 'Sin asignar';
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
   const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
-  const montoFinal = raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
+  
+  // El jefe guarda su decisión manual en cantidad_combustible (en show API) o cantidad_estimada (en comparativa API)
+  const montoFinal = raw.cantidad_combustible || comp.cantidad_estimada || raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
   const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
 
   return (
