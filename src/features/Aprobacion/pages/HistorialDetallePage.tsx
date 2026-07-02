@@ -166,10 +166,11 @@ export default function HistorialDetallePage() {
   const motivo = raw.motivo || comp.motivo || raw.observaciones || 'Sin motivo';
   const decisionFinal = raw.decision_final || comp.decision_final || status;
   
-  // Si fue aprobado manual, no tomar lo sugerido por operativo. Tomar la asignación final del motorista_id/vehiculo_id de raw
+  // Asignaciones finales
   const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || data.comparativa?.operativo?.autor || 'Sin asignar';
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
   const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
+  const montoFinal = raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
   const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
 
   return (
@@ -278,28 +279,41 @@ export default function HistorialDetallePage() {
               </span>
             </div>
 
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <User size={12} /> Motorista Asignado
-              </p>
-              <p className="text-sm text-slate-800 font-medium">
-                {motoristaFinal}
-              </p>
-            </div>
-
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                <Car size={12} /> Vehículo Asignado
-              </p>
-              <p className="text-sm text-slate-800 font-medium">
-                {vehiculoFinal}
-              </p>
-              {vehiculoMarca && (
-                <p className="text-xs text-slate-500">
-                  {vehiculoMarca}
+            {isCombustibleView ? (
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <FileText size={12} /> Vales Aprobados
                 </p>
-              )}
-            </div>
+                <p className="text-xl font-black text-emerald-600">
+                  {montoFinal !== null && montoFinal !== undefined ? `$${Number(montoFinal).toFixed(2)}` : 'Sin asignar'}
+                </p>
+              </div>
+            ) : (
+              <>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <User size={12} /> Motorista Asignado
+                  </p>
+                  <p className="text-sm text-slate-800 font-medium">
+                    {motoristaFinal}
+                  </p>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Car size={12} /> Vehículo Asignado
+                  </p>
+                  <p className="text-sm text-slate-800 font-medium">
+                    {vehiculoFinal}
+                  </p>
+                  {vehiculoMarca && (
+                    <p className="text-xs text-slate-500">
+                      {vehiculoMarca}
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
 
             <div>
               <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Comentario del Jefe</p>
