@@ -212,7 +212,7 @@ class LoteCombustibleService
     public function finalizarLote(int $loteId, int $userId): AsignacionCombustibleLote
     {
         return DB::transaction(function () use ($loteId, $userId) {
-            $lote = AsignacionCombustibleLote::with('detalles')->findOrFail($loteId);
+            $lote = AsignacionCombustibleLote::with('detalles.solicitudCombustible')->findOrFail($loteId);
 
             if ($lote->estado !== EstadoLoteEnum::BORRADOR) {
                 throw new \DomainException('Solo se pueden finalizar lotes en estado borrador.');
@@ -226,6 +226,17 @@ class LoteCombustibleService
             if ($sinMonto->isNotEmpty()) {
                 throw new \DomainException(
                     "Hay {$sinMonto->count()} detalle(s) sin monto asignado. Todos deben tener monto mayor a 0."
+                );
+            }
+
+            $noAprobadas = $lote->detalles->filter(fn ($d) =>
+                $d->solicitud_combustible_id !== null
+                && optional($d->solicitudCombustible)->estado !== EstadoSolicitudEnum::APROBADA->value
+            );
+            if ($noAprobadas->isNotEmpty()) {
+                throw new \DomainException(
+                    "Todas las solicitudes del lote deben estar aprobadas antes de finalizar. "
+                    . "Hay {$noAprobadas->count()} detalle(s) pendiente(s) de aprobación."
                 );
             }
 

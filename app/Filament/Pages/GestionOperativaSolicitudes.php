@@ -969,6 +969,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 $detalle->update([
                     'solicitud_combustible_id' => $id,
                     'monto_asignado'           => $monto,
+                    'cantidad_galones'         => $solicitud->cantidad_combustible,
                     'asignado_por'             => auth()->id(),
                     'fecha_asignacion'         => now(),
                     'estado_asignacion'        => 'asignado',
