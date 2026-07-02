@@ -111,7 +111,15 @@ class RecepcionEntregaVehiculoResource extends Resource
                         ->label('Nivel de combustible')
                         ->options(\App\Domain\Solicitudes\Enums\NivelCombustibleEnum::options())
                         ->native(false)
-                        ->helperText('0% = Vacío | 25% = ¼ | 50% = ½ | 75% = ¾ | 100% = Lleno'),
+                        ->helperText('0% = Vacío | 25% = ¼ | 50% = ½ | 75% = ¾ | 100% = Lleno')
+                        ->afterStateUpdated(function (callable $set, $state) {
+                            // Si el nivel es bajo (< 50%), sugerir desmarcar reserva
+                        }),
+
+                    Forms\Components\Toggle::make('tiene_reserva')
+                        ->label('🛢️ Tiene reserva de combustible')
+                        ->helperText('Marque si el vehículo cuenta con combustible suficiente de un viaje anterior y no requiere asignación nueva.')
+                        ->inline(false),
 
                     Forms\Components\CheckboxList::make('herramientas_verificadas')
                         ->label('Herramientas y accesorios verificados')
@@ -210,6 +218,15 @@ class RecepcionEntregaVehiculoResource extends Resource
                         $state <= 75 => 'info',
                         default => 'success',
                     }),
+
+                Tables\Columns\IconColumn::make('tiene_reserva')
+                    ->label('Reserva')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-check-circle')
+                    ->falseIcon('heroicon-o-x-circle')
+                    ->trueColor('success')
+                    ->falseColor('gray')
+                    ->tooltip(fn ($state) => $state ? 'Tiene reserva activa' : 'Sin reserva'),
 
                 Tables\Columns\TextColumn::make('herramientas_verificadas')
                     ->label('Herramientas')

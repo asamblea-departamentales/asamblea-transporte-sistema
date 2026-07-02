@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\RecepcionEntregaVehiculo;
 use App\Models\SolicitudTransporte;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
@@ -133,6 +134,34 @@ class Vehiculo extends Model
             ->unique();
 
         return $query->whereIn('id', $idsOcupados);
+    }
+
+    // ──────────────────────────────────────────────
+    // Reserva de combustible
+    // ──────────────────────────────────────────────
+    // Indica si el vehículo tiene una reserva activa de combustible,
+    // es decir, en su última recepción el operativo marcó "tiene_reserva"
+    // y aún no se ha registrado una entrega posterior que la consuma.
+    public function getTieneReservaActivaAttribute(): bool
+    {
+        $ultimaRecepcionConReserva = RecepcionEntregaVehiculo::where('vehiculo_id', $this->id)
+            ->where('tipo_movimiento', 'recepcion')
+            ->where('tiene_reserva', true)
+            ->latest('fecha_hora')
+            ->first();
+
+        if (!$ultimaRecepcionConReserva) {
+            return false;
+        }
+
+        // La reserva se considera consumida si hay una entrega posterior
+        // a la recepción que la originó.
+        $entregaPosterior = RecepcionEntregaVehiculo::where('vehiculo_id', $this->id)
+            ->where('tipo_movimiento', 'entrega')
+            ->where('fecha_hora', '>', $ultimaRecepcionConReserva->fecha_hora)
+            ->exists();
+
+        return !$entregaPosterior;
     }
 
     // Relaciones con otras tablas/modelos

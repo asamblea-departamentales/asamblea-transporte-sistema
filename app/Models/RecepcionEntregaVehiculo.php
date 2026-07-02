@@ -20,6 +20,7 @@ class RecepcionEntregaVehiculo extends Model
         'fecha_hora',
         'kilometraje',
         'nivel_combustible',
+        'tiene_reserva',
         'estado_exterior',
         'estado_interior',
         'herramientas_verificadas',
@@ -33,6 +34,7 @@ class RecepcionEntregaVehiculo extends Model
     protected $casts = [
         'fecha_hora' => 'datetime',
         'nivel_combustible' => 'integer',
+        'tiene_reserva' => 'boolean',
         'herramientas_verificadas' => 'array',
         'adjuntos' => 'array',
     ];

@@ -436,6 +436,7 @@
                                 reglas_minimas: false,
                                 hallazgos: '',
                                 monto: {{ $match ? number_format($match['monto_actual'], 2, '.', '') : 0 }},
+                                cubrir_con_reserva: {{ $match && $match['tiene_reserva'] ? 'true' : 'false' }},
                                 submit() {
                                     $wire.validarYAsignarCombustible({{ $row['id'] }}, {
                                         comentario: this.comentario,
@@ -446,6 +447,7 @@
                                         hallazgos: this.hallazgos,
                                         detalle_id: {{ $match['detalle_id'] ?? 'null' }},
                                         monto: this.monto,
+                                        cubrir_con_reserva: this.cubrir_con_reserva,
                                     });
                                     this.open = false;
                                     this.step = 1;
@@ -502,27 +504,102 @@
                                                     <span class="font-semibold">#{{ $match['lote_id'] }}</span>
                                                 </div>
                                             </div>
+                                            @if($match['tiene_reserva'])
+                                            <div class="bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-start gap-3">
+                                                <span class="text-lg">🛢️</span>
+                                                <div>
+                                                    <p class="text-sm font-semibold text-green-800 dark:text-green-200">Este vehículo tiene reserva activa de combustible</p>
+                                                    <p class="text-xs text-green-600 dark:text-green-400">
+                                                        @if($match['nivel_combustible'])
+                                                            Nivel: {{ $match['nivel_combustible'] }}%
+                                                            (@php echo \App\Domain\Solicitudes\Enums\NivelCombustibleEnum::fromInt($match['nivel_combustible'])->label(); @endphp)
+                                                        @endif
+                                                        — Recibido de un viaje anterior, aún no consumido.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            @endif
+
                                             <hr class="border-gray-200">
-                                            <div>
+
+                                            <div x-show="!cubrir_con_reserva">
                                                 <div class="modal-label">Monto establecido por {{ $match['establecido_por'] }}</div>
                                                 <div class="text-lg font-bold text-gray-900">${{ number_format($match['monto_actual'], 2) }}</div>
                                             </div>
-                                            <div>
+
+                                            @if($match['tiene_reserva'])
+                                            <label class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer">
+                                                <input type="checkbox" x-model="cubrir_con_reserva" class="mt-0.5">
+                                                <div>
+                                                    <span class="text-sm font-semibold text-gray-900 dark:text-white">Cubrir con reserva</span>
+                                                    <p class="text-xs text-gray-500">El vehículo ya cuenta con combustible suficiente de un viaje anterior. No se asignará combustible nuevo ni se vinculará a un detalle de lote.</p>
+                                                </div>
+                                            </label>
+                                            @endif
+
+                                            <div x-show="!cubrir_con_reserva">
                                                 <div class="modal-label">Nuevo monto</div>
                                                 <input type="number" x-model="monto" step="0.01" min="0"
                                                        class="modal-textarea text-lg font-bold">
                                             </div>
+
+                                            <div x-show="cubrir_con_reserva" class="text-sm text-gray-500 italic">
+                                                Al marcar "Cubrir con reserva" la solicitud se pre-aprobará sin asignar combustible. El detalle del lote quedará disponible para otro vehículo.
+                                            </div>
+
                                             <div class="flex justify-end gap-3 pt-2">
                                                 <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
                                                 <button type="button" class="btn-accion btn-success"
                                                     @click="submit()"
-                                                    x-bind:disabled="monto <= 0">
-                                                    Validar y Confirmar Asignación
+                                                    x-bind:disabled="!cubrir_con_reserva && monto <= 0">
+                                                    <span x-show="cubrir_con_reserva">Validar y Cubrir con Reserva</span>
+                                                    <span x-show="!cubrir_con_reserva">Validar y Confirmar Asignación</span>
                                                 </button>
                                             </div>
                                         </div>
                                         @else
-                                        <div x-show="step === 2">
+                                        @php $tieneReservaVehiculo = $this->getVehiculoTieneReserva($row['id']); @endphp
+                                        <div x-data="{ cubrir_con_reserva_sin_lote: {{ $tieneReservaVehiculo ? 'true' : 'false' }} }" x-show="step === 2">
+                                            @if($tieneReservaVehiculo)
+                                            <div class="space-y-4">
+                                                <div class="bg-green-50 dark:bg-green-900/20 border border-green-300 dark:border-green-700 rounded-lg p-3 flex items-start gap-3">
+                                                    <span class="text-lg">🛢️</span>
+                                                    <div>
+                                                        <p class="text-sm font-semibold text-green-800 dark:text-green-200">Este vehículo tiene reserva activa de combustible</p>
+                                                        <p class="text-xs text-green-600 dark:text-green-400">No requiere lote del día — puede pre-aprobarse contra la reserva.</p>
+                                                    </div>
+                                                </div>
+                                                <label class="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg cursor-pointer">
+                                                    <input type="checkbox" x-model="cubrir_con_reserva_sin_lote" class="mt-0.5">
+                                                    <div>
+                                                        <span class="text-sm font-semibold text-gray-900 dark:text-white">Cubrir con reserva</span>
+                                                        <p class="text-xs text-gray-500">Pre-aprobar la solicitud sin asignar combustible nuevo. El detalle de lote no es necesario.</p>
+                                                    </div>
+                                                </label>
+                                                <div class="flex justify-end gap-3 pt-2">
+                                                    <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
+                                                    <button type="button" class="btn-accion btn-success"
+                                                        @click="
+                                                            $wire.validarYAsignarCombustible({{ $row['id'] }}, {
+                                                                comentario: comentario,
+                                                                datos_completos: datos_completos,
+                                                                fechas_validas: fechas_validas,
+                                                                recursos_disponibles: recursos_disponibles,
+                                                                reglas_minimas: reglas_minimas,
+                                                                hallazgos: hallazgos,
+                                                                detalle_id: null,
+                                                                monto: 0,
+                                                                cubrir_con_reserva: true,
+                                                            });
+                                                            open = false;
+                                                            step = 1;
+                                                        "
+                                                        x-bind:disabled="!comentario.trim() || !datos_completos || !reglas_minimas || !cubrir_con_reserva_sin_lote">
+                                                        Validar y Cubrir con Reserva
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            @else
                                             <div class="text-center py-8 space-y-4">
                                                 <div class="text-4xl">⚠️</div>
                                                 <h2 class="text-lg font-semibold text-gray-900">Sin disponibilidad en lote del día</h2>
@@ -541,6 +618,7 @@
                                                 <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
                                                 <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cerrar</button>
                                             </div>
+                                            @endif
                                         </div>
                                         @endif
 

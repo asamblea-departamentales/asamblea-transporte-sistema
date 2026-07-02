@@ -777,14 +777,18 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
         if (!$detalle) return null;
 
+        $vehiculo = $solicitud->vehiculo;
+
         return [
-            'lote_id'          => $lote->id,
-            'detalle_id'       => $detalle->id,
-            'placa'            => $solicitud->vehiculo?->placa ?? $detalle->placa_cache,
-            'ticket'           => $solicitud->ticket,
-            'codigo'           => $solicitud->codigo,
-            'monto_actual'     => (float) $detalle->monto_asignado,
-            'establecido_por'  => $this->formatNombreUsuario($lote->creador),
+            'lote_id'            => $lote->id,
+            'detalle_id'         => $detalle->id,
+            'placa'              => $vehiculo?->placa ?? $detalle->placa_cache,
+            'ticket'             => $solicitud->ticket,
+            'codigo'             => $solicitud->codigo,
+            'monto_actual'       => (float) $detalle->monto_asignado,
+            'establecido_por'    => $this->formatNombreUsuario($lote->creador),
+            'tiene_reserva'      => $vehiculo?->tiene_reserva_activa ?? false,
+            'nivel_combustible'  => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
         ];
     }
 
@@ -848,29 +852,29 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             return;
         }
 
-        $detalleId = $data['detalle_id'] ?? null;
-        if (!$detalleId) {
-            Notification::make()
-                ->title('No hay un detalle de lote disponible para asignar')
-                ->danger()
-                ->send();
-            return;
-        }
+        $cubrirConReserva = (bool) ($data['cubrir_con_reserva'] ?? false);
 
-        $monto = (float) ($data['monto'] ?? 0);
-        if ($monto <= 0) {
-            Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
-            return;
-        }
-
-        try {
-            $detalle = AsignacionCombustibleLoteDetalle::findOrFail($detalleId);
-
-            if ($detalle->solicitud_combustible_id) {
-                Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+        if (!$cubrirConReserva) {
+            $detalleId = $data['detalle_id'] ?? null;
+            if (!$detalleId) {
+                Notification::make()
+                    ->title('No hay un detalle de lote disponible para asignar')
+                    ->danger()
+                    ->send();
                 return;
             }
 
+            $monto = (float) ($data['monto'] ?? 0);
+            if ($monto <= 0) {
+                Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+                return;
+            }
+        } else {
+            $detalleId = null;
+            $monto = 0;
+        }
+
+        try {
             \DB::beginTransaction();
 
             app(RevisionOperativaService::class)->validarYPreaprobar(
@@ -881,13 +885,49 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 $this->armarValidaciones($data),
             );
 
-            $detalle->update([
-                'solicitud_combustible_id' => $id,
-                'monto_asignado'           => $monto,
-                'asignado_por'             => auth()->id(),
-                'fecha_asignacion'         => now(),
-                'estado_asignacion'        => 'asignado',
-            ]);
+            if ($cubrirConReserva) {
+                // ─────────────────────────────────────────────────────────────
+                // Flujo: Cubrir con reserva
+                // ─────────────────────────────────────────────────────────────
+                // El vehículo ya cuenta con combustible de un viaje anterior
+                // (marcado como "tiene_reserva" en Recepción/Entrega).
+                // Se pre-aprueba la solicitud sin vincularla a un detalle de lote,
+                // ya que no requiere asignación de combustible nueva.
+                // ─────────────────────────────────────────────────────────────
+                $solicitud = SolicitudCombustible::find($id);
+                $vehiculo = $solicitud?->vehiculo;
+
+                BitacoraEvento::create([
+                    'entidad_tipo' => 'combustible',
+                    'entidad_id'   => $id,
+                    'accion'       => 'VALIDAR_PREAPROBAR',
+                    'user_id'      => auth()->id(),
+                    'datos_extras' => [
+                        'comentario'           => $data['comentario'],
+                        'validaciones'         => $this->armarValidaciones($data),
+                        'cubierto_con_reserva' => true,
+                        'nivel_combustible'    => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
+                        'placa'                => $vehiculo?->placa,
+                        'mensaje'              => 'Solicitud cubierta con reserva del vehículo ' . ($vehiculo?->placa ?? 'N/A') . '. No requiere asignación de combustible.',
+                    ],
+                ]);
+            } else {
+                $detalle = AsignacionCombustibleLoteDetalle::findOrFail($detalleId);
+
+                if ($detalle->solicitud_combustible_id) {
+                    \DB::rollBack();
+                    Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+                    return;
+                }
+
+                $detalle->update([
+                    'solicitud_combustible_id' => $id,
+                    'monto_asignado'           => $monto,
+                    'asignado_por'             => auth()->id(),
+                    'fecha_asignacion'         => now(),
+                    'estado_asignacion'        => 'asignado',
+                ]);
+            }
 
             \DB::commit();
 
@@ -906,11 +946,19 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 })
                 ->implode(' · ');
 
-            Notification::make()
-                ->title('Solicitud validada y asignada al lote')
-                ->body("{$checks} | Monto: \${$monto}")
-                ->success()
-                ->send();
+            if ($cubrirConReserva) {
+                Notification::make()
+                    ->title('Solicitud validada y cubierta con reserva')
+                    ->body("{$checks} | El vehículo ya contaba con combustible suficiente.")
+                    ->success()
+                    ->send();
+            } else {
+                Notification::make()
+                    ->title('Solicitud validada y asignada al lote')
+                    ->body("{$checks} | Monto: \${$monto}")
+                    ->success()
+                    ->send();
+            }
         } catch (\Exception $e) {
             \DB::rollBack();
             Notification::make()->title('Error: ' . $e->getMessage())->danger()->send();
@@ -932,6 +980,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         return collect(explode('.', $username))
             ->map(fn ($part) => ucfirst(strtolower(trim($part))))
             ->implode(' ');
+    }
+
+    public function getVehiculoTieneReserva(int $solicitudId): bool
+    {
+        $solicitud = SolicitudCombustible::with('vehiculo')->find($solicitudId);
+
+        return $solicitud?->vehiculo?->tiene_reserva_activa ?? false;
     }
 
     public function getContratosActivosProperty(): array
