@@ -174,6 +174,16 @@ export default function HistorialDetallePage() {
   // El jefe guarda su decisión manual en cantidad_combustible (en show API) o cantidad_estimada (en comparativa API)
   const montoFinal = raw.cantidad_combustible || comp.cantidad_estimada || raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
   const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
+  
+  // Prioridad
+  const prioridadRaw = raw.prioridad_grupo?.value || raw.prioridad_grupo || comp.prioridad_grupo || raw.prioridad?.value || raw.prioridad || comp.prioridad || 'N/A';
+  const prioridad = typeof prioridadRaw === 'string' ? prioridadRaw.toLowerCase() : prioridadRaw;
+  const getPrioridadColor = (p: string) => {
+    if (p.includes('alta') || p.includes('urgente')) return 'bg-red-50 text-red-700 border-red-200';
+    if (p.includes('media')) return 'bg-amber-50 text-amber-700 border-amber-200';
+    if (p === 'n/a') return 'bg-slate-50 text-slate-700 border-slate-200';
+    return 'bg-blue-50 text-blue-700 border-blue-200';
+  };
 
   return (
     <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-5xl mx-auto">
@@ -205,9 +215,17 @@ export default function HistorialDetallePage() {
             <h3 className="font-bold text-slate-800 text-lg tracking-tight">{isCombustibleView ? 'Datos de Combustible' : 'Datos del Viaje'}</h3>
           </div>
           <div className="space-y-4">
-            <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Solicitante</p>
-              <p className="text-sm text-slate-800 font-medium">{solicitanteName}</p>
+            <div className="flex justify-between items-start gap-4">
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Solicitante</p>
+                <p className="text-sm text-slate-800 font-medium">{solicitanteName}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Prioridad</p>
+                <span className={`inline-block px-2.5 py-0.5 rounded text-xs font-bold capitalize border ${getPrioridadColor(prioridad)}`}>
+                  {prioridadRaw}
+                </span>
+              </div>
             </div>
             
             {!isCombustibleView && (
@@ -282,13 +300,28 @@ export default function HistorialDetallePage() {
             </div>
 
             {isCombustibleView ? (
-              <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <FileText size={12} /> Vales Aprobados
-                </p>
-                <p className="text-xl font-black text-emerald-600">
-                  {montoFinal !== null && montoFinal !== undefined ? `$${Number(montoFinal).toFixed(2)}` : 'Sin asignar'}
-                </p>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <FileText size={12} /> Vales Aprobados
+                  </p>
+                  <p className="text-xl font-black text-emerald-600">
+                    {montoFinal !== null && montoFinal !== undefined ? `$${Number(montoFinal).toFixed(2)}` : 'Sin asignar'}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Car size={12} /> Vehículo (Placa)
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {vehiculoFinal}
+                  </p>
+                  {vehiculoMarca && (
+                    <p className="text-xs text-slate-500">
+                      {vehiculoMarca}
+                    </p>
+                  )}
+                </div>
               </div>
             ) : (
               <>
