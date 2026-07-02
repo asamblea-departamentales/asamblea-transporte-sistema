@@ -10,7 +10,7 @@ export function useAprobacionCombustible(id: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   
   const [comentario, setComentario] = useState('');
-  const [tipoDecision, setTipoDecision] = useState<'mantener' | 'manual'>('mantener');
+  const [tipoDecision, setTipoDecision] = useState<'operativo' | 'jefe'>('operativo');
   const [montoManual, setMontoManual] = useState<number | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -43,7 +43,7 @@ export function useAprobacionCombustible(id: string | undefined) {
   const confirmarAprobacion = async () => {
     if (!id) return;
     
-    if (tipoDecision === 'manual' && (!montoManual || Number(montoManual) <= 0)) {
+    if (tipoDecision === 'jefe' && (!montoManual || Number(montoManual) <= 0)) {
       const msg = 'Debe ingresar un monto válido de vales para aprobar manualmente';
       setError(msg); 
       toast.error(msg); 
@@ -57,7 +57,7 @@ export function useAprobacionCombustible(id: string | undefined) {
         id, 
         tipoDecision, 
         comentario || 'Aprobado por jefatura', 
-        tipoDecision === 'manual' ? Number(montoManual) : undefined
+        tipoDecision === 'jefe' ? Number(montoManual) : undefined
       );
       toast.success('Solicitud procesada exitosamente');
       navigate('/');

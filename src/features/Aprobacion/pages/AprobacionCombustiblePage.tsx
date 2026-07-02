@@ -103,13 +103,13 @@ export default function AprobacionCombustiblePage() {
           <div className="space-y-4">
             <label className="block text-sm font-bold text-slate-700">Monto a Aprobar</label>
             <div className="flex flex-col gap-3">
-              <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${tipoDecision === 'mantener' ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-slate-200'}`}>
+              <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${tipoDecision === 'operativo' ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-slate-200'}`}>
                 <input 
                   type="radio" 
                   name="tipoDecision"
                   className="w-4 h-4 text-primary mt-1 self-start"
-                  checked={tipoDecision === 'mantener'} 
-                  onChange={() => setTipoDecision('mantener')} 
+                  checked={tipoDecision === 'operativo'} 
+                  onChange={() => setTipoDecision('operativo')} 
                 />
                 <div className="flex flex-col">
                   <span className="font-semibold text-slate-800 text-sm">Mantener sugerido</span>
@@ -117,18 +117,18 @@ export default function AprobacionCombustiblePage() {
                 </div>
               </label>
 
-              <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${tipoDecision === 'manual' ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-slate-200'}`}>
+              <label className={`flex items-center gap-3 p-4 border rounded-xl cursor-pointer transition-colors ${tipoDecision === 'jefe' ? 'bg-primary/5 border-primary shadow-sm' : 'hover:bg-slate-50 border-slate-200'}`}>
                 <input 
                   type="radio" 
                   name="tipoDecision"
                   className="w-4 h-4 text-primary mt-1 self-start"
-                  checked={tipoDecision === 'manual'} 
-                  onChange={() => setTipoDecision('manual')} 
+                  checked={tipoDecision === 'jefe'} 
+                  onChange={() => setTipoDecision('jefe')} 
                 />
                 <div className="flex flex-col w-full">
                   <span className="font-semibold text-slate-800 text-sm">Monto manual</span>
                   <span className="text-xs text-slate-500 mt-1 mb-3">Ingresar una cantidad distinta de vales</span>
-                  {tipoDecision === 'manual' && (
+                  {tipoDecision === 'jefe' && (
                     <input 
                       type="number"
                       placeholder="Ej. 30"
@@ -184,7 +184,7 @@ export default function AprobacionCombustiblePage() {
           
           <button 
             onClick={confirmarAprobacion}
-            disabled={isSubmitting || (tipoDecision === 'manual' && (!montoManual || montoManual <= 0))}
+            disabled={isSubmitting || (tipoDecision === 'jefe' && (!montoManual || montoManual <= 0))}
             className="w-full md:w-auto px-8 py-2.5 font-bold rounded-lg text-white transition-all shadow-md bg-primary hover:bg-primary-hover disabled:opacity-60 disabled:cursor-not-allowed text-sm"
           >
             {isSubmitting ? 'Procesando...' : 'Aprobar Vales Oficialmente'}

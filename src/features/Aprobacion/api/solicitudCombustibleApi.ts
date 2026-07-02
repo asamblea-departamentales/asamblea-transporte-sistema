@@ -25,12 +25,12 @@ export const solicitudCombustibleApi = {
     return response.data;
   },
 
-  aprobarConDecision: async (id: string, decision_final: 'mantener' | 'manual', comentario: string, monto_aprobado?: number) => {
+  aprobarConDecision: async (id: string, decision_final: 'operativo' | 'jefe', comentario: string, monto_aprobado?: number) => {
     const payload: any = {
       decision_final,
       comentario
     };
-    if (decision_final === 'manual' && monto_aprobado !== undefined) {
+    if (decision_final === 'jefe' && monto_aprobado !== undefined) {
       payload.monto_aprobado = monto_aprobado;
     }
 
