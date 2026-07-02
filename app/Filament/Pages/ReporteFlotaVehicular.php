@@ -27,7 +27,7 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
 
     protected static ?string $navigationGroup = 'Reportes';
 
-    protected static ?string $navigationLabel = 'Reporte Flota Vehicular';
+    protected static ?string $navigationLabel = 'Distribución Flota Vehicular';
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 

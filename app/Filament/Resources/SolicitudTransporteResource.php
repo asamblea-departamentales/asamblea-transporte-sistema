@@ -31,7 +31,7 @@ class SolicitudTransporteResource extends Resource
     protected static ?string $model = SolicitudTransporte::class;
     protected static ?string $recordTitleAttribute = 'codigo';
     protected static ?string $slug = 'solicitud-transporte';
-    protected static ?string $navigationGroup = 'Asignaciones';
+    protected static ?string $navigationGroup = 'Procesos';
     protected static ?string $navigationLabel = 'Solicitudes de Transporte';
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 

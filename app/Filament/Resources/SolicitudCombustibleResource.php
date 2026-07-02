@@ -36,8 +36,8 @@ class SolicitudCombustibleResource extends Resource
     // Columna que se muestra como título en la búsqueda global.
     protected static ?string $recordTitleAttribute = 'codigo';
 
-    // Agrupa este recurso en el menú bajo "Asignaciones".
-    protected static ?string $navigationGroup = 'Asignaciones';
+    // Agrupa este recurso en el menú bajo "Procesos".
+    protected static ?string $navigationGroup = 'Procesos';
     // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Combustible';
     // Icono visual para identificar este recurso en el menú.
