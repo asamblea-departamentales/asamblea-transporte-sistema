@@ -15,6 +15,16 @@ export const solicitudCombustibleApi = {
     return response.data;
   },
 
+  observacion: async (id: string, comentario: string) => {
+    const response = await axiosClient.post(`/solicitudes-combustible/${id}/observacion`, { observaciones: comentario });
+    return response.data;
+  },
+
+  preAprobar: async (id: string, comentario: string) => {
+    const response = await axiosClient.post(`/solicitudes-combustible/${id}/pre-aprobar`, { observaciones: comentario });
+    return response.data;
+  },
+
   aprobarConDecision: async (id: string, decision_final: 'mantener' | 'manual', comentario: string, monto_aprobado?: number) => {
     const payload: any = {
       decision_final,

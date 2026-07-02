@@ -10,6 +10,8 @@ export function useAprobacionCombustible(id: string | undefined) {
   const [error, setError] = useState<string | null>(null);
   
   const [comentario, setComentario] = useState('');
+  const [tipoDecision, setTipoDecision] = useState<'mantener' | 'manual'>('mantener');
+  const [montoManual, setMontoManual] = useState<number | ''>('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const navigate = useNavigate();
@@ -41,10 +43,22 @@ export function useAprobacionCombustible(id: string | undefined) {
   const confirmarAprobacion = async () => {
     if (!id) return;
     
+    if (tipoDecision === 'manual' && (!montoManual || Number(montoManual) <= 0)) {
+      const msg = 'Debe ingresar un monto válido de vales para aprobar manualmente';
+      setError(msg); 
+      toast.error(msg); 
+      return;
+    }
+
     try {
       setIsSubmitting(true);
       setError(null);
-      await solicitudCombustibleApi.aprobar(id, comentario);
+      await solicitudCombustibleApi.aprobarConDecision(
+        id, 
+        tipoDecision, 
+        comentario || 'Aprobado por jefatura', 
+        tipoDecision === 'manual' ? Number(montoManual) : undefined
+      );
       toast.success('Solicitud procesada exitosamente');
       navigate('/');
     } catch (err: any) {
@@ -56,7 +70,35 @@ export function useAprobacionCombustible(id: string | undefined) {
     }
   };
 
+  const handleObservacion = async () => {
+    if (!id) return;
+    if (!comentario.trim()) { 
+      const msg = 'Debe ingresar un comentario para enviar una observación';
+      setError(msg); toast.error(msg); return; 
+    }
+    try {
+      setIsSubmitting(true); setError(null);
+      await solicitudCombustibleApi.observacion(id, comentario);
+      toast.success('Observación registrada');
+      navigate('/');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al registrar la observación';
+      setError(msg); toast.error(msg);
+    } finally { setIsSubmitting(false); }
+  };
 
+  const handlePreAprobar = async () => {
+    if (!id) return;
+    try {
+      setIsSubmitting(true); setError(null);
+      await solicitudCombustibleApi.preAprobar(id, comentario || 'Pre-aprobado por jefatura');
+      toast.success('Solicitud pre-aprobada');
+      navigate('/');
+    } catch (err: any) {
+      const msg = err.response?.data?.message || 'Error al pre-aprobar la solicitud';
+      setError(msg); toast.error(msg);
+    } finally { setIsSubmitting(false); }
+  };
 
   const handleRechazar = async () => {
     if (!id) return;
@@ -87,7 +129,13 @@ export function useAprobacionCombustible(id: string | undefined) {
     error,
     comentario,
     setComentario,
+    tipoDecision,
+    setTipoDecision,
+    montoManual,
+    setMontoManual,
     confirmarAprobacion,
+    handleObservacion,
+    handlePreAprobar,
     handleRechazar,
     isSubmitting
   };
