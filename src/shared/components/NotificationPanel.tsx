@@ -15,9 +15,19 @@ interface NotificationPanelProps {
   isOpen: boolean;
   onClose: () => void;
   notifications: NotificationItem[];
+  onClearAll?: () => void;
+  onMarkAllRead?: () => void;
+  onDelete?: (id: string | number) => void;
 }
 
-export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, onClose, notifications }) => {
+export const NotificationPanel: React.FC<NotificationPanelProps> = ({ 
+  isOpen, 
+  onClose, 
+  notifications,
+  onClearAll,
+  onMarkAllRead,
+  onDelete
+}) => {
   const navigate = useNavigate();
 
   return (
@@ -48,12 +58,14 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
           </div>
           <div className="flex items-center gap-2">
             <button 
+              onClick={onMarkAllRead}
               title="Marcar todo como leído"
               className="flex items-center justify-center w-8 h-8 rounded-full text-blue-600 hover:bg-blue-50 transition-colors"
             >
               <Check size={16} strokeWidth={2.5} />
             </button>
             <button 
+              onClick={onClearAll}
               title="Eliminar todas las notificaciones"
               className="flex items-center justify-center w-8 h-8 rounded-full text-red-600 hover:bg-red-50 transition-colors"
             >
@@ -115,7 +127,10 @@ export const NotificationPanel: React.FC<NotificationPanelProps> = ({ isOpen, on
 
                 {/* Botón Flotante Eliminar */}
                 <button 
-                  onClick={(e) => { e.stopPropagation(); }}
+                  onClick={(e) => { 
+                    e.stopPropagation(); 
+                    if (onDelete) onDelete(notif.id);
+                  }}
                   title="Eliminar Notificación"
                   className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all translate-x-2 group-hover:translate-x-0"
                 >

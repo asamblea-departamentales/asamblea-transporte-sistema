@@ -13,7 +13,7 @@ interface SidebarProps {
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const { notifications, pendingCount, markAllAsRead } = useNotifications(user);
+  const { notifications, pendingCount, markAllAsRead, clearNotifications, deleteNotification } = useNotifications(user);
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Verifica si estamos actualmente en una página de aprobación viendo un ID específico
@@ -170,6 +170,9 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         isOpen={isNotifOpen}
         onClose={() => setIsNotifOpen(false)}
         notifications={notifications}
+        onClearAll={clearNotifications}
+        onMarkAllRead={markAllAsRead}
+        onDelete={deleteNotification}
       />
     </>
   );

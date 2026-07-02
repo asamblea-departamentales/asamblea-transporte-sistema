@@ -72,15 +72,25 @@ export function useNotifications(user: any) {
       // Save snapshot
       localStorage.setItem(SNAP_KEY, JSON.stringify(newSnapshot));
 
-      // Append new notifications
-      if (newNotifs.length > 0) {
-        setNotifications(prev => {
-          const combined = [...newNotifs, ...prev].slice(0, 20); // Keep last 20
-          localStorage.setItem(NOTIF_KEY, JSON.stringify(combined));
-          setPendingCount(combined.filter(n => !n.read).length);
-          return combined;
+      // Auto-limpiar notificaciones que ya no están pendientes en currentItems
+      setNotifications(prev => {
+        // IDs que actualmente son válidos (siguen pre_aprobados)
+        const currentIds = currentItems.map(r => String(r.id || r.code));
+        
+        // Conservamos solo las que siguen pendientes O que son muy recientes (por si hay un delay)
+        // Pero para ser estrictos con tu petición, borramos las que ya se aprobaron.
+        const filteredPrev = prev.filter(n => {
+          // Extraemos el código de la URL
+          const match = n.action_url.match(/([^\/]+)$/);
+          const reqCode = match ? match[1] : '';
+          return currentIds.includes(reqCode);
         });
-      }
+
+        const combined = [...newNotifs, ...filteredPrev].slice(0, 20); // Keep last 20
+        localStorage.setItem(NOTIF_KEY, JSON.stringify(combined));
+        setPendingCount(combined.filter(n => !n.read).length);
+        return combined;
+      });
 
     } catch (error) {
       console.error("Error fetching notifications via polling", error);
@@ -104,7 +114,17 @@ export function useNotifications(user: any) {
     setNotifications([]);
     setPendingCount(0);
     localStorage.removeItem(NOTIF_KEY);
+    localStorage.removeItem(SNAP_KEY);
   };
 
-  return { notifications, pendingCount, markAllAsRead, clearNotifications };
+  const deleteNotification = (id: string | number) => {
+    setNotifications(prev => {
+      const updated = prev.filter(n => n.id !== id);
+      localStorage.setItem(NOTIF_KEY, JSON.stringify(updated));
+      setPendingCount(updated.filter(n => !n.read).length);
+      return updated;
+    });
+  };
+
+  return { notifications, pendingCount, markAllAsRead, clearNotifications, deleteNotification };
 }

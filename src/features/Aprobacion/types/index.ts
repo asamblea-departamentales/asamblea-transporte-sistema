@@ -66,11 +66,13 @@ export interface AprobacionState {
 
 export interface SolicitudCombustibleDetalle {
   id: string;
+  codigo?: string;
   solicitante: string;
   vehiculo: string;
   placa: string;
   motivo: string;
   fecha_solicitud: string;
+  estado?: any;
   decision_final?: 'mantener' | 'manual' | null;
   comentario_jefe?: string | null;
 }
