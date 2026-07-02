@@ -18,7 +18,6 @@ export default function AprobacionCombustiblePage() {
     setMontoManual,
     confirmarAprobacion,
     handleObservacion,
-    handlePreAprobar,
     handleRechazar,
     isSubmitting 
   } = useAprobacionCombustible(id);
