@@ -8,6 +8,7 @@ use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
+use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
@@ -858,8 +859,19 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         }
 
         $cubrirConReserva = (bool) ($data['cubrir_con_reserva'] ?? false);
+        $crearLote = (bool) ($data['crear_lote'] ?? false);
 
-        if (!$cubrirConReserva) {
+        if ($cubrirConReserva) {
+            $detalleId = null;
+            $monto = 0;
+        } elseif ($crearLote) {
+            $monto = (float) ($data['monto'] ?? 0);
+            if ($monto <= 0) {
+                Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+                return;
+            }
+            $detalleId = null;
+        } else {
             $detalleId = $data['detalle_id'] ?? null;
             if (!$detalleId) {
                 Notification::make()
@@ -874,13 +886,27 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
                 return;
             }
-        } else {
-            $detalleId = null;
-            $monto = 0;
         }
 
         try {
             \DB::beginTransaction();
+
+            if ($crearLote) {
+                $solicitud = SolicitudCombustible::findOrFail($id);
+                $lote = app(LoteCombustibleService::class)->crearLote([
+                    'fecha'         => $data['fecha_lote'] ?? today()->format('Y-m-d'),
+                    'observaciones' => $data['observaciones_lote'] ?? null,
+                ], auth()->id());
+
+                $detalle = app(LoteCombustibleService::class)->agregarVehiculo($lote->id, [
+                    'vehiculo_id'              => $solicitud->vehiculo_id,
+                    'monto_asignado'           => $monto,
+                    'numero_ticket'            => $solicitud->ticket,
+                    'solicitud_combustible_id' => null,
+                ]);
+
+                $detalleId = $detalle->id;
+            }
 
             app(RevisionOperativaService::class)->validarYPreaprobar(
                 'combustible',
@@ -956,6 +982,12 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 Notification::make()
                     ->title('Solicitud validada y cubierta con reserva')
                     ->body("{$checks} | El vehículo ya contaba con combustible suficiente.")
+                    ->success()
+                    ->send();
+            } elseif ($crearLote) {
+                Notification::make()
+                    ->title('Solicitud validada y asignada a lote nuevo')
+                    ->body("{$checks} | Lote creado y asignado. Monto: \${$monto}")
                     ->success()
                     ->send();
             } else {

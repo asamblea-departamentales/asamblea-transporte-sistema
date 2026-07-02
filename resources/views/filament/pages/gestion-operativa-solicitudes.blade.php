@@ -445,6 +445,9 @@
                                 errores: [],
                                 monto: {{ $match ? number_format($match['monto_actual'], 2, '.', '') : 0 }},
                                 cubrir_con_reserva: {{ $match && $match['tiene_reserva'] ? 'true' : 'false' }},
+                                crearLote: false,
+                                fechaLote: '{{ date('Y-m-d') }}',
+                                observacionesLote: '',
                                 validarPaso1() {
                                     this.errores = [];
                                     if (!this.comentario.trim()) this.errores.push('Debe escribir un comentario de validación.');
@@ -453,17 +456,24 @@
                                     if (this.errores.length === 0) this.step = 2;
                                 },
                                 submit() {
-                                    $wire.validarYAsignarCombustible({{ $row['id'] }}, {
+                                    const p = {
                                         comentario: this.comentario,
                                         datos_completos: this.datos_completos,
                                         fechas_validas: this.fechas_validas,
                                         recursos_disponibles: this.recursos_disponibles,
                                         reglas_minimas: this.reglas_minimas,
                                         hallazgos: this.hallazgos,
-                                        detalle_id: {{ $match['detalle_id'] ?? 'null' }},
                                         monto: this.monto,
                                         cubrir_con_reserva: this.cubrir_con_reserva,
-                                    });
+                                    };
+                                    if (this.crearLote) {
+                                        p.crear_lote = true;
+                                        p.fecha_lote = this.fechaLote;
+                                        p.observaciones_lote = this.observacionesLote;
+                                    } else {
+                                        p.detalle_id = {{ $match['detalle_id'] ?? 'null' }};
+                                    }
+                                    $wire.validarYAsignarCombustible({{ $row['id'] }}, p);
                                     this.open = false;
                                     this.step = 1;
                                 }
@@ -480,6 +490,9 @@
                                             reglas_minimas = false;
                                             hallazgos = '';
                                             errores = [];
+                                            crearLote = false;
+                                            fechaLote = '{{ date('Y-m-d') }}';
+                                            observacionesLote = '';
                                         });
                                     ">
                                     <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
@@ -582,13 +595,44 @@
                                                 Al marcar "Cubrir con reserva" la solicitud se pre-aprobará sin asignar combustible. El detalle del lote quedará disponible para otro vehículo.
                                             </div>
 
+                                            {{-- Crear nuevo lote toggle --}}
+                                            <template x-if="!crearLote && !cubrir_con_reserva">
+                                                <div class="text-center pt-2">
+                                                    <button type="button" class="text-xs text-indigo-600 underline hover:text-indigo-800"
+                                                            @click="crearLote = true; cubrir_con_reserva = false">
+                                                        + Crear nuevo lote en vez del sugerido
+                                                    </button>
+                                                </div>
+                                            </template>
+                                            <template x-if="crearLote">
+                                                <div class="space-y-4 border-t border-gray-200 pt-4 mt-2">
+                                                    <div>
+                                                        <div class="modal-label">Fecha del lote</div>
+                                                        <input type="date" x-model="fechaLote" class="modal-select">
+                                                    </div>
+                                                    <div>
+                                                        <div class="modal-label">Observaciones (opcional)</div>
+                                                        <textarea x-model="observacionesLote" class="modal-textarea" rows="2" placeholder="Observaciones del lote..."></textarea>
+                                                    </div>
+                                                    <div>
+                                                        <div class="modal-label">Monto a asignar</div>
+                                                        <input type="number" x-model="monto" step="0.01" min="0" class="modal-textarea text-lg font-bold">
+                                                    </div>
+                                                    <button type="button" class="text-xs text-gray-500 underline hover:text-gray-700"
+                                                            @click="crearLote = false; cubrir_con_reserva = {{ $match && $match['tiene_reserva'] ? 'true' : 'false' }}">
+                                                        ← Volver al lote sugerido
+                                                    </button>
+                                                </div>
+                                            </template>
+
                                             <div class="flex justify-end gap-3 pt-2">
                                                 <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
                                                 <button type="button" class="btn-accion btn-success"
                                                     @click="submit()"
                                                     x-bind:disabled="!cubrir_con_reserva && monto <= 0">
                                                     <span x-show="cubrir_con_reserva">Validar y Cubrir con Reserva</span>
-                                                    <span x-show="!cubrir_con_reserva">Validar y Confirmar Asignación</span>
+                                                    <span x-show="!cubrir_con_reserva && !crearLote">Validar y Confirmar Asignación</span>
+                                                    <span x-show="!cubrir_con_reserva && crearLote">Crear lote y confirmar asignación</span>
                                                 </button>
                                             </div>
                                         </div>
@@ -635,23 +679,51 @@
                                                 </div>
                                             </div>
                                             @else
-                                            <div class="text-center py-8 space-y-4">
-                                                <div class="text-4xl">⚠️</div>
-                                                <h2 class="text-lg font-semibold text-gray-900">Sin disponibilidad en lote del día</h2>
+                                            <div class="text-center py-6 space-y-4">
+                                                <div class="text-4xl">📦</div>
+                                                <h2 class="text-lg font-semibold text-gray-900">Sin lote disponible</h2>
                                                 <p class="text-sm text-gray-500 max-w-md mx-auto">
-                                                    No hay un lote del día con espacio para el vehículo de esta solicitud.
+                                                    No hay un lote en borrador para hoy con espacio para este vehículo. Puedes crear uno nuevo.
                                                 </p>
-                                                <p class="text-sm text-gray-500 max-w-md mx-auto">
-                                                    Solicita al jefe que cree un lote e importe o agregue el vehículo antes de continuar.
-                                                </p>
-                                                <a href="{{ url('/admin/asignacion-combustible-lotes') }}" target="_blank"
-                                                   class="inline-flex items-center gap-1.5 text-sm font-semibold text-indigo-600 underline">
-                                                    Ir a Lotes de Combustible →
-                                                </a>
                                             </div>
+
+                                            <div class="space-y-4">
+                                                <div>
+                                                    <div class="modal-label">Fecha del lote</div>
+                                                    <input type="date" x-model="fechaLote" class="modal-select">
+                                                </div>
+                                                <div>
+                                                    <div class="modal-label">Observaciones (opcional)</div>
+                                                    <textarea x-model="observacionesLote" class="modal-textarea" rows="2" placeholder="Observaciones del lote..."></textarea>
+                                                </div>
+                                                <div>
+                                                    <div class="modal-label">Monto a asignar</div>
+                                                    <input type="number" x-model="monto" step="0.01" min="0" class="modal-textarea text-lg font-bold">
+                                                </div>
+                                            </div>
+
                                             <div class="flex justify-end gap-3 pt-2">
                                                 <button type="button" class="btn-accion btn-gray" @click="step = 1">← Atrás</button>
-                                                <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cerrar</button>
+                                                <button type="button" class="btn-accion btn-success"
+                                                    @click="
+                                                        $wire.validarYAsignarCombustible({{ $row['id'] }}, {
+                                                            comentario: comentario,
+                                                            datos_completos: datos_completos,
+                                                            fechas_validas: fechas_validas,
+                                                            recursos_disponibles: recursos_disponibles,
+                                                            reglas_minimas: reglas_minimas,
+                                                            hallazgos: hallazgos,
+                                                            monto: monto,
+                                                            crear_lote: true,
+                                                            fecha_lote: fechaLote,
+                                                            observaciones_lote: observacionesLote,
+                                                        });
+                                                        open = false;
+                                                        step = 1;
+                                                    "
+                                                    x-bind:disabled="monto <= 0">
+                                                    Crear lote y confirmar asignación
+                                                </button>
                                             </div>
                                             @endif
                                         </div>
