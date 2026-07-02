@@ -71,6 +71,7 @@ class TokenAuthController extends Controller
                 'email' => $user->email,
                 'username' => $user->username,
                 'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
+                'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
             ],
         ]);
     }
@@ -126,6 +127,7 @@ class TokenAuthController extends Controller
             'email' => $user->email,
             'username' => $user->username,
             'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
+            'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
         ]);
     }
 
