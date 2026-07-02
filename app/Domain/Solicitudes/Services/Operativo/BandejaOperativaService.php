@@ -134,6 +134,7 @@ class BandejaOperativaService
                 'solicitante' => $r->solicitante?->name ?? '—',
                 'unidad' => $r->unidad?->nombre ?? $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'tipo_vehiculo_nombre' => $r->tipo_vehiculo_nombre,
+                'fecha_solicitud' => optional($r->fecha_solicitud)?->format('Y-m-d'),
                 'detalle' => $r->motivo_actividad ?? 'Solicitud de transporte',
                 'prioridad' => $this->enumValue($r->prioridad),
                 'prioridad_grupo' => $r->prioridad_grupo?->value ?? $r->solicitante?->grupo?->nivel_prioridad,
@@ -146,7 +147,7 @@ class BandejaOperativaService
     private function mapCombustible(array $filters = []): Collection
     {
         $query = SolicitudCombustible::query()
-            ->with(['solicitante.grupo', 'solicitante.unidadSolicitante'])
+            ->with(['solicitante.grupo', 'solicitante.unidadSolicitante', 'vehiculo'])
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PENDIENTE,
                 EstadoSolicitudEnum::EN_REVISION,
@@ -174,6 +175,10 @@ class BandejaOperativaService
                 'grupo_nombre' => $r->solicitante?->grupo?->nombre,
                 'estado' => $this->enumValue($r->estado),
                 'monto_solicitado' => (float) ($r->cantidad_combustible ?? 0),
+                'vehiculo_id' => $r->vehiculo_id,
+                'vehiculo_placa' => $r->vehiculo?->placa,
+                'vales_solicitados' => (float) ($r->cantidad_combustible ?? 0),
+                'fecha_solicitud' => optional($r->fecha_solicitud)?->format('Y-m-d'),
             ];
         });
     }
@@ -208,6 +213,7 @@ class BandejaOperativaService
                     : $r->detalle,
                 'prioridad' => $this->enumValue($r->prioridad),
                 'estado' => $this->enumValue($r->estado),
+                'fecha_solicitud' => optional($r->fecha_solicitud)?->format('Y-m-d'),
             ];
         });
     }

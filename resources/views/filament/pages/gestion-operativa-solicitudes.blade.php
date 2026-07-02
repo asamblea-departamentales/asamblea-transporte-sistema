@@ -330,7 +330,12 @@
                         <div><div class="meta-label">Vehículo pedido</div><div class="meta-value">{{ $row['tipo_vehiculo_nombre'] }}</div></div>
                         @endif
                         @if($row['tipo'] === 'combustible')
-                        <div><div class="meta-label">Monto solicitado</div><div class="meta-value font-semibold">${{ number_format($row['monto_solicitado'] ?? 0, 2) }}</div></div>
+                        <div><div class="meta-label">Vehículo</div><div class="meta-value">{{ $row['vehiculo_placa'] ?? '—' }}</div></div>
+                        <div><div class="meta-label">Vales solicitados</div><div class="meta-value font-semibold">{{ number_format($row['vales_solicitados'] ?? 0) }}</div></div>
+                        <div><div class="meta-label">Fecha solicitud</div><div class="meta-value">{{ $row['fecha_solicitud'] ?? '—' }}</div></div>
+                        @endif
+                        @if(in_array($row['tipo'], ['transporte', 'mantenimiento']) && !empty($row['fecha_solicitud']))
+                        <div><div class="meta-label">Fecha solicitud</div><div class="meta-value">{{ $row['fecha_solicitud'] }}</div></div>
                         @endif
                         <div><div class="meta-label">ID</div><div class="meta-value mono">{{ $row['id'] }}</div></div>
                         <div>
@@ -606,6 +611,10 @@
                                             </template>
                                             <template x-if="crearLote">
                                                 <div class="space-y-4 border-t border-gray-200 pt-4 mt-2">
+                                                    <div class="flex justify-between text-sm bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
+                                                        <span class="text-gray-500">Vales solicitados:</span>
+                                                        <span class="font-semibold">{{ $row['vales_solicitados'] ?? 0 }}</span>
+                                                    </div>
                                                     <div>
                                                         <div class="modal-label">Fecha del lote</div>
                                                         <input type="date" x-model="fechaLote" class="modal-select">
@@ -688,6 +697,10 @@
                                             </div>
 
                                             <div class="space-y-4">
+                                                <div class="flex justify-between text-sm bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2">
+                                                    <span class="text-gray-500">Vales solicitados:</span>
+                                                    <span class="font-semibold">{{ $row['vales_solicitados'] ?? 0 }}</span>
+                                                </div>
                                                 <div>
                                                     <div class="modal-label">Fecha del lote</div>
                                                     <input type="date" x-model="fechaLote" class="modal-select">

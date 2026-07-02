@@ -906,6 +906,8 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ]);
 
                 $detalleId = $detalle->id;
+
+                $importResult = app(LoteCombustibleService::class)->importarSolicitudes($lote->id, auth()->id());
             }
 
             app(RevisionOperativaService::class)->validarYPreaprobar(
@@ -985,9 +987,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                     ->success()
                     ->send();
             } elseif ($crearLote) {
+                $importado = $importResult['imported'] ?? 0;
+                $adicional = $importado > 0
+                    ? " | Se importaron {$importado} solicitud(es) adicional(es) al lote."
+                    : '';
                 Notification::make()
                     ->title('Solicitud validada y asignada a lote nuevo')
-                    ->body("{$checks} | Lote creado y asignado. Monto: \${$monto}")
+                    ->body("{$checks} | Lote creado y asignado. Monto: \${$monto}{$adicional}")
                     ->success()
                     ->send();
             } else {
