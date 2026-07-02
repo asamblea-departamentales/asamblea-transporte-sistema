@@ -231,7 +231,7 @@ class LoteCombustibleService
 
             $noAprobadas = $lote->detalles->filter(fn ($d) =>
                 $d->solicitud_combustible_id !== null
-                && optional($d->solicitudCombustible)->estado !== EstadoSolicitudEnum::APROBADA->value
+                && optional($d->solicitudCombustible)->estado !== EstadoSolicitudEnum::APROBADA
             );
             if ($noAprobadas->isNotEmpty()) {
                 throw new \DomainException(
