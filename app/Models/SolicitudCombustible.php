@@ -165,6 +165,11 @@ class SolicitudCombustible extends Model
 
     // ── Helpers ─────────────────────────────────────────────
 
+    public function getRouteKeyName(): string
+    {
+        return 'codigo';
+    }
+
     public function tieneComprobantes(): bool
     {
         return ! empty($this->comprobantes);

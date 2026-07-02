@@ -172,7 +172,7 @@ Route::middleware('auth:sanctum')->group(function () {
             $perPage = $request->query('per_page', 15);
 
             $qTransporte = \App\Models\SolicitudTransporte::query()
-                ->where(fn ($q) => $q->where('jefe_id', $user->id)->orWhere('decidido_por', $user->id))
+                ->where(fn ($q) => $q->where('decidido_por', $user->id))
                 ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
 
             $qMantenimiento = \App\Models\SolicitudMantenimiento::query()
