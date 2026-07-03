@@ -653,7 +653,12 @@ class SolicitudTransporteResource extends Resource
                         ->visible(fn (SolicitudTransporte $record) => 
                             auth()->check() &&
                             auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin']) &&
-                            in_array($record->estado, [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA], true) &&
+                            in_array($record->estado, [
+                                EstadoSolicitudEnum::APROBADA,
+                                EstadoSolicitudEnum::PROGRAMADA,
+                                EstadoSolicitudEnum::ASIGNADA,
+                                EstadoSolicitudEnum::COMPLETADA,
+                            ], true) &&
                             !empty($record->vehiculo_id) && 
                             !empty($record->motorista_id) &&
                             !empty($record->decidido_por)

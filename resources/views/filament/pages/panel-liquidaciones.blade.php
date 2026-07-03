@@ -731,13 +731,19 @@
                             👁️ Ver detalle
                         </button>
 
-                        {{-- PDFs --}}
-                        @if($transporteCompleto)
+                        {{-- Misión Oficial (Transporte) --}}
+                        @if($esTransporte && !empty($item['vehiculo']) && !empty($item['motorista']))
                             <div class="liq-dropdown-divider"></div>
-                            <a href="{{ route('reportes.mision-oficial.pdf', $item['id']) }}" 
+                            @if(in_array($item['estado_raw'], ['aprobada', 'programada', 'asignada', 'completada']))
+                            <a href="{{ route('reportes.mision-oficial.pdf', $item['id']) }}"
                                target="_blank" class="liq-dropdown-item">
                                 📄 Misión Oficial
                             </a>
+                            @else
+                            <span class="liq-dropdown-item disabled" title="Para generar la Misión Oficial la solicitud debe estar aprobada, programada o asignada.">
+                                📄 Misión Oficial (requiere aprobación)
+                            </span>
+                            @endif
                         @endif
 
                         @if($item['tipo'] === 'combustible' && !empty($item['solicitud_transporte_id']))
