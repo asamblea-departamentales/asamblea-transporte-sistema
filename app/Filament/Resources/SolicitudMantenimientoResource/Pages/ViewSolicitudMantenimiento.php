@@ -33,7 +33,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                 ->url(fn (SolicitudMantenimiento $record) => route('reportes.orden-trabajo.pdf', ['solicitud_id' => $record->id]))
                 ->openUrlInNewTab()
                 ->visible(fn (SolicitudMantenimiento $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin', 'operativo']) &&
                     $record->vehiculo_id !== null &&
                     in_array($record->estado->value, [
                         EstadoSolicitudEnum::APROBADA->value,

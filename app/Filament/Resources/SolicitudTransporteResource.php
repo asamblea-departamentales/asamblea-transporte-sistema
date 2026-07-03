@@ -527,7 +527,7 @@ class SolicitudTransporteResource extends Resource
                         ->openUrlInNewTab()
                         ->visible(fn (SolicitudTransporte $record) => 
                             auth()->check() &&
-                            auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin']) &&
+                            auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin', 'operativo']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::APROBADA,
                                 EstadoSolicitudEnum::PROGRAMADA,

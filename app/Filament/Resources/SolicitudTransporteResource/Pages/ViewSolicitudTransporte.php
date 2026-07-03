@@ -164,7 +164,7 @@ class ViewSolicitudTransporte extends ViewRecord
                 ->url(fn (SolicitudTransporte $record) => route('reportes.mision-oficial.pdf', ['solicitud' => $record]))
                 ->openUrlInNewTab()
                 ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
+                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin', 'operativo']) &&
                     $record->vehiculo_id !== null &&
                     $record->motorista_id !== null &&
                     in_array($record->estado, [
