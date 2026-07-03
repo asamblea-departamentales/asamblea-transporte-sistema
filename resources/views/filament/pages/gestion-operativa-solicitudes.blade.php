@@ -378,10 +378,17 @@
                     {{-- ── REVISIÓN ────────────────────────────────────── --}}
                     @if($etapa === 'revision')
 
-                        {{-- Validar — mantenimiento (sin cambio) --}}
-                        @if($row['tipo'] === 'mantenimiento')
+                        {{-- Validar + Asignar — mantenimiento (2 pasos) --}}
+                        @if($row['tipo'] === 'mantenimiento' && $row['estado'] === 'en_revision')
+                        @php
+                            $contratoSugerido = $this->getContratoSugerido($row['id']);
+                            $tipoMant = $row['tipo_mantenimiento_nombre'] ?? '—';
+                        @endphp
+                        <script type="application/json" id="contratos-data-{{ $uid }}">@json($this->contratosActivos)</script>
+                        <script type="application/json" id="sugerencia-contrato-{{ $uid }}">@json($contratoSugerido)</script>
                         <div x-data="{
                             open: false,
+                            step: 1,
                             comentario: '',
                             datos_completos: false,
                             fechas_validas: false,
@@ -389,56 +396,135 @@
                             reglas_minimas: false,
                             hallazgos: '',
                             errores: [],
-                            submit() {
+                            contratos: JSON.parse(document.getElementById('contratos-data-{{ $uid }}').textContent),
+                            sugerencia: JSON.parse(document.getElementById('sugerencia-contrato-{{ $uid }}').textContent),
+                            contratoId: {{ $contratoSugerido['id'] ?? 'null' }},
+                            justificacion: '',
+                            get cambio() {
+                                if (!this.sugerencia) return 'ninguno';
+                                return this.sugerencia.id !== this.contratoId ? 'contrato' : 'ninguno';
+                            },
+                            validarPaso1() {
                                 this.errores = [];
                                 if (!this.comentario.trim()) this.errores.push('Debe escribir un comentario de validación.');
                                 if (!this.datos_completos) this.errores.push('Debe marcar &quot;Datos completos&quot; en el checklist.');
                                 if (!this.reglas_minimas) this.errores.push('Debe marcar &quot;Reglas mínimas&quot; en el checklist.');
-                                if (this.errores.length > 0) return;
-                                $wire.validar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
+                                if (this.errores.length === 0) this.step = 2;
+                            },
+                            submit() {
+                                $wire.validarYAsignarMantenimiento({{ $row['id'] }}, {
                                     comentario: this.comentario,
                                     datos_completos: this.datos_completos,
                                     fechas_validas: this.fechas_validas,
                                     recursos_disponibles: this.recursos_disponibles,
                                     reglas_minimas: this.reglas_minimas,
                                     hallazgos: this.hallazgos,
+                                    contrato_id: this.contratoId,
+                                    justificacion: this.justificacion || null
                                 });
+                                this.open = false;
+                                this.step = 1;
+                                this.comentario = '';
+                                this.datos_completos = false;
+                                this.fechas_validas = false;
+                                this.recursos_disponibles = false;
+                                this.reglas_minimas = false;
+                                this.hallazgos = '';
+                                this.contratoId = {{ $contratoSugerido['id'] ?? 'null' }};
+                                this.justificacion = '';
                             }
                         }">
-                            <button class="btn-accion btn-success" @click="open = true">
+                            <button class="btn-accion btn-success" @click="open = true; step = 1">
                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>Validar
                             </button>
-                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
+                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false; step = 1" style="display:none"></div>
                             <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
                                 <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
-                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                                        Validar y enviar a preaprobación — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
-                                    </h2>
-                                    <div class="space-y-4 pt-2">
-                                        <div><div class="modal-label">Checklist de validación</div>
-                                        <div class="modal-check-grid">
-                                            <label class="check-item"><input type="checkbox" x-model="datos_completos"> Datos completos</label>
-                                            <label class="check-item"><input type="checkbox" x-model="fechas_validas"> Fechas válidas</label>
-                                            <label class="check-item"><input type="checkbox" x-model="recursos_disponibles"> Recursos disponibles</label>
-                                            <label class="check-item"><input type="checkbox" x-model="reglas_minimas"> Reglas mínimas</label>
-                                        </div></div>
-                                        <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
-                                        <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
-                                    </div>
-                                    <template x-if="errores.length">
-                                        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 space-y-1">
-                                            <template x-for="err in errores" :key="err">
-                                                <div x-text="err"></div>
-                                            </template>
+
+                                    {{-- Paso 1: Validación --}}
+                                    <div x-show="step === 1">
+                                        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                            Validar solicitud — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                        </h2>
+                                        <div class="space-y-4 pt-2">
+                                            <div><div class="modal-label">Checklist de validación</div>
+                                            <div class="modal-check-grid">
+                                                <label class="check-item"><input type="checkbox" x-model="datos_completos"> Datos completos</label>
+                                                <label class="check-item"><input type="checkbox" x-model="fechas_validas"> Fechas válidas</label>
+                                                <label class="check-item"><input type="checkbox" x-model="recursos_disponibles"> Recursos disponibles</label>
+                                                <label class="check-item"><input type="checkbox" x-model="reglas_minimas"> Reglas mínimas</label>
+                                            </div></div>
+                                            <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
+                                            <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
                                         </div>
-                                    </template>
-                                    <div class="flex justify-end gap-3 pt-2">
-                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
-                                        <button type="button" class="btn-accion btn-success" @click="submit()">
-                                            <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
-                                            Enviar a preaprobación
-                                        </button>
+                                        <template x-if="errores.length">
+                                            <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 space-y-1">
+                                                <template x-for="err in errores" :key="err">
+                                                    <div x-text="err"></div>
+                                                </template>
+                                            </div>
+                                        </template>
+                                        <div class="flex justify-end gap-3 pt-4">
+                                            <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
+                                            <button type="button" class="btn-accion btn-indigo" @click="validarPaso1()">
+                                                Continuar a Asignación Previa →
+                                            </button>
+                                        </div>
                                     </div>
+
+                                    {{-- Paso 2: Asignación de contrato --}}
+                                    <div x-show="step === 2">
+                                        <h2 class="text-base font-semibold text-gray-900 dark:text-white">
+                                            Asignar contrato — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
+                                        </h2>
+                                        @if(!empty($tipoMant))
+                                        <div class="text-sm text-gray-500 bg-gray-50 rounded-lg px-3 py-2 border border-gray-200">
+                                            Mantenimiento solicitado: <strong>{{ $tipoMant }}</strong>
+                                        </div>
+                                        @endif
+                                        @if($contratoSugerido)
+                                        <div class="text-xs text-gray-400 bg-gray-50 dark:bg-gray-700 rounded-lg px-3 py-2 border border-gray-200 dark:border-gray-600">
+                                            Sistema sugiere: <strong>{{ $contratoSugerido['nombre'] ?? '?' }}</strong>
+                                            (Disp: ${{ number_format($contratoSugerido['monto_disponible'] ?? 0, 2) }})
+                                        </div>
+                                        @endif
+                                        <div class="space-y-4 pt-2">
+                                            <template x-if="!contratos.length">
+                                                <div class="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg">
+                                                    No hay contratos activos con saldo disponible. Crea uno desde
+                                                    <a href="{{ url('/admin/contrato-mantenimientos') }}" class="text-indigo-600 underline font-medium">Contratos de Mantenimiento</a>.
+                                                </div>
+                                            </template>
+                                            <template x-if="contratos.length">
+                                                <div>
+                                                    <div class="modal-label">Contrato <span class="text-red-400">*</span></div>
+                                                    <select x-model="contratoId" class="modal-select">
+                                                        <option value="">Seleccione un contrato</option>
+                                                        <template x-for="c in contratos" :key="c.id">
+                                                            <option :value="c.id" x-text="c.nombre + ' — ' + (c.proveedor?.nombre || 'Sin proveedor') + ' | Disp: $' + Number(c.monto_disponible).toLocaleString('es-CR', {minimumFractionDigits:2})"></option>
+                                                        </template>
+                                                    </select>
+                                                    <div class="mt-2 text-xs text-gray-400" x-show="contratos.find(c => c.id === contratoId)">
+                                                        Contrato <strong x-text="contratos.find(c => c.id === contratoId)?.numero_contrato || '—'"></strong>
+                                                        · Proveedor: <strong x-text="contratos.find(c => c.id === contratoId)?.proveedor?.nombre || '—'"></strong>
+                                                    </div>
+                                                </div>
+                                            </template>
+                                            <div x-show="cambio !== 'ninguno'">
+                                                <div class="modal-label">Justificación <span class="text-red-400">*</span></div>
+                                                <textarea x-model="justificacion" class="modal-textarea" rows="3" placeholder="Indica por qué cambias el contrato sugerido..."></textarea>
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-between pt-4">
+                                            <button type="button" class="btn-accion btn-gray" @click="step = 1">← Volver a validación</button>
+                                            <button type="button" class="btn-accion btn-success"
+                                                @click="submit()"
+                                                x-bind:disabled="!contratoId || (cambio !== 'ninguno' && !justificacion.trim())">
+                                                Validar y asignar contrato
+                                            </button>
+                                        </div>
+                                    </div>
+
                                 </div>
                             </div>
                         </div>
@@ -758,67 +844,6 @@
                                     </div>
                                 </div>
                             </div>
-                        @endif
-
-                        {{-- Asignación Previa — mantenimiento --}}
-                        @if($row['tipo'] === 'mantenimiento')
-                        <div x-data="{
-                            open: false,
-                            contratos: @js($this->contratosActivos),
-                            contratoSeleccionado: null,
-                            init() {
-                                if (this.contratos.length) {
-                                    this.contratoSeleccionado = this.contratos[0].id;
-                                }
-                            },
-                            get contratoInfo() {
-                                return this.contratos.find(c => c.id === this.contratoSeleccionado) || null;
-                            }
-                        }">
-                            <button class="btn-accion btn-indigo" @click="open = true">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-                                Asignación Previa
-                            </button>
-                            <div x-show="open" x-transition.opacity class="fixed inset-0 z-40 bg-black/50" @click="open = false" style="display:none"></div>
-                            <div x-show="open" x-transition class="fixed inset-0 z-50 flex items-center justify-center p-4" style="display:none">
-                                <div class="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-lg p-6 space-y-4" @click.stop>
-                                    <h2 class="text-base font-semibold text-gray-900 dark:text-white">
-                                        Asignación previa — <span class="font-mono text-gray-400 text-sm">{{ $row['codigo'] }}</span>
-                                    </h2>
-                                    <p class="text-sm text-gray-500">Vincula esta solicitud a un contrato de mantenimiento para agilizar la gestión.</p>
-
-                                    <template x-if="!contratos.length">
-                                        <div class="text-sm text-gray-400 italic py-4 text-center bg-gray-50 rounded-lg">
-                                            No hay contratos activos con saldo disponible. Crea uno desde
-                                            <a href="{{ url('/admin/contrato-mantenimientos') }}" class="text-indigo-600 underline font-medium">Contratos de Mantenimiento</a>.
-                                        </div>
-                                    </template>
-
-                                    <template x-if="contratos.length">
-                                        <div>
-                                            <div class="modal-label">Contrato</div>
-                                            <select x-model="contratoSeleccionado" class="modal-select">
-                                                <template x-for="c in contratos" :key="c.id">
-                                                    <option :value="c.id" x-text="c.nombre + ' — ' + (c.proveedor?.nombre || 'Sin proveedor') + ' | Disp: $' + Number(c.monto_disponible).toLocaleString('es-CR', {minimumFractionDigits:2})"></option>
-                                                </template>
-                                            </select>
-                                            <div class="mt-2 text-xs text-gray-400" x-show="contratoInfo">
-                                                Contrato <strong x-text="contratoInfo.numero_contrato"></strong> · Proveedor: <strong x-text="contratoInfo.proveedor?.nombre || '—'"></strong> · Disp: <strong x-text="Number(contratoInfo.monto_disponible).toLocaleString('es-CR', {style:'currency', currency:'CRC'})"></strong>
-                                            </div>
-                                        </div>
-                                    </template>
-
-                                    <div class="flex justify-end gap-3 pt-2">
-                                        <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
-                                        <button type="button" class="btn-accion btn-success"
-                                            @click="if (contratoSeleccionado) { $wire.asignacionPreviaMantenimiento({{ $row['id'] }}, contratoSeleccionado); open = false; }"
-                                            x-bind:disabled="!contratoSeleccionado">
-                                            Confirmar asignación
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                         @endif
 
                         {{-- Validar + Asignar — transporte en revisión (2 pasos) --}}

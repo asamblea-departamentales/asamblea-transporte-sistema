@@ -371,34 +371,75 @@ class SolicitudMantenimientoResource extends Resource
 
             Forms\Components\Section::make('Historial de estados')
                 ->schema([
-                    Forms\Components\Repeater::make('historial_ui')
-                        ->label('')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->default(function (SolicitudMantenimiento $record) {
-                            return HistorialEstado::query()
+                    Forms\Components\Placeholder::make('historial_visual')
+                        ->label('Historial de estados')
+                        ->content(function (SolicitudMantenimiento $record) {
+
+                            $historial = \App\Models\HistorialEstado::query()
                                 ->where('entidad_tipo', 'solicitud_mantenimiento')
                                 ->where('entidad_id', $record->id)
-                                ->orderByDesc('created_at')
-                                ->get()
-                                ->map(fn ($h) => [
-                                    'fecha' => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
-                                    'de' => $h->estado_anterior ?? '-',
-                                    'a' => $h->estado_nuevo ?? '-',
-                                    'comentario' => $h->comentario ?? null,
-                                ])
-                                ->toArray();
+                                ->orderBy('created_at')
+                                ->get();
+
+                            if ($historial->isEmpty()) {
+                                return 'Sin cambios de estado.';
+                            }
+
+                            $html = '<div style="border-left: 3px solid #e5e7eb; padding-left: 15px;">';
+
+                            foreach ($historial as $h) {
+                                $fecha = optional($h->created_at)->format('d/m/Y H:i');
+                                $de = strtoupper($h->estado_anterior ?: 'INICIO');
+                                $a = strtoupper($h->estado_nuevo);
+
+                                $color = match ($h->estado_nuevo) {
+                                    'borrador' => '#6b7280',
+                                    'pendiente' => '#f59e0b',
+                                    'en_revision' => '#3b82f6',
+                                    'pre_aprobada' => '#a855f7',
+                                    'aprobada' => '#10b981',
+                                    'rechazada' => '#ef4444',
+                                    'en_ejecucion' => '#06b6d4',
+                                    'completada' => '#059669',
+                                    'cancelada' => '#6b7280',
+                                    default => '#6b7280',
+                                };
+
+                                $comentario = $h->comentario
+                                    ? "<div style='font-size: 12px; color: #6b7280;'>💬 {$h->comentario}</div>"
+                                    : '';
+
+                                $html .= "
+            <div style='margin-bottom: 20px; position: relative;'>
+
+                <div style='
+                    position: absolute;
+                    left: -22px;
+                    top: 6px;
+                    width: 10px;
+                    height: 10px;
+                    background: {$color};
+                    border-radius: 50%;
+                '></div>
+
+                <div style='font-size: 12px; color: #6b7280;'>
+                    {$fecha}
+                </div>
+
+                <div style='font-weight: bold; color: {$color};'>
+                    {$de} → {$a}
+                </div>
+
+                {$comentario}
+
+            </div>
+        ";
+                            }
+
+                            $html .= '</div>';
+
+                            return new \Illuminate\Support\HtmlString($html);
                         })
-                        ->schema([
-                            Forms\Components\TextInput::make('fecha')->disabled(),
-                            Forms\Components\TextInput::make('de')->label('De')->disabled(),
-                            Forms\Components\TextInput::make('a')->label('A')->disabled(),
-                            Forms\Components\Textarea::make('comentario')
-                                ->rows(2)
-                                ->disabled()
-                                ->columnSpanFull(),
-                        ])
-                        ->columns(['default' => 1, 'md' => 3])
                         ->columnSpanFull(),
                 ])
                 ->collapsible()
@@ -593,37 +634,8 @@ class SolicitudMantenimientoResource extends Resource
             ])
             ->actions([
                 Tables\Actions\ViewAction::make(),
-                Tables\Actions\Action::make('evaluar')
-                    ->label('Evaluar')
-                    ->icon('heroicon-o-check-circle')
-                    ->visible(fn ($record) => $record->estado === EstadoSolicitudEnum::COMPLETADA
-                        && ! $record->evaluacion_estado
-                    )
-                    ->form([
-                        Forms\Components\Select::make('estado')
-                            ->options([
-                                'conforme' => '✔ Conforme',
-                                'observaciones' => '⚠ Con observaciones',
-                                'no_conforme' => '❌ No conforme',
-                            ])
-                            ->required(),
-
-                        Forms\Components\Textarea::make('comentario'),
-                    ])
-                    ->action(function ($record, $data) {
-                        app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)
-                            ->evaluar(
-                                $record,
-                                auth()->id(),
-                                $data['estado'],
-                                $data['comentario']
-                            );
-                    }),
 
                 Tables\Actions\ActionGroup::make([
-                    // -------------------------------------------------------------------------------------------------------
-                    // Orden de trabajo
-                    // -------------------------------------------------------------------------------------------------------
                     Tables\Actions\Action::make('orden_trabajo')
                         ->label('Orden de trabajo')
                         ->icon('heroicon-o-document-text')
@@ -638,6 +650,42 @@ class SolicitudMantenimientoResource extends Resource
                             ]) && ! empty($record->vehiculo_id)
                         ),
 
+                    Tables\Actions\Action::make('enviar_liquidador')
+                        ->label('Enviar a liquidador')
+                        ->color('primary')
+                        ->icon('heroicon-o-arrow-right')
+                        ->requiresConfirmation()
+                        ->modalHeading('Enviar a liquidador')
+                        ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los adjuntos.')
+                        ->disabled(fn (SolicitudMantenimiento $record) => ! $record->tieneAdjuntos())
+                        ->tooltip(fn (SolicitudMantenimiento $record) => ! $record->tieneAdjuntos()
+                            ? 'Debe cargar adjuntos antes de enviar'
+                            : 'Enviar a revisión'
+                        )
+                        ->action(function (SolicitudMantenimiento $record, \Filament\Tables\Actions\Action $action) {
+                            try {
+                                app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)
+                                    ->enviarALiquidador($record, auth()->id());
+
+                                Notification::make()
+                                    ->title('Enviada a liquidador')
+                                    ->success()
+                                    ->send();
+                            } catch (\DomainException $e) {
+                                Notification::make()
+                                    ->title('Error al enviar')
+                                    ->body($e->getMessage())
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+                        })
+                        ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
+                            in_array($record->estado, [
+                                EstadoSolicitudEnum::COMPLETADA,
+                            ], true)
+                        ),
                 ])
                     ->label('Más')
                     ->icon('heroicon-m-ellipsis-vertical'),

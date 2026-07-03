@@ -154,59 +154,6 @@ class ViewSolicitudTransporte extends ViewRecord
     {
         return [
 
-            // ── OBSERVACIÓN ───────────────────────────────────────────────
-            Actions\Action::make('observacion')
-                ->button()
-                ->size('lg')
-                ->label('Observación')
-                ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                ->modalHeading('Agregar Observación')
-                ->modalSubmitActionLabel('Guardar Observación')
-                ->form([
-                    Forms\Components\Textarea::make('comentario_jefe')
-                        ->label('Observación del jefe')
-                        ->rows(4)
-                        ->required()
-                        ->maxLength(2000),
-                ])
-                ->action(function (SolicitudTransporte $record, array $data) {
-                    $estadoAnterior = $record->estado;
-
-                    $record->comentario_jefe = $data['comentario_jefe'];
-
-                    if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                        $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                    }
-
-                    $record->save();
-
-                    if ($estadoAnterior !== $record->estado) {
-                        HistorialEstado::create([
-                            'entidad_tipo' => 'solicitud_transporte',
-                            'entidad_id' => $record->id,
-                            'estado_anterior' => $estadoAnterior?->value,
-                            'estado_nuevo' => $record->estado?->value,
-                            'user_id' => auth()->id(),
-                            'comentario' => $data['comentario_jefe'],
-                        ]);
-                    }
-
-                    BitacoraEvento::create([
-                        'entidad_tipo' => 'solicitud_transporte',
-                        'entidad_id' => $record->id,
-                        'accion' => AccionBitacoraEnum::OBSERVAR->value,
-                        'user_id' => auth()->id(),
-                        'datos_extras' => ['comentario' => $data['comentario_jefe']],
-                    ]);
-                })
-                ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
-                    auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
-                    in_array($record->estado, [
-                        EstadoSolicitudEnum::PENDIENTE,
-                        EstadoSolicitudEnum::EN_REVISION,
-                    ], true)
-                ),
-
             // ── MISIÓN OFICIAL ────────────────────────────────────────────
             Actions\Action::make('mision_oficial')
                 ->button()

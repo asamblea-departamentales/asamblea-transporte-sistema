@@ -123,6 +123,11 @@ class SolicitudMantenimiento extends Model
         return $this->morphOne(Liquidacion::class, 'liquidable');
     }
 
+    public function decisionOperativa(): \Illuminate\Database\Eloquent\Relations\MorphOne
+    {
+        return $this->morphOne(DecisionOperativa::class, 'decidable');
+    }
+
     // Relacion para incidencias
     public function incidencias()
     {

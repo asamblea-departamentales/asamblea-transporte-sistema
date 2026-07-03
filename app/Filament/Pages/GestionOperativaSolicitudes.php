@@ -1074,29 +1074,98 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->toArray();
     }
 
-    public function asignacionPreviaMantenimiento(int $solicitudId, int $contratoId): void
+    public function getContratoSugerido(int $solicitudId): ?array
+    {
+        $solicitud = SolicitudMantenimiento::find($solicitudId);
+        if (!$solicitud) return null;
+
+        $sugerido = app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)
+            ->generarSugerencia($solicitud);
+
+        if (!$sugerido) return null;
+
+        return [
+            'id' => $sugerido->id,
+            'nombre' => $sugerido->nombre,
+            'numero_contrato' => $sugerido->numero_contrato,
+            'proveedor_nombre' => $sugerido->proveedor?->nombre,
+            'monto_disponible' => $sugerido->monto_disponible,
+        ];
+    }
+
+    public function validarYAsignarMantenimiento(int $id, array $data): void
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
             return;
         }
 
-        try {
-            $solicitud = SolicitudMantenimiento::findOrFail($solicitudId);
+        if (empty(trim($data['comentario'] ?? ''))) {
+            Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+            return;
+        }
 
-            $solicitud->update([
-                'contrato_mantenimiento_id' => $contratoId,
-                'observaciones' => trim(($solicitud->observaciones ?? '') . "\n[Asignación previa al contrato #{$contratoId} el " . now()->format('d/m/Y H:i') . ']'),
+        if (empty($data['datos_completos']) || empty($data['reglas_minimas'])) {
+            Notification::make()
+                ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
+                ->danger()
+                ->send();
+            return;
+        }
+
+        if (empty($data['contrato_id'])) {
+            Notification::make()->title('Debe seleccionar un contrato')->danger()->send();
+            return;
+        }
+
+        try {
+            $solicitud = SolicitudMantenimiento::findOrFail($id);
+
+            $solicitud->observaciones = $data['comentario'];
+            $solicitud->save();
+
+            BitacoraEvento::create([
+                'entidad_tipo' => 'mantenimiento',
+                'entidad_id' => $solicitud->id,
+                'accion' => 'VALIDAR_PREAPROBAR',
+                'user_id' => auth()->id(),
+                'datos_extras' => [
+                    'comentario' => $data['comentario'],
+                    'validaciones' => $this->armarValidaciones($data),
+                ],
             ]);
 
+            app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)->asignarRecursos(
+                $solicitud,
+                auth()->id(),
+                $data['contrato_id'],
+                $data['justificacion'] ?? null,
+            );
+
             $this->refreshKpis();
+            $this->resetPage();
+
+            $contrato = ContratoMantenimiento::find($data['contrato_id']);
+
+            $checks = collect($this->armarValidaciones($data))
+                ->filter(fn ($v) => is_bool($v) && $v)
+                ->keys()
+                ->map(fn ($k) => match ($k) {
+                    'datos_completos' => 'Datos completos',
+                    'fechas_validas' => 'Fechas válidas',
+                    'recursos_disponibles' => 'Recursos disponibles',
+                    'reglas_minimas' => 'Reglas mínimas',
+                    default => $k,
+                })
+                ->implode(' · ');
 
             Notification::make()
-                ->title('Contrato asignado a la solicitud correctamente')
+                ->title('Solicitud validada y contrato asignado')
+                ->body("{$checks} | {$contrato?->nombre}")
                 ->success()
                 ->send();
-        } catch (\Exception $e) {
-            Notification::make()->title('Error al asignar: ' . $e->getMessage())->danger()->send();
+        } catch (\DomainException $e) {
+            Notification::make()->title($e->getMessage())->danger()->send();
         }
     }
 

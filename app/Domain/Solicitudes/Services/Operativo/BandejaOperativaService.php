@@ -211,6 +211,7 @@ class BandejaOperativaService
                 'detalle' => $r->tipoMantenimiento?->nombre
                     ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
                     : $r->detalle,
+                'tipo_mantenimiento_nombre' => $r->tipoMantenimiento?->nombre ?? null,
                 'prioridad' => $this->enumValue($r->prioridad),
                 'estado' => $this->enumValue($r->estado),
                 'fecha_solicitud' => optional($r->fecha_solicitud)?->format('Y-m-d'),

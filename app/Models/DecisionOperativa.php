@@ -19,6 +19,7 @@ class DecisionOperativa extends Model
         'cambio_detectado',
         'justificacion',
         'monto_aprobado',
+        'contrato_mantenimiento_final_id',
     ];
 
     public function decidable(): MorphTo
@@ -45,5 +46,10 @@ class DecisionOperativa extends Model
     public function motoristaFinal(): BelongsTo
     {
         return $this->belongsTo(Motorista::class, 'motorista_final_id');
+    }
+
+    public function contratoMantenimientoFinal(): BelongsTo
+    {
+        return $this->belongsTo(ContratoMantenimiento::class, 'contrato_mantenimiento_final_id');
     }
 }

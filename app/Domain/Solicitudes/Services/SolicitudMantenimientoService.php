@@ -4,6 +4,8 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\ContratoMantenimiento;
+use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
@@ -288,6 +290,44 @@ class SolicitudMantenimientoService
         });
     }
 
+    public function enviarALiquidador(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
+    {
+        $estadosPermitidos = [
+            EstadoSolicitudEnum::COMPLETADA,
+        ];
+
+        if (! in_array($solicitud->estado, $estadosPermitidos)) {
+            throw new \DomainException('La solicitud debe estar completada para enviar a liquidación.');
+        }
+
+        if (! $solicitud->tieneAdjuntos()) {
+            throw new \DomainException('No se puede enviar a liquidador sin adjuntar los comprobantes.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId) {
+            $this->registrarCambioEstado(
+                $solicitud,
+                $solicitud->estado,
+                $solicitud->estado,
+                $userId,
+                'Traspaso administrativo: Solicitud enviada formalmente a revisión de liquidación.'
+            );
+
+            $this->registrarEvento(
+                $solicitud,
+                'enviar_liquidador',
+                $userId,
+                [
+                    'fecha_envio' => now()->toDateTimeString(),
+                    'estado_al_enviar' => $solicitud->estado->value,
+                    'mensaje' => 'Documentación lista para revisión contable',
+                ]
+            );
+
+            return $solicitud;
+        });
+    }
+
     public function liquidar(SolicitudMantenimiento $solicitud, int $userId, array $data): void
     {
         if (empty($solicitud->adjuntos)) {
@@ -326,6 +366,130 @@ class SolicitudMantenimientoService
         });
     }
 
+    // ── Sugerencia ───────────────────────────────────────────────
+
+    public function generarSugerencia(SolicitudMantenimiento $solicitud): ?ContratoMantenimiento
+    {
+        return ContratoMantenimiento::where('activo', true)
+            ->where('monto_disponible', '>', 0)
+            ->orderByDesc('monto_disponible')
+            ->first();
+    }
+
+    // ── Asignación de recursos (operativo) ──────────────────────
+
+    public function asignarRecursos(
+        SolicitudMantenimiento $solicitud,
+        int $userId,
+        int $contratoId,
+        ?string $justificacion = null
+    ): array {
+        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
+            throw new \DomainException('Solo se pueden asignar recursos a solicitudes en revisión o pre-aprobadas.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId, $contratoId, $justificacion) {
+            $sugerencia = $this->generarSugerencia($solicitud);
+
+            $cambio = 'ninguno';
+            if ($sugerencia && $sugerencia->id !== $contratoId) {
+                $cambio = 'contrato';
+            }
+
+            DecisionOperativa::updateOrCreate(
+                ['decidable_id' => $solicitud->id, 'decidable_type' => SolicitudMantenimiento::class],
+                [
+                    'usuario_operativo_id' => $userId,
+                    'contrato_mantenimiento_final_id' => $contratoId,
+                    'cambio_detectado' => $cambio,
+                    'justificacion' => $cambio !== 'ninguno' ? $justificacion : null,
+                ]
+            );
+
+            if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
+                $anterior = $solicitud->estado;
+                $solicitud->estado = EstadoSolicitudEnum::PRE_APROBADA;
+                $solicitud->save();
+                $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $justificacion);
+            } else {
+                $solicitud->save();
+            }
+
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::ASIGNAR_RECURSOS->value, $userId, [
+                'contrato_id' => $contratoId,
+                'cambio_detectado' => $cambio,
+            ]);
+
+            return [
+                'cambio_detectado' => $cambio,
+                'estado_nuevo' => EstadoSolicitudEnum::PRE_APROBADA->value,
+            ];
+        });
+    }
+
+    // ── Aprobación con decisión (jefe) ─────────────────────────
+
+    public function aprobarConDecision(
+        SolicitudMantenimiento $solicitud,
+        int $jefeId,
+        string $decisionFinal,
+        string $comentario,
+        ?string $firma = null,
+        ?int $contratoId = null
+    ): array {
+        if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
+            throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
+        }
+
+        if (!in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
+            throw new \InvalidArgumentException('decision_final debe ser "operativo", "sistema" o "manual".');
+        }
+
+        return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma, $contratoId) {
+            $anterior = $solicitud->estado;
+
+            if ($decisionFinal === 'manual') {
+                if (!$contratoId) {
+                    throw new \DomainException('Para decisión manual debe proporcionar un contrato.');
+                }
+                $c = ContratoMantenimiento::find($contratoId);
+                if (!$c || !$c->activo) {
+                    throw new \DomainException('El contrato seleccionado no está activo.');
+                }
+                $solicitud->contrato_mantenimiento_id = $contratoId;
+            } elseif ($decisionFinal === 'operativo') {
+                $decision = $solicitud->decisionOperativa;
+                if (!$decision) throw new \DomainException('No hay decisión operativa registrada.');
+                $solicitud->contrato_mantenimiento_id = $decision->contrato_mantenimiento_final_id;
+            } else {
+                $sugerido = $this->generarSugerencia($solicitud);
+                if (!$sugerido) throw new \DomainException('No hay contratos disponibles para sugerir.');
+                $solicitud->contrato_mantenimiento_id = $sugerido->id;
+            }
+
+            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
+            $solicitud->aprobador_id = $jefeId;
+            $solicitud->fecha_aprobacion = now();
+            $solicitud->observaciones = $comentario;
+            $solicitud->firma_aprobador = $firma;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
+                'decision_final' => $decisionFinal,
+                'contrato_id' => $solicitud->contrato_mantenimiento_id,
+                'comentario' => $comentario,
+            ]);
+
+            $this->enviarCorreoAprobada($solicitud);
+
+            return [
+                'estado' => EstadoSolicitudEnum::APROBADA->value,
+                'contrato_id' => $solicitud->contrato_mantenimiento_id,
+            ];
+        });
+    }
+
     // =====================================================
     // Helpers (mismo patrón que transporte)
     // =====================================================
@@ -354,6 +518,13 @@ class SolicitudMantenimientoService
     }
 
     // ── Correos ──────────────────────────────────────────
+
+    private function enviarCorreoAprobada(SolicitudMantenimiento $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_aprobada'
+        );
+    }
 
     private function enviarCorreoEnviada(SolicitudMantenimiento $solicitud): void
     {

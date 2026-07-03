@@ -318,34 +318,76 @@ class SolicitudTransporteResource extends Resource
 
                 Forms\Components\Section::make('Historial de estados')
                     ->schema([
-                        Forms\Components\Repeater::make('historial_ui')
-                            ->label('')
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->default(function (SolicitudTransporte $record) {
-                                return HistorialEstado::query()
+                        Forms\Components\Placeholder::make('historial_visual')
+                            ->label('Historial de estados')
+                            ->content(function (SolicitudTransporte $record) {
+
+                                $historial = \App\Models\HistorialEstado::query()
                                     ->where('entidad_tipo', 'solicitud_transporte')
                                     ->where('entidad_id', $record->id)
-                                    ->orderByDesc('created_at')
-                                    ->get()
-                                    ->map(fn ($h) => [
-                                        'fecha' => optional($h->created_at)?->format('d/m/Y H:i') ?? '-',
-                                        'de' => $h->estado_anterior ?? '-',
-                                        'a' => $h->estado_nuevo ?? '-',
-                                        'comentario' => $h->comentario ?? null,
-                                    ])
-                                    ->toArray();
+                                    ->orderBy('created_at')
+                                    ->get();
+
+                                if ($historial->isEmpty()) {
+                                    return 'Sin cambios de estado.';
+                                }
+
+                                $html = '<div style="border-left: 3px solid #e5e7eb; padding-left: 15px;">';
+
+                                foreach ($historial as $h) {
+                                    $fecha = optional($h->created_at)->format('d/m/Y H:i');
+                                    $de = strtoupper($h->estado_anterior ?: 'INICIO');
+                                    $a = strtoupper($h->estado_nuevo);
+
+                                    $color = match ($h->estado_nuevo) {
+                                        'borrador' => '#6b7280',
+                                        'pendiente' => '#f59e0b',
+                                        'en_revision' => '#3b82f6',
+                                        'pre_aprobada' => '#a855f7',
+                                        'aprobada' => '#10b981',
+                                        'rechazada' => '#ef4444',
+                                        'programada' => '#6366f1',
+                                        'en_ejecucion' => '#06b6d4',
+                                        'completada' => '#059669',
+                                        'cancelada' => '#6b7280',
+                                        default => '#6b7280',
+                                    };
+
+                                    $comentario = $h->comentario
+                                        ? "<div style='font-size: 12px; color: #6b7280;'>💬 {$h->comentario}</div>"
+                                        : '';
+
+                                    $html .= "
+                <div style='margin-bottom: 20px; position: relative;'>
+
+                    <div style='
+                        position: absolute;
+                        left: -22px;
+                        top: 6px;
+                        width: 10px;
+                        height: 10px;
+                        background: {$color};
+                        border-radius: 50%;
+                    '></div>
+
+                    <div style='font-size: 12px; color: #6b7280;'>
+                        {$fecha}
+                    </div>
+
+                    <div style='font-weight: bold; color: {$color};'>
+                        {$de} → {$a}
+                    </div>
+
+                    {$comentario}
+
+                </div>
+            ";
+                                }
+
+                                $html .= '</div>';
+
+                                return new \Illuminate\Support\HtmlString($html);
                             })
-                            ->schema([
-                                Forms\Components\TextInput::make('fecha')->disabled(),
-                                Forms\Components\TextInput::make('de')->label('De')->disabled(),
-                                Forms\Components\TextInput::make('a')->label('A')->disabled(),
-                                Forms\Components\Textarea::make('comentario')
-                                    ->rows(2)
-                                    ->disabled()
-                                    ->columnSpanFull(),
-                            ])
-                            ->columns(['default' => 1, 'md' => 3])
                             ->columnSpanFull(),
                     ])
                     ->collapsible()
@@ -474,173 +516,6 @@ class SolicitudTransporteResource extends Resource
                 Tables\Actions\ViewAction::make(),
 
                 Tables\Actions\ActionGroup::make([
-
-                    Tables\Actions\Action::make('observacion')
-                        ->label('Observación')
-                        ->icon('heroicon-o-chat-bubble-left-ellipsis')
-                        ->modalHeading('Agregar Observación')
-                        ->modalSubmitActionLabel('Guardar Observación')
-                        ->form([
-                            Forms\Components\Textarea::make('comentario_jefe')
-                                ->label('Observación del jefe')
-                                ->rows(4)
-                                ->required()
-                                ->maxLength(2000),
-                        ])
-                        ->action(function (SolicitudTransporte $record, array $data) {
-                            $estadoAnterior = $record->estado;
-                            $record->comentario_jefe = $data['comentario_jefe'];
-
-                            if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                                $record->estado = EstadoSolicitudEnum::EN_REVISION;
-                            }
-
-                            $record->save();
-
-                            if ($estadoAnterior !== $record->estado) {
-                                HistorialEstado::create([
-                                    'entidad_tipo' => 'solicitud_transporte',
-                                    'entidad_id' => $record->id,
-                                    'estado_anterior' => $estadoAnterior?->value,
-                                    'estado_nuevo' => $record->estado?->value,
-                                    'user_id' => auth()->id(),
-                                    'comentario' => $data['comentario_jefe'],
-                                ]);
-                            }
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_transporte',
-                                'entidad_id' => $record->id,
-                                'accion' => AccionBitacoraEnum::OBSERVAR->value,
-                                'user_id' => auth()->id(),
-                                'datos_extras' => ['comentario' => $data['comentario_jefe']],
-                            ]);
-                        })
-                        ->visible(fn (SolicitudTransporte $record) => 
-                            auth()->check() && 
-                            auth()->user()->hasRole('operativo') &&
-                            in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)
-                        ),
-
-                    Tables\Actions\Action::make('aprobar')
-                        ->label('Aprobar y Programar')
-                        ->icon('heroicon-o-check-circle')
-                        ->color('success')
-                        ->modalHeading('Aprobar Solicitud')
-                        ->form([
-                            Forms\Components\Section::make('Asignación de Vehículo y Motorista')
-                                ->schema([
-                                    Forms\Components\Select::make('vehiculo_id')
-                                        ->label('Vehículo')
-                                        ->options(function (SolicitudTransporte $record) {
-                                            $ocupados = SolicitudTransporte::query()
-                                                ->where('id', '!=', $record->id)
-                                                ->whereIn('estado', [
-                                                    EstadoSolicitudEnum::PROGRAMADA,
-                                                    EstadoSolicitudEnum::APROBADA,
-                                                    EstadoSolicitudEnum::EN_EJECUCION,
-                                                ])
-                                                ->where(function ($query) use ($record) {
-                                                    $query->where('fecha_salida', '<=', $record->fecha_retorno)
-                                                        ->where('fecha_retorno', '>=', $record->fecha_salida);
-                                                })
-                                                ->pluck('vehiculo_id')
-                                                ->filter()
-                                                ->unique();
-
-                                            return Vehiculo::where('activo', true)
-                                                ->whereNotIn('id', $ocupados)
-                                                ->get()
-                                                ->mapWithKeys(fn ($v) => [
-                                                    $v->id => "{$v->placa} - {$v->tipo->nombre}",
-                                                ]);
-                                        })
-                                        ->searchable()
-                                        ->required()
-                                        ->hint(fn ($record) => 'Solicitó: ' . ($record->tipo_vehiculo_nombre ?? 'N/A'))
-                                        ->hintColor('warning')
-                                        ->live()
-                                        ->afterStateUpdated(static::afterVehiculoSeleccionado()),
-
-                                    Forms\Components\Hidden::make('motorista_id'),
-
-                                    Forms\Components\Placeholder::make('motorista_nombre')
-                                        ->label('Motorista asignado')
-                                        ->content(fn ($get) => $get('motorista_nombre') ?? 'Selecciona un vehículo primero')
-                                        ->hint(fn ($get) => !$get('motorista_id') ? '⚠ No hay motorista disponible' : null)
-                                        ->hintColor('danger'),
-                                ])
-                                ->columns(2),
-
-                            Forms\Components\Section::make('Firma del Aprobador')
-                                ->description('Dibuje su firma. Aparecerá en el PDF de Misión Oficial.')
-                                ->schema([
-                                    \App\Forms\Components\SignaturePad::make('firma_aprobador')
-                                        ->label('Firma')
-                                        ->columnSpanFull(),
-                                ])
-                                ->columnSpanFull(),
-
-                            Forms\Components\Textarea::make('comentario_jefe')
-                                ->label('Observaciones adicionales')
-                                ->rows(3),
-                        ])
-                        ->action(function (SolicitudTransporte $record, array $data) {
-                            static::guardarSiMotoristaDisponible($data);
-
-                            $estadoAnterior = $record->estado;
-
-                            $record->update([
-                                'estado' => EstadoSolicitudEnum::PROGRAMADA,
-                                'comentario_jefe' => $data['comentario_jefe'],
-                                'decidido_por' => auth()->id(),
-                                'decidido_en' => now(),
-                                'vehiculo_id' => $data['vehiculo_id'],
-                                'motorista_id' => $data['motorista_id'],
-                                'firma_aprobador' => $data['firma_aprobador'] ?? null,
-                            ]);
-
-                            app(EstadoFlotaService::class)->aplicarPorEstado($record);
-
-                            HistorialEstado::create([
-                                'entidad_tipo' => 'solicitud_transporte',
-                                'entidad_id' => $record->id,
-                                'estado_anterior' => $estadoAnterior?->value,
-                                'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
-                                'user_id' => auth()->id(),
-                                'comentario' => $data['comentario_jefe'],
-                            ]);
-
-                            BitacoraEvento::create([
-                                'entidad_tipo' => 'solicitud_transporte',
-                                'entidad_id' => $record->id,
-                                'accion' => AccionBitacoraEnum::APROBAR->value,
-                                'user_id' => auth()->id(),
-                                'datos_extras' => [
-                                    'comentario' => $data['comentario_jefe'],
-                                    'vehiculo_id' => $data['vehiculo_id'],
-                                    'motorista_id' => $data['motorista_id'],
-                                ],
-                            ]);
-
-                            Notification::make()
-                                ->title('Solicitud aprobada con éxito')
-                                ->body("La solicitud {$record->codigo} ha sido programada.")
-                                ->success()
-                                ->send();
-
-                            try {
-                                app(SolicitudEmailDispatchService::class)->toSolicitante(
-                                    $record, 'transporte', 'solicitud_aprobada'
-                                );
-                            } catch (\Exception $e) {
-                                Log::error('Error en correo de aprobación: '.$e->getMessage());
-                            }
-                        })
-                        ->visible(fn (SolicitudTransporte $record) => 
-                            auth()->user()?->hasRole('jefe') && 
-                            $record->estado === EstadoSolicitudEnum::PRE_APROBADA
-                        ),
 
                     Tables\Actions\Action::make('mision_oficial')
                         ->label('Misión Oficial')
