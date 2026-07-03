@@ -70,15 +70,21 @@ class User extends Authenticatable implements FilamentUser
             return true;
         }
 
-        if ($this->hasAnyRole(['super_admin', 'superadmin'])) {
-            return true;
-        }
-
         if (app()->environment('local')) {
             return true;
         }
 
-        return !$this->hasAnyRole(['motorista', 'solicitante']);
+        if (! $this->activo) {
+            return false;
+        }
+
+        return $this->hasAnyRole([
+            'super_admin',
+            'superadmin',
+            'admin',
+            'jefe',
+            'operativo',
+        ]);
     }
 
     //Relaciones

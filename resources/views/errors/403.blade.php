@@ -71,12 +71,15 @@
 
         @php
             $user = auth()->user();
-            $isMotorista = $user?->hasRole('motorista');
-            $isSolicitante = $user?->hasRole('solicitante');
+            $rolesAdmin = ['super_admin', 'superadmin', 'admin', 'jefe', 'operativo'];
+            $isSoloMotorista = $user?->hasRole('motorista')
+                && ! $user->hasAnyRole($rolesAdmin);
+            $isSoloSolicitante = $user?->hasRole('solicitante')
+                && ! $user->hasAnyRole($rolesAdmin);
             $sinRoles = $user && $user->roles->isEmpty();
         @endphp
 
-        @if ($isMotorista)
+        @if ($isSoloMotorista)
             <p class="message">No podés acceder al panel de gestión.<br>Ingresa a la aplicación de motoristas para continuar.</p>
             <div class="actions">
                 <a href="https://asamble-transporte-motorista.vercel.app/login" class="btn btn-primary">
@@ -91,7 +94,7 @@
                     </button>
                 </form>
             </div>
-        @elseif ($isSolicitante)
+        @elseif ($isSoloSolicitante)
             <p class="message">No podés acceder al panel de gestión.<br>Ingresa a la aplicación de solicitudes de transporte para continuar.</p>
             <div class="actions">
                 <a href="https://asamblea-transporte.vercel.app/login" class="btn btn-primary">
