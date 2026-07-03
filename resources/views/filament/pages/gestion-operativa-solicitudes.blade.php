@@ -388,7 +388,13 @@
                             recursos_disponibles: false,
                             reglas_minimas: false,
                             hallazgos: '',
+                            errores: [],
                             submit() {
+                                this.errores = [];
+                                if (!this.comentario.trim()) this.errores.push('Debe escribir un comentario de validación.');
+                                if (!this.datos_completos) this.errores.push('Debe marcar &quot;Datos completos&quot; en el checklist.');
+                                if (!this.reglas_minimas) this.errores.push('Debe marcar &quot;Reglas mínimas&quot; en el checklist.');
+                                if (this.errores.length > 0) return;
                                 $wire.validar('{{ $row['tipo'] }}', {{ $row['id'] }}, {
                                     comentario: this.comentario,
                                     datos_completos: this.datos_completos,
@@ -419,9 +425,16 @@
                                         <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
                                         <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
                                     </div>
+                                    <template x-if="errores.length">
+                                        <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 space-y-1">
+                                            <template x-for="err in errores" :key="err">
+                                                <div x-text="err"></div>
+                                            </template>
+                                        </div>
+                                    </template>
                                     <div class="flex justify-end gap-3 pt-2">
                                         <button type="button" class="btn-accion btn-gray" @click="open = false">Cancelar</button>
-                                        <button type="button" class="btn-accion btn-success" @click="submit()" x-bind:disabled="!comentario.trim() || !datos_completos || !reglas_minimas">
+                                        <button type="button" class="btn-accion btn-success" @click="submit()">
                                             <svg xmlns="http://www.w3.org/2000/svg" class="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"/></svg>
                                             Enviar a preaprobación
                                         </button>
@@ -822,6 +835,7 @@
                             recursos_disponibles: false,
                             reglas_minimas: false,
                             hallazgos: '',
+                            errores: [],
                             vehiculoId: null,
                             motoristaId: null,
                             justificacion: '',
@@ -843,6 +857,11 @@
                                 } else {
                                     this.motoristaId = '';
                                 }
+                            },
+                            irPaso2() {
+                                this.errores = [];
+                                if (!this.comentario.trim()) this.errores.push('Debe escribir un comentario de validación.');
+                                if (this.errores.length === 0) this.step = 2;
                             },
                             submit() {
                                 $wire.validarYAsignarRecursos({{ $row['id'] }}, {
@@ -892,9 +911,16 @@
                                             <div><div class="modal-label">Hallazgos (opcional)</div><textarea x-model="hallazgos" class="modal-textarea" rows="2" placeholder="Describe hallazgos encontrados..."></textarea></div>
                                             <div><div class="modal-label">Comentario de validación <span class="text-red-400">*</span></div><textarea x-model="comentario" class="modal-textarea" rows="3" placeholder="Comentario final de revisión..." required></textarea></div>
                                         </div>
+                                        <template x-if="errores.length">
+                                            <div class="bg-red-50 border border-red-200 text-red-700 text-sm rounded-lg p-3 space-y-1">
+                                                <template x-for="err in errores" :key="err">
+                                                    <div x-text="err"></div>
+                                                </template>
+                                            </div>
+                                        </template>
                                         <div class="flex justify-end gap-3 pt-4">
-                                            <button type="button" class="ben tn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
-                                            <button type="button" class="btn-accion btn-primary" @click="step = 2" x-bind:disabled="!comentario.trim()">
+                                            <button type="button" class="btn-accion btn-gray" @click="open = false; step = 1">Cancelar</button>
+                                            <button type="button" class="btn-accion btn-primary" @click="irPaso2()">
                                                 Continuar a asignación previa →
                                             </button>
                                         </div>
