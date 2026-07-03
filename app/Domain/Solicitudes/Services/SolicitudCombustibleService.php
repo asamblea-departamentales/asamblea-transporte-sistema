@@ -373,6 +373,7 @@ class SolicitudCombustibleService
             $solicitud->cantidad_vales = $cantidadVales;
             $solicitud->valor_unitario_vale = $valorUnitario;
             $solicitud->monto_asignado = $montoAsignado;
+            $solicitud->valor_total = $montoAsignado;
             $solicitud->fecha_asignacion = now();
             $solicitud->asignado_por = $userId;
             $solicitud->estado = EstadoSolicitudEnum::ASIGNADA;
