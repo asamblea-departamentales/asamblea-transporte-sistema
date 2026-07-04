@@ -308,7 +308,18 @@ class SolicitudTransporteService
             if ($vNuevo) app(EstadoFlotaService::class)->reservarVehiculo($vNuevo, $solicitud->codigo);
             if ($mNuevo) app(EstadoFlotaService::class)->ocuparMotorista($mNuevo, $solicitud->codigo);
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $decisionLabels = [
+                'operativo' => 'asignación previa del operativo',
+                'sistema' => 'sugerencia del sistema',
+                'manual' => 'asignación manual del jefe',
+            ];
+            $label = $decisionLabels[$decisionFinal] ?? $decisionFinal;
+            $vPlaca = $vNuevo?->placa ?? 'N/A';
+            $mNombre = $mNuevo?->nombre ?? 'N/A';
+            $comentarioEnriquecido = "Aprobado vía {$label}. Vehículo: {$vPlaca}, Motorista: {$mNombre}";
+            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'decision_final' => $decisionFinal,
             ]);

@@ -474,7 +474,18 @@ class SolicitudMantenimientoService
             $solicitud->firma_aprobador = $firma;
             $solicitud->save();
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $decisionLabels = [
+                'operativo' => 'asignación previa del operativo',
+                'sistema' => 'sugerencia del sistema',
+                'manual' => 'asignación manual del jefe',
+            ];
+            $label = $decisionLabels[$decisionFinal] ?? $decisionFinal;
+            $contrato = $solicitud->contratoMantenimiento;
+            $cNombre = $contrato?->nombre ?? 'N/A';
+            $comentarioEnriquecido = "Aprobado vía {$label}. Contrato: {$cNombre}";
+            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'decision_final' => $decisionFinal,
                 'contrato_id' => $solicitud->contrato_mantenimiento_id,

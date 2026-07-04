@@ -600,7 +600,17 @@ class SolicitudCombustibleService
                 }
             }
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
+            $montoFinal = $solicitud->cantidad_combustible;
+            $comentarioEnriquecido = match ($decisionFinal) {
+                'operativo' => "Aprobado con monto sugerido por el operativo: \${$montoFinal}",
+                'jefe' => ($montoOriginal !== null && $montoOriginal != $montoAprobado)
+                    ? "Aprobado por el jefe. Monto ajustado de \${$montoOriginal} a \${$montoAprobado}"
+                    : "Aprobado por el jefe. Monto: \${$montoFinal}",
+                default => 'Aprobado',
+            };
+            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'decision_final' => $decisionFinal,
                 'monto_aprobado' => $solicitud->cantidad_combustible,

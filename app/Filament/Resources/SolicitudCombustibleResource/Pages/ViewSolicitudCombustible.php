@@ -68,7 +68,7 @@ class ViewSolicitudCombustible extends ViewRecord
                         $action->halt();
                     }
                 })
-                ->visible(fn (SolicitudCombustible $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
+                ->visible(fn (SolicitudCombustible $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin', 'operativo']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::APROBADA,
                         EstadoSolicitudEnum::COMPLETADA,

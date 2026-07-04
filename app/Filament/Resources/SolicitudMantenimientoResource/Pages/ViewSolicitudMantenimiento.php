@@ -75,7 +75,7 @@ class ViewSolicitudMantenimiento extends ViewRecord
                         $action->halt();
                     }
                 })
-                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
+                ->visible(fn (SolicitudMantenimiento $record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin', 'operativo']) &&
                     in_array($record->estado, [
                         EstadoSolicitudEnum::COMPLETADA,
                     ], true)
