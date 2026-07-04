@@ -77,6 +77,13 @@ class PanelLiquidaciones extends Page
 
     public $evidencia = [];
 
+    public function getHeading(): string
+    {
+        return $this->modo === 'listado'
+            ? 'Listado completo de Solicitudes'
+            : 'Panel de Liquidaciones';
+    }
+
     public function mount(): void
     {
         $this->fecha_desde = now()->startOfMonth()->format('Y-m-d');
