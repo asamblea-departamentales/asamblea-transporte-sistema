@@ -5,31 +5,30 @@
     <title>Orden de Trabajo</title>
     <style>
         @page {
-            margin: 20px 28px;
+            margin: 22px 30px;
         }
 
         body {
             font-family: 'DejaVu Sans', sans-serif;
-            font-size: 10px;
-            color: #111827;
+            font-size: 11px;
+            color: #000;
             margin: 0;
         }
 
         .logo {
             text-align: center;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
 
         .logo img {
-            width: 90px;
+            width: 85px;
         }
 
         .titulo {
             text-align: center;
-            font-size: 19px;
+            font-size: 22px;
             font-weight: bold;
-            margin-bottom: 10px;
-            letter-spacing: 0.5px;
+            margin-bottom: 16px;
         }
 
         .ticket-badge {
@@ -37,44 +36,41 @@
             font-size: 12px;
             font-weight: bold;
             color: #1a56db;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
 
         .seccion-titulo {
-            text-align: left;
-            font-size: 11px;
+            font-size: 12px;
             font-weight: bold;
             text-transform: uppercase;
-            border-bottom: 2px solid #111827;
-            padding-bottom: 2px;
-            margin: 10px 0 4px 0;
+            margin: 12px 0 6px 0;
         }
 
         .tabla {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 4px;
+            margin-bottom: 2px;
         }
 
         .tabla td {
-            border: 1px solid #9ca3af;
-            padding: 4px 8px;
+            border: 1px solid #000;
+            padding: 5px 8px;
             vertical-align: top;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .tabla td:first-child {
             font-weight: bold;
             width: 32%;
-            background: #f3f4f6;
+            background: #fff;
         }
 
         .bloque {
-            border: 1px solid #9ca3af;
+            border: 1px solid #000;
             padding: 6px 8px;
-            margin-bottom: 6px;
+            margin: 8px 0;
             text-align: justify;
-            font-size: 10px;
+            font-size: 11px;
         }
 
         .bloque strong {
@@ -82,10 +78,9 @@
             margin-bottom: 3px;
         }
 
-        /* Bloque de firma: nunca se parte entre paginas */
         .firma-wrapper {
             page-break-inside: avoid;
-            margin-top: 20px;
+            margin-top: 30px;
         }
 
         .firma {
@@ -96,7 +91,7 @@
             margin: 0 auto;
             width: 55%;
             border-top: 1px solid #000;
-            margin-top: 30px;
+            margin-top: 40px;
             margin-bottom: 4px;
         }
 
@@ -106,13 +101,12 @@
 
         .footer {
             position: fixed;
-            bottom: -10px;
+            bottom: -8px;
             left: 0;
             right: 0;
             text-align: center;
             font-size: 7px;
-            color: #9ca3af;
-            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
             padding-top: 3px;
         }
     </style>
@@ -216,7 +210,7 @@
                     </strong>
                     @if($r->evaluacion_comentario)
                         <br>
-                        <span style="color: #4b5563; font-style: italic;">"{{ $r->evaluacion_comentario }}"</span>
+                        <span style="font-style: italic;">"{{ $r->evaluacion_comentario }}"</span>
                     @endif
                 </td>
             </tr>
