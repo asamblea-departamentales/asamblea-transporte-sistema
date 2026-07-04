@@ -86,7 +86,7 @@
         <div class="bloque-texto">
             EL SUSCRITO SEÑOR <strong>{{ mb_strtoupper($r->autorizador?->name ?? '—') }}</strong>,
             EN SU CALIDAD DE <strong>{{ mb_strtoupper($service->resolverAutorizadorCargo($r)) }}</strong>
-            DE LA ASAMBLEA LEGISLATIVA.
+            DEl DEPARTAMENTO DE TRANSPORTE DE LA ASAMBLEA LEGISLATIVA.
         </div>
 
         <div class="bloque-texto">
