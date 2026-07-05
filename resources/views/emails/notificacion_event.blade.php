@@ -62,6 +62,8 @@
             .info-card-title { color:#94a3b8 !important; border-bottom-color:#2a3a5a !important; }
             .info-row { color:#e2e8f0 !important; }
             .info-row strong { color:#94a3b8 !important; }
+            .route-boss { background-color:#3a2718 !important; border-left-color:#f97316 !important; color:#fed7aa !important; }
+            .route-boss strong, .route-boss-title { color:#fdba74 !important; }
             .map-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; }
             .map-header { background-color:#1e3a5f !important; color:#93c5fd !important; }
             .map-body { color:#cbd5e1 !important; }
@@ -71,6 +73,7 @@
             .evidencia-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; color:#e2e8f0 !important; }
             .evidencia-section h4 { color:#93c5fd !important; }
             .map-note { color:#94a3b8 !important; }
+            .status-no_disponible { background-color:#92400e !important; color:#ffffff !important; }
             .email-footer { background-color:#1a2744 !important; border-color:#2a2a4a !important; }
             .email-footer p { color:#94a3b8 !important; }
         }
@@ -135,6 +138,27 @@
             color:#475569;
             font-weight:600;
         }
+        .route-extra {
+            margin-top:8px;
+            padding-top:8px;
+            border-top:1px dashed #e2e8f0;
+        }
+        .route-subtitle {
+            margin-bottom:4px;
+            font-size:11px;
+            color:#64748b;
+            font-weight:600;
+        }
+        .route-boss {
+            margin-top:8px;
+            padding:8px 10px;
+            background-color:#fff7ed;
+            border-left:3px solid #f97316;
+            color:#9a3412;
+        }
+        .route-boss strong, .route-boss-title {
+            color:#9a3412;
+        }
         .status-badge {
             display:inline-block;
             padding:6px 12px;
@@ -154,9 +178,10 @@
         .status-en_ejecucion { background-color:#1e3a8a; color:#ffffff; }
         .status-cancelada { background-color:#6b7280; color:#ffffff; }
         .status-asignada { background-color:#a855f7; color:#ffffff; }
-        .status-liquidada { background-color:#a855f7; color:#ffffff; }
+        .status-liquidada { background-color:#16a34a; color:#ffffff; }
         .status-ruta_modificada { background-color:#f97316; color:#ffffff; }
         .status-desconocido { background-color:#f3f4f6; color:#374151; }
+        .status-no_disponible { background-color:#f59e0b; color:#ffffff; }
         .map-section {
             margin:16px 0 6px;
             background-color:#f8fafc;
@@ -262,7 +287,7 @@
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
             <tr>
                 <td align="center" style="padding:0 0 14px;">
-                    <img src="{{ $logo_src ?? 'https://placehold.co/180x60/1e3a8a/ffffff?text=AL' }}"
+                    <img src="{{ $logoSrc ?: 'https://placehold.co/180x60/1e3a8a/ffffff?text=AL' }}"
                          alt="Asamblea Legislativa"
                          width="180" height="60"
                          class="email-logo-img"
@@ -311,7 +336,7 @@
                 @if(isset($payload['solicitud']['estado']))
                     <div class="info-row">
                         <strong>Estado:</strong>
-                        <span class="status-badge status-rechazada">No disponible</span>
+                        <span class="status-badge status-no_disponible">No disponible</span>
                     </div>
                 @endif
                 @if(isset($payload['solicitud']['motorista']))
@@ -344,6 +369,25 @@
         @endif
 
         @if($tipo === 'transporte' && isset($payload['solicitud']))
+            @php
+                $solicitud = $payload['solicitud'];
+                $destinosSolicitados = $solicitud['destinos_solicitados'] ?? collect($solicitud['destinos_adicionales'] ?? [])
+                    ->reject(fn ($d) => $d['agregado_durante_viaje'] ?? false)
+                    ->values()
+                    ->map(fn ($d, $i) => $d + ['etiqueta' => 'Destino adicional ' . ($i + 1)])
+                    ->all();
+                $destinosJefaturaBase = collect($solicitud['destinos_jefatura'] ?? $solicitud['destinos_adicionales'] ?? [])
+                    ->filter(fn ($d) => $d['agregado_durante_viaje'] ?? false)
+                    ->values();
+                $destinosJefatura = isset($solicitud['destinos_jefatura'])
+                    ? $solicitud['destinos_jefatura']
+                    : $destinosJefaturaBase
+                        ->map(fn ($d, $i) => $d + [
+                            'etiqueta' => 'Destino nuevo asignado por jefatura'
+                                . ($destinosJefaturaBase->count() > 1 ? ' ' . ($i + 1) : ''),
+                        ])
+                        ->all();
+            @endphp
             @if(isset($payload['solicitud']['estado']))
                 <div style="margin:0 0 12px;">
                     <span class="status-badge status-{{ $payload['solicitud']['estado'] }}">
@@ -352,37 +396,42 @@
                 </div>
             @endif
 
-            @if(isset($payload['solicitud']['origen']) || isset($payload['solicitud']['destino']) || (isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== ''))
+            @if(isset($solicitud['origen']) || isset($solicitud['destino']) || !empty($destinosSolicitados) || !empty($destinosJefatura))
                 <div class="info-card">
                     <div class="info-card-title">Ruta del viaje</div>
-                    @if(isset($payload['solicitud']['origen']))
-                        <div class="info-row"><strong>Origen:</strong> {{ $payload['solicitud']['origen'] }}</div>
+                    @if(isset($solicitud['origen']))
+                        <div class="info-row"><strong>Origen:</strong> {{ $solicitud['origen'] }}</div>
                     @endif
-                    @if(isset($payload['solicitud']['destino']))
-                        <div class="info-row"><strong>Destino:</strong> {{ $payload['solicitud']['destino'] }}</div>
-                    @endif
-                    @if(isset($payload['solicitud']['destino_adicional']) && $payload['solicitud']['destino_adicional'] !== '')
-                        <div class="info-row"><strong>Destino adicional:</strong> {{ $payload['solicitud']['destino_adicional'] }}</div>
+                    @if(isset($solicitud['destino']))
+                        <div class="info-row"><strong>Destino principal:</strong> {{ $solicitud['destino'] }}</div>
                     @endif
 
-                    @if(!empty($payload['solicitud']['destinos_adicionales']))
-                        <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #e2e8f0;">
-                            <strong style="font-size:11px;color:#64748b;">Destinos adicionales:</strong>
-                            @if($ruta_description)
-                                <div style="margin:6px 0 8px;padding:8px 10px;background-color:#fff7ed;border-left:3px solid #f97316;font-size:12px;color:#9a3412;">
-                                    {!! $ruta_description !!}
+                    @if(!empty($destinosSolicitados))
+                        <div class="route-extra">
+                            <div class="route-subtitle">Destinos adicionales solicitados</div>
+                            @foreach($destinosSolicitados as $destino)
+                                <div class="info-row">
+                                    <strong>{{ $destino['etiqueta'] ?? 'Destino adicional ' . $loop->iteration }}:</strong>
+                                    {{ $destino['nombre'] }}
                                 </div>
-                            @endif
-                            <ol style="margin:4px 0 0 20px;padding:0;font-size:12px;">
-                                @foreach($payload['solicitud']['destinos_adicionales'] as $destino)
-                                    <li style="margin-top:4px;">
-                                        {{ $destino['nombre'] }}
-                                        @if($destino['agregado_durante_viaje'] ?? false)
-                                            <span style="font-size:10px;color:#f97316;">(agregado durante el viaje)</span>
-                                        @endif
-                                    </li>
-                                @endforeach
-                            </ol>
+                            @endforeach
+                        </div>
+                    @endif
+
+                    @if(!empty($destinosJefatura))
+                        <div class="route-boss">
+                            <div class="route-boss-title" style="font-size:11px;font-weight:700;margin-bottom:4px;">
+                                Destino asignado por jefatura
+                            </div>
+                            @foreach($destinosJefatura as $destino)
+                                <div class="info-row" style="color:#9a3412;">
+                                    <strong>{{ $destino['etiqueta'] ?? 'Destino nuevo asignado por jefatura' }}:</strong>
+                                    {{ $destino['nombre'] }}
+                                    @if(!empty($destino['agregado_por_nombre']))
+                                        <span style="font-size:10px;">({{ $destino['agregado_por_nombre'] }})</span>
+                                    @endif
+                                </div>
+                            @endforeach
                         </div>
                     @endif
                 </div>

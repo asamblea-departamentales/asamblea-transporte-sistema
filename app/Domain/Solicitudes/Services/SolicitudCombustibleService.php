@@ -455,6 +455,9 @@ class SolicitudCombustibleService
 
             $this->enviarCorreoCompletada($solicitud);
 
+            \App\Jobs\RecordatorioLiquidacionJob::dispatch($solicitud, 'combustible')
+                ->delay(now()->addHours(2));
+
             return $solicitud;
         });
     }
@@ -739,35 +742,46 @@ class SolicitudCombustibleService
 
     private function enviarCorreoEnviada(SolicitudCombustible $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_enviada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_enviada');
     }
 
     private function enviarCorreoRechazada(SolicitudCombustible $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_rechazada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_rechazada');
+        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_rechazada');
     }
 
     private function enviarCorreoCancelada(SolicitudCombustible $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_cancelada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_cancelada');
+        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_cancelada');
     }
 
     private function enviarCorreoCompletada(SolicitudCombustible $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_completada'
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_completada',
+            attachments: $solicitud->comprobantes ?? []
+        );
+        $dispatch->toJefatura(
+            $solicitud, 'combustible', 'solicitud_completada',
+            attachments: $solicitud->comprobantes ?? []
         );
     }
 
     private function enviarCorreoLiquidada(SolicitudCombustible $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_liquidada',
+            attachments: $solicitud->comprobantes ?? []
+        );
+        $dispatch->toJefatura(
             $solicitud, 'combustible', 'solicitud_liquidada',
             attachments: $solicitud->comprobantes ?? []
         );

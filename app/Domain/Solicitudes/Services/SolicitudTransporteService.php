@@ -491,43 +491,61 @@ class SolicitudTransporteService
 
     private function enviarCorreoEnviada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_enviada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_enviada');
     }
 
     private function enviarCorreoAprobada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_aprobada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_aprobada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_aprobada');
+        $this->enviarCorreoMotoristaAsignado($solicitud);
     }
 
     private function enviarCorreoRechazada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_rechazada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_rechazada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_rechazada');
     }
 
     private function enviarCorreoCancelada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_cancelada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_cancelada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_cancelada');
     }
 
     private function enviarCorreoCompletada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_completada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_completada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_completada');
     }
 
     private function enviarCorreoProgramada(SolicitudTransporte $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_programada'
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_programada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_programada');
+        $this->enviarCorreoMotoristaAsignado($solicitud);
+    }
+
+    private function enviarCorreoMotoristaAsignado(SolicitudTransporte $solicitud): void
+    {
+        $motorista = $solicitud->motorista;
+        if (!$motorista) {
+            return;
+        }
+        $email = $motorista->user?->email ?? $motorista->correo;
+        if (empty($email)) {
+            return;
+        }
+        app(SolicitudEmailDispatchService::class)->toEmail(
+            $solicitud, 'transporte', 'motorista_asignado',
+            $email
         );
     }
 

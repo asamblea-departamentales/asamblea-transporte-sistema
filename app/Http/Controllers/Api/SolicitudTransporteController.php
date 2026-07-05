@@ -85,18 +85,25 @@ class SolicitudTransporteController extends Controller
             'destino_lng' => ['nullable', 'numeric'],
             'destino_adicional_lat' => ['nullable', 'numeric'],
             'destino_adicional_lng' => ['nullable', 'numeric'],
+
+            // --- DESTINOS ADICIONALES MULTIPLES (array) ---
+            'destinos_adicionales' => ['nullable', 'array'],
+            'destinos_adicionales.*.nombre' => ['required_with:destinos_adicionales', 'string', 'max:255'],
+            'destinos_adicionales.*.lat' => ['nullable', 'numeric'],
+            'destinos_adicionales.*.lng' => ['nullable', 'numeric'],
         ]);
 
         // --- MAPEO DE DATOS ---
         $tipoVehiculoNombre = $data['tipo_vehiculo'];
         $destinoReal = $data['destino_principal'];
         $destinoAdicional = $data['destino_adicional'] ?? null;
+        $destinosAdicionales = $data['destinos_adicionales'] ?? [];
 
         // Extraemos las coordenadas para que no estorben en el resto de la lógica si fuera necesario
         // aunque al usar el spread operator (...) podemos dejarlas en $data si los nombres coinciden con la BD.
 
         // Limpiamos los campos que no van directo a columnas con el mismo nombre
-        unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional']);
+        unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional'], $data['destinos_adicionales']);
 
         // Mergear hora_salida en fecha_salida y hora_retorno en fecha_retorno
         if (!empty($data['hora_salida']) && !empty($data['fecha_salida'])) {
@@ -131,10 +138,25 @@ class SolicitudTransporteController extends Controller
         ]);
 
         // Sincronizar destinos adicionales a la nueva tabla
-        if ($destinoAdicional) {
-            $nombres = array_map('trim', explode(' - ', $destinoAdicional));
+        $orden = 0;
+
+        // Prioridad 1: Array de destinos con coordenadas (mapa frontend)
+        if (!empty($destinosAdicionales) && is_array($destinosAdicionales)) {
+            foreach ($destinosAdicionales as $d) {
+                SolicitudDestinoAdicional::create([
+                    'solicitud_transporte_id' => $solicitud->id,
+                    'nombre'                  => $d['nombre'] ?? 'Destino adicional',
+                    'lat'                     => $d['lat'] ?? null,
+                    'lng'                     => $d['lng'] ?? null,
+                    'agregado_por'            => null,
+                    'agregado_durante_viaje'  => false,
+                    'orden'                   => $orden++,
+                ]);
+            }
+        } elseif ($destinoAdicional) {
+            // Prioridad 2: Legacy string separado por |
+            $nombres = array_map('trim', preg_split('/\s*(?:\|| - )\s*/', $destinoAdicional));
             $nombres = array_filter($nombres, fn ($n) => $n !== '');
-            $orden = 0;
             foreach ($nombres as $nombre) {
                 SolicitudDestinoAdicional::create([
                     'solicitud_transporte_id' => $solicitud->id,
@@ -207,20 +229,20 @@ class SolicitudTransporteController extends Controller
         ]);
 
         // ── Notificar modificación de ruta ──
-        dispatch(function () use ($solicitud, $nombre, $user) {
+        dispatch(function () use ($solicitud) {
             try {
                 $dispatch = app(SolicitudEmailDispatchService::class);
-                $payloadService = app(SolicitudEmailPayloadService::class);
-                $subject = "Ruta modificada - {$solicitud->codigo}";
 
-                $payload = $payloadService->build($solicitud, 'transporte', 'ruta_modificada');
-                $payload['destino_nuevo'] = $nombre;
-                $payload['modificado_por'] = $user->name;
-
-                // ponytail: solo al solicitante, el jefe es quien modifica la ruta
                 if ($solicitud->solicitante?->email) {
-                    $payload['mostrar_solicitante'] = false;
-                    $dispatch->withPayload($subject, $payload, $solicitud->solicitante->email);
+                    $dispatch->toSolicitante($solicitud, 'transporte', 'ruta_modificada');
+                }
+
+                $motorista = $solicitud->motorista;
+                if ($motorista) {
+                    $email = $motorista->user?->email ?? $motorista->correo;
+                    if ($email) {
+                        $dispatch->toEmail($solicitud, 'transporte', 'ruta_modificada', $email);
+                    }
                 }
             } catch (\Exception $e) {
                 Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: " . $e->getMessage());

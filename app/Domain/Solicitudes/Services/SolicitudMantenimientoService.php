@@ -216,6 +216,9 @@ class SolicitudMantenimientoService
 
             $this->enviarCorreoCompletada($solicitud);
 
+            \App\Jobs\RecordatorioLiquidacionJob::dispatch($solicitud, 'mantenimiento')
+                ->delay(now()->addHours(2));
+
             return $solicitud;
         });
     }
@@ -539,35 +542,46 @@ class SolicitudMantenimientoService
 
     private function enviarCorreoEnviada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_enviada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_enviada');
     }
 
     private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_rechazada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_rechazada');
+        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_rechazada');
     }
 
     private function enviarCorreoCancelada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_cancelada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_cancelada');
+        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_cancelada');
     }
 
     private function enviarCorreoCompletada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_completada'
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_completada',
+            attachments: $solicitud->adjuntos ?? []
+        );
+        $dispatch->toJefatura(
+            $solicitud, 'mantenimiento', 'solicitud_completada',
+            attachments: $solicitud->adjuntos ?? []
         );
     }
 
     private function enviarCorreoLiquidada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_liquidada',
+            attachments: $solicitud->adjuntos ?? []
+        );
+        $dispatch->toJefatura(
             $solicitud, 'mantenimiento', 'solicitud_liquidada',
             attachments: $solicitud->adjuntos ?? []
         );

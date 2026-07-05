@@ -110,10 +110,7 @@ class SolicitudTransporte extends Model
 }
 
     // Este método hará la magia al mostrar el dato
-    public function getDestinoAdicionalAttribute($value)
-    {
-        return $value ?? 'Sin destino adicional';
-    }
+    // ponytail: null returns null so the template/map can check emptiness properly
 
     // Relaciones
     public function unidad()

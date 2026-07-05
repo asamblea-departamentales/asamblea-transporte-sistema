@@ -76,6 +76,50 @@ class SolicitudEmailPayloadService
      */
     private function buildTransporte($r, string $evento): array
     {
+        $destinosAdicionales = collect($r->destinosAdicionales ?? [])
+            ->map(fn ($d) => [
+                'nombre'                 => data_get($d, 'nombre'),
+                'lat'                    => data_get($d, 'lat'),
+                'lng'                    => data_get($d, 'lng'),
+                'agregado_durante_viaje' => (bool) data_get($d, 'agregado_durante_viaje', false),
+                'agregado_por_nombre'    => data_get($d, 'agregadoPor.name') ?? data_get($d, 'agregadoPor.username'),
+                'orden'                  => data_get($d, 'orden'),
+            ])
+            ->filter(fn ($d) => filled($d['nombre']))
+            ->values();
+
+        if ($destinosAdicionales->isEmpty() && filled($r->destino_adicional)) {
+            $destinosAdicionales = collect(preg_split('/\s*(?:\|| - )\s*/', $r->destino_adicional))
+                ->map(fn ($nombre) => trim((string) $nombre))
+                ->filter(fn ($nombre) => $nombre !== '' && mb_strtolower($nombre) !== 'sin destino adicional')
+                ->values()
+                ->map(fn ($nombre, $i) => [
+                    'nombre'                 => $nombre,
+                    'lat'                    => $i === 0 ? $r->destino_adicional_lat : null,
+                    'lng'                    => $i === 0 ? $r->destino_adicional_lng : null,
+                    'agregado_durante_viaje' => false,
+                    'agregado_por_nombre'    => null,
+                    'orden'                  => $i,
+                ]);
+        }
+
+        $destinosSolicitados = $destinosAdicionales
+            ->reject(fn ($d) => $d['agregado_durante_viaje'])
+            ->values()
+            ->map(fn ($d, $i) => $d + ['etiqueta' => 'Destino adicional ' . ($i + 1)])
+            ->toArray();
+
+        $destinosJefaturaBase = $destinosAdicionales
+            ->filter(fn ($d) => $d['agregado_durante_viaje'])
+            ->values();
+
+        $destinosJefatura = $destinosJefaturaBase
+            ->map(fn ($d, $i) => $d + [
+                'etiqueta' => 'Destino nuevo asignado por jefatura'
+                    . ($destinosJefaturaBase->count() > 1 ? ' ' . ($i + 1) : ''),
+            ])
+            ->toArray();
+
         $data = [
             'id' => $r->id,
             'codigo' => $r->codigo,
@@ -91,13 +135,9 @@ class SolicitudEmailPayloadService
             'destino_lng' => $r->destino_lng,
             'destino_adicional_lat' => $r->destino_adicional_lat,
             'destino_adicional_lng' => $r->destino_adicional_lng,
-            'destinos_adicionales'  => $r->destinosAdicionales->map(fn ($d) => [
-                'nombre'                => $d->nombre,
-                'lat'                   => $d->lat,
-                'lng'                   => $d->lng,
-                'agregado_durante_viaje' => $d->agregado_durante_viaje,
-                'agregado_por_nombre'    => $d->agregadoPor?->name ?? $d->agregadoPor?->username ?? null,
-            ])->toArray(),
+            'destinos_adicionales' => $destinosAdicionales->toArray(),
+            'destinos_solicitados' => $destinosSolicitados,
+            'destinos_jefatura' => $destinosJefatura,
             'fecha_salida' => $r->fecha_salida,
             'fecha_retorno' => $r->fecha_retorno,
             'motivo_actividad' => $r->motivo_actividad,
@@ -261,6 +301,7 @@ class SolicitudEmailPayloadService
             'solicitud_asignada' => "Tu solicitud de {$label} tiene recursos asignados.",
             'solicitud_liquidada' => "Tu solicitud de {$label} ha sido LIQUIDADA.",
             'solicitud_programada' => "Tu solicitud de {$label} ha sido PROGRAMADA.",
+            'solicitud_pendiente_liquidacion' => "La solicitud de {$label} está en espera de revisión de liquidación.",
             'motorista_asignado' => 'Se te ha asignado un nuevo viaje.',
             'motorista_no_disponible' => 'Un motorista se ha reportado no disponible.',
             'ruta_modificada' => "La ruta de tu solicitud de {$label} ha sido modificada.",
@@ -322,6 +363,7 @@ class SolicitudEmailPayloadService
             'solicitud_asignada' => "Solicitud de {$label} ASIGNADA",
             'solicitud_liquidada' => "Solicitud de {$label} LIQUIDADA",
             'solicitud_programada' => "Solicitud de {$label} PROGRAMADA",
+            'solicitud_pendiente_liquidacion' => "Solicitud de {$label} pendiente de liquidación",
             'motorista_asignado' => 'Nuevo viaje asignado',
             'motorista_no_disponible' => 'Motorista no disponible',
             'ruta_modificada' => "Ruta modificada - {$label}",

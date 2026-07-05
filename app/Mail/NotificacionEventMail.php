@@ -28,9 +28,8 @@ class NotificacionEventMail extends Mailable
         $logoPath = public_path('images/logo-blanco-fondo-transparente.png');
         $logoSrc = null;
         if (file_exists($logoPath)) {
-            $mime = mime_content_type($logoPath) ?: 'image/png';
             $data = base64_encode(file_get_contents($logoPath));
-            $logoSrc = 'data:' . $mime . ';base64,' . $data;
+            $logoSrc = 'data:image/png;base64,' . $data;
         }
 
         $mapFallbackPath = public_path('images/mapa-el-salvador.png');
@@ -41,7 +40,6 @@ class NotificacionEventMail extends Mailable
         }
 
         $evidenciaSrc = $this->resolveEvidenciaSrc($this->payload);
-        $rutaDescription = $this->buildRutaDescription($this->payload);
 
         $mail = $this->subject($this->subject)
             ->view('emails.notificacion_event')
@@ -50,9 +48,8 @@ class NotificacionEventMail extends Mailable
                 'map_url' => $mapUrl,
                 'map_fallback_src' => $mapFallbackSrc,
                 'evidencia_src' => $evidenciaSrc,
-                'ruta_description' => $rutaDescription,
                 'subject' => $this->subject,
-                'logo_src' => $logoSrc,
+                'logoSrc' => $logoSrc,
             ]);
 
         $this->attachFilesFromPayload($this->payload, $mail);
@@ -130,45 +127,5 @@ class NotificacionEventMail extends Mailable
         }
 
         return 'data:' . $mime . ';base64,' . base64_encode($body);
-    }
-
-    private function buildRutaDescription(array $payload): ?string
-    {
-        $destinos = $payload['solicitud']['destinos_adicionales'] ?? [];
-        if (($payload['evento'] ?? null) !== 'ruta_modificada' || empty($destinos)) {
-            return null;
-        }
-
-        $originales = [];
-        $nuevos = [];
-        foreach ($destinos as $d) {
-            if ($d['agregado_durante_viaje'] ?? false) {
-                $nuevos[] = $d['nombre'];
-            } else {
-                $originales[] = $d['nombre'];
-            }
-        }
-        if (empty($nuevos)) {
-            return null;
-        }
-
-        $cnt = count($nuevos);
-        $puntoOrigen = $originales ? end($originales) : ($payload['solicitud']['origen'] ?? null);
-
-        if ($cnt === 1) {
-            return $puntoOrigen
-                ? "Se agreg&oacute; un nuevo destino a la ruta desde <strong>{$puntoOrigen}</strong> hasta <strong>{$nuevos[0]}</strong>."
-                : "Se agreg&oacute; un nuevo destino a la ruta: <strong>{$nuevos[0]}</strong>.";
-        }
-        if ($cnt === 2) {
-            return $puntoOrigen
-                ? "Se agreg&oacute; un nuevo destino a la ruta desde <strong>{$puntoOrigen}</strong> hasta <strong>{$nuevos[0]}</strong>, terminando en <strong>{$nuevos[1]}</strong>."
-                : "Se agreg&oacute; un nuevo destino a la ruta desde <strong>{$nuevos[0]}</strong> hasta <strong>{$nuevos[1]}</strong>.";
-        }
-
-        $pasando = array_slice($nuevos, 1, -1);
-        return $puntoOrigen
-            ? "Se agreg&oacute; un nuevo destino a la ruta desde <strong>{$puntoOrigen}</strong> hasta <strong>{$nuevos[0]}</strong>, pasando por <strong>" . implode('</strong>, <strong>', $pasando) . "</strong>, terminando en <strong>" . end($nuevos) . "</strong>."
-            : "Se agreg&oacute; un nuevo destino a la ruta desde <strong>{$nuevos[0]}</strong> hasta <strong>{$nuevos[1]}</strong>, terminando en <strong>" . end($nuevos) . "</strong>.";
     }
 }

@@ -30,19 +30,13 @@ class SolicitudEmailDispatchService
      */
     public function toSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
-        $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
-        $payload['mostrar_solicitante'] = false;
-        if (!empty($attachments)) {
-            $payload['attachments'] = $attachments;
-        }
-        $subject = $this->payloadService->subjectFor($tipo, $evento);
-
         $email = $record->solicitante?->email;
         if (empty($email)) {
             Log::warning("Correo no enviado [{$tipo}/{$evento}]: solicitante #{$record->solicitante_id} sin email");
             return;
         }
 
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, false, $attachments);
         $this->send($subject, $payload, $email);
     }
 
@@ -57,18 +51,12 @@ class SolicitudEmailDispatchService
      */
     public function queueToSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
-        $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
-        $payload['mostrar_solicitante'] = false;
-        if (!empty($attachments)) {
-            $payload['attachments'] = $attachments;
-        }
-        $subject = $this->payloadService->subjectFor($tipo, $evento);
-
         $email = $record->solicitante?->email;
         if (empty($email)) {
             return;
         }
 
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, false, $attachments);
         $this->queue($subject, $payload, $email);
     }
 
@@ -82,13 +70,6 @@ class SolicitudEmailDispatchService
      */
     public function toJefatura($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
-        $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
-        $payload['mostrar_solicitante'] = true;
-        if (!empty($attachments)) {
-            $payload['attachments'] = $attachments;
-        }
-        $subject = $this->payloadService->subjectFor($tipo, $evento);
-
         // Obtiene todos los usuarios con rol 'jefe' que tengan correo
         $emails = User::role('jefe')
             ->whereNotNull('email')
@@ -101,6 +82,27 @@ class SolicitudEmailDispatchService
             return;
         }
 
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, true, $attachments);
+        $this->send($subject, $payload, $emails);
+    }
+
+    /**
+     * Envía un correo a todos los usuarios con el rol 'liquidador'.
+     */
+    public function toLiquidadores($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
+    {
+        $emails = User::role('liquidador')
+            ->whereNotNull('email')
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        if (empty($emails)) {
+            return;
+        }
+
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, true, $attachments);
         $this->send($subject, $payload, $emails);
     }
 
@@ -115,14 +117,20 @@ class SolicitudEmailDispatchService
      */
     public function toEmail($record, string $tipo, string $evento, string|array $email, ?string $mensaje = null, array $attachments = []): void
     {
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, true, $attachments);
+        $this->send($subject, $payload, $email);
+    }
+
+    private function messageFor($record, string $tipo, string $evento, ?string $mensaje, bool $mostrarSolicitante, array $attachments): array
+    {
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
-        $payload['mostrar_solicitante'] = true;
+        $payload['mostrar_solicitante'] = $mostrarSolicitante;
+
         if (!empty($attachments)) {
             $payload['attachments'] = $attachments;
         }
-        $subject = $this->payloadService->subjectFor($tipo, $evento);
 
-        $this->send($subject, $payload, $email);
+        return [$this->payloadService->subjectFor($tipo, $evento), $payload];
     }
 
     /**
