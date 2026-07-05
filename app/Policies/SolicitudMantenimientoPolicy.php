@@ -15,7 +15,7 @@ class SolicitudMantenimientoPolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador', 'super_admin']);
+        return $user->can('view_any_solicitud::mantenimiento');
     }
 
     /**
@@ -23,7 +23,7 @@ class SolicitudMantenimientoPolicy
      */
     public function view(User $user, SolicitudMantenimiento $solicitudMantenimiento): bool
     {
-        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador', 'super_admin']);
+        return $user->can('view_solicitud::mantenimiento');
     }
 
     /**

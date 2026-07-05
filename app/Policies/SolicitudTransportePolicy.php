@@ -15,7 +15,7 @@ class SolicitudTransportePolicy
      */
     public function viewAny(User $user): bool
     {
-        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
+        return $user->can('view_any_solicitud::transporte');
     }
 
     /**
@@ -23,7 +23,7 @@ class SolicitudTransportePolicy
      */
     public function view(User $user, SolicitudTransporte $solicitudTransporte): bool
     {
-        return $user->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
+        return $user->can('view_solicitud::transporte');
     }
 
     /**
