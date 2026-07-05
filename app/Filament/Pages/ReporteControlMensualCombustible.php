@@ -246,7 +246,8 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                     ->label('Contrato')
                     ->toggleable(),
 
-                Tables\Columns\TextColumn::make('serieCarga.nombre')
+                Tables\Columns\TextColumn::make('nombre')
+                    ->relationship('serieCarga', 'nombre')
                     ->label('Serie')
                     ->toggleable(),
 
