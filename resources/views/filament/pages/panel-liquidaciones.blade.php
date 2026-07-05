@@ -1211,7 +1211,7 @@
                 </div>
                 <div class="liq-drawer-row">
                     <span class="liq-drawer-row-label">Prioridad</span>
-                    <span class="liq-drawer-row-value">{{ ucfirst($this->detalleItem['prioridad_grupo'] ?? '—') }}</span>
+                    <span class="liq-drawer-row-value">{{ ucfirst($this->detalleItem['prioridad_grupo'] instanceof \UnitEnum ? $this->detalleItem['prioridad_grupo']->value : ($this->detalleItem['prioridad_grupo'] ?? '—')) }}</span>
                 </div>
                 @if($this->detalleItem['comentario_jefe'] && $this->detalleItem['comentario_jefe'] !== '—')
                 <div class="liq-drawer-row">
