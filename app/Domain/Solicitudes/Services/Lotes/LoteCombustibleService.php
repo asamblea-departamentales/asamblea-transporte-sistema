@@ -9,6 +9,8 @@ use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\SolicitudCombustible;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\Vehiculo;
+use App\Models\ContratoCombustible;
+use App\Models\SerieCarga;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -322,6 +324,42 @@ class LoteCombustibleService
 
             $lote->estado = EstadoLoteEnum::COMPLETADO->value;
             $lote->save();
+
+            // Poblar solicitudes con datos del lote para el reporte
+            foreach ($lote->detalles as $detalle) {
+                if (! $detalle->solicitud_combustible_id) continue;
+
+                $solicitud = $detalle->solicitudCombustible;
+                if (! $solicitud || $solicitud->estado !== EstadoSolicitudEnum::APROBADA) continue;
+
+                $contrato = ContratoCombustible::where('numero_contrato', $detalle->numero_contrato)->first();
+                $serie = SerieCarga::where('nombre', $detalle->numero_serie)->first();
+                if (! $contrato || ! $serie) continue;
+
+                $cantidadVales = (int) ($detalle->cantidad_galones ?? 1);
+                $inicio = $serie->correlativo_actual;
+                $fin = $inicio + $cantidadVales - 1;
+
+                $solicitud->contrato_id = $contrato->id;
+                $solicitud->serie_vale_id = $serie->id;
+                $solicitud->correlativo_inicio = $inicio;
+                $solicitud->correlativo_fin = $fin;
+                $solicitud->cantidad_vales = $cantidadVales;
+                $solicitud->monto_asignado = $detalle->monto_asignado ?? ($cantidadVales * $serie->valor);
+                $solicitud->valor_total = $solicitud->monto_asignado;
+                $solicitud->fecha_asignacion = now();
+                $solicitud->asignado_por = $userId;
+                $solicitud->estado = EstadoSolicitudEnum::ASIGNADA;
+                $solicitud->save();
+
+                // Avanzar correlativo en la serie
+                $serie->correlativo_actual = $fin + 1;
+                $serie->save();
+
+                // Descontar del contrato
+                $contrato->monto_disponible = (float) $contrato->monto_disponible - $solicitud->monto_asignado;
+                $contrato->save();
+            }
 
             Log::info('Lote de combustible completado', [
                 'lote_id'         => $lote->id,

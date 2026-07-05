@@ -111,7 +111,7 @@ class SolicitudCombustibleController extends Controller
         }
 
         $request->validate([
-            'forma_pago' => ['required', 'in:vale,ticket,tarjeta,efectivo,otro'],
+            'forma_pago' => ['required', 'in:carga,ticket,tarjeta,efectivo,otro'],
             'numero_vale_ticket' => ['nullable', 'string'],
             'valor_total' => ['required', 'numeric', 'min:0'],
             'comprobantes' => ['required', 'array', 'min:1'],
@@ -297,7 +297,12 @@ class SolicitudCombustibleController extends Controller
                 'data' => $solicitud->fresh()->load(['vehiculo', 'motorista', 'solicitante', 'contrato', 'serieVale']),
             ]);
         } catch (\DomainException $e) {
-            return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
+            return response()->json([
+                'message' => $e->getMessage(),
+                'codigo' => $solicitud->codigo,
+                'estado_actual' => $solicitud->estado?->value ?? $solicitud->estado,
+                'sugerencia' => 'Revisa el estado de la solicitud en el panel de administración o contacta al operador encargado.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
     }
 

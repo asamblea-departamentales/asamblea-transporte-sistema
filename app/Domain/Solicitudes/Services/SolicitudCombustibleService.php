@@ -321,7 +321,16 @@ class SolicitudCombustibleService
     public function asignarVales(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
     {
         if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-            throw new \DomainException('Solo se pueden asignar cargas a una solicitud Aprobada.');
+            $current = $solicitud->estado?->value ?? $solicitud->estado;
+            $guia = match ($solicitud->estado) {
+                EstadoSolicitudEnum::ASIGNADA => 'Ya tiene vales/cargas asignadas. Revisa el historial de la solicitud para ver los detalles de la asignación.',
+                EstadoSolicitudEnum::COMPLETADA => 'La solicitud ya fue completada por el solicitante. No requiere asignación de vales.',
+                EstadoSolicitudEnum::EN_REVISION => 'La solicitud aún está en revisión. El jefe debe aprobarla primero antes de asignar vales.',
+                EstadoSolicitudEnum::RECHAZADA => 'La solicitud fue rechazada. No se pueden asignar vales a solicitudes rechazadas.',
+                EstadoSolicitudEnum::CANCELADA => 'La solicitud fue cancelada. No se pueden asignar vales a solicitudes canceladas.',
+                default => 'La solicitud no está en estado Aprobada. Verifica el estado actual antes de continuar.',
+            };
+            throw new \DomainException("La solicitud {$solicitud->codigo} está en estado \"{$current}\". {$guia}");
         }
 
         $contrato = ContratoCombustible::findOrFail($data['contrato_id']);
