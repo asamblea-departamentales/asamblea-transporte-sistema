@@ -200,10 +200,11 @@
             @php
                 $estado    = $r->estado instanceof \UnitEnum ? $r->estado->value : (string) $r->estado;
                 $prioridad = $r->prioridad instanceof \UnitEnum ? $r->prioridad->value : (string) $r->prioridad;
+                $prioridadGrupo = $r->prioridad_grupo instanceof \UnitEnum ? $r->prioridad_grupo->value : (string) ($r->prioridad_grupo ?? 'baja');
             @endphp
             <tr>
                 <td style="font-family:monospace; font-size:9px;">{{ $r->ticket ?? '—' }}</td>
-                <td>{{ ucfirst($r->prioridad_grupo ?? 'baja') }}</td>
+                <td>{{ ucfirst($prioridadGrupo) }}</td>
                 <td style="font-family:monospace; font-size:9px;">{{ $r->codigo }}</td>
                 <td>
                     <strong>{{ $r->vehiculo?->placa ?? 'N/A' }}</strong><br>
