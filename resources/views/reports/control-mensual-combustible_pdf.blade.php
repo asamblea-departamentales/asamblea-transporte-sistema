@@ -169,7 +169,7 @@
                 <td>{{ $r->motorista?->nombre ?? '—' }}</td>
                 <td>{{ mb_convert_encoding(mb_strimwidth($r->destino_actividad ?? '', 0, 50, '...'), 'UTF-8', 'UTF-8') }}</td>
                 <td>{{ $r->contrato?->numero_contrato ?? '—' }}</td>
-                <td>{{ $r->serieVale?->nombre ?? '—' }}</td>
+                <td>{{ $r->serieCarga?->nombre ?? '—' }}</td>
                 <td>{{ $service->resolverCorrelativo($r) }}</td>
                 <td style="text-align:right;">{{ $r->cantidad_vales ?? '—' }}</td>
                 <td style="text-align:right;">${{ $r->monto_asignado ? number_format($r->monto_asignado, 2) : '—' }}</td>
