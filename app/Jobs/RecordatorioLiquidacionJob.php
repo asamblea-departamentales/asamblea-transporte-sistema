@@ -25,7 +25,7 @@ class RecordatorioLiquidacionJob implements ShouldQueue
     {
         $solicitud = $this->solicitud->fresh();
 
-        if (!$solicitud) {
+        if (! $solicitud) {
             return;
         }
 
@@ -39,7 +39,7 @@ class RecordatorioLiquidacionJob implements ShouldQueue
         };
 
         $estado = $solicitud->estado?->value ?? $solicitud->estado;
-        if (!in_array($estado, $estadosLiquidables, true)) {
+        if (! in_array($estado, $estadosLiquidables, true)) {
             return;
         }
 
@@ -51,7 +51,7 @@ class RecordatorioLiquidacionJob implements ShouldQueue
             );
             Log::info("Recordatorio liquidación enviado: {$this->tipo} #{$solicitud->id} ({$solicitud->codigo})");
         } catch (\Exception $e) {
-            Log::error("Error recordatorio {$this->tipo} #{$solicitud->id}: " . $e->getMessage());
+            Log::error("Error recordatorio {$this->tipo} #{$solicitud->id}: ".$e->getMessage());
         }
     }
 }

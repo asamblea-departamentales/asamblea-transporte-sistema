@@ -12,11 +12,11 @@ namespace App\Http\Controllers\Reportes;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Services\AuditoriaService;
-use App\Http\Controllers\Controller;
 use App\Domain\Solicitudes\Services\Reportes\ReporteOrdenTrabajoService;
+use App\Http\Controllers\Controller;
 use Barryvdh\DomPDF\Facade\Pdf;
-use Illuminate\Http\Request;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 
 class ReporteOrdenTrabajoController extends Controller
 {
@@ -48,10 +48,10 @@ class ReporteOrdenTrabajoController extends Controller
         );
 
         $pdf = Pdf::loadView('reports.reporte_orden_trabajo_pdf', [
-            'rows'       => $rows,
-            'filters'    => $filters,
-            'kpis'       => $kpis,
-            'service'    => $service,
+            'rows' => $rows,
+            'filters' => $filters,
+            'kpis' => $kpis,
+            'service' => $service,
             'rangeLabel' => $this->rangeLabel($filters),
         ])->setPaper('a4', 'portrait');
 
@@ -60,11 +60,11 @@ class ReporteOrdenTrabajoController extends Controller
 
     private function rangeLabel(array $filters): string
     {
-        $from = !empty($filters['date_from'])
+        $from = ! empty($filters['date_from'])
             ? Carbon::parse($filters['date_from'])->format('d/m/Y')
             : 'Inicio';
 
-        $to = !empty($filters['date_to'])
+        $to = ! empty($filters['date_to'])
             ? Carbon::parse($filters['date_to'])->format('d/m/Y')
             : 'Fin';
 

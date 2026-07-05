@@ -2,17 +2,19 @@
 
 namespace App\Filament\Widgets;
 
-use Filament\Widgets\Widget;
 use App\Domain\Solicitudes\Services\Dashboard\DashboardService;
+use Filament\Widgets\Widget;
 
 class DashboardActividad extends Widget
 {
     protected static string $view = 'filament.widgets.dashboard-actividad';
+
     protected static ?int $sort = 3;
+
     protected int|string|array $columnSpan = [
         'default' => 1,
-        'sm'      => 1,
-        'lg'      => 2,
+        'sm' => 1,
+        'lg' => 2,
     ];
 
     public function getData()

@@ -1,4 +1,5 @@
 <?php
+
 // -----------------------------------------------------------------------------
 // RECURSO PRINCIPAL PARA PLANIFICACIÓN DE FLOTA
 // -----------------------------------------------------------------------------
@@ -18,7 +19,6 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Override;
 
 class PlanificacionFlotaResource extends Resource
 {
@@ -35,10 +35,9 @@ class PlanificacionFlotaResource extends Resource
     public static function canViewAny(): bool
     {
         return auth()->check() && auth()->user()->hasAnyRole([
-            'operativo', 'jefe', 'super_admin', 'admin', 'ti'
+            'operativo', 'jefe', 'super_admin', 'admin', 'ti',
         ]);
     }
-    
 
     public static function table(Table $table): Table
     {

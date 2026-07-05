@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\User;
 use App\Models\ParametroSistema;
+use App\Models\User;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 class ParametroSistemaPolicy

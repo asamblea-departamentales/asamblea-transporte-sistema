@@ -10,7 +10,6 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\EstadoFlotaService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
@@ -30,7 +29,7 @@ class MotoristaViajeController extends Controller
     private function verificarOwnership(SolicitudTransporte $solicitud): void
     {
         $motorista = Auth::user()->motorista;
-        if (!$motorista || $solicitud->motorista_id !== $motorista->id) {
+        if (! $motorista || $solicitud->motorista_id !== $motorista->id) {
             abort(403, 'Este viaje no te está asignado.');
         }
     }
@@ -39,7 +38,7 @@ class MotoristaViajeController extends Controller
     {
         $this->verificarOwnership($solicitud);
 
-        if (!in_array($solicitud->estado, [
+        if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::PROGRAMADA,
             EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::ASIGNADA,
@@ -101,7 +100,7 @@ class MotoristaViajeController extends Controller
     {
         $this->verificarOwnership($solicitud);
 
-        if (!$solicitud->fecha_llegada_destino) {
+        if (! $solicitud->fecha_llegada_destino) {
             return response()->json([
                 'message' => 'Debe registrar la llegada a destino primero.',
             ], 422);
@@ -126,7 +125,7 @@ class MotoristaViajeController extends Controller
             ], 422);
         }
 
-        if ($solicitud->fecha_salida_real && !$solicitud->fecha_retorno_real) {
+        if ($solicitud->fecha_salida_real && ! $solicitud->fecha_retorno_real) {
             $solicitud->fecha_retorno_real = now();
             $solicitud->save();
         }

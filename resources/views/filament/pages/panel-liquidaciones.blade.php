@@ -914,7 +914,10 @@
     <div class="liq-drawer-header">
         <div>
             <div style="font-size:11px;color:#9ca3af;margin-bottom:2px;">
-                {{ $this->detalleItem['tipo'] === 'combustible' ? '⛽ Combustible' : '🔧 Mantenimiento' }}
+                {{ $this->detalleItem['tipo'] === 'combustible' ? '⛽ Combustible' : '' }}
+                {{ $this->detalleItem['tipo'] === 'mantenimiento' ? '🔧 Mantenimiento' : '' }}
+                {{ $this->detalleItem['tipo'] === 'transporte' ? '🚗 Transporte' : '' }}
+                &middot; {{ $this->modo === 'liquidacion' ? 'Resumen Financiero' : 'Detalle de solicitud' }}
             </div>
             <h3 class="liq-drawer-title">{{ $this->detalleItem['codigo'] }}</h3>
         </div>
@@ -923,144 +926,405 @@
 
     <div class="liq-drawer-body">
 
-        {{-- Info general --}}
-        <div>
-            <div class="liq-drawer-section-title">Información general</div>
-            <div class="liq-drawer-row">
-                <span class="liq-drawer-row-label">Vehículo</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['vehiculo'] ?? '—' }}</span>
-            </div>
-            <div class="liq-drawer-row">
-                <span class="liq-drawer-row-label">Solicitante</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['solicitante'] ?? '—' }}</span>
-            </div>
-            @if($this->detalleItem['tipo'] === 'combustible')
-            <div class="liq-drawer-row">
-                <span class="liq-drawer-row-label">Motorista</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['motorista'] ?? '—' }}</span>
-            </div>
-            @endif
-            <div class="liq-drawer-row">
-                <span class="liq-drawer-row-label">Fecha</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha'] ?? '—' }}</span>
-            </div>
-            @if($this->detalleItem['liquidado'])
-            <div class="liq-drawer-row">
-                <span class="liq-drawer-row-label">Fecha liquidación</span>
-                <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_liquidacion'] ?? '—' }}</span>
-            </div>
-            @endif
-        </div>
+        @if($this->modo === 'liquidacion')
+            {{-- ═══ MODO LIQUIDACIÓN: solo datos financieros ═══ --}}
+            @if(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']))
 
-        {{-- Cantidad de galones (solo combustible) --}}
-        @if($this->detalleItem['tipo'] === 'combustible')
-        <div style="margin-bottom:16px;">
-            <div style="font-size:11px;color:#6b7280;font-weight:500;margin-bottom:2px;">Cantidad de galones</div>
-            <div style="font-size:18px;font-weight:700;color:#111827;">
-                {{ number_format($this->detalleItem['cantidad_galones'] ?? 0, 2) }} gal
-            </div>
-        </div>
-        @endif
-
-        {{-- Montos --}}
-        <div>
-            <div class="liq-drawer-section-title">Resumen financiero</div>
-            <div style="display:flex;gap:10px;margin-bottom:10px;">
-                <div class="liq-monto-box">
-                    <div class="liq-monto-box-label">
-                        {{ $this->detalleItem['tipo'] === 'combustible' ? 'Valor solicitado' : 'Costo real' }}
+                {{-- Datos de Liquidación --}}
+                <div>
+                    <div class="liq-drawer-section-title">Datos de Liquidación</div>
+                    @if($this->detalleItem['tipo'] === 'combustible')
+                    <div class="liq-drawer-row">
+                        <span class="liq-drawer-row-label">Contrato</span>
+                        <span class="liq-drawer-row-value">{{ $this->detalleItem['contrato_numero'] ?? '—' }}</span>
                     </div>
-                    <div class="liq-monto-box-value" style="color:#111827;">
-                        ${{ number_format($this->detalleItem['monto_solicitado'] ?? 0, 2) }}
+                    <div class="liq-drawer-row">
+                        <span class="liq-drawer-row-label">Serie</span>
+                        <span class="liq-drawer-row-value">{{ $this->detalleItem['serie_nombre'] ?? '—' }}</span>
                     </div>
+                    <div class="liq-drawer-row">
+                        <span class="liq-drawer-row-label">Correlativo</span>
+                        <span class="liq-drawer-row-value">{{ $this->detalleItem['correlativo_rango'] ?? '—' }}</span>
+                    </div>
+                    <div class="liq-drawer-row">
+                        <span class="liq-drawer-row-label">Cant. vales</span>
+                        <span class="liq-drawer-row-value">{{ $this->detalleItem['cantidad_vales'] ?? '—' }}</span>
+                    </div>
+                    @else
+                    <div class="liq-drawer-row">
+                        <span class="liq-drawer-row-label">Contrato</span>
+                        <span class="liq-drawer-row-value">{{ $this->detalleItem['contrato_numero'] ?? '—' }}</span>
+                    </div>
+                    @endif
                 </div>
-                @if($this->detalleItem['liquidado'])
-                <div class="liq-monto-box">
-                    <div class="liq-monto-box-label">Validado</div>
-                    <div class="liq-monto-box-value"
-                         style="color:{{ ($this->detalleItem['monto_validado'] ?? 0) < ($this->detalleItem['monto_solicitado'] ?? 0) ? '#ef4444' : '#10b981' }}">
-                        ${{ number_format($this->detalleItem['monto_validado'] ?? 0, 2) }}
+
+                {{-- Resumen Financiero --}}
+                <div>
+                    <div class="liq-drawer-section-title">Resumen Financiero</div>
+                    <div style="display:flex;gap:10px;margin-bottom:10px;">
+                        <div class="liq-monto-box">
+                            <div class="liq-monto-box-label">Monto solicitado</div>
+                            <div class="liq-monto-box-value" style="color:#111827;">
+                                ${{ number_format($this->detalleItem['monto_solicitado'] ?? 0, 2) }}
+                            </div>
+                        </div>
+                        @if($this->detalleItem['liquidado'])
+                        <div class="liq-monto-box">
+                            <div class="liq-monto-box-label">Validado</div>
+                            <div class="liq-monto-box-value"
+                                 style="color:{{ ($this->detalleItem['monto_validado'] ?? 0) < ($this->detalleItem['monto_solicitado'] ?? 0) ? '#ef4444' : '#10b981' }}">
+                                ${{ number_format($this->detalleItem['monto_validado'] ?? 0, 2) }}
+                            </div>
+                        </div>
+                        @endif
                     </div>
+
+                    @if($this->detalleItem['liquidado'])
+                        @php
+                            $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
+                        @endphp
+                        <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                            <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
+                                {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
+                            </span>
+                            <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
+                                {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
+                            </span>
+                        </div>
+
+                        <div style="display:flex;align-items:center;justify-content:space-between;">
+                            <span style="font-size:12px;color:#6b7280;">Resultado</span>
+                            @if($this->detalleItem['resultado'] === 'coincide')
+                                <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
+                            @elseif($this->detalleItem['resultado'] === 'discrepancia')
+                                <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
+                            @else
+                                <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
+                            @endif
+                        </div>
+
+                        @if($this->detalleItem['observaciones'])
+                        <div style="margin-top:12px;">
+                            <div style="font-size:11px;color:#6b7280;font-weight:500;margin-bottom:4px;">Observaciones</div>
+                            <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;">
+                                {{ $this->detalleItem['observaciones'] }}
+                            </div>
+                        </div>
+                        @endif
+                    @endif
+                </div>
+
+                {{-- Comprobantes --}}
+                <div>
+                    <div class="liq-drawer-section-title">Comprobantes</div>
+                    @if(empty($this->detalleItem['comprobantes']))
+                        <div style="text-align:center;padding:24px;background:#f9fafb;border-radius:10px;color:#9ca3af;font-size:13px;">
+                            Sin comprobantes adjuntos
+                        </div>
+                    @else
+                        <div class="liq-comp-grid">
+                            @foreach($this->detalleItem['comprobantes'] as $path)
+                                @php
+                                    $url   = asset('storage/' . $path);
+                                    $ext   = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                                    $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
+                                @endphp
+                                <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
+                                    @if($isImg)
+                                        <img src="{{ $url }}" alt="Comprobante">
+                                    @else
+                                        <span style="font-size:24px;">📄</span>
+                                        <span class="liq-comp-label">{{ strtoupper($ext) }}</span>
+                                    @endif
+                                </a>
+                            @endforeach
+                        </div>
+                    @endif
+                </div>
+
+            @else
+                {{-- Transporte en modo liquidación no aplica --}}
+                <div style="text-align:center;padding:48px 0;">
+                    <div style="font-size:48px;margin-bottom:12px;">🚗</div>
+                    <div style="font-size:15px;font-weight:600;color:#6b7280;">Solo consulta</div>
+                    <div style="font-size:13px;color:#9ca3af;margin-top:4px;">
+                        Las solicitudes de transporte no se liquidan financieramente.
+                    </div>
+                    @if($this->detalleItem['tiene_mision_oficial'] || $this->detalleItem['tiene_doc_oficial'])
+                        <div style="margin-top:16px;display:flex;gap:8px;justify-content:center;">
+                            @if($this->detalleItem['tiene_mision_oficial'])
+                                <a href="{{ $this->detalleItem['mision_oficial_route'] }}" target="_blank" class="liq-btn liq-btn-pdf">
+                                    📄 Misión Oficial
+                                </a>
+                            @endif
+                            @if($this->detalleItem['tiene_doc_oficial'])
+                                <a href="{{ $this->detalleItem['doc_oficial_route'] }}" target="_blank" class="liq-btn liq-btn-pdf">
+                                    📄 Documento Oficial
+                                </a>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endif
+
+        @else
+            {{-- ═══ MODO LISTADO: detalle completo ═══ --}}
+
+            {{-- Info general --}}
+            <div>
+                <div class="liq-drawer-section-title">Información general</div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Vehículo</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['vehiculo'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Solicitante</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['solicitante'] ?? '—' }}</span>
+                </div>
+                @if($this->detalleItem['tipo'] !== 'mantenimiento')
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Motorista</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['motorista'] ?? '—' }}</span>
+                </div>
+                @endif
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha'] ?? '—' }}</span>
+                </div>
+                @if(!empty($this->detalleItem['destino']) && $this->detalleItem['destino'] !== '—')
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Destino / Actividad</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['destino'] }}</span>
+                </div>
+                @endif
+                @if(!empty($this->detalleItem['estado']))
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Estado</span>
+                    <span class="liq-drawer-row-value" style="text-transform:uppercase;">{{ $this->detalleItem['estado'] }}</span>
                 </div>
                 @endif
             </div>
 
-            @if($this->detalleItem['liquidado'])
-                @php
-                    $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
-                @endphp
-                <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
-                    <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
-                        {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
-                    </span>
-                    <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
-                        {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
-                    </span>
+            {{-- Detalle por tipo --}}
+            @if($this->detalleItem['tipo'] === 'combustible')
+            <div>
+                <div class="liq-drawer-section-title">Detalle de Combustible</div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Contrato</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['contrato_numero'] ?? '—' }}</span>
                 </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Serie</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['serie_nombre'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Correlativo</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['correlativo_rango'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Galones</span>
+                    <span class="liq-drawer-row-value">{{ number_format($this->detalleItem['cantidad_galones'] ?? 0, 2) }} gal</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Cant. vales</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['cantidad_vales'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Precio galón</span>
+                    <span class="liq-drawer-row-value">${{ number_format($this->detalleItem['valor_unitario'] ?? 1, 2) }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Ticket</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['ticket'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">N° Vale/Ticket</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['numero_vale_ticket'] ?? '—' }}</span>
+                </div>
+                @if(!empty($this->detalleItem['fecha_asignacion']))
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha asignación</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_asignacion'] }}</span>
+                </div>
+                @endif
+            </div>
+            @endif
 
-                <div style="display:flex;align-items:center;justify-content:space-between;">
-                    <span style="font-size:12px;color:#6b7280;">Resultado</span>
-                    @if($this->detalleItem['resultado'] === 'coincide')
-                        <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
-                    @elseif($this->detalleItem['resultado'] === 'discrepancia')
-                        <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
-                    @else
-                        <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
+            @if($this->detalleItem['tipo'] === 'mantenimiento')
+            <div>
+                <div class="liq-drawer-section-title">Detalle de Mantenimiento</div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Tipo</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['tipo_mantenimiento'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Contrato</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['contrato_numero'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Detalle</span>
+                    <span class="liq-drawer-row-value" style="max-width:70%;text-align:right;">{{ $this->detalleItem['detalle'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha sugerida</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_sugerida'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha realizada</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_realizada'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Costo estimado</span>
+                    <span class="liq-drawer-row-value">${{ number_format($this->detalleItem['costo_estimado'] ?? 0, 2) }}</span>
+                </div>
+                @if($this->detalleItem['costo_real'])
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Costo real</span>
+                    <span class="liq-drawer-row-value">${{ number_format($this->detalleItem['costo_real'], 2) }}</span>
+                </div>
+                @endif
+            </div>
+            @endif
+
+            @if($this->detalleItem['tipo'] === 'transporte')
+            <div>
+                <div class="liq-drawer-section-title">Detalle de Transporte</div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Motivo / Actividad</span>
+                    <span class="liq-drawer-row-value" style="max-width:70%;text-align:right;">{{ $this->detalleItem['motivo_actividad'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Destino</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['destino'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha salida</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_salida'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Fecha retorno</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['fecha_retorno'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Personas</span>
+                    <span class="liq-drawer-row-value">{{ $this->detalleItem['cantidad_personas'] ?? '—' }}</span>
+                </div>
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Prioridad</span>
+                    <span class="liq-drawer-row-value">{{ ucfirst($this->detalleItem['prioridad_grupo'] ?? '—') }}</span>
+                </div>
+                @if($this->detalleItem['comentario_jefe'] && $this->detalleItem['comentario_jefe'] !== '—')
+                <div class="liq-drawer-row">
+                    <span class="liq-drawer-row-label">Comentario jefe</span>
+                    <span class="liq-drawer-row-value" style="max-width:60%;text-align:right;">{{ $this->detalleItem['comentario_jefe'] }}</span>
+                </div>
+                @endif
+            </div>
+            @endif
+
+            {{-- Resumen Financiero (modo listado) --}}
+            @if($this->detalleItem['tipo'] !== 'transporte')
+            <div>
+                <div class="liq-drawer-section-title">Resumen Financiero</div>
+                <div style="display:flex;gap:10px;margin-bottom:10px;">
+                    <div class="liq-monto-box">
+                        <div class="liq-monto-box-label">
+                            {{ $this->detalleItem['tipo'] === 'combustible' ? 'Valor solicitado' : 'Costo' }}
+                        </div>
+                        <div class="liq-monto-box-value" style="color:#111827;">
+                            ${{ number_format($this->detalleItem['monto_solicitado'] ?? 0, 2) }}
+                        </div>
+                    </div>
+                    @if($this->detalleItem['liquidado'])
+                    <div class="liq-monto-box">
+                        <div class="liq-monto-box-label">Validado</div>
+                        <div class="liq-monto-box-value"
+                             style="color:{{ ($this->detalleItem['monto_validado'] ?? 0) < ($this->detalleItem['monto_solicitado'] ?? 0) ? '#ef4444' : '#10b981' }}">
+                            ${{ number_format($this->detalleItem['monto_validado'] ?? 0, 2) }}
+                        </div>
+                    </div>
                     @endif
                 </div>
-            @endif
-        </div>
 
-        {{-- Observaciones (solo si está liquidado y tiene) --}}
-        @if($this->detalleItem['liquidado'] && $this->detalleItem['observaciones'])
-        <div>
-            <div class="liq-drawer-section-title">Observaciones</div>
-            <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;">
-                {{ $this->detalleItem['observaciones'] }}
+                @if($this->detalleItem['liquidado'])
+                    @php
+                        $diff = ($this->detalleItem['monto_validado'] ?? 0) - ($this->detalleItem['monto_solicitado'] ?? 0);
+                    @endphp
+                    <div style="padding:10px 14px;border-radius:10px;background:{{ $diff < 0 ? '#fef2f2' : '#f0fdf4' }};display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">
+                        <span style="font-size:12px;color:{{ $diff < 0 ? '#991b1b' : '#166534' }};font-weight:600;">
+                            {{ $diff < 0 ? 'Diferencia' : 'Remanente' }}
+                        </span>
+                        <span style="font-size:14px;font-weight:700;color:{{ $diff < 0 ? '#dc2626' : '#16a34a' }};">
+                            {{ $diff > 0 ? '+' : '' }}${{ number_format($diff, 2) }}
+                        </span>
+                    </div>
+
+                    <div style="display:flex;align-items:center;justify-content:space-between;">
+                        <span style="font-size:12px;color:#6b7280;">Resultado</span>
+                        @if($this->detalleItem['resultado'] === 'coincide')
+                            <span class="liq-badge liq-badge-comp-ok">✔ Coincide</span>
+                        @elseif($this->detalleItem['resultado'] === 'discrepancia')
+                            <span class="liq-badge liq-badge-comp-no">✖ Discrepancia</span>
+                        @else
+                            <span class="liq-badge liq-badge-pendiente">— Sin resultado</span>
+                        @endif
+                    </div>
+
+                    @if($this->detalleItem['observaciones'])
+                    <div style="margin-top:12px;">
+                        <div style="font-size:11px;color:#6b7280;font-weight:500;margin-bottom:4px;">Observaciones</div>
+                        <div style="background:#f9fafb;border-radius:10px;padding:12px 14px;font-size:13px;color:#374151;line-height:1.6;">
+                            {{ $this->detalleItem['observaciones'] }}
+                        </div>
+                    </div>
+                    @endif
+                @endif
             </div>
-        </div>
-        @endif
-
-        {{-- Comprobantes --}}
-        <div>
-            <div class="liq-drawer-section-title">Comprobantes</div>
-            @if(empty($this->detalleItem['comprobantes']))
-                <div style="text-align:center;padding:24px;background:#f9fafb;border-radius:10px;color:#9ca3af;font-size:13px;">
-                    Sin comprobantes adjuntos
-                </div>
-            @else
-                <div class="liq-comp-grid">
-                    @foreach($this->detalleItem['comprobantes'] as $path)
-                        @php
-                            $url   = asset('storage/' . $path);
-                            $ext   = strtolower(pathinfo($path, PATHINFO_EXTENSION));
-                            $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
-                        @endphp
-                        <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
-                            @if($isImg)
-                                <img src="{{ $url }}" alt="Comprobante">
-                            @else
-                                <span style="font-size:24px;">📄</span>
-                                <span class="liq-comp-label">{{ strtoupper($ext) }}</span>
-                            @endif
-                        </a>
-                    @endforeach
-                </div>
             @endif
-        </div>
+
+            {{-- Comprobantes --}}
+            <div>
+                <div class="liq-drawer-section-title">Comprobantes</div>
+                @if(empty($this->detalleItem['comprobantes']))
+                    <div style="text-align:center;padding:24px;background:#f9fafb;border-radius:10px;color:#9ca3af;font-size:13px;">
+                        Sin comprobantes adjuntos
+                    </div>
+                @else
+                    <div class="liq-comp-grid">
+                        @foreach($this->detalleItem['comprobantes'] as $path)
+                            @php
+                                $url   = asset('storage/' . $path);
+                                $ext   = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                                $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
+                            @endphp
+                            <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
+                                @if($isImg)
+                                    <img src="{{ $url }}" alt="Comprobante">
+                                @else
+                                    <span style="font-size:24px;">📄</span>
+                                    <span class="liq-comp-label">{{ strtoupper($ext) }}</span>
+                                @endif
+                            </a>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
+
+        @endif
+        {{-- fin modo --}}
 
     </div>
 
-    {{-- Footer: si está liquidado muestra PDF, si no muestra botón Liquidar --}}
+    {{-- Footer: acciones según modo y tipo --}}
     <div class="liq-drawer-footer">
-        @if($this->detalleItem['liquidado'])
-            <a href="{{ $this->detalleItem['pdf_route'] }}"
-               target="_blank"
-               style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;">
-                📄 Descargar PDF
-            </a>
-        @else
-            @if($this->detalleItem['tiene_comprobantes'])
+        @if($this->modo === 'liquidacion')
+            @if(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']) && $this->detalleItem['liquidado'])
+                <a href="{{ $this->detalleItem['pdf_route'] }}"
+                   target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;">
+                    📄 Descargar PDF Liquidación
+                </a>
+            @elseif(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']) && $this->detalleItem['tiene_comprobantes'])
                 <button
                     wire:click="cerrarDetalle"
                     x-data="{}"
@@ -1068,10 +1332,33 @@
                     style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;">
                     Liquidar esta solicitud
                 </button>
-            @else
+            @elseif(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']))
                 <div style="text-align:center;padding:11px;border-radius:12px;background:#f3f4f6;color:#9ca3af;font-size:13px;">
                     Sin comprobantes — no se puede liquidar
                 </div>
+            @endif
+        @else
+            {{-- Modo listado footer --}}
+            @if($this->detalleItem['liquidado'])
+                <a href="{{ $this->detalleItem['pdf_route'] }}"
+                   target="_blank"
+                   style="display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;text-decoration:none;">
+                    📄 Descargar PDF
+                </a>
+            @else
+                @if(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']) && $this->detalleItem['tiene_comprobantes'])
+                    <button
+                        wire:click="cerrarDetalle"
+                        x-data="{}"
+                        @click="$nextTick(() => $wire.abrirModalLiquidar({{ $this->detalleItem['id'] }}, '{{ $this->detalleItem['tipo'] }}'))"
+                        style="width:100%;display:flex;align-items:center;justify-content:center;gap:8px;padding:11px;border-radius:12px;background:#6366f1;color:#fff;font-size:13px;font-weight:600;border:none;cursor:pointer;">
+                        Liquidar esta solicitud
+                    </button>
+                @elseif(in_array($this->detalleItem['tipo'], ['combustible', 'mantenimiento']))
+                    <div style="text-align:center;padding:11px;border-radius:12px;background:#f3f4f6;color:#9ca3af;font-size:13px;">
+                        Sin comprobantes — no se puede liquidar
+                    </div>
+                @endif
             @endif
         @endif
     </div>

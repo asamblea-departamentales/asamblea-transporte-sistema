@@ -52,9 +52,9 @@ class GrupoResource extends Resource
                             ->label('Nivel de Prioridad')
                             ->options([
                                 'critica' => 'Crítica',
-                                'alta'    => 'Alta',
-                                'media'   => 'Media',
-                                'baja'    => 'Baja',
+                                'alta' => 'Alta',
+                                'media' => 'Media',
+                                'baja' => 'Baja',
                             ])
                             ->required(),
 
@@ -82,11 +82,11 @@ class GrupoResource extends Resource
                 Tables\Columns\TextColumn::make('nivel_prioridad')
                     ->label('Prioridad')
                     ->badge()
-                    ->color(fn ($state) => match($state) {
+                    ->color(fn ($state) => match ($state) {
                         'critica' => 'danger',
-                        'alta'    => 'warning',
-                        'media'   => 'info',
-                        'baja'    => 'gray',
+                        'alta' => 'warning',
+                        'media' => 'info',
+                        'baja' => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => ucfirst($state)),
 
@@ -126,10 +126,9 @@ class GrupoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListGrupos::route('/'),
+            'index' => Pages\ListGrupos::route('/'),
             'create' => Pages\CreateGrupo::route('/create'),
-            'edit'   => Pages\EditGrupo::route('/{record}/edit'),
+            'edit' => Pages\EditGrupo::route('/{record}/edit'),
         ];
     }
-
 }

@@ -6,14 +6,9 @@
 
 namespace App\Filament\Resources;
 
-use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
-use App\Domain\Solicitudes\Services\EstadoFlotaService;
-use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Filament\Resources\SolicitudTransporteResource\Pages;
-use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\Motorista;
 use App\Models\SolicitudTransporte;
 use App\Models\Vehiculo;
@@ -24,15 +19,19 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Support\Facades\Log;
 
 class SolicitudTransporteResource extends Resource
 {
     protected static ?string $model = SolicitudTransporte::class;
+
     protected static ?string $recordTitleAttribute = 'codigo';
+
     protected static ?string $slug = 'solicitud-transporte';
+
     protected static ?string $navigationGroup = 'Procesos';
+
     protected static ?string $navigationLabel = 'Solicitudes de Transporte';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
 
     public static function canViewAny(): bool
@@ -103,7 +102,7 @@ class SolicitudTransporteResource extends Resource
             ];
         }
 
-        if ($motoristaTitular && !$sugerido) {
+        if ($motoristaTitular && ! $sugerido) {
             return [
                 'id' => null,
                 'label' => "❌ {$motoristaTitular->nombre} no disponible y no hay sustitutos.",
@@ -113,8 +112,8 @@ class SolicitudTransporteResource extends Resource
 
         return [
             'id' => $sugerido?->id,
-            'label' => $sugerido 
-                ? "⚠️ Sin motorista titular. ¿Asignar a {$sugerido->nombre}?" 
+            'label' => $sugerido
+                ? "⚠️ Sin motorista titular. ¿Asignar a {$sugerido->nombre}?"
                 : '❌ Sin motoristas disponibles.',
             'advertencia' => true,
         ];
@@ -123,9 +122,10 @@ class SolicitudTransporteResource extends Resource
     private static function afterVehiculoSeleccionado(): \Closure
     {
         return function ($state, callable $set) {
-            if (!$state) {
+            if (! $state) {
                 $set('motorista_id', null);
                 $set('motorista_nombre', 'Selecciona un vehículo');
+
                 return;
             }
 
@@ -222,8 +222,8 @@ class SolicitudTransporteResource extends Resource
                                     $html .= '<div style="margin-bottom: 8px; font-weight: 600; color: #374151;">Originales:</div>';
                                     $html .= '<ul style="list-style-type: disc; margin-left: 20px; line-height: 1.5;">';
                                     foreach ($destinos as $destino) {
-                                        if (!empty($destino)) {
-                                            $html .= '<li style="margin-bottom: 4px; color: #374151;">' . e($destino) . '</li>';
+                                        if (! empty($destino)) {
+                                            $html .= '<li style="margin-bottom: 4px; color: #374151;">'.e($destino).'</li>';
                                         }
                                     }
                                     $html .= '</ul>';
@@ -237,8 +237,8 @@ class SolicitudTransporteResource extends Resource
                                     foreach ($duranteViaje as $d) {
                                         $nombreAgregador = $d->agregadoPor?->name ?? $d->agregadoPor?->username ?? 'Desconocido';
                                         $html .= '<li style="margin-bottom: 6px; padding: 6px 10px; background: #fff7ed; border-left: 3px solid #f97316; border-radius: 4px; color: #374151;">';
-                                        $html .= '🚩 <strong>' . e($d->nombre) . '</strong>';
-                                        $html .= '<br><small style="color: #9a3412;">— El departamento de Transporte agregó este punto (' . e($nombreAgregador) . ').</small>';
+                                        $html .= '🚩 <strong>'.e($d->nombre).'</strong>';
+                                        $html .= '<br><small style="color: #9a3412;">— El departamento de Transporte agregó este punto ('.e($nombreAgregador).').</small>';
                                         $html .= '</li>';
                                     }
                                     $html .= '</ul>';
@@ -247,6 +247,7 @@ class SolicitudTransporteResource extends Resource
                                 if (empty($html)) {
                                     return 'Sin destinos adicionales';
                                 }
+
                                 return new \Illuminate\Support\HtmlString($html);
                             }),
                     ])
@@ -525,8 +526,7 @@ class SolicitudTransporteResource extends Resource
                             'solicitud_id' => $record->id,
                         ]))
                         ->openUrlInNewTab()
-                        ->visible(fn (SolicitudTransporte $record) => 
-                            auth()->check() &&
+                        ->visible(fn (SolicitudTransporte $record) => auth()->check() &&
                             auth()->user()->hasAnyRole(['jefe', 'ti', 'super_admin', 'operativo']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::APROBADA,
@@ -534,9 +534,9 @@ class SolicitudTransporteResource extends Resource
                                 EstadoSolicitudEnum::ASIGNADA,
                                 EstadoSolicitudEnum::COMPLETADA,
                             ], true) &&
-                            !empty($record->vehiculo_id) && 
-                            !empty($record->motorista_id) &&
-                            !empty($record->decidido_por)
+                            ! empty($record->vehiculo_id) &&
+                            ! empty($record->motorista_id) &&
+                            ! empty($record->decidido_por)
                         ),
 
                     Tables\Actions\Action::make('documento_oficial')
@@ -548,8 +548,8 @@ class SolicitudTransporteResource extends Resource
                         ]))
                         ->openUrlInNewTab(),
                 ])
-                ->label('Más')
-                ->icon('heroicon-m-ellipsis-vertical'),
+                    ->label('Más')
+                    ->icon('heroicon-m-ellipsis-vertical'),
             ])
             ->bulkActions([]);
     }

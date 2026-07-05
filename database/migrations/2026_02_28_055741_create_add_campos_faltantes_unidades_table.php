@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
+    public function up(): void
     {
         Schema::table('unidad_solicitantes', function (Blueprint $table) {
             $table->string('codigo', 20)->nullable()->after('id');

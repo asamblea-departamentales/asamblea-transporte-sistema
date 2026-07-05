@@ -30,7 +30,9 @@ class LiquidacionCombustibleResource extends Resource
     protected static bool $shouldRegisterNavigation = false;
 
     protected static ?string $navigationGroup = 'Liquidación';
+
     protected static ?string $navigationLabel = 'Panel de Liquidación';
+
     protected static ?string $navigationIcon = 'heroicon-o-check-badge';
 
     public static function canViewAny(): bool
@@ -66,7 +68,7 @@ class LiquidacionCombustibleResource extends Resource
 
                 Tables\Columns\IconColumn::make('comprobantes')
                     ->label('Comp.')
-                    ->getStateUsing(fn ($record) => !empty($record->comprobantes))
+                    ->getStateUsing(fn ($record) => ! empty($record->comprobantes))
                     ->boolean(),
 
                 Tables\Columns\TextColumn::make('liquidacion.resultado')
@@ -99,9 +101,8 @@ class LiquidacionCombustibleResource extends Resource
                         app(SolicitudCombustibleService::class)
                             ->liquidar($record, auth()->id(), $data);
                     })
-                    ->visible(fn ($record) =>
-                        !$record->liquidacion &&
-                        !empty($record->comprobantes)
+                    ->visible(fn ($record) => ! $record->liquidacion &&
+                        ! empty($record->comprobantes)
                     ),
 
                 Tables\Actions\Action::make('pdf')
@@ -122,7 +123,7 @@ class LiquidacionCombustibleResource extends Resource
                         ->content(fn ($record) => $record->codigo),
 
                     Forms\Components\Placeholder::make('monto')
-                        ->content(fn ($record) => '$' . number_format($record->valor_total, 2)),
+                        ->content(fn ($record) => '$'.number_format($record->valor_total, 2)),
                 ]),
 
             Forms\Components\Section::make('Resultado')
@@ -140,7 +141,7 @@ class LiquidacionCombustibleResource extends Resource
     {
         return [
             'index' => Pages\ListLiquidacionCombustibles::route('/'),
-            'view'  => Pages\ViewLiquidacionCombustible::route('/{record}'),
+            'view' => Pages\ViewLiquidacionCombustible::route('/{record}'),
         ];
     }
 }

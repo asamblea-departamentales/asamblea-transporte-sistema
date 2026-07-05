@@ -4,8 +4,8 @@ namespace App\Filament\Resources\SolicitudTransporteResource\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Filament\Resources\SolicitudTransporteResource;
-use Filament\Resources\Pages\ListRecords;
 use Filament\Resources\Components\Tab;
+use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
 
 class ListSolicitudTransportes extends ListRecords

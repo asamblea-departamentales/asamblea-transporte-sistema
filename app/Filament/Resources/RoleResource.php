@@ -1,4 +1,5 @@
 <?php
+
 // -----------------------------------------------------------------------------
 // RECURSO PRINCIPAL PARA ROLES
 // -----------------------------------------------------------------------------
@@ -10,23 +11,25 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\RoleResource\Pages;
-use BezhanSalleh\FilamentShield\Support\Utils;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Model;
 use Spatie\Permission\Models\Role;
 
 class RoleResource extends Resource
 {
     protected static ?string $model = Role::class;
-    
+
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+
     protected static ?string $navigationGroup = 'Administracion';
+
     protected static ?int $navigationSort = 2;
+
     protected static ?string $navigationLabel = 'Roles';
+
     protected static ?string $slug = 'roles'; // 👈 Cambia la URL
 
     public static function form(Form $form): Form
@@ -117,7 +120,7 @@ class RoleResource extends Resource
             'edit' => Pages\EditRole::route('/{record}/edit'),
         ];
     }
-    
+
     public static function canViewAny(): bool
     {
         return auth()->user()->can('view_any_role');

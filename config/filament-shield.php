@@ -1,18 +1,18 @@
 <?php
 
 return [
-   'shield_resource' => [
-    'should_register_navigation' => false, // 👈 true
-    'slug' => 'shield/roles',
-    'navigation_sort' => 2,
-    'navigation_badge' => true,
-    'navigation_group' => 'Administracion',
-    'is_globally_searchable' => false,
-    'show_model_path' => true,
-    'cluster' => null,
-    
-    'resource' => \App\Filament\Resources\RoleResource::class, // 👈 Debe estar
-],
+    'shield_resource' => [
+        'should_register_navigation' => false, // 👈 true
+        'slug' => 'shield/roles',
+        'navigation_sort' => 2,
+        'navigation_badge' => true,
+        'navigation_group' => 'Administracion',
+        'is_globally_searchable' => false,
+        'show_model_path' => true,
+        'cluster' => null,
+
+        'resource' => \App\Filament\Resources\RoleResource::class, // 👈 Debe estar
+    ],
 
     'tenant_model' => null,
 

@@ -16,10 +16,10 @@ class ProveedoresSeeder extends Seeder
             ['id' => 2,  'municipio_id' => 213, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 2, 'nombre_comercial' => 'CENTRO DE SERVICIO DOÑO, S.A DE C.V.', 'nombre' => 'CENTRO DE SERVICIO DOÑO, S.A. DE C.V.', 'apellido' => 'SR. VICENTE DOÑO', 'direccion' => 'BLVD VENEZUELA', 'dui' => null, 'nit' => '0614-011012-002-5', 'nrc' => '0002-3', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 3,  'municipio_id' => 213, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 2, 'nombre_comercial' => 'TALLER DIDEA, S.A. DE C.V.', 'nombre' => 'TALLER DIDEA, S.A. DE C.V.', 'apellido' => 'LIC. ARNULFO FLORES', 'direccion' => 'CALLE SISIMILES, FRENTE A METROCENTRO', 'dui' => null, 'nit' => '1324-55559-393-9', 'nrc' => '9392-1', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 4,  'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 4, 'nombre_comercial' => 'MENENDEZ MORENO S.A DE C.V.', 'nombre' => 'MENEDEZ MORENO S.A DE C.V.', 'apellido' => 'DAYSI DELMY MORENO DE MENENDEZ', 'direccion' => 'FINAL COLONIA AMERICA, CARRETERA A SAN MARCOS KM 3 1/2', 'dui' => null, 'nit' => '0614-080909-102-1', 'nrc' => '019605-4', 'tipo_persona' => 2, 'activo' => true],
-            
+
             // ID 5: Se mantiene NIT original de tu volcado; si da error UNIQUE en prod, cámbialo por su NIT real de auditoría.
             ['id' => 5,  'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 4, 'nombre_comercial' => 'MULTISERVICIOS A&M S.A. DE C.V.', 'nombre' => 'MULTISERVICIOS A&M S.A. DE C.V.', 'apellido' => 'ERICK GILBERTO ARIAS MARTINEZ', 'direccion' => '29 CALLE PONIENTE NO 917, COLONIA LAYCO', 'dui' => null, 'nit' => '0614-080909-102-1', 'nrc' => '019605-4', 'tipo_persona' => 2, 'activo' => true],
-            
+
             ['id' => 6,  'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 1, 'nombre_comercial' => 'GOLDEN WILL INDUSTRIAL LIMITED, S.A. DE C.V.', 'nombre' => 'GOLDEN WILL INDUSTRIAL LIMITED, S.A. DE C.V.', 'apellido' => 'BO YANG', 'direccion' => '4ª CALLE PONIENTE Y 23 AVENIDA SUR', 'dui' => null, 'nit' => '0614-261103-103-4', 'nrc' => '52999-0', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 7,  'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 2, 'nombre_comercial' => 'GRUPO Q EL SALVADOR S.A. DE C.V.', 'nombre' => 'GRUPO Q EL SALVADOR S.A. DE C.V.', 'apellido' => 'BLANCA VILMA ESQUIVEL GARCIA', 'direccion' => 'BOULEVARD LOS PROCERES Y AVENIDA LAS AMAPOLAS, COLONIA SAN MATEO', 'dui' => null, 'nit' => '1217-130688-001-0', 'nrc' => '579-7', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 8,  'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 1, 'nombre_comercial' => 'TRANSPORTES EJECUTIVOS SHALOM', 'nombre' => 'TREJESH SA DE CV', 'apellido' => 'REINALDO GUZMAN RUIZ', 'direccion' => 'COLONIA FLOR BLANCA, EDIFICIO INSTEL LOCAL NO 8', 'dui' => null, 'nit' => '0614-140312-104-0', 'nrc' => '215734-2', 'tipo_persona' => 2, 'activo' => true],
@@ -33,11 +33,11 @@ class ProveedoresSeeder extends Seeder
             ['id' => 18, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 1, 'nombre_comercial' => 'SERVICIO AUTOMOTRIZ ESPAÑA S.A. DE C.V.', 'nombre' => 'MANTENIMIENTO DE VEHÍCULOS AUTOMOTORES', 'apellido' => 'LIC PEDRO OWALDO PEREZ MATÍNEZ', 'direccion' => 'AV. ESPAÑA Y 25 CALLE ORIENTE N°1406 BARRIO SAN MIGUELITO', 'dui' => null, 'nit' => '0614-612111-105-5', 'nrc' => '215213-6', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 19, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 4, 'nombre_comercial' => 'R.NUÑEZ S.A DE C.V', 'nombre' => 'RIVERA NUÑEZ S.A DE C.V', 'apellido' => 'JOSE ROBERTO RIOS ANDRADE', 'direccion' => 'BULEVAR VENEZUELA # 2965 SAN SALVADOR', 'dui' => null, 'nit' => '0903-050348-001-7', 'nrc' => '5202-7', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 20, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 2, 'nombre_comercial' => 'VERSATEC', 'nombre' => 'VERSATEC S.A, DE C.V', 'apellido' => 'JOSE RIVERA ESCOBAR', 'direccion' => 'COLONIA SAN BENITO, EDIFICIO CENTURY TOWER, EL SALVADOR', 'dui' => null, 'nit' => '0614-290807-105-1', 'nrc' => 'N° 181282-8', 'tipo_persona' => 2, 'activo' => true],
-            
+
             // CORRECCIÓN DE IDS HISTÓRICOS PARA INTEGRIDAD DE CONTRATOS (Mapeados desde el Excel Origen)
             ['id' => 22, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => 2, 'nombre_comercial' => 'DIPARVEL, S.A. DE C.V.', 'nombre' => 'DISTRIBUIDORA PAREDES VELA', 'apellido' => 'CLAUDIA MARIA PAREDES VELA', 'direccion' => '29 CALLE PONIENTE, SAN SALVADOR', 'dui' => null, 'nit' => '1217-160992-101-8', 'nrc' => '70622-1', 'tipo_persona' => 2, 'activo' => true],
             ['id' => 23, 'municipio_id' => 23,  'actividad_economica_id' => 1, 'tamano_proveedor_id' => 4, 'nombre_comercial' => 'IMPORTADORA RAMIREZ, S.A. DE C.V.', 'nombre' => 'IMPORTADORA RAMIREZ, S.A. DE C.V.', 'apellido' => 'MARIO ERNESTO RAMIREZ PERAZA', 'direccion' => 'KM 75 CART. PANAMERICANA, CANTON LOS AMATES', 'dui' => null, 'nit' => '0614-300992-106-8', 'nrc' => '713007', 'tipo_persona' => 2, 'activo' => true],
-            
+
             // PROVEEDORES HISTÓRICOS REQUERIDOS POR CONTRATOS ANTIGUOS (Evita romper Constraints FK)
             ['id' => 165, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => null, 'nombre_comercial' => 'PROVEEDOR HISTORICO LLANTAS ID 165', 'nombre' => 'PROVEEDOR HISTORICO LLANTAS 165', 'apellido' => null, 'direccion' => 'DESCONOCIDA (MIGRACION)', 'dui' => null, 'nit' => '0000-000000-000-1', 'nrc' => null, 'tipo_persona' => 2, 'activo' => false],
             ['id' => 168, 'municipio_id' => 215, 'actividad_economica_id' => 1, 'tamano_proveedor_id' => null, 'nombre_comercial' => 'PROVEEDOR HISTORICO LLANTAS ID 168', 'nombre' => 'PROVEEDOR HISTORICO LLANTAS 168', 'apellido' => null, 'direccion' => 'DESCONOCIDA (MIGRACION)', 'dui' => null, 'nit' => '0000-000000-000-2', 'nrc' => null, 'tipo_persona' => 2, 'activo' => false],
@@ -50,7 +50,7 @@ class ProveedoresSeeder extends Seeder
         foreach ($proveedores as $proveedor) {
             DB::table('proveedores')->insertOrIgnore(array_merge($proveedor, [
                 'created_at' => $now,
-                'updated_at' => $now
+                'updated_at' => $now,
             ]));
         }
 

@@ -14,10 +14,10 @@ class UsersSeeder extends Seeder
     {
         // 1. Desactivamos llaves foráneas para poder limpiar la tabla
         Schema::disableForeignKeyConstraints();
-        
+
         // 2. Limpiamos la tabla de usuarios antes de insertar
-        User::truncate(); 
-        
+        User::truncate();
+
         // 3. Reactivamos las restricciones inmediatamente
         Schema::enableForeignKeyConstraints();
 
@@ -54,7 +54,7 @@ class UsersSeeder extends Seeder
             'unidad_solicitante_id' => $unidadId,
         ]);
 
-        //Rol operativo
+        // Rol operativo
         $operativo = User::create([
             'name' => 'Operativo',
             'username' => 'operativo',

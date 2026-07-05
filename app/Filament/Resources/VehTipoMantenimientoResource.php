@@ -22,11 +22,17 @@ use Filament\Tables\Table;
 class VehTipoMantenimientoResource extends Resource
 {
     protected static ?string $model = VehTipoMantenimiento::class;
+
     protected static ?string $cluster = VehiculosCatalogos::class;
+
     protected static ?string $navigationLabel = 'Tipos de Mantenimiento';
+
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
     protected static ?string $modelLabel = 'Tipo de Mantenimiento';
+
     protected static ?string $pluralModelLabel = 'Tipos de Mantenimiento';
+
     protected static ?int $navigationSort = 12;
 
     public static function canViewAny(): bool
@@ -100,9 +106,9 @@ class VehTipoMantenimientoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListVehTipoMantenimientos::route('/'),
+            'index' => Pages\ListVehTipoMantenimientos::route('/'),
             'create' => Pages\CreateVehTipoMantenimiento::route('/create'),
-            'edit'   => Pages\EditVehTipoMantenimiento::route('/{record}/edit'),
+            'edit' => Pages\EditVehTipoMantenimiento::route('/{record}/edit'),
         ];
     }
 }

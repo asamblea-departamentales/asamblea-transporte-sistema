@@ -35,7 +35,7 @@ class EditMotorista extends EditRecord
             ->orWhere('name', $motorista->nombre)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
 
             $parts = array_values(array_filter(explode(' ', trim($motorista->nombre))));
             $firstName = $parts[0] ?? '';

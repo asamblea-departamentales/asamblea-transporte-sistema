@@ -2,10 +2,10 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\Motorista;
 use App\Models\TipoLicencia;
 use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class MotoristasSeeder extends Seeder
@@ -95,7 +95,7 @@ class MotoristasSeeder extends Seeder
 
             $user = User::where('name', $nombre)->first();
 
-            if (!$user) {
+            if (! $user) {
 
                 $username = $baseIdentity;
 
@@ -133,7 +133,7 @@ class MotoristasSeeder extends Seeder
             Motorista::updateOrCreate(
 
                 [
-                    'numero_empleado' => $numeroEmpleado
+                    'numero_empleado' => $numeroEmpleado,
                 ],
 
                 [

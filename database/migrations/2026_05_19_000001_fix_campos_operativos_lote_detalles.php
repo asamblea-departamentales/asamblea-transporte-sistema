@@ -8,21 +8,20 @@ return new class extends Migration
 {
     /**
      * MIGRACIÓN CORREGIDA Y MODERNIZADA
-     * 
+     *
      * Problemas solucionados:
      * 1. Schema::getManager() → Schema::getForeignKeys() / Schema::getIndexes()
      * 2. 'tipo_combustibles' → 'veh_tipo_combustible' (tabla correcta)
      * 3. Agregados validaciones con hasColumn/hasForeignKey para idempotencia
      */
-
     public function up(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
-            
+
             // ─────────────────────────────────────────────────────────────────
             // PASO 1: Limpiar constraints viejos de forma segura (Laravel 11+)
             // ─────────────────────────────────────────────────────────────────
-            
+
             // Obtener lista de FKs existentes (método nativo Laravel)
             $foreignKeys = collect(Schema::getForeignKeys('asignaciones_combustibles_lote_detalles'))
                 ->pluck('name')
@@ -45,16 +44,16 @@ return new class extends Migration
         });
 
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
-            
+
             // ─────────────────────────────────────────────────────────────────
             // PASO 2: Crear nuevo UNIQUE constraint (idempotente)
             // ─────────────────────────────────────────────────────────────────
-            
+
             $indexes = collect(Schema::getIndexes('asignaciones_combustibles_lote_detalles'))
                 ->pluck('name')
                 ->toArray();
 
-            if (!in_array('lote_detalle_solicitud_unique', $indexes)) {
+            if (! in_array('lote_detalle_solicitud_unique', $indexes)) {
                 $table->unique(
                     ['lote_id', 'solicitud_combustible_id'],
                     'lote_detalle_solicitud_unique'
@@ -64,12 +63,12 @@ return new class extends Migration
             // ─────────────────────────────────────────────────────────────────
             // PASO 3: Recrear FK lote_id (idempotente)
             // ─────────────────────────────────────────────────────────────────
-            
+
             $foreignKeys = collect(Schema::getForeignKeys('asignaciones_combustibles_lote_detalles'))
                 ->pluck('name')
                 ->toArray();
 
-            if (!in_array('asignaciones_combustibles_lote_detalles_lote_id_foreign', $foreignKeys)) {
+            if (! in_array('asignaciones_combustibles_lote_detalles_lote_id_foreign', $foreignKeys)) {
                 $table->foreign('lote_id')
                     ->references('id')
                     ->on('asignaciones_combustibles_lotes')
@@ -81,7 +80,7 @@ return new class extends Migration
             // ─────────────────────────────────────────────────────────────────
 
             // asignado_por
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'asignado_por')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'asignado_por')) {
                 $table->foreignId('asignado_por')
                     ->nullable()
                     ->after('solicitud_combustible_id')
@@ -90,28 +89,28 @@ return new class extends Migration
             }
 
             // fecha_asignacion
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'fecha_asignacion')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'fecha_asignacion')) {
                 $table->timestamp('fecha_asignacion')
                     ->nullable()
                     ->after('asignado_por');
             }
 
             // numero_serie
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'numero_serie')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'numero_serie')) {
                 $table->string('numero_serie', 100)
                     ->nullable()
                     ->after('fecha_asignacion');
             }
 
             // numero_contrato
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'numero_contrato')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'numero_contrato')) {
                 $table->string('numero_contrato', 100)
                     ->nullable()
                     ->after('numero_serie');
             }
 
             // tipo_combustible_id (CORREGIDO: veh_tipo_combustible, no tipo_combustibles)
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'tipo_combustible_id')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'tipo_combustible_id')) {
                 $table->foreignId('tipo_combustible_id')
                     ->nullable()
                     ->after('numero_contrato')
@@ -120,21 +119,21 @@ return new class extends Migration
             }
 
             // cantidad_galones
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'cantidad_galones')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'cantidad_galones')) {
                 $table->decimal('cantidad_galones', 10, 2)
                     ->nullable()
                     ->after('tipo_combustible_id');
             }
 
             // estado_asignacion
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'estado_asignacion')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'estado_asignacion')) {
                 $table->string('estado_asignacion', 20)
                     ->default('pendiente')
                     ->after('cantidad_galones');
             }
 
             // observaciones_operativas
-            if (!Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'observaciones_operativas')) {
+            if (! Schema::hasColumn('asignaciones_combustibles_lote_detalles', 'observaciones_operativas')) {
                 $table->text('observaciones_operativas')
                     ->nullable()
                     ->after('estado_asignacion');
@@ -145,7 +144,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('asignaciones_combustibles_lote_detalles', function (Blueprint $table) {
-            
+
             // Obtener FKs actuales de forma segura
             $foreignKeys = collect(Schema::getForeignKeys('asignaciones_combustibles_lote_detalles'))
                 ->pluck('name')
@@ -176,14 +175,14 @@ return new class extends Migration
             }
 
             // Recrear los viejos constraints
-            if (!in_array('lote_detalle_vehiculo_unique', $indexes)) {
+            if (! in_array('lote_detalle_vehiculo_unique', $indexes)) {
                 $table->unique(
                     ['lote_id', 'vehiculo_id'],
                     'lote_detalle_vehiculo_unique'
                 );
             }
 
-            if (!in_array('asignaciones_combustibles_lote_detalles_lote_id_foreign', $foreignKeys)) {
+            if (! in_array('asignaciones_combustibles_lote_detalles_lote_id_foreign', $foreignKeys)) {
                 $table->foreign('lote_id')
                     ->references('id')
                     ->on('asignaciones_combustibles_lotes')
@@ -206,7 +205,7 @@ return new class extends Migration
 
             $existingColumns = array_intersect($columnsToRemove, $columns);
 
-            if (!empty($existingColumns)) {
+            if (! empty($existingColumns)) {
                 $table->dropColumn($existingColumns);
             }
         });

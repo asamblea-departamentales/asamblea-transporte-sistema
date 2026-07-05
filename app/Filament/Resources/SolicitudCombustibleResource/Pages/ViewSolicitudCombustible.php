@@ -4,18 +4,16 @@ namespace App\Filament\Resources\SolicitudCombustibleResource\Pages;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
+use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Filament\Resources\SolicitudCombustibleResource;
 use App\Models\BitacoraEvento;
-use App\Models\ContratoCombustible;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use Filament\Actions;
 use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
-use App\Models\SerieCarga;
 use Illuminate\Support\Facades\Log;
 
 class ViewSolicitudCombustible extends ViewRecord

@@ -12,18 +12,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('historial_estados', function (Blueprint $table) {
-    $table->id();
+            $table->id();
 
-    $table->string('entidad_tipo'); // solicitud_transporte
-    $table->unsignedBigInteger('entidad_id');
+            $table->string('entidad_tipo'); // solicitud_transporte
+            $table->unsignedBigInteger('entidad_id');
 
-    $table->string('estado_anterior');
-    $table->string('estado_nuevo');
+            $table->string('estado_anterior');
+            $table->string('estado_nuevo');
 
-    $table->foreignId('user_id')->constrained('users');
-    $table->text('comentario')->nullable();
+            $table->foreignId('user_id')->constrained('users');
+            $table->text('comentario')->nullable();
 
-    $table->timestamps();
+            $table->timestamps();
         });
     }
 

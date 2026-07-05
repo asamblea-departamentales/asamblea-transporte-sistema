@@ -6,21 +6,16 @@ namespace App\Models;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Testing\Fluent\Concerns\Has;
 use Laravel\Sanctum\HasApiTokens;
 use Spatie\Permission\Traits\HasRoles;
-use App\Models\Motorista;
-use App\Models\SolicitudTransporte;
-use App\Models\SolicitudCombustible;
-use App\Models\SolicitudMantenimiento;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class User extends Authenticatable implements FilamentUser
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasRoles, HasApiTokens;
+    use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -62,7 +57,6 @@ class User extends Authenticatable implements FilamentUser
 
     /**
      * Control de acceso a Filament.
-     * 
      */
     public function canAccessPanel(Panel $panel): bool
     {
@@ -87,7 +81,7 @@ class User extends Authenticatable implements FilamentUser
         ]);
     }
 
-    //Relaciones
+    // Relaciones
     public function unidadSolicitante()
     {
         return $this->belongsTo(UnidadSolicitante::class, 'unidad_solicitante_id');
@@ -98,7 +92,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Departamental::class, 'departamental_id');
     }
 
-    //Relacion para motorista
+    // Relacion para motorista
     public function motorista()
     {
         return $this->hasOne(Motorista::class);
@@ -120,7 +114,7 @@ class User extends Authenticatable implements FilamentUser
         return $this->hasMany(SolicitudMantenimiento::class, 'solicitante_id');
     }
 
-    //Relacion con grupo de prioridades
+    // Relacion con grupo de prioridades
     public function grupo(): BelongsTo
     {
         return $this->belongsTo(Grupo::class);
@@ -129,7 +123,7 @@ class User extends Authenticatable implements FilamentUser
     // -------------------------------------------------------
     // Helpers para lo de prioridades
     // -------------------------------------------------------
-     public function getPriorityLabel(): string
+    public function getPriorityLabel(): string
     {
         return $this->grupo?->label() ?? 'Baja';
     }

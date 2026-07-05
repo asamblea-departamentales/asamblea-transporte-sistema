@@ -70,7 +70,7 @@ class ReporteLoteCombustibleController extends Controller
         $filename = "auditoria_lote_{$lote->id}_{$lote->fecha->format('Y-m-d')}.csv";
 
         $headers = [
-            'Content-Type'        => 'text/csv; charset=UTF-8',
+            'Content-Type' => 'text/csv; charset=UTF-8',
             'Content-Disposition' => "attachment; filename=\"{$filename}\"",
         ];
 

@@ -48,7 +48,7 @@ class AsignacionCombustibleLoteResource extends Resource
             'super_admin',
             'jefe',
         ]);
-    }   
+    }
 
     public static function canEdit(Model $record): bool
     {
@@ -104,7 +104,7 @@ class AsignacionCombustibleLoteResource extends Resource
                 Tables\Columns\TextColumn::make('total_monto')
                     ->label('Monto Total Asignado')
                     ->money('USD', true),
-               Tables\Columns\TextColumn::make('estado')
+                Tables\Columns\TextColumn::make('estado')
                     ->label('Estado')
                     ->badge()
                     ->color(fn (EstadoLoteEnum $state) => $state->color())
@@ -156,5 +156,5 @@ class AsignacionCombustibleLoteResource extends Resource
 
             'edit' => Pages\EditAsignacionCombustibleLote::route('/{record}/edit'),
         ];
-    }  
+    }
 }

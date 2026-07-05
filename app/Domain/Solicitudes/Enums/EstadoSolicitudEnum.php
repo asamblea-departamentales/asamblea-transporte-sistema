@@ -17,7 +17,7 @@ enum EstadoSolicitudEnum: string
 
     case COMPLETADA = 'completada';
     case CANCELADA = 'cancelada';
-    //Agregado
+    // Agregado
     case PRE_APROBADA = 'pre_aprobada';
 
     case ASIGNADA = 'asignada';

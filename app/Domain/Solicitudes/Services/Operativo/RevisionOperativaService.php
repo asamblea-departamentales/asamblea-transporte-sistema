@@ -21,15 +21,15 @@ class RevisionOperativaService
             ->sortBy('fecha_ingreso')
             ->values();
 
-        if (!empty($filters['tipo'])) {
+        if (! empty($filters['tipo'])) {
             $rows = $rows->where('tipo', $filters['tipo'])->values();
         }
 
-        if (!empty($filters['prioridad'])) {
+        if (! empty($filters['prioridad'])) {
             $rows = $rows->where('prioridad', $filters['prioridad'])->values();
         }
 
-        if (!empty($filters['prioridad_grupo'])) {
+        if (! empty($filters['prioridad_grupo'])) {
             $rows = $rows->where('prioridad_grupo', $filters['prioridad_grupo'])->values();
         }
 
@@ -176,11 +176,11 @@ class RevisionOperativaService
             ->with(['solicitante.grupo', 'solicitante.unidadSolicitante', 'unidad'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -209,11 +209,11 @@ class RevisionOperativaService
             ->with(['solicitante.grupo', 'solicitante.unidadSolicitante', 'vehiculo'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -245,11 +245,11 @@ class RevisionOperativaService
             ->with(['solicitante.unidadSolicitante', 'tipoMantenimiento'])
             ->where('estado', EstadoSolicitudEnum::EN_REVISION);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('updated_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
@@ -262,7 +262,7 @@ class RevisionOperativaService
                 'solicitante' => $r->solicitante?->name ?? '—',
                 'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->tipoMantenimiento?->nombre
-                    ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
+                    ? $r->tipoMantenimiento->nombre.' - '.$r->detalle
                     : $r->detalle,
                 'tipo_mantenimiento_nombre' => $r->tipoMantenimiento?->nombre ?? null,
                 'prioridad' => $this->enumValue($r->prioridad),

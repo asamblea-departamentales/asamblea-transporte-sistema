@@ -27,7 +27,7 @@ class EditUser extends EditRecord
             );
         }
 
-        if (!$this->record->username && $this->record->email) {
+        if (! $this->record->username && $this->record->email) {
             $this->record->username = str($this->record->email)->before('@')->value();
             $this->record->save();
         }

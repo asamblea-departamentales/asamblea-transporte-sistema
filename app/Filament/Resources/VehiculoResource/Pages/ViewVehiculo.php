@@ -3,10 +3,10 @@
 namespace App\Filament\Resources\VehiculoResource\Pages;
 
 use App\Filament\Resources\VehiculoResource;
-use Filament\Infolists\Components\Section;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\ImageEntry;
+use Filament\Infolists\Components\Section;
+use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
 use Filament\Resources\Pages\ViewRecord;
 
@@ -69,10 +69,10 @@ class ViewVehiculo extends ViewRecord
                         ->badge()
                         ->color(fn (?string $state): string => match ($state) {
                             'Disponible' => 'success',
-                            'Ocupado'    => 'warning',
-                            'En Taller'  => 'danger',
-                            'Baja'       => 'gray',
-                            default      => 'gray',
+                            'Ocupado' => 'warning',
+                            'En Taller' => 'danger',
+                            'Baja' => 'gray',
+                            default => 'gray',
                         }),
 
                     IconEntry::make('activo')
@@ -81,8 +81,8 @@ class ViewVehiculo extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
-                    'xl'      => 3,
+                    'sm' => 2,
+                    'xl' => 3,
                 ])
                 ->compact(),
 
@@ -114,21 +114,21 @@ class ViewVehiculo extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
-                    'xl'      => 3,
+                    'sm' => 2,
+                    'xl' => 3,
                 ])
                 ->collapsible()
                 ->compact(),
             Section::make('Equipamiento y Herramientas')
-    ->icon('heroicon-o-wrench-screwdriver')
-    ->schema([
-        TextEntry::make('accesorios')
-            ->label('Inventario actual')
-            ->badge()
-            ->color('success')
-            ->separator(',')
-            ->formatStateUsing(fn (string $state): string => match ($state) {
-                'llavero' => 'Llavero con llaves',
+                ->icon('heroicon-o-wrench-screwdriver')
+                ->schema([
+                    TextEntry::make('accesorios')
+                        ->label('Inventario actual')
+                        ->badge()
+                        ->color('success')
+                        ->separator(',')
+                        ->formatStateUsing(fn (string $state): string => match ($state) {
+                            'llavero' => 'Llavero con llaves',
                             'gato' => 'Gato Hidráulico',
                             'bateria' => 'Batería',
                             'espejos retrovisores' => 'Espejos Retrovisores',
@@ -158,12 +158,12 @@ class ViewVehiculo extends ViewRecord
                             'pilotos_tablero' => 'Pilotos del Tablero Funcionales',
                             'tarjeta_circulacion' => 'Tarjeta de Circulación',
                             'tarjeta_seguro' => 'Tarjeta de Seguro',
-                default => $state,
-            })
-            ->placeholder('No se registraron accesorios'),
-    ])
-    ->collapsible()
-    ->compact(),
+                            default => $state,
+                        })
+                        ->placeholder('No se registraron accesorios'),
+                ])
+                ->collapsible()
+                ->compact(),
 
             Section::make('Identificación')
                 ->schema([
@@ -185,7 +185,7 @@ class ViewVehiculo extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
+                    'sm' => 2,
                 ])
                 ->collapsible()
                 ->compact(),
@@ -211,7 +211,7 @@ class ViewVehiculo extends ViewRecord
                 ])
                 ->columns([
                     'default' => 1,
-                    'sm'      => 2,
+                    'sm' => 2,
                 ])
                 ->collapsible()
                 ->compact(),
@@ -229,5 +229,8 @@ class ViewVehiculo extends ViewRecord
         ]);
     }
 
-    protected function canCreate(): bool { return false; }
+    protected function canCreate(): bool
+    {
+        return false;
+    }
 }

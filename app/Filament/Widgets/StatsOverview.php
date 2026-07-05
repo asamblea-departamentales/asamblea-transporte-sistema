@@ -3,9 +3,9 @@
 namespace App\Filament\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Models\SolicitudTransporte;
-use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
 use App\Models\UnidadSolicitante;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;
@@ -14,6 +14,7 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class StatsOverview extends BaseWidget
 {
     protected static ?int $sort = 1;
+
     protected int|string|array $columnSpan = 'full';
 
     public static function canView(): bool

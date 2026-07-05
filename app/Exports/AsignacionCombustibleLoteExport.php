@@ -16,14 +16,7 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\NumberFormat;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class AsignacionCombustibleLoteExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    WithStyles,
-    WithTitle,
-    ShouldAutoSize,
-    WithColumnFormatting
+class AsignacionCombustibleLoteExport implements FromCollection, ShouldAutoSize, WithColumnFormatting, WithHeadings, WithMapping, WithStyles, WithTitle
 {
     public function __construct(
         private readonly AsignacionCombustibleLote $lote
@@ -103,17 +96,17 @@ class AsignacionCombustibleLoteExport implements
         // Fila de encabezado
         $sheet->getStyle('A1:M1')->applyFromArray([
             'font' => [
-                'bold'  => true,
+                'bold' => true,
                 'color' => ['rgb' => 'FFFFFF'],
-                'size'  => 10,
+                'size' => 10,
             ],
             'fill' => [
-                'fillType'   => Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => '0891B2'], // cyan-600
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
-                'vertical'   => Alignment::VERTICAL_CENTER,
+                'vertical' => Alignment::VERTICAL_CENTER,
             ],
         ]);
 
@@ -122,7 +115,7 @@ class AsignacionCombustibleLoteExport implements
             'borders' => [
                 'allBorders' => [
                     'borderStyle' => Border::BORDER_THIN,
-                    'color'       => ['rgb' => 'D1D5DB'],
+                    'color' => ['rgb' => 'D1D5DB'],
                 ],
             ],
         ]);
@@ -132,7 +125,7 @@ class AsignacionCombustibleLoteExport implements
             if ($row % 2 === 0) {
                 $sheet->getStyle("A{$row}:M{$row}")->applyFromArray([
                     'fill' => [
-                        'fillType'   => Fill::FILL_SOLID,
+                        'fillType' => Fill::FILL_SOLID,
                         'startColor' => ['rgb' => 'F5FDFF'],
                     ],
                 ]);
@@ -142,14 +135,14 @@ class AsignacionCombustibleLoteExport implements
         // Fila de totales al final
         $totalRow = $lastRow + 2;
         $sheet->setCellValue("A{$totalRow}", 'TOTALES');
-        $sheet->setCellValue("D{$totalRow}", 'Vehículos: ' . $this->lote->detalles()->count());
+        $sheet->setCellValue("D{$totalRow}", 'Vehículos: '.$this->lote->detalles()->count());
         $sheet->setCellValue("E{$totalRow}", (float) $this->lote->total_monto);
         $sheet->setCellValue("I{$totalRow}", (float) ($this->lote->total_galones ?? 0));
 
         $sheet->getStyle("A{$totalRow}:M{$totalRow}")->applyFromArray([
             'font' => ['bold' => true],
             'fill' => [
-                'fillType'   => Fill::FILL_SOLID,
+                'fillType' => Fill::FILL_SOLID,
                 'startColor' => ['rgb' => 'E0F2FE'],
             ],
         ]);
@@ -158,10 +151,10 @@ class AsignacionCombustibleLoteExport implements
         $sheet->insertNewRowBefore(1, 4);
 
         $sheet->setCellValue('A1', 'ASAMBLEA LEGISLATIVA DE EL SALVADOR — LOTE DE COMBUSTIBLE');
-        $sheet->setCellValue('A2', 'Fecha del lote: ' . $this->lote->fecha->format('d/m/Y'));
-        $sheet->setCellValue('A3', 'Estado: ' . $this->lote->estado->label());
-        $sheet->setCellValue('D2', 'Creado por: ' . ($this->lote->creador?->name ?? '—'));
-        $sheet->setCellValue('D3', 'Generado: ' . now()->format('d/m/Y H:i'));
+        $sheet->setCellValue('A2', 'Fecha del lote: '.$this->lote->fecha->format('d/m/Y'));
+        $sheet->setCellValue('A3', 'Estado: '.$this->lote->estado->label());
+        $sheet->setCellValue('D2', 'Creado por: '.($this->lote->creador?->name ?? '—'));
+        $sheet->setCellValue('D3', 'Generado: '.now()->format('d/m/Y H:i'));
 
         $sheet->getStyle('A1:M1')->applyFromArray([
             'font' => ['bold' => true, 'size' => 13, 'color' => ['rgb' => '0891B2']],
@@ -177,6 +170,6 @@ class AsignacionCombustibleLoteExport implements
 
     public function title(): string
     {
-        return 'Lote ' . $this->lote->fecha->format('d-m-Y');
+        return 'Lote '.$this->lote->fecha->format('d-m-Y');
     }
 }

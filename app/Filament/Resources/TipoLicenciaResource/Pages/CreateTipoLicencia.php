@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\TipoLicenciaResource\Pages;
 
 use App\Filament\Resources\TipoLicenciaResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateTipoLicencia extends CreateRecord

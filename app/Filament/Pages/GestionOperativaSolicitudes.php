@@ -5,10 +5,10 @@ namespace App\Filament\Pages;
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
 use App\Domain\Solicitudes\Services\Operativo\AprobacionesService;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
-use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
@@ -317,11 +317,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
         if (empty(trim($data['comentario'] ?? ''))) {
             Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+
             return;
         }
 
@@ -330,6 +332,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -368,6 +371,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -508,6 +512,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -538,8 +543,9 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public function asignarRecursosDesdeFilament(int $id, int $vehiculoId, int $motoristaId, ?string $justificacion = null): void
     {
-        if (!auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
+        if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -566,11 +572,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
         if (empty(trim($data['comentario'] ?? ''))) {
             Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+
             return;
         }
 
@@ -579,16 +587,19 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
                 ->danger()
                 ->send();
+
             return;
         }
 
         if (empty($data['vehiculo_id'])) {
             Notification::make()->title('Debe seleccionar un vehículo')->danger()->send();
+
             return;
         }
 
         if (empty($data['motorista_id'])) {
             Notification::make()->title('Debe seleccionar un motorista')->danger()->send();
+
             return;
         }
 
@@ -650,8 +661,9 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public function aprobarConDecision(int $id, string $decisionFinal, string $comentario, ?string $firma = null): void
     {
-        if (!auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -676,8 +688,9 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
     public function desbloquearTransporte(int $id): void
     {
-        if (!auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+        if (! auth()->user()->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -735,7 +748,9 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function getSugerencia(int $solicitudId): ?array
     {
         $sug = SugerenciaAsignacion::where('solicitud_id', $solicitudId)->first();
-        if (!$sug) return null;
+        if (! $sug) {
+            return null;
+        }
 
         return [
             'vehiculo_sugerido_id' => $sug->vehiculo_sugerido_id,
@@ -750,7 +765,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
         $lotes = AsignacionCombustibleLote::whereDate('fecha', today())
             ->with(['detalles' => function ($q) {
                 $q->whereNull('solicitud_combustible_id')
-                  ->with('vehiculo:id,placa');
+                    ->with('vehiculo:id,placa');
             }])
             ->where('estado', EstadoLoteEnum::BORRADOR)
             ->orderBy('created_at', 'desc')
@@ -767,34 +782,40 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             ->with('vehiculo:id,placa')
             ->findOrFail($solicitudId);
 
-        if (!$solicitud->vehiculo_id) return null;
+        if (! $solicitud->vehiculo_id) {
+            return null;
+        }
 
         $lote = AsignacionCombustibleLote::whereDate('fecha', today())
             ->where('estado', EstadoLoteEnum::BORRADOR)
             ->with('creador')
             ->first();
 
-        if (!$lote) return null;
+        if (! $lote) {
+            return null;
+        }
 
         $detalle = AsignacionCombustibleLoteDetalle::where('lote_id', $lote->id)
             ->where('vehiculo_id', $solicitud->vehiculo_id)
             ->whereNull('solicitud_combustible_id')
             ->first();
 
-        if (!$detalle) return null;
+        if (! $detalle) {
+            return null;
+        }
 
         $vehiculo = $solicitud->vehiculo;
 
         return [
-            'lote_id'            => $lote->id,
-            'detalle_id'         => $detalle->id,
-            'placa'              => $vehiculo?->placa ?? $detalle->placa_cache,
-            'ticket'             => $solicitud->ticket,
-            'codigo'             => $solicitud->codigo,
-            'monto_actual'       => (float) $detalle->monto_asignado,
-            'establecido_por'    => $this->formatNombreUsuario($lote->creador),
-            'tiene_reserva'      => $vehiculo?->tiene_reserva_activa ?? false,
-            'nivel_combustible'  => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
+            'lote_id' => $lote->id,
+            'detalle_id' => $detalle->id,
+            'placa' => $vehiculo?->placa ?? $detalle->placa_cache,
+            'ticket' => $solicitud->ticket,
+            'codigo' => $solicitud->codigo,
+            'monto_actual' => (float) $detalle->monto_asignado,
+            'establecido_por' => $this->formatNombreUsuario($lote->creador),
+            'tiene_reserva' => $vehiculo?->tiene_reserva_activa ?? false,
+            'nivel_combustible' => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
         ];
     }
 
@@ -802,6 +823,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
@@ -810,20 +832,22 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
             if ($detalle->solicitud_combustible_id) {
                 Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+
                 return;
             }
 
             if ($monto <= 0) {
                 Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+
                 return;
             }
 
             $detalle->update([
                 'solicitud_combustible_id' => $solicitudId,
-                'monto_asignado'           => $monto,
-                'asignado_por'             => auth()->id(),
-                'fecha_asignacion'         => now(),
-                'estado_asignacion'        => 'asignado',
+                'monto_asignado' => $monto,
+                'asignado_por' => auth()->id(),
+                'fecha_asignacion' => now(),
+                'estado_asignacion' => 'asignado',
             ]);
 
             $this->refreshKpis();
@@ -834,7 +858,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->success()
                 ->send();
         } catch (\Exception $e) {
-            Notification::make()->title('Error al asignar: ' . $e->getMessage())->danger()->send();
+            Notification::make()->title('Error al asignar: '.$e->getMessage())->danger()->send();
         }
     }
 
@@ -842,11 +866,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
         if (empty(trim($data['comentario'] ?? ''))) {
             Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+
             return;
         }
 
@@ -855,6 +881,7 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
                 ->danger()
                 ->send();
+
             return;
         }
 
@@ -868,22 +895,25 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             $monto = (float) ($data['monto'] ?? 0);
             if ($monto <= 0) {
                 Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+
                 return;
             }
             $detalleId = null;
         } else {
             $detalleId = $data['detalle_id'] ?? null;
-            if (!$detalleId) {
+            if (! $detalleId) {
                 Notification::make()
                     ->title('No hay un detalle de lote disponible para asignar')
                     ->danger()
                     ->send();
+
                 return;
             }
 
             $monto = (float) ($data['monto'] ?? 0);
             if ($monto <= 0) {
                 Notification::make()->title('El monto debe ser mayor a 0')->danger()->send();
+
                 return;
             }
         }
@@ -904,16 +934,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                     $loteReusado = true;
                 } else {
                     $lote = app(LoteCombustibleService::class)->crearLote([
-                        'fecha'         => $fechaLote,
+                        'fecha' => $fechaLote,
                         'observaciones' => $data['observaciones_lote'] ?? null,
                     ], auth()->id());
                     $loteReusado = false;
                 }
 
                 $detalle = app(LoteCombustibleService::class)->agregarVehiculo($lote->id, [
-                    'vehiculo_id'              => $solicitud->vehiculo_id,
-                    'monto_asignado'           => $monto,
-                    'numero_ticket'            => $solicitud->ticket,
+                    'vehiculo_id' => $solicitud->vehiculo_id,
+                    'monto_asignado' => $monto,
+                    'numero_ticket' => $solicitud->ticket,
                     'solicitud_combustible_id' => null,
                 ]);
 
@@ -945,16 +975,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
 
                 BitacoraEvento::create([
                     'entidad_tipo' => 'combustible',
-                    'entidad_id'   => $id,
-                    'accion'       => 'VALIDAR_PREAPROBAR',
-                    'user_id'      => auth()->id(),
+                    'entidad_id' => $id,
+                    'accion' => 'VALIDAR_PREAPROBAR',
+                    'user_id' => auth()->id(),
                     'datos_extras' => [
-                        'comentario'           => $data['comentario'],
-                        'validaciones'         => $this->armarValidaciones($data),
+                        'comentario' => $data['comentario'],
+                        'validaciones' => $this->armarValidaciones($data),
                         'cubierto_con_reserva' => true,
-                        'nivel_combustible'    => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
-                        'placa'                => $vehiculo?->placa,
-                        'mensaje'              => 'Solicitud cubierta con reserva del vehículo ' . ($vehiculo?->placa ?? 'N/A') . '. No requiere asignación de combustible.',
+                        'nivel_combustible' => $vehiculo?->ultimaRecepcionEntrega?->nivel_combustible,
+                        'placa' => $vehiculo?->placa,
+                        'mensaje' => 'Solicitud cubierta con reserva del vehículo '.($vehiculo?->placa ?? 'N/A').'. No requiere asignación de combustible.',
                     ],
                 ]);
             } else {
@@ -963,16 +993,17 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 if ($detalle->solicitud_combustible_id) {
                     \DB::rollBack();
                     Notification::make()->title('Este detalle ya tiene una solicitud asignada')->danger()->send();
+
                     return;
                 }
 
                 $detalle->update([
                     'solicitud_combustible_id' => $id,
-                    'monto_asignado'           => $monto,
-                    'cantidad_galones'         => $solicitud->cantidad_combustible,
-                    'asignado_por'             => auth()->id(),
-                    'fecha_asignacion'         => now(),
-                    'estado_asignacion'        => 'asignado',
+                    'monto_asignado' => $monto,
+                    'cantidad_galones' => $solicitud->cantidad_combustible,
+                    'asignado_por' => auth()->id(),
+                    'fecha_asignacion' => now(),
+                    'estado_asignacion' => 'asignado',
                 ]);
             }
 
@@ -1024,21 +1055,25 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
             }
         } catch (\Exception $e) {
             \DB::rollBack();
-            Notification::make()->title('Error: ' . $e->getMessage())->danger()->send();
+            Notification::make()->title('Error: '.$e->getMessage())->danger()->send();
         }
     }
 
     private function formatNombreUsuario(?User $user): string
     {
-        if (!$user) return '—';
+        if (! $user) {
+            return '—';
+        }
 
         $name = $user->name;
-        if ($name && !str_contains($name, '.') && ctype_upper(mb_substr($name, 0, 1))) {
+        if ($name && ! str_contains($name, '.') && ctype_upper(mb_substr($name, 0, 1))) {
             return $name;
         }
 
         $username = $user->username ?? $name;
-        if (!$username) return '—';
+        if (! $username) {
+            return '—';
+        }
 
         return collect(explode('.', $username))
             ->map(fn ($part) => ucfirst(strtolower(trim($part))))
@@ -1077,12 +1112,16 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     public function getContratoSugerido(int $solicitudId): ?array
     {
         $solicitud = SolicitudMantenimiento::find($solicitudId);
-        if (!$solicitud) return null;
+        if (! $solicitud) {
+            return null;
+        }
 
         $sugerido = app(\App\Domain\Solicitudes\Services\SolicitudMantenimientoService::class)
             ->generarSugerencia($solicitud);
 
-        if (!$sugerido) return null;
+        if (! $sugerido) {
+            return null;
+        }
 
         return [
             'id' => $sugerido->id,
@@ -1097,11 +1136,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
     {
         if (! auth()->user()->hasAnyRole(['operativo', 'super_admin', 'ti'])) {
             Notification::make()->title('Sin permiso')->danger()->send();
+
             return;
         }
 
         if (empty(trim($data['comentario'] ?? ''))) {
             Notification::make()->title('El comentario de validación es obligatorio')->danger()->send();
+
             return;
         }
 
@@ -1110,11 +1151,13 @@ class GestionOperativaSolicitudes extends Page implements Forms\Contracts\HasFor
                 ->title('Debe marcar al menos "Datos completos" y "Reglas mínimas"')
                 ->danger()
                 ->send();
+
             return;
         }
 
         if (empty($data['contrato_id'])) {
             Notification::make()->title('Debe seleccionar un contrato')->danger()->send();
+
             return;
         }
 

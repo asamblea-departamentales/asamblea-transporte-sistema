@@ -144,12 +144,12 @@ class ContratoMantenimientoResource extends Resource
 
                 Tables\Columns\TextColumn::make('monto_inicial')
                     ->label('Monto Inicial')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 2, '.', ','))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 2, '.', ','))
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('monto_disponible')
                     ->label('Disponible')
-                    ->formatStateUsing(fn ($state) => '$' . number_format($state, 2, '.', ','))
+                    ->formatStateUsing(fn ($state) => '$'.number_format($state, 2, '.', ','))
                     ->sortable()
                     ->weight('bold')
                     ->color(fn ($record) => match (true) {

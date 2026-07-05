@@ -11,10 +11,13 @@ use Filament\Pages\Page;
 
 class CalendarioFlota extends Page
 {
-    protected static ?string $navigationIcon  = 'heroicon-o-calendar-days';
+    protected static ?string $navigationIcon = 'heroicon-o-calendar-days';
+
     protected static ?string $navigationLabel = 'Calendario de Flota';
+
     protected static ?string $navigationGroup = 'Gestión Operativa';
-    protected static ?int    $navigationSort  = 3;
+
+    protected static ?int $navigationSort = 3;
 
     // Registrar en el menú lateral para acceso directo desde Gestión Operativa
     protected static bool $shouldRegisterNavigation = true;
@@ -51,38 +54,38 @@ class CalendarioFlota extends Page
             ->get()
             ->map(function (SolicitudTransporte $s) {
 
-                $placa       = $s->vehiculo?->placa ?? 'Vehículo';
-                $destino     = $s->destino ?? '—';
-                $origen      = $s->origen ?? '—';
+                $placa = $s->vehiculo?->placa ?? 'Vehículo';
+                $destino = $s->destino ?? '—';
+                $origen = $s->origen ?? '—';
                 $solicitante = $s->solicitante?->name ?? '—';
-                $unidad      = $s->unidad?->nombre ?? '—';
-                $personas    = $s->cantidad_personas ?? '—';
+                $unidad = $s->unidad?->nombre ?? '—';
+                $personas = $s->cantidad_personas ?? '—';
 
                 $color = match ($s->estado) {
                     EstadoSolicitudEnum::EN_EJECUCION => '#D85A30',
-                    EstadoSolicitudEnum::PROGRAMADA   => '#2563eb',
-                    EstadoSolicitudEnum::APROBADA     => '#BA7517',
-                    default                           => '#6b7280',
+                    EstadoSolicitudEnum::PROGRAMADA => '#2563eb',
+                    EstadoSolicitudEnum::APROBADA => '#BA7517',
+                    default => '#6b7280',
                 };
 
                 return [
-                    'id'              => $s->id,
-                    'title'           => "{$placa} → {$destino}",
-                    'start'           => $s->fecha_salida?->toIso8601String(),
-                    'end'             => $s->fecha_retorno?->toIso8601String(),
+                    'id' => $s->id,
+                    'title' => "{$placa} → {$destino}",
+                    'start' => $s->fecha_salida?->toIso8601String(),
+                    'end' => $s->fecha_retorno?->toIso8601String(),
                     'backgroundColor' => $color,
-                    'borderColor'     => $color,
-                    'textColor'       => '#ffffff',
-                    'extendedProps'   => [
-                        'codigo'      => $s->codigo,
-                        'placa'       => $placa,
-                        'origen'      => $origen,
-                        'destino'     => $destino,
+                    'borderColor' => $color,
+                    'textColor' => '#ffffff',
+                    'extendedProps' => [
+                        'codigo' => $s->codigo,
+                        'placa' => $placa,
+                        'origen' => $origen,
+                        'destino' => $destino,
                         'solicitante' => $solicitante,
-                        'unidad'      => $unidad,
-                        'personas'    => $personas,
-                        'estado'      => $s->estado?->value ?? '—',
-                        'url_view'    => \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $s->id]),
+                        'unidad' => $unidad,
+                        'personas' => $personas,
+                        'estado' => $s->estado?->value ?? '—',
+                        'url_view' => \App\Filament\Resources\SolicitudTransporteResource::getUrl('view', ['record' => $s->id]),
                     ],
                 ];
             })

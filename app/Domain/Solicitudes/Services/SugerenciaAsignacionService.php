@@ -14,7 +14,8 @@ class SugerenciaAsignacionService
 {
     public function __construct(
         protected EstadoFlotaService $estadoFlotaService
-     ) {}
+    ) {}
+
     public function generar(SolicitudTransporte $solicitud): SugerenciaAsignacion
     {
         // 1. Filtrar vehículos candidatos
@@ -38,7 +39,7 @@ class SugerenciaAsignacionService
         $motoristaOptimo = $motoristasCandidatos->sortByDesc(function ($m) {
             return $this->puntuarMotorista($m);
         })->first();
-        if (!$vehiculoOptimo || !$motoristaOptimo) {
+        if (! $vehiculoOptimo || ! $motoristaOptimo) {
             throw new \DomainException('No hay recursos disponibles para sugerir una asignación.');
         }
         $scoreConfianza = round(
@@ -50,6 +51,7 @@ class SugerenciaAsignacionService
             $motoristaOptimo, $vehiculoOptimo, $solicitud, $horasPeriodo
         );
         $combustible = $this->obtenerCombustible($vehiculoOptimo);
+
         return SugerenciaAsignacion::updateOrCreate(
             ['solicitud_id' => $solicitud->id],
             [
@@ -62,6 +64,7 @@ class SugerenciaAsignacionService
             ]
         );
     }
+
     protected function puntuarVehiculo(Vehiculo $v): float
     {
         $score = 0;
@@ -74,8 +77,10 @@ class SugerenciaAsignacionService
         $ultimoKm = RecepcionEntregaVehiculo::where('vehiculo_id', $v->id)
             ->orderByDesc('fecha_hora')->value('kilometraje');
         $score += $ultimoKm ? max(0, 25 - ($ultimoKm / 10000)) : 25;
+
         return min(100, $score);
     }
+
     protected function puntuarMotorista(Motorista $m): float
     {
         $horas = $m->horasEnPeriodo();
@@ -89,12 +94,17 @@ class SugerenciaAsignacionService
                 ->pluck('id'))
             ->count();
         $scoreIncidencias = max(0, 100 - ($incidencias * 20));
+
         return ($scoreHoras * 0.5) + (30) + ($scoreIncidencias * 0.2);
     }
+
     protected function sinConflictoHorario(Motorista $m, SolicitudTransporte $s): bool
     {
-        if (!$s->fecha_salida || !$s->fecha_retorno) return true;
-        return !SolicitudTransporte::where('motorista_id', $m->id)
+        if (! $s->fecha_salida || ! $s->fecha_retorno) {
+            return true;
+        }
+
+        return ! SolicitudTransporte::where('motorista_id', $m->id)
             ->whereIn('estado', [
                 EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::ASIGNADA,
                 EstadoSolicitudEnum::EN_EJECUCION, EstadoSolicitudEnum::APROBADA,
@@ -102,15 +112,17 @@ class SugerenciaAsignacionService
             ->where('id', '!=', $s->id)
             ->where(function ($q) use ($s) {
                 $q->where('fecha_salida', '<=', $s->fecha_retorno)
-                  ->where('fecha_retorno', '>=', $s->fecha_salida);
+                    ->where('fecha_retorno', '>=', $s->fecha_salida);
             })->exists();
     }
+
     protected function obtenerCombustible(Vehiculo $v): ?int
     {
         return RecepcionEntregaVehiculo::where('vehiculo_id', $v->id)
             ->orderByDesc('fecha_hora')
             ->value('nivel_combustible');
     }
+
     protected function generarBullets(Motorista $m, Vehiculo $v, SolicitudTransporte $s, float $horas): array
     {
         $bullets = [];
@@ -120,6 +132,7 @@ class SugerenciaAsignacionService
             $bullets[] = "Vehículo con combustible al {$combustible}%";
         }
         $bullets[] = "Capacidad para {$v->capacidad_personas} personas";
+
         return $bullets;
     }
 }

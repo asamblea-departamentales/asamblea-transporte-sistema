@@ -9,7 +9,7 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
+    public function up(): void
     {
         Schema::table('motoristas', function (Blueprint $table) {
             $table->foreignId('tipo_licencia_id')
@@ -22,6 +22,7 @@ return new class extends Migration
             $table->date('fecha_vencimiento_licencia')->nullable()->after('radio');
         });
     }
+
     public function down(): void
     {
         Schema::table('motoristas', function (Blueprint $table) {

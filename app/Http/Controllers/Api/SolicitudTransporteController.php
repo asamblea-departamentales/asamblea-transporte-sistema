@@ -16,17 +16,16 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\MapImageService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
-use App\Domain\Solicitudes\Services\SolicitudEmailPayloadService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Controllers\Controller;
 use App\Models\BitacoraEvento;
 use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
-use Carbon\Carbon;
 
 class SolicitudTransporteController extends Controller
 {
@@ -75,7 +74,7 @@ class SolicitudTransporteController extends Controller
             'encargado' => ['required', 'string'],
             'subencargado' => ['nullable', 'string'],
 
-            //NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
+            // NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
             'hora_retorno' => ['nullable'],
 
             // --- NUEVOS CAMPOS DE COORDENADAS ---
@@ -106,21 +105,21 @@ class SolicitudTransporteController extends Controller
         unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional'], $data['destinos_adicionales']);
 
         // Mergear hora_salida en fecha_salida y hora_retorno en fecha_retorno
-        if (!empty($data['hora_salida']) && !empty($data['fecha_salida'])) {
+        if (! empty($data['hora_salida']) && ! empty($data['fecha_salida'])) {
             $fecha = $data['fecha_salida'] instanceof Carbon ? $data['fecha_salida'] : Carbon::parse($data['fecha_salida']);
-            $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d') . ' ' . $data['hora_salida']);
+            $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_salida']);
         }
         unset($data['hora_salida']);
 
-        if (!empty($data['hora_retorno']) && !empty($data['fecha_retorno'])) {
+        if (! empty($data['hora_retorno']) && ! empty($data['fecha_retorno'])) {
             $fecha = $data['fecha_retorno'] instanceof Carbon ? $data['fecha_retorno'] : Carbon::parse($data['fecha_retorno']);
-            $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d') . ' ' . $data['hora_retorno']);
+            $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_retorno']);
         }
         unset($data['hora_retorno']);
 
         $user = Auth::user();
 
-        if (!empty($data['fecha_salida']) && !empty($data['fecha_retorno'])) {
+        if (! empty($data['fecha_salida']) && ! empty($data['fecha_retorno'])) {
             $data['horas_estimadas'] = round(
                 Carbon::parse($data['fecha_salida'])->diffInMinutes(Carbon::parse($data['fecha_retorno']), true) / 60,
                 2
@@ -141,16 +140,16 @@ class SolicitudTransporteController extends Controller
         $orden = 0;
 
         // Prioridad 1: Array de destinos con coordenadas (mapa frontend)
-        if (!empty($destinosAdicionales) && is_array($destinosAdicionales)) {
+        if (! empty($destinosAdicionales) && is_array($destinosAdicionales)) {
             foreach ($destinosAdicionales as $d) {
                 SolicitudDestinoAdicional::create([
                     'solicitud_transporte_id' => $solicitud->id,
-                    'nombre'                  => $d['nombre'] ?? 'Destino adicional',
-                    'lat'                     => $d['lat'] ?? null,
-                    'lng'                     => $d['lng'] ?? null,
-                    'agregado_por'            => null,
-                    'agregado_durante_viaje'  => false,
-                    'orden'                   => $orden++,
+                    'nombre' => $d['nombre'] ?? 'Destino adicional',
+                    'lat' => $d['lat'] ?? null,
+                    'lng' => $d['lng'] ?? null,
+                    'agregado_por' => null,
+                    'agregado_durante_viaje' => false,
+                    'orden' => $orden++,
                 ]);
             }
         } elseif ($destinoAdicional) {
@@ -160,10 +159,10 @@ class SolicitudTransporteController extends Controller
             foreach ($nombres as $nombre) {
                 SolicitudDestinoAdicional::create([
                     'solicitud_transporte_id' => $solicitud->id,
-                    'nombre'                  => $nombre,
-                    'agregado_por'            => null,
-                    'agregado_durante_viaje'  => false,
-                    'orden'                   => $orden++,
+                    'nombre' => $nombre,
+                    'agregado_por' => null,
+                    'agregado_durante_viaje' => false,
+                    'orden' => $orden++,
                 ]);
             }
         }
@@ -184,7 +183,7 @@ class SolicitudTransporteController extends Controller
     {
         $user = $request->user();
 
-        if (!$user->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+        if (! $user->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
             return response()->json(['message' => 'Solo el Jefe de Transporte puede agregar destinos durante el viaje.'], 403);
         }
 
@@ -206,25 +205,25 @@ class SolicitudTransporteController extends Controller
 
         $destino = SolicitudDestinoAdicional::create([
             'solicitud_transporte_id' => $solicitud->id,
-            'nombre'                  => $nombre,
-            'lat'                     => $lat,
-            'lng'                     => $lng,
-            'agregado_por'            => $user->id,
-            'agregado_durante_viaje'  => true,
-            'orden'                   => $ultimoOrden + 1,
+            'nombre' => $nombre,
+            'lat' => $lat,
+            'lng' => $lng,
+            'agregado_por' => $user->id,
+            'agregado_durante_viaje' => true,
+            'orden' => $ultimoOrden + 1,
         ]);
 
         BitacoraEvento::create([
             'entidad_tipo' => 'solicitud_transporte',
-            'entidad_id'   => $solicitud->id,
-            'accion'       => AccionBitacoraEnum::AGREGAR_DESTINO_VIAJE->value,
-            'user_id'      => $user->id,
+            'entidad_id' => $solicitud->id,
+            'accion' => AccionBitacoraEnum::AGREGAR_DESTINO_VIAJE->value,
+            'user_id' => $user->id,
             'datos_extras' => [
-                'nombre'           => $nombre,
-                'lat'              => $lat,
-                'lng'              => $lng,
+                'nombre' => $nombre,
+                'lat' => $lat,
+                'lng' => $lng,
                 'solicitud_codigo' => $solicitud->codigo,
-                'orden'            => $ultimoOrden + 1,
+                'orden' => $ultimoOrden + 1,
             ],
         ]);
 
@@ -245,7 +244,7 @@ class SolicitudTransporteController extends Controller
                     }
                 }
             } catch (\Exception $e) {
-                Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: " . $e->getMessage());
+                Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: ".$e->getMessage());
             }
         });
 
@@ -443,7 +442,7 @@ class SolicitudTransporteController extends Controller
         return response()->json([
             'solicitud' => [
                 'id' => $solicitud->codigo,
-                'solicitante' => ($solicitud->solicitante?->name ?? '') . ' (' . ($solicitud->unidad?->nombre ?? '') . ')',
+                'solicitante' => ($solicitud->solicitante?->name ?? '').' ('.($solicitud->unidad?->nombre ?? '').')',
                 'destino' => $solicitud->destino,
                 'prioridad' => $solicitud->prioridad?->value,
                 'prioridad_grupo' => $solicitud->prioridad_grupo?->value,
@@ -513,7 +512,7 @@ class SolicitudTransporteController extends Controller
             // MINIMAL CHANGE: Filtrar por jefe_id (o aprobado por él) para que el front no reciba un historial vacío
             ->where(function ($query) use ($user) {
                 $query->where('jefe_id', $user->id)
-                      ->orWhere('decidido_por', $user->id);
+                    ->orWhere('decidido_por', $user->id);
             })
             ->whereIn('estado', [
                 EstadoSolicitudEnum::APROBADA,
@@ -537,7 +536,6 @@ class SolicitudTransporteController extends Controller
      *
      * Nota sencillo: esto no crea ni modifica nada; sólo muestra información histórica.
      */
-
     public function recursosDisponibles(Request $request)
     {
         $this->authorizeJefe();
@@ -628,7 +626,6 @@ class SolicitudTransporteController extends Controller
      * Uso: el frontend lo invoca para mostrar opciones válidas al reasignar o
      *      al planear una solicitud sin causar solapamientos.
      */
-
     public function reasignar(Request $request, SolicitudTransporte $solicitud)
     {
         $this->authorizeJefe();
@@ -669,7 +666,6 @@ class SolicitudTransporteController extends Controller
      *   los recursos anteriores si procede. Este método sólo orquesta la petición
      *   y devuelve el resultado al cliente.
      */
-
     public function asignarRecursos(Request $request, SolicitudTransporte $solicitud)
     {
         $data = $request->validate([
@@ -743,7 +739,6 @@ class SolicitudTransporteController extends Controller
      *   los recursos seleccionados.
      * - Devuelve el estado final y los recursos consolidados al cliente.
      */
-
     public function desbloquear(SolicitudTransporte $solicitud)
     {
         try {
@@ -759,6 +754,7 @@ class SolicitudTransporteController extends Controller
     {
         try {
             $result = $this->service->programar($solicitud, Auth::id());
+
             return response()->json($result);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);

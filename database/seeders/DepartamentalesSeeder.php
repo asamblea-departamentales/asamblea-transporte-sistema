@@ -31,15 +31,16 @@ class DepartamentalesSeeder extends Seeder
             DB::table('departamentales')->updateOrInsert(
                 ['codigo' => $r['codigo']],
                 [
-                    'nombre' => $r['nombre'], 
-                    'updated_at' => now(), 
-                    'created_at' => now() // Simplificado para pruebas
+                    'nombre' => $r['nombre'],
+                    'updated_at' => now(),
+                    'created_at' => now(), // Simplificado para pruebas
                 ]
             );
-            
+
             // Esto imprimirá cada departamento en la consola mientras se inserta
             $this->command->info(string: "Procesado: {$r['nombre']}");
         }
 
-        $this->command->info('¡Departamentos cargados con éxito!');    }
+        $this->command->info('¡Departamentos cargados con éxito!');
+    }
 }

@@ -11,11 +11,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Services\LdapAuthenticator;
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use App\Domain\Solicitudes\Services\LdapAuthenticator;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 
@@ -134,6 +133,7 @@ class TokenAuthController extends Controller
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()?->delete();
+
         return response()->json(['message' => 'Logout exitoso']);
     }
 }

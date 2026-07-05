@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\HistorialEstadoResource\Pages;
 
 use App\Filament\Resources\HistorialEstadoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateHistorialEstado extends CreateRecord

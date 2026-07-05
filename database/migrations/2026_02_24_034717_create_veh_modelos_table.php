@@ -11,16 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
-     Schema::create('veh_modelos', function (Blueprint $table) {
-        $table->id();
-        $table->foreignId('veh_marca_id')->constrained('veh_marcas');
-        $table->string('nombre');
-        $table->boolean('activo')->default(true);
-        $table->timestamps();
+        Schema::create('veh_modelos', function (Blueprint $table) {
+            $table->id();
+            $table->foreignId('veh_marca_id')->constrained('veh_marcas');
+            $table->string('nombre');
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
 
-        $table->unique(['veh_marca_id', 'nombre']);
-        $table->index('veh_marca_id', 'activo');
-     });
+            $table->unique(['veh_marca_id', 'nombre']);
+            $table->index('veh_marca_id', 'activo');
+        });
     }
 
     /**

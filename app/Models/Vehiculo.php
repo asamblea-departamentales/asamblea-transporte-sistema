@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Models\RecepcionEntregaVehiculo;
-use App\Models\SolicitudTransporte;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -76,7 +74,7 @@ class Vehiculo extends Model
         return Storage::disk('public')->url($this->fotografia);
     }
 
-    //NUEVOS: Scopes y Accesors para estados operativos
+    // NUEVOS: Scopes y Accesors para estados operativos
     public function getEstadoOperativoAttribute(): string
     {
         $tieneViajeActivo = SolicitudTransporte::where('vehiculo_id', $this->id)
@@ -104,7 +102,7 @@ class Vehiculo extends Model
         return $this->estado_operativo === 'disponible';
     }
 
-    //Filtra vehiculos sin viajes activos (en ejecución, programada, aprobada o asignada)
+    // Filtra vehiculos sin viajes activos (en ejecución, programada, aprobada o asignada)
     public function scopeDisponibles(Builder $query): Builder
     {
         $idsOcupados = SolicitudTransporte::whereIn('estado', [
@@ -120,7 +118,7 @@ class Vehiculo extends Model
         return $query->whereNotIn('id', $idsOcupados);
     }
 
-    //Filtra vehiculos con al menos un viaje activo (en ejecución, programada, aprobada o asignada)
+    // Filtra vehiculos con al menos un viaje activo (en ejecución, programada, aprobada o asignada)
     public function scopeNoDisponibles(Builder $query): Builder
     {
         $idsOcupados = SolicitudTransporte::whereIn('estado', [
@@ -150,7 +148,7 @@ class Vehiculo extends Model
             ->latest('fecha_hora')
             ->first();
 
-        if (!$ultimaRecepcionConReserva) {
+        if (! $ultimaRecepcionConReserva) {
             return false;
         }
 
@@ -161,7 +159,7 @@ class Vehiculo extends Model
             ->where('fecha_hora', '>', $ultimaRecepcionConReserva->fecha_hora)
             ->exists();
 
-        return !$entregaPosterior;
+        return ! $entregaPosterior;
     }
 
     // Relaciones con otras tablas/modelos

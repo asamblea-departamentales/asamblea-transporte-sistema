@@ -23,16 +23,17 @@ class SolicitudEmailDispatchService
     /**
      * Envía un correo al solicitante de la solicitud.
      *
-     * @param  object      $record   Modelo de la solicitud
-     * @param  string      $tipo     'transporte', 'combustible' o 'mantenimiento'
-     * @param  string      $evento   Evento ocurrido (ej. 'solicitud_aprobada')
-     * @param  string|null $mensaje  Mensaje personalizado (opcional)
+     * @param  object  $record  Modelo de la solicitud
+     * @param  string  $tipo  'transporte', 'combustible' o 'mantenimiento'
+     * @param  string  $evento  Evento ocurrido (ej. 'solicitud_aprobada')
+     * @param  string|null  $mensaje  Mensaje personalizado (opcional)
      */
     public function toSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
         $email = $record->solicitante?->email;
         if (empty($email)) {
             Log::warning("Correo no enviado [{$tipo}/{$evento}]: solicitante #{$record->solicitante_id} sin email");
+
             return;
         }
 
@@ -44,10 +45,10 @@ class SolicitudEmailDispatchService
      * Encola un correo al solicitante en lugar de enviarlo en línea.
      * Requiere un worker de colas configurado (QUEUE_CONNECTION).
      *
-     * @param  object      $record   Modelo de la solicitud
-     * @param  string      $tipo     'transporte', 'combustible' o 'mantenimiento'
-     * @param  string      $evento   Evento ocurrido
-     * @param  string|null $mensaje  Mensaje personalizado (opcional)
+     * @param  object  $record  Modelo de la solicitud
+     * @param  string  $tipo  'transporte', 'combustible' o 'mantenimiento'
+     * @param  string  $evento  Evento ocurrido
+     * @param  string|null  $mensaje  Mensaje personalizado (opcional)
      */
     public function queueToSolicitante($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
@@ -63,10 +64,10 @@ class SolicitudEmailDispatchService
     /**
      * Envía un correo a todos los usuarios con el rol 'jefe'.
      *
-     * @param  object      $record   Modelo de la solicitud
-     * @param  string      $tipo     'transporte', 'combustible' o 'mantenimiento'
-     * @param  string      $evento   Evento ocurrido
-     * @param  string|null $mensaje  Mensaje personalizado (opcional)
+     * @param  object  $record  Modelo de la solicitud
+     * @param  string  $tipo  'transporte', 'combustible' o 'mantenimiento'
+     * @param  string  $evento  Evento ocurrido
+     * @param  string|null  $mensaje  Mensaje personalizado (opcional)
      */
     public function toJefatura($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
     {
@@ -109,11 +110,11 @@ class SolicitudEmailDispatchService
     /**
      * Envía un correo a una o varias direcciones electrónicas específicas.
      *
-     * @param  object             $record   Modelo de la solicitud
-     * @param  string             $tipo     'transporte', 'combustible' o 'mantenimiento'
-     * @param  string             $evento   Evento ocurrido
-     * @param  string|array       $email    Dirección o arreglo de direcciones de correo
-     * @param  string|null        $mensaje  Mensaje personalizado (opcional)
+     * @param  object  $record  Modelo de la solicitud
+     * @param  string  $tipo  'transporte', 'combustible' o 'mantenimiento'
+     * @param  string  $evento  Evento ocurrido
+     * @param  string|array  $email  Dirección o arreglo de direcciones de correo
+     * @param  string|null  $mensaje  Mensaje personalizado (opcional)
      */
     public function toEmail($record, string $tipo, string $evento, string|array $email, ?string $mensaje = null, array $attachments = []): void
     {
@@ -126,7 +127,7 @@ class SolicitudEmailDispatchService
         $payload = $this->payloadService->build($record, $tipo, $evento, $mensaje);
         $payload['mostrar_solicitante'] = $mostrarSolicitante;
 
-        if (!empty($attachments)) {
+        if (! empty($attachments)) {
             $payload['attachments'] = $attachments;
         }
 
@@ -137,9 +138,9 @@ class SolicitudEmailDispatchService
      * Envía un correo usando un payload ya construido (sin pasar por el PayloadService).
      * Útil para casos donde el payload ya fue armado externamente.
      *
-     * @param  string       $subject  Asunto del correo
-     * @param  array        $payload  Datos estructurados para la vista
-     * @param  string|array $email    Dirección o arreglo de direcciones
+     * @param  string  $subject  Asunto del correo
+     * @param  array  $payload  Datos estructurados para la vista
+     * @param  string|array  $email  Dirección o arreglo de direcciones
      */
     public function withPayload(string $subject, array $payload, string|array $email): void
     {
@@ -149,9 +150,9 @@ class SolicitudEmailDispatchService
     /**
      * Encola un correo con payload ya construido (versión async de withPayload).
      *
-     * @param  string       $subject  Asunto del correo
-     * @param  array        $payload  Datos estructurados para la vista
-     * @param  string|array $email    Dirección o arreglo de direcciones
+     * @param  string  $subject  Asunto del correo
+     * @param  array  $payload  Datos estructurados para la vista
+     * @param  string|array  $email  Dirección o arreglo de direcciones
      */
     public function queueWithPayload(string $subject, array $payload, string|array $email): void
     {
@@ -168,7 +169,7 @@ class SolicitudEmailDispatchService
                 new NotificacionEventMail($subject, $payload)
             );
         } catch (\Exception $e) {
-            Log::error("Error enviando correo [{$payload['tipo']}/{$payload['evento']}]: " . $e->getMessage());
+            Log::error("Error enviando correo [{$payload['tipo']}/{$payload['evento']}]: ".$e->getMessage());
         }
     }
 
@@ -182,7 +183,7 @@ class SolicitudEmailDispatchService
                 new NotificacionEventMail($subject, $payload)
             );
         } catch (\Exception $e) {
-            Log::error("Error encolando correo [{$payload['tipo']}/{$payload['evento']}]: " . $e->getMessage());
+            Log::error("Error encolando correo [{$payload['tipo']}/{$payload['evento']}]: ".$e->getMessage());
         }
     }
 }

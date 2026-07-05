@@ -4,11 +4,10 @@ namespace App\Filament\Resources\AsignacionCombustibleLoteResource\RelationManag
 
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService;
-use App\Filament\Resources\AsignacionCombustibleLoteResource;
 use App\Models\ContratoCombustible;
 use App\Models\SerieCarga;
-use App\Models\VehTipoCombustible;
 use App\Models\Vehiculo;
+use App\Models\VehTipoCombustible;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
@@ -76,12 +75,12 @@ class DetallesRelationManager extends RelationManager
                 ->required()
                 ->maxLength(50),
 
-            Forms\Components\TextInput::make('monto_asignado') 
-                ->label('Monto ($)') 
-                ->numeric() 
-                ->required() 
+            Forms\Components\TextInput::make('monto_asignado')
+                ->label('Monto ($)')
+                ->numeric()
+                ->required()
                 ->prefix('$')
-                 ->minValue(0),
+                ->minValue(0),
 
             Forms\Components\Select::make('solicitud_combustible_id')
                 ->label('Solicitud (opcional)')
@@ -102,20 +101,20 @@ class DetallesRelationManager extends RelationManager
         if ($record->estaCompleto() && $record->estado_asignacion !== 'asignado') {
             $record->update([
                 'estado_asignacion' => 'asignado',
-                'asignado_por'      => auth()->id(),
-                'fecha_asignacion'  => now(),
+                'asignado_por' => auth()->id(),
+                'fecha_asignacion' => now(),
             ]);
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
-            ->registrar(
-                accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::ACTUALIZACION,
-                modelo: 'AsignacionCombustibleLoteDetalle',
-                datos: [
-                    'detalle_id' => $record->id,
-                    'placa' => $record->placa_cache,
-                    'galones' => $record->cantidad_galones,
-                    'tipo_combustible_id' => $record->tipo_combustible_id,
-                ]
-    );
+                ->registrar(
+                    accion: \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::ACTUALIZACION,
+                    modelo: 'AsignacionCombustibleLoteDetalle',
+                    datos: [
+                        'detalle_id' => $record->id,
+                        'placa' => $record->placa_cache,
+                        'galones' => $record->cantidad_galones,
+                        'tipo_combustible_id' => $record->tipo_combustible_id,
+                    ]
+                );
 
             Notification::make()
                 ->title('Carga registrada')
@@ -131,12 +130,12 @@ class DetallesRelationManager extends RelationManager
 
     public function table(Table $table): Table
     {
-        $lote           = $this->getOwnerRecord();
-        $esBorrador     = $lote->estado === EstadoLoteEnum::BORRADOR;
-        $esEnProceso    = $lote->estado === EstadoLoteEnum::EN_PROCESO;
+        $lote = $this->getOwnerRecord();
+        $esBorrador = $lote->estado === EstadoLoteEnum::BORRADOR;
+        $esEnProceso = $lote->estado === EstadoLoteEnum::EN_PROCESO;
 
         // Jefe edita monto solo en BORRADOR
-        $jefeEdita      = $this->esJefe() && $esBorrador;
+        $jefeEdita = $this->esJefe() && $esBorrador;
 
         // Operativo edita campos de carga solo en EN_PROCESO
         $operativoEdita = $this->esOperativo() && $esEnProceso;
@@ -181,77 +180,77 @@ class DetallesRelationManager extends RelationManager
                         ->money('USD', true)
                         ->sortable()
                         ->summarize(
-                    Tables\Columns\Summarizers\Sum::make()
-                        ->money('USD', true)
-                ),
+                            Tables\Columns\Summarizers\Sum::make()
+                                ->money('USD', true)
+                        ),
                 ]),
 
                 // ── Campos operativos: inline editables por operativo en EN_PROCESO ──
 
                 ...($operativoEdita ? [
-                    SelectColumn::make('numero_serie')
-                        ->label('N° Serie')
-                        ->options(
-                            fn () => SerieCarga::where('activo', true)
-                                ->orderBy('nombre')
-                                ->pluck('nombre', 'nombre')
-                        )
-                        ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
+                            SelectColumn::make('numero_serie')
+                                ->label('N° Serie')
+                                ->options(
+                                    fn () => SerieCarga::where('activo', true)
+                                        ->orderBy('nombre')
+                                        ->pluck('nombre', 'nombre')
+                                )
+                                ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
-                    SelectColumn::make('numero_contrato')
-                        ->label('N° Contrato')
-                        ->options(
-                            fn () => ContratoCombustible::where('activo', true)
-                                ->orderBy('numero_contrato')
-                                ->pluck('numero_contrato', 'numero_contrato')
-                        )
-                        ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
+                            SelectColumn::make('numero_contrato')
+                                ->label('N° Contrato')
+                                ->options(
+                                    fn () => ContratoCombustible::where('activo', true)
+                                        ->orderBy('numero_contrato')
+                                        ->pluck('numero_contrato', 'numero_contrato')
+                                )
+                                ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
-                    SelectColumn::make('tipo_combustible_id')
-                        ->label('Tipo Combustible')
-                        ->options(
-                            fn () => VehTipoCombustible::where('activo', true)
-                                ->orderBy('nombre')
-                                ->pluck('nombre', 'id')
-                        )
-                        ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
+                            SelectColumn::make('tipo_combustible_id')
+                                ->label('Tipo Combustible')
+                                ->options(
+                                    fn () => VehTipoCombustible::where('activo', true)
+                                        ->orderBy('nombre')
+                                        ->pluck('nombre', 'id')
+                                )
+                                ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
-                    TextInputColumn::make('cantidad_galones')
-                        ->label('Cargas')
-                        ->type('number')
-                        ->rules(['numeric', 'min:0'])
-                        ->extraAttributes(['style' => 'min-width:90px'])
-                        ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
+                            TextInputColumn::make('cantidad_galones')
+                                ->label('Cargas')
+                                ->type('number')
+                                ->rules(['numeric', 'min:0'])
+                                ->extraAttributes(['style' => 'min-width:90px'])
+                                ->afterStateUpdated(fn ($record) => $this->marcarAsignadoSiCompleto($record)),
 
-                    TextInputColumn::make('observaciones_operativas')
-                        ->label('Observaciones')
-                        ->extraAttributes(['style' => 'min-width:200px']),
+                            TextInputColumn::make('observaciones_operativas')
+                                ->label('Observaciones')
+                                ->extraAttributes(['style' => 'min-width:200px']),
 
-                ] : [
+                        ] : [
                     TextColumn::make('numero_serie')
-                        ->label('N° Serie')
-                        ->placeholder('—'),
+                                ->label('N° Serie')
+                                ->placeholder('—'),
 
                     TextColumn::make('numero_contrato')
-                        ->label('N° Contrato')
-                        ->placeholder('—'),
+                                ->label('N° Contrato')
+                                ->placeholder('—'),
 
                     TextColumn::make('tipoCombustible.nombre')
-                        ->label('Tipo Combustible')
-                        ->placeholder('—'),
+                                ->label('Tipo Combustible')
+                                ->placeholder('—'),
 
                     TextColumn::make('cantidad_galones')
-                        ->label('Cargas')
-                        ->numeric(2)
-                        ->placeholder('—')
-                        ->summarize(
-                        Tables\Columns\Summarizers\Sum::make()
-                    ),
-                    
-                     TextColumn::make('observaciones_operativas')
-                        ->label('Observaciones')
-                        ->placeholder('—')
-                        ->limit(40),   
+                                ->label('Cargas')
+                                ->numeric(2)
+                                ->placeholder('—')
+                                ->summarize(
+                                    Tables\Columns\Summarizers\Sum::make()
+                                ),
+
+                    TextColumn::make('observaciones_operativas')
+                                ->label('Observaciones')
+                                ->placeholder('—')
+                                ->limit(40),
                 ]),
 
                 // ── Estado asignación ─────────────────────────────────────────
@@ -261,8 +260,8 @@ class DetallesRelationManager extends RelationManager
                     ->badge()
                     ->color(fn ($state) => match ($state) {
                         'pendiente' => 'warning',
-                        'asignado'  => 'success',
-                        default     => 'gray',
+                        'asignado' => 'success',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => ucfirst($state ?? 'pendiente')),
 
@@ -283,7 +282,7 @@ class DetallesRelationManager extends RelationManager
                     ->label('Agregado')
                     ->dateTime('d/m/Y H:i')
                     ->toggleable(isToggledHiddenByDefault: true),
-                    
+
             ])
 
             // ── Header actions ────────────────────────────────────────────────

@@ -3,15 +3,15 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\TicketService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Solicitudes\Services\TicketService;
-use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SolicitudTransporte extends Model
 {
@@ -47,7 +47,7 @@ class SolicitudTransporte extends Model
         'despachado_por',
         'confirmado_por',
         'confirmado_en',
-        //NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
+        // NUEVOS CAMPOS PARA HORAS MANEJADAS DE MOTORISTAS
         'decision_final',
         'horas_estimadas',
         'horas_reales',
@@ -89,25 +89,25 @@ class SolicitudTransporte extends Model
      * Generar código único por usuario automáticamente
      */
     protected static function booted()
-{
-    static::creating(function ($solicitud) {
-        $year = now()->year;
+    {
+        static::creating(function ($solicitud) {
+            $year = now()->year;
 
-        // 1. Buscamos la última solicitud del año a nivel GLOBAL (sin filtrar por usuario)
-        $ultima = static::where('codigo', 'like', "TR-{$year}-%")
-            ->latest('id')
-            ->first();
+            // 1. Buscamos la última solicitud del año a nivel GLOBAL (sin filtrar por usuario)
+            $ultima = static::where('codigo', 'like', "TR-{$year}-%")
+                ->latest('id')
+                ->first();
 
-        // 2. Si hay una, extraemos los últimos 6 dígitos y sumamos 1. Si no, empezamos en 1.
-        $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+            // 2. Si hay una, extraemos los últimos 6 dígitos y sumamos 1. Si no, empezamos en 1.
+            $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
-        // 3. Formateamos el código único (Ej: TR-2026-000001, TR-2026-000002...)
-        $solicitud->codigo = "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+            // 3. Formateamos el código único (Ej: TR-2026-000001, TR-2026-000002...)
+            $solicitud->codigo = "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
 
-        // 4. Generamos el ticket
-        app(TicketService::class)->generar($solicitud);
-    });
-}
+            // 4. Generamos el ticket
+            app(TicketService::class)->generar($solicitud);
+        });
+    }
 
     // Este método hará la magia al mostrar el dato
     // ponytail: null returns null so the template/map can check emptiness properly
@@ -178,7 +178,7 @@ class SolicitudTransporte extends Model
         return $this->morphMany(Incidencia::class, 'entidad', 'entidad_tipo', 'entidad_id');
     }
 
-    //Relacion con Grupo de prioridades
+    // Relacion con Grupo de prioridades
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'prioridad_grupo');

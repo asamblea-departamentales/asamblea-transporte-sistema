@@ -1,5 +1,7 @@
 <?php
+
 namespace App\Filament\Resources\ContratoCombustibleResource\Pages;
+
 use App\Filament\Resources\ContratoCombustibleResource;
 use Filament\Actions;
 use Filament\Infolists;
@@ -35,7 +37,7 @@ class ViewContratoCombustible extends ViewRecord
                     ->color(fn ($record) => $record->monto_disponible <= 0 ? 'danger' : 'success'),
                 Infolists\Components\TextEntry::make('monto_usado')
                     ->label('Utilizado')
-                    ->getStateUsing(fn ($record) => '$' . number_format($record->monto_inicial - $record->monto_disponible, 2))
+                    ->getStateUsing(fn ($record) => '$'.number_format($record->monto_inicial - $record->monto_disponible, 2))
                     ->color('warning'),
                 Infolists\Components\TextEntry::make('observaciones')
                     ->label('Observaciones')->columnSpanFull()->placeholder('—'),

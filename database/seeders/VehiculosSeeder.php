@@ -2,41 +2,41 @@
 
 namespace Database\Seeders;
 
+use App\Models\TipoVehiculo;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
-use App\Models\TipoVehiculo;
 
 class VehiculosSeeder extends Seeder
 {
     public function run(): void
     {
-        $sedan       = TipoVehiculo::where('nombre', 'Sedán')->value('id');
-        $microbus    = TipoVehiculo::where('nombre', 'Microbús')->value('id');
-        $camion      = TipoVehiculo::where('nombre', 'Camión Pesado')->value('id');
-        $pickup      = TipoVehiculo::where('nombre', 'Pickup')->value('id');
-        $moto        = TipoVehiculo::where('nombre', 'Motocicleta')->value('id');
+        $sedan = TipoVehiculo::where('nombre', 'Sedán')->value('id');
+        $microbus = TipoVehiculo::where('nombre', 'Microbús')->value('id');
+        $camion = TipoVehiculo::where('nombre', 'Camión Pesado')->value('id');
+        $pickup = TipoVehiculo::where('nombre', 'Pickup')->value('id');
+        $moto = TipoVehiculo::where('nombre', 'Motocicleta')->value('id');
 
-        $marcas  = DB::table('veh_marcas')->pluck('id', 'nombre');
+        $marcas = DB::table('veh_marcas')->pluck('id', 'nombre');
         $modelos = DB::table('veh_modelos')->pluck('id', 'nombre');
 
         $disponible = DB::table('veh_estados_catalogo')->where('nombre', 'Disponible')->value('id');
-        $gris       = DB::table('veh_colores')->where('nombre', 'GRIS')->value('id');
-        $blanco     = DB::table('veh_colores')->where('nombre', 'BLANCO')->value('id');
-        $plateado   = DB::table('veh_colores')->where('nombre', 'PLATEADO')->value('id');
-        $negro      = DB::table('veh_colores')->where('nombre', 'NEGRO')->value('id');
-        $azul       = DB::table('veh_colores')->where('nombre', 'AZUL')->value('id');
-        $rojo       = DB::table('veh_colores')->where('nombre', 'ROJO')->value('id');
-        $manual     = DB::table('veh_transmisiones')->where('nombre', 'Manual')->value('id');
-        $auto       = DB::table('veh_transmisiones')->where('nombre', 'Automática')->value('id');
-        $gasolina   = DB::table('veh_tipo_combustible')->where('nombre', 'GASOLINA')->value('id');
-        $diesel     = DB::table('veh_tipo_combustible')->where('nombre', 'DIESEL')->value('id');
-        $tracc4x2   = DB::table('veh_tracciones')->where('nombre', '4x2')->value('id');
-        $tracc4x4   = DB::table('veh_tracciones')->where('nombre', '4x4')->value('id');
+        $gris = DB::table('veh_colores')->where('nombre', 'GRIS')->value('id');
+        $blanco = DB::table('veh_colores')->where('nombre', 'BLANCO')->value('id');
+        $plateado = DB::table('veh_colores')->where('nombre', 'PLATEADO')->value('id');
+        $negro = DB::table('veh_colores')->where('nombre', 'NEGRO')->value('id');
+        $azul = DB::table('veh_colores')->where('nombre', 'AZUL')->value('id');
+        $rojo = DB::table('veh_colores')->where('nombre', 'ROJO')->value('id');
+        $manual = DB::table('veh_transmisiones')->where('nombre', 'Manual')->value('id');
+        $auto = DB::table('veh_transmisiones')->where('nombre', 'Automática')->value('id');
+        $gasolina = DB::table('veh_tipo_combustible')->where('nombre', 'GASOLINA')->value('id');
+        $diesel = DB::table('veh_tipo_combustible')->where('nombre', 'DIESEL')->value('id');
+        $tracc4x2 = DB::table('veh_tracciones')->where('nombre', '4x2')->value('id');
+        $tracc4x4 = DB::table('veh_tracciones')->where('nombre', '4x4')->value('id');
         $clasifAdmin = DB::table('veh_clasificaciones')->where('nombre', 'ADMINISTRATIVO')->value('id');
         $clasifTransp = DB::table('veh_clasificaciones')->where('nombre', 'TRANSPORTE DE PERSONAL')->value('id');
 
         $deptos = DB::table('departamentales')->pluck('id', 'codigo');
-        $nrm = fn($m, $mo) => ['veh_marca_id' => $marcas[$m] ?? null, 'veh_modelo_id' => $modelos[$mo] ?? null];
+        $nrm = fn ($m, $mo) => ['veh_marca_id' => $marcas[$m] ?? null, 'veh_modelo_id' => $modelos[$mo] ?? null];
 
         $vehiculos = [
             // Sedanes
@@ -45,8 +45,8 @@ class VehiculosSeeder extends Seeder
             ['placa' => 'P636163', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Hilux'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P618428', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P243639', 'tipo_vehiculo_id' => $sedan,    'anio' => 2013, 'capacidad_personas' => 5, ...$nrm('Toyota', 'Corolla GLI'),                    'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'P131011', 'tipo_vehiculo_id' => $microbus, 'anio' => 2011, 'capacidad_personas' => 20,...$nrm('Toyota', 'Coaster'),                        'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'P131644', 'tipo_vehiculo_id' => $microbus, 'anio' => 2010, 'capacidad_personas' => 15,...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131011', 'tipo_vehiculo_id' => $microbus, 'anio' => 2011, 'capacidad_personas' => 20, ...$nrm('Toyota', 'Coaster'),                        'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P131644', 'tipo_vehiculo_id' => $microbus, 'anio' => 2010, 'capacidad_personas' => 15, ...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'C72526',  'tipo_vehiculo_id' => $camion,   'anio' => 2012, 'capacidad_personas' => 3, ...$nrm('Isuzu', 'NMR'),                             'estado' => 'disponible', 'activo' => true],
             ['placa' => 'C72530',  'tipo_vehiculo_id' => $camion,   'anio' => 2012, 'capacidad_personas' => 3, ...$nrm('Isuzu', 'NMR'),                             'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P618425', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
@@ -69,7 +69,7 @@ class VehiculosSeeder extends Seeder
             ['placa' => 'N2272',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['US']],
             ['placa' => 'N9025',   'tipo_vehiculo_id' => $pickup,   'anio' => 2015, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['SO']],
             ['placa' => 'N6702',   'tipo_vehiculo_id' => $pickup,   'anio' => 2016, 'capacidad_personas' => 5, ...$nrm('Nissan', 'Frontier LCV'),                   'estado' => 'disponible', 'activo' => true, 'departamental_id' => $deptos['CA']],
-            ['placa' => 'N5690',   'tipo_vehiculo_id' => $microbus, 'anio' => 2012, 'capacidad_personas' => 15,...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N5690',   'tipo_vehiculo_id' => $microbus, 'anio' => 2012, 'capacidad_personas' => 15, ...$nrm('Toyota', 'Hiace'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P8929',   'tipo_vehiculo_id' => $pickup,   'anio' => 2014, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P585518', 'tipo_vehiculo_id' => $sedan,    'anio' => 2008, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer GLXI'),                  'estado' => 'disponible', 'activo' => true],
             ['placa' => 'P618427', 'tipo_vehiculo_id' => $sedan,    'anio' => 2009, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'Lancer EX'),                  'estado' => 'disponible', 'activo' => true],
@@ -115,8 +115,8 @@ class VehiculosSeeder extends Seeder
             ['placa' => 'M586003', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'FastWind 180'),              'estado' => 'disponible', 'activo' => true],
             ['placa' => 'M585800', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'MAX 200x'),                   'estado' => 'disponible', 'activo' => true],
             ['placa' => 'M585792', 'tipo_vehiculo_id' => $moto,     'anio' => 2019, 'capacidad_personas' => 2, ...$nrm('United Motors', 'MAX 200x'),                   'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'P-312D2', 'tipo_vehiculo_id' => $microbus, 'anio' => 2023, 'capacidad_personas' => 14,...$nrm('Nissan', 'Urvan'),                           'estado' => 'disponible', 'activo' => true],
-            ['placa' => 'N-19432', 'tipo_vehiculo_id' => $microbus, 'anio' => 2022, 'capacidad_personas' => 25,...$nrm('Hyundai', 'County'),                          'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'P-312D2', 'tipo_vehiculo_id' => $microbus, 'anio' => 2023, 'capacidad_personas' => 14, ...$nrm('Nissan', 'Urvan'),                           'estado' => 'disponible', 'activo' => true],
+            ['placa' => 'N-19432', 'tipo_vehiculo_id' => $microbus, 'anio' => 2022, 'capacidad_personas' => 25, ...$nrm('Hyundai', 'County'),                          'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N-872E2', 'tipo_vehiculo_id' => $pickup,   'anio' => 2025, 'capacidad_personas' => 5, ...$nrm('Mitsubishi', 'L200'),                        'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N-19313', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
             ['placa' => 'N-19314', 'tipo_vehiculo_id' => $pickup,   'anio' => 2023, 'capacidad_personas' => 5, ...$nrm('Volkswagen', 'Amarok'),                      'estado' => 'disponible', 'activo' => true],
@@ -131,24 +131,24 @@ class VehiculosSeeder extends Seeder
             'FastWind 180', 'MAX 200x', 'Urvan', 'County', 'Amarok',
         ];
         $modeloStr = DB::table('veh_modelos')->whereIn('nombre', $modeloNombres)->pluck('nombre', 'id');
-        $marcaStr  = DB::table('veh_marcas')->pluck('nombre', 'id');
+        $marcaStr = DB::table('veh_marcas')->pluck('nombre', 'id');
 
         foreach ($vehiculos as $v) {
             $mid = $v['veh_modelo_id'] ?? null;
             $bid = $v['veh_marca_id'] ?? null;
             DB::table('vehiculos')->insertOrIgnore(array_merge($v, [
-                'marca'                   => $marcaStr[$bid] ?? null,
-                'modelo'                  => $modeloStr[$mid] ?? null,
-                'veh_color_id'            => null,
-                'veh_tipo_motor_id'       => null,
-                'veh_transmision_id'      => null,
-                'veh_traccion_id'         => null,
-                'veh_tipo_llanta_id'      => null,
+                'marca' => $marcaStr[$bid] ?? null,
+                'modelo' => $modeloStr[$mid] ?? null,
+                'veh_color_id' => null,
+                'veh_tipo_motor_id' => null,
+                'veh_transmision_id' => null,
+                'veh_traccion_id' => null,
+                'veh_tipo_llanta_id' => null,
                 'veh_tipo_combustible_id' => null,
-                'veh_clasificacion_id'    => null,
-                'veh_estado_catalogo_id'  => $disponible,
-                'created_at'              => now(),
-                'updated_at'              => now(),
+                'veh_clasificacion_id' => null,
+                'veh_estado_catalogo_id' => $disponible,
+                'created_at' => now(),
+                'updated_at' => now(),
             ]));
         }
 

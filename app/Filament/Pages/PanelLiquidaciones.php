@@ -213,7 +213,14 @@ class PanelLiquidaciones extends Page
                 'vehiculo' => trim($record->vehiculo?->placa.' — '.$record->vehiculo?->vehMarca?->nombre.' '.$record->vehiculo?->vehModelo?->nombre),
                 'solicitante' => $record->solicitante?->name,
                 'motorista' => $record->motorista?->nombre ?? '—',
-                'destino' => $record->destino,
+                'destino' => $record->destino ?? '—',
+                'estado' => $record->estado?->value ?? $record->estado,
+                'fecha_salida' => $record->fecha_salida?->format('d/m/Y H:i'),
+                'fecha_retorno' => $record->fecha_retorno?->format('d/m/Y H:i'),
+                'motivo_actividad' => $record->motivo_actividad ?? '—',
+                'cantidad_personas' => $record->cantidad_personas ?? '—',
+                'prioridad_grupo' => $record->prioridad_grupo ?? '—',
+                'comentario_jefe' => $record->comentario_jefe ?? '—',
                 'monto_solicitado' => 0,
                 'monto_validado' => null,
                 'resultado' => null,
@@ -223,8 +230,8 @@ class PanelLiquidaciones extends Page
                 'tiene_comprobantes' => false,
                 'liquidado' => false,
                 'pdf_route' => null,
-                'tiene_mision_oficial' => !empty($record->vehiculo_id) && !empty($record->motorista_id) && !empty($record->decidido_por),
-                'tiene_doc_oficial' => !empty($record->vehiculo_id) && !empty($record->motorista_id),
+                'tiene_mision_oficial' => ! empty($record->vehiculo_id) && ! empty($record->motorista_id) && ! empty($record->decidido_por),
+                'tiene_doc_oficial' => ! empty($record->vehiculo_id) && ! empty($record->motorista_id),
                 'mision_oficial_route' => route('reportes.mision-oficial.pdf', ['solicitud_id' => $record->id]),
                 'doc_oficial_route' => route('reportes.solicitud-autorizacion.pdf', ['solicitud' => $record->id]),
             ];
@@ -236,18 +243,34 @@ class PanelLiquidaciones extends Page
                 'motorista',
                 'liquidacion',
                 'solicitudTransporte',
+                'contrato',
+                'serieCarga',
             ])->findOrFail($id);
 
             $this->detalleItem = [
                 'id' => $record->id,
                 'fecha' => $record->created_at?->format('d/m/Y'),
+                'fecha_asignacion' => $record->fecha_asignacion?->format('d/m/Y'),
                 'codigo' => $record->codigo,
                 'tipo' => 'combustible',
                 'vehiculo' => trim($record->vehiculo?->placa.' — '.$record->vehiculo?->vehMarca?->nombre.' '.$record->vehiculo?->vehModelo?->nombre),
                 'solicitante' => $record->solicitante?->name,
                 'motorista' => $record->motorista?->nombre ?? '—',
+                'destino' => $record->destino_actividad ?? '—',
+                'estado' => $record->estado?->value ?? $record->estado,
+                'contrato_numero' => $record->contrato?->numero_contrato ?? '—',
+                'serie_nombre' => $record->serieCarga?->nombre ?? '—',
+                'correlativo_rango' => $record->correlativo_inicio
+                    ? ($record->correlativo_inicio === $record->correlativo_fin
+                        ? (string) $record->correlativo_inicio
+                        : "{$record->correlativo_inicio} - {$record->correlativo_fin}")
+                    : '—',
+                'cantidad_vales' => $record->cantidad_vales ?? 0,
                 'monto_solicitado' => $record->valor_total,
                 'cantidad_galones' => $record->cantidad_combustible,
+                'valor_unitario' => $record->valor_unitario ?? 1,
+                'ticket' => $record->ticket ?? '—',
+                'numero_vale_ticket' => $record->numero_vale_ticket ?? '—',
                 'monto_validado' => $record->liquidacion?->monto_validado,
                 'resultado' => $record->liquidacion?->resultado,
                 'observaciones' => $record->liquidacion?->observaciones,
@@ -265,6 +288,7 @@ class PanelLiquidaciones extends Page
                 'solicitante',
                 'liquidacion',
                 'tipoMantenimiento',
+                'contratoMantenimiento',
             ])->findOrFail($id);
 
             $this->detalleItem = [
@@ -275,17 +299,24 @@ class PanelLiquidaciones extends Page
                 'vehiculo' => trim($record->vehiculo?->placa.' — '.$record->vehiculo?->vehMarca?->nombre.' '.$record->vehiculo?->vehModelo?->nombre),
                 'solicitante' => $record->solicitante?->name,
                 'motorista' => '—',
-                'tipo_mantenimiento' => $record->tipoMantenimiento?->nombre,
+                'estado' => $record->estado?->value ?? $record->estado,
+                'tipo_mantenimiento' => $record->tipoMantenimiento?->nombre ?? '—',
+                'contrato_numero' => $record->contratoMantenimiento?->numero_contrato ?? '—',
+                'fecha_sugerida' => $record->fecha_sugerida?->format('d/m/Y'),
+                'fecha_realizada' => $record->fecha_realizada?->format('d/m/Y'),
+                'costo_estimado' => $record->costo_estimado,
                 'monto_solicitado' => $record->costo_real ?? $record->costo_estimado,
+                'costo_real' => $record->costo_real,
+                'detalle' => $record->detalle ?? '—',
+                'observaciones' => $record->liquidacion?->observaciones,
                 'monto_validado' => $record->liquidacion?->monto_validado,
                 'resultado' => $record->liquidacion?->resultado,
-                'observaciones' => $record->liquidacion?->observaciones,
                 'fecha_liquidacion' => $record->liquidacion?->fecha_liquidacion?->format('d/m/Y H:i'),
                 'comprobantes' => $record->adjuntos ?? [],
                 'tiene_comprobantes' => ! empty($record->adjuntos),
                 'liquidado' => $record->liquidacion !== null,
                 'pdf_route' => route('liquidacion.mantenimiento.pdf', $record->id),
-                'tiene_orden_trabajo' => !empty($record->vehiculo_id),
+                'tiene_orden_trabajo' => ! empty($record->vehiculo_id),
                 'orden_trabajo_route' => route('reportes.orden-trabajo.pdf', ['solicitud_id' => $record->id]),
             ];
         }
@@ -360,8 +391,8 @@ class PanelLiquidaciones extends Page
     public static function canAccess(): bool
     {
         if (auth()->check()) {
-        return auth()->user()->hasAnyRole(['liquidador', 'jefe', 'operativo', 'admin', 'super_admin', 'super-admin', 'superadmin']);
-    }
+            return auth()->user()->hasAnyRole(['liquidador', 'jefe', 'operativo', 'admin', 'super_admin', 'super-admin', 'superadmin']);
+        }
 
         return false;
     }

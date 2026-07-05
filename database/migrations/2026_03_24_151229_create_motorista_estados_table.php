@@ -21,7 +21,7 @@ return new class extends Migration
             $table->timestamp('fecha_inicio')->useCurrent();
             $table->timestamp('fecha_fin')->nullable();
             $table->foreignId('user_id')->nullable()->constrained();
-            
+
             $table->timestamps();
         });
     }

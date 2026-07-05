@@ -6,6 +6,7 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\Reportes\ReporteControlMensualCombustibleService;
 use App\Models\ContratoCombustible;
 use App\Models\Motorista;
+use App\Models\SerieCarga;
 use App\Models\SolicitudCombustible;
 use App\Models\Vehiculo;
 use Filament\Actions\Action;
@@ -17,7 +18,6 @@ use Filament\Tables;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use App\Models\SerieCarga;
 
 class ReporteControlMensualCombustible extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
 {

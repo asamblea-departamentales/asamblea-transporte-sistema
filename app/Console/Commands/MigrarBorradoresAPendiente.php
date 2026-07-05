@@ -2,10 +2,10 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
+use App\Models\SolicitudTransporte;
+use Illuminate\Console\Command;
 
 class MigrarBorradoresAPendiente extends Command
 {
@@ -35,6 +35,7 @@ class MigrarBorradoresAPendiente extends Command
 
         if ($borradores->isEmpty()) {
             $this->info('No hay solicitudes en estado BORRADOR.');
+
             return Command::SUCCESS;
         }
 

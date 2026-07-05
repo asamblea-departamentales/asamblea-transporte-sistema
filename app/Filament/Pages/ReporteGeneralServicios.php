@@ -4,13 +4,13 @@ namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
-use App\Models\Vehiculo;
 use App\Domain\Solicitudes\Services\Reportes\ReporteGeneralServiciosService;
+use App\Models\Vehiculo;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
@@ -20,31 +20,45 @@ class ReporteGeneralServicios extends Page implements Forms\Contracts\HasForms
     use WithPagination;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Informe General de Servicios';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
+
     protected static ?int $navigationSort = 6;
 
     protected static string $view = 'filament.pages.reporte-general-servicios';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?string $tipo_servicio = null;
+
     public ?string $estado = null;
+
     public ?string $prioridad = null;
+
     public ?int $vehiculo_id = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_transporte = 0;
+
     public int $kpi_combustible = 0;
+
     public int $kpi_mantenimiento = 0;
+
     public int $kpi_aprobadas = 0;
+
     public int $kpi_rechazadas = 0;
+
     public float $kpi_monto_total = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -153,7 +167,7 @@ class ReporteGeneralServicios extends Page implements Forms\Contracts\HasForms
                                     ->label('Mes actual')
                                     ->action(function () {
                                         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->resetPage();
                                         $this->refreshKpis();
@@ -232,7 +246,7 @@ class ReporteGeneralServicios extends Page implements Forms\Contracts\HasForms
     public function rangeLabel(): string
     {
         $from = $this->date_from ? \Carbon\Carbon::parse($this->date_from)->format('d/m/Y') : 'Inicio';
-        $to   = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
+        $to = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
 
         return "Periodo: {$from} al {$to}";
     }

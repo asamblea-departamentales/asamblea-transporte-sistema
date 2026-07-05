@@ -9,7 +9,6 @@
 // Los comentarios están pensados para que cualquier ingeniero, incluso sin
 // experiencia en Laravel o Filament, pueda entender cómo se administra este proceso.
 
-
 namespace App\Filament\Resources;
 
 // Imports para emails
@@ -17,7 +16,6 @@ namespace App\Filament\Resources;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Filament\Resources\SolicitudMantenimientoResource\Pages;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -30,7 +28,6 @@ use Illuminate\Database\Eloquent\Builder;
 // Un recurso es una pantalla o módulo donde se pueden ver y gestionar solicitudes de mantenimiento.
 class SolicitudMantenimientoResource extends Resource
 {
-
     // Indica el modelo principal que representa una solicitud de mantenimiento en la base de datos.
     protected static ?string $model = SolicitudMantenimiento::class;
 
@@ -39,23 +36,26 @@ class SolicitudMantenimientoResource extends Resource
 
     // Agrupa este recurso en el menú bajo "Procesos".
     protected static ?string $navigationGroup = 'Procesos';
+
     // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Mantenimiento';
+
     // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
     // Nombre singular y plural para mostrar en la interfaz.
     protected static ?string $modelLabel = 'Solicitud de Mantenimiento';
+
     protected static ?string $pluralModelLabel = 'Solicitudes de Mantenimiento';
+
     // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 2;
-
 
     // Controla quién puede ver la lista de solicitudes de mantenimiento.
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'solicitante', 'operativo', 'liquidador', 'super_admin']);
     }
-
 
     // En este recurso, no se permite crear, editar ni eliminar solicitudes desde la interfaz.
     public static function canCreate(): bool
@@ -82,10 +82,9 @@ class SolicitudMantenimientoResource extends Resource
         return ['codigo', 'ticket', 'vehiculo.placa', 'solicitante.name', 'tipoMantenimiento.nombre'];
     }
 
-
-    // ------------------------------------------------------------------------- 
+    // -------------------------------------------------------------------------
     // FORMULARIO PRINCIPAL
-    // ------------------------------------------------------------------------- 
+    // -------------------------------------------------------------------------
     // Aquí se define cómo se ve y se comporta el formulario para ver una solicitud
     // de mantenimiento. Cada campo tiene validaciones y explicaciones.
 

@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/AsignacionCombustibleLote.php
 
 namespace App\Models;
@@ -20,7 +21,7 @@ class AsignacionCombustibleLote extends Model
     ];
 
     protected $casts = [
-        'fecha'  => 'date',
+        'fecha' => 'date',
         'estado' => EstadoLoteEnum::class,
     ];
 

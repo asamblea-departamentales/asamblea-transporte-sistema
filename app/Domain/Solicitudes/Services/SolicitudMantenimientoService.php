@@ -4,13 +4,12 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\BitacoraEvento;
 use App\Models\ContratoMantenimiento;
 use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use App\Models\BitacoraEvento;
 
 /**
  * Servicio encargado de gestionar la lógica y transiciones de estado de Solicitudes de Mantenimiento.
@@ -387,7 +386,7 @@ class SolicitudMantenimientoService
         int $contratoId,
         ?string $justificacion = null
     ): array {
-        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
             throw new \DomainException('Solo se pueden asignar recursos a solicitudes en revisión o pre-aprobadas.');
         }
 
@@ -444,7 +443,7 @@ class SolicitudMantenimientoService
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (!in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
+        if (! in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
             throw new \InvalidArgumentException('decision_final debe ser "operativo", "sistema" o "manual".');
         }
 
@@ -452,21 +451,25 @@ class SolicitudMantenimientoService
             $anterior = $solicitud->estado;
 
             if ($decisionFinal === 'manual') {
-                if (!$contratoId) {
+                if (! $contratoId) {
                     throw new \DomainException('Para decisión manual debe proporcionar un contrato.');
                 }
                 $c = ContratoMantenimiento::find($contratoId);
-                if (!$c || !$c->activo) {
+                if (! $c || ! $c->activo) {
                     throw new \DomainException('El contrato seleccionado no está activo.');
                 }
                 $solicitud->contrato_mantenimiento_id = $contratoId;
             } elseif ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
-                if (!$decision) throw new \DomainException('No hay decisión operativa registrada.');
+                if (! $decision) {
+                    throw new \DomainException('No hay decisión operativa registrada.');
+                }
                 $solicitud->contrato_mantenimiento_id = $decision->contrato_mantenimiento_final_id;
             } else {
                 $sugerido = $this->generarSugerencia($solicitud);
-                if (!$sugerido) throw new \DomainException('No hay contratos disponibles para sugerir.');
+                if (! $sugerido) {
+                    throw new \DomainException('No hay contratos disponibles para sugerir.');
+                }
                 $solicitud->contrato_mantenimiento_id = $sugerido->id;
             }
 
@@ -486,7 +489,9 @@ class SolicitudMantenimientoService
             $contrato = $solicitud->contratoMantenimiento;
             $cNombre = $contrato?->nombre ?? 'N/A';
             $comentarioEnriquecido = "Aprobado vía {$label}. Contrato: {$cNombre}";
-            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+            if ($comentario) {
+                $comentarioEnriquecido .= ". Observación: {$comentario}";
+            }
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [

@@ -2,17 +2,17 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Domain\Solicitudes\Services\AsignacionVehiculoMotoristaService;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
 class AsignacionVehiculoMotoristaSeeder extends Seeder
 {
     public function run(): void
     {
-        $service = new AsignacionVehiculoMotoristaService();
+        $service = new AsignacionVehiculoMotoristaService;
 
-        $vehiculos  = DB::table('vehiculos')->pluck('id')->toArray();
+        $vehiculos = DB::table('vehiculos')->pluck('id')->toArray();
         $motoristas = DB::table('motoristas')->pluck('id')->toArray();
 
         // Asignar un motorista a cada vehículo (máximo 9 pares)

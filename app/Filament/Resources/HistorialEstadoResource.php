@@ -11,15 +11,12 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\HistorialEstadoResource\Pages;
-use App\Filament\Resources\HistorialEstadoResource\RelationManagers;
 use App\Models\HistorialEstado;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class HistorialEstadoResource extends Resource
 {
@@ -27,33 +24,34 @@ class HistorialEstadoResource extends Resource
 
     protected static ?string $navigationGroup = 'Auditoría';
 
-    protected static ?string $navigationLabel = 'Historial de Estados'; 
+    protected static ?string $navigationLabel = 'Historial de Estados';
 
     protected static ?string $navigationIcon = 'heroicon-o-clock';
 
     protected static ?int $navigationSort = 4;
 
-
-    //Restricciones de acceso al Historial de Estados
+    // Restricciones de acceso al Historial de Estados
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['jefe', 'admin', 'super_admin', 'super-admin', 'superadmin']);
     }
-    //restricción para crear nuevos registros en el historial
+
+    // restricción para crear nuevos registros en el historial
     public static function canCreate(): bool
     {
         return false;
     }
+
     public static function form(Form $form): Form
     {
         return $form->schema([
-        Forms\Components\TextInput::make('entidad_tipo')->disabled(),
-        Forms\Components\TextInput::make('entidad_id')->disabled(),
-        Forms\Components\TextInput::make('estado_anterior')->disabled(),
-        Forms\Components\TextInput::make('estado_nuevo')->disabled(),
-        Forms\Components\Textarea::make('comentario')->disabled(),
-        Forms\Components\DateTimePicker::make('created_at')->disabled(),
-    ]);
+            Forms\Components\TextInput::make('entidad_tipo')->disabled(),
+            Forms\Components\TextInput::make('entidad_id')->disabled(),
+            Forms\Components\TextInput::make('estado_anterior')->disabled(),
+            Forms\Components\TextInput::make('estado_nuevo')->disabled(),
+            Forms\Components\Textarea::make('comentario')->disabled(),
+            Forms\Components\DateTimePicker::make('created_at')->disabled(),
+        ]);
     }
 
     public static function table(Table $table): Table
@@ -108,7 +106,7 @@ class HistorialEstadoResource extends Resource
     {
         return [
             'index' => Pages\ListHistorialEstados::route('/'),
-            'view'  => Pages\ViewHistorialEstado::route('/{record}'),
+            'view' => Pages\ViewHistorialEstado::route('/{record}'),
         ];
     }
 }

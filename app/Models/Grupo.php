@@ -59,7 +59,7 @@ class Grupo extends Model
         return $this->nivelEnum()->color();
     }
 
-    /// cache para evitar consultas repetitivas
+    // / cache para evitar consultas repetitivas
     #[Override]
     public static function booted()
     {
@@ -78,4 +78,4 @@ class Grupo extends Model
             return self::where('activo', true)->orderBy('orden')->get();
         });
     }
-}    
+}

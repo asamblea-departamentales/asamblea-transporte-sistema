@@ -1,6 +1,7 @@
 <?php
-/// Este servicio se encarga de gestionar el estado operativo de los vehículos y motoristas en función del estado de las solicitudes de transporte. 
-//Se encarga de reservar y liberar vehículos y motoristas basado en los estados de las solicitudes, asegurando que los recursos se asignen correctamente y se liberen cuando ya no estén en uso.
+
+// / Este servicio se encarga de gestionar el estado operativo de los vehículos y motoristas en función del estado de las solicitudes de transporte.
+// Se encarga de reservar y liberar vehículos y motoristas basado en los estados de las solicitudes, asegurando que los recursos se asignen correctamente y se liberen cuando ya no estén en uso.
 
 namespace App\Domain\Solicitudes\Services;
 
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\DB;
 
 class EstadoFlotaService
 {
-    //Reserva un vehículo y ocupa un motorista para una solicitud de transporte específica. Estado del vehículo se cambia a "Reservado" y el estado del motorista se cambia a inactivo.
+    // Reserva un vehículo y ocupa un motorista para una solicitud de transporte específica. Estado del vehículo se cambia a "Reservado" y el estado del motorista se cambia a inactivo.
     public function reservarVehiculo(Vehiculo $vehiculo, string $codigoViaje): void
     {
         $reservado = VehEstadoCatalogo::where('nombre', 'Reservado')->value('id');
@@ -23,7 +24,7 @@ class EstadoFlotaService
         }
     }
 
-    //Libera un vehículo, cambiando su estado a "Disponible" solo si no tiene otro viaje activo. Cambia el estado del motorista a disponible solo si no tiene otro viaje activo.
+    // Libera un vehículo, cambiando su estado a "Disponible" solo si no tiene otro viaje activo. Cambia el estado del motorista a disponible solo si no tiene otro viaje activo.
     public function liberarVehiculo(Vehiculo $vehiculo): void
     {
         $tieneOtroViajeActivo = SolicitudTransporte::where('vehiculo_id', $vehiculo->id)
@@ -43,7 +44,7 @@ class EstadoFlotaService
         }
     }
 
-    //Ocupar un motorista, cambiando su estado a inactivo solo si no tiene otro viaje activo. Cambia el estado del motorista a inactivo.
+    // Ocupar un motorista, cambiando su estado a inactivo solo si no tiene otro viaje activo. Cambia el estado del motorista a inactivo.
     public function ocuparMotorista(Motorista $motorista, string $codigoViaje): void
     {
         app(MotoristaService::class)->cambiarEstado(
@@ -53,7 +54,7 @@ class EstadoFlotaService
         );
     }
 
-    //Liberar un motorista, cambiando su estado a disponible solo si no tiene otro viaje activo. Cambia el estado del motorista a disponible solo si no tiene otro viaje activo.
+    // Liberar un motorista, cambiando su estado a disponible solo si no tiene otro viaje activo. Cambia el estado del motorista a disponible solo si no tiene otro viaje activo.
     public function liberarMotorista(Motorista $motorista, string $codigoViaje): void
     {
         $tieneOtroViajeActivo = SolicitudTransporte::where('motorista_id', $motorista->id)

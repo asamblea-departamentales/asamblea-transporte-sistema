@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\VehClasificacionResource\Pages;
 
 use App\Filament\Resources\VehClasificacionResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateVehClasificacion extends CreateRecord

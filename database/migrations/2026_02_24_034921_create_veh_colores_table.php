@@ -9,14 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-     public function up(): void
+    public function up(): void
     {
-     Schema::create('veh_colores', function (Blueprint $table) {
-        $table->id();
-        $table->string('nombre')->unique();
-        $table->boolean('activo')->default(true);
-        $table->timestamps();
-     });
+        Schema::create('veh_colores', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->unique();
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

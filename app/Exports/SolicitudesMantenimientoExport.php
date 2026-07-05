@@ -29,7 +29,7 @@ class SolicitudesMantenimientoExport implements FromCollection, ShouldAutoSize, 
     {
         return [
             'Código',
-            'Ticket', //NUEVO - para mostrar el número de ticket en el reporte
+            'Ticket', // NUEVO - para mostrar el número de ticket en el reporte
             'Vehículo (Placa)',
             'Marca / Modelo',
             'Tipo Mantenimiento',
@@ -56,7 +56,7 @@ class SolicitudesMantenimientoExport implements FromCollection, ShouldAutoSize, 
 
         return [
             $clean($row->codigo),
-            $row->ticket, //NUEVO - para mostrar el número de ticket en el reporte
+            $row->ticket, // NUEVO - para mostrar el número de ticket en el reporte
             $clean($row->vehiculo?->placa ?? ''),
             $clean(trim("{$row->vehiculo?->vehMarca?->nombre} {$row->vehiculo?->vehModelo?->nombre}")),
             $clean($row->tipoMantenimiento?->nombre ?? ''),

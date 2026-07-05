@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\VehColorResource\Pages;
 
 use App\Filament\Resources\VehColorResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateVehColor extends CreateRecord

@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('users', function (Blueprint $table) {
-            //Agregar campo de 'activo' booleano
+            // Agregar campo de 'activo' booleano
             $table->boolean('activo')->default(true)->after('password');
         });
     }

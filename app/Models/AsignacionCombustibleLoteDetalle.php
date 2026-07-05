@@ -1,4 +1,5 @@
 <?php
+
 // app/Models/AsignacionCombustibleLoteDetalle.php
 
 namespace App\Models;
@@ -29,9 +30,9 @@ class AsignacionCombustibleLoteDetalle extends Model
     ];
 
     protected $casts = [
-        'monto_asignado'    => 'decimal:2',
-        'cantidad_galones'  => 'decimal:2',
-        'fecha_asignacion'  => 'datetime',
+        'monto_asignado' => 'decimal:2',
+        'cantidad_galones' => 'decimal:2',
+        'fecha_asignacion' => 'datetime',
     ];
 
     public function lote(): BelongsTo

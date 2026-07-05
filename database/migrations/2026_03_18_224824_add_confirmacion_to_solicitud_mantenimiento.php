@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-            Schema::table('solicitudes_mantenimiento', function (Blueprint $table) {
+        Schema::table('solicitudes_mantenimiento', function (Blueprint $table) {
             $table->foreignId('finalizado_por')->nullable()->constrained('users');
             $table->timestamp('fecha_finalizacion')->nullable();
         });

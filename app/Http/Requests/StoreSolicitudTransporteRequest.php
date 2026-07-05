@@ -20,17 +20,16 @@ class StoreSolicitudTransporteRequest extends FormRequest
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
     public function rules(): array
-{
-    return [
-        'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
-        'motivo_actividad' => ['required', 'string', 'max:5000'],
-        'origen' => ['required', 'string', 'max:255'],
-        'destino' => ['required', 'string', 'max:255'],
-        'fecha_salida' => ['required', 'date', 'after_or_equal:now'],
-        'fecha_retorno' => ['nullable', 'date', 'after:fecha_salida'],
-        'cantidad_personas' => ['required', 'integer', 'min:1', 'max:60'],
-        'prioridad' => ['required', 'in:baja,media,alta'],
-    ];
-}
-
+    {
+        return [
+            'unidad_solicitante_id' => ['required', 'exists:unidad_solicitantes,id'],
+            'motivo_actividad' => ['required', 'string', 'max:5000'],
+            'origen' => ['required', 'string', 'max:255'],
+            'destino' => ['required', 'string', 'max:255'],
+            'fecha_salida' => ['required', 'date', 'after_or_equal:now'],
+            'fecha_retorno' => ['nullable', 'date', 'after:fecha_salida'],
+            'cantidad_personas' => ['required', 'integer', 'min:1', 'max:60'],
+            'prioridad' => ['required', 'in:baja,media,alta'],
+        ];
+    }
 }

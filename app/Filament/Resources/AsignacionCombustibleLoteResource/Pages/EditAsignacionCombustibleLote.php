@@ -31,6 +31,7 @@ class EditAsignacionCombustibleLote extends EditRecord
                             ->body($e->getMessage())
                             ->danger()
                             ->send();
+
                         return;
                     }
 
@@ -38,28 +39,27 @@ class EditAsignacionCombustibleLote extends EditRecord
                 })
                 ->visible(fn ($record) => $record->estado === \App\Domain\Solicitudes\Enums\EstadoLoteEnum::BORRADOR),
 
-            // NUEVO: Accion para asignar monto a los lotes de combustible  
-           Actions\Action::make('iniciarAsignacion')
-    ->label('Iniciar Asignación')
-    ->icon('heroicon-o-play')
-    ->color('primary')
-    ->requiresConfirmation()
-    ->modalHeading('Iniciar asignación operativa')
-    ->modalDescription('El lote pasará a estado EN PROCESO y el operativo podrá registrar series, contratos y galones.')
-    ->action(function ($record) {
+            // NUEVO: Accion para asignar monto a los lotes de combustible
+            Actions\Action::make('iniciarAsignacion')
+                ->label('Iniciar Asignación')
+                ->icon('heroicon-o-play')
+                ->color('primary')
+                ->requiresConfirmation()
+                ->modalHeading('Iniciar asignación operativa')
+                ->modalDescription('El lote pasará a estado EN PROCESO y el operativo podrá registrar series, contratos y galones.')
+                ->action(function ($record) {
 
-        app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)
-            ->iniciarAsignacion($record->id, auth()->id());
+                    app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)
+                        ->iniciarAsignacion($record->id, auth()->id());
 
-        return redirect(
-            $this->getResource()::getUrl('view', ['record' => $record])
-        );
-    })
-    ->visible(
-        fn ($record) =>
-            $record->estado === \App\Domain\Solicitudes\Enums\EstadoLoteEnum::FINALIZADO
-            && auth()->user()->hasAnyRole(['operativo', 'admin', 'super_admin'])
-    ),   
+                    return redirect(
+                        $this->getResource()::getUrl('view', ['record' => $record])
+                    );
+                })
+                ->visible(
+                    fn ($record) => $record->estado === \App\Domain\Solicitudes\Enums\EstadoLoteEnum::FINALIZADO
+                         && auth()->user()->hasAnyRole(['operativo', 'admin', 'super_admin'])
+                ),
         ];
     }
 

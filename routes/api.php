@@ -270,7 +270,7 @@ Route::middleware('auth:sanctum')->group(function () {
         ->prefix('motoristas')
         ->group(function () {
 
-            //NUEVAS (self-service motorista)
+            // NUEVAS (self-service motorista)
             Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
             Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
             Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
@@ -349,7 +349,7 @@ Route::middleware('auth:sanctum')->group(function () {
         });
 
         Route::get('/vehiculos/{vehiculo}/detalle', function (\App\Models\Vehiculo $vehiculo) {
-            if (!$vehiculo->activo) {
+            if (! $vehiculo->activo) {
                 return response()->json(['message' => 'Vehículo no encontrado.'], 404);
             }
 

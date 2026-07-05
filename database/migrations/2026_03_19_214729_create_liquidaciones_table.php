@@ -12,16 +12,16 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('liquidaciones', function (Blueprint $table) {
-    $table->id();
-    $table->morphs('liquidable');
-    $table->foreignId('user_id')->constrained('users');
-    $table->decimal('monto_solicitado', 10, 2)->nullable();
-    $table->decimal('monto_validado', 10, 2)->nullable();
-    $table->string('resultado');
-    $table->text('observaciones')->nullable();
-    $table->timestamp('fecha_liquidacion')->nullable();
-    $table->timestamps();
-});
+            $table->id();
+            $table->morphs('liquidable');
+            $table->foreignId('user_id')->constrained('users');
+            $table->decimal('monto_solicitado', 10, 2)->nullable();
+            $table->decimal('monto_validado', 10, 2)->nullable();
+            $table->string('resultado');
+            $table->text('observaciones')->nullable();
+            $table->timestamp('fecha_liquidacion')->nullable();
+            $table->timestamps();
+        });
     }
 
     /**

@@ -2,19 +2,19 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 use App\Models\Motorista;
 use App\Models\TipoVehiculo;
 use App\Models\User;
 use App\Models\Vehiculo;
-use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
@@ -23,27 +23,37 @@ class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tab
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Misión Oficial';
+
     protected static ?string $navigationIcon = 'heroicon-o-document-text';
+
     protected static ?int $navigationSort = 7;
 
     protected static string $view = 'filament.pages.reporte-mision-oficial';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?int $vehiculo_id = null;
+
     public ?int $motorista_id = null;
+
     public ?int $tipo_vehiculo_id = null;
+
     public ?int $solicitante_id = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_aprobadas = 0;
+
     public int $kpi_completadas = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -142,7 +152,7 @@ class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tab
                                     ->label('Mes actual')
                                     ->action(function () {
                                         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),
@@ -217,14 +227,14 @@ class ReporteMisionOficial extends Page implements Forms\Contracts\HasForms, Tab
     }
 
     private function refreshKpis(): void
-{
-    $kpis = app(ReporteMisionOficialService::class)
-        ->getKpis($this->getFilterState());
+    {
+        $kpis = app(ReporteMisionOficialService::class)
+            ->getKpis($this->getFilterState());
 
-    $this->kpi_total = $kpis['total'];
-    $this->kpi_aprobadas = $kpis['aprobadas'];
-    $this->kpi_completadas = $kpis['completadas'];
-}
+        $this->kpi_total = $kpis['total'];
+        $this->kpi_aprobadas = $kpis['aprobadas'];
+        $this->kpi_completadas = $kpis['completadas'];
+    }
 
     private function getFilterState(): array
     {

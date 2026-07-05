@@ -1,9 +1,10 @@
 <?php
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class VehModelo extends Model
 {
@@ -13,7 +14,7 @@ class VehModelo extends Model
     protected $fillable = ['nombre', 'activo', 'veh_marca_id'];
 
     protected $casts = [
-        'activo' => 'boolean'
+        'activo' => 'boolean',
     ];
 
     /**

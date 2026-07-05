@@ -22,8 +22,8 @@ class Liquidacion extends Model
     ];
 
     protected $casts = [
-        'monto_solicitado'  => 'decimal:2',
-        'monto_validado'    => 'decimal:2',
+        'monto_solicitado' => 'decimal:2',
+        'monto_validado' => 'decimal:2',
         'fecha_liquidacion' => 'datetime',
     ];
 

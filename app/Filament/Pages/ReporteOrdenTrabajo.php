@@ -2,19 +2,18 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\SolicitudMantenimiento;
-use App\Models\User;
-use App\Models\VehTipoMantenimiento;
-use App\Models\Vehiculo;
 use App\Domain\Solicitudes\Services\Reportes\ReporteOrdenTrabajoService;
+use App\Models\User;
+use App\Models\Vehiculo;
+use App\Models\VehTipoMantenimiento;
 use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
 use Filament\Tables;
-use Filament\Tables\Table;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Tables\Concerns\InteractsWithTable;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class ReporteOrdenTrabajo extends Page implements Forms\Contracts\HasForms, Tables\Contracts\HasTable
@@ -23,27 +22,37 @@ class ReporteOrdenTrabajo extends Page implements Forms\Contracts\HasForms, Tabl
     use InteractsWithTable;
 
     protected static ?string $navigationGroup = 'Reportes';
+
     protected static ?string $navigationLabel = 'Orden de Trabajo';
+
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
+
     protected static ?int $navigationSort = 8;
 
     protected static string $view = 'filament.pages.reporte-orden-trabajo';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?int $vehiculo_id = null;
+
     public ?int $tipo_mantenimiento_id = null;
+
     public ?int $solicitante_id = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_aprobadas = 0;
+
     public int $kpi_en_ejecucion = 0;
+
     public int $kpi_completadas = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -133,7 +142,7 @@ class ReporteOrdenTrabajo extends Page implements Forms\Contracts\HasForms, Tabl
                                     ->label('Mes actual')
                                     ->action(function () {
                                         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->refreshKpis();
                                     }),

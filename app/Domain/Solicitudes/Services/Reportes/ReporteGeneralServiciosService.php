@@ -18,19 +18,19 @@ class ReporteGeneralServiciosService
             ->sortByDesc('fecha')
             ->values();
 
-        if (!empty($filters['tipo_servicio'])) {
+        if (! empty($filters['tipo_servicio'])) {
             $rows = $rows->where('origen_modulo', $filters['tipo_servicio'])->values();
         }
 
-        if (!empty($filters['estado'])) {
+        if (! empty($filters['estado'])) {
             $rows = $rows->filter(fn ($r) => $r['estado'] === $filters['estado'])->values();
         }
 
-        if (!empty($filters['prioridad'])) {
+        if (! empty($filters['prioridad'])) {
             $rows = $rows->filter(fn ($r) => $r['prioridad'] === $filters['prioridad'])->values();
         }
 
-        if (!empty($filters['vehiculo_id'])) {
+        if (! empty($filters['vehiculo_id'])) {
             $rows = $rows->filter(fn ($r) => (int) $r['vehiculo_id'] === (int) $filters['vehiculo_id'])->values();
         }
 
@@ -61,9 +61,9 @@ class ReporteGeneralServiciosService
 
         return $query->get()->map(function (SolicitudTransporte $r) {
             $detalle = trim(
-                'Origen: ' . ($r->origen ?? '—') .
-                ' / Destino: ' . ($r->destino ?? '—') .
-                ($r->motivo_actividad ? ' / Motivo: ' . $r->motivo_actividad : '')
+                'Origen: '.($r->origen ?? '—').
+                ' / Destino: '.($r->destino ?? '—').
+                ($r->motivo_actividad ? ' / Motivo: '.$r->motivo_actividad : '')
             );
 
             return [
@@ -126,7 +126,7 @@ class ReporteGeneralServiciosService
                 'vehiculo' => $r->vehiculo?->placa ?? '—',
                 'vehiculo_id' => $r->vehiculo_id,
                 'motorista' => '—',
-                'detalle' => trim(($tipo ? $tipo . ' / ' : '') . ($r->detalle ?? '')),
+                'detalle' => trim(($tipo ? $tipo.' / ' : '').($r->detalle ?? '')),
                 'estado' => $this->enumValue($r->estado),
                 'prioridad' => $this->enumValue($r->prioridad),
                 'monto' => (float) ($r->costo_real ?? $r->costo_estimado ?? 0),
@@ -137,11 +137,11 @@ class ReporteGeneralServiciosService
 
     private function applyDateFilter($query, array $filters, string $column): void
     {
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where($column, '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where($column, '<=', $filters['date_to']);
         }
     }

@@ -56,8 +56,8 @@ class ReporteFlotaVehicularService
         $base = $this->buildQuery($filtros);
 
         return [
-            'total'          => (clone $base)->count(),
-            'activos'        => (clone $base)->where('activo', true)->count(),
+            'total' => (clone $base)->count(),
+            'activos' => (clone $base)->where('activo', true)->count(),
             'con_asignacion' => (clone $base)->whereHas('asignacionVigenteMotorista')->count(),
             'sin_asignacion' => (clone $base)->whereDoesntHave('asignacionVigenteMotorista')->count(),
         ];
@@ -73,7 +73,7 @@ class ReporteFlotaVehicularService
 
         return $motorista->nombre_completo
             ?? $motorista->nombre
-            ?? trim(($motorista->nombres ?? '') . ' ' . ($motorista->apellidos ?? ''))
+            ?? trim(($motorista->nombres ?? '').' '.($motorista->apellidos ?? ''))
             ?: 'Motorista asignado';
     }
 }

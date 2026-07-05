@@ -20,7 +20,7 @@ class ViewLiquidacionCombustible extends ViewRecord
                 ->icon('heroicon-o-printer')
                 ->url(fn ($record) => route('liquidacion.pdf', $record))
                 ->openUrlInNewTab(),
-            
+
             // Si el liquidador necesitara corregir la liquidación creada
             // Actions\EditAction::make(),
         ];

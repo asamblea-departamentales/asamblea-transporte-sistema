@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\BitacoraEventoResource\Pages;
 
 use App\Filament\Resources\BitacoraEventoResource;
-use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 
 class ListBitacoraEventos extends ListRecords

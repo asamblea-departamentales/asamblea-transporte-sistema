@@ -6,8 +6,8 @@ use Illuminate\Mail\Mailable;
 
 class NotificacionEventMail extends Mailable
 {
-
     public $subject;
+
     public $payload;
 
     public function __construct($subject, $payload)
@@ -29,14 +29,14 @@ class NotificacionEventMail extends Mailable
         $logoSrc = null;
         if (file_exists($logoPath)) {
             $data = base64_encode(file_get_contents($logoPath));
-            $logoSrc = 'data:image/png;base64,' . $data;
+            $logoSrc = 'data:image/png;base64,'.$data;
         }
 
         $mapFallbackPath = public_path('images/mapa-el-salvador.png');
         $mapFallbackSrc = null;
-        if (!$mapUrl && file_exists($mapFallbackPath)) {
+        if (! $mapUrl && file_exists($mapFallbackPath)) {
             $data = base64_encode(file_get_contents($mapFallbackPath));
-            $mapFallbackSrc = 'data:image/png;base64,' . $data;
+            $mapFallbackSrc = 'data:image/png;base64,'.$data;
         }
 
         $evidenciaSrc = $this->resolveEvidenciaSrc($this->payload);
@@ -89,8 +89,8 @@ class NotificacionEventMail extends Mailable
         }
 
         $candidates = [
-            storage_path('app/public/' . ltrim((string) $file, '/')),
-            storage_path('app/' . ltrim((string) $file, '/')),
+            storage_path('app/public/'.ltrim((string) $file, '/')),
+            storage_path('app/'.ltrim((string) $file, '/')),
             public_path(ltrim((string) $file, '/')),
             (string) $file,
         ];
@@ -112,12 +112,12 @@ class NotificacionEventMail extends Mailable
         }
 
         $path = $this->resolveAttachmentPath($evidencia['ruta'] ?? '');
-        if (!$path) {
+        if (! $path) {
             return null;
         }
 
         $mime = mime_content_type($path);
-        if (!$mime || !str_starts_with($mime, 'image/')) {
+        if (! $mime || ! str_starts_with($mime, 'image/')) {
             return null;
         }
 
@@ -126,6 +126,6 @@ class NotificacionEventMail extends Mailable
             return null;
         }
 
-        return 'data:' . $mime . ';base64,' . base64_encode($body);
+        return 'data:'.$mime.';base64,'.base64_encode($body);
     }
 }

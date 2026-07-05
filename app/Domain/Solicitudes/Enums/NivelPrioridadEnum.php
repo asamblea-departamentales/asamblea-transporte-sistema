@@ -5,17 +5,17 @@ namespace App\Domain\Solicitudes\Enums;
 enum NivelPrioridadEnum: string
 {
     case CRITICA = 'critica';
-    case ALTA    = 'alta';
-    case MEDIA   = 'media';
-    case BAJA    = 'baja';
+    case ALTA = 'alta';
+    case MEDIA = 'media';
+    case BAJA = 'baja';
 
     public function label(): string
     {
         return match ($this) {
             self::CRITICA => 'Crítica',
-            self::ALTA    => 'Alta',
-            self::MEDIA   => 'Media',
-            self::BAJA    => 'Baja',
+            self::ALTA => 'Alta',
+            self::MEDIA => 'Media',
+            self::BAJA => 'Baja',
         };
     }
 
@@ -23,9 +23,9 @@ enum NivelPrioridadEnum: string
     {
         return match ($this) {
             self::CRITICA => 'danger',
-            self::ALTA    => 'warning',
-            self::MEDIA   => 'info',
-            self::BAJA    => 'gray',
+            self::ALTA => 'warning',
+            self::MEDIA => 'info',
+            self::BAJA => 'gray',
         };
     }
 
@@ -33,9 +33,9 @@ enum NivelPrioridadEnum: string
     {
         return match ($this) {
             self::CRITICA => 1,
-            self::ALTA    => 2,
-            self::MEDIA   => 3,
-            self::BAJA    => 4,
+            self::ALTA => 2,
+            self::MEDIA => 3,
+            self::BAJA => 4,
         };
     }
 }

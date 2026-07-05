@@ -3,18 +3,20 @@
 namespace App\Filament\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Filament\Resources\SolicitudTransporteResource;
-use App\Filament\Resources\SolicitudMantenimientoResource;
 use App\Filament\Resources\SolicitudCombustibleResource;
-use App\Models\SolicitudTransporte;
-use App\Models\SolicitudMantenimiento;
+use App\Filament\Resources\SolicitudMantenimientoResource;
+use App\Filament\Resources\SolicitudTransporteResource;
 use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
 use Filament\Widgets\Widget;
 
 class RecentSolicitudes extends Widget
 {
     protected static ?int $sort = 6;
+
     protected int|string|array $columnSpan = 'full';
+
     protected static string $view = 'filament.widgets.recent-solicitudes';
 
     public static function canView(): bool
@@ -37,12 +39,12 @@ class RecentSolicitudes extends Widget
             ->limit(5)
             ->get()
             ->map(fn ($s) => [
-                'codigo'      => $s->codigo,
+                'codigo' => $s->codigo,
                 'solicitante' => $s->solicitante?->name ?? '-',
-                'estado'      => $s->estado?->value ?? $s->estado,
-                'fecha'       => optional($s->fecha_salida ?? $s->created_at)->format('d/m/Y H:i'),
-                'modulo'      => 'Transporte',
-                'url'         => SolicitudTransporteResource::getUrl('view', ['record' => $s->id]),
+                'estado' => $s->estado?->value ?? $s->estado,
+                'fecha' => optional($s->fecha_salida ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo' => 'Transporte',
+                'url' => SolicitudTransporteResource::getUrl('view', ['record' => $s->id]),
             ]);
 
         $mantenimiento = SolicitudMantenimiento::query()
@@ -52,12 +54,12 @@ class RecentSolicitudes extends Widget
             ->limit(5)
             ->get()
             ->map(fn ($s) => [
-                'codigo'      => $s->codigo,
+                'codigo' => $s->codigo,
                 'solicitante' => $s->solicitante?->name ?? '-',
-                'estado'      => $s->estado?->value ?? $s->estado,
-                'fecha'       => optional($s->fecha_sugerida ?? $s->created_at)->format('d/m/Y H:i'),
-                'modulo'      => 'Mantenimiento',
-                'url'         => SolicitudMantenimientoResource::getUrl('view', ['record' => $s->id]),
+                'estado' => $s->estado?->value ?? $s->estado,
+                'fecha' => optional($s->fecha_sugerida ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo' => 'Mantenimiento',
+                'url' => SolicitudMantenimientoResource::getUrl('view', ['record' => $s->id]),
             ]);
 
         $combustible = SolicitudCombustible::query()
@@ -67,12 +69,12 @@ class RecentSolicitudes extends Widget
             ->limit(5)
             ->get()
             ->map(fn ($s) => [
-                'codigo'      => $s->codigo,
+                'codigo' => $s->codigo,
                 'solicitante' => $s->solicitante?->name ?? '-',
-                'estado'      => $s->estado?->value ?? $s->estado,
-                'fecha'       => optional($s->fecha_solicitud ?? $s->created_at)->format('d/m/Y H:i'),
-                'modulo'      => 'Combustible',
-                'url'         => SolicitudCombustibleResource::getUrl('view', ['record' => $s->id]),
+                'estado' => $s->estado?->value ?? $s->estado,
+                'fecha' => optional($s->fecha_solicitud ?? $s->created_at)->format('d/m/Y H:i'),
+                'modulo' => 'Combustible',
+                'url' => SolicitudCombustibleResource::getUrl('view', ['record' => $s->id]),
             ]);
 
         return $transporte

@@ -71,6 +71,7 @@ class ReporteRegistroVehiculos extends Page
                                         ->get()
                                         ->mapWithKeys(function ($v) {
                                             $tipoNombre = $v->tipo?->nombre ?? 'Sin tipo';
+
                                             return [$v->id => "{$v->placa} — {$tipoNombre}"];
                                         });
                                 })
@@ -117,9 +118,9 @@ class ReporteRegistroVehiculos extends Page
     private function generarUrlPdf(): string
     {
         return route('reportes.registro-vehiculos.pdf', [
-            'vehiculo_id'  => $this->vehiculo_id,
+            'vehiculo_id' => $this->vehiculo_id,
             'fecha_inicio' => $this->fecha_inicio,
-            'fecha_fin'    => $this->fecha_fin,
+            'fecha_fin' => $this->fecha_fin,
         ]);
     }
 }

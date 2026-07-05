@@ -1,4 +1,5 @@
 <?php
+
 // -----------------------------------------------------------------------------
 // RECURSO PRINCIPAL PARA PREFIJOS DE EMPLEADO
 // -----------------------------------------------------------------------------
@@ -20,15 +21,34 @@ use Filament\Tables\Table;
 class PrefijoEmpleadoResource extends Resource
 {
     protected static ?string $model = PrefijoEmpleado::class;
-    protected static ?string $navigationGroup = 'Catálogos Globales';
-    protected static ?string $navigationLabel = 'Prefijos de Empleado';
-    protected static ?string $navigationIcon  = 'heroicon-o-tag';
-    protected static ?int    $navigationSort  = 8;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']); }
+    protected static ?string $navigationGroup = 'Catálogos Globales';
+
+    protected static ?string $navigationLabel = 'Prefijos de Empleado';
+
+    protected static ?string $navigationIcon = 'heroicon-o-tag';
+
+    protected static ?int $navigationSort = 8;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canEdit($r): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canDelete($r): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']);
+    }
 
     public static function form(Form $form): Form
     {
@@ -84,9 +104,9 @@ class PrefijoEmpleadoResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListPrefijoEmpleados::route('/'),
+            'index' => Pages\ListPrefijoEmpleados::route('/'),
             'create' => Pages\CreatePrefijoEmpleado::route('/create'),
-            'edit'   => Pages\EditPrefijoEmpleado::route('/{record}/edit'),
+            'edit' => Pages\EditPrefijoEmpleado::route('/{record}/edit'),
         ];
     }
 }

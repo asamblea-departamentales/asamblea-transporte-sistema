@@ -5,7 +5,8 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
-{ // <--- ESTA LLAVE ES LA QUE TE FALTA
+{
+    // <--- ESTA LLAVE ES LA QUE TE FALTA
     public function up(): void
     {
         Schema::table('contrato_combustibles', function (Blueprint $table) {

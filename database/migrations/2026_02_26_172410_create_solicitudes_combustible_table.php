@@ -20,12 +20,12 @@ return new class extends Migration
 
             $table->foreignId('vehiculo_id')->constrained('vehiculos');
             $table->foreignId('motorista_id')->constrained('motoristas');
-            
+
             // Relación opcional con transporte
             $table->foreignId('solicitud_transporte_id')
-                  ->nullable()
-                  ->constrained('solicitudes_transporte')
-                  ->nullOnDelete();
+                ->nullable()
+                ->constrained('solicitudes_transporte')
+                ->nullOnDelete();
 
             $table->string('destino_actividad');
             $table->foreignId('solicitante_id')->constrained('users');
@@ -36,7 +36,7 @@ return new class extends Migration
 
             $table->enum('forma_pago', ['efectivo', 'tarjeta', 'vale', 'ticket', 'otro']);
             $table->string('numero_vale_ticket')->nullable();
-            $table->json('comprobantes')->nullable(); 
+            $table->json('comprobantes')->nullable();
 
             $table->string('estado')->default('borrador');
             $table->string('prioridad')->default('media');

@@ -9,13 +9,10 @@
 // Los comentarios están pensados para que cualquier ingeniero, incluso sin
 // experiencia en Laravel o Filament, pueda entender cómo se administra este proceso.
 
-
 namespace App\Filament\Resources;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Filament\Resources\SolicitudCombustibleResource\Pages;
-use App\Models\ContratoCombustible;
 use App\Models\SolicitudCombustible;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -29,7 +26,6 @@ use Illuminate\Database\Eloquent\Builder;
 // Un recurso es una pantalla o módulo donde se pueden ver y gestionar solicitudes de combustible.
 class SolicitudCombustibleResource extends Resource
 {
-
     // Indica el modelo principal que representa una solicitud de combustible en la base de datos.
     protected static ?string $model = SolicitudCombustible::class;
 
@@ -38,13 +34,15 @@ class SolicitudCombustibleResource extends Resource
 
     // Agrupa este recurso en el menú bajo "Procesos".
     protected static ?string $navigationGroup = 'Procesos';
+
     // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Solicitudes de Combustible';
+
     // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-banknotes';
+
     // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 3;
-
 
     // Controla quién puede ver la lista de solicitudes de combustible.
     public static function canViewAny(): bool
@@ -52,13 +50,11 @@ class SolicitudCombustibleResource extends Resource
         return auth()->check() && auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'operativo', 'liquidador', 'super_admin']);
     }
 
-
     // En este recurso, no se permite crear solicitudes desde la interfaz.
     public static function canCreate(): bool
     {
         return false;
     }
-
 
     // No se permite eliminar solicitudes desde la interfaz.
     public static function canDelete($record): bool
@@ -77,10 +73,9 @@ class SolicitudCombustibleResource extends Resource
         return ['codigo', 'ticket', 'numero_vale_ticket', 'vehiculo.placa', 'solicitante.name'];
     }
 
-
-    // ------------------------------------------------------------------------- 
+    // -------------------------------------------------------------------------
     // FORMULARIO PRINCIPAL
-    // ------------------------------------------------------------------------- 
+    // -------------------------------------------------------------------------
     // Aquí se define cómo se ve y se comporta el formulario para ver una solicitud
     // de combustible. Cada campo tiene validaciones y explicaciones.
     public static function form(Form $form): Form
@@ -405,7 +400,7 @@ class SolicitudCombustibleResource extends Resource
 
     public static function table(Table $table): Table
     {
-        
+
         return $table
             ->defaultSort('prioridad_orden', 'asc')
             ->striped()
@@ -549,10 +544,10 @@ class SolicitudCombustibleResource extends Resource
                     ->label('Nivel de prioridad')
                     ->options([
                         'critica' => 'Crítica',
-                        'alta'    => 'Alta',
-                        'media'   => 'Media',
-                        'baja'    => 'Baja',
-                    ]), 
+                        'alta' => 'Alta',
+                        'media' => 'Media',
+                        'baja' => 'Baja',
+                    ]),
 
                 Tables\Filters\Filter::make('pendientes')
                     ->label('Solo pendientes')

@@ -26,12 +26,12 @@ return new class extends Migration
 
                         SolicitudDestinoAdicional::create([
                             'solicitud_transporte_id' => $s->id,
-                            'nombre'                  => $nombre,
-                            'lat'                     => $lat,
-                            'lng'                     => $lng,
-                            'agregado_por'            => null,
-                            'agregado_durante_viaje'  => false,
-                            'orden'                   => $orden++,
+                            'nombre' => $nombre,
+                            'lat' => $lat,
+                            'lng' => $lng,
+                            'agregado_por' => null,
+                            'agregado_durante_viaje' => false,
+                            'orden' => $orden++,
                         ]);
                     }
                 }

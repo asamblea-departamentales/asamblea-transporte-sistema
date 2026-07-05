@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        // Asegúrate de que el nombre de la tabla sea 'solicitud_transportes' 
+        // Asegúrate de que el nombre de la tabla sea 'solicitud_transportes'
         // (o 'solicitudes_transporte' según lo que uses en tus modelos)
         Schema::table('solicitud_transportes', function (Blueprint $table) {
             $table->foreignId('confirmado_por')
@@ -20,7 +20,7 @@ return new class extends Migration
                 ->nullOnDelete(); // Faltaban los paréntesis ()
 
             $table->timestamp('confirmado_en')
-                ->nullable();    
+                ->nullable();
         });
     }
 

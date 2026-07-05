@@ -40,7 +40,7 @@ return [
             'use_starttls' => env('LDAP_STARTTLS', false),
             'use_sasl' => env('LDAP_SASL', false),
             'sasl_options' => [
-                // 'mech' => 'GSSAPI',  
+                // 'mech' => 'GSSAPI',
             ],
         ],
 

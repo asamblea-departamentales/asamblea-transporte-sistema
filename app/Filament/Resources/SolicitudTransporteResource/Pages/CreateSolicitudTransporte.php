@@ -3,8 +3,6 @@
 namespace App\Filament\Resources\SolicitudTransporteResource\Pages;
 
 use App\Filament\Resources\SolicitudTransporteResource;
-use App\Models\SolicitudTransporte;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 use Illuminate\Database\Eloquent\Model;
 

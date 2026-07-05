@@ -2,15 +2,15 @@
 
 namespace App\Domain\Solicitudes\Services\Lotes;
 
-use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
-use App\Models\SolicitudCombustible;
-use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Models\Vehiculo;
 use App\Models\ContratoCombustible;
 use App\Models\SerieCarga;
+use App\Models\SolicitudCombustible;
+use App\Models\Vehiculo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -24,14 +24,14 @@ class LoteCombustibleService
     {
         return DB::transaction(function () use ($data, $userId) {
             $lote = AsignacionCombustibleLote::create([
-                'fecha'         => $data['fecha'],
-                'creado_por'    => $userId,
-                'estado'        => EstadoLoteEnum::BORRADOR,
+                'fecha' => $data['fecha'],
+                'creado_por' => $userId,
+                'estado' => EstadoLoteEnum::BORRADOR,
                 'observaciones' => $data['observaciones'] ?? null,
             ]);
 
             Log::info('Lote de combustible creado', [
-                'lote_id'    => $lote->id,
+                'lote_id' => $lote->id,
                 'creado_por' => $userId,
             ]);
 
@@ -72,12 +72,12 @@ class LoteCombustibleService
             $vehiculo = Vehiculo::findOrFail($vehiculoId);
 
             return $lote->detalles()->create([
-                'vehiculo_id'              => $vehiculoId,
+                'vehiculo_id' => $vehiculoId,
                 'solicitud_combustible_id' => $data['solicitud_combustible_id'] ?? null,
-                'placa_cache'              => $vehiculo->placa,
-                'monto_asignado'           => $data['monto_asignado'],
-                'numero_ticket'            => $data['numero_ticket'],
-                'estado_asignacion'        => 'pendiente',
+                'placa_cache' => $vehiculo->placa,
+                'monto_asignado' => $data['monto_asignado'],
+                'numero_ticket' => $data['numero_ticket'],
+                'estado_asignacion' => 'pendiente',
             ]);
         });
     }
@@ -90,7 +90,7 @@ class LoteCombustibleService
     {
         DB::transaction(function () use ($detalleId) {
             $detalle = AsignacionCombustibleLoteDetalle::with('lote')->findOrFail($detalleId);
-            $lote    = $detalle->lote;
+            $lote = $detalle->lote;
 
             if ($lote->estado !== EstadoLoteEnum::BORRADOR) {
                 throw new \DomainException('No se puede modificar un lote finalizado o en proceso.');
@@ -135,13 +135,13 @@ class LoteCombustibleService
                 ->get();
 
             $imported = 0;
-            $skipped  = 0;
+            $skipped = 0;
 
             if ($solicitudes->isEmpty()) {
 
                 Log::info('Importación de solicitudes: ninguna pendiente', [
                     'lote_id' => $loteId,
-                    'fecha'   => $lote->fecha,
+                    'fecha' => $lote->fecha,
                 ]);
 
                 app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
@@ -167,26 +167,27 @@ class LoteCombustibleService
 
                 if ($duplicado) {
                     $skipped++;
+
                     continue;
                 }
 
                 $lote->detalles()->create([
-                    'vehiculo_id'              => $solicitud->vehiculo_id,
+                    'vehiculo_id' => $solicitud->vehiculo_id,
                     'solicitud_combustible_id' => $solicitud->id,
-                    'placa_cache'              => $solicitud->vehiculo->placa ?? '',
-                    'numero_ticket'            => $solicitud->ticket,
-                    'monto_asignado'           => 0,
-                    'cantidad_galones'         => $solicitud->cantidad_combustible ?? 0,
-                    'estado_asignacion'        => 'pendiente',
+                    'placa_cache' => $solicitud->vehiculo->placa ?? '',
+                    'numero_ticket' => $solicitud->ticket,
+                    'monto_asignado' => 0,
+                    'cantidad_galones' => $solicitud->cantidad_combustible ?? 0,
+                    'estado_asignacion' => 'pendiente',
                 ]);
 
                 $imported++;
             }
 
             Log::info('Solicitudes importadas al lote', [
-                'lote_id'    => $loteId,
-                'imported'   => $imported,
-                'skipped'    => $skipped,
+                'lote_id' => $loteId,
+                'imported' => $imported,
+                'skipped' => $skipped,
                 'importado_por' => $userId,
             ]);
 
@@ -231,14 +232,13 @@ class LoteCombustibleService
                 );
             }
 
-            $noAprobadas = $lote->detalles->filter(fn ($d) =>
-                $d->solicitud_combustible_id !== null
+            $noAprobadas = $lote->detalles->filter(fn ($d) => $d->solicitud_combustible_id !== null
                 && optional($d->solicitudCombustible)->estado !== EstadoSolicitudEnum::APROBADA
             );
             if ($noAprobadas->isNotEmpty()) {
                 throw new \DomainException(
-                    "Todas las solicitudes del lote deben estar aprobadas antes de finalizar. "
-                    . "Hay {$noAprobadas->count()} detalle(s) pendiente(s) de aprobación."
+                    'Todas las solicitudes del lote deben estar aprobadas antes de finalizar. '
+                    ."Hay {$noAprobadas->count()} detalle(s) pendiente(s) de aprobación."
                 );
             }
 
@@ -246,10 +246,10 @@ class LoteCombustibleService
             $lote->save();
 
             Log::info('Lote de combustible finalizado', [
-                'lote_id'         => $lote->id,
-                'finalizado_por'  => $userId,
+                'lote_id' => $lote->id,
+                'finalizado_por' => $userId,
                 'total_vehiculos' => $lote->detalles->count(),
-                'monto_total'     => $lote->total_monto,
+                'monto_total' => $lote->total_monto,
             ]);
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
@@ -284,7 +284,7 @@ class LoteCombustibleService
             $lote->save();
 
             Log::info('Asignación operativa iniciada', [
-                'lote_id'    => $lote->id,
+                'lote_id' => $lote->id,
                 'iniciado_por' => $userId,
             ]);
 
@@ -327,14 +327,20 @@ class LoteCombustibleService
 
             // Poblar solicitudes con datos del lote para el reporte
             foreach ($lote->detalles as $detalle) {
-                if (! $detalle->solicitud_combustible_id) continue;
+                if (! $detalle->solicitud_combustible_id) {
+                    continue;
+                }
 
                 $solicitud = $detalle->solicitudCombustible;
-                if (! $solicitud || $solicitud->estado !== EstadoSolicitudEnum::APROBADA) continue;
+                if (! $solicitud || $solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+                    continue;
+                }
 
                 $contrato = ContratoCombustible::where('numero_contrato', $detalle->numero_contrato)->first();
                 $serie = SerieCarga::where('nombre', $detalle->numero_serie)->first();
-                if (! $contrato || ! $serie) continue;
+                if (! $contrato || ! $serie) {
+                    continue;
+                }
 
                 $cantidadVales = (int) ($detalle->cantidad_galones ?? 1);
                 $inicio = $serie->correlativo_actual;
@@ -362,11 +368,11 @@ class LoteCombustibleService
             }
 
             Log::info('Lote de combustible completado', [
-                'lote_id'         => $lote->id,
-                'completado_por'  => $userId,
+                'lote_id' => $lote->id,
+                'completado_por' => $userId,
                 'total_vehiculos' => $lote->detalles->count(),
-                'total_galones'   => $lote->total_galones,
-                'monto_total'     => $lote->total_monto,
+                'total_galones' => $lote->total_galones,
+                'monto_total' => $lote->total_monto,
             ]);
 
             app(\App\Domain\Solicitudes\Services\AuditoriaService::class)

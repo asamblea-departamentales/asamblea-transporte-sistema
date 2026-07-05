@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\ActividadEconomicaResource\Pages;
 
 use App\Filament\Resources\ActividadEconomicaResource;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateActividadEconomica extends CreateRecord

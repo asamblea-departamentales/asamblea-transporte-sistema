@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\Mail;
 class TestEmailCommand extends Command
 {
     protected $signature = 'test:email {email}';
+
     protected $description = 'Enviar email de prueba';
 
     public function handle()
@@ -49,6 +50,6 @@ class TestEmailCommand extends Command
         );
 
         $this->info(" Email enviado a: {$email}");
-        $this->info("Revisa Mailtrap o tus logs");
+        $this->info('Revisa Mailtrap o tus logs');
     }
 }

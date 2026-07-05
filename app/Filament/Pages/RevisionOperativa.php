@@ -3,14 +3,13 @@
 namespace App\Filament\Pages;
 
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
-use App\Models\User;
 use App\Domain\Solicitudes\Services\Operativo\RevisionOperativaService;
-use Filament\Actions\Action;
+use App\Models\User;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
@@ -18,28 +17,39 @@ class RevisionOperativa extends Page implements Forms\Contracts\HasForms
 {
     use InteractsWithForms;
     use WithPagination;
+
     protected static bool $shouldRegisterNavigation = false;
+
     protected static ?string $navigationGroup = 'Gestión Operativa';
+
     protected static ?string $navigationLabel = 'Revisión Operativa';
+
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-check';
+
     protected static ?int $navigationSort = 2;
 
     protected static string $view = 'filament.pages.revision-operativa';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?string $tipo = null;
+
     public ?string $prioridad = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_transporte = 0;
+
     public int $kpi_combustible = 0;
+
     public int $kpi_mantenimiento = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();

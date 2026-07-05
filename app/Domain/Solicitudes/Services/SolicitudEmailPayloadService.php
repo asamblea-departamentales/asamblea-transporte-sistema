@@ -2,10 +2,6 @@
 
 namespace App\Domain\Solicitudes\Services;
 
-use App\Models\SolicitudCombustible;
-use App\Models\SolicitudMantenimiento;
-use App\Models\SolicitudTransporte;
-
 /**
  * Servicio encargado de construir el payload (estructura de datos) que se envía
  * a la plantilla de correo electrónico, según el tipo de solicitud y el evento.
@@ -19,11 +15,11 @@ class SolicitudEmailPayloadService
     /**
      * Punto de entrada principal: construye el payload completo para un correo.
      *
-     * @param  object  $record     Modelo de la solicitud (Transporte, Combustible o Mantenimiento)
-     * @param  string  $tipo       Tipo de solicitud: 'transporte', 'combustible', 'mantenimiento'
-     * @param  string  $evento     Evento ocurrido (ej. 'solicitud_aprobada', 'solicitud_rechazada')
-     * @param  string|null $mensaje Mensaje personalizado; si es null se usa el mensaje por defecto
-     * @return array              Payload estructurado para la vista del correo
+     * @param  object  $record  Modelo de la solicitud (Transporte, Combustible o Mantenimiento)
+     * @param  string  $tipo  Tipo de solicitud: 'transporte', 'combustible', 'mantenimiento'
+     * @param  string  $evento  Evento ocurrido (ej. 'solicitud_aprobada', 'solicitud_rechazada')
+     * @param  string|null  $mensaje  Mensaje personalizado; si es null se usa el mensaje por defecto
+     * @return array Payload estructurado para la vista del correo
      */
     public function build($record, string $tipo, string $evento, ?string $mensaje = null): array
     {
@@ -65,6 +61,7 @@ class SolicitudEmailPayloadService
             'ruta_modificada' => 'ruta_modificada',
             default => $data['estado'],
         };
+
         return $data;
     }
 
@@ -78,12 +75,12 @@ class SolicitudEmailPayloadService
     {
         $destinosAdicionales = collect($r->destinosAdicionales ?? [])
             ->map(fn ($d) => [
-                'nombre'                 => data_get($d, 'nombre'),
-                'lat'                    => data_get($d, 'lat'),
-                'lng'                    => data_get($d, 'lng'),
+                'nombre' => data_get($d, 'nombre'),
+                'lat' => data_get($d, 'lat'),
+                'lng' => data_get($d, 'lng'),
                 'agregado_durante_viaje' => (bool) data_get($d, 'agregado_durante_viaje', false),
-                'agregado_por_nombre'    => data_get($d, 'agregadoPor.name') ?? data_get($d, 'agregadoPor.username'),
-                'orden'                  => data_get($d, 'orden'),
+                'agregado_por_nombre' => data_get($d, 'agregadoPor.name') ?? data_get($d, 'agregadoPor.username'),
+                'orden' => data_get($d, 'orden'),
             ])
             ->filter(fn ($d) => filled($d['nombre']))
             ->values();
@@ -94,19 +91,19 @@ class SolicitudEmailPayloadService
                 ->filter(fn ($nombre) => $nombre !== '' && mb_strtolower($nombre) !== 'sin destino adicional')
                 ->values()
                 ->map(fn ($nombre, $i) => [
-                    'nombre'                 => $nombre,
-                    'lat'                    => $i === 0 ? $r->destino_adicional_lat : null,
-                    'lng'                    => $i === 0 ? $r->destino_adicional_lng : null,
+                    'nombre' => $nombre,
+                    'lat' => $i === 0 ? $r->destino_adicional_lat : null,
+                    'lng' => $i === 0 ? $r->destino_adicional_lng : null,
                     'agregado_durante_viaje' => false,
-                    'agregado_por_nombre'    => null,
-                    'orden'                  => $i,
+                    'agregado_por_nombre' => null,
+                    'orden' => $i,
                 ]);
         }
 
         $destinosSolicitados = $destinosAdicionales
             ->reject(fn ($d) => $d['agregado_durante_viaje'])
             ->values()
-            ->map(fn ($d, $i) => $d + ['etiqueta' => 'Destino adicional ' . ($i + 1)])
+            ->map(fn ($d, $i) => $d + ['etiqueta' => 'Destino adicional '.($i + 1)])
             ->toArray();
 
         $destinosJefaturaBase = $destinosAdicionales
@@ -116,7 +113,7 @@ class SolicitudEmailPayloadService
         $destinosJefatura = $destinosJefaturaBase
             ->map(fn ($d, $i) => $d + [
                 'etiqueta' => 'Destino nuevo asignado por jefatura'
-                    . ($destinosJefaturaBase->count() > 1 ? ' ' . ($i + 1) : ''),
+                    .($destinosJefaturaBase->count() > 1 ? ' '.($i + 1) : ''),
             ])
             ->toArray();
 
@@ -248,36 +245,36 @@ class SolicitudEmailPayloadService
      * Devuelve las relaciones de Eloquent que deben cargarse según el tipo.
      */
     private function relationsFor(string $tipo): array
-{
-    return match ($tipo) {
+    {
+        return match ($tipo) {
 
-        'transporte' => [
-            'solicitante.unidadSolicitante',
-            'vehiculo.tipo',
-            'motorista',
-            'unidad',
-            'destinosAdicionales.agregadoPor',
-        ],
+            'transporte' => [
+                'solicitante.unidadSolicitante',
+                'vehiculo.tipo',
+                'motorista',
+                'unidad',
+                'destinosAdicionales.agregadoPor',
+            ],
 
-        'combustible' => [
-            'solicitante.unidadSolicitante',
-            'vehiculo',
-            'motorista',
-            'contrato',
-            'serieCarga',
-            'liquidacion',
-        ],
+            'combustible' => [
+                'solicitante.unidadSolicitante',
+                'vehiculo',
+                'motorista',
+                'contrato',
+                'serieCarga',
+                'liquidacion',
+            ],
 
-        'mantenimiento' => [
-            'solicitante.unidadSolicitante',
-            'vehiculo',
-            'tipoMantenimiento',
-            'liquidacion',
-        ],
+            'mantenimiento' => [
+                'solicitante.unidadSolicitante',
+                'vehiculo',
+                'tipoMantenimiento',
+                'liquidacion',
+            ],
 
-        default => ['solicitante'],
-    };
-}
+            default => ['solicitante'],
+        };
+    }
 
     /**
      * Genera un mensaje descriptivo por defecto según el tipo y el evento.
@@ -331,7 +328,7 @@ class SolicitudEmailPayloadService
             $payload['evidencia'] = [
                 'nombre' => basename(str_replace('\\', '/', $archivoPath)),
                 'ruta' => $archivoPath,
-                'url' => asset('storage/' . ltrim($archivoPath, '/')),
+                'url' => asset('storage/'.ltrim($archivoPath, '/')),
             ];
             $payload['attachments'] = [$archivoPath];
         }

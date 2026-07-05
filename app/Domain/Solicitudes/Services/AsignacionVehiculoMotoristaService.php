@@ -17,8 +17,8 @@ class AsignacionVehiculoMotoristaService
                 ->where('vigente', true)
                 ->whereNull('hasta')
                 ->update([
-                    'vigente'    => false,
-                    'hasta'      => $ahora,
+                    'vigente' => false,
+                    'hasta' => $ahora,
                     'updated_at' => $ahora,
                 ]);
 
@@ -27,18 +27,18 @@ class AsignacionVehiculoMotoristaService
                 ->where('vigente', true)
                 ->whereNull('hasta')
                 ->update([
-                    'vigente'    => false,
-                    'hasta'      => $ahora,
+                    'vigente' => false,
+                    'hasta' => $ahora,
                     'updated_at' => $ahora,
                 ]);
 
             // Crear nueva asignación vigente
             return AsignacionVehiculoMotorista::create([
-                'vehiculo_id'  => $vehiculoId,
+                'vehiculo_id' => $vehiculoId,
                 'motorista_id' => $motoristaId,
-                'desde'        => $ahora,
-                'hasta'        => null,
-                'vigente'      => true,
+                'desde' => $ahora,
+                'hasta' => null,
+                'vigente' => true,
             ]);
         });
     }
@@ -50,8 +50,8 @@ class AsignacionVehiculoMotoristaService
                 ->where('vigente', true)
                 ->whereNull('hasta')
                 ->update([
-                    'vigente'    => false,
-                    'hasta'      => now(),
+                    'vigente' => false,
+                    'hasta' => now(),
                     'updated_at' => now(),
                 ]);
         });

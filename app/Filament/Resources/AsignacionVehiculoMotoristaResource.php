@@ -13,33 +13,35 @@ namespace App\Filament\Resources;
 use App\Domain\Solicitudes\Services\AsignacionVehiculoMotoristaService;
 use App\Filament\Resources\AsignacionVehiculoMotoristaResource\Pages;
 use App\Models\AsignacionVehiculoMotorista;
-use App\Models\Vehiculo;
 use App\Models\Motorista;
+use App\Models\Vehiculo;
 use Filament\Forms\Components\DateTimePicker;
-use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Placeholder;
 use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
-use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Tables;
 use Filament\Tables\Actions\Action;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 
 class AsignacionVehiculoMotoristaResource extends Resource
 {
     protected static ?string $model = AsignacionVehiculoMotorista::class;
-    protected static ?string $navigationIcon     = 'heroicon-o-link';
-    protected static ?string $navigationLabel    = 'Asignaciones';
-    protected static ?string $modelLabel         = 'Asignación';
-    protected static ?string $pluralModelLabel   = 'Asignaciones Vehículo → Motorista';
-    protected static ?string $navigationGroup    = 'Flota';
-    protected static ?int    $navigationSort     = 3;
+
+    protected static ?string $navigationIcon = 'heroicon-o-link';
+
+    protected static ?string $navigationLabel = 'Asignaciones';
+
+    protected static ?string $modelLabel = 'Asignación';
+
+    protected static ?string $pluralModelLabel = 'Asignaciones Vehículo → Motorista';
+
+    protected static ?string $navigationGroup = 'Flota';
+
+    protected static ?int $navigationSort = 3;
 
     public static function table(Table $table): Table
     {
@@ -117,6 +119,7 @@ class AsignacionVehiculoMotoristaResource extends Resource
                                     ->afterStateUpdated(function ($state, callable $set) {
                                         if (! $state) {
                                             $set('motorista_preview', 'Selecciona un vehículo');
+
                                             return;
                                         }
 
@@ -127,10 +130,10 @@ class AsignacionVehiculoMotoristaResource extends Resource
                                         if ($motorista) {
                                             $esApto = (bool) ($estado?->activo ?? true);
                                             $label = "{$motorista->nombre} — DUI: {$motorista->dui}";
-                                            
+
                                             // 🔥 ALERTA: Si el motorista actual (ej. Carlos) está INACTIVO
-                                            if (!$esApto) {
-                                                $set('motorista_preview', "⚠️ {$label} (BLOQUEADO: " . ($estado?->motivo ?? 'INACTIVO') . ")");
+                                            if (! $esApto) {
+                                                $set('motorista_preview', "⚠️ {$label} (BLOQUEADO: ".($estado?->motivo ?? 'INACTIVO').')');
                                             } else {
                                                 $set('motorista_preview', "✅ {$label}");
                                             }
@@ -166,20 +169,21 @@ class AsignacionVehiculoMotoristaResource extends Resource
                     ->action(function (array $data): void {
                         // 🛡️ ÚLTIMA VALIDACIÓN ANTES DE GUARDAR
                         $motorista = Motorista::with('estadoActual')->find($data['motorista_id']);
-                        
-                        if ($motorista && !($motorista->estadoActual?->activo ?? true)) {
+
+                        if ($motorista && ! ($motorista->estadoActual?->activo ?? true)) {
                             Notification::make()
                                 ->title('Error de asignación')
                                 ->body("El motorista {$motorista->nombre} no está disponible actualmente.")
                                 ->danger()
                                 ->send();
+
                             return;
                         }
 
                         app(AsignacionVehiculoMotoristaService::class)->asignar(
-                            vehiculoId:  (int) $data['vehiculo_id'],
+                            vehiculoId: (int) $data['vehiculo_id'],
                             motoristaId: (int) $data['motorista_id'],
-                            desde:       $data['desde'] ?? null,
+                            desde: $data['desde'] ?? null,
                         );
 
                         Notification::make()

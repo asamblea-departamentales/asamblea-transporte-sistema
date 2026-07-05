@@ -9,18 +9,18 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('solicitud_transportes', function (Blueprint $table) {
-            if (!Schema::hasColumn('solicitud_transportes', 'prioridad_grupo')) {
+            if (! Schema::hasColumn('solicitud_transportes', 'prioridad_grupo')) {
                 $table->enum('prioridad_grupo', [
                     'critica',
                     'alta',
                     'media',
                     'baja',
                 ])
-                ->nullable()
-                ->after('estado');
+                    ->nullable()
+                    ->after('estado');
             }
-            
-            if (!Schema::hasColumn('solicitud_transportes', 'prioridad_orden')) {
+
+            if (! Schema::hasColumn('solicitud_transportes', 'prioridad_orden')) {
                 $table->unsignedTinyInteger('prioridad_orden')
                     ->nullable()
                     ->after('prioridad_grupo')
@@ -33,7 +33,7 @@ return new class extends Migration
     {
         Schema::table('solicitud_transportes', function (Blueprint $table) {
             $columns = Schema::getColumnListing('solicitud_transportes');
-            
+
             if (in_array('prioridad_grupo', $columns)) {
                 $table->dropColumn('prioridad_grupo');
             }

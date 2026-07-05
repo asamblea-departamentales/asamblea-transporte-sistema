@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-            Schema::create('veh_clasificaciones', function (Blueprint $table) {
-                $table->id();
-                $table->string('nombre')->unique();
-                $table->boolean('activo')->default(true);
-                $table->timestamps();
-            });
+        Schema::create('veh_clasificaciones', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->unique();
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+        });
     }
 
     /**

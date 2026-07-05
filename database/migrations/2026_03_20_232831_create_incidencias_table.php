@@ -14,26 +14,26 @@ return new class extends Migration
         Schema::create('incidencias', function (Blueprint $table) {
             $table->id();
 
-            //Relaciones
+            // Relaciones
             $table->string('entidad_tipo');
             $table->unsignedBigInteger('entidad_id');
-            
-            //Datos principales de las incidencias
+
+            // Datos principales de las incidencias
             $table->string('tipo');
-            $table->string('severidad'); //Basado en el enum de severidad de la incidencia
+            $table->string('severidad'); // Basado en el enum de severidad de la incidencia
             $table->text('descripcion');
-            //Estado
+            // Estado
             $table->string('estado');
 
-            //Responsable de reportar la incidencia
+            // Responsable de reportar la incidencia
             $table->foreignId('resportado_por')->constrained('users');
             $table->foreignId('asignado_a')->nullable()->constrained('users');
 
-            //Resolucion 
+            // Resolucion
             $table->text('resolucion')->nullable();
             $table->timestamp('fecha_resolucion')->nullable();
 
-            //Evidencias simples
+            // Evidencias simples
             $table->json('evidencias')->nullable();
 
             $table->timestamps();
@@ -44,13 +44,13 @@ return new class extends Migration
      * Reverse the migrations.
      */
     public function down(): void
-{
-    Schema::table('incidencias', function (Blueprint $table) {
-        // Primero eliminamos las restricciones de llave foránea
-        $table->dropForeign(['resportado_por']);
-        $table->dropForeign(['asignado_a']);
-    });
+    {
+        Schema::table('incidencias', function (Blueprint $table) {
+            // Primero eliminamos las restricciones de llave foránea
+            $table->dropForeign(['resportado_por']);
+            $table->dropForeign(['asignado_a']);
+        });
 
-    Schema::dropIfExists('incidencias');
-}
+        Schema::dropIfExists('incidencias');
+    }
 };

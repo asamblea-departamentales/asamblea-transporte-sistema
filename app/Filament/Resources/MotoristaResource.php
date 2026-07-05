@@ -26,18 +26,32 @@ class MotoristaResource extends Resource
     protected static ?string $model = Motorista::class;
 
     protected static ?string $navigationGroup = 'Catálogos';
+
     protected static ?string $navigationLabel = 'Motoristas';
-    protected static ?string $navigationIcon  = 'heroicon-o-identification';
-    protected static ?int    $navigationSort  = 2;
+
+    protected static ?string $navigationIcon = 'heroicon-o-identification';
+
+    protected static ?int $navigationSort = 2;
 
     public static function canViewAny(): bool
     {
         return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
     }
 
-    public static function canCreate(): bool         { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']); }
-    public static function canEdit($record): bool   { return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']); }
-    public static function canDelete($record): bool { return auth()->user()->hasAnyRole(['admin', 'jefe', 'super_admin']); }
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'jefe', 'super_admin']);
+    }
 
     public static function form(Form $form): Form
     {
@@ -53,7 +67,7 @@ class MotoristaResource extends Resource
                     Forms\Components\TextInput::make('numero_empleado')
                         ->label('N° Empleado')
                         ->maxLength(50)
-                        ->placeholder('Ej: 1078'),    
+                        ->placeholder('Ej: 1078'),
 
                     Forms\Components\TextInput::make('dui')
                         ->label('DUI')
@@ -77,71 +91,73 @@ class MotoristaResource extends Resource
                     Forms\Components\TextInput::make('radio')
                         ->label('Radio / Nexte;')
                         ->maxLength(100)
-                        ->placeholder('Ej: 1025*315*98'),    
+                        ->placeholder('Ej: 1025*315*98'),
 
                     Forms\Components\Toggle::make('activo')
                         ->label('Activo')
                         ->default(true),
-     
+
                 ])->columns(2),
 
             Forms\Components\Section::make('Historial de estados')
-            ->description('Estados del motorista, incluyendo incapacidades y sus evidencias.')
-            ->icon('heroicon-o-clock')
-            ->schema([
-                Forms\Components\Repeater::make('historia_estados')
-                    ->label('')
-                    ->disabled()
-                    ->dehydrated(false)
-                    ->default(function ($record) {
-                        if (!$record) return [];
+                ->description('Estados del motorista, incluyendo incapacidades y sus evidencias.')
+                ->icon('heroicon-o-clock')
+                ->schema([
+                    Forms\Components\Repeater::make('historia_estados')
+                        ->label('')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->default(function ($record) {
+                            if (! $record) {
+                                return [];
+                            }
 
-                        return $record->estados()->orderByDesc('fecha_inicio')->get()
-                        ->map(fn ($estado) => [
-                            'estado' => $estado->activo ? 'Disponible' : 'No Disponible',
-                            'motivo' => $estado->motivo,
-                            'fecha'  => optional($estado->fecha_inicio)?->format('d/m/Y H:i'),
-                            'archivo' => $estado->archivo,
+                            return $record->estados()->orderByDesc('fecha_inicio')->get()
+                                ->map(fn ($estado) => [
+                                    'estado' => $estado->activo ? 'Disponible' : 'No Disponible',
+                                    'motivo' => $estado->motivo,
+                                    'fecha' => optional($estado->fecha_inicio)?->format('d/m/Y H:i'),
+                                    'archivo' => $estado->archivo,
+                                ])
+                                ->toArray();
+                        })
+
+                        ->schema([
+                            Forms\Components\TextInput::make('estado')
+                                ->label('Estado')
+                                ->disabled()
+                                ->columnSpan(1),
+
+                            Forms\Components\TextInput::make('motivo')
+                                ->label('Motivo')
+                                ->disabled()
+                                ->columnSpan(2),
+
+                            Forms\Components\TextInput::make('fecha')
+                                ->label('Fecha de Inicio')
+                                ->disabled()
+                                ->columnSpan(1),
+
+                            Forms\Components\Placeholder::make('archivo')
+                                ->label('Evidencia Adjunta')
+                                ->content(function ($get) {
+                                    $archivo = $get('archivo');
+                                    if (! $archivo) {
+                                        return 'Sin evidencia adjunta';
+                                    }
+
+                                    $url = Storage::disk('public')->url($archivo);
+
+                                    return new \Illuminate\Support\HtmlString(
+                                        "<a href='{$url}' target='_blank' style='color: #2563; font-weight: bold;'>📎 Ver Archivo</a>"
+                                    );
+                                }),
                         ])
-                        ->toArray();
-                    })
-
-                    ->schema([
-                        Forms\Components\TextInput::make('estado')
-                            ->label('Estado')
-                            ->disabled()
-                            ->columnSpan(1),
-
-                        Forms\Components\TextInput::make('motivo')
-                            ->label('Motivo')
-                            ->disabled()
-                            ->columnSpan(2),
-
-                        Forms\Components\TextInput::make('fecha')
-                            ->label('Fecha de Inicio')
-                            ->disabled()
-                            ->columnSpan(1),
-
-                        Forms\Components\Placeholder::make('archivo')
-                            ->label('Evidencia Adjunta')
-                            ->content(function ($get){
-                                $archivo = $get('archivo');
-                                if (!$archivo) {
-                                    return 'Sin evidencia adjunta';
-                                }
-
-                                $url = Storage::disk('public')->url($archivo);
-
-                                return new \Illuminate\Support\HtmlString(
-                                    "<a href='{$url}' target='_blank' style='color: #2563; font-weight: bold;'>📎 Ver Archivo</a>"
-                                );
-                            }),
-                    ])
-                    ->columns(3)
-                    ->columnSpanFull(),
-            ])
-            ->collapsible()
-            ->collapsed(false),    
+                        ->columns(3)
+                        ->columnSpanFull(),
+                ])
+                ->collapsible()
+                ->collapsed(false),
 
             Forms\Components\Section::make('Licencia de Conducir')
                 ->icon('heroicon-o-identification')
@@ -155,13 +171,13 @@ class MotoristaResource extends Resource
                     Forms\Components\TextInput::make('numero_licencia')
                         ->label('Número de Licencia')
                         ->maxLength(100)
-                        ->placeholder('Ej: 0614-050962-012-9'),   
-                        
+                        ->placeholder('Ej: 0614-050962-012-9'),
+
                     Forms\Components\DatePicker::make('fecha_vencimiento_licencia')
                         ->label('Fecha de Vencimiento')
-                        ->displayFormat('d/m/Y')
-                    
-                    ])->columns(3),
+                        ->displayFormat('d/m/Y'),
+
+                ])->columns(3),
         ]);
     }
 
@@ -171,8 +187,8 @@ class MotoristaResource extends Resource
             ->defaultSort('nombre', 'asc')
             ->contentGrid([
                 'default' => 1,
-                'md'      => 2,
-                'xl'      => 3,
+                'md' => 2,
+                'xl' => 3,
             ])
             ->recordUrl(fn (Motorista $record) => static::getUrl('view', ['record' => $record]))
             ->columns([
@@ -209,7 +225,7 @@ class MotoristaResource extends Resource
                         ->placeholder('Sin licencia')
                         ->badge()
                         ->color('warning')
-                        ->grow(false),    
+                        ->grow(false),
 
                     Tables\Columns\TextColumn::make('estadoActual.motivo')
                         ->label('Motivo Inactividad')
@@ -254,10 +270,10 @@ class MotoristaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListMotoristas::route('/'),
+            'index' => Pages\ListMotoristas::route('/'),
             'create' => Pages\CreateMotorista::route('/create'),
-            'edit'   => Pages\EditMotorista::route('/{record}/edit'),
-            'view'   => Pages\ViewMotorista::route('/{record}'),
+            'edit' => Pages\EditMotorista::route('/{record}/edit'),
+            'view' => Pages\ViewMotorista::route('/{record}'),
         ];
     }
 }

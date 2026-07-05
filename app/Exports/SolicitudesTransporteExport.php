@@ -5,24 +5,17 @@ namespace App\Exports;
 use App\Models\SolicitudTransporte;
 use Illuminate\Database\Eloquent\Builder;
 use Maatwebsite\Excel\Concerns\FromCollection;
+use Maatwebsite\Excel\Concerns\ShouldAutoSize;
+use Maatwebsite\Excel\Concerns\WithEvents;
+// Formato Excel
 use Maatwebsite\Excel\Concerns\WithHeadings;
 use Maatwebsite\Excel\Concerns\WithMapping;
-
-// Formato Excel
-use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Maatwebsite\Excel\Concerns\WithStyles;
-use Maatwebsite\Excel\Concerns\WithEvents;
 use Maatwebsite\Excel\Events\AfterSheet;
-use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
-class SolicitudesTransporteExport implements
-    FromCollection,
-    WithHeadings,
-    WithMapping,
-    ShouldAutoSize,
-    WithStyles,
-    WithEvents
+class SolicitudesTransporteExport implements FromCollection, ShouldAutoSize, WithEvents, WithHeadings, WithMapping, WithStyles
 {
     public function __construct(private Builder $query) {}
 
@@ -38,7 +31,7 @@ class SolicitudesTransporteExport implements
     {
         return [
             'Código',
-            'Ticket', //NUEVO - para mostrar el número de ticket en el reporte
+            'Ticket', // NUEVO - para mostrar el número de ticket en el reporte
             'Unidad',
             'Solicitante',
             'Motivo',
@@ -47,7 +40,7 @@ class SolicitudesTransporteExport implements
             'Fecha salida',
             'Fecha retorno',
             'Personas',
-            'Prioridad Grupo', //NUEVO - prioridad institucional del grupo del solicitante
+            'Prioridad Grupo', // NUEVO - prioridad institucional del grupo del solicitante
             'Prioridad',
             'Estado',
             'Decidido por',
@@ -60,9 +53,8 @@ class SolicitudesTransporteExport implements
     public function map($row): array
     {
         /** @var SolicitudTransporte $row */
-
         $prioridad = $row->prioridad?->value ?? (string) $row->prioridad;
-        $estado    = $row->estado?->value ?? (string) $row->estado;
+        $estado = $row->estado?->value ?? (string) $row->estado;
 
         $clean = fn ($v) => is_string($v) ? iconv('UTF-8', 'UTF-8//IGNORE', $v) : $v;
 
@@ -77,7 +69,7 @@ class SolicitudesTransporteExport implements
             optional($row->fecha_salida)->format('Y-m-d H:i'),
             optional($row->fecha_retorno)->format('Y-m-d H:i'),
             $row->cantidad_personas,
-            ucfirst($row->prioridad_grupo ?? 'baja'), //NUEVO - prioridad institucional
+            ucfirst($row->prioridad_grupo ?? 'baja'), // NUEVO - prioridad institucional
             strtoupper($prioridad),
             strtoupper($estado),
             $clean($row->autorizador?->name ?? ''),
@@ -156,14 +148,14 @@ class SolicitudesTransporteExport implements
                 }
 
                 //  Ajustes de alineación por columnas (opcional)
-                $sheet->getStyle("A:A")->getAlignment()->setHorizontal('center'); // Código
-                $sheet->getStyle("G:H")->getAlignment()->setHorizontal('center'); // Fechas
-                $sheet->getStyle("I:I")->getAlignment()->setHorizontal('center'); // Personas
-                $sheet->getStyle("J:K")->getAlignment()->setHorizontal('center'); // Prioridad/Estado
+                $sheet->getStyle('A:A')->getAlignment()->setHorizontal('center'); // Código
+                $sheet->getStyle('G:H')->getAlignment()->setHorizontal('center'); // Fechas
+                $sheet->getStyle('I:I')->getAlignment()->setHorizontal('center'); // Personas
+                $sheet->getStyle('J:K')->getAlignment()->setHorizontal('center'); // Prioridad/Estado
 
                 //  Wrap para columnas de texto largas
-                $sheet->getStyle("D:F")->getAlignment()->setWrapText(true); // motivo/origen/destino
-                $sheet->getStyle("N:N")->getAlignment()->setWrapText(true); // comentario jefe
+                $sheet->getStyle('D:F')->getAlignment()->setWrapText(true); // motivo/origen/destino
+                $sheet->getStyle('N:N')->getAlignment()->setWrapText(true); // comentario jefe
 
                 // Altura header
                 $sheet->getRowDimension(1)->setRowHeight(18);

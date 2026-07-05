@@ -2,18 +2,20 @@
 
 namespace App\Filament\Widgets;
 
+use App\Domain\Solicitudes\Services\Dashboard\DashboardService;
 use Filament\Widgets\StatsOverviewWidget;
 use Filament\Widgets\StatsOverviewWidget\Stat;
-use App\Domain\Solicitudes\Services\Dashboard\DashboardService;
 
 class DashboardStats extends StatsOverviewWidget
 {
     protected static ?int $sort = 5;
+
     protected int|string|array $columnSpan = [
         'default' => 1,
-        'sm'      => 1,
-        'lg'      => 2,
+        'sm' => 1,
+        'lg' => 2,
     ];
+
     protected function getStats(): array
     {
         $data = app(DashboardService::class)->getKpis();

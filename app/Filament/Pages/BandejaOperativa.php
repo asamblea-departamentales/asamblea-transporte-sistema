@@ -5,11 +5,10 @@ namespace App\Filament\Pages;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\Operativo\BandejaOperativaService;
-use Filament\Actions\Action;
 use Filament\Forms;
+use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Form;
 use Filament\Pages\Page;
-use Filament\Forms\Concerns\InteractsWithForms;
 use Illuminate\Support\Collection;
 use Livewire\WithPagination;
 
@@ -19,29 +18,39 @@ class BandejaOperativa extends Page implements Forms\Contracts\HasForms
     use WithPagination;
 
     protected static bool $shouldRegisterNavigation = false;
-    protected static ?string $navigationGroup = 'Gestión Operativa';
-    protected static ?string $navigationLabel = 'Bandeja Operativa';
-    protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
-    protected static ?int $navigationSort = 1;
 
+    protected static ?string $navigationGroup = 'Gestión Operativa';
+
+    protected static ?string $navigationLabel = 'Bandeja Operativa';
+
+    protected static ?string $navigationIcon = 'heroicon-o-inbox-stack';
+
+    protected static ?int $navigationSort = 1;
 
     protected static string $view = 'filament.pages.bandeja-operativa';
 
     public ?string $date_from = null;
+
     public ?string $date_to = null;
+
     public ?string $tipo = null;
+
     public ?string $estado = null;
+
     public ?string $prioridad = null;
 
     public int $kpi_total = 0;
+
     public int $kpi_transporte = 0;
+
     public int $kpi_combustible = 0;
+
     public int $kpi_mantenimiento = 0;
 
     public function mount(): void
     {
         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
 
         $this->form->fill($this->getFilterState());
         $this->refreshKpis();
@@ -129,7 +138,7 @@ class BandejaOperativa extends Page implements Forms\Contracts\HasForms
                                     ->label('Mes actual')
                                     ->action(function () {
                                         $this->date_from = now()->startOfMonth()->startOfDay()->toDateTimeString();
-                                        $this->date_to   = now()->endOfMonth()->endOfDay()->toDateTimeString();
+                                        $this->date_to = now()->endOfMonth()->endOfDay()->toDateTimeString();
                                         $this->form->fill($this->getFilterState());
                                         $this->resetPage();
                                         $this->refreshKpis();

@@ -20,6 +20,7 @@ class HistorialEstado extends Model
         // El orden es: nombre de la relación, columna tipo, columna id
         return $this->morphTo('entidad', 'entidad_tipo', 'entidad_id');
     }
+
     public function usuario()
     {
         return $this->belongsTo(User::class, 'user_id');

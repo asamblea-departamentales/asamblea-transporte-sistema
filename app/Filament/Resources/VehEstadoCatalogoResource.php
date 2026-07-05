@@ -12,47 +12,49 @@ namespace App\Filament\Resources;
 
 use App\Filament\Clusters\VehiculosCatalogos;
 use App\Filament\Resources\VehEstadoCatalogoResource\Pages;
-use App\Filament\Resources\VehEstadoCatalogoResource\RelationManagers;
 use App\Models\VehEstadoCatalogo;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class VehEstadoCatalogoResource extends Resource
 {
     protected static ?string $model = VehEstadoCatalogo::class;
+
     protected static ?string $cluster = VehiculosCatalogos::class;
+
     protected static ?string $navigationLabel = 'Estados de Catálogo';
+
     protected static ?int $navigationSort = 10;
 
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+
     protected static ?string $modelLabel = 'Estado de Catálogo';
+
     protected static ?string $pluralModelLabel = 'Estados de Catálogo';
 
-        public static function canViewAny(): bool
-        {
-            return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
-        }
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasAnyRole(['admin', 'ti', 'jefe', 'super_admin']);
+    }
 
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
                 Forms\Components\Section::make()->schema([
-                Forms\Components\TextInput::make('nombre')
-                    ->label('Nombre')
-                    ->required()
-                    ->maxLength(100)
-                    ->unique(ignoreRecord: true),
+                    Forms\Components\TextInput::make('nombre')
+                        ->label('Nombre')
+                        ->required()
+                        ->maxLength(100)
+                        ->unique(ignoreRecord: true),
 
-                Forms\Components\Toggle::make('activo')
-                    ->label('Activo')
-                    ->default(true),
-            ])->columns(2),
+                    Forms\Components\Toggle::make('activo')
+                        ->label('Activo')
+                        ->default(true),
+                ])->columns(2),
             ]);
     }
 
@@ -67,7 +69,7 @@ class VehEstadoCatalogoResource extends Resource
 
                 Tables\Columns\IconColumn::make('activo')
                     ->label('Activo')
-                    ->boolean()
+                    ->boolean(),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('activo')->label('Activo'),

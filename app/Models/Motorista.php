@@ -3,13 +3,12 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Models\SolicitudTransporte;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Motorista extends Model
 {
@@ -34,8 +33,8 @@ class Motorista extends Model
     protected $casts = [
         'activo' => 'boolean',
     ];
-    
-    //Relacion con sus estados
+
+    // Relacion con sus estados
     public function estados()
     {
         return $this->hasMany(MotoristaEstado::class);
@@ -48,7 +47,7 @@ class Motorista extends Model
 
     public function estadoActual()
     {
-        return $this->hasOne(MotoristaEstado::class)->latestOfMany('fecha_inicio');    
+        return $this->hasOne(MotoristaEstado::class)->latestOfMany('fecha_inicio');
     }
 
     public function asignacionesVehiculo(): HasMany
@@ -57,9 +56,9 @@ class Motorista extends Model
     }
 
     public function tipoLicencia(): BelongsTo
-{
-    return $this->belongsTo(\App\Models\TipoLicencia::class);
-}
+    {
+        return $this->belongsTo(\App\Models\TipoLicencia::class);
+    }
 
     public function sugerencia()
     {
@@ -82,14 +81,14 @@ class Motorista extends Model
             ->latest('desde');
     }
 
-    //NUEVOS: Scopes y Accesors para estados operativos
-    //True si el motorista no tiene estado o su estado actual es activo, false si su estado actual es inactivo
+    // NUEVOS: Scopes y Accesors para estados operativos
+    // True si el motorista no tiene estado o su estado actual es activo, false si su estado actual es inactivo
     public function getEstaDisponibleAttribute(): bool
     {
         return (bool) ($this->estadoActual?->activo ?? true);
     }
 
-    //Filtra motoristas sin estado o con estado activo
+    // Filtra motoristas sin estado o con estado activo
     public function scopeDisponibles(Builder $query): Builder
     {
         $disponiblesIds = MotoristaEstado::query()
@@ -124,16 +123,21 @@ class Motorista extends Model
             ])
             ->get()
             ->sum(function ($viaje) {
-                if ($viaje->horas_reales !== null) return (float) $viaje->horas_reales;
-                if ($viaje->horas_estimadas !== null) return (float) $viaje->horas_estimadas;
+                if ($viaje->horas_reales !== null) {
+                    return (float) $viaje->horas_reales;
+                }
+                if ($viaje->horas_estimadas !== null) {
+                    return (float) $viaje->horas_estimadas;
+                }
                 if ($viaje->fecha_salida && $viaje->fecha_retorno) {
                     return round($viaje->fecha_retorno->diffInMinutes($viaje->fecha_salida) / 60, 2);
                 }
+
                 return 0;
             });
     }
 
-    //Filtra motoristas con estado inactivo (o con estado activo pero que no es el último)
+    // Filtra motoristas con estado inactivo (o con estado activo pero que no es el último)
     public function scopeNoDisponibles(Builder $query): Builder
     {
         $noDisponiblesIds = MotoristaEstado::query()
@@ -148,5 +152,4 @@ class Motorista extends Model
 
         return $query->whereIn('id', $noDisponiblesIds);
     }
-
 }

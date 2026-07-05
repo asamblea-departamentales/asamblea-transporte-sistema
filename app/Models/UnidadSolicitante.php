@@ -28,8 +28,9 @@ class UnidadSolicitante extends Model
         'puede_solicitar_combustible' => 'boolean',
     ];
 
-    //Relacion con solicitudes (una unidad solicitante puede tener muchas solicitudes)
-    public function solicitudes(){
+    // Relacion con solicitudes (una unidad solicitante puede tener muchas solicitudes)
+    public function solicitudes()
+    {
         return $this->hasMany(SolicitudTransporte::class);
     }
 }

@@ -4,7 +4,6 @@ namespace App\Filament\Resources\MotoristaResource\Pages;
 
 use App\Filament\Resources\MotoristaResource;
 use App\Models\User;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateMotorista extends CreateRecord
@@ -28,7 +27,7 @@ class CreateMotorista extends CreateRecord
             ->orWhere('name', $motorista->nombre)
             ->first();
 
-        if (!$user) {
+        if (! $user) {
 
             $parts = array_values(array_filter(explode(' ', trim($motorista->nombre))));
             $firstName = $parts[0] ?? '';

@@ -1,4 +1,5 @@
 <?php
+
 // -----------------------------------------------------------------------------
 // RECURSO PRINCIPAL PARA TIPOS DE LICENCIA
 // -----------------------------------------------------------------------------
@@ -21,17 +22,38 @@ use Filament\Tables\Table;
 class TipoLicenciaResource extends Resource
 {
     protected static ?string $model = TipoLicencia::class;
-    protected static ?string $navigationGroup = 'Catálogos Globales';
-    protected static ?string $navigationLabel = 'Tipos de Licencia';
-    protected static ?string $pluralModelLabel = 'Tipos de Licencia';
-    protected static ?string $modelLabel = 'Tipo de Licencia';
-    protected static ?string $navigationIcon  = 'heroicon-o-identification';
-    protected static ?int    $navigationSort  = 11;
 
-    public static function canViewAny(): bool  { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']); }
+    protected static ?string $navigationGroup = 'Catálogos Globales';
+
+    protected static ?string $navigationLabel = 'Tipos de Licencia';
+
+    protected static ?string $pluralModelLabel = 'Tipos de Licencia';
+
+    protected static ?string $modelLabel = 'Tipo de Licencia';
+
+    protected static ?string $navigationIcon = 'heroicon-o-identification';
+
+    protected static ?int $navigationSort = 11;
+
+    public static function canViewAny(): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canEdit($r): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin', 'ti', 'jefe']);
+    }
+
+    public static function canDelete($r): bool
+    {
+        return auth()->user()->hasAnyRole(['super_admin', 'superadmin', 'admin']);
+    }
 
     public static function form(Form $form): Form
     {
@@ -54,54 +76,55 @@ class TipoLicenciaResource extends Resource
         ]);
     }
 
-   public static function table(Table $table): Table
-{
-    return $table
-        ->defaultSort('nombre')
-        ->columns([
-            Tables\Columns\TextColumn::make('nombre')
-                ->label('Categoría de Licencia')
-                ->searchable()
-                ->sortable()
-                ->weight('bold')
-                ->size('lg')
-                ->icon('heroicon-m-identification')
-                ->color('primary'),
+    public static function table(Table $table): Table
+    {
+        return $table
+            ->defaultSort('nombre')
+            ->columns([
+                Tables\Columns\TextColumn::make('nombre')
+                    ->label('Categoría de Licencia')
+                    ->searchable()
+                    ->sortable()
+                    ->weight('bold')
+                    ->size('lg')
+                    ->icon('heroicon-m-identification')
+                    ->color('primary'),
 
-            Tables\Columns\TextColumn::make('motoristas_count')
-                ->label('Personal Asignado')
-                ->counts('motoristas')
-                ->badge()
-                ->color(fn ($state) => $state > 0 ? 'info' : 'gray')
-                ->icon('heroicon-m-users')
-                ->alignCenter(),
+                Tables\Columns\TextColumn::make('motoristas_count')
+                    ->label('Personal Asignado')
+                    ->counts('motoristas')
+                    ->badge()
+                    ->color(fn ($state) => $state > 0 ? 'info' : 'gray')
+                    ->icon('heroicon-m-users')
+                    ->alignCenter(),
 
-            // Usamos ToggleColumn para que puedas activar/desactivar licencias desde la lista
-            Tables\Columns\ToggleColumn::make('activo')
-                ->label('Estado')
-                ->alignEnd(),
-        ])
-        ->filters([
-            Tables\Filters\TernaryFilter::make('activo')
-                ->label('Estado de Categoría'),
-        ])
-        ->actions([
-            Tables\Actions\ActionGroup::make([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make()
-                    ->before(function ($record, $action) {
-                        if ($record->motoristas_count > 0) {
-                            $action->cancel();
-                            \Filament\Notifications\Notification::make()
-                                ->title('Acción Bloqueada')
-                                ->body('No puedes eliminar una licencia que ya está siendo usada por motoristas.')
-                                ->danger()
-                                ->send();
-                        }
-                    }),
-            ])->button()->label('Acciones')->color('gray')
-        ]);
-}
+                // Usamos ToggleColumn para que puedas activar/desactivar licencias desde la lista
+                Tables\Columns\ToggleColumn::make('activo')
+                    ->label('Estado')
+                    ->alignEnd(),
+            ])
+            ->filters([
+                Tables\Filters\TernaryFilter::make('activo')
+                    ->label('Estado de Categoría'),
+            ])
+            ->actions([
+                Tables\Actions\ActionGroup::make([
+                    Tables\Actions\EditAction::make(),
+                    Tables\Actions\DeleteAction::make()
+                        ->before(function ($record, $action) {
+                            if ($record->motoristas_count > 0) {
+                                $action->cancel();
+                                \Filament\Notifications\Notification::make()
+                                    ->title('Acción Bloqueada')
+                                    ->body('No puedes eliminar una licencia que ya está siendo usada por motoristas.')
+                                    ->danger()
+                                    ->send();
+                            }
+                        }),
+                ])->button()->label('Acciones')->color('gray'),
+            ]);
+    }
+
     public static function getEloquentQuery(): \Illuminate\Database\Eloquent\Builder
     {
         return parent::getEloquentQuery()->withCount('motoristas');
@@ -110,9 +133,9 @@ class TipoLicenciaResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => Pages\ListTipoLicencias::route('/'),
+            'index' => Pages\ListTipoLicencias::route('/'),
             'create' => Pages\CreateTipoLicencia::route('/create'),
-            'edit'   => Pages\EditTipoLicencia::route('/{record}/edit'),
+            'edit' => Pages\EditTipoLicencia::route('/{record}/edit'),
         ];
     }
 }

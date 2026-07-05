@@ -1,4 +1,5 @@
 <?php
+
 // -----------------------------------------------------------------------------
 // RECURSO PRINCIPAL PARA PAÍSES
 // -----------------------------------------------------------------------------
@@ -10,24 +11,27 @@
 namespace App\Filament\Resources;
 
 use App\Filament\Resources\PaisResource\Pages;
-use App\Filament\Resources\PaisResource\RelationManagers;
 use App\Models\Pais;
 use Filament\Forms;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
-use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PaisResource extends Resource
 {
     protected static ?string $model = Pais::class;
+
     protected static ?string $navigationGroup = 'Catálogos Globales';
+
     protected static ?string $navigationLabel = 'Países';
+
     protected static ?string $pluralModelLabel = 'Países';
+
     protected static ?string $modelLabel = 'País';
+
     protected static ?string $navigationIcon = 'heroicon-o-globe-alt';
+
     protected static ?int $navigationSort = 6;
 
     public static function canViewAny(): bool
@@ -35,9 +39,20 @@ class PaisResource extends Resource
         return auth()->user()->hasAnyRole(['super_admin', 'admin', 'jefe', 'ti']);
     }
 
-    public static function canCreate(): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']); }
-    public static function canEdit($r): bool   { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']); }
-    public static function canDelete($r): bool { return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe', 'super_admin']); }
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
+    }
+
+    public static function canEdit($r): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'ti', 'jefe', 'super_admin']);
+    }
+
+    public static function canDelete($r): bool
+    {
+        return auth()->user()->hasAnyRole(['superadmin', 'admin', 'jefe', 'super_admin']);
+    }
 
     public static function form(Form $form): Form
     {
@@ -86,7 +101,7 @@ class PaisResource extends Resource
 
                 Tables\Columns\IconColumn::make('activo')
                     ->label(label: 'Activo')
-                    ->boolean(),    
+                    ->boolean(),
             ])
             ->filters([
                 Tables\Filters\TernaryFilter::make('activo')
@@ -96,12 +111,12 @@ class PaisResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make()
-                ->button()
-                ->size('sm'),
+                    ->button()
+                    ->size('sm'),
 
                 Tables\Actions\DeleteAction::make()
-                ->button()
-                ->size('sm'),
+                    ->button()
+                    ->size('sm'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

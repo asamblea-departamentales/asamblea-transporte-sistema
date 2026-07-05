@@ -9,12 +9,9 @@
 // cualquier ingeniero, incluso sin experiencia en Laravel o Filament, pueda
 // entender cómo se administra la gestión de usuarios.
 
-
 namespace App\Filament\Resources;
 
-use Illuminate\Support\Facades\Hash;
 use App\Filament\Resources\UserResource\Pages;
-use App\Filament\Resources\UserResource\RelationManagers;
 use App\Models\User;
 use Filament\Forms;
 use Filament\Forms\Form;
@@ -22,38 +19,38 @@ use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use PhpParser\Node\Stmt\Label;
 use Spatie\Permission\Models\Role;
 
 // Esta clase representa el "recurso" de Usuarios.
 // Un recurso es una pantalla o módulo donde se pueden ver, crear y gestionar usuarios.
 class UserResource extends Resource
 {
-
     // Indica el modelo principal que representa un usuario en la base de datos.
     protected static ?string $model = User::class;
 
-
     // Icono visual para identificar este recurso en el menú.
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
+
     // Agrupa este recurso en el menú bajo "Administración".
     protected static ?string $navigationGroup = 'Administracion';
+
     // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 1;
+
     // Nombre que aparece en el menú de navegación.
     protected static ?string $navigationLabel = 'Usuarios';
 
-    
-    // ------------------------------------------------------------------------- 
+    // -------------------------------------------------------------------------
     // Controla quién puede ver la lista de usuarios.
     // Solo ciertos roles pueden acceder a la gestión de usuarios.
     public static function canViewAny(): bool
     {
         $u = auth()->user();
+
         // Solo los usuarios con rol de super_admin, ti o admin pueden ver este recurso.
         return $u?->hasAnyRole(['super_admin', 'ti', 'admin']) ?? false;
     }
+
     // -------------------------------------------------------------------------
     // FORMULARIO PRINCIPAL
     // -------------------------------------------------------------------------
@@ -85,57 +82,56 @@ class UserResource extends Resource
                             ->searchable()
                             ->preload()
                             ->required(),
-                        
-                    Forms\Components\Toggle::make('activo')
-                        ->label('Activo')
-                        ->default(true)
-                        ->inline(false),
-                        
-                    Forms\Components\Select::make('grupo_id')
-                        ->label('Grupo')
-                        ->relationship('grupo', 'nombre')
-                        ->options(fn () => \App\Models\Grupo::activos()->pluck('nombre', 'id'))
-                        ->searchable()
-                        ->preload()
-                        ->nullable()
-                        ->visible(fn () =>
-                            auth()->user()->hasAnyRole(['admin', 'super_admin', 'ti', 'operativo'])
-                        ),
-                ]), 
-                
-               Forms\Components\Section::make('Seguridad')
+
+                        Forms\Components\Toggle::make('activo')
+                            ->label('Activo')
+                            ->default(true)
+                            ->inline(false),
+
+                        Forms\Components\Select::make('grupo_id')
+                            ->label('Grupo')
+                            ->relationship('grupo', 'nombre')
+                            ->options(fn () => \App\Models\Grupo::activos()->pluck('nombre', 'id'))
+                            ->searchable()
+                            ->preload()
+                            ->nullable()
+                            ->visible(fn () => auth()->user()->hasAnyRole(['admin', 'super_admin', 'ti', 'operativo'])
+                            ),
+                    ]),
+
+                Forms\Components\Section::make('Seguridad')
                     ->columns(2)
                     ->schema([
                         Forms\Components\TextInput::make('password')
-    ->label('Contraseña')
-    ->password()
-    ->revealable()
+                            ->label('Contraseña')
+                            ->password()
+                            ->revealable()
     // ❌ Quitar esta línea — el cast 'hashed' del modelo ya hashea
     // ->dehydrateStateUsing(fn ($state) => \Illuminate\Support\Facades\Hash::make($state))
-    ->dehydrated(fn ($state) => filled($state))
-    ->required(fn ($context) => $context === 'create')
-    ->helperText('Dejar en blanco para mantener la contraseña actual')
-    ->minLength(9),
+                            ->dehydrated(fn ($state) => filled($state))
+                            ->required(fn ($context) => $context === 'create')
+                            ->helperText('Dejar en blanco para mantener la contraseña actual')
+                            ->minLength(9),
 
                         Forms\Components\Select::make('roles')
-    ->label('Roles')
-    ->multiple()
-    ->searchable()
-    ->preload()
-    ->options(
-        \Spatie\Permission\Models\Role::where('guard_name', 'web')
-            ->pluck('name', 'name') // clave = nombre, valor = nombre
-    )
-    ->afterStateHydrated(function ($component, $record) {
-        if ($record) {
-            $component->state($record->roles->pluck('name')->toArray());
-        }
-    })
-    ->saveRelationshipsUsing(function ($record, $state) {
-        $record->syncRoles($state ?? []);
-    })
-    ->helperText('Seleccioná uno o varios roles.'),
-                    ])
+                            ->label('Roles')
+                            ->multiple()
+                            ->searchable()
+                            ->preload()
+                            ->options(
+                                \Spatie\Permission\Models\Role::where('guard_name', 'web')
+                                    ->pluck('name', 'name') // clave = nombre, valor = nombre
+                            )
+                            ->afterStateHydrated(function ($component, $record) {
+                                if ($record) {
+                                    $component->state($record->roles->pluck('name')->toArray());
+                                }
+                            })
+                            ->saveRelationshipsUsing(function ($record, $state) {
+                                $record->syncRoles($state ?? []);
+                            })
+                            ->helperText('Seleccioná uno o varios roles.'),
+                    ]),
             ]);
     }
 
@@ -182,7 +178,10 @@ class UserResource extends Resource
                     ->label('Rol')
                     ->options(fn () => Role::query()->orderBy('name')->pluck('name', 'name')->toArray())
                     ->query(function (Builder $query, array $data) {
-                        if (empty($data['value'])) return $query;
+                        if (empty($data['value'])) {
+                            return $query;
+                        }
+
                         return $query->whereHas('roles', fn ($q) => $q->where('name', $data['value']));
                     }),
                 Tables\Filters\SelectFilter::make('grupo')
@@ -199,7 +198,7 @@ class UserResource extends Resource
                     ->color(fn (User $record) => $record->activo ? 'danger' : 'success')
                     ->requiresConfirmation()
                     ->action(function (User $record) {
-                        $record->update(['activo' => !$record->activo]);
+                        $record->update(['activo' => ! $record->activo]);
                     }),
             ])
             ->bulkActions([

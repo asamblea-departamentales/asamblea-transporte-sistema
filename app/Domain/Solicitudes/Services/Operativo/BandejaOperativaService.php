@@ -2,14 +2,13 @@
 
 namespace App\Domain\Solicitudes\Services\Operativo;
 
-use App\Models\SolicitudCombustible;
-use App\Models\SolicitudMantenimiento;
-use App\Models\SolicitudTransporte;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
+use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
 use Illuminate\Support\Collection;
-
 
 class BandejaOperativaService
 {
@@ -22,19 +21,19 @@ class BandejaOperativaService
             ->sortBy('fecha_ingreso')
             ->values();
 
-        if (!empty($filters['tipo'])) {
+        if (! empty($filters['tipo'])) {
             $rows = $rows->where('tipo', $filters['tipo'])->values();
         }
 
-        if (!empty($filters['prioridad'])) {
+        if (! empty($filters['prioridad'])) {
             $rows = $rows->where('prioridad', $filters['prioridad'])->values();
         }
 
-        if (!empty($filters['prioridad_grupo'])) {
+        if (! empty($filters['prioridad_grupo'])) {
             $rows = $rows->where('prioridad_grupo', $filters['prioridad_grupo'])->values();
         }
 
-        if (!empty($filters['estado'])) {
+        if (! empty($filters['estado'])) {
             $rows = $rows->where('estado', $filters['estado'])->values();
         }
 
@@ -117,11 +116,11 @@ class BandejaOperativaService
                 EstadoSolicitudEnum::EN_REVISION,
             ]);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -153,11 +152,11 @@ class BandejaOperativaService
                 EstadoSolicitudEnum::EN_REVISION,
             ]);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -192,11 +191,11 @@ class BandejaOperativaService
                 EstadoSolicitudEnum::EN_REVISION,
             ]);
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $query->where('created_at', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
@@ -209,7 +208,7 @@ class BandejaOperativaService
                 'solicitante' => $r->solicitante?->name ?? '—',
                 'unidad' => $r->solicitante?->unidadSolicitante?->nombre ?? '—',
                 'detalle' => $r->tipoMantenimiento?->nombre
-                    ? $r->tipoMantenimiento->nombre . ' - ' . $r->detalle
+                    ? $r->tipoMantenimiento->nombre.' - '.$r->detalle
                     : $r->detalle,
                 'tipo_mantenimiento_nombre' => $r->tipoMantenimiento?->nombre ?? null,
                 'prioridad' => $this->enumValue($r->prioridad),

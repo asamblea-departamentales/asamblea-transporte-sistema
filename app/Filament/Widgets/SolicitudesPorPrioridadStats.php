@@ -2,7 +2,6 @@
 
 namespace App\Filament\Widgets;
 
-use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudTransporte;
 use Filament\Widgets\StatsOverviewWidget as BaseWidget;

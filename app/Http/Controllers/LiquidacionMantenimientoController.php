@@ -21,8 +21,8 @@ class LiquidacionMantenimientoController extends Controller
     /**
      * Genera y muestra el PDF de la liquidación de una solicitud de mantenimiento.
      *
-     * @param int $id  Identificador de la solicitud de mantenimiento.
-     * @return \Illuminate\Http\Response  PDF generado para el usuario.
+     * @param  int  $id  Identificador de la solicitud de mantenimiento.
+     * @return \Illuminate\Http\Response PDF generado para el usuario.
      */
     public function pdf($id)
     {

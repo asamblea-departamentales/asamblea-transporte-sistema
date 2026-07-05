@@ -1,7 +1,8 @@
 <?php
 
 namespace App\Domain\Solicitudes\Services;
-//Servicio encargado de gestionar la logica y las transiciones de estado de las Solicitudes de Transporte
+
+// Servicio encargado de gestionar la logica y las transiciones de estado de las Solicitudes de Transporte
 // aplicando un patron de servicios, sacamos la logica del controlador y del resource
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
@@ -9,13 +10,11 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
 use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
+use App\Models\Motorista;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
-use App\Models\Motorista;
 use App\Models\Vehiculo;
-use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 /**
  *Archivo principal del servicio de Solicitudes de Transporte, aplicando un patron de servicios, sacamos la logica del controlador o algun otro resource
@@ -146,13 +145,13 @@ class SolicitudTransporteService
         int $motoristaId,
         ?string $justificacion = null
     ): array {
-        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
             throw new \DomainException('Solo se pueden asignar recursos a solicitudes en revisión o pre-aprobadas.');
         }
 
         return DB::transaction(function () use ($solicitud, $userId, $vehiculoId, $motoristaId, $justificacion) {
             $sugerencia = $solicitud->sugerencia;
-            if (!$sugerencia) {
+            if (! $sugerencia) {
                 $sugerencia = $this->generarSugerencia($solicitud);
             }
 
@@ -173,11 +172,15 @@ class SolicitudTransporteService
             if ($solicitud->decision_final !== null) {
                 if ($solicitud->vehiculo_id) {
                     $v = Vehiculo::find($solicitud->vehiculo_id);
-                    if ($v) app(EstadoFlotaService::class)->liberarVehiculo($v);
+                    if ($v) {
+                        app(EstadoFlotaService::class)->liberarVehiculo($v);
+                    }
                 }
                 if ($solicitud->motorista_id) {
                     $m = Motorista::find($solicitud->motorista_id);
-                    if ($m) app(EstadoFlotaService::class)->liberarMotorista($m, $solicitud->codigo);
+                    if ($m) {
+                        app(EstadoFlotaService::class)->liberarMotorista($m, $solicitud->codigo);
+                    }
                 }
                 $solicitud->decision_final = null;
                 $solicitud->vehiculo_id = null;
@@ -222,7 +225,7 @@ class SolicitudTransporteService
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (!in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
+        if (! in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
             throw new \InvalidArgumentException('decision_final debe ser "operativo", "sistema" o "manual".');
         }
 
@@ -234,27 +237,31 @@ class SolicitudTransporteService
             $motoristaAnteriorId = $solicitud->motorista_id;
 
             if ($decisionFinal === 'manual') {
-                if (!$vehiculoId || !$motoristaId) {
+                if (! $vehiculoId || ! $motoristaId) {
                     throw new \DomainException('Para decisión manual debe proporcionar vehículo y motorista.');
                 }
                 $v = Vehiculo::find($vehiculoId);
                 $m = Motorista::find($motoristaId);
-                if ($v && !$v->esta_disponible) {
+                if ($v && ! $v->esta_disponible) {
                     throw new \DomainException("El vehículo {$v->placa} seleccionado ya no está disponible.");
                 }
-                if ($m && !$m->esta_disponible) {
+                if ($m && ! $m->esta_disponible) {
                     throw new \DomainException("El motorista {$m->nombre} seleccionado ya no está disponible.");
                 }
                 $solicitud->vehiculo_id = $vehiculoId;
                 $solicitud->motorista_id = $motoristaId;
             } elseif ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
-                if (!$decision) throw new \DomainException('No hay decisión operativa registrada.');
+                if (! $decision) {
+                    throw new \DomainException('No hay decisión operativa registrada.');
+                }
                 $solicitud->vehiculo_id = $decision->vehiculo_final_id;
                 $solicitud->motorista_id = $decision->motorista_final_id;
             } else {
                 $sugerencia = $solicitud->sugerencia;
-                if (!$sugerencia) throw new \DomainException('No hay sugerencia del sistema.');
+                if (! $sugerencia) {
+                    throw new \DomainException('No hay sugerencia del sistema.');
+                }
                 $solicitud->vehiculo_id = $sugerencia->vehiculo_sugerido_id;
                 $solicitud->motorista_id = $sugerencia->motorista_sugerido_id;
             }
@@ -264,16 +271,16 @@ class SolicitudTransporteService
                 $vehiculoSugerido = Vehiculo::find($solicitud->vehiculo_id);
                 $motoristaSugerido = Motorista::find($solicitud->motorista_id);
 
-                if ($vehiculoSugerido && !$vehiculoSugerido->esta_disponible) {
+                if ($vehiculoSugerido && ! $vehiculoSugerido->esta_disponible) {
                     throw new \DomainException(
                         "El vehículo {$vehiculoSugerido->placa} sugerido por el sistema ya no está disponible. "
-                        . "Solicite al operativo una re-asignación."
+                        .'Solicite al operativo una re-asignación.'
                     );
                 }
-                if ($motoristaSugerido && !$motoristaSugerido->esta_disponible) {
+                if ($motoristaSugerido && ! $motoristaSugerido->esta_disponible) {
                     throw new \DomainException(
                         "El motorista {$motoristaSugerido->nombre} sugerido por el sistema ya no está disponible. "
-                        . "Solicite al operativo una re-asignación."
+                        .'Solicite al operativo una re-asignación.'
                     );
                 }
             }
@@ -281,11 +288,15 @@ class SolicitudTransporteService
             // Liberar recursos previamente consolidados
             if ($vehiculoAnteriorId) {
                 $v = Vehiculo::find($vehiculoAnteriorId);
-                if ($v) app(EstadoFlotaService::class)->liberarVehiculo($v);
+                if ($v) {
+                    app(EstadoFlotaService::class)->liberarVehiculo($v);
+                }
             }
             if ($motoristaAnteriorId) {
                 $m = Motorista::find($motoristaAnteriorId);
-                if ($m) app(EstadoFlotaService::class)->liberarMotorista($m, $solicitud->codigo);
+                if ($m) {
+                    app(EstadoFlotaService::class)->liberarMotorista($m, $solicitud->codigo);
+                }
             }
 
             if ($solicitud->fecha_salida && $solicitud->fecha_retorno) {
@@ -298,15 +309,21 @@ class SolicitudTransporteService
             $solicitud->decidido_por = $jefeId;
             $solicitud->decidido_en = now();
             $solicitud->comentario_jefe = $comentario;
-            if ($firma) $solicitud->firma_aprobador = $firma;
+            if ($firma) {
+                $solicitud->firma_aprobador = $firma;
+            }
             $solicitud->estado = EstadoSolicitudEnum::APROBADA;
             $solicitud->save();
 
             // Reservar nuevos recursos consolidados
             $vNuevo = Vehiculo::find($solicitud->vehiculo_id);
             $mNuevo = Motorista::find($solicitud->motorista_id);
-            if ($vNuevo) app(EstadoFlotaService::class)->reservarVehiculo($vNuevo, $solicitud->codigo);
-            if ($mNuevo) app(EstadoFlotaService::class)->ocuparMotorista($mNuevo, $solicitud->codigo);
+            if ($vNuevo) {
+                app(EstadoFlotaService::class)->reservarVehiculo($vNuevo, $solicitud->codigo);
+            }
+            if ($mNuevo) {
+                app(EstadoFlotaService::class)->ocuparMotorista($mNuevo, $solicitud->codigo);
+            }
 
             $decisionLabels = [
                 'operativo' => 'asignación previa del operativo',
@@ -317,7 +334,9 @@ class SolicitudTransporteService
             $vPlaca = $vNuevo?->placa ?? 'N/A';
             $mNombre = $mNuevo?->nombre ?? 'N/A';
             $comentarioEnriquecido = "Aprobado vía {$label}. Vehículo: {$vPlaca}, Motorista: {$mNombre}";
-            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+            if ($comentario) {
+                $comentarioEnriquecido .= ". Observación: {$comentario}";
+            }
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
@@ -352,10 +371,9 @@ class SolicitudTransporteService
      * Este método realiza todos los cambios dentro de una transacción para
      * garantizar que la reasignación sea atómica (todo o nada).
      */
-
     public function desbloquear(SolicitudTransporte $solicitud, int $userId): array
     {
-        if (!in_array($solicitud->estado, [
+        if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::PRE_APROBADA,
             EstadoSolicitudEnum::RECHAZADA,
@@ -394,7 +412,7 @@ class SolicitudTransporteService
         int $motoristaId,
         string $motivoReasignacion
     ): SolicitudTransporte {
-        if (!in_array($solicitud->estado, [
+        if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::PROGRAMADA,
         ], true)) {
@@ -408,10 +426,10 @@ class SolicitudTransporteService
 
             $v = Vehiculo::find($vehiculoId);
             $m = Motorista::find($motoristaId);
-            if ($v && !$v->esta_disponible) {
+            if ($v && ! $v->esta_disponible) {
                 throw new \DomainException("El vehículo {$v->placa} seleccionado no está disponible.");
             }
-            if ($m && !$m->esta_disponible) {
+            if ($m && ! $m->esta_disponible) {
                 throw new \DomainException("El motorista {$m->nombre} seleccionado no está disponible.");
             }
 
@@ -424,15 +442,23 @@ class SolicitudTransporteService
 
             if ($vehiculoAnteriorId) {
                 $vAnterior = Vehiculo::find($vehiculoAnteriorId);
-                if ($vAnterior) app(EstadoFlotaService::class)->liberarVehiculo($vAnterior);
+                if ($vAnterior) {
+                    app(EstadoFlotaService::class)->liberarVehiculo($vAnterior);
+                }
             }
             if ($motoristaAnteriorId) {
                 $mAnterior = Motorista::find($motoristaAnteriorId);
-                if ($mAnterior) app(EstadoFlotaService::class)->liberarMotorista($mAnterior, $solicitud->codigo);
+                if ($mAnterior) {
+                    app(EstadoFlotaService::class)->liberarMotorista($mAnterior, $solicitud->codigo);
+                }
             }
 
-            if ($v) app(EstadoFlotaService::class)->reservarVehiculo($v, $solicitud->codigo);
-            if ($m) app(EstadoFlotaService::class)->ocuparMotorista($m, $solicitud->codigo);
+            if ($v) {
+                app(EstadoFlotaService::class)->reservarVehiculo($v, $solicitud->codigo);
+            }
+            if ($m) {
+                app(EstadoFlotaService::class)->ocuparMotorista($m, $solicitud->codigo);
+            }
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId,
                 "Reasignación: {$motivoReasignacion}");
@@ -454,9 +480,16 @@ class SolicitudTransporteService
         $cambioV = $sugerencia->vehiculo_sugerido_id !== $vehiculoId;
         $cambioM = $sugerencia->motorista_sugerido_id !== $motoristaId;
 
-        if ($cambioV && $cambioM) return 'ambos';
-        if ($cambioV) return 'vehiculo';
-        if ($cambioM) return 'chofer';
+        if ($cambioV && $cambioM) {
+            return 'ambos';
+        }
+        if ($cambioV) {
+            return 'vehiculo';
+        }
+        if ($cambioM) {
+            return 'chofer';
+        }
+
         return 'ninguno';
     }
 
@@ -536,7 +569,7 @@ class SolicitudTransporteService
     private function enviarCorreoMotoristaAsignado(SolicitudTransporte $solicitud): void
     {
         $motorista = $solicitud->motorista;
-        if (!$motorista) {
+        if (! $motorista) {
             return;
         }
         $email = $motorista->user?->email ?? $motorista->correo;
@@ -660,26 +693,26 @@ class SolicitudTransporteService
         if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
             throw new \DomainException('Solo se pueden programar solicitudes en pre-aprobada.');
         }
-        if (!$solicitud->decision_final) {
+        if (! $solicitud->decision_final) {
             throw new \DomainException('La solicitud debe tener una decisión aprobada antes de programar.');
         }
-        if (!$solicitud->vehiculo_id || !$solicitud->motorista_id) {
+        if (! $solicitud->vehiculo_id || ! $solicitud->motorista_id) {
             throw new \DomainException('La solicitud debe tener vehículo y motorista consolidados.');
         }
 
         // Validar disponibilidad actual de los recursos consolidados
         $vehiculo = Vehiculo::find($solicitud->vehiculo_id);
         $motorista = Motorista::find($solicitud->motorista_id);
-        if ($vehiculo && !$vehiculo->esta_disponible) {
+        if ($vehiculo && ! $vehiculo->esta_disponible) {
             throw new \DomainException(
                 "El vehículo {$vehiculo->placa} consolidado ya no está disponible. "
-                . "Solicite al operativo una re-asignación antes de programar."
+                .'Solicite al operativo una re-asignación antes de programar.'
             );
         }
-        if ($motorista && !$motorista->esta_disponible) {
+        if ($motorista && ! $motorista->esta_disponible) {
             throw new \DomainException(
                 "El motorista {$motorista->nombre} consolidado ya no está disponible. "
-                . "Solicite al operativo una re-asignación antes de programar."
+                .'Solicite al operativo una re-asignación antes de programar.'
             );
         }
 

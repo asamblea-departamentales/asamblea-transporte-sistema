@@ -22,10 +22,10 @@ class SolicitudDestinoAdicional extends Model
     protected function casts(): array
     {
         return [
-            'lat'                    => 'decimal:8',
-            'lng'                    => 'decimal:8',
+            'lat' => 'decimal:8',
+            'lng' => 'decimal:8',
             'agregado_durante_viaje' => 'boolean',
-            'orden'                  => 'integer',
+            'orden' => 'integer',
         ];
     }
 

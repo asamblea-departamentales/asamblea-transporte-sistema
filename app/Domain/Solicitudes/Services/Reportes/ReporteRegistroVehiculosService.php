@@ -18,37 +18,36 @@ class ReporteRegistroVehiculosService
     /**
      * Obtiene los registros pareados de entrega/recepción para un vehículo y rango.
      *
-     * @param  int    $vehiculoId
-     * @param  string $fechaInicio Y-m-d
-     * @param  string $fechaFin    Y-m-d
-     * @return Collection  de arrays con keys:
-     *   fecha, km_inicial, km_final, km_recorridos, lugares, motorista_nombre,
-     *   combustible_salida, combustible_regreso
+     * @param  string  $fechaInicio  Y-m-d
+     * @param  string  $fechaFin  Y-m-d
+     * @return Collection de arrays con keys:
+     *                    fecha, km_inicial, km_final, km_recorridos, lugares, motorista_nombre,
+     *                    combustible_salida, combustible_regreso
      */
     public function getRegistros(int $vehiculoId, string $fechaInicio, string $fechaFin): Collection
     {
         $movimientos = RecepcionEntregaVehiculo::with(['motorista', 'solicitud'])
             ->where('vehiculo_id', $vehiculoId)
-            ->whereBetween('fecha_hora', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59'])
+            ->whereBetween('fecha_hora', [$fechaInicio.' 00:00:00', $fechaFin.' 23:59:59'])
             ->orderBy('fecha_hora')
             ->get();
 
         // Agrupar por solicitud_transporte_id
         $grupos = $movimientos->groupBy(function ($item) {
-            return $item->solicitud_transporte_id ?? 'sin_solicitud_' . $item->id;
+            return $item->solicitud_transporte_id ?? 'sin_solicitud_'.$item->id;
         });
 
         $resultados = collect();
 
         foreach ($grupos as $grupo) {
-            $entrega   = $grupo->firstWhere('tipo_movimiento', 'entrega');
+            $entrega = $grupo->firstWhere('tipo_movimiento', 'entrega');
             $recepcion = $grupo->firstWhere('tipo_movimiento', 'recepcion');
 
             $solicitud = $entrega?->solicitud ?? $recepcion?->solicitud;
             $motorista = $entrega?->motorista ?? $recepcion?->motorista;
 
             $kmInicial = $entrega?->kilometraje;
-            $kmFinal   = $recepcion?->kilometraje;
+            $kmFinal = $recepcion?->kilometraje;
             $kmRecorridos = null;
             if ($kmInicial !== null && $kmFinal !== null) {
                 $kmRecorridos = (int) $kmFinal - (int) $kmInicial;
@@ -56,18 +55,18 @@ class ReporteRegistroVehiculosService
 
             $lugares = '';
             if ($solicitud) {
-                $lugares = ($solicitud->origen ?? '') . ' → ' . ($solicitud->destino ?? '');
+                $lugares = ($solicitud->origen ?? '').' → '.($solicitud->destino ?? '');
                 $lugares = trim($lugares, ' →');
             }
 
             $resultados->push([
-                'fecha'               => $entrega?->fecha_hora ?? $recepcion?->fecha_hora,
-                'km_inicial'          => $kmInicial,
-                'km_final'            => $kmFinal,
-                'km_recorridos'       => $kmRecorridos,
-                'lugares'             => $lugares ?: '—',
-                'motorista_nombre'    => $motorista?->nombre ?? '—',
-                'combustible_salida'  => $entrega?->nivel_combustible,
+                'fecha' => $entrega?->fecha_hora ?? $recepcion?->fecha_hora,
+                'km_inicial' => $kmInicial,
+                'km_final' => $kmFinal,
+                'km_recorridos' => $kmRecorridos,
+                'lugares' => $lugares ?: '—',
+                'motorista_nombre' => $motorista?->nombre ?? '—',
+                'combustible_salida' => $entrega?->nivel_combustible,
                 'combustible_regreso' => $recepcion?->nivel_combustible,
             ]);
         }
@@ -86,8 +85,8 @@ class ReporteRegistroVehiculosService
         $v = Vehiculo::with(['tipo', 'tipoCombustible'])->findOrFail($vehiculoId);
 
         return [
-            'placa'              => $v->placa,
-            'tipo_nombre'        => $v->tipo?->nombre ?? 'N/A',
+            'placa' => $v->placa,
+            'tipo_nombre' => $v->tipo?->nombre ?? 'N/A',
             'combustible_nombre' => $v->tipoCombustible?->nombre ?? 'N/A',
         ];
     }

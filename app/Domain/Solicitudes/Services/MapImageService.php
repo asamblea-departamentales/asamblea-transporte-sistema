@@ -3,7 +3,6 @@
 namespace App\Domain\Solicitudes\Services;
 
 use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Servicio para generar imágenes de mapas estáticos de rutas de solicitudes
@@ -19,8 +18,11 @@ class MapImageService
      * Límites geográficos aproximados de El Salvador para validar coordenadas.
      */
     protected float $minLat = 13.15;
+
     protected float $maxLat = 14.44;
+
     protected float $minLng = -90.15;
+
     protected float $maxLng = -87.65;
 
     /**
@@ -28,8 +30,8 @@ class MapImageService
      * basadas en un hash del texto de entrada. Esto asegura que la misma
      * dirección siempre genere las mismas coordenadas.
      *
-     * @param  string $text Texto a geocodificar (dirección, lugar, etc.)
-     * @return array        [latitud, longitud]
+     * @param  string  $text  Texto a geocodificar (dirección, lugar, etc.)
+     * @return array [latitud, longitud]
      */
     protected function fakeGeocode(string $text): array
     {
@@ -53,9 +55,9 @@ class MapImageService
      * Verifica si unas coordenadas se encuentran dentro de los límites
      * aproximados de El Salvador.
      *
-     * @param  float $lat Latitud
-     * @param  float $lng Longitud
-     * @return bool       True si está dentro del polígono delimitador
+     * @param  float  $lat  Latitud
+     * @param  float  $lng  Longitud
+     * @return bool True si está dentro del polígono delimitador
      */
     public function isInsideElSalvador(float $lat, float $lng): bool
     {
@@ -71,8 +73,8 @@ class MapImageService
      * La búsqueda se limita a El Salvador agregando el sufijo ", El Salvador"
      * y el filtro oficial countrycode:sv de Geoapify.
      *
-     * @param  string $text Dirección o nombre del lugar a geocodificar
-     * @return array        [latitud, longitud]
+     * @param  string  $text  Dirección o nombre del lugar a geocodificar
+     * @return array [latitud, longitud]
      */
     public function geocodeOrFake(string $text): array
     {
@@ -89,8 +91,8 @@ class MapImageService
 
         try {
             $response = Http::timeout(6)->get('https://api.geoapify.com/v1/geocode/search', [
-                'text'   => $text . ', El Salvador',
-                'limit'  => 1,
+                'text' => $text.', El Salvador',
+                'limit' => 1,
                 'apiKey' => $apiKey,
                 'filter' => 'countrycode:sv',
             ]);
@@ -99,7 +101,7 @@ class MapImageService
             return $this->fakeGeocode($text);
         }
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return $this->fakeGeocode($text);
         }
 
@@ -110,7 +112,7 @@ class MapImageService
         }
 
         $props = $features[0]['properties'] ?? [];
-        if (!isset($props['lat'], $props['lon'])) {
+        if (! isset($props['lat'], $props['lon'])) {
             return $this->fakeGeocode($text);
         }
 
@@ -119,7 +121,7 @@ class MapImageService
         $countryCode = strtolower((string) ($props['country_code'] ?? ''));
 
         // Valida que el resultado esté dentro de El Salvador
-        if (($countryCode && $countryCode !== 'sv') || !$this->isInsideElSalvador($lat, $lng)) {
+        if (($countryCode && $countryCode !== 'sv') || ! $this->isInsideElSalvador($lat, $lng)) {
             return $this->fakeGeocode($text);
         }
 
@@ -136,8 +138,8 @@ class MapImageService
      *
      * El zoom se calcula automáticamente según la extensión geográfica de los waypoints.
      *
-     * @param  array       $solicitud Arreglo con datos de la solicitud
-     * @return string|null            URL de la imagen del mapa o null si no se pudo generar
+     * @param  array  $solicitud  Arreglo con datos de la solicitud
+     * @return string|null URL de la imagen del mapa o null si no se pudo generar
      */
     public function generateRouteImageUrl(array $solicitud): ?string
     {
@@ -146,11 +148,11 @@ class MapImageService
             return null;
         }
 
-        $origenTexto  = $solicitud['origen']  ?? 'San Salvador';
+        $origenTexto = $solicitud['origen'] ?? 'San Salvador';
         $destinoTexto = $solicitud['destino'] ?? 'San Salvador';
 
-        $latOrigen  = $solicitud['origen_lat']  ?? null;
-        $lngOrigen  = $solicitud['origen_lng']  ?? null;
+        $latOrigen = $solicitud['origen_lat'] ?? null;
+        $lngOrigen = $solicitud['origen_lng'] ?? null;
         $latDestino = $solicitud['destino_lat'] ?? null;
         $lngDestino = $solicitud['destino_lng'] ?? null;
 
@@ -200,7 +202,7 @@ class MapImageService
         // Zoom dinámico según la extensión geográfica
         $allLats = array_column($waypoints, 'lat');
         $allLngs = array_column($waypoints, 'lng');
-        $spread  = max(abs(max($allLats) - min($allLats)), abs(max($allLngs) - min($allLngs)));
+        $spread = max(abs(max($allLats) - min($allLats)), abs(max($allLngs) - min($allLngs)));
 
         if ($spread < 0.03) {
             $zoom = 13;
@@ -213,10 +215,10 @@ class MapImageService
         }
 
         $params = [
-            'style'  => 'osm-carto',
-            'width'  => 600,
+            'style' => 'osm-carto',
+            'width' => 600,
             'height' => 350,
-            'zoom'   => $zoom,
+            'zoom' => $zoom,
             'apiKey' => $apiKey,
         ];
 
@@ -234,10 +236,9 @@ class MapImageService
 
         $query = http_build_query($params);
         foreach ($markers as $m) {
-            $query .= '&marker=' . $m;
+            $query .= '&marker='.$m;
         }
 
-        return 'https://maps.geoapify.com/v1/staticmap?' . $query;
+        return 'https://maps.geoapify.com/v1/staticmap?'.$query;
     }
-
 }

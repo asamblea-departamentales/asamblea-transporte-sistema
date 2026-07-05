@@ -7,33 +7,33 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-   public function up(): void
-{
-    // 1. Add new columns first (don't change nivel_combustible yet)
-    Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
-        $table->json('herramientas_verificadas')->nullable()->after('nivel_combustible');
-    });
+    public function up(): void
+    {
+        // 1. Add new columns first (don't change nivel_combustible yet)
+        Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
+            $table->json('herramientas_verificadas')->nullable()->after('nivel_combustible');
+        });
 
-    // 2. Map the string values to numbers while it's still a string column
-    $mapa = [
-        'vacio' => '0',
-        '1/4'   => '25',
-        '1/2'   => '50',
-        '3/4'   => '75',
-        'lleno' => '100',
-    ];
+        // 2. Map the string values to numbers while it's still a string column
+        $mapa = [
+            'vacio' => '0',
+            '1/4' => '25',
+            '1/2' => '50',
+            '3/4' => '75',
+            'lleno' => '100',
+        ];
 
-    foreach ($mapa as $oldValue => $newValue) {
-        DB::table('recepciones_entregas_vehiculo')
-            ->where('nivel_combustible', $oldValue)
-            ->update(['nivel_combustible' => $newValue]);
+        foreach ($mapa as $oldValue => $newValue) {
+            DB::table('recepciones_entregas_vehiculo')
+                ->where('nivel_combustible', $oldValue)
+                ->update(['nivel_combustible' => $newValue]);
+        }
+
+        // 3. NOW it is safe to change the type to integer
+        Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
+            $table->unsignedTinyInteger('nivel_combustible')->nullable()->change();
+        });
     }
-
-    // 3. NOW it is safe to change the type to integer
-    Schema::table('recepciones_entregas_vehiculo', function (Blueprint $table) {
-        $table->unsignedTinyInteger('nivel_combustible')->nullable()->change();
-    });
-}
 
     public function down(): void
     {

@@ -24,8 +24,11 @@ class IncidenciaResource extends Resource
     protected static ?string $model = Incidencia::class;
 
     protected static ?string $navigationGroup = 'Operación';
+
     protected static ?string $navigationLabel = 'Incidencias';
+
     protected static ?string $navigationIcon = 'heroicon-o-exclamation-triangle';
+
     protected static ?int $navigationSort = 5;
 
     public static function form(Form $form): Form

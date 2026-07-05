@@ -3,125 +3,124 @@
 namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoCombustible;
 use App\Models\DecisionOperativa;
 use App\Models\HistorialEstado;
-use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Domain\Solicitudes\Services\SugerenciaAsignacionService;
+use App\Models\SerieCarga;
 use App\Models\SolicitudCombustible;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Models\SerieCarga;
 
 class SolicitudCombustibleService
 {
     // ── BORRADOR (Creación inicial) ─────────────────────────
 
     public function crear(array $data, int $userId): SolicitudCombustible
-{
-    return DB::transaction(function () use ($data, $userId) {
+    {
+        return DB::transaction(function () use ($data, $userId) {
 
-        $user = \App\Models\User::with('grupo')->findOrFail($userId);
+            $user = \App\Models\User::with('grupo')->findOrFail($userId);
 
-        // ─────────────────────────────────────────────────────────────────
-        // Lógica automática para motorista
-        // ─────────────────────────────────────────────────────────────────
+            // ─────────────────────────────────────────────────────────────────
+            // Lógica automática para motorista
+            // ─────────────────────────────────────────────────────────────────
 
-        if (! isset($data['motorista_id'])) {
+            if (! isset($data['motorista_id'])) {
 
-            $asignacion = \App\Models\AsignacionVehiculoMotorista::where(
-                'vehiculo_id',
-                $data['vehiculo_id']
-            )
-                ->where('vigente', true)
-                ->first();
+                $asignacion = \App\Models\AsignacionVehiculoMotorista::where(
+                    'vehiculo_id',
+                    $data['vehiculo_id']
+                )
+                    ->where('vigente', true)
+                    ->first();
 
-            if (! $asignacion) {
-                throw new \DomainException(
-                    'No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.'
-                );
+                if (! $asignacion) {
+                    throw new \DomainException(
+                        'No se puede crear la solicitud: El vehículo seleccionado no tiene un motorista asignado actualmente.'
+                    );
+                }
+
+                $data['motorista_id'] = $asignacion->motorista_id;
             }
 
-            $data['motorista_id'] = $asignacion->motorista_id;
-        }
+            // ─────────────────────────────────────────────────────────────────
+            // Datos base
+            // ─────────────────────────────────────────────────────────────────
 
-        // ─────────────────────────────────────────────────────────────────
-        // Datos base
-        // ─────────────────────────────────────────────────────────────────
+            $data['solicitante_id'] = $userId;
 
-        $data['solicitante_id'] = $userId;
+            $data['estado'] = EstadoSolicitudEnum::BORRADOR;
 
-        $data['estado'] = EstadoSolicitudEnum::BORRADOR;
+            $data['cantidad_combustible'] =
+                $data['cantidad_combustible'] ?? 0;
 
-        $data['cantidad_combustible'] =
-            $data['cantidad_combustible'] ?? 0;
+            $data['valor_unitario'] = 1;
 
-        $data['valor_unitario'] = 1;
+            $data['valor_total'] =
+                $data['cantidad_combustible'];
 
-        $data['valor_total'] =
-            $data['cantidad_combustible'];
+            // ─────────────────────────────────────────────────────────────────
+            // Snapshot de prioridad del grupo
+            // ─────────────────────────────────────────────────────────────────
 
-        // ─────────────────────────────────────────────────────────────────
-        // Snapshot de prioridad del grupo
-        // ─────────────────────────────────────────────────────────────────
+            $grupo = $user->grupo;
 
-        $grupo = $user->grupo;
+            $data['prioridad_grupo'] =
+                $grupo?->nivel_prioridad ?? 'baja';
 
-        $data['prioridad_grupo'] =
-            $grupo?->nivel_prioridad ?? 'baja';
+            $data['prioridad_orden'] =
+                $grupo?->orden ?? 999;
 
-        $data['prioridad_orden'] =
-            $grupo?->orden ?? 999;
+            // ─────────────────────────────────────────────────────────────────
+            // Código correlativo
+            // ─────────────────────────────────────────────────────────────────
 
-        // ─────────────────────────────────────────────────────────────────
-        // Código correlativo
-        // ─────────────────────────────────────────────────────────────────
+            if (! isset($data['codigo'])) {
+                $data['codigo'] = $this->generarCodigoCorrelativo();
+            }
 
-        if (! isset($data['codigo'])) {
-            $data['codigo'] = $this->generarCodigoCorrelativo();
-        }
+            // ─────────────────────────────────────────────────────────────────
+            // Crear solicitud
+            // ─────────────────────────────────────────────────────────────────
 
-        // ─────────────────────────────────────────────────────────────────
-        // Crear solicitud
-        // ─────────────────────────────────────────────────────────────────
+            $solicitud = SolicitudCombustible::create($data);
 
-        $solicitud = SolicitudCombustible::create($data);
+            // ─────────────────────────────────────────────────────────────────
+            // Auditoría y bitácora
+            // ─────────────────────────────────────────────────────────────────
 
-        // ─────────────────────────────────────────────────────────────────
-        // Auditoría y bitácora
-        // ─────────────────────────────────────────────────────────────────
+            $this->registrarCambioEstado(
+                $solicitud,
+                null,
+                $solicitud->estado,
+                $userId,
+                'Creación inicial de borrador.'
+            );
 
-        $this->registrarCambioEstado(
-            $solicitud,
-            null,
-            $solicitud->estado,
-            $userId,
-            'Creación inicial de borrador.'
-        );
+            $this->registrarEvento(
+                $solicitud,
+                AccionBitacoraEnum::CREAR->value,
+                $userId,
+                [
+                    'prioridad_grupo' => $solicitud->prioridad_grupo,
+                    'prioridad_orden' => $solicitud->prioridad_orden,
+                    'grupo_solicitante' => $grupo?->nombre ?? 'Sin grupo',
+                ]
+            );
 
-        $this->registrarEvento(
-            $solicitud,
-            AccionBitacoraEnum::CREAR->value,
-            $userId,
-            [
-                'prioridad_grupo'   => $solicitud->prioridad_grupo,
-                'prioridad_orden'   => $solicitud->prioridad_orden,
-                'grupo_solicitante' => $grupo?->nombre ?? 'Sin grupo',
-            ]
-        );
+            Log::info('Solicitud de combustible creada', [
+                'solicitud_id' => $solicitud->id,
+                'prioridad_grupo' => $solicitud->prioridad_grupo,
+                'prioridad_orden' => $solicitud->prioridad_orden,
+                'grupo' => $grupo?->nombre,
+                'usuario_id' => $userId,
+            ]);
 
-        Log::info('Solicitud de combustible creada', [
-            'solicitud_id'      => $solicitud->id,
-            'prioridad_grupo'   => $solicitud->prioridad_grupo,
-            'prioridad_orden'   => $solicitud->prioridad_orden,
-            'grupo'             => $grupo?->nombre,
-            'usuario_id'        => $userId,
-        ]);
-
-        return $solicitud;
-    });
-}
+            return $solicitud;
+        });
+    }
 
     private function generarCodigoCorrelativo(): string
     {
@@ -527,7 +526,7 @@ class SolicitudCombustibleService
         float $montoAprobado,
         ?string $justificacion = null
     ): array {
-        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION])) {
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION])) {
             throw new \DomainException('Solo se puede asignar carga a solicitudes pendientes o en revisión.');
         }
 
@@ -573,7 +572,7 @@ class SolicitudCombustibleService
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (!in_array($decisionFinal, ['operativo', 'jefe'])) {
+        if (! in_array($decisionFinal, ['operativo', 'jefe'])) {
             throw new \InvalidArgumentException('decision_final debe ser "operativo" o "jefe".');
         }
 
@@ -583,7 +582,7 @@ class SolicitudCombustibleService
 
             if ($decisionFinal === 'operativo') {
                 $decision = $solicitud->decisionOperativa;
-                if (!$decision) {
+                if (! $decision) {
                     throw new \DomainException('No hay asignación del operativo registrada.');
                 }
                 $solicitud->cantidad_combustible = $decision->monto_aprobado;
@@ -607,7 +606,7 @@ class SolicitudCombustibleService
                 $detalle = \App\Models\AsignacionCombustibleLoteDetalle::where('solicitud_combustible_id', $solicitud->id)->first();
                 if ($detalle) {
                     $detalle->update(['monto_asignado' => $montoAprobado]);
-                    $obs = trim(($detalle->observaciones_operativas ?? '') . "\nEl jefe reasignó el monto de \${$montoOriginal} a \${$montoAprobado}.");
+                    $obs = trim(($detalle->observaciones_operativas ?? '')."\nEl jefe reasignó el monto de \${$montoOriginal} a \${$montoAprobado}.");
                     $detalle->update(['observaciones_operativas' => $obs]);
                 }
             }
@@ -620,7 +619,9 @@ class SolicitudCombustibleService
                     : "Aprobado por el jefe. Monto: \${$montoFinal}",
                 default => 'Aprobado',
             };
-            if ($comentario) $comentarioEnriquecido .= ". Observación: {$comentario}";
+            if ($comentario) {
+                $comentarioEnriquecido .= ". Observación: {$comentario}";
+            }
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
@@ -649,7 +650,7 @@ class SolicitudCombustibleService
 
     public function desbloquear(SolicitudCombustible $solicitud, int $userId): array
     {
-        if (!in_array($solicitud->estado, [
+        if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::PRE_APROBADA,
             EstadoSolicitudEnum::APROBADA,
             EstadoSolicitudEnum::RECHAZADA,

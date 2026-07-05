@@ -10,4 +10,3 @@ enum IncidenciaTipoEnum: string
     case FALLA_MECANICA = 'falla_mecanica';
     case OTRO = 'otro';
 }
-

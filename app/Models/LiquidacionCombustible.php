@@ -22,7 +22,7 @@ class LiquidacionCombustible extends Model
         'fecha_liquidacion' => 'datetime',
     ];
 
-    //Relaciones
+    // Relaciones
     public function solicitud()
     {
         return $this->belongsTo(SolicitudCombustible::class, 'solicitud_id');
@@ -33,4 +33,3 @@ class LiquidacionCombustible extends Model
         return $this->belongsTo(User::class, 'user_id');
     }
 }
-

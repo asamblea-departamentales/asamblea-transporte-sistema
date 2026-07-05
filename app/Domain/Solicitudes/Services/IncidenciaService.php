@@ -2,8 +2,8 @@
 
 namespace App\Domain\Solicitudes\Services;
 
-use App\Models\Incidencia;
 use App\Models\BitacoraEvento;
+use App\Models\Incidencia;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
@@ -19,19 +19,19 @@ class IncidenciaService
             $entidad = $this->resolveEntidad($data['entidad_tipo'], $data['entidad_id']);
 
             $incidencia = $entidad->incidencias()->create([
-                'tipo'          => $data['tipo'],
-                'severidad'     => $data['severidad'],
-                'descripcion'   => $data['descripcion'],
-                'estado'        => 'abierta',
+                'tipo' => $data['tipo'],
+                'severidad' => $data['severidad'],
+                'descripcion' => $data['descripcion'],
+                'estado' => 'abierta',
                 'reportado_por' => auth()->id(),
-                'evidencias'    => $data['evidencias'] ?? null,
+                'evidencias' => $data['evidencias'] ?? null,
             ]);
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
-                'entidad_id'   => $incidencia->id,
-                'accion'       => 'crear',
-                'user_id'      => auth()->id(),
+                'entidad_id' => $incidencia->id,
+                'accion' => 'crear',
+                'user_id' => auth()->id(),
                 'datos_extras' => [
                     'tipo' => $incidencia->tipo,
                     'severidad' => $incidencia->severidad,
@@ -45,10 +45,10 @@ class IncidenciaService
     private function resolveEntidad(string $tipo, int $id): Model
     {
         return match ($tipo) {
-            'combustible'   => SolicitudCombustible::findOrFail($id),
+            'combustible' => SolicitudCombustible::findOrFail($id),
             'mantenimiento' => SolicitudMantenimiento::findOrFail($id),
-            'transporte'    => SolicitudTransporte::findOrFail($id),
-            default         => throw new \InvalidArgumentException("Tipo de entidad inválido: {$tipo}"),
+            'transporte' => SolicitudTransporte::findOrFail($id),
+            default => throw new \InvalidArgumentException("Tipo de entidad inválido: {$tipo}"),
         };
     }
 
@@ -60,14 +60,14 @@ class IncidenciaService
 
             $incidencia->update([
                 'asignado_a' => $userId,
-                'estado'     => 'en_proceso',
+                'estado' => 'en_proceso',
             ]);
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
-                'entidad_id'   => $incidencia->id,
-                'accion'       => 'asignar',
-                'user_id'      => auth()->id(),
+                'entidad_id' => $incidencia->id,
+                'accion' => 'asignar',
+                'user_id' => auth()->id(),
                 'datos_extras' => [
                     'antes' => $antes,
                     'despues' => $incidencia->fresh()->toArray(),
@@ -83,16 +83,16 @@ class IncidenciaService
             $antes = $incidencia->toArray();
 
             $incidencia->update([
-                'estado'           => 'resuelta',
-                'resolucion'       => $data['resolucion'],
+                'estado' => 'resuelta',
+                'resolucion' => $data['resolucion'],
                 'fecha_resolucion' => now(),
             ]);
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
-                'entidad_id'   => $incidencia->id,
-                'accion'       => 'resolver',
-                'user_id'      => auth()->id(),
+                'entidad_id' => $incidencia->id,
+                'accion' => 'resolver',
+                'user_id' => auth()->id(),
                 'datos_extras' => [
                     'antes' => $antes,
                     'despues' => $incidencia->fresh()->toArray(),
@@ -113,9 +113,9 @@ class IncidenciaService
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
-                'entidad_id'   => $incidencia->id,
-                'accion'       => 'cerrar',
-                'user_id'      => auth()->id(),
+                'entidad_id' => $incidencia->id,
+                'accion' => 'cerrar',
+                'user_id' => auth()->id(),
                 'datos_extras' => [
                     'antes' => $antes,
                     'despues' => $incidencia->fresh()->toArray(),
@@ -134,9 +134,9 @@ class IncidenciaService
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'incidencia',
-                'entidad_id'   => $incidencia->id,
-                'accion'       => 'reabrir',
-                'user_id'      => auth()->id(),
+                'entidad_id' => $incidencia->id,
+                'accion' => 'reabrir',
+                'user_id' => auth()->id(),
             ]);
         });
     }

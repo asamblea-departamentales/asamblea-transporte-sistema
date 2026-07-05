@@ -32,8 +32,8 @@ class ContratosCombustibleTransporteSeeder extends Seeder
             $montoInicial = $contrato['monto'] ?? 0.00;
 
             // Validar que el proveedor exista para no romper integridad referencial
-            $proveedorId = in_array($contrato['proveedor_id'], $proveedoresExistentes) 
-                ? $contrato['proveedor_id'] 
+            $proveedorId = in_array($contrato['proveedor_id'], $proveedoresExistentes)
+                ? $contrato['proveedor_id']
                 : null;
 
             if (array_key_exists('saldo_actual', $contrato) && $contrato['saldo_actual'] !== null) {
@@ -45,7 +45,7 @@ class ContratosCombustibleTransporteSeeder extends Seeder
             $observaciones = array_filter([
                 'Migrado desde contratos historicos de transporte.',
                 "con_id legado: {$contrato['id']}.",
-                "con_id_prv legado: {$contrato['proveedor_id']}." . ($proveedorId === null ? ' (No encontrado en tabla proveedores nueva)' : ''),
+                "con_id_prv legado: {$contrato['proveedor_id']}.".($proveedorId === null ? ' (No encontrado en tabla proveedores nueva)' : ''),
                 'Institucion: ASAMBLEA LEGISLATIVA DE EL SALVADOR.',
                 "Codigo: {$contrato['codigo']}.",
                 "Resolucion: {$contrato['resolucion']}.",
@@ -71,7 +71,7 @@ class ContratosCombustibleTransporteSeeder extends Seeder
                 ]
             );
         }
-        
+
         // Descomentar si usas PostgreSQL:
         // DB::statement("SELECT setval(pg_get_serial_sequence('contrato_combustibles', 'id'), coalesce(max(id), 1)) FROM contrato_combustibles;");
     }

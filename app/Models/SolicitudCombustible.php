@@ -3,11 +3,11 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\TicketService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
-use App\Domain\Solicitudes\Services\TicketService;
 
 class SolicitudCombustible extends Model
 {
@@ -157,7 +157,7 @@ class SolicitudCombustible extends Model
         return $this->morphOne(DecisionOperativa::class, 'decidable');
     }
 
-    //Relacion con grupo de prioridades
+    // Relacion con grupo de prioridades
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'prioridad_grupo');

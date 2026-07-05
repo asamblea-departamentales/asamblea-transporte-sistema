@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Filament\Resources\AsignacionCombustibleLoteResource\Widgets;
 
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
@@ -43,7 +44,7 @@ class LotesStatsOverview extends StatsOverviewWidget
 
             Stat::make(
                 'Monto Total',
-                '$' . number_format(
+                '$'.number_format(
                     AsignacionCombustibleLote::sum('total_monto'),
                     2
                 )

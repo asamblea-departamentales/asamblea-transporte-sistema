@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-         Schema::create('veh_estados_catalogo', function (Blueprint $table) {
+        Schema::create('veh_estados_catalogo', function (Blueprint $table) {
             $table->id();
             $table->string('nombre')->unique(); // ejemplo: Activo, Baja, Taller, etc
             $table->boolean('activo')->default(true);

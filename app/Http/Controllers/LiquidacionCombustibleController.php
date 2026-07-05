@@ -21,8 +21,8 @@ class LiquidacionCombustibleController extends Controller
     /**
      * Genera y muestra el PDF de la liquidación de una solicitud de combustible.
      *
-     * @param int $id  Identificador de la solicitud de combustible.
-     * @return \Illuminate\Http\Response  PDF generado para el usuario.
+     * @param  int  $id  Identificador de la solicitud de combustible.
+     * @return \Illuminate\Http\Response PDF generado para el usuario.
      */
     public function pdf($id)
     {

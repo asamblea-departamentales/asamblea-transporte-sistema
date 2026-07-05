@@ -9,13 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::table('solicitud_transportes', function (Blueprint $table) {
-        // Guardamos el nombre tal cual viene del frontend
-        $table->string('tipo_vehiculo_nombre')->nullable()->after('motivo_actividad');
-    });
-}
+    public function up(): void
+    {
+        Schema::table('solicitud_transportes', function (Blueprint $table) {
+            // Guardamos el nombre tal cual viene del frontend
+            $table->string('tipo_vehiculo_nombre')->nullable()->after('motivo_actividad');
+        });
+    }
 
     /**
      * Reverse the migrations.

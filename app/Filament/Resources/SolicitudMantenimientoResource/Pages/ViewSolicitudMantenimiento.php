@@ -2,16 +2,12 @@
 
 namespace App\Filament\Resources\SolicitudMantenimientoResource\Pages;
 
-use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
 use App\Filament\Resources\SolicitudMantenimientoResource;
-use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudMantenimiento;
 use Filament\Actions;
-use Filament\Forms;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Log;

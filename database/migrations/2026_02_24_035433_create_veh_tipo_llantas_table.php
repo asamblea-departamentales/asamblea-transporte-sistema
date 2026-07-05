@@ -9,15 +9,15 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-   public function up(): void
-{
-    Schema::create('veh_tipo_llantas', function (Blueprint $table) {
-        $table->id();
-        $table->string('nombre')->unique();
-        $table->boolean('activo')->default(true);
-        $table->timestamps();
-    });
-}
+    public function up(): void
+    {
+        Schema::create('veh_tipo_llantas', function (Blueprint $table) {
+            $table->id();
+            $table->string('nombre')->unique();
+            $table->boolean('activo')->default(true);
+            $table->timestamps();
+        });
+    }
 
     /**
      * Reverse the migrations.

@@ -15,39 +15,43 @@ class CreateRecepcionEntregaVehiculo extends CreateRecord
     {
         $record = $this->record;
 
-        if (!$record->solicitud_transporte_id) return;
+        if (! $record->solicitud_transporte_id) {
+            return;
+        }
 
         $solicitud = SolicitudTransporte::find($record->solicitud_transporte_id);
-        if (!$solicitud) return;
+        if (! $solicitud) {
+            return;
+        }
 
-        if ($record->tipo_movimiento === 'entrega' && !$solicitud->fecha_salida_real) {
+        if ($record->tipo_movimiento === 'entrega' && ! $solicitud->fecha_salida_real) {
             $solicitud->update([
                 'fecha_salida_real' => $record->fecha_hora,
-                'despachado_por'    => auth()->id(),
+                'despachado_por' => auth()->id(),
             ]);
 
             HistorialEstado::create([
-                'entidad_tipo'    => 'solicitud_transporte',
-                'entidad_id'      => $solicitud->id,
+                'entidad_tipo' => 'solicitud_transporte',
+                'entidad_id' => $solicitud->id,
                 'estado_anterior' => $solicitud->estado->value,
-                'estado_nuevo'    => $solicitud->estado->value,
-                'user_id'         => auth()->id(),
-                'comentario'      => 'Despacho automático al registrar entrega.',
+                'estado_nuevo' => $solicitud->estado->value,
+                'user_id' => auth()->id(),
+                'comentario' => 'Despacho automático al registrar entrega.',
             ]);
         }
 
-        if ($record->tipo_movimiento === 'recepcion' && !$solicitud->fecha_retorno_real) {
+        if ($record->tipo_movimiento === 'recepcion' && ! $solicitud->fecha_retorno_real) {
             $solicitud->update([
                 'fecha_retorno_real' => $record->fecha_hora,
             ]);
 
             HistorialEstado::create([
-                'entidad_tipo'    => 'solicitud_transporte',
-                'entidad_id'      => $solicitud->id,
+                'entidad_tipo' => 'solicitud_transporte',
+                'entidad_id' => $solicitud->id,
                 'estado_anterior' => $solicitud->estado->value,
-                'estado_nuevo'    => $solicitud->estado->value,
-                'user_id'         => auth()->id(),
-                'comentario'      => 'Cierre real registrado al recibir vehículo.',
+                'estado_nuevo' => $solicitud->estado->value,
+                'user_id' => auth()->id(),
+                'comentario' => 'Cierre real registrado al recibir vehículo.',
             ]);
         }
 
@@ -70,14 +74,14 @@ class CreateRecepcionEntregaVehiculo extends CreateRecord
             if ($reservaPrevia) {
                 \App\Models\BitacoraEvento::create([
                     'entidad_tipo' => 'recepcion_entrega',
-                    'entidad_id'   => $record->id,
-                    'accion'       => 'RESERVA_CONSUMIDA',
-                    'user_id'      => auth()->id(),
+                    'entidad_id' => $record->id,
+                    'accion' => 'RESERVA_CONSUMIDA',
+                    'user_id' => auth()->id(),
                     'datos_extras' => [
-                        'vehiculo_id'        => $record->vehiculo_id,
-                        'reserva_origen_id'  => $reservaPrevia->id,
-                        'nivel_combustible'   => $reservaPrevia->nivel_combustible,
-                        'mensaje'            => "Reserva de combustible consumida automáticamente al registrar entrega del vehículo.",
+                        'vehiculo_id' => $record->vehiculo_id,
+                        'reserva_origen_id' => $reservaPrevia->id,
+                        'nivel_combustible' => $reservaPrevia->nivel_combustible,
+                        'mensaje' => 'Reserva de combustible consumida automáticamente al registrar entrega del vehículo.',
                     ],
                 ]);
             }

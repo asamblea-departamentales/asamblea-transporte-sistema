@@ -1,14 +1,15 @@
 <?php
 
-//Archivo creado para mejorar la vista del panel de control
+// Archivo creado para mejorar la vista del panel de control
 
 namespace App\Domain\Solicitudes\Services\Dashboard;
 
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Models\Incidencia;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
-use App\Models\Incidencia;
-use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+
 class DashboardService
 {
     public function getKpis(): array
@@ -60,39 +61,39 @@ class DashboardService
         ];
     }
 
-   public function getActividad(): array
-{
-    $comb = SolicitudCombustible::with('solicitante')->latest()->take(5)->get()
-        ->map(fn($s) => [
-            'codigo'      => $s->codigo,
-            'modulo'      => 'Combustible',
-            'estado'      => $s->estado?->value ?? $s->estado,
-            'solicitante' => $s->solicitante?->name ?? '-',
-            'fecha'       => $s->created_at,
-        ])->toBase();
+    public function getActividad(): array
+    {
+        $comb = SolicitudCombustible::with('solicitante')->latest()->take(5)->get()
+            ->map(fn ($s) => [
+                'codigo' => $s->codigo,
+                'modulo' => 'Combustible',
+                'estado' => $s->estado?->value ?? $s->estado,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'fecha' => $s->created_at,
+            ])->toBase();
 
-    $mant = SolicitudMantenimiento::with('solicitante')->latest()->take(5)->get()
-        ->map(fn($s) => [
-            'codigo'      => $s->codigo,
-            'modulo'      => 'Mantenimiento',
-            'estado'      => $s->estado?->value ?? $s->estado,
-            'solicitante' => $s->solicitante?->name ?? '-',
-            'fecha'       => $s->created_at,
-        ])->toBase();
+        $mant = SolicitudMantenimiento::with('solicitante')->latest()->take(5)->get()
+            ->map(fn ($s) => [
+                'codigo' => $s->codigo,
+                'modulo' => 'Mantenimiento',
+                'estado' => $s->estado?->value ?? $s->estado,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'fecha' => $s->created_at,
+            ])->toBase();
 
-    $trans = SolicitudTransporte::with('solicitante')->latest()->take(5)->get()
-        ->map(fn($s) => [
-            'codigo'      => $s->codigo,
-            'modulo'      => 'Transporte',
-            'estado'      => $s->estado?->value ?? $s->estado,
-            'solicitante' => $s->solicitante?->name ?? '-',
-            'fecha'       => $s->created_at,
-        ])->toBase();
+        $trans = SolicitudTransporte::with('solicitante')->latest()->take(5)->get()
+            ->map(fn ($s) => [
+                'codigo' => $s->codigo,
+                'modulo' => 'Transporte',
+                'estado' => $s->estado?->value ?? $s->estado,
+                'solicitante' => $s->solicitante?->name ?? '-',
+                'fecha' => $s->created_at,
+            ])->toBase();
 
-    return $comb->merge($mant)->merge($trans)
-        ->sortByDesc('fecha')
-        ->take(10)
-        ->values()
-        ->all();
-}
+        return $comb->merge($mant)->merge($trans)
+            ->sortByDesc('fecha')
+            ->take(10)
+            ->values()
+            ->all();
+    }
 }

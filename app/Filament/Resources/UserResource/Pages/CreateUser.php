@@ -4,7 +4,6 @@ namespace App\Filament\Resources\UserResource\Pages;
 
 use App\Filament\Resources\UserResource;
 use App\Models\Motorista;
-use Filament\Actions;
 use Filament\Resources\Pages\CreateRecord;
 
 class CreateUser extends CreateRecord
@@ -15,7 +14,7 @@ class CreateUser extends CreateRecord
     {
         $roles = $this->data['roles'] ?? [];
 
-        if (!empty($roles)) {
+        if (! empty($roles)) {
             $this->record->syncRoles($roles);
         }
 
@@ -30,7 +29,7 @@ class CreateUser extends CreateRecord
             );
         }
 
-        if (!$this->record->username && $this->record->email) {
+        if (! $this->record->username && $this->record->email) {
             $this->record->username = str($this->record->email)->before('@')->value();
             $this->record->save();
         }

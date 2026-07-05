@@ -37,7 +37,7 @@ return [
 
     'mailers' => [
 
-       'smtp' => [
+        'smtp' => [
             'transport' => 'smtp',
             'scheme' => env('MAIL_SCHEME'),
             'url' => env('MAIL_URL'),
@@ -47,8 +47,8 @@ return [
             'password' => env('MAIL_PASSWORD'),
             'timeout' => null,
             'local_domain' => env('MAIL_EHLO_DOMAIN', parse_url(env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
-            
-            //LA VACUNA INYECTADA:
+
+            // LA VACUNA INYECTADA:
             'verify_peer' => false,
             'verify_peer_name' => false,
         ],
