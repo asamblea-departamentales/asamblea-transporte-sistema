@@ -57,11 +57,10 @@ class SolicitudCombustibleService
         $data['cantidad_combustible'] =
             $data['cantidad_combustible'] ?? 0;
 
-        $data['valor_unitario'] =
-            $data['valor_unitario'] ?? 0;
+        $data['valor_unitario'] = 1;
 
         $data['valor_total'] =
-            $data['valor_total'] ?? 0;
+            $data['cantidad_combustible'];
 
         // ─────────────────────────────────────────────────────────────────
         // Snapshot de prioridad del grupo
@@ -583,6 +582,7 @@ class SolicitudCombustibleService
                 $solicitud->cantidad_combustible = $montoAprobado;
             }
 
+            $solicitud->valor_total = $solicitud->cantidad_combustible;
             $solicitud->estado = EstadoSolicitudEnum::APROBADA;
             $solicitud->aprobador_id = $jefeId;
             $solicitud->fecha_aprobacion = now();
@@ -595,7 +595,7 @@ class SolicitudCombustibleService
                 $detalle = \App\Models\AsignacionCombustibleLoteDetalle::where('solicitud_combustible_id', $solicitud->id)->first();
                 if ($detalle) {
                     $detalle->update(['monto_asignado' => $montoAprobado]);
-                    $obs = trim(($detalle->observaciones_operativas ?? '') . "\nEl jefe cambió el monto de \${$montoOriginal} a \${$montoAprobado}.");
+                    $obs = trim(($detalle->observaciones_operativas ?? '') . "\nEl jefe reasignó el monto de \${$montoOriginal} a \${$montoAprobado}.");
                     $detalle->update(['observaciones_operativas' => $obs]);
                 }
             }
