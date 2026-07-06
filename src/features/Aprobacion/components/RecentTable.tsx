@@ -75,7 +75,10 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
             <div 
               key={idx}
               onClick={() => {
-                const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                const tipo = req.type?.toLowerCase();
+                const basePath = tipo === 'combustible' ? '/combustible/aprobaciones' 
+                               : tipo === 'mantenimiento' ? '/mantenimiento/aprobaciones' 
+                               : '/aprobaciones';
                 navigate(`${basePath}/${req.code}`);
               }}
               className="bg-white border border-slate-100 shadow-sm rounded-xl p-4 flex flex-col gap-3 cursor-pointer hover:border-indigo-200 transition-colors"
@@ -128,7 +131,10 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
                 <tr 
                   key={idx} 
                   onClick={() => {
-                    const basePath = req.type?.toLowerCase() === 'combustible' ? '/combustible/aprobaciones' : '/aprobaciones';
+                    const tipo = req.type?.toLowerCase();
+                    const basePath = tipo === 'combustible' ? '/combustible/aprobaciones' 
+                                   : tipo === 'mantenimiento' ? '/mantenimiento/aprobaciones' 
+                                   : '/aprobaciones';
                     navigate(`${basePath}/${req.code}`);
                   }}
                   className="hover:bg-slate-50/50 transition-colors duration-150 cursor-pointer group"

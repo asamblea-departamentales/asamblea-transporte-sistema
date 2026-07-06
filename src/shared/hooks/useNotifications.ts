@@ -55,8 +55,10 @@ export function useNotifications(user: any) {
 
         // Si este id no existía en el snapshot anterior, es una nueva solicitud que requiere atención
         if (!snapshot[idStr]) {
-          const typeLabel = req.type?.toLowerCase() === 'combustible' ? 'combustible' : 'transporte';
-          const actionUrl = typeLabel === 'combustible' ? `/combustible/aprobaciones/${req.code}` : `/aprobaciones/${req.code}`;
+          const typeLabel = req.type?.toLowerCase() || 'transporte';
+          const actionUrl = typeLabel === 'combustible' ? `/combustible/aprobaciones/${req.code}` 
+                          : typeLabel === 'mantenimiento' ? `/mantenimiento/aprobaciones/${req.code}`
+                          : `/aprobaciones/${req.code}`;
           
           newNotifs.push({
             id: uid(),

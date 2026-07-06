@@ -17,7 +17,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   // Verifica si estamos actualmente en una página de aprobación viendo un ID específico
-  const isAprobando = location.pathname.includes('/aprobaciones/') || location.pathname.includes('/combustible/aprobaciones/');
+  const isAprobando = location.pathname.includes('/aprobaciones/') || location.pathname.includes('/combustible/aprobaciones/') || location.pathname.includes('/mantenimiento/aprobaciones/');
 
   return (
     <>

@@ -89,3 +89,20 @@ export interface ComparativaCombustibleResponse {
 }
 
 export type DecisionCombustibleType = 'mantener' | 'manual' | 'ninguna';
+
+// === TIPOS PARA MANTENIMIENTO ===
+
+export interface SolicitudMantenimientoDetalle {
+  id: string;
+  codigo?: string;
+  solicitante: string;
+  vehiculo: string;
+  placa: string;
+  motivo: string;
+  fecha_sugerida?: string;
+  kilometraje_actual?: number;
+  tipo_mantenimiento?: string;
+  estado?: any;
+  decision_final?: string | null;
+  comentario_jefe?: string | null;
+}
