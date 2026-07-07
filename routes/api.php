@@ -165,7 +165,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/destinos', [SolicitudTransporteController::class, 'agregarDestinoViaje']);
         Route::patch('solicitudes-transporte/{solicitud:codigo}/destino-adicional', [SolicitudTransporteController::class, 'agregarDestinoAdicional']);
-        Route::post('solicitudes-transporte/{solicitud:codigo}/destino-en-ejecucion', [SolicitudTransporteController::class, 'agregarDestinoAdicional']);
+        Route::post('solicitudes-transporte/{solicitud:codigo}/destino-en-ejecucion', [SolicitudTransporteController::class, 'agregarDestinoViaje']);
         Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
 
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
