@@ -193,12 +193,16 @@ class SolicitudTransporteController extends Controller
 
         $data = $request->validate([
             'nombre' => ['required', 'string', 'max:255'],
+            'lat' => ['nullable', 'numeric'],
+            'lng' => ['nullable', 'numeric'],
         ]);
 
         $nombre = trim($data['nombre']);
-
-        // Geocodificar usando el mismo servicio de mapas
-        [$lat, $lng] = app(MapImageService::class)->geocodeOrFake($nombre);
+        $lat = $data['lat'] ?? null;
+        $lng = $data['lng'] ?? null;
+        if ($lat === null || $lng === null) {
+            [$lat, $lng] = app(MapImageService::class)->geocodeOrFake($nombre);
+        }
 
         // Calcular el siguiente orden
         $ultimoOrden = SolicitudDestinoAdicional::where('solicitud_transporte_id', $solicitud->id)->max('orden') ?? -1;
