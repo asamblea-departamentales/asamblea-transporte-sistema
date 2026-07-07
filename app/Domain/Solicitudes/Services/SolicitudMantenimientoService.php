@@ -549,7 +549,7 @@ class SolicitudMantenimientoService
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_programada');
     }
 
     private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void

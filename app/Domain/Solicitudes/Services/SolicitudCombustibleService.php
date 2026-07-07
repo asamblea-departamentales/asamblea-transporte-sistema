@@ -745,7 +745,7 @@ class SolicitudCombustibleService
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_programada');
     }
 
     private function enviarCorreoRechazada(SolicitudCombustible $solicitud): void

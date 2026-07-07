@@ -28,8 +28,7 @@ class NotificacionEventMail extends Mailable
         $logoPath = public_path('images/logo-blanco-fondo-transparente.png');
         $logoSrc = null;
         if (file_exists($logoPath)) {
-            $data = base64_encode(file_get_contents($logoPath));
-            $logoSrc = 'data:image/png;base64,'.$data;
+            $logoSrc = $this->embed($logoPath);
         }
 
         $mapFallbackPath = public_path('images/mapa-el-salvador.png');

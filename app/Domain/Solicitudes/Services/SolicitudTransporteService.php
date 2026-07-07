@@ -526,7 +526,7 @@ class SolicitudTransporteService
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_enviada');
+        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_programada');
     }
 
     private function enviarCorreoAprobada(SolicitudTransporte $solicitud): void

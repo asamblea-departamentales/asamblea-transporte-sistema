@@ -168,19 +168,24 @@ class MapImageService
 
         $waypoints[] = ['lat' => $latOrigen, 'lng' => $lngOrigen, 'color' => 'blue', 'size' => 'large'];
 
-        $adicional = $solicitud['destino_adicional'] ?? '';
-        if ($adicional !== '') {
-            $latAd = $solicitud['destino_adicional_lat'] ?? null;
-            $lngAd = $solicitud['destino_adicional_lng'] ?? null;
-            if ($latAd === null || $latAd === '' || $lngAd === null || $lngAd === '') {
-                [$latAd, $lngAd] = $this->geocodeOrFake($adicional);
-            }
-            if ($latAd !== null && $latAd !== '' && $lngAd !== null && $lngAd !== '') {
-                $waypoints[] = ['lat' => $latAd, 'lng' => $lngAd, 'color' => 'green', 'size' => 'medium'];
+        // Si ya vienen destinos_adicionales del modelo, NO procesamos el campo texto
+        // destino_adicional para evitar duplicados (el payload ya lo parseó).
+        $destinosAdicionales = $solicitud['destinos_adicionales'] ?? [];
+
+        if (empty($destinosAdicionales)) {
+            $adicional = $solicitud['destino_adicional'] ?? '';
+            if ($adicional !== '') {
+                $latAd = $solicitud['destino_adicional_lat'] ?? null;
+                $lngAd = $solicitud['destino_adicional_lng'] ?? null;
+                if ($latAd === null || $latAd === '' || $lngAd === null || $lngAd === '') {
+                    [$latAd, $lngAd] = $this->geocodeOrFake($adicional);
+                }
+                if ($latAd !== null && $latAd !== '' && $lngAd !== null && $lngAd !== '') {
+                    $waypoints[] = ['lat' => $latAd, 'lng' => $lngAd, 'color' => 'green', 'size' => 'medium'];
+                }
             }
         }
 
-        $destinosAdicionales = $solicitud['destinos_adicionales'] ?? [];
         foreach ($destinosAdicionales as $d) {
             $lat = $d['lat'] ?? null;
             $lng = $d['lng'] ?? null;
