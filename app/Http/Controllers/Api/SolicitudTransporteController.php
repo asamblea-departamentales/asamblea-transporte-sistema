@@ -251,6 +251,60 @@ class SolicitudTransporteController extends Controller
         return response()->json($destino->load('agregadoPor'), 201);
     }
 
+    public function actualizarDestinoEjecucion(Request $request, SolicitudTransporte $solicitud)
+    {
+        $user = $request->user();
+
+        if (! $user->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
+            return response()->json(['message' => 'Solo el Jefe de Transporte puede modificar la ruta.'], 403);
+        }
+
+        if ($solicitud->estado !== EstadoSolicitudEnum::EN_EJECUCION) {
+            return response()->json(['message' => 'Solo se puede modificar la ruta de un viaje en curso.'], 422);
+        }
+
+        $data = $request->validate([
+            'destino_adicional' => ['required', 'string', 'max:5000'],
+        ]);
+
+        $solicitud->update(['destino_adicional' => trim($data['destino_adicional'])]);
+
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id' => $solicitud->id,
+            'accion' => AccionBitacoraEnum::AGREGAR_DESTINO_VIAJE->value,
+            'user_id' => $user->id,
+            'datos_extras' => [
+                'nueva_ruta' => $data['destino_adicional'],
+                'solicitud_codigo' => $solicitud->codigo,
+                'tipo' => 'reemplazo_completo',
+            ],
+        ]);
+
+        dispatch(function () use ($solicitud) {
+            try {
+                $dispatch = app(SolicitudEmailDispatchService::class);
+                if ($solicitud->solicitante?->email) {
+                    $dispatch->toSolicitante($solicitud, 'transporte', 'ruta_modificada');
+                }
+                $motorista = $solicitud->motorista;
+                if ($motorista) {
+                    $email = $motorista->user?->email ?? $motorista->correo;
+                    if ($email) {
+                        $dispatch->toEmail($solicitud, 'transporte', 'ruta_modificada', $email);
+                    }
+                }
+            } catch (\Exception $e) {
+                Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: ".$e->getMessage());
+            }
+        });
+
+        return response()->json([
+            'message' => 'Ruta actualizada correctamente.',
+            'destino_adicional' => $solicitud->fresh()->destino_adicional,
+        ]);
+    }
+
     /**
      * Ver detalle
      */
