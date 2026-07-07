@@ -220,10 +220,20 @@ export default function NewRequestPage() {
   const { user }    = useAuth();
   const userRoles   = user?.roles ?? [];
 
-  // Solo filtra — no memoiza datos estáticos
   const visibleModules = useMemo(
-    () => MODULE_DEFINITIONS.filter(m => m.allowedRoles.some(r => userRoles.includes(r))),
-    [userRoles],
+    () => MODULE_DEFINITIONS.filter(m => {
+      // Si es super admin o admin informático, siempre puede ver todos los módulos
+      if (userRoles.some(r => ["admin", "superadmin", "super_admin"].includes(r.toLowerCase()))) {
+        return true;
+      }
+      // Si el usuario tiene unidad asignada, verifica los permisos dinámicos de esa unidad
+      if (user?.unidad) {
+        return user.unidad[m.key] === true;
+      }
+      // Fallback a roles quemados por si acaso el usuario no tiene unidad configurada
+      return m.allowedRoles.some(r => userRoles.includes(r));
+    }),
+    [userRoles, user?.unidad],
   );
 
   const gridCols =

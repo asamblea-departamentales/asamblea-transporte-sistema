@@ -7,6 +7,13 @@ export type AuthUser = {
   name: string;
   email: string;
   roles: string[];
+  unidad?: {
+    id: number;
+    nombre: string;
+    transporte: boolean;
+    mantenimiento: boolean;
+    combustible: boolean;
+  } | null;
 };
 //
 
