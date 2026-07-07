@@ -138,6 +138,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const navItems = useMemo((): NavItem[] => {
     const baseItems: NavItem[] = [
       { to: "/dashboard", label: "Panel Principal", mobileLabel: "Panel", icon: Icons.Dashboard },
+      { to: "/historial", label: "Historial Viajes", mobileLabel: "Historial", icon: Icons.List },
     ];
     if (viajeActivoId) {
       baseItems.push({
@@ -148,7 +149,6 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
       });
     }
     baseItems.push(
-      { to: "/historial", label: "Historial Viajes", mobileLabel: "Historial", icon: Icons.List },
       { to: "/incapacidad", label: "Disponibilidad", mobileLabel: "Estatus", icon: Icons.Alert }
     );
     return baseItems;
