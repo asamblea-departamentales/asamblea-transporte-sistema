@@ -80,6 +80,11 @@ class SolicitudMantenimiento extends Model
         return $this->belongsTo(ContratoMantenimiento::class);
     }
 
+    public function getRouteKeyName(): string
+    {
+        return 'codigo';
+    }
+
     // ── Relaciones ──────────────────────────────────────────
 
     public function vehiculo()
