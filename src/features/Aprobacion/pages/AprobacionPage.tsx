@@ -47,7 +47,8 @@ export default function AprobacionPage() {
   }
 
   const solicitud = data.solicitud || data;
-  const isEnEjecucion = (solicitud.estado === 'en_ejecucion' || solicitud.estado?.value === 'en_ejecucion' || solicitud.estado?.nombre === 'en_ejecucion');
+  const statusStr = typeof solicitud.estado === 'string' ? solicitud.estado : (solicitud.estado?.value || solicitud.estado?.nombre || '');
+  const isEnEjecucion = statusStr.toLowerCase().includes('ejecucion');
 
   const nextStep = () => setStep(s => Math.min(3, s + 1));
   const prevStep = () => setStep(s => Math.max(1, s - 1));
