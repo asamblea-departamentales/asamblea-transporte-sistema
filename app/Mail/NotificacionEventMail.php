@@ -25,12 +25,6 @@ class NotificacionEventMail extends Mailable
             $mapUrl = $mapService->generateRouteImageUrl($this->payload['solicitud']);
         }
 
-        $logoPath = public_path('images/logo-blanco-fondo-transparente.png');
-        $logoSrc = null;
-        if (file_exists($logoPath)) {
-            $logoSrc = $this->embed($logoPath);
-        }
-
         $mapFallbackPath = public_path('images/mapa-el-salvador.png');
         $mapFallbackSrc = null;
         if (! $mapUrl && file_exists($mapFallbackPath)) {
@@ -48,7 +42,6 @@ class NotificacionEventMail extends Mailable
                 'map_fallback_src' => $mapFallbackSrc,
                 'evidencia_src' => $evidenciaSrc,
                 'subject' => $this->subject,
-                'logoSrc' => $logoSrc,
             ]);
 
         $this->attachFilesFromPayload($this->payload, $mail);

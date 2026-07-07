@@ -287,7 +287,8 @@
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;">
             <tr>
                 <td align="center" style="padding:0 0 14px;">
-                    <img src="{{ $logoSrc ?: 'https://placehold.co/180x60/1e3a8a/ffffff?text=AL' }}"
+                    @php $logoExists = file_exists(public_path('images/logo-blanco-fondo-transparente.png')); @endphp
+                    <img src="{{ $logoExists ? $message->embed(public_path('images/logo-blanco-fondo-transparente.png')) : 'https://placehold.co/180x60/1e3a8a/ffffff?text=AL' }}"
                          alt="Asamblea Legislativa"
                          width="180" height="60"
                          class="email-logo-img"
