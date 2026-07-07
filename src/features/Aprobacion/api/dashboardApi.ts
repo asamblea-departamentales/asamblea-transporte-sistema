@@ -42,42 +42,19 @@ export const dashboardApi = {
   },
   // TODO: Reemplazar el endpoint cuando el backend libere /api/solicitudes/historial-jefatura
   getHistorialJefatura: async (): Promise<{ data: RecentRequest[] }> => {
-    try {
-      // Intentamos llamar al nuevo endpoint dedicado
-      const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
-      const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-      const mappedData: RecentRequest[] = rawData.map((item: any) => ({
-        id: item.id?.toString() || '',
-        code: item.codigo || item.code || '',
-        date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
-        rawDate: item.created_at || item.date || '',
-        type: item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte'),
-        status: item.estado || item.status || ''
-      }));
-      return { data: mappedData };
-    } catch (_e) {
-      // Fallback temporal: usar el endpoint de recientes
-      try {
-        const response = await axiosClient.get('/solicitudes/recientes');
-        const rawData: RecentRequest[] = Array.isArray(response.data)
-          ? response.data
-          : (response.data?.data || []);
-
-        // Filtrar: excluir pre_aprobadas (esas son para la pantalla de "Por Aprobar")
-        const filteredData = rawData.filter((req: RecentRequest) => {
-          if (!req.status) return false;
-          const statusVal = typeof req.status === 'string' ? req.status : (req.status as any).value || '';
-          const s = statusVal.toLowerCase();
-          // Excluir pre_aprobada primero (contiene la palabra "aprobada")
-          if (s.includes('pre')) return false;
-          return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada') || s.includes('en_ejecucion');
-        });
-
-        return { data: filteredData };
-      } catch (_e2) {
-        // Si todo falla, devolvemos vacío para no crashear
-        return { data: [] };
-      }
-    }
+    // Ya no usamos el fallback, forzamos a que llame a historial-jefatura
+    const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
+    const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
+    
+    const mappedData: RecentRequest[] = rawData.map((item: any) => ({
+      id: item.id?.toString() || '',
+      code: item.codigo || item.code || '',
+      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
+      rawDate: item.created_at || item.date || '',
+      type: item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte'),
+      status: item.estado || item.status || ''
+    }));
+    
+    return { data: mappedData };
   }
 };
