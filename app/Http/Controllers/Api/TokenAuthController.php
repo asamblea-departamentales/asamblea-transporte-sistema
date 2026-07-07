@@ -71,6 +71,13 @@ class TokenAuthController extends Controller
                 'username' => $user->username,
                 'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
                 'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
+                'unidad' => $user->unidadSolicitante ? [
+                    'id' => $user->unidadSolicitante->id,
+                    'nombre' => $user->unidadSolicitante->nombre,
+                    'transporte' => (bool) $user->unidadSolicitante->puede_solicitar_transporte,
+                    'mantenimiento' => (bool) $user->unidadSolicitante->puede_solicitar_mantenimiento,
+                    'combustible' => (bool) $user->unidadSolicitante->puede_solicitar_combustible,
+                ] : null,
             ],
         ]);
     }
@@ -127,6 +134,13 @@ class TokenAuthController extends Controller
             'username' => $user->username,
             'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
             'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
+            'unidad' => $user->unidadSolicitante ? [
+                'id' => $user->unidadSolicitante->id,
+                'nombre' => $user->unidadSolicitante->nombre,
+                'transporte' => (bool) $user->unidadSolicitante->puede_solicitar_transporte,
+                'mantenimiento' => (bool) $user->unidadSolicitante->puede_solicitar_mantenimiento,
+                'combustible' => (bool) $user->unidadSolicitante->puede_solicitar_combustible,
+            ] : null,
         ]);
     }
 
