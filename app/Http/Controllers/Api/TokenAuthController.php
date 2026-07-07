@@ -90,37 +90,23 @@ class TokenAuthController extends Controller
             return null;
         }
 
-        try {
-            $connection = \LdapRecord\Container::get('default');
-            $search = $connection->query()
-                ->where('samaccountname', '=', $username)
-                ->first();
+        $ldapUser = $ldapAuth->findUser($username);
 
-            if (! $search) {
-                return null;
-            }
-
-            $name = $search->getFirstAttribute('displayname')
-                ?? $search->getFirstAttribute('cn')
-                ?? $username;
-
-            $email = $search->getFirstAttribute('mail')
-                ?? "{$username}@asamblea.gob.sv";
-
-            $user = User::create([
-                'username' => $username,
-                'name' => $name,
-                'email' => $email,
-                'password' => Hash::make(Str::random(32)),
-                'activo' => true,
-            ]);
-
-            $user->assignRole('solicitante');
-
-            return $user;
-        } catch (\Exception $e) {
+        if (! $ldapUser) {
             return null;
         }
+
+        $user = User::create([
+            'username' => $username,
+            'name' => $ldapUser['name'],
+            'email' => $ldapUser['email'],
+            'password' => Hash::make(Str::random(32)),
+            'activo' => true,
+        ]);
+
+        $user->assignRole('solicitante');
+
+        return $user;
     }
 
     public function me(Request $request)
