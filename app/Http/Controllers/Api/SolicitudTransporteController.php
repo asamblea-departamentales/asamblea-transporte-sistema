@@ -519,6 +519,7 @@ class SolicitudTransporteController extends Controller
                 EstadoSolicitudEnum::PROGRAMADA,
                 EstadoSolicitudEnum::COMPLETADA,
                 EstadoSolicitudEnum::RECHAZADA,
+                EstadoSolicitudEnum::EN_EJECUCION,
             ])
             ->orderByDesc('updated_at')
             ->paginate($perPage);
