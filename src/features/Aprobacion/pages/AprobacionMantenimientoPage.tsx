@@ -58,6 +58,9 @@ export default function AprobacionMantenimientoPage() {
         </div>
       </div>
 
+      {/* DEBUG TEMPORAL PARA VER LOS CAMPOS DEL CONTRATO */}
+      <div className="hidden" id="debug-mantenimiento-data" data-json={JSON.stringify(data)}></div>
+
       {/* Detalle de Solicitud */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
         <h3 className="text-lg font-bold text-slate-800 mb-6 border-b pb-2">Información del Mantenimiento</h3>
@@ -90,7 +93,13 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Fecha Sugerida</p>
-              <p className="font-semibold text-slate-800">{data.fecha_sugerida || 'No especificada'}</p>
+              <p className="font-semibold text-slate-800">
+                {data.fecha_sugerida 
+                  ? new Date(data.fecha_sugerida).toLocaleDateString('es-ES', { 
+                      day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute:'2-digit' 
+                    }) 
+                  : 'No especificada'}
+              </p>
             </div>
           </div>
 
