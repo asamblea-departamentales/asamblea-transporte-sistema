@@ -14,10 +14,21 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-shadow.png',
 });
 
-function LocationMarker({ position, setPosition }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void }) {
+function LocationMarker({ position, setPosition, setDestino }: { position: L.LatLng | null, setPosition: (pos: L.LatLng) => void, setDestino: (dest: string) => void }) {
   useMapEvents({
-    click(e) {
+    async click(e) {
       setPosition(e.latlng);
+      try {
+        const response = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${e.latlng.lat}&lon=${e.latlng.lng}`);
+        const data = await response.json();
+        if (data && data.display_name) {
+          // Tomamos el nombre, pero lo limpiamos un poco si es muy largo
+          const address = data.display_name.split(',').slice(0, 3).join(',');
+          setDestino(address);
+        }
+      } catch (error) {
+        console.error("Error al obtener la dirección:", error);
+      }
     },
   });
   return position === null ? null : <Marker position={position}></Marker>;
@@ -107,7 +118,7 @@ export function ModalDestinoAdicional({ isOpen, onClose, solicitudId, onSuccess 
                   attribution='&copy; OpenStreetMap'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <LocationMarker position={position} setPosition={setPosition} />
+                <LocationMarker position={position} setPosition={setPosition} setDestino={setDestino} />
               </MapContainer>
             </div>
           </div>
