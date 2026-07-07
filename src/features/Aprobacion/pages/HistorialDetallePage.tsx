@@ -4,6 +4,7 @@ import { ArrowLeft, MapPin, Calendar, Clock, FileText, User, Car, RefreshCw, Che
 import { axiosClient } from '../../../shared/api/axiosClient';
 import { solicitudApi, RecursoDisponible } from '../api/solicitudApi';
 import { toast } from 'sonner';
+import { ModalDestinoAdicional } from '../components/ModalDestinoAdicional';
 
 export default function HistorialDetallePage() {
   const { id } = useParams();
@@ -19,6 +20,9 @@ export default function HistorialDetallePage() {
   const [selectedMotorista, setSelectedMotorista] = useState<number | ''>('');
   const [motivoReasignacion, setMotivoReasignacion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Destino Adicional
+  const [showDestinoModal, setShowDestinoModal] = useState(false);
 
   useEffect(() => {
     if (!id) return;
@@ -158,6 +162,9 @@ export default function HistorialDetallePage() {
 
   // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible)
   const canReasignar = !isCombustibleView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
+
+  // Añadir destino adicional solo en ejecución
+  const canAddDestino = !isCombustibleView && status === 'en_ejecucion';
 
   // Valores a mostrar
   const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
@@ -373,6 +380,22 @@ export default function HistorialDetallePage() {
               </p>
             </div>
           )}
+
+          {/* Botón de Añadir Destino en Ejecución */}
+          {canAddDestino && (
+            <div className="mt-6 pt-4 border-t border-slate-200">
+              <button
+                onClick={() => setShowDestinoModal(true)}
+                className="w-full flex items-center justify-center gap-2 px-6 py-3 bg-[#859BFF] hover:bg-[#7288f5] text-white font-bold rounded-xl hover:shadow-lg hover:-translate-y-0.5 transition-all text-sm"
+              >
+                <MapPin size={18} />
+                Añadir Destino Adicional
+              </button>
+              <p className="text-[11px] text-slate-400 text-center mt-2">
+                Modifica la ruta enviando un nuevo destino en tiempo real al motorista.
+              </p>
+            </div>
+          )}
         </div>
       </div>
 
@@ -488,6 +511,20 @@ export default function HistorialDetallePage() {
           </div>
         </div>
       )}
+
+      {/* Modal de Destino Adicional */}
+      <ModalDestinoAdicional 
+        isOpen={showDestinoModal}
+        onClose={() => setShowDestinoModal(false)}
+        solicitudId={raw.codigo || comp.codigo || id || ''}
+        onSuccess={() => {
+          setShowDestinoModal(false);
+          // Recargar datos para reflejar el cambio si el backend devuelve el nuevo campo
+          axiosClient.get(`/solicitudes-transporte/${id}`).then(res => {
+            setData((prev: any) => ({ ...prev, raw: res.data.data || res.data }));
+          });
+        }}
+      />
     </div>
   );
 }
