@@ -251,16 +251,12 @@ class SolicitudTransporteController extends Controller
         return response()->json($destino->load('agregadoPor'), 201);
     }
 
-    public function actualizarDestinoEjecucion(Request $request, SolicitudTransporte $solicitud)
+    public function agregarDestinoAdicional(Request $request, SolicitudTransporte $solicitud)
     {
-        $user = $request->user();
+        $this->authorizeJefe();
 
-        if (! $user->hasAnyRole(['jefe', 'super_admin', 'ti'])) {
-            return response()->json(['message' => 'Solo el Jefe de Transporte puede modificar la ruta.'], 403);
-        }
-
-        if ($solicitud->estado !== EstadoSolicitudEnum::EN_EJECUCION) {
-            return response()->json(['message' => 'Solo se puede modificar la ruta de un viaje en curso.'], 422);
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::EN_EJECUCION, EstadoSolicitudEnum::PROGRAMADA], true)) {
+            return response()->json(['message' => 'Solo se pueden agregar destinos a viajes programados o en curso.'], 422);
         }
 
         $data = $request->validate([
@@ -272,12 +268,11 @@ class SolicitudTransporteController extends Controller
         BitacoraEvento::create([
             'entidad_tipo' => 'solicitud_transporte',
             'entidad_id' => $solicitud->id,
-            'accion' => AccionBitacoraEnum::AGREGAR_DESTINO_VIAJE->value,
-            'user_id' => $user->id,
+            'accion' => AccionBitacoraEnum::AGREGAR_DESTINO_ADICIONAL->value,
+            'user_id' => Auth::id(),
             'datos_extras' => [
-                'nueva_ruta' => $data['destino_adicional'],
+                'nuevo_destino' => $data['destino_adicional'],
                 'solicitud_codigo' => $solicitud->codigo,
-                'tipo' => 'reemplazo_completo',
             ],
         ]);
 
@@ -300,7 +295,8 @@ class SolicitudTransporteController extends Controller
         });
 
         return response()->json([
-            'message' => 'Ruta actualizada correctamente.',
+            'success' => true,
+            'message' => 'Destino adicional guardado correctamente.',
             'destino_adicional' => $solicitud->fresh()->destino_adicional,
         ]);
     }

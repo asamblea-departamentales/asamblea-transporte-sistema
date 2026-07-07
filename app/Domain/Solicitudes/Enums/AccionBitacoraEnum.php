@@ -45,4 +45,5 @@ enum AccionBitacoraEnum: string
     case DESBLOQUEAR = 'desbloquear';
     case PROGRAMAR = 'programar';
     case AGREGAR_DESTINO_VIAJE = 'agregar_destino_viaje';
+    case AGREGAR_DESTINO_ADICIONAL = 'agregar_destino_adicional';
 }
