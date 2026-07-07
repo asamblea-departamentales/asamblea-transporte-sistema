@@ -55,12 +55,13 @@ export const solicitudApi = {
   },
 
   // Nuevo: Añadir un destino adicional a una solicitud que ya está en curso (EN_EJECUCION)
-  addDestinoEnEjecucion: async (codigo: string, destino_adicional: string) => {
-    // La otra IA alucinó el endpoint /destinos. Volvemos a la propuesta original
-    // que el backend debe construir.
-    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/destino-en-ejecucion`, {
-      nombre: destino_adicional
-    });
+  addDestinoEnEjecucion: async (codigo: string, destino_adicional: string, lat?: number, lng?: number) => {
+    const payload: any = { nombre: destino_adicional };
+    if (lat !== undefined && lng !== undefined) {
+      payload.lat = lat;
+      payload.lng = lng;
+    }
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/destino-en-ejecucion`, payload);
     return response.data;
   }
 };

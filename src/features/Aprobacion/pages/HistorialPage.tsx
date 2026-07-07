@@ -3,6 +3,7 @@ import { dashboardApi, RecentRequest } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 import { History, Search, Calendar, Filter } from 'lucide-react';
 import { Pagination } from '../../../shared/components/Pagination';
+import { axiosClient } from '../../../shared/api/axiosClient';
 
 export const HistorialPage: React.FC = () => {
   const [requests, setRequests] = useState<RecentRequest[]>([]);
@@ -22,7 +23,16 @@ export const HistorialPage: React.FC = () => {
   useEffect(() => {
     const fetchHistorial = async () => {
       try {
+        // DEBUG GIGANTE
+        try {
+          const debugRes = await axiosClient.get('/solicitudes-transporte/TR-2026-000008');
+          console.error("====== DEBUG TR-08 ======", debugRes.data);
+        } catch (e) {
+          console.error("====== ERROR TR-08 ======", e);
+        }
+
         const data = await dashboardApi.getHistorialJefatura();
+        console.log("RESPUESTA REAL DEL BACKEND (historial-jefatura):", data);
         setRequests(data.data || []);
         setFilteredRequests(data.data || []);
       } catch (error) {
