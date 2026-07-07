@@ -11,13 +11,13 @@ interface RecentTableProps {
 export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading }) => {
   const navigate = useNavigate();
 
-  // Filtrar las solicitudes pre-aprobadas (para aprobar) y las que están en ejecución (para seguimiento/destinos)
+  // Filtrar solo las solicitudes pre-aprobadas, ya que al Jefe solo le interesan estas para aprobar
   const safeRequests = requests || [];
   const preAprobadas = safeRequests.filter(req => {
     if (!req.status) return false;
     const statusVal = typeof req.status === 'string' ? req.status : (req.status as any).value || '';
     const s = statusVal.toLowerCase();
-    return s.includes('pre_aprobada') || s.includes('pre') || s.includes('en_ejecucion') || s.includes('ejecucion');
+    return s.includes('pre_aprobada') || s.includes('pre');
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -35,10 +35,6 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
       colorClass = "border-emerald-200 text-emerald-600";
       dotClass = "bg-emerald-500";
       text = "pre_aprobada";
-    } else if (statusVal.toLowerCase().includes('ejecucion')) {
-      colorClass = "border-indigo-200 text-indigo-600";
-      dotClass = "bg-indigo-500";
-      text = "en_ejecucion";
     }
 
     return (

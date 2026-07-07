@@ -147,6 +147,7 @@ export default function HistorialDetallePage() {
   
   const isAprobada = status.includes('aprobada') || status.includes('programada');
   const isRechazada = status.includes('rechazada');
+  const isEnEjecucion = status.includes('ejecucion');
 
   const getStatusColor = () => {
     if (isAprobada) return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Aprobada' };
@@ -294,15 +295,15 @@ export default function HistorialDetallePage() {
         {/* Card: Asignación Actual */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-200">
-            {isAprobada ? <CheckCircle className="text-emerald-500" size={18} /> : <XCircle className="text-red-500" size={18} />}
+            {isEnEjecucion ? <MapPin className="text-indigo-500" size={18} /> : (isAprobada ? <CheckCircle className="text-emerald-500" size={18} /> : <XCircle className="text-red-500" size={18} />)}
             <h3 className="font-bold text-slate-800 text-lg tracking-tight">
-              {isAprobada ? 'Asignación Aprobada' : 'Decisión Final'}
+              {isEnEjecucion ? 'Viaje en Curso' : (isAprobada ? 'Asignación Aprobada' : 'Decisión Final')}
             </h3>
           </div>
           <div className="space-y-4">
             <div>
-              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Decisión</p>
-              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold capitalize ${isAprobada ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'}`}>
+              <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">Estado Actual</p>
+              <span className={`inline-block px-3 py-1 rounded-full text-xs font-bold capitalize border ${statusInfo.bg} ${statusInfo.text} ${statusInfo.border}`}>
                 {decisionFinal}
               </span>
             </div>
