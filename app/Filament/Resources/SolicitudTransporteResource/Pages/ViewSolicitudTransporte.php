@@ -168,6 +168,7 @@ class ViewSolicitudTransporte extends ViewRecord
                         EstadoSolicitudEnum::APROBADA,
                         EstadoSolicitudEnum::PROGRAMADA,
                         EstadoSolicitudEnum::ASIGNADA,
+                        EstadoSolicitudEnum::EN_EJECUCION,
                         EstadoSolicitudEnum::COMPLETADA,
                     ])
                 ),
