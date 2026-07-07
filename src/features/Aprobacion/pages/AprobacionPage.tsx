@@ -6,10 +6,12 @@ import { ColumnaViaje } from '../components/ColumnaViaje';
 import { ColumnaOperativo } from '../components/ColumnaOperativo';
 import { ColumnaSistema } from '../components/ColumnaSistema';
 import { MapaViaje } from '../components/MapaViaje';
+import { ModalDestinoAdicional } from '../components/ModalDestinoAdicional';
 
 export default function AprobacionPage() {
   const { id } = useParams();
   const [step, setStep] = useState(1);
+  const [isModalDestinoOpen, setIsModalDestinoOpen] = useState(false);
   const { 
     data, 
     isLoading, 
@@ -45,6 +47,7 @@ export default function AprobacionPage() {
   }
 
   const solicitud = data.solicitud || data;
+  const isEnEjecucion = (solicitud.estado === 'en_ejecucion' || solicitud.estado?.value === 'en_ejecucion' || solicitud.estado?.nombre === 'en_ejecucion');
 
   const nextStep = () => setStep(s => Math.min(3, s + 1));
   const prevStep = () => setStep(s => Math.max(1, s - 1));
@@ -69,35 +72,36 @@ export default function AprobacionPage() {
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Sigue los pasos para revisar y autorizar esta solicitud.</p>
           </div>
-          
-          {/* Stepper */}
-          <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm overflow-x-auto max-w-full">
-            {steps.map((s, idx) => (
-              <React.Fragment key={s.num}>
-                <div 
-                  onClick={() => setStep(s.num)}
-                  className={`flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
-                    step === s.num ? 'text-primary font-bold' : 
-                    step > s.num ? 'text-success font-medium' : 'text-slate-400 hover:text-slate-600'
-                  }`}
-                >
-                  <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
-                    step === s.num ? 'bg-primary/10 text-primary' : 
-                    step > s.num ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'
-                  }`}>
-                    {step > s.num ? <CheckCircle size={14} /> : s.num}
+          {/* Stepper (oculto si está en ejecución) */}
+          {!isEnEjecucion && (
+            <div className="flex items-center gap-2 bg-white px-4 py-2 rounded-lg border border-slate-200 shadow-sm overflow-x-auto max-w-full">
+              {steps.map((s, idx) => (
+                <React.Fragment key={s.num}>
+                  <div 
+                    onClick={() => setStep(s.num)}
+                    className={`flex items-center gap-2 cursor-pointer transition-colors whitespace-nowrap ${
+                      step === s.num ? 'text-primary font-bold' : 
+                      step > s.num ? 'text-success font-medium' : 'text-slate-400 hover:text-slate-600'
+                    }`}
+                  >
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center text-xs shrink-0 ${
+                      step === s.num ? 'bg-primary/10 text-primary' : 
+                      step > s.num ? 'bg-success/10 text-success' : 'bg-slate-100 text-slate-500'
+                    }`}>
+                      {step > s.num ? <CheckCircle size={14} /> : s.num}
+                    </div>
+                    <span className="text-sm hidden md:block">{s.title}</span>
                   </div>
-                  <span className="text-sm hidden md:block">{s.title}</span>
-                </div>
-                {idx < steps.length - 1 && <div className="w-4 h-[1px] bg-slate-300 mx-2 shrink-0"></div>}
-              </React.Fragment>
-            ))}
-          </div>
+                  {idx < steps.length - 1 && <div className="w-4 h-[1px] bg-slate-300 mx-2 shrink-0"></div>}
+                </React.Fragment>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
       {/* Banner de decisión previa */}
-      {solicitud.decision_final && (
+      {!isEnEjecucion && solicitud.decision_final && (
         <div className="mb-6 bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start gap-3">
           <Info className="text-blue-500 shrink-0 mt-0.5" size={20} />
           <div>
@@ -112,8 +116,47 @@ export default function AprobacionPage() {
 
       {/* Main Content Area */}
       <div className="mb-8 min-h-[500px]">
+
+        {/* VISTA ESPECIAL: EN EJECUCIÓN */}
+        {isEnEjecucion && (
+          <div className="max-w-4xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
+            <div className="bg-white rounded-xl shadow-sm border border-blue-200 p-8 text-center mb-6 overflow-hidden relative">
+              <div className="absolute top-0 left-0 right-0 h-1 bg-[#859BFF]"></div>
+              <div className="w-16 h-16 rounded-full bg-blue-50 flex items-center justify-center mx-auto mb-4 text-[#859BFF]">
+                <MapIcon size={32} />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-800 mb-2">Vehículo en Ruta</h2>
+              <p className="text-slate-500 mb-8 max-w-lg mx-auto">
+                Este viaje ya fue aprobado y actualmente se encuentra en ejecución. Puedes monitorear su progreso o modificar la ruta enviando un nuevo destino al motorista.
+              </p>
+              <button 
+                onClick={() => setIsModalDestinoOpen(true)}
+                className="inline-flex items-center gap-2 px-8 py-3 font-bold rounded-lg text-white transition-all shadow-md bg-[#859BFF] hover:bg-[#7288f5]"
+              >
+                <MapIcon size={18} /> Añadir Destino Adicional
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch min-h-[400px]">
+              <div className="lg:col-span-3 h-full min-h-[400px]">
+                <MapaViaje 
+                  origen={solicitud.origen || 'Asamblea Legislativa'} 
+                  destino={solicitud.destino} 
+                  origen_lat={solicitud.origen_lat}
+                  origen_lng={solicitud.origen_lng}
+                  destino_lat={solicitud.destino_lat}
+                  destino_lng={solicitud.destino_lng}
+                />
+              </div>
+              <div className="lg:col-span-2 h-full">
+                <ColumnaViaje solicitud={solicitud} />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* PASO 1: MAPA Y DATOS */}
-        {step === 1 && (
+        {!isEnEjecucion && step === 1 && (
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 items-stretch min-h-[500px] animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="lg:col-span-3 h-full min-h-[400px]">
               <MapaViaje 
@@ -132,7 +175,7 @@ export default function AprobacionPage() {
         )}
 
         {/* PASO 2: RECURSOS */}
-        {step === 2 && (
+        {!isEnEjecucion && step === 2 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-stretch max-w-5xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-500">
             <ColumnaOperativo 
               data={data.operativo} 
@@ -151,7 +194,7 @@ export default function AprobacionPage() {
         )}
 
         {/* PASO 3: FINALIZACIÓN */}
-        {step === 3 && (
+        {!isEnEjecucion && step === 3 && (
           <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
             <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-6 text-slate-600">
               <PenTool size={32} />
@@ -221,29 +264,39 @@ export default function AprobacionPage() {
       </div>
 
       {/* Wizard Footer Navigation */}
-      <div className="fixed bottom-0 left-0 md:left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-[100] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
-        <button 
-          onClick={prevStep}
-          disabled={step === 1}
-          className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-        >
-          <ChevronLeft size={18} /> Atrás
-        </button>
-
-        {step < 3 ? (
+      {!isEnEjecucion && (
+        <div className="fixed bottom-0 left-0 md:left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-[100] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
           <button 
-            onClick={nextStep}
-            disabled={step === 2 && decision === 'ninguna'}
-            className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            onClick={prevStep}
+            disabled={step === 1}
+            className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-slate-600 bg-slate-100 hover:bg-slate-200 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {step === 1 ? 'Siguiente: Evaluar Recursos' : 'Siguiente: Finalización'} <ChevronRight size={18} />
+            <ChevronLeft size={18} /> Atrás
           </button>
-        ) : (
-          <div className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-            <CheckCircle size={16} /> Fin del Proceso
-          </div>
-        )}
-      </div>
+
+          {step < 3 ? (
+            <button 
+              onClick={nextStep}
+              disabled={step === 2 && decision === 'ninguna'}
+              className="flex items-center gap-2 px-6 py-2.5 font-bold rounded-lg text-white bg-slate-800 hover:bg-slate-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            >
+              {step === 1 ? 'Siguiente: Evaluar Recursos' : 'Siguiente: Finalización'} <ChevronRight size={18} />
+            </button>
+          ) : (
+            <div className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+              <CheckCircle size={16} /> Fin del Proceso
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Modal de Destino Adicional */}
+      <ModalDestinoAdicional 
+        isOpen={isModalDestinoOpen}
+        onClose={() => setIsModalDestinoOpen(false)}
+        solicitudId={solicitud.codigo || solicitud.id || id || ''}
+        onSuccess={() => setIsModalDestinoOpen(false)}
+      />
     </div>
   );
 }

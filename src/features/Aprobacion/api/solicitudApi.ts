@@ -52,5 +52,13 @@ export const solicitudApi = {
     if (fecha_retorno) params.fecha_retorno = fecha_retorno;
     const response = await axiosClient.get<RecursoDisponible>('/recursos/disponibles', { params });
     return response.data;
+  },
+
+  // Nuevo: Añadir un destino adicional a una solicitud que ya está en curso
+  addDestinoEnEjecucion: async (id: string, destino_adicional: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${id}/destino-en-ejecucion`, {
+      destino_adicional
+    });
+    return response.data;
   }
 };

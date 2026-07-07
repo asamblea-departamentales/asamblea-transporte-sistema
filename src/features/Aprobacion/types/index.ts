@@ -18,6 +18,8 @@ export interface SolicitudDetalle {
   motivo: string;
   decision_final?: 'operativo' | 'sistema' | null;
   comentario_jefe?: string | null;
+  estado?: any;
+  codigo?: string;
 }
 
 export interface VehiculoSugerido {
