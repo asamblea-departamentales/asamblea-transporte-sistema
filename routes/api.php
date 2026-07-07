@@ -170,20 +170,16 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
         Route::get('solicitudes/historial-jefatura', function (Request $request) {
-            $user = $request->user();
             $perPage = $request->query('per_page', 15);
 
             $qTransporte = \App\Models\SolicitudTransporte::query()
-                ->where(fn ($q) => $q->where('decidido_por', $user->id))
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
 
             $qMantenimiento = \App\Models\SolicitudMantenimiento::query()
-                ->where(fn ($q) => $q->where('aprobador_id', $user->id))
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
 
             $qCombustible = \App\Models\SolicitudCombustible::query()
-                ->where('aprobador_id', $user->id)
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA]);
+                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
 
             $rows = $qTransporte->get()->map(fn ($s) => [
                 'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
