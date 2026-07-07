@@ -59,7 +59,7 @@ export const solicitudApi = {
     // La otra IA alucinó el endpoint /destinos. Volvemos a la propuesta original
     // que el backend debe construir.
     const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/destino-en-ejecucion`, {
-      destino_adicional
+      nombre: destino_adicional
     });
     return response.data;
   }
