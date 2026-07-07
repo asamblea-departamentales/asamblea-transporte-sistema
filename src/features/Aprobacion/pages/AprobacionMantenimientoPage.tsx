@@ -69,7 +69,7 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Solicitante</p>
-              <p className="font-semibold text-slate-800">{data.solicitante || 'No especificado'}</p>
+              <p className="font-semibold text-slate-800">{typeof data.solicitante === 'object' ? (data.solicitante as any)?.name : data.solicitante || 'No especificado'}</p>
             </div>
           </div>
 
@@ -79,7 +79,7 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Vehículo / Placa</p>
-              <p className="font-semibold text-slate-800">{data.vehiculo || 'Vehículo desconocido'} <span className="text-slate-500 font-normal">({data.placa || 'Sin placa'})</span></p>
+              <p className="font-semibold text-slate-800">{typeof data.vehiculo === 'object' ? (data.vehiculo as any)?.marca || 'Vehículo' : data.vehiculo || 'Vehículo desconocido'} <span className="text-slate-500 font-normal">({data.placa || (data.vehiculo as any)?.placa || 'Sin placa'})</span></p>
               {data.kilometraje_actual && <p className="text-xs text-slate-500 mt-1">Kilometraje: {data.kilometraje_actual} km</p>}
             </div>
           </div>
@@ -100,7 +100,7 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Tipo Mantenimiento</p>
-              <p className="font-semibold text-slate-800">{data.tipo_mantenimiento || 'General / Desconocido'}</p>
+              <p className="font-semibold text-slate-800">{typeof data.tipo_mantenimiento === 'object' ? (data.tipo_mantenimiento as any)?.nombre : data.tipo_mantenimiento || 'General / Desconocido'}</p>
             </div>
           </div>
         </div>
