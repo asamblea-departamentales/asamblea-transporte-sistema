@@ -70,7 +70,7 @@ export const dashboardApi = {
           const s = statusVal.toLowerCase();
           // Excluir pre_aprobada primero (contiene la palabra "aprobada")
           if (s.includes('pre')) return false;
-          return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada');
+          return s.includes('aprobada') || s.includes('rechazada') || s.includes('programada') || s.includes('completada') || s.includes('en_ejecucion');
         });
 
         return { data: filteredData };

@@ -115,6 +115,9 @@ export const HistorialPage: React.FC = () => {
     } else if (text.includes('completada')) {
       colorClass = "border-slate-200 text-slate-600";
       dotClass = "bg-slate-500";
+    } else if (text.includes('en_ejecucion') || text.includes('ejecucion')) {
+      colorClass = "border-indigo-200 text-indigo-600";
+      dotClass = "bg-indigo-500";
     }
 
     return (
