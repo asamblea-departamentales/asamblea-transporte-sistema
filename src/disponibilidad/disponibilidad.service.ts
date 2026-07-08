@@ -43,10 +43,9 @@ export async function reportarDisponibilidad(
   }
   console.log("------------------------------------------");
 
-  // Dejamos que Axios y el navegador resuelvan el Content-Type y el boundary automáticamente
   await api.post("/api/motoristas/me/estado", formData, {
     headers: {
-      "Content-Type": undefined
+      "Content-Type": "multipart/form-data"
     }
   });
 }
