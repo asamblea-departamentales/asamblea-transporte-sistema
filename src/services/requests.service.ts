@@ -55,6 +55,12 @@ export type Request = {
   origen: string;
   destino: string;
   destino_adicional?: string | null;
+  origen_lat?: number | null;
+  origen_lng?: number | null;
+  destino_lat?: number | null;
+  destino_lng?: number | null;
+  destino_adicional_lat?: number | null;
+  destino_adicional_lng?: number | null;
   fecha_salida: string;
   fecha_retorno: string | null;
   cantidad_personas: number;

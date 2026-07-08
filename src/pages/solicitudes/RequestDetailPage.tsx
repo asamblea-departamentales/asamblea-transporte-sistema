@@ -48,7 +48,13 @@ type GenericRequest = {
   // ------ Transporte ------
   motivo_actividad?: string;
   origen?: string;
+  origen_lat?: number | null;
+  origen_lng?: number | null;
   destino?: string;
+  destino_lat?: number | null;
+  destino_lng?: number | null;
+  destino_adicional_lat?: number | null;
+  destino_adicional_lng?: number | null;
   fecha_salida?: string;
   cantidad_personas?: number;
   // ------ Mantenimiento ------
@@ -332,7 +338,17 @@ export default function RequestDetailPage() {
             <MapPin className="h-4 w-4" />
             Itinerario en Mapa
           </h2>
-          <MapSection origen={data.origen!} destinosRaw={data.destino!} destinosAdicionales={data.destino_adicional} />
+          <MapSection 
+            origen={data.origen!} 
+            origenLat={data.origen_lat}
+            origenLng={data.origen_lng}
+            destinosRaw={data.destino!} 
+            destinoLat={data.destino_lat}
+            destinoLng={data.destino_lng}
+            destinosAdicionales={data.destino_adicional} 
+            destinoAdicionalLat={data.destino_adicional_lat}
+            destinoAdicionalLng={data.destino_adicional_lng}
+          />
         </section>
       )}
 
@@ -669,10 +685,20 @@ function InfoChip({ label, value, icon }: { label: string; value: string | numbe
 
 // ─── COMPONENTE DE MAPA ───────────────────────────────────────────────────────
 
-function MapSection({ origen, destinosRaw, destinosAdicionales }: {
+function MapSection({ 
+  origen, origenLat, origenLng, 
+  destinosRaw, destinoLat, destinoLng, 
+  destinosAdicionales, destinoAdicionalLat, destinoAdicionalLng 
+}: {
   origen: string;
+  origenLat?: number | null;
+  origenLng?: number | null;
   destinosRaw: string;
+  destinoLat?: number | null;
+  destinoLng?: number | null;
   destinosAdicionales?: string | null;
+  destinoAdicionalLat?: number | null;
+  destinoAdicionalLng?: number | null;
 }) {
   const mapRef = useRef<L.Map | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -735,22 +761,47 @@ function MapSection({ origen, destinosRaw, destinosAdicionales }: {
       routeLayerRef.current = null;
 
       const adicStrings = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
-      const allStrings = [origen, destinosRaw, ...adicStrings].filter(s => s && s.trim().length > 0);
+      
+      const validCoords: { lat: number; lng: number; label: string; isOrigin: boolean }[] = [];
 
-      if (allStrings.length === 0) {
+      // Origen
+      if (origenLat && origenLng) {
+        validCoords.push({ lat: origenLat, lng: origenLng, label: origen, isOrigin: true });
+      } else if (origen) {
+        const c = await geocodeAddress(origen);
+        if (c) validCoords.push({ ...c, label: origen, isOrigin: true });
+      }
+
+      // Destino Principal
+      if (destinoLat && destinoLng) {
+        validCoords.push({ lat: destinoLat, lng: destinoLng, label: destinosRaw, isOrigin: false });
+      } else if (destinosRaw) {
+        const c = await geocodeAddress(destinosRaw);
+        if (c) validCoords.push({ ...c, label: destinosRaw, isOrigin: false });
+      }
+
+      // Destinos Adicionales
+      if (adicStrings.length > 0) {
+        if (destinoAdicionalLat && destinoAdicionalLng) {
+          validCoords.push({ lat: destinoAdicionalLat, lng: destinoAdicionalLng, label: adicStrings[0], isOrigin: false });
+        } else {
+          const c = await geocodeAddress(adicStrings[0]);
+          if (c) validCoords.push({ ...c, label: adicStrings[0], isOrigin: false });
+        }
+        
+        // Si hay más destinos adicionales (fallback)
+        if (adicStrings.length > 1) {
+          for (let i = 1; i < adicStrings.length; i++) {
+            const c = await geocodeAddress(adicStrings[i]);
+            if (c) validCoords.push({ ...c, label: adicStrings[i], isOrigin: false });
+          }
+        }
+      }
+
+      if (validCoords.length === 0) {
         setLoading(false);
         return;
       }
-
-      // Geocodificación paralela
-      const results = await Promise.all(
-        allStrings.map(async (s, i) => {
-          const c = await geocodeAddress(s);
-          return c ? { ...c, label: s, isOrigin: i === 0 } : null;
-        })
-      );
-
-      const validCoords = results.filter((c): c is { lat: number; lng: number; label: string; isOrigin: boolean } => c !== null);
       const bounds: [number, number][] = [];
 
       validCoords.forEach((c, i) => {
