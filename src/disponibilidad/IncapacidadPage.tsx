@@ -1,10 +1,12 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import {
   getDisponibilidad,
   reportarDisponibilidad,
 } from "./disponibilidad.service";
 
 export default function IncapacidadPage() {
+  const navigate = useNavigate();
   const [activo, setActivo] = useState<boolean>(true);
   const [motivo, setMotivo] = useState("");
   const [loading, setLoading] = useState(true);
@@ -24,9 +26,15 @@ export default function IncapacidadPage() {
   }, []);
 
   const handleSave = async () => {
-    if (!activo && !motivo.trim()) {
-      setError("Debes ingresar un motivo para reportar incapacidad.");
-      return;
+    if (!activo) {
+      if (!motivo.trim()) {
+        setError("Debes ingresar un motivo para reportar incapacidad.");
+        return;
+      }
+      if (!evidenceFile) {
+        setError("El atestado (evidencia) es obligatorio para reportar incapacidad.");
+        return;
+      }
     }
     setSaving(true);
     setError(null);
@@ -34,12 +42,9 @@ export default function IncapacidadPage() {
     try {
       await reportarDisponibilidad(activo, motivo.trim(), evidenceFile || undefined);
       setSuccess(true);
-      if (!activo) {
-        setEvidenceFile(null); // Limpiar despues de reportar incapacidad exitosa
-      }
+      setTimeout(() => navigate("/dashboard"), 1200);
     } catch {
       setError("No se pudo guardar el estado. Intente de nuevo.");
-    } finally {
       setSaving(false);
     }
   };
@@ -134,7 +139,9 @@ export default function IncapacidadPage() {
         {/* Campo de evidencia (solo si no esta disponible) */}
         {!activo && (
           <div>
-            <label className="block text-sm font-bold text-slate-700 mb-2">Evidencia (Opcional)</label>
+            <label className="block text-sm font-bold text-slate-700 mb-2">
+              Evidencia (Obligatoria) <span className="text-red-500 ml-1">*</span>
+            </label>
             {evidenceFile ? (
               <div className="relative flex items-center justify-between p-3 border border-slate-200 rounded-xl bg-slate-50">
                 <span className="text-sm font-semibold text-slate-700 truncate max-w-[80%]">{evidenceFile.name}</span>
