@@ -1,6 +1,6 @@
 import { useNavigate, useParams } from "react-router-dom";
 import { ArrowLeft, MapPin, Shield, CheckCircle2, CircleDot, Play, RefreshCw } from "lucide-react";
-import { useViajeActivo, type TiemposViaje } from "./hooks/useViajeActivo";
+import { useViajeActivo } from "./hooks/useViajeActivo";
 import { MapaViaje } from "./components/MapaViaje";
 import { Wifi, WifiOff } from "lucide-react";
 
