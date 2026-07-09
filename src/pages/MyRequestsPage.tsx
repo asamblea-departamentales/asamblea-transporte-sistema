@@ -327,7 +327,7 @@ function RequestCard({ req, isExpanded, onToggle, onCancel }: {
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const targetId = req.modulo === "transporte" ? req.codigo : req.id;
+                  const targetId = req.codigo;
                   window.location.href = `/solicitudes/${req.modulo}/${targetId}`;
                 }}
                 className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
@@ -656,7 +656,7 @@ export default function MyRequestsPage() {
                             <div className="mt-3 flex gap-2">
                               <button
                                 onClick={() => {
-                                  const targetId = req.modulo === "transporte" ? req.codigo : req.id;
+                                  const targetId = req.codigo;
                                   navigate(`/solicitudes/${req.modulo}/${targetId}`);
                                 }}
                                 className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"

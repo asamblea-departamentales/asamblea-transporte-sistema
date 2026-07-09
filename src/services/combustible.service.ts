@@ -276,7 +276,7 @@ export async function getSolicitudesCombustible(
   return normalizePaginated(data);
 }
 
-export async function getSolicitudCombustible(id: number): Promise<SolicitudCombustible> {
+export async function getSolicitudCombustible(id: string | number): Promise<SolicitudCombustible> {
   const { data } = await api.get<SolicitudCombustible>(`/api/solicitudes-combustible/${id}`);
   return data;
 }
@@ -293,7 +293,7 @@ export async function crearSolicitudCombustible(
 // ══════════════════════════════════════════════════════════════════════════════
 
 export async function enviarSolicitud(
-  id: number
+  id: string | number
 ): Promise<{ message: string; data: SolicitudCombustible }> {
   const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
     `/api/solicitudes-combustible/${id}/enviar`
@@ -302,7 +302,7 @@ export async function enviarSolicitud(
 }
 
 export async function finalizarSolicitud(
-  id: number,
+  id: string | number,
   payload: FinalizarSolicitudPayload
 ): Promise<{ message: string; data: SolicitudCombustible }> {
   const form = new FormData();
@@ -326,7 +326,7 @@ export async function finalizarSolicitud(
 }
 
 export async function cancelarSolicitud(
-  id: number
+  id: string | number
 ): Promise<{ message: string; data: SolicitudCombustible }> {
   const { data } = await api.post<{ message: string; data: SolicitudCombustible }>(
     `/api/solicitudes-combustible/${id}/cancelar`

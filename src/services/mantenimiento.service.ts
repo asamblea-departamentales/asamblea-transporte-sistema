@@ -90,7 +90,7 @@ export type FinalizarMantenimientoPayload = {
 };
 
 export async function finalizarMantenimiento(
-  id: number,
+  id: string | number,
   payload: FinalizarMantenimientoPayload
 ): Promise<{ message: string; data: SolicitudMantenimiento }> {
   const form = new FormData();
@@ -109,7 +109,7 @@ export async function finalizarMantenimiento(
   return data;
 }
 
-export async function cancelarMantenimiento(id: number): Promise<{ message: string; data: SolicitudMantenimiento }> {
+export async function cancelarMantenimiento(id: string | number): Promise<{ message: string; data: SolicitudMantenimiento }> {
   const { data } = await api.post<{ message: string; data: SolicitudMantenimiento }>(
     `/api/solicitudes-mantenimiento/${id}/cancelar`
   );

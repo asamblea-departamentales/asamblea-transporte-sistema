@@ -111,7 +111,7 @@ export default function RequestDetailPage() {
       let res;
       if (modulo === "transporte") res = await getRequestById(id);
       else if (modulo === "mantenimiento") res = await getMantenimientoById(id);
-      else if (modulo === "combustible") res = await getSolicitudCombustible(parseInt(id));
+      else if (modulo === "combustible") res = await getSolicitudCombustible(id);
 
       if (!res) throw new Error("No se encontró la solicitud");
       
@@ -413,7 +413,7 @@ export default function RequestDetailPage() {
         <FinalizarCombustibleModal
           isOpen={isFinalizarModalOpen}
           onClose={() => setIsFinalizarModalOpen(false)}
-          solicitudId={data.id}
+          solicitudId={data.codigo}
           onSuccess={() => {
             setIsFinalizarModalOpen(false);
             fetchData();
@@ -426,7 +426,7 @@ export default function RequestDetailPage() {
         <FinalizarMantenimientoModal
           isOpen={isFinalizarMantenimientoOpen}
           onClose={() => setIsFinalizarMantenimientoOpen(false)}
-          solicitudId={data.id}
+          solicitudId={data.codigo}
           onSuccess={() => {
             setIsFinalizarMantenimientoOpen(false);
             fetchData();

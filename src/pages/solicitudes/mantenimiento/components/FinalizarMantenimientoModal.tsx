@@ -5,7 +5,7 @@ import { Spinner } from "../../Combustible/components/FormUI";
 interface Props {
   isOpen: boolean;
   onClose: () => void;
-  solicitudId: number;
+  solicitudId: string | number;
   onSuccess: () => void;
 }
 
