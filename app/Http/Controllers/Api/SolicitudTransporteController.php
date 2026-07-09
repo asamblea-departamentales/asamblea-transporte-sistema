@@ -17,7 +17,6 @@ use App\Domain\Solicitudes\Services\MapImageService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
-use App\Http\Controllers\Controller;
 use App\Models\BitacoraEvento;
 use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
@@ -28,7 +27,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
-class SolicitudTransporteController extends Controller
+class SolicitudTransporteController extends BaseSolicitudController
 {
     public function __construct(
         protected SolicitudTransporteService $service
@@ -821,37 +820,6 @@ class SolicitudTransporteController extends Controller
             ]);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-    }
-
-    // =====================================================
-    // Helpers de autorización
-    // =====================================================
-
-    private function authorizeOwner(SolicitudTransporte $solicitud): void
-    {
-        if ($solicitud->solicitante_id !== Auth::id()) {
-            abort(Response::HTTP_FORBIDDEN, 'No autorizado para gestionar esta solicitud.');
-        }
-    }
-
-    private function authorizeJefe(): void
-    {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            abort(Response::HTTP_FORBIDDEN, 'Solo personal autorizado puede realizar esta acción.');
-        }
-    }
-
-    private function authorizeView(SolicitudTransporte $solicitud): void
-    {
-        $user = Auth::user();
-
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            return;
-        }
-
-        if ($solicitud->solicitante_id !== $user->id) {
-            abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para ver esta solicitud.');
         }
     }
 

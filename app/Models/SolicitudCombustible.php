@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Solicitudes\Contracts\Workflowable;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
@@ -9,7 +10,7 @@ use App\Domain\Solicitudes\Services\TicketService;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SolicitudCombustible extends Model
+class SolicitudCombustible extends Model implements Workflowable
 {
     use SoftDeletes;
 
@@ -161,6 +162,30 @@ class SolicitudCombustible extends Model
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'prioridad_grupo');
+    }
+
+    // ── Workflowable ─────────────────────────────────────────
+
+    public function getEstado(): EstadoSolicitudEnum
+    {
+        return $this->estado;
+    }
+
+    public function setEstado(EstadoSolicitudEnum $estado): static
+    {
+        $this->estado = $estado;
+
+        return $this;
+    }
+
+    public function getEntidadTipo(): string
+    {
+        return 'solicitud_combustible';
+    }
+
+    public function getSolicitanteId(): int
+    {
+        return $this->solicitante_id;
     }
 
     // ── Helpers ─────────────────────────────────────────────

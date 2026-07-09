@@ -2,135 +2,70 @@
 
 namespace App\Domain\Solicitudes\Services;
 
-// Servicio encargado de gestionar la logica y las transiciones de estado de las Solicitudes de Transporte
-// aplicando un patron de servicios, sacamos la logica del controlador y del resource
-
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
 use App\Models\DecisionOperativa;
-use App\Models\HistorialEstado;
 use App\Models\Motorista;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
+use App\Models\User;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\DB;
 
-/**
- *Archivo principal del servicio de Solicitudes de Transporte, aplicando un patron de servicios, sacamos la logica del controlador o algun otro resource
- */
-
-/**
- * Servicio encargado de gestionar la logica y las transiciones de estado de las Solicitudes de Transporte.
- */
 class SolicitudTransporteService
 {
-    // El solicitante envía la solicitud como borrador para revisión
+    public function __construct(
+        private SolicitudWorkflowService $workflow,
+    ) {}
+
     public function enviarSolicitud(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
     {
-        // Borrador -> Pendiente
-        // No puedes enviar algo que ya esta enviado o procesado
-        if ($solicitud->estado !== EstadoSolicitudEnum::BORRADOR) {
-            throw new \DomainException('Solo se puede enviar una solicitud en estado Borrador.');
-        }
+        $this->workflow->enviar($solicitud, User::findOrFail($userId));
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::ENVIAR->value, $userId, null);
 
-        return DB::transaction(function () use ($solicitud, $userId) {
-            $anterior = $solicitud->estado;
-
-            $solicitud->estado = EstadoSolicitudEnum::PENDIENTE;
-            $solicitud->save();
-
-            // Registrar en el historial de estados
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, null);
-            // Registrar en la bitacora de eventos
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::ENVIAR->value, $userId, null);
-
-            // Enviar correo de notificación
-            $this->enviarCorreoEnviada($solicitud);
-
-            return $solicitud;
-        });
+        return $solicitud;
     }
 
-    // El jefe puede agregar notas
     public function observar(SolicitudTransporte $solicitud, int $jefeId, ?string $comentario): SolicitudTransporte
     {
-        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)) {
-            throw new \DomainException('Solo se puede observar una solicitud en estado Pendiente o En Revisión.');
-        }
+        $solicitud->comentario_jefe = $comentario;
 
-        return DB::transaction(function () use ($solicitud, $jefeId, $comentario) {
-            $anterior = $solicitud->estado;
+        $this->workflow->observar($solicitud, User::findOrFail($jefeId), $comentario);
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::OBSERVAR->value, $jefeId, ['comentario' => $comentario]);
 
-            // Guardar comentario siempre
-            $solicitud->comentario_jefe = $comentario;
-
-            // Transicion automatica de PENDIENTE a EN_REVISION
-            if ($solicitud->estado === EstadoSolicitudEnum::PENDIENTE) {
-                $solicitud->estado = EstadoSolicitudEnum::EN_REVISION;
-            }
-            $solicitud->save();
-
-            // Registramos el historial de estado solo si hubo un cambio real
-            if ($anterior !== $solicitud->estado) {
-                // Registrar en el historial de estados
-                $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
-            }
-
-            // Registrar en la bitacora de eventos
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::OBSERVAR->value, $jefeId, ['comentario' => $comentario]);
-
-            return $solicitud;
-        });
+        return $solicitud;
     }
 
-    // Aprobacion por parte del jefe de unidad
     public function aprobar(SolicitudTransporte $solicitud, int $jefeId): SolicitudTransporte
     {
-        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)) {
-            throw new \DomainException('Solo se puede aprobar una solicitud PENDIENTE o EN_REVISION.');
-        }
+        $solicitud->decidido_por = $jefeId;
+        $solicitud->decidido_en = now();
 
-        return DB::transaction(function () use ($solicitud, $jefeId) {
-            $anterior = $solicitud->estado;
+        $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::APROBADA, User::findOrFail($jefeId), null, ['accion' => 'aprobar']);
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
 
-            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
-            $solicitud->decidido_por = $jefeId;
-            $solicitud->decidido_en = now();
-            $solicitud->save();
-
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, null);
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId);
-
-            $this->enviarCorreoAprobada($solicitud);
-
-            return $solicitud;
-        });
+        return $solicitud;
     }
 
-    // Rechaza una solicitud pendiente o en revisión indicando el motivo
     public function rechazar(SolicitudTransporte $solicitud, int $jefeId, string $comentario): SolicitudTransporte
     {
-        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION, EstadoSolicitudEnum::PRE_APROBADA], true)) {
-            throw new \DomainException('Solo se puede rechazar una solicitud PENDIENTE o EN_REVISION.');
-        }
+        $solicitud->comentario_jefe = $comentario;
+        $solicitud->decidido_por = $jefeId;
+        $solicitud->decidido_en = now();
 
-        return DB::transaction(function () use ($solicitud, $jefeId, $comentario) {
-            $anterior = $solicitud->estado;
+        $this->workflow->rechazar($solicitud, User::findOrFail($jefeId), $comentario);
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::RECHAZAR->value, $jefeId, ['comentario' => $comentario]);
 
-            $solicitud->estado = EstadoSolicitudEnum::RECHAZADA;
-            $solicitud->comentario_jefe = $comentario; // Es importante guardar el comentario al rechazar
-            $solicitud->decidido_por = $jefeId;
-            $solicitud->decidido_en = now();
-            $solicitud->save();
+        return $solicitud;
+    }
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentario);
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::RECHAZAR->value, $jefeId, ['comentario' => $comentario]);
+    public function preAprobar(SolicitudTransporte $solicitud, int $jefeId): SolicitudTransporte
+    {
+        $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::PRE_APROBADA, User::findOrFail($jefeId), 'Solicitud pre-aprobada.', ['accion' => 'pre_aprobar']);
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::PRE_APROBAR->value, $jefeId, null);
 
-            $this->enviarCorreoRechazada($solicitud);
-
-            return $solicitud;
-        });
+        return $solicitud;
     }
 
     public function generarSugerencia(SolicitudTransporte $solicitud): SugerenciaAsignacion
@@ -168,7 +103,6 @@ class SolicitudTransporteService
                 ]
             );
 
-            // Si ya había aprobación previa, invalidar → fuerza re-aprobación
             if ($solicitud->decision_final !== null) {
                 if ($solicitud->vehiculo_id) {
                     $v = Vehiculo::find($solicitud->vehiculo_id);
@@ -191,10 +125,7 @@ class SolicitudTransporteService
             }
 
             if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
-                $anterior = $solicitud->estado;
-                $solicitud->estado = EstadoSolicitudEnum::PRE_APROBADA;
-                $solicitud->save();
-                $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $justificacion);
+                $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::PRE_APROBADA, User::findOrFail($userId), $justificacion, ['accion' => 'asignar_recursos']);
             } else {
                 $solicitud->save();
             }
@@ -225,21 +156,13 @@ class SolicitudTransporteService
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }
 
-        if (! in_array($decisionFinal, ['operativo', 'sistema', 'manual'])) {
-            throw new \InvalidArgumentException('decision_final debe ser "operativo", "sistema" o "manual".');
-        }
-
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma, $vehiculoId, $motoristaId) {
-            // Recargar con lock para evitar race conditions
             $solicitud = SolicitudTransporte::lockForUpdate()->findOrFail($solicitud->id);
 
             if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
                 throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
             }
 
-            $anterior = $solicitud->estado;
-
-            // Guardar referencias a recursos viejos ANTES de pisarlos
             $vehiculoAnteriorId = $solicitud->vehiculo_id;
             $motoristaAnteriorId = $solicitud->motorista_id;
 
@@ -273,7 +196,6 @@ class SolicitudTransporteService
                 $solicitud->motorista_id = $sugerencia->motorista_sugerido_id;
             }
 
-            // Validar disponibilidad de recursos sugeridos por el sistema
             if ($decisionFinal === 'sistema') {
                 $vehiculoSugerido = Vehiculo::lockForUpdate()->find($solicitud->vehiculo_id);
                 $motoristaSugerido = Motorista::lockForUpdate()->find($solicitud->motorista_id);
@@ -292,7 +214,6 @@ class SolicitudTransporteService
                 }
             }
 
-            // Liberar recursos previamente consolidados
             if ($vehiculoAnteriorId) {
                 $v = Vehiculo::find($vehiculoAnteriorId);
                 if ($v) {
@@ -319,10 +240,9 @@ class SolicitudTransporteService
             if ($firma) {
                 $solicitud->firma_aprobador = $firma;
             }
-            $solicitud->estado = EstadoSolicitudEnum::APROBADA;
-            $solicitud->save();
 
-            // Reservar nuevos recursos consolidados
+            $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::APROBADA, User::findOrFail($jefeId), $comentario, ['accion' => 'aprobar_con_decision']);
+
             $vNuevo = Vehiculo::find($solicitud->vehiculo_id);
             $mNuevo = Motorista::find($solicitud->motorista_id);
             if ($vNuevo) {
@@ -345,12 +265,9 @@ class SolicitudTransporteService
                 $comentarioEnriquecido .= ". Observación: {$comentario}";
             }
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $comentarioEnriquecido);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'decision_final' => $decisionFinal,
             ]);
-
-            $this->enviarCorreoAprobada($solicitud);
 
             return [
                 'success' => true,
@@ -363,21 +280,6 @@ class SolicitudTransporteService
         });
     }
 
-    /**
-     * reasignar
-     *
-     * Reasigna vehículo y motorista para una solicitud ya aprobada o programada.
-     * Explicación simple paso a paso:
-     * 1) Verifica que la solicitud esté en un estado donde la reasignación esté permitida.
-     * 2) Comprueba que el vehículo y el motorista solicitados estén disponibles.
-     * 3) Guarda los IDs anteriores para, si aplica, liberar esos recursos.
-     * 4) Actualiza la solicitud con los nuevos recursos y marca los estados en
-     *    la tabla de flota (liberar/reservar según corresponda).
-     * 6) Registra el cambio en el historial y en la bitácora con el motivo.
-     *
-     * Este método realiza todos los cambios dentro de una transacción para
-     * garantizar que la reasignación sea atómica (todo o nada).
-     */
     public function desbloquear(SolicitudTransporte $solicitud, int $userId): array
     {
         if (! in_array($solicitud->estado, [
@@ -389,20 +291,16 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {
-            $anterior = $solicitud->estado;
-
-            $solicitud->estado = EstadoSolicitudEnum::PENDIENTE;
             $solicitud->decision_final = null;
             $solicitud->vehiculo_id = null;
             $solicitud->motorista_id = null;
             $solicitud->decidido_por = null;
             $solicitud->decidido_en = null;
-            $solicitud->save();
+
+            $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::PENDIENTE, User::findOrFail($userId), 'Solicitud desbloqueada para re-asignación.', ['accion' => 'desbloquear']);
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId,
-                'Solicitud desbloqueada para re-asignación.');
             $this->registrarEvento($solicitud, AccionBitacoraEnum::DESBLOQUEAR->value, $userId);
 
             return [
@@ -426,11 +324,7 @@ class SolicitudTransporteService
             throw new \DomainException('Solo se puede reasignar solicitudes aprobadas o programadas.');
         }
 
-        // No bloqueamos por hora pasada. Si la solicitud ya cambió a EN_EJECUCION,
-        // la validación del estado siguiente la impedirá.
         return DB::transaction(function () use ($solicitud, $jefeId, $vehiculoId, $motoristaId, $motivoReasignacion) {
-            $anterior = $solicitud->estado;
-
             $v = Vehiculo::find($vehiculoId);
             $m = Motorista::find($motoristaId);
             if ($v && ! $v->esta_disponible) {
@@ -467,9 +361,6 @@ class SolicitudTransporteService
                 app(EstadoFlotaService::class)->ocuparMotorista($m, $solicitud->codigo);
             }
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId,
-                "Reasignación: {$motivoReasignacion}");
-
             $this->registrarEvento($solicitud, AccionBitacoraEnum::REASIGNAR->value, $jefeId, [
                 'vehiculo_anterior_id' => $vehiculoAnteriorId,
                 'vehiculo_nuevo_id' => $vehiculoId,
@@ -477,9 +368,6 @@ class SolicitudTransporteService
                 'motorista_nuevo_id' => $motoristaId,
                 'motivo' => $motivoReasignacion,
             ]);
-
-            $solicitud->load('motorista');
-            $this->enviarCorreoReasignado($solicitud);
 
             return $solicitud;
         });
@@ -503,113 +391,8 @@ class SolicitudTransporteService
         return 'ninguno';
     }
 
-    // Metodos auxiliares para registrar en la bitacora y el historial
-
-    // Guarda el rastro de CÓMO cambió el estado (Línea de tiempo).
-    private function registrarCambioEstado(SolicitudTransporte $solicitud, $anterior, $nuevo, int $userId, ?string $comentario): void
-    {
-        HistorialEstado::create([
-            'entidad_tipo' => 'solicitud_transporte',
-            'entidad_id' => $solicitud->id,
-            'estado_anterior' => $anterior?->value ?? (string) $anterior,
-            'estado_nuevo' => $nuevo?->value ?? (string) $nuevo,
-            'user_id' => $userId,
-            'comentario' => $comentario,
-        ]);
-    }
-
-    // Guarda QUÉ acción se realizó (Bitácora de actividad).
-    private function registrarEvento(SolicitudTransporte $solicitud, string $accion, int $userId, ?array $extra = null): void
-    {
-        BitacoraEvento::create([
-            'entidad_tipo' => 'solicitud_transporte',
-            'entidad_id' => $solicitud->id,
-            'accion' => $accion,
-            'user_id' => $userId,
-            'datos_extras' => $extra,
-        ]);
-    }
-
-    // ── Correos ──────────────────────────────────────────
-
-    private function enviarCorreoEnviada(SolicitudTransporte $solicitud): void
-    {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_programada');
-    }
-
-    private function enviarCorreoAprobada(SolicitudTransporte $solicitud): void
-    {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_aprobada');
-        $this->enviarCorreoMotoristaAsignado($solicitud);
-    }
-
-    private function enviarCorreoRechazada(SolicitudTransporte $solicitud): void
-    {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_rechazada'
-        );
-    }
-
-    private function enviarCorreoCancelada(SolicitudTransporte $solicitud): void
-    {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_cancelada'
-        );
-    }
-
-    private function enviarCorreoCompletada(SolicitudTransporte $solicitud): void
-    {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_completada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_completada');
-    }
-
-    private function enviarCorreoProgramada(SolicitudTransporte $solicitud): void
-    {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'solicitud_programada'
-        );
-        $this->enviarCorreoMotoristaAsignado($solicitud);
-    }
-
-    private function enviarCorreoReasignado(SolicitudTransporte $solicitud): void
-    {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'transporte', 'motorista_reasignado'
-        );
-        $this->enviarCorreoMotoristaAsignado($solicitud);
-    }
-
-    private function enviarCorreoMotoristaAsignado(SolicitudTransporte $solicitud): void
-    {
-        $motorista = $solicitud->motorista;
-        if (! $motorista) {
-            return;
-        }
-        $email = $motorista->user?->email ?? $motorista->correo;
-        if (empty($email)) {
-            return;
-        }
-        app(SolicitudEmailDispatchService::class)->toEmail(
-            $solicitud, 'transporte', 'motorista_asignado',
-            $email
-        );
-    }
-
-    /** NUEVOS MÉTODOS PARA FINALIZAR SOLICITUDES Y APLICAR CAMBIOS DE ESTADOS EN VEHÍCULOS Y MOTORISTAS
-     * Estos métodos permiten finalizar una solicitud de transporte (cambiando su estado a COMPLETADA)
-     *  y aplicar los cambios necesarios en el estado de los vehículos y motoristas asociados según el nuevo estado de la solicitud.
-     * Al finalizar/completar una solicitud, se libera el vehículo y el motorista asignados, siempre verificando que no tengan otros viajes activos antes de cambiar su estado a disponible.
-     */
     public function finalizar(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
     {
-        // Permitimos que la finalización la ejecute también el motorista cuando
-        // la solicitud esté en ejecución (EN_EJECUCION). Antes sólo se aceptaban
-        // PROGRAMADA, APROBADA o ASIGNADA, pero el flujo operativo marca EN_EJECUCION
-        // al iniciar el viaje y el motorista debe poder marcarlo como finalizado.
         if (! in_array($solicitud->estado, [
             EstadoSolicitudEnum::PROGRAMADA,
             EstadoSolicitudEnum::APROBADA,
@@ -620,10 +403,6 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {
-
-            $anterior = $solicitud->estado;
-
-            // Calcular horas reales (Opción A — 4 pasos)
             if ($solicitud->fecha_salida_real && $solicitud->fecha_retorno_real) {
                 if ($solicitud->fecha_llegada_destino && $solicitud->fecha_inicio_retorno) {
                     $horasIda = $solicitud->fecha_salida_real
@@ -643,30 +422,14 @@ class SolicitudTransporteService
                 }
             }
 
-            $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
             $solicitud->confirmado_por = $userId;
             $solicitud->confirmado_en = now();
-            $solicitud->save();
 
-            // HISTORIAL
-            $this->registrarCambioEstado(
-                $solicitud,
-                $anterior,
-                $solicitud->estado,
-                $userId,
-                'Finalizada por el solicitante.'
-            );
+            $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::COMPLETADA, User::findOrFail($userId), 'Finalizada por el solicitante.', ['accion' => 'completar']);
 
-            // BITÁCORA
-            $this->registrarEvento(
-                $solicitud,
-                AccionBitacoraEnum::COMPLETAR->value,
-                $userId
-            );
+            $this->registrarEvento($solicitud, AccionBitacoraEnum::COMPLETAR->value, $userId);
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
-
-            $this->enviarCorreoCompletada($solicitud);
 
             return $solicitud;
         });
@@ -685,24 +448,14 @@ class SolicitudTransporteService
             throw new \DomainException('Solo el solicitante puede cancelar esta solicitud.');
         }
 
-        return DB::transaction(function () use ($solicitud, $userId, $motivoCancelacion) {
-            $anterior = $solicitud->estado;
+        $solicitud->motivo_cancelacion = $motivoCancelacion;
 
-            $solicitud->estado = EstadoSolicitudEnum::CANCELADA;
-            $solicitud->motivo_cancelacion = $motivoCancelacion;
-            $solicitud->save();
+        $this->workflow->cancelar($solicitud, User::findOrFail($userId), $motivoCancelacion);
+        $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
+            'motivo_cancelacion' => $motivoCancelacion,
+        ]);
 
-            $comentarioHistorial = $motivoCancelacion ?? 'Solicitud cancelada por el usuario.';
-
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, $comentarioHistorial);
-            $this->registrarEvento($solicitud, AccionBitacoraEnum::CANCELAR->value, $userId, [
-                'motivo_cancelacion' => $motivoCancelacion,
-            ]);
-
-            $this->enviarCorreoCancelada($solicitud);
-
-            return $solicitud;
-        });
+        return $solicitud;
     }
 
     public function programar(SolicitudTransporte $solicitud, int $userId): array
@@ -717,7 +470,6 @@ class SolicitudTransporteService
             throw new \DomainException('La solicitud debe tener vehículo y motorista consolidados.');
         }
 
-        // Validar disponibilidad actual de los recursos consolidados
         $vehiculo = Vehiculo::find($solicitud->vehiculo_id);
         $motorista = Motorista::find($solicitud->motorista_id);
         if ($vehiculo && ! $vehiculo->esta_disponible) {
@@ -734,24 +486,31 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {
-            $anterior = $solicitud->estado;
-
-            $solicitud->estado = EstadoSolicitudEnum::PROGRAMADA;
-            $solicitud->save();
+            $this->workflow->transicionar($solicitud, EstadoSolicitudEnum::PROGRAMADA, User::findOrFail($userId), 'Solicitud programada.', ['accion' => 'programar']);
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
 
-            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Solicitud programada.');
             $this->registrarEvento($solicitud, AccionBitacoraEnum::PROGRAMAR->value, $userId, [
                 'accion' => 'programar',
             ]);
-
-            $this->enviarCorreoProgramada($solicitud);
 
             return [
                 'message' => "Solicitud {$solicitud->codigo} programada exitosamente.",
                 'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
             ];
         });
+    }
+
+    // ── Helpers ──────────────────────────────────────────
+
+    private function registrarEvento(SolicitudTransporte $solicitud, string $accion, int $userId, ?array $extra = null): void
+    {
+        BitacoraEvento::create([
+            'entidad_tipo' => 'solicitud_transporte',
+            'entidad_id' => $solicitud->id,
+            'accion' => $accion,
+            'user_id' => $userId,
+            'datos_extras' => $extra,
+        ]);
     }
 }

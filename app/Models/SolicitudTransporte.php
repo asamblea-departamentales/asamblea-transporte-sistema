@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Solicitudes\Contracts\Workflowable;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
-class SolicitudTransporte extends Model
+class SolicitudTransporte extends Model implements Workflowable
 {
     use SoftDeletes;
 
@@ -192,5 +193,29 @@ class SolicitudTransporte extends Model
     public function decisionOperativa(): MorphOne
     {
         return $this->morphOne(DecisionOperativa::class, 'decidable');
+    }
+
+    // ── Workflowable ─────────────────────────────────────────
+
+    public function getEstado(): EstadoSolicitudEnum
+    {
+        return $this->estado;
+    }
+
+    public function setEstado(EstadoSolicitudEnum $estado): static
+    {
+        $this->estado = $estado;
+
+        return $this;
+    }
+
+    public function getEntidadTipo(): string
+    {
+        return 'solicitud_transporte';
+    }
+
+    public function getSolicitanteId(): int
+    {
+        return $this->solicitante_id;
     }
 }

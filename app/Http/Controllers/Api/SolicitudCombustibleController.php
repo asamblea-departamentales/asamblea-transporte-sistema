@@ -13,13 +13,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
-use App\Http\Controllers\Controller;
 use App\Models\SolicitudCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class SolicitudCombustibleController extends Controller
+class SolicitudCombustibleController extends BaseSolicitudController
 {
     public function __construct(
         protected SolicitudCombustibleService $service
@@ -332,42 +331,6 @@ class SolicitudCombustibleController extends Controller
             return response()->json($result);
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-    }
-
-    // ── HELPERS DE AUTORIZACIÓN ─────────────────────────────────────────────
-
-    private function authorizeOwner(SolicitudCombustible $solicitud): void
-    {
-        if ($solicitud->solicitante_id !== Auth::id()) {
-            abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para realizar esta acción.');
-        }
-    }
-
-    private function authorizeJefe(): void
-    {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal con rol de jefatura.');
-        }
-    }
-
-    private function authorizeOperativo(): void
-    {
-        if (! Auth::user()->hasAnyRole(['operativo', 'admin', 'ti', 'super_admin'])) {
-            abort(Response::HTTP_FORBIDDEN, 'Acción permitida únicamente para personal operativo.');
-        }
-    }
-
-    private function authorizeView(SolicitudCombustible $solicitud): void
-    {
-        $user = Auth::user();
-
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            return;
-        }
-
-        if ($solicitud->solicitante_id !== $user->id) {
-            abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para ver esta solicitud.');
         }
     }
 }

@@ -14,13 +14,12 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
-use App\Http\Controllers\Controller;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
-class SolicitudMantenimientoController extends Controller
+class SolicitudMantenimientoController extends BaseSolicitudController
 {
     public function __construct(
         protected SolicitudMantenimientoService $service
@@ -280,34 +279,6 @@ class SolicitudMantenimientoController extends Controller
 
         } catch (\DomainException $e) {
             return response()->json(['error' => $e->getMessage()], 422);
-        }
-    }
-    // ── Helpers de autorización ──────────────────────────────
-
-    private function authorizeOwner(SolicitudMantenimiento $solicitud): void
-    {
-        if ($solicitud->solicitante_id !== Auth::id()) {
-            abort(Response::HTTP_FORBIDDEN, 'No autorizado para gestionar esta solicitud.');
-        }
-    }
-
-    private function authorizeJefe(): void
-    {
-        if (! Auth::user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            abort(Response::HTTP_FORBIDDEN, 'Solo personal autorizado puede realizar esta acción.');
-        }
-    }
-
-    private function authorizeView(SolicitudMantenimiento $solicitud): void
-    {
-        $user = Auth::user();
-
-        if ($user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            return;
-        }
-
-        if ($solicitud->solicitante_id !== $user->id) {
-            abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para ver esta solicitud.');
         }
     }
 }
