@@ -471,6 +471,9 @@ class SolicitudTransporteService
                 'motivo' => $motivoReasignacion,
             ]);
 
+            $solicitud->load('motorista');
+            $this->enviarCorreoReasignado($solicitud);
+
             return $solicitud;
         });
     }
@@ -533,7 +536,6 @@ class SolicitudTransporteService
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_aprobada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_aprobada');
         $this->enviarCorreoMotoristaAsignado($solicitud);
     }
 
@@ -563,6 +565,14 @@ class SolicitudTransporteService
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_programada');
         $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_programada');
+        $this->enviarCorreoMotoristaAsignado($solicitud);
+    }
+
+    private function enviarCorreoReasignado(SolicitudTransporte $solicitud): void
+    {
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'motorista_reasignado'
+        );
         $this->enviarCorreoMotoristaAsignado($solicitud);
     }
 

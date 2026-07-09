@@ -155,7 +155,7 @@ class SolicitudEmailPayloadService
         }
 
         // Cuando se asigna un motorista, se incluye su nombre
-        if ($evento === 'motorista_asignado') {
+        if (in_array($evento, ['motorista_asignado', 'motorista_reasignado'], true)) {
             $data['motorista'] = $r->motorista?->nombre ?? 'N/A';
         }
 
@@ -300,6 +300,7 @@ class SolicitudEmailPayloadService
             'solicitud_programada' => "Tu solicitud de {$label} ha sido PROGRAMADA.",
             'solicitud_pendiente_liquidacion' => "La solicitud de {$label} está en espera de revisión de liquidación.",
             'motorista_asignado' => 'Se te ha asignado un nuevo viaje.',
+            'motorista_reasignado' => 'El motorista de tu solicitud de Transporte ha sido reasignado. A continuación se muestran los datos actualizados.',
             'motorista_no_disponible' => 'Un motorista se ha reportado no disponible.',
             'ruta_modificada' => "La ruta de tu solicitud de {$label} ha sido modificada.",
             default => "Tu solicitud de {$label} ha sido actualizada.",
@@ -362,6 +363,7 @@ class SolicitudEmailPayloadService
             'solicitud_programada' => "Solicitud de {$label} PROGRAMADA",
             'solicitud_pendiente_liquidacion' => "Solicitud de {$label} pendiente de liquidación",
             'motorista_asignado' => 'Nuevo viaje asignado',
+            'motorista_reasignado' => 'Motorista reasignado - Transporte',
             'motorista_no_disponible' => 'Motorista no disponible',
             'ruta_modificada' => "Ruta modificada - {$label}",
             default => "Notificación de {$label}",
