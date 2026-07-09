@@ -260,6 +260,7 @@ class MotoristaEstadoController extends Controller
                     'fecha_salida_real' => $viaje->fecha_salida_real,
                     'fecha_llegada_destino' => $viaje->fecha_llegada_destino,
                     'fecha_inicio_retorno' => $viaje->fecha_inicio_retorno,
+                    'fecha_retorno_real' => $viaje->fecha_retorno_real,
                 ];
             });
 

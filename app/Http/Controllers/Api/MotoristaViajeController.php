@@ -17,6 +17,7 @@ use App\Http\Controllers\Controller;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudTransporte;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -34,7 +35,7 @@ class MotoristaViajeController extends Controller
         }
     }
 
-    public function iniciar(SolicitudTransporte $solicitud)
+    public function iniciar(Request $request, SolicitudTransporte $solicitud)
     {
         $this->verificarOwnership($solicitud);
 
@@ -48,10 +49,14 @@ class MotoristaViajeController extends Controller
             ], 422);
         }
 
-        return DB::transaction(function () use ($solicitud) {
+        $request->validate([
+            'timestamp_real' => 'nullable|date_format:Y-m-d\TH:i:s.v\Z,Y-m-d H:i:s',
+        ]);
+
+        return DB::transaction(function () use ($solicitud, $request) {
             $anterior = $solicitud->estado;
             $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
-            $solicitud->fecha_salida_real = now();
+            $solicitud->fecha_salida_real = $request->input('timestamp_real', now());
             $solicitud->save();
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
@@ -79,7 +84,7 @@ class MotoristaViajeController extends Controller
         });
     }
 
-    public function llegadaDestino(SolicitudTransporte $solicitud)
+    public function llegadaDestino(Request $request, SolicitudTransporte $solicitud)
     {
         $this->verificarOwnership($solicitud);
 
@@ -87,7 +92,11 @@ class MotoristaViajeController extends Controller
             return response()->json(['message' => 'El viaje debe estar en ejecución.'], 422);
         }
 
-        $solicitud->fecha_llegada_destino = now();
+        $request->validate([
+            'timestamp_real' => 'nullable|date_format:Y-m-d\TH:i:s.v\Z,Y-m-d H:i:s',
+        ]);
+
+        $solicitud->fecha_llegada_destino = $request->input('timestamp_real', now());
         $solicitud->save();
 
         return response()->json([
@@ -96,7 +105,7 @@ class MotoristaViajeController extends Controller
         ]);
     }
 
-    public function iniciarRetorno(SolicitudTransporte $solicitud)
+    public function iniciarRetorno(Request $request, SolicitudTransporte $solicitud)
     {
         $this->verificarOwnership($solicitud);
 
@@ -106,7 +115,11 @@ class MotoristaViajeController extends Controller
             ], 422);
         }
 
-        $solicitud->fecha_inicio_retorno = now();
+        $request->validate([
+            'timestamp_real' => 'nullable|date_format:Y-m-d\TH:i:s.v\Z,Y-m-d H:i:s',
+        ]);
+
+        $solicitud->fecha_inicio_retorno = $request->input('timestamp_real', now());
         $solicitud->save();
 
         return response()->json([
@@ -115,7 +128,7 @@ class MotoristaViajeController extends Controller
         ]);
     }
 
-    public function finalizar(SolicitudTransporte $solicitud)
+    public function finalizar(Request $request, SolicitudTransporte $solicitud)
     {
         $this->verificarOwnership($solicitud);
 
@@ -125,8 +138,12 @@ class MotoristaViajeController extends Controller
             ], 422);
         }
 
+        $request->validate([
+            'timestamp_real' => 'nullable|date_format:Y-m-d\TH:i:s.v\Z,Y-m-d H:i:s',
+        ]);
+
         if ($solicitud->fecha_salida_real && ! $solicitud->fecha_retorno_real) {
-            $solicitud->fecha_retorno_real = now();
+            $solicitud->fecha_retorno_real = $request->input('timestamp_real', now());
             $solicitud->save();
         }
 
@@ -136,6 +153,27 @@ class MotoristaViajeController extends Controller
             'message' => 'Viaje finalizado con éxito.',
             'horas_reales' => $solicitud->horas_reales,
             'horas_espera' => $solicitud->horas_espera,
+        ]);
+    }
+
+    public function show(SolicitudTransporte $solicitud)
+    {
+        $this->verificarOwnership($solicitud);
+
+        $solicitud->load('solicitante');
+
+        return response()->json([
+            'id' => $solicitud->id,
+            'fecha' => $solicitud->fecha_salida?->format('Y-m-d'),
+            'hora_salida' => $solicitud->fecha_salida?->format('H:i'),
+            'origen' => $solicitud->origen,
+            'destino' => $solicitud->destino,
+            'estado' => strtoupper($solicitud->estado->value),
+            'solicitante' => $solicitud->solicitante?->name ?? 'Desconocido',
+            'fecha_salida_real' => $solicitud->fecha_salida_real,
+            'fecha_llegada_destino' => $solicitud->fecha_llegada_destino,
+            'fecha_inicio_retorno' => $solicitud->fecha_inicio_retorno,
+            'fecha_retorno_real' => $solicitud->fecha_retorno_real,
         ]);
     }
 }

@@ -279,7 +279,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
             Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
 
-            // Viajes — flujo de 4 pasos
+            // Viajes — flujo de 4 pasos + detalle
+            Route::get('me/viajes/{solicitud}', [MotoristaViajeController::class, 'show']);
             Route::post('me/viajes/{solicitud}/iniciar', [MotoristaViajeController::class, 'iniciar']);
             Route::post('me/viajes/{solicitud}/llegada', [MotoristaViajeController::class, 'llegadaDestino']);
             Route::post('me/viajes/{solicitud}/retorno', [MotoristaViajeController::class, 'iniciarRetorno']);
