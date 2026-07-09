@@ -107,6 +107,23 @@ class SolicitudEmailDispatchService
         $this->send($subject, $payload, $emails);
     }
 
+    public function toOperativo($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
+    {
+        $emails = User::role('operativo')
+            ->whereNotNull('email')
+            ->pluck('email')
+            ->filter()
+            ->unique()
+            ->toArray();
+
+        if (empty($emails)) {
+            return;
+        }
+
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, true, $attachments);
+        $this->send($subject, $payload, $emails);
+    }
+
     /**
      * Envía un correo a una o varias direcciones electrónicas específicas.
      *

@@ -540,16 +540,16 @@ class SolicitudMantenimientoService
 
     private function enviarCorreoAprobada(SolicitudMantenimiento $solicitud): void
     {
-        app(SolicitudEmailDispatchService::class)->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_aprobada'
-        );
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_aprobada');
+        $dispatch->toLiquidadores($solicitud, 'mantenimiento', 'solicitud_pendiente_liquidacion');
     }
 
     private function enviarCorreoEnviada(SolicitudMantenimiento $solicitud): void
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_programada');
+        $dispatch->toOperativo($solicitud, 'mantenimiento', 'solicitud_programada');
     }
 
     private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void
@@ -568,12 +568,7 @@ class SolicitudMantenimientoService
 
     private function enviarCorreoCompletada(SolicitudMantenimiento $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_completada',
-            attachments: $solicitud->adjuntos ?? []
-        );
-        $dispatch->toJefatura(
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
             $solicitud, 'mantenimiento', 'solicitud_completada',
             attachments: $solicitud->adjuntos ?? []
         );
@@ -581,12 +576,7 @@ class SolicitudMantenimientoService
 
     private function enviarCorreoLiquidada(SolicitudMantenimiento $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante(
-            $solicitud, 'mantenimiento', 'solicitud_liquidada',
-            attachments: $solicitud->adjuntos ?? []
-        );
-        $dispatch->toJefatura(
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
             $solicitud, 'mantenimiento', 'solicitud_liquidada',
             attachments: $solicitud->adjuntos ?? []
         );

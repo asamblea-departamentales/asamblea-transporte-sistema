@@ -638,6 +638,8 @@ class SolicitudCombustibleService
                 ]);
             }
 
+            $this->enviarCorreoAprobada($solicitud);
+
             return [
                 'success' => true,
                 'estado_final' => EstadoSolicitudEnum::APROBADA->value,
@@ -745,7 +747,14 @@ class SolicitudCombustibleService
     {
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_enviada');
-        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_programada');
+        $dispatch->toOperativo($solicitud, 'combustible', 'solicitud_programada');
+    }
+
+    private function enviarCorreoAprobada(SolicitudCombustible $solicitud): void
+    {
+        $dispatch = app(SolicitudEmailDispatchService::class);
+        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_aprobada');
+        $dispatch->toLiquidadores($solicitud, 'combustible', 'solicitud_pendiente_liquidacion');
     }
 
     private function enviarCorreoRechazada(SolicitudCombustible $solicitud): void
@@ -764,12 +773,7 @@ class SolicitudCombustibleService
 
     private function enviarCorreoCompletada(SolicitudCombustible $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_completada',
-            attachments: $solicitud->comprobantes ?? []
-        );
-        $dispatch->toJefatura(
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
             $solicitud, 'combustible', 'solicitud_completada',
             attachments: $solicitud->comprobantes ?? []
         );
@@ -777,12 +781,7 @@ class SolicitudCombustibleService
 
     private function enviarCorreoLiquidada(SolicitudCombustible $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante(
-            $solicitud, 'combustible', 'solicitud_liquidada',
-            attachments: $solicitud->comprobantes ?? []
-        );
-        $dispatch->toJefatura(
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
             $solicitud, 'combustible', 'solicitud_liquidada',
             attachments: $solicitud->comprobantes ?? []
         );

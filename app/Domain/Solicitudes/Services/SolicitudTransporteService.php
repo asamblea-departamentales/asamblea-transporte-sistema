@@ -562,9 +562,9 @@ class SolicitudTransporteService
 
     private function enviarCorreoProgramada(SolicitudTransporte $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_programada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_programada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_programada'
+        );
         $this->enviarCorreoMotoristaAsignado($solicitud);
     }
 
