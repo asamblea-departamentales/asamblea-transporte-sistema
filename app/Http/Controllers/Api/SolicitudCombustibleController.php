@@ -11,11 +11,9 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Http\Controllers\Controller;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -106,10 +104,6 @@ class SolicitudCombustibleController extends Controller
     {
         $this->authorizeOwner($solicitud);
 
-        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::ASIGNADA, EstadoSolicitudEnum::APROBADA])) {
-            return response()->json(['error' => 'Solo se pueden finalizar solicitudes que estén aprobadas o asignadas.'], 422);
-        }
-
         $request->validate([
             'forma_pago' => ['required', 'in:carga,ticket,tarjeta,efectivo,otro'],
             'numero_vale_ticket' => ['nullable', 'string'],
@@ -123,27 +117,21 @@ class SolicitudCombustibleController extends Controller
             $rutas[] = $archivo->store('combustible/comprobantes', 'public');
         }
 
-        $estadoAnterior = $solicitud->estado;
-        $solicitud->estado = EstadoSolicitudEnum::COMPLETADA;
-        $solicitud->forma_pago = $request->forma_pago;
-        $solicitud->valor_total = $request->valor_total;
-        $solicitud->numero_vale_ticket = $request->numero_vale_ticket;
-        $solicitud->comprobantes = array_merge($solicitud->comprobantes ?? [], $rutas);
-        $solicitud->save();
+        try {
+            $solicitud = $this->service->completar($solicitud, Auth::id(), [
+                'forma_pago' => $request->forma_pago,
+                'numero_vale_ticket' => $request->numero_vale_ticket,
+                'valor_total' => $request->valor_total,
+                'comprobantes' => $rutas,
+            ]);
 
-        HistorialEstado::create([
-            'entidad_tipo' => 'solicitud_combustible',
-            'entidad_id' => $solicitud->id,
-            'estado_anterior' => $estadoAnterior->value,
-            'estado_nuevo' => EstadoSolicitudEnum::COMPLETADA->value,
-            'user_id' => Auth::id(),
-            'comentario' => 'Carga de combustible finalizada por el usuario.',
-        ]);
-
-        return response()->json([
-            'message' => 'Carga de combustible finalizada con éxito.',
-            'data' => $solicitud->fresh(),
-        ]);
+            return response()->json([
+                'message' => 'Carga de combustible finalizada con éxito.',
+                'data' => $solicitud->fresh(),
+            ]);
+        } catch (\DomainException $e) {
+            return response()->json(['error' => $e->getMessage()], 422);
+        }
     }
 
     public function cancelar(Request $request, SolicitudCombustible $solicitud)

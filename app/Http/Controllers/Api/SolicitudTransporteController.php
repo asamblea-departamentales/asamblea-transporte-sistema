@@ -24,6 +24,7 @@ use App\Models\SolicitudTransporte;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -98,77 +99,73 @@ class SolicitudTransporteController extends Controller
         $destinoAdicional = $data['destino_adicional'] ?? null;
         $destinosAdicionales = $data['destinos_adicionales'] ?? [];
 
-        // Extraemos las coordenadas para que no estorben en el resto de la lógica si fuera necesario
-        // aunque al usar el spread operator (...) podemos dejarlas en $data si los nombres coinciden con la BD.
-
-        // Limpiamos los campos que no van directo a columnas con el mismo nombre
         unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional'], $data['destinos_adicionales']);
 
-        // Mergear hora_salida en fecha_salida y hora_retorno en fecha_retorno
-        if (! empty($data['hora_salida']) && ! empty($data['fecha_salida'])) {
-            $fecha = $data['fecha_salida'] instanceof Carbon ? $data['fecha_salida'] : Carbon::parse($data['fecha_salida']);
-            $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_salida']);
-        }
-        unset($data['hora_salida']);
-
-        if (! empty($data['hora_retorno']) && ! empty($data['fecha_retorno'])) {
-            $fecha = $data['fecha_retorno'] instanceof Carbon ? $data['fecha_retorno'] : Carbon::parse($data['fecha_retorno']);
-            $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_retorno']);
-        }
-        unset($data['hora_retorno']);
-
-        $user = Auth::user();
-
-        if (! empty($data['fecha_salida']) && ! empty($data['fecha_retorno'])) {
-            $data['horas_estimadas'] = round(
-                Carbon::parse($data['fecha_salida'])->diffInMinutes(Carbon::parse($data['fecha_retorno']), true) / 60,
-                2
-            );
-        }
-
-        $solicitud = SolicitudTransporte::create([
-            ...$data, // Aquí ya se incluyen las latitudes y longitudes validadas
-            'destino' => $destinoReal,
-            'destino_adicional' => $destinoAdicional,
-            'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
-            'solicitante_id' => $user->id,
-            'prioridad_grupo' => $user->grupo?->nivel_prioridad ?? 'baja',
-            'estado' => EstadoSolicitudEnum::BORRADOR,
-        ]);
-
-        // Sincronizar destinos adicionales a la nueva tabla
-        $orden = 0;
-
-        // Prioridad 1: Array de destinos con coordenadas (mapa frontend)
-        if (! empty($destinosAdicionales) && is_array($destinosAdicionales)) {
-            foreach ($destinosAdicionales as $d) {
-                SolicitudDestinoAdicional::create([
-                    'solicitud_transporte_id' => $solicitud->id,
-                    'nombre' => $d['nombre'] ?? 'Destino adicional',
-                    'lat' => $d['lat'] ?? null,
-                    'lng' => $d['lng'] ?? null,
-                    'agregado_por' => null,
-                    'agregado_durante_viaje' => false,
-                    'orden' => $orden++,
-                ]);
+        $solicitud = DB::transaction(function () use ($data, $tipoVehiculoNombre, $destinoReal, $destinoAdicional, $destinosAdicionales) {
+            // Mergear hora_salida en fecha_salida y hora_retorno en fecha_retorno
+            if (! empty($data['hora_salida']) && ! empty($data['fecha_salida'])) {
+                $fecha = $data['fecha_salida'] instanceof Carbon ? $data['fecha_salida'] : Carbon::parse($data['fecha_salida']);
+                $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_salida']);
             }
-        } elseif ($destinoAdicional) {
-            // Prioridad 2: Legacy string separado por |
-            $nombres = array_map('trim', preg_split('/\s*(?:\|| - )\s*/', $destinoAdicional));
-            $nombres = array_filter($nombres, fn ($n) => $n !== '');
-            foreach ($nombres as $nombre) {
-                SolicitudDestinoAdicional::create([
-                    'solicitud_transporte_id' => $solicitud->id,
-                    'nombre' => $nombre,
-                    'agregado_por' => null,
-                    'agregado_durante_viaje' => false,
-                    'orden' => $orden++,
-                ]);
-            }
-        }
+            unset($data['hora_salida']);
 
-        // El service cambia el estado de BORRADOR a PENDIENTE y notifica (aquí se enviará el correo)
-        $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+            if (! empty($data['hora_retorno']) && ! empty($data['fecha_retorno'])) {
+                $fecha = $data['fecha_retorno'] instanceof Carbon ? $data['fecha_retorno'] : Carbon::parse($data['fecha_retorno']);
+                $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_retorno']);
+            }
+            unset($data['hora_retorno']);
+
+            $user = Auth::user();
+
+            if (! empty($data['fecha_salida']) && ! empty($data['fecha_retorno'])) {
+                $data['horas_estimadas'] = round(
+                    Carbon::parse($data['fecha_salida'])->diffInMinutes(Carbon::parse($data['fecha_retorno']), true) / 60,
+                    2
+                );
+            }
+
+            $solicitud = SolicitudTransporte::create([
+                ...$data,
+                'destino' => $destinoReal,
+                'destino_adicional' => $destinoAdicional,
+                'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
+                'solicitante_id' => $user->id,
+                'prioridad_grupo' => $user->grupo?->nivel_prioridad ?? 'baja',
+                'estado' => EstadoSolicitudEnum::BORRADOR,
+            ]);
+
+            $orden = 0;
+
+            if (! empty($destinosAdicionales) && is_array($destinosAdicionales)) {
+                foreach ($destinosAdicionales as $d) {
+                    SolicitudDestinoAdicional::create([
+                        'solicitud_transporte_id' => $solicitud->id,
+                        'nombre' => $d['nombre'] ?? 'Destino adicional',
+                        'lat' => $d['lat'] ?? null,
+                        'lng' => $d['lng'] ?? null,
+                        'agregado_por' => null,
+                        'agregado_durante_viaje' => false,
+                        'orden' => $orden++,
+                    ]);
+                }
+            } elseif ($destinoAdicional) {
+                $nombres = array_map('trim', preg_split('/\s*(?:\|| - )\s*/', $destinoAdicional));
+                $nombres = array_filter($nombres, fn ($n) => $n !== '');
+                foreach ($nombres as $nombre) {
+                    SolicitudDestinoAdicional::create([
+                        'solicitud_transporte_id' => $solicitud->id,
+                        'nombre' => $nombre,
+                        'agregado_por' => null,
+                        'agregado_durante_viaje' => false,
+                        'orden' => $orden++,
+                    ]);
+                }
+            }
+
+            $solicitud = $this->service->enviarSolicitud($solicitud, Auth::id());
+
+            return $solicitud;
+        });
 
         return response()->json(
             $solicitud->fresh()->load(['unidad', 'solicitante']),

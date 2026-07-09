@@ -815,19 +815,70 @@
 {{-- MODAL LIQUIDAR --}}
 @if($this->modalLiquidar)
 <div class="liq-modal-overlay" wire:click.self="cerrarModal">
-    <div class="liq-modal">
+    <div class="liq-modal" style="max-width:620px;">
         <div class="liq-modal-header">
-            <h3 class="liq-modal-title">Registrar Liquidación</h3>
+            <h3 class="liq-modal-title">
+                Liquidar {{ $this->liquidarData['codigo'] ?? '' }}
+                &middot;
+                {{ $this->liquidarTipo === 'combustible' ? '⛽ Combustible' : '🔧 Mantenimiento' }}
+            </h3>
             <button class="liq-modal-close" wire:click="cerrarModal">&times;</button>
         </div>
-        <div style="display:flex;flex-direction:column;gap:14px;">
-            <div class="liq-field">
-                <label>Monto Validado (USD)</label>
-                <input type="number" step="0.01" wire:model="monto_validado" placeholder="0.00">
-                @error('monto_validado')
-                    <span class="liq-field-error">{{ $message }}</span>
-                @enderror
+
+        <div style="display:flex;flex-direction:column;gap:16px;">
+
+            {{-- Montos lado a lado --}}
+            <div style="display:flex;gap:12px;">
+                <div class="liq-monto-box" style="flex:1;">
+                    <div class="liq-monto-box-label">Monto solicitado</div>
+                    <div class="liq-monto-box-value" style="color:#111827;font-size:18px;">
+                        ${{ number_format($this->liquidarData['monto_solicitado'] ?? 0, 2) }}
+                    </div>
+                    @if($this->liquidarTipo === 'combustible')
+                        <div style="font-size:11px;color:#9ca3af;margin-top:4px;">
+                            {{ number_format($this->liquidarData['cantidad'], 2) }} cargas
+                        </div>
+                        <div style="font-size:11px;color:#9ca3af;margin-top:2px;">
+                            Ticket: {{ $this->liquidarData['ticket'] ?? '—' }}
+                        </div>
+                    @endif
+                </div>
+                <div class="liq-field" style="flex:1;">
+                    <label>Monto validado</label>
+                    <input type="number" step="0.01" wire:model="monto_validado" placeholder="0.00">
+                    @error('monto_validado')
+                        <span class="liq-field-error">{{ $message }}</span>
+                    @enderror
+                </div>
             </div>
+
+            {{-- Comprobantes preview --}}
+            @if(!empty($this->liquidarData['comprobantes']))
+            <div>
+                <div style="font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:0.05em;color:#9ca3af;margin-bottom:8px;">
+                    Comprobantes
+                </div>
+                <div class="liq-comp-grid" style="grid-template-columns:repeat(4, 1fr);">
+                    @foreach($this->liquidarData['comprobantes'] as $path)
+                        @php
+                            $url   = asset('storage/' . $path);
+                            $ext   = strtolower(pathinfo($path, PATHINFO_EXTENSION));
+                            $isImg = in_array($ext, ['jpg','jpeg','png','webp','gif']);
+                        @endphp
+                        <a href="{{ $url }}" target="_blank" class="liq-comp-thumb">
+                            @if($isImg)
+                                <img src="{{ $url }}" alt="Comprobante">
+                            @else
+                                <span style="font-size:24px;">📄</span>
+                                <span class="liq-comp-label">{{ strtoupper($ext) }}</span>
+                            @endif
+                        </a>
+                    @endforeach
+                </div>
+            </div>
+            @endif
+
+            {{-- Formulario --}}
             <div class="liq-field">
                 <label>Resultado</label>
                 <select wire:model="resultado">
@@ -844,6 +895,7 @@
                 <textarea wire:model="observaciones" rows="3" placeholder="Notas contables opcionales..."></textarea>
             </div>
         </div>
+
         <div class="liq-modal-footer">
             <button class="liq-btn-cancel" wire:click="cerrarModal">Cancelar</button>
             <button class="liq-btn-confirm" wire:click="confirmarLiquidacion">Confirmar Liquidación</button>

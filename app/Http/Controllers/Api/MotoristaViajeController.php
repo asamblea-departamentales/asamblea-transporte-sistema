@@ -39,21 +39,23 @@ class MotoristaViajeController extends Controller
     {
         $this->verificarOwnership($solicitud);
 
-        if (! in_array($solicitud->estado, [
-            EstadoSolicitudEnum::PROGRAMADA,
-            EstadoSolicitudEnum::APROBADA,
-            EstadoSolicitudEnum::ASIGNADA,
-        ], true)) {
-            return response()->json([
-                'message' => 'El viaje no está en un estado que permita iniciarlo.',
-            ], 422);
-        }
-
         $request->validate([
             'timestamp_real' => 'nullable|date_format:Y-m-d\TH:i:s.v\Z,Y-m-d H:i:s',
         ]);
 
         return DB::transaction(function () use ($solicitud, $request) {
+            $solicitud = SolicitudTransporte::lockForUpdate()->findOrFail($solicitud->id);
+
+            if (! in_array($solicitud->estado, [
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ], true)) {
+                return response()->json([
+                    'message' => 'El viaje no está en un estado que permita iniciarlo.',
+                ], 422);
+            }
+
             $anterior = $solicitud->estado;
             $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
             $solicitud->fecha_salida_real = $request->input('timestamp_real', now());

@@ -14,6 +14,7 @@ use App\Http\Controllers\Controller;
 use App\Models\UserSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
@@ -24,31 +25,42 @@ class AuthController extends Controller
             'password' => ['required'],
         ]);
 
-        // 1. PRIMERO validar credenciales SIN loguear
         if (! Auth::validate($credentials)) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);
         }
 
-        // 2. AHORA que sabemos que es el dueño, verificar sesión activa
         $user = \App\Models\User::where('email', $credentials['email'])->first();
 
-        if ($user && UserSession::where('user_id', $user->id)->exists()) {
-            return response()->json([
-                'message' => 'Sesión activa en otro dispositivo',
-            ], 409);
+        if (! $user) {
+            return response()->json(['message' => 'Credenciales inválidas'], 401);
         }
 
-        // 3. Proceder con el login real
+        // Atomic check-then-create with row lock to prevent race condition
+        try {
+            DB::transaction(function () use ($user, $request) {
+                $existing = UserSession::where('user_id', $user->id)->lockForUpdate()->first();
+
+                if ($existing) {
+                    throw new \DomainException('Sesión activa en otro dispositivo');
+                }
+
+                UserSession::create([
+                    'user_id' => $user->id,
+                    'session_id' => $request->session()->getId(),
+                    'ip_address' => $request->ip(),
+                    'user_agent' => $request->userAgent(),
+                    'last_activity' => now(),
+                ]);
+            });
+        } catch (\DomainException $e) {
+            return response()->json(['message' => $e->getMessage()], 409);
+        }
+
         Auth::attempt($credentials);
         $request->session()->regenerate();
 
-        // 4. Registrar la nueva sesión
-        UserSession::create([
-            'user_id' => $user->id,
+        UserSession::where('user_id', $user->id)->update([
             'session_id' => $request->session()->getId(),
-            'ip_address' => $request->ip(),
-            'user_agent' => $request->userAgent(),
-            'last_activity' => now(),
         ]);
 
         return response()->json([

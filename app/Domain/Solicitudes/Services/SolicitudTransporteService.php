@@ -230,6 +230,13 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $comentario, $firma, $vehiculoId, $motoristaId) {
+            // Recargar con lock para evitar race conditions
+            $solicitud = SolicitudTransporte::lockForUpdate()->findOrFail($solicitud->id);
+
+            if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
+                throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
+            }
+
             $anterior = $solicitud->estado;
 
             // Guardar referencias a recursos viejos ANTES de pisarlos
@@ -240,8 +247,8 @@ class SolicitudTransporteService
                 if (! $vehiculoId || ! $motoristaId) {
                     throw new \DomainException('Para decisión manual debe proporcionar vehículo y motorista.');
                 }
-                $v = Vehiculo::find($vehiculoId);
-                $m = Motorista::find($motoristaId);
+                $v = Vehiculo::lockForUpdate()->find($vehiculoId);
+                $m = Motorista::lockForUpdate()->find($motoristaId);
                 if ($v && ! $v->esta_disponible) {
                     throw new \DomainException("El vehículo {$v->placa} seleccionado ya no está disponible.");
                 }
@@ -268,8 +275,8 @@ class SolicitudTransporteService
 
             // Validar disponibilidad de recursos sugeridos por el sistema
             if ($decisionFinal === 'sistema') {
-                $vehiculoSugerido = Vehiculo::find($solicitud->vehiculo_id);
-                $motoristaSugerido = Motorista::find($solicitud->motorista_id);
+                $vehiculoSugerido = Vehiculo::lockForUpdate()->find($solicitud->vehiculo_id);
+                $motoristaSugerido = Motorista::lockForUpdate()->find($solicitud->motorista_id);
 
                 if ($vehiculoSugerido && ! $vehiculoSugerido->esta_disponible) {
                     throw new \DomainException(

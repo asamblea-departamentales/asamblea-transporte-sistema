@@ -150,11 +150,24 @@ class SolicitudMantenimientoService
     }
 
     // Iniciar ejecución: APROBADA -> EN_EJECUCION
-    // public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
-    //  {
-    // if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
-    //  throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
-    // }
+    public function iniciarEjecucion(SolicitudMantenimiento $solicitud, int $userId): SolicitudMantenimiento
+    {
+        if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+            throw new \DomainException('Solo se puede iniciar ejecución de una solicitud Aprobada.');
+        }
+
+        return DB::transaction(function () use ($solicitud, $userId) {
+            $anterior = $solicitud->estado;
+
+            $solicitud->estado = EstadoSolicitudEnum::EN_EJECUCION;
+            $solicitud->save();
+
+            $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $userId, 'Mantenimiento iniciado.');
+            $this->registrarEvento($solicitud, 'EN_EJECUCION', $userId, null);
+
+            return $solicitud;
+        });
+    }
 
     // return DB::transaction(function () use ($solicitud, $userId) {
     // $anterior = $solicitud->estado;

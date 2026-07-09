@@ -420,8 +420,8 @@ class SolicitudCombustibleService
 
     public function completar(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
     {
-        if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
-            throw new \DomainException('Solo se puede completar una solicitud con vales ya asignados.');
+        if (! in_array($solicitud->estado, [EstadoSolicitudEnum::ASIGNADA, EstadoSolicitudEnum::APROBADA])) {
+            throw new \DomainException('Solo se puede completar una solicitud aprobada o asignada.');
         }
 
         $comprobantesExistentes = $solicitud->comprobantes ?? [];

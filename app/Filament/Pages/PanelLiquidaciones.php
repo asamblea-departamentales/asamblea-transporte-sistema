@@ -57,6 +57,8 @@ class PanelLiquidaciones extends Page
 
     public string $observaciones = '';
 
+    public array $liquidarData = [];
+
     // Drawer detalle
     public bool $drawerDetalle = false;
 
@@ -153,6 +155,29 @@ class PanelLiquidaciones extends Page
         $this->monto_validado = '';
         $this->resultado = '';
         $this->observaciones = '';
+        $this->liquidarData = [];
+
+        if ($tipo === 'combustible') {
+            $record = SolicitudCombustible::with(['contrato', 'serieCarga'])->findOrFail($id);
+            $this->liquidarData = [
+                'codigo' => $record->codigo,
+                'monto_solicitado' => $record->valor_total,
+                'cantidad' => $record->cantidad_combustible,
+                'unidad' => 'gal',
+                'ticket' => $record->numero_vale_ticket ?? '—',
+                'comprobantes' => $record->comprobantes ?? [],
+            ];
+        } elseif ($tipo === 'mantenimiento') {
+            $record = SolicitudMantenimiento::with(['contratoMantenimiento'])->findOrFail($id);
+            $this->liquidarData = [
+                'codigo' => $record->codigo,
+                'monto_solicitado' => $record->costo_real ?? $record->costo_estimado,
+                'cantidad' => null,
+                'unidad' => null,
+                'comprobantes' => $record->adjuntos ?? [],
+            ];
+        }
+
         $this->modalLiquidar = true;
     }
 
@@ -161,6 +186,7 @@ class PanelLiquidaciones extends Page
         $this->modalLiquidar = false;
         $this->liquidarId = null;
         $this->liquidarTipo = '';
+        $this->liquidarData = [];
     }
 
     public function confirmarLiquidacion(): void
