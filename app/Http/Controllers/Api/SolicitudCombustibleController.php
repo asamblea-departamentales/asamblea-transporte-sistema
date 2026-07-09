@@ -106,12 +106,12 @@ class SolicitudCombustibleController extends Controller
     {
         $this->authorizeOwner($solicitud);
 
-        if ($solicitud->estado !== EstadoSolicitudEnum::ASIGNADA) {
-            return response()->json(['error' => 'Solo se pueden finalizar solicitudes que ya tengan cupones asignados.'], 422);
+        if (!in_array($solicitud->estado, [EstadoSolicitudEnum::ASIGNADA, EstadoSolicitudEnum::APROBADA])) {
+            return response()->json(['error' => 'Solo se pueden finalizar solicitudes que estén aprobadas o asignadas.'], 422);
         }
 
         $request->validate([
-            'forma_pago' => ['required', 'in:carga,ticket,tarjeta,efectivo,otro'],
+            'forma_pago' => ['required', 'in:carga,vale,ticket,tarjeta,efectivo,otro'],
             'numero_vale_ticket' => ['nullable', 'string'],
             'valor_total' => ['required', 'numeric', 'min:0'],
             'comprobantes' => ['required', 'array', 'min:1'],
