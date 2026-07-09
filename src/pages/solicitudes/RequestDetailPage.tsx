@@ -165,9 +165,9 @@ export default function RequestDetailPage() {
   const isMantenimiento = modulo === "mantenimiento";
   const isOwner = Number(data.solicitante_id) === Number(user?.id);
 
-  // ✅ Combustible: finalizar cuando está "asignada"
+  // ✅ Combustible: finalizar cuando está "aprobada"
   const canFinalizarCombustible =
-    isCombustible && data.estado === "asignada" && isOwner;
+    isCombustible && data.estado === "aprobada" && isOwner;
 
   // ✅ Transporte: finalizar cuando está "asignada"
   const canFinalizarTransporte =

@@ -368,12 +368,12 @@ export const FORMA_PAGO_LABELS: Record<FormaPago, string> = {
 
 export const ESTADOS_ACCIONABLES_SOLICITANTE: EstadoCombustible[] = [
   "borrador",
-  "asignada", // ✅ puede finalizar cuando está asignada
+  "aprobada", // ✅ puede finalizar cuando está aprobada
 ];
 
-/** El solicitante puede finalizar cuando el estado es "asignada" */
+/** El solicitante puede finalizar cuando el estado es "aprobada" */
 export function puedeFinalizarSolicitud(solicitud: SolicitudCombustible): boolean {
-  return solicitud.estado === "asignada";
+  return solicitud.estado === "aprobada";
 }
 
 export function puedeCancelarSolicitud(solicitud: SolicitudCombustible): boolean {
