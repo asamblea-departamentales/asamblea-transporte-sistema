@@ -257,7 +257,7 @@ class LiquidacionUnifiedService
             return false;
         }
 
-        return ! empty($r->vehiculo_id) && ! empty($r->motorista_id);
+        return ! empty($r->vehiculo_id) && ! empty($r->motorista_id) && $r->solicitudCombustible()->exists();
     }
 
     private function tieneOrdenTrabajo($r): bool

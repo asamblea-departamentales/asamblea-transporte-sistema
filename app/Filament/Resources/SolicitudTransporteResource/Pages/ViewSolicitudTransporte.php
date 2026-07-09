@@ -184,7 +184,8 @@ class ViewSolicitudTransporte extends ViewRecord
                     'reportes.solicitud-autorizacion.pdf',
                     ['solicitud' => $record->id]
                 ))
-                ->openUrlInNewTab(),
+                ->openUrlInNewTab()
+                ->visible(fn (SolicitudTransporte $record) => $record->solicitudCombustible()->exists()),
         ];
     }
 

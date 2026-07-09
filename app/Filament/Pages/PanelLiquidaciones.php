@@ -231,7 +231,7 @@ class PanelLiquidaciones extends Page
                 'liquidado' => false,
                 'pdf_route' => null,
                 'tiene_mision_oficial' => ! empty($record->vehiculo_id) && ! empty($record->motorista_id) && ! empty($record->decidido_por),
-                'tiene_doc_oficial' => ! empty($record->vehiculo_id) && ! empty($record->motorista_id),
+                'tiene_doc_oficial' => ! empty($record->vehiculo_id) && ! empty($record->motorista_id) && $record->solicitudCombustible()->exists(),
                 'mision_oficial_route' => route('reportes.mision-oficial.pdf', ['solicitud_id' => $record->id]),
                 'doc_oficial_route' => route('reportes.solicitud-autorizacion.pdf', ['solicitud' => $record->id]),
             ];

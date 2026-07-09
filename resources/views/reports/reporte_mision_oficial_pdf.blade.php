@@ -130,10 +130,10 @@
 
         <div class="bloque-texto centrado">
             <strong>Fecha de salida:</strong>
-            {{ optional($r->fecha_salida)->format('d/m/Y H:i') ?? '—' }}
+            {{ optional($r->fecha_salida_real ?? $r->fecha_salida)->format('d/m/Y H:i') ?? '—' }}
             <br>
             <strong>Fecha de retorno:</strong>
-            {{ optional($r->fecha_retorno)->format('d/m/Y H:i') ?? '—' }}
+            {{ optional($r->fecha_retorno_real ?? $r->fecha_llegada_destino ?? $r->fecha_inicio_retorno ?? $r->fecha_retorno)->format('d/m/Y H:i') ?? '—' }}
         </div>
 
         <div class="firma">
