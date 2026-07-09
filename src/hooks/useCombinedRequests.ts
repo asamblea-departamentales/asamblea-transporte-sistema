@@ -1,5 +1,6 @@
 // hooks/useCombinedRequests.ts
-import { useState, useEffect, useCallback, useRef } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
+import { useQueries } from "@tanstack/react-query";
 import { getAllRequests } from "../services/requests.service";
 import { getAllMantenimientos } from "../services/mantenimiento.service";
 import { getAllCombustibles } from "../services/combustible.service";
@@ -7,7 +8,6 @@ import type { RequestStatus } from "../services/requests.service";
 import type { SolicitudCombustibleNormalizada } from "../services/combustible.service";
 
 // ─── Tipo unificado ────────────────────────────────────────────────────────────
-
 export type Modulo = "transporte" | "mantenimiento" | "combustible";
 
 export type CombinedRequest = {
@@ -24,11 +24,8 @@ export type CombinedRequest = {
   motorista?: { id: number; nombre: string } | null;
   vehiculo?: { id: number; placa: string } | null;
   modulo: Modulo;
-  // raw data por si la vista de detalle lo necesita
   _raw: Record<string, unknown>;
 };
-
-// ─── Filtros ───────────────────────────────────────────────────────────────────
 
 export type CombinedFilters = {
   estado: RequestStatus | "";
@@ -39,7 +36,6 @@ export type CombinedFilters = {
 const PER_PAGE = 10;
 
 // ─── Helpers para normalizar cada módulo ───────────────────────────────────────
-
 function normalizeTransporte(s: any): CombinedRequest {
   return {
     id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
@@ -64,21 +60,14 @@ function normalizeCombustible(s: SolicitudCombustibleNormalizada): CombinedReque
   return {
     id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
     estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-    solicitante: s.solicitante
-      ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email }
-      : undefined,
+    solicitante: s.solicitante ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email } : undefined,
     modulo: "combustible", motorista: s.motorista, vehiculo: s.vehiculo,
     created_at: (s as any).created_at || s.fecha_salida, updated_at: s.updated_at,
     _raw: s as unknown as Record<string, unknown>,
   };
 }
 
-// ─── Función genérica para traer todas las páginas de un endpoint ──────────────
-
-async function fetchAllPages<T>(
-  fetcher: (filters: any) => Promise<{ data: T[]; total: number }>,
-  apiFilters: any
-): Promise<T[]> {
+async function fetchAllPages<T>(fetcher: (filters: any) => Promise<{ data: T[]; total: number }>, apiFilters: any): Promise<T[]> {
   const first = await fetcher({ ...apiFilters, page: 1 });
   const all = [...first.data];
   if (all.length >= first.total) return all;
@@ -97,35 +86,17 @@ async function fetchAllPages<T>(
   return all;
 }
 
-// ─── Ordenar por fecha desc ────────────────────────────────────────────────────
-
 function sortByDate(arr: CombinedRequest[]): CombinedRequest[] {
-  return [...arr].sort(
-    (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-  );
+  return [...arr].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 }
 
-// ─── Hook ──────────────────────────────────────────────────────────────────────
-
 export function useCombinedRequests() {
-  const [allItems, setAllItems]       = useState<CombinedRequest[]>([]);
-  const [loading, setLoading]         = useState(true);
-  const [error, setError]             = useState<string | null>(null);
-  const [page, setPage]               = useState(1);
+  const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
-  const [filters, setFilters]         = useState<CombinedFilters>({
-    estado: "",
-    modulo: "",
-    search: "",
-  });
-
-  // Contador para saber cuántos módulos han respondido
-  const [modulesLoaded, setModulesLoaded] = useState(0);
-  const totalModulesToLoad = useRef(3);
+  const [filters, setFilters] = useState<CombinedFilters>({ estado: "", modulo: "", search: "" });
 
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
-  // Debounce search
   useEffect(() => {
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
@@ -135,79 +106,65 @@ export function useCombinedRequests() {
     return () => clearTimeout(searchTimer.current);
   }, [searchInput]);
 
-  // Fetch solicitudes — carga incremental (muestra datos conforme llegan)
-  const fetchAll = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    setAllItems([]);
-    setModulesLoaded(0);
+  const apiFilters = {
+    per_page: 1000,
+    page: 1,
+    estado: filters.estado || undefined,
+    search: filters.search || undefined,
+  };
 
-    const apiFilters = {
-      per_page: 1000,
-      page: 1,
-      estado: filters.estado || undefined,
-      search: filters.search || undefined,
-    };
+  const shouldFetchTransporte = !filters.modulo || filters.modulo === "transporte";
+  const shouldFetchMantenimiento = !filters.modulo || filters.modulo === "mantenimiento";
+  const shouldFetchCombustible = !filters.modulo || filters.modulo === "combustible";
 
-    const moduloFilter = filters.modulo;
-    const shouldFetchTransporte    = !moduloFilter || moduloFilter === "transporte";
-    const shouldFetchMantenimiento = !moduloFilter || moduloFilter === "mantenimiento";
-    const shouldFetchCombustible   = !moduloFilter || moduloFilter === "combustible";
+  const queries = useQueries({
+    queries: [
+      {
+        queryKey: ["transporte-all", apiFilters],
+        queryFn: async () => {
+          const data = await fetchAllPages(getAllRequests, apiFilters);
+          return data.map(normalizeTransporte);
+        },
+        enabled: shouldFetchTransporte,
+        staleTime: 60 * 1000,
+      },
+      {
+        queryKey: ["mantenimiento-all", apiFilters],
+        queryFn: async () => {
+          const data = await fetchAllPages(getAllMantenimientos, apiFilters);
+          return data.map(normalizeMantenimiento);
+        },
+        enabled: shouldFetchMantenimiento,
+        staleTime: 60 * 1000,
+      },
+      {
+        queryKey: ["combustible-all", apiFilters],
+        queryFn: async () => {
+          const data = await fetchAllPages(getAllCombustibles as any, apiFilters);
+          return (data as any[]).map((s) => normalizeCombustible(s));
+        },
+        enabled: shouldFetchCombustible,
+        staleTime: 60 * 1000,
+      },
+    ],
+  });
 
-    // Contar cuántos módulos vamos a cargar
-    const count = [shouldFetchTransporte, shouldFetchMantenimiento, shouldFetchCombustible]
-      .filter(Boolean).length;
-    totalModulesToLoad.current = count;
+  const allItems = useMemo(() => {
+    const items = queries.flatMap((q) => q.data || []);
+    return sortByDate(items);
+  }, [queries[0].data, queries[1].data, queries[2].data]);
 
-    // Función que agrega resultados conforme llegan y actualiza el estado
-    const addResults = (newItems: CombinedRequest[]) => {
-      setAllItems((prev) => sortByDate([...prev, ...newItems]));
-      setModulesLoaded((prev) => {
-        const next = prev + 1;
-        if (next >= totalModulesToLoad.current) setLoading(false);
-        return next;
-      });
-    };
+  const loading = queries.some((q) => q.isLoading && q.fetchStatus !== 'idle');
+  
+  const expectedQueries = [shouldFetchTransporte, shouldFetchMantenimiento, shouldFetchCombustible].filter(Boolean).length;
+  const loadedQueries = queries.filter((q) => q.isSuccess).length;
+  const isPartiallyLoaded = loadedQueries > 0 && loadedQueries < expectedQueries;
+  const error = queries.find((q) => q.error)?.error?.message || null;
 
-    // Lanzar cada módulo de forma independiente — el primero que responda se muestra
-    if (shouldFetchTransporte) {
-      fetchAllPages(getAllRequests, apiFilters)
-        .then((data) => addResults(data.map(normalizeTransporte)))
-        .catch(() => addResults([]));
-    }
-
-    if (shouldFetchMantenimiento) {
-      fetchAllPages(getAllMantenimientos, apiFilters)
-        .then((data) => addResults(data.map(normalizeMantenimiento)))
-        .catch(() => addResults([]));
-    }
-
-    if (shouldFetchCombustible) {
-      fetchAllPages(getAllCombustibles as any, apiFilters)
-        .then((data: any) =>
-          addResults(data.map((s: SolicitudCombustibleNormalizada) => normalizeCombustible(s)))
-        )
-        .catch(() => addResults([]));
-    }
-
-    // Si no hay módulos que cargar (no debería pasar)
-    if (count === 0) setLoading(false);
-  }, [filters.estado, filters.search, filters.modulo]);
-
-  useEffect(() => { fetchAll(); }, [fetchAll]);
-
-  // ─── Paginación client-side ──────────────────────────────────────────────────
-
-  const total      = allItems.length;
+  const total = allItems.length;
   const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const safePage   = Math.min(page, totalPages);
-  const requests   = allItems.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
-
-  // ─── Estado de progreso ──────────────────────────────────────────────────────
-
-  const isPartiallyLoaded = modulesLoaded > 0 && modulesLoaded < totalModulesToLoad.current;
-
-  // ─── Handlers ────────────────────────────────────────────────────────────────
+  const safePage = Math.min(page, totalPages);
+  const requests = allItems.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
 
   const handleEstadoChange = (estado: RequestStatus | "") => {
     setFilters((f) => ({ ...f, estado }));
@@ -225,6 +182,10 @@ export function useCombinedRequests() {
     setPage(1);
   };
 
+  const refresh = () => {
+    queries.forEach(q => q.refetch());
+  };
+
   return {
     loading,
     isPartiallyLoaded,
@@ -232,7 +193,7 @@ export function useCombinedRequests() {
     requests,
     total,
     totalPages,
-    page:        safePage,
+    page: safePage,
     filters,
     searchInput,
     setPage,
@@ -240,6 +201,6 @@ export function useCombinedRequests() {
     handleEstadoChange,
     handleModuloChange,
     clearFilters,
-    refresh: fetchAll,
+    refresh,
   };
 }

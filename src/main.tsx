@@ -6,6 +6,17 @@ import App from "./app/app";
 import { AuthProvider } from "./auth/AuthContext";
 import "leaflet/dist/leaflet.css";
 
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false, // Opcional, pero recomendado
+      retry: 1, // Intentar una vez extra en caso de fallo
+    },
+  },
+});
+
 if (import.meta.env.PROD) {
   console.log = () => {};
   console.debug = () => {};
@@ -16,8 +27,10 @@ if (import.meta.env.PROD) {
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <AuthProvider>
-      <App />
-    </AuthProvider>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <App />
+      </AuthProvider>
+    </QueryClientProvider>
   </React.StrictMode>
 );

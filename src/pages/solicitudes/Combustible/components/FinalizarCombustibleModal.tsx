@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { finalizarSolicitud, type FormaPago } from "../../../../services/combustible.service";
+import { finalizarCombustibleSchema, type FinalizarCombustibleFormValues } from "../../../../schemas/requests.schema";
 import { Spinner } from "./FormUI";
 
 interface Props {
@@ -19,20 +22,32 @@ const FORMAS_PAGO: { value: FormaPago; label: string; icon: string }[] = [
 
 export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [formaPago, setFormaPago] = useState<FormaPago>("carga");
-  const [valorTotal, setValorTotal] = useState("");
-  const [numVale, setNumVale] = useState("");
-  const [archivos, setArchivos] = useState<File[]>([]);
+  const [globalError, setGlobalError] = useState<string | null>(null);
   const [dragOver, setDragOver] = useState(false);
-  //Probando
-
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const {
+    register,
+    handleSubmit,    setValue,
+    watch,
+    reset,
+    formState: { errors },
+  } = useForm<FinalizarCombustibleFormValues>({
+    resolver: zodResolver(finalizarCombustibleSchema),
+    defaultValues: {
+      formaPago: "carga",
+      valorTotal: undefined,
+      numVale: "",
+      archivos: [],
+    },
+  });
+
+  const archivos = watch("archivos") || [];
+  const formaPago = watch("formaPago");
 
   if (!isOpen) return null;
 
   // ── Archivos ──────────────────────────────────────────────────────────────
-
   const addFiles = (newFiles: FileList | null) => {
     if (!newFiles) return;
     const MAX_FILES = 5;
@@ -41,19 +56,27 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
       const okSize = f.size <= 5 * 1024 * 1024; // 5 MB
       return okType && okSize;
     });
-    setArchivos((prev) => {
-      const names = new Set(prev.map((f) => f.name));
-      const merged = [...prev, ...valid.filter((f) => !names.has(f.name))];
-      if (merged.length > MAX_FILES) {
-        setError(`Máximo ${MAX_FILES} comprobantes por solicitud.`);
-        return prev;
-      }
-      return merged;
-    });
+
+    const currentFiles = watch("archivos") || [];
+    const names = new Set(currentFiles.map((f) => f.name));
+    const merged = [...currentFiles, ...valid.filter((f) => !names.has(f.name))];
+
+    if (merged.length > MAX_FILES) {
+      setGlobalError(`Máximo ${MAX_FILES} comprobantes por solicitud.`);
+      return;
+    }
+    setGlobalError(null);
+    setValue("archivos", merged, { shouldValidate: true });
   };
 
-  const removeFile = (idx: number) =>
-    setArchivos((prev) => prev.filter((_, i) => i !== idx));
+  const removeFile = (idx: number) => {
+    const currentFiles = watch("archivos") || [];
+    setValue(
+      "archivos",
+      currentFiles.filter((_, i) => i !== idx),
+      { shouldValidate: true }
+    );
+  };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
@@ -62,65 +85,42 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
   };
 
   // ── Submit ────────────────────────────────────────────────────────────────
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError(null);
-
-    if (!valorTotal || parseFloat(valorTotal) <= 0) {
-      setError("Ingresa un monto válido mayor a $0.00");
-      return;
-    }
-    if (archivos.length === 0) {
-      setError("Adjunta al menos un comprobante (JPG, PNG o PDF, máx 5 MB).");
-      return;
-    }
-
+  const onSubmit = async (data: FinalizarCombustibleFormValues) => {
+    setGlobalError(null);
     setLoading(true);
+
     try {
       await finalizarSolicitud(solicitudId, {
-        forma_pago: formaPago,
-        valor_total: parseFloat(valorTotal),
-        comprobantes: archivos,
-        numero_vale_ticket: numVale || undefined,
+        forma_pago: data.formaPago,
+        valor_total: data.valorTotal,
+        comprobantes: data.archivos,
+        numero_vale_ticket: data.numVale || undefined,
       });
-      // Reset
-      setValorTotal("");
-      setNumVale("");
-      setArchivos([]);
-      setFormaPago("carga");
+      
+      reset();
       onSuccess();
     } catch (err: any) {
       const msg =
         err.response?.data?.errors
           ? Object.values(err.response.data.errors).flat().join(" • ")
           : err.response?.data?.message || err.message || "Error al finalizar.";
-      setError(msg);
+      setGlobalError(msg);
     } finally {
       setLoading(false);
     }
   };
 
   // ── UI helpers ────────────────────────────────────────────────────────────
-
-  const fileIcon = (f: File) => {
-    if (f.type === "application/pdf") return "📄";
-    return "🖼️";
-  };
-
+  const fileIcon = (f: File) => (f.type === "application/pdf" ? "📄" : "🖼️");
   const showNumeroField = formaPago === "carga" || formaPago === "ticket";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
       {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={loading ? undefined : onClose} />
 
       {/* Modal */}
       <div className="relative w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:rounded-3xl">
-
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -135,7 +135,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
             </div>
           </div>
           <button
-            onClick={onClose}
+            onClick={loading ? undefined : onClose}
             className="rounded-xl p-2 text-slate-400 transition hover:bg-white hover:text-slate-900"
           >
             <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
@@ -145,21 +145,19 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
         </div>
 
         {/* Form */}
-        <form onSubmit={handleSubmit} className="max-h-[80vh] overflow-y-auto p-6">
-
-          {/* Error */}
-          {error && (
+        <form onSubmit={handleSubmit(onSubmit)} className="max-h-[80vh] overflow-y-auto p-6">
+          {/* Global Error */}
+          {globalError && (
             <div className="mb-5 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-700">
               <svg className="h-5 w-5 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <span>{error}</span>
+              <span>{globalError}</span>
             </div>
           )}
 
           <div className="space-y-6">
-
-            {/* Forma de Pago — selector visual */}
+            {/* Forma de Pago */}
             <div>
               <label className="mb-3 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Forma de Pago
@@ -169,11 +167,12 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                   <button
                     key={value}
                     type="button"
-                    onClick={() => setFormaPago(value)}
-                    className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 text-center transition ${formaPago === value
-                      ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
-                      : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
-                      }`}
+                    onClick={() => setValue("formaPago", value, { shouldValidate: true })}
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl border-2 p-3 text-center transition ${
+                      formaPago === value
+                        ? "border-emerald-500 bg-emerald-50 shadow-md shadow-emerald-100"
+                        : "border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50"
+                    }`}
                   >
                     <span className="text-xl">{icon}</span>
                     <span className={`text-[10px] font-black ${formaPago === value ? "text-emerald-700" : "text-slate-500"}`}>
@@ -182,9 +181,10 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                   </button>
                 ))}
               </div>
+              {errors.formaPago && <p className="mt-2 text-xs text-red-500">{errors.formaPago.message}</p>}
             </div>
 
-            {/* Número de Vale/Ticket — condicional */}
+            {/* Número de Carga/Ticket */}
             {showNumeroField && (
               <div className="animate-fade-in">
                 <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
@@ -194,8 +194,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 <input
                   type="text"
                   placeholder={formaPago === "carga" ? "Ej: C-2024-001" : "Ej: T-98765"}
-                  value={numVale}
-                  onChange={(e) => setNumVale(e.target.value)}
+                  {...register("numVale")}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
                 />
               </div>
@@ -211,23 +210,21 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 <input
                   type="number"
                   step="0.01"
-                  min="0.01"
-                  required
                   placeholder="0.00"
-                  value={valorTotal}
-                  onChange={(e) => setValorTotal(e.target.value)}
-                  className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-8 pr-4 text-sm font-bold text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
+                  {...register("valorTotal", { valueAsNumber: true })}
+                  className={`w-full rounded-2xl border bg-white py-3 pl-8 pr-4 text-sm font-bold shadow-sm outline-none transition focus:ring-4 ${
+                    errors.valorTotal ? "border-red-400 focus:ring-red-500/10" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10"
+                  }`}
                 />
               </div>
+              {errors.valorTotal && <p className="mt-2 text-xs text-red-500">{errors.valorTotal.message}</p>}
             </div>
 
             {/* Zona de subida de comprobantes */}
             <div>
               <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
                 Comprobantes
-                <span className="ml-1 font-medium normal-case text-slate-400">
-                  (JPG, PNG o PDF — máx 5 MB c/u)
-                </span>
+                <span className="ml-1 font-medium normal-case text-slate-400">(JPG, PNG o PDF — máx 5 MB c/u)</span>
               </label>
 
               <div
@@ -235,12 +232,17 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 onDragLeave={() => setDragOver(false)}
                 onDrop={handleDrop}
                 onClick={() => fileInputRef.current?.click()}
-                className={`mt-2 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition ${dragOver
-                  ? "border-emerald-400 bg-emerald-50"
-                  : "border-slate-200 bg-slate-50/50 hover:border-emerald-400 hover:bg-emerald-50/20"
-                  }`}
+                className={`mt-2 flex cursor-pointer flex-col items-center justify-center rounded-3xl border-2 border-dashed p-8 transition ${
+                  dragOver
+                    ? "border-emerald-400 bg-emerald-50"
+                    : errors.archivos
+                    ? "border-red-300 bg-red-50"
+                    : "border-slate-200 bg-slate-50/50 hover:border-emerald-400 hover:bg-emerald-50/20"
+                }`}
               >
-                <div className={`mb-3 flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ring-1 transition ${dragOver ? "bg-emerald-100 ring-emerald-200 text-emerald-600" : "bg-white ring-slate-100 text-slate-400"}`}>
+                <div className={`mb-3 flex h-14 w-14 items-center justify-center rounded-2xl shadow-sm ring-1 transition ${
+                  dragOver ? "bg-emerald-100 ring-emerald-200 text-emerald-600" : "bg-white ring-slate-100 text-slate-400"
+                }`}>
                   <svg className="h-7 w-7" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
                   </svg>
@@ -248,9 +250,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 <p className="text-sm font-bold text-slate-700">
                   {dragOver ? "Suelta aquí" : "Haz clic o arrastra archivos"}
                 </p>
-                <p className="mt-1 text-center text-xs text-slate-400">
-                  Puedes subir múltiples archivos a la vez
-                </p>
+                <p className="mt-1 text-center text-xs text-slate-400">Puedes subir múltiples archivos a la vez</p>
                 <input
                   type="file"
                   multiple
@@ -260,21 +260,17 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                   className="hidden"
                 />
               </div>
+              {errors.archivos && <p className="mt-2 text-xs text-red-500">{errors.archivos.message}</p>}
 
               {/* Lista de archivos seleccionados */}
               {archivos.length > 0 && (
                 <ul className="mt-3 space-y-2">
                   {archivos.map((f, i) => (
-                    <li
-                      key={i}
-                      className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100"
-                    >
+                    <li key={i} className="flex items-center justify-between rounded-xl bg-slate-50 px-3 py-2 ring-1 ring-slate-100">
                       <div className="flex items-center gap-2 min-w-0">
                         <span className="text-base">{fileIcon(f)}</span>
                         <span className="truncate text-xs font-bold text-slate-700">{f.name}</span>
-                        <span className="flex-shrink-0 text-[10px] text-slate-400">
-                          ({(f.size / 1024).toFixed(0)} KB)
-                        </span>
+                        <span className="flex-shrink-0 text-[10px] text-slate-400">({(f.size / 1024).toFixed(0)} KB)</span>
                       </div>
                       <button
                         type="button"
@@ -304,13 +300,10 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
             </button>
             <button
               type="submit"
-              disabled={loading || archivos.length === 0 || !valorTotal}
+              disabled={loading}
               className="flex-1 rounded-2xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-xl shadow-emerald-200 transition hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {loading
-                ? <Spinner className="mx-auto h-5 w-5 text-white" />
-                : "Confirmar Finalización"
-              }
+              {loading ? <Spinner className="mx-auto h-5 w-5 text-white" /> : "Confirmar Finalización"}
             </button>
           </div>
         </form>

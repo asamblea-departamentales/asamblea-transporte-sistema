@@ -1,10 +1,9 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   getDashboardSummary,
   getRecentRequests,
-  type DashboardSummary,
-  type RecentRequest,
 } from "../services/dashboard.service";
 import { cn } from "../lib/utils";
 
@@ -196,29 +195,21 @@ function EmptyState({ onNewRequest }: { onNewRequest: () => void }) {
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  const [loading, setLoading] = useState(true);
-  const [summary, setSummary] = useState<DashboardSummary | null>(null);
-  const [recent, setRecent] = useState<RecentRequest[]>([]);
-  const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    let alive = true;
-    async function load() {
-      setLoading(true); setError(null);
-      try {
-        const [s, r] = await Promise.all([getDashboardSummary(), getRecentRequests()]);
-        if (!alive) return;
-        setSummary(s); setRecent(r);
-      } catch (e: any) {
-        if (!alive) return;
-        setError(e?.message ?? "No se pudo cargar el dashboard.");
-      } finally {
-        if (alive) setLoading(false);
-      }
-    }
-    load();
-    return () => { alive = false; };
-  }, []);
+  const { data: summary, isLoading: loadingSummary, error: summaryError } = useQuery({
+    queryKey: ["dashboard-summary"],
+    queryFn: getDashboardSummary,
+    staleTime: 60 * 1000,
+  });
+
+  const { data: recent = [], isLoading: loadingRecent, error: recentError } = useQuery({
+    queryKey: ["dashboard-recent"],
+    queryFn: getRecentRequests,
+    staleTime: 60 * 1000,
+  });
+
+  const loading = loadingSummary || loadingRecent;
+  const error = (summaryError as any)?.message || (recentError as any)?.message || null;
 
   const cards = useMemo(() => [
     {
