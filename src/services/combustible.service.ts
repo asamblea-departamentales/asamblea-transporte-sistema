@@ -29,7 +29,7 @@ export type EstadoCombustible =
   | "cancelada";
 
 export type FormaPago =
-  | "vale"
+  | "carga"
   | "ticket"
   | "tarjeta"
   | "efectivo"
@@ -359,7 +359,7 @@ export const ESTADO_CONFIG: Record<
 };
 
 export const FORMA_PAGO_LABELS: Record<FormaPago, string> = {
-  vale: "Vale",
+  carga: "Carga",
   ticket: "Ticket",
   tarjeta: "Tarjeta",
   efectivo: "Efectivo",

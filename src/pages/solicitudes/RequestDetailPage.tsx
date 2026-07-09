@@ -463,7 +463,7 @@ function DetailItem({ icon, label, value }: { icon: React.ReactNode; label: stri
 // ── Sección de datos de finalización ────────────────────────────────────────
 
 const FORMA_PAGO_MAP: Record<string, { label: string; Icon: typeof Receipt }> = {
-  vale: { label: "Vale", Icon: Receipt },
+  carga: { label: "Carga", Icon: Receipt },
   ticket: { label: "Ticket", Icon: Ticket },
   tarjeta: { label: "Tarjeta", Icon: CreditCard },
   efectivo: { label: "Efectivo", Icon: DollarSign },

@@ -10,7 +10,7 @@ interface Props {
 }
 
 const FORMAS_PAGO: { value: FormaPago; label: string; icon: string }[] = [
-  { value: "vale", label: "Vale", icon: "🧾" },
+  { value: "carga", label: "Carga", icon: "⛽" },
   { value: "ticket", label: "Ticket", icon: "🎫" },
   { value: "tarjeta", label: "Tarjeta", icon: "💳" },
   { value: "efectivo", label: "Efectivo", icon: "💵" },
@@ -20,7 +20,7 @@ const FORMAS_PAGO: { value: FormaPago; label: string; icon: string }[] = [
 export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId, onSuccess }: Props) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [formaPago, setFormaPago] = useState<FormaPago>("vale");
+  const [formaPago, setFormaPago] = useState<FormaPago>("carga");
   const [valorTotal, setValorTotal] = useState("");
   const [numVale, setNumVale] = useState("");
   const [archivos, setArchivos] = useState<File[]>([]);
@@ -88,7 +88,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
       setValorTotal("");
       setNumVale("");
       setArchivos([]);
-      setFormaPago("vale");
+      setFormaPago("carga");
       onSuccess();
     } catch (err: any) {
       const msg =
@@ -108,7 +108,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
     return "🖼️";
   };
 
-  const showNumeroField = formaPago === "vale" || formaPago === "ticket";
+  const showNumeroField = formaPago === "carga" || formaPago === "ticket";
 
   return (
     <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
@@ -188,12 +188,12 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
             {showNumeroField && (
               <div className="animate-fade-in">
                 <label className="mb-2 block text-[10px] font-black uppercase tracking-widest text-slate-400">
-                  Número de {formaPago === "vale" ? "Vale" : "Ticket"}
+                  Número de {formaPago === "carga" ? "Carga" : "Ticket"}
                   <span className="ml-1 font-medium normal-case text-slate-400">(opcional)</span>
                 </label>
                 <input
                   type="text"
-                  placeholder={formaPago === "vale" ? "Ej: V-2024-001" : "Ej: T-98765"}
+                  placeholder={formaPago === "carga" ? "Ej: C-2024-001" : "Ej: T-98765"}
                   value={numVale}
                   onChange={(e) => setNumVale(e.target.value)}
                   className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-900 shadow-sm outline-none transition focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10"
