@@ -127,12 +127,13 @@ class ViewSolicitudCombustible extends ViewRecord
                 ->label('Documento Oficial')
                 ->color('success')
                 ->icon('heroicon-o-printer')
-                ->url(fn (SolicitudCombustible $record) => $record->solicitud_transporte_id
-                    ? route('reportes.solicitud-autorizacion.pdf', [$record->solicitud_transporte_id, $record->id])
-                    : '#'
-                )
-                ->openUrlInNewTab()
-                ->visible(fn (SolicitudCombustible $record) => $record->solicitud_transporte_id !== null),
+                ->url(fn (SolicitudCombustible $record) => route(
+                    'reportes.solicitud-autorizacion.pdf',
+                    $record->solicitud_transporte_id
+                        ? [$record->solicitud_transporte_id, $record->id]
+                        : [0, $record->id]
+                ))
+                ->openUrlInNewTab(),
         ];
     }
 

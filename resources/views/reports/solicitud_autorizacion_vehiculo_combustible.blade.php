@@ -169,7 +169,13 @@
     </div>
 
     <div class="titulo">
-        SOLICITUD Y AUTORIZACIÓN DE VEHÍCULOS Y COMBUSTIBLE
+        @if($datos['modo'] === 'solo_transporte')
+            SOLICITUD Y AUTORIZACIÓN DE VEHÍCULO
+        @elseif($datos['modo'] === 'solo_combustible')
+            SOLICITUD Y AUTORIZACIÓN DE CARGAS DE COMBUSTIBLE
+        @else
+            SOLICITUD Y AUTORIZACIÓN DE VEHÍCULOS Y COMBUSTIBLE
+        @endif
     </div>
 
     <div class="linea-principal"></div>
@@ -226,33 +232,41 @@
 
             <table class="formulario">
 
+                @if($datos['modo'] !== 'solo_combustible')
                 <tr>
                     <td class="label">Tipo vehículo:</td>
                     <td class="valor">
                         {{ $datos['tipo_vehiculo'] }}
                     </td>
                 </tr>
+                @endif
 
+                @if($datos['modo'] !== 'solo_transporte')
                 <tr>
                     <td class="label">Modo de Combustible:</td>
                     <td class="valor">
                         {{ $datos['tipo_combustible'] }}
                     </td>
                 </tr>
+                @endif
 
+                @if($datos['modo'] !== 'solo_transporte')
                 <tr>
                     <td class="label">Valor:</td>
                     <td class="valor">
                         $ {{ number_format($datos['monto_combustible'], 2) }}
                     </td>
                 </tr>
+                @endif
 
+                @if($datos['modo'] !== 'solo_transporte')
                 <tr>
                     <td class="label">Total vales:</td>
                     <td class="valor">
                         1
                     </td>
                 </tr>
+                @endif
 
             </table>
 
@@ -262,19 +276,23 @@
 
             <table class="formulario">
 
+                @if($datos['modo'] !== 'solo_combustible')
                 <tr>
                     <td class="label">Placa:</td>
                     <td class="valor">
                         {{ $datos['placa'] }}
                     </td>
                 </tr>
+                @endif
 
+                @if($datos['modo'] !== 'solo_transporte')
                 <tr>
                     <td class="label">Monto:</td>
                     <td class="valor">
                         $ {{ number_format($datos['monto_combustible'], 2) }}
                     </td>
                 </tr>
+                @endif
 
             </table>
 

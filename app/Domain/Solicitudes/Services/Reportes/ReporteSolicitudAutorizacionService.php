@@ -9,6 +9,48 @@ class ReporteSolicitudAutorizacionService
 {
     public function getDatosOficiales(int $solicitudId, ?int $combustibleId = null): array
     {
+        // ── MODO: Solo Combustible (sin transporte) ──────────────────────
+        if ($solicitudId === 0 && $combustibleId) {
+            $combustible = SolicitudCombustible::with([
+                'vehiculo.vehMarca',
+                'vehiculo.vehModelo',
+                'vehiculo.tipo',
+                'vehiculo.tipoCombustible',
+                'solicitante',
+                'motorista',
+            ])->findOrFail($combustibleId);
+
+            return [
+                'modo' => 'solo_combustible',
+                'codigo' => $combustible->codigo,
+                'fecha_emision' => now()->format('d/m/Y'),
+                'unidad' => $combustible->solicitante?->unidadSolicitante?->nombre ?? '—',
+                'solicitante' => $combustible->solicitante?->name ?? '—',
+                'destino' => $combustible->destino_actividad ?? '—',
+                'destino_adicional' => null,
+                'motivo' => $combustible->destino_actividad ?? '—',
+                'fecha_salida' => optional($combustible->fecha_solicitud)->format('d/m/Y') ?? '—',
+                'fecha_regreso' => '—',
+                'hora_salida' => '—',
+                'hora_regreso' => '—',
+
+                // Vehículo
+                'placa' => $combustible->vehiculo?->placa ?? '—',
+                'tipo_vehiculo' => $combustible->vehiculo?->tipo?->nombre ?? '—',
+                'motorista' => $combustible->motorista?->nombre ?? '—',
+
+                // Combustible
+                'ticket' => $combustible->numero_vale_ticket ?? '—',
+                'numero_vale_ticket' => $combustible->numero_vale_ticket ?? '—',
+                'tipo_combustible' => $combustible->vehiculo?->tipoCombustible?->nombre ?? '—',
+                'monto_combustible' => $combustible->monto_asignado ?? $combustible->cantidad_combustible ?? 0,
+
+                // Extras
+                'observaciones' => '—',
+            ];
+        }
+
+        // ── MODO: Con Transporte ─────────────────────────────────────────
         $solicitud = SolicitudTransporte::with([
             'unidad',
             'solicitante',
@@ -18,12 +60,14 @@ class ReporteSolicitudAutorizacionService
             'solicitudCombustible',
         ])->findOrFail($solicitudId);
 
-        // Usar el combustible específico si se pasa, o el ligado al transporte
         $combustible = $combustibleId
             ? SolicitudCombustible::with('vehiculo.tipoCombustible')->find($combustibleId)
             : $solicitud->solicitudCombustible;
 
+        $modo = $combustible ? 'completo' : 'solo_transporte';
+
         return [
+            'modo' => $modo,
             'codigo' => $solicitud->codigo,
             'fecha_emision' => now()->format('d/m/Y'),
             'unidad' => $solicitud->unidad?->nombre ?? '—',

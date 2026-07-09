@@ -546,8 +546,7 @@ class SolicitudTransporteResource extends Resource
                         ->url(fn ($record) => route('reportes.solicitud-autorizacion.pdf', [
                             'solicitud' => $record->id,
                         ]))
-                        ->openUrlInNewTab()
-                        ->visible(fn ($record) => $record->solicitudCombustible()->exists()),
+                        ->openUrlInNewTab(),
                 ])
                     ->label('Más')
                     ->icon('heroicon-m-ellipsis-vertical'),
