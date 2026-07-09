@@ -232,14 +232,12 @@
 
             <table class="formulario">
 
-                @if($datos['modo'] !== 'solo_combustible')
                 <tr>
                     <td class="label">Tipo vehículo:</td>
                     <td class="valor">
                         {{ $datos['tipo_vehiculo'] }}
                     </td>
                 </tr>
-                @endif
 
                 @if($datos['modo'] !== 'solo_transporte')
                 <tr>
@@ -276,14 +274,12 @@
 
             <table class="formulario">
 
-                @if($datos['modo'] !== 'solo_combustible')
                 <tr>
                     <td class="label">Placa:</td>
                     <td class="valor">
                         {{ $datos['placa'] }}
                     </td>
                 </tr>
-                @endif
 
                 @if($datos['modo'] !== 'solo_transporte')
                 <tr>

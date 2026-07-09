@@ -82,7 +82,9 @@ class ReporteSolicitudAutorizacionService
 
             // Vehículo
             'placa' => $solicitud->vehiculo?->placa ?? $combustible?->vehiculo?->placa ?? '—',
-            'tipo_vehiculo' => $solicitud->tipoVehiculo?->nombre ?? '—',
+            'tipo_vehiculo' => $solicitud->tipoVehiculo?->nombre
+                ?? $solicitud->vehiculo?->tipo?->nombre
+                ?? '—',
             'motorista' => $solicitud->motorista?->nombre ?? $solicitud->motorista?->name ?? '—',
 
             // Combustible
