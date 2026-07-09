@@ -32,15 +32,12 @@ class NotificacionEventMail extends Mailable
             $mapFallbackSrc = 'data:image/png;base64,'.$data;
         }
 
-        $evidenciaSrc = $this->resolveEvidenciaSrc($this->payload);
-
         $mail = $this->subject($this->subject)
             ->view('emails.notificacion_event')
             ->with([
                 'payload' => $this->payload,
                 'map_url' => $mapUrl,
                 'map_fallback_src' => $mapFallbackSrc,
-                'evidencia_src' => $evidenciaSrc,
                 'subject' => $this->subject,
             ]);
 
@@ -94,30 +91,5 @@ class NotificacionEventMail extends Mailable
         }
 
         return null;
-    }
-
-    private function resolveEvidenciaSrc(array $payload): ?string
-    {
-        $evidencia = $payload['evidencia'] ?? null;
-        if (empty($evidencia)) {
-            return null;
-        }
-
-        $path = $this->resolveAttachmentPath($evidencia['ruta'] ?? '');
-        if (! $path) {
-            return null;
-        }
-
-        $mime = mime_content_type($path);
-        if (! $mime || ! str_starts_with($mime, 'image/')) {
-            return null;
-        }
-
-        $body = file_get_contents($path);
-        if ($body === false) {
-            return null;
-        }
-
-        return 'data:'.$mime.';base64,'.base64_encode($body);
     }
 }

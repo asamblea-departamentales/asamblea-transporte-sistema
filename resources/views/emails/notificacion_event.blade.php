@@ -67,11 +67,6 @@
             .map-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; }
             .map-header { background-color:#1e3a5f !important; color:#93c5fd !important; }
             .map-body { color:#cbd5e1 !important; }
-            .attachments-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; color:#e2e8f0 !important; }
-            .attachments-header { background-color:#1e3a5f !important; color:#93c5fd !important; }
-            .attachments-body { color:#cbd5e1 !important; }
-            .evidencia-section { background-color:#1e2a4a !important; border-color:#2a3a5a !important; color:#e2e8f0 !important; }
-            .evidencia-section h4 { color:#93c5fd !important; }
             .map-note { color:#94a3b8 !important; }
             .status-no_disponible { background-color:#92400e !important; color:#ffffff !important; }
             .email-footer { background-color:#1a2744 !important; border-color:#2a2a4a !important; }
@@ -214,25 +209,6 @@
             font-size:11px;
             color:#64748b;
         }
-        .attachments-section {
-            margin:14px 0 6px;
-            background-color:#f8fafc;
-            border:1px solid #e2e8f0;
-        }
-        .attachments-header {
-            padding:8px 12px;
-            background-color:#f1f5f9;
-            border-bottom:1px solid #e2e8f0;
-            font-size:11px;
-            font-weight:600;
-            color:#475569;
-        }
-        .attachments-body {
-            padding:8px 12px 10px;
-            font-size:12px;
-            color:#475569;
-        }
-
         .extension-badge {
             display:inline-block;
             margin-top:6px;
@@ -240,18 +216,6 @@
             background-color:#e0f2fe;
             color:#1d4ed8;
             font-size:10px;
-            font-weight:600;
-        }
-        .evidencia-section {
-            margin-top:14px;
-            padding:12px;
-            background-color:#f8fafc;
-            border:1px solid #e2e8f0;
-        }
-        .evidencia-section h4 {
-            margin:0 0 6px;
-            font-size:12px;
-            color:#1e3a8a;
             font-weight:600;
         }
         .email-footer {
@@ -595,30 +559,7 @@
             @endif
         @endif
 
-        @if(!empty($payload['evidencia']))
-            <div class="evidencia-section">
-                <h4>Evidencia adjunta</h4>
-                @if(!empty($evidencia_src))
-                    <img src="{{ $evidencia_src }}" alt="{{ $payload['evidencia']['nombre'] ?? 'Evidencia' }}" style="max-width:100%;height:auto;">
-                @else
-                    <p style="font-size:13px;color:#475569;">{{ $payload['evidencia']['nombre'] ?? 'Archivo adjunto' }}</p>
-                @endif
-            </div>
-        @endif
 
-        @if(!empty($payload['attachments']))
-            <div class="attachments-section">
-                <div class="attachments-header">Adjuntos</div>
-                <div class="attachments-body">
-                    @foreach($payload['attachments'] as $attachment)
-                        @php
-                            $name = is_array($attachment) ? ($attachment['name'] ?? basename($attachment['path'] ?? '')) : basename($attachment);
-                        @endphp
-                        <div style="font-size:13px;padding:2px 0;">{{ $name }}</div>
-                    @endforeach
-                </div>
-            </div>
-        @endif
 
         @if(!empty($payload['solicitud']['monto_validado']))
             <div class="info-card" style="margin-top:12px;">
