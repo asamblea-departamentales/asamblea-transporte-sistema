@@ -554,16 +554,16 @@ class SolicitudMantenimientoService
 
     private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_rechazada');
-        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_rechazada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_rechazada'
+        );
     }
 
     private function enviarCorreoCancelada(SolicitudMantenimiento $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_cancelada');
-        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_cancelada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'mantenimiento', 'solicitud_cancelada'
+        );
     }
 
     private function enviarCorreoCompletada(SolicitudMantenimiento $solicitud): void

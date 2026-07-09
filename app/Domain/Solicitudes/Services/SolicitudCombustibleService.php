@@ -750,16 +750,16 @@ class SolicitudCombustibleService
 
     private function enviarCorreoRechazada(SolicitudCombustible $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_rechazada');
-        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_rechazada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_rechazada'
+        );
     }
 
     private function enviarCorreoCancelada(SolicitudCombustible $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_cancelada');
-        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_cancelada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'combustible', 'solicitud_cancelada'
+        );
     }
 
     private function enviarCorreoCompletada(SolicitudCombustible $solicitud): void

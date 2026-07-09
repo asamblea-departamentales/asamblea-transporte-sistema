@@ -541,16 +541,16 @@ class SolicitudTransporteService
 
     private function enviarCorreoRechazada(SolicitudTransporte $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_rechazada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_rechazada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_rechazada'
+        );
     }
 
     private function enviarCorreoCancelada(SolicitudTransporte $solicitud): void
     {
-        $dispatch = app(SolicitudEmailDispatchService::class);
-        $dispatch->toSolicitante($solicitud, 'transporte', 'solicitud_cancelada');
-        $dispatch->toJefatura($solicitud, 'transporte', 'solicitud_cancelada');
+        app(SolicitudEmailDispatchService::class)->toSolicitante(
+            $solicitud, 'transporte', 'solicitud_cancelada'
+        );
     }
 
     private function enviarCorreoCompletada(SolicitudTransporte $solicitud): void
