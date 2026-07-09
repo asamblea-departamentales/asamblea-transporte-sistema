@@ -108,13 +108,15 @@ class SolicitudMantenimientoService
             $solicitud->aprobador_id = $jefeId;
             $solicitud->fecha_aprobacion = now();
             $solicitud->observaciones = $observaciones;
-            $solicitud->motivo_rechazo = null; // limpiar si venía rechazada antes
+            $solicitud->motivo_rechazo = null;
             $solicitud->save();
 
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $observaciones);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, [
                 'observaciones' => $observaciones,
             ]);
+
+            $this->enviarCorreoAprobada($solicitud);
 
             return $solicitud;
         });
@@ -550,6 +552,7 @@ class SolicitudMantenimientoService
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'mantenimiento', 'solicitud_enviada');
         $dispatch->toOperativo($solicitud, 'mantenimiento', 'solicitud_programada');
+        $dispatch->toJefatura($solicitud, 'mantenimiento', 'solicitud_programada');
     }
 
     private function enviarCorreoRechazada(SolicitudMantenimiento $solicitud): void

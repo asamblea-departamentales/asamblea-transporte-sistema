@@ -224,6 +224,8 @@ class SolicitudCombustibleService
             $this->registrarCambioEstado($solicitud, $anterior, $solicitud->estado, $jefeId, $observaciones);
             $this->registrarEvento($solicitud, AccionBitacoraEnum::APROBAR->value, $jefeId, ['observaciones' => $observaciones]);
 
+            $this->enviarCorreoAprobada($solicitud);
+
             return $solicitud;
         });
     }
@@ -748,6 +750,7 @@ class SolicitudCombustibleService
         $dispatch = app(SolicitudEmailDispatchService::class);
         $dispatch->toSolicitante($solicitud, 'combustible', 'solicitud_enviada');
         $dispatch->toOperativo($solicitud, 'combustible', 'solicitud_programada');
+        $dispatch->toJefatura($solicitud, 'combustible', 'solicitud_programada');
     }
 
     private function enviarCorreoAprobada(SolicitudCombustible $solicitud): void
