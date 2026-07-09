@@ -69,6 +69,7 @@ export function MapaViaje({ destino, faseActual, isOnline, setIsOnline }: MapaVi
             </g>
           )}
         </svg>
+        //
 
         {import.meta.env.DEV && (
           <button 
