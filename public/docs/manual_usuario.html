@@ -68,56 +68,56 @@
     background: #f8fafc;
     border: 4px solid var(--primary);
     border-radius: 12px;
-    padding: 50px 40px 40px;
-    margin: 60px 0 80px;
+    padding: 24px 28px 16px;
+    margin: 20px 0;
     page-break-after: always;
     break-after: page;
   }
   .toc-header {
     text-align: center;
-    margin-bottom: 40px;
+    margin-bottom: 14px;
   }
   .toc-eyebrow {
-    font-size: 0.85rem; font-weight: 700; color: var(--accent);
+    font-size: 0.7rem; font-weight: 700; color: var(--accent);
     text-transform: uppercase; letter-spacing: 0.15em;
   }
   .toc-title {
-    font-size: 2.5rem; font-weight: 800; color: var(--primary);
-    margin: 12px 0 8px;
+    font-size: 1.6rem; font-weight: 800; color: var(--primary);
+    margin: 6px 0 4px;
   }
   .toc-subtitle {
-    font-size: 1.05rem; color: var(--text-muted);
+    font-size: 0.85rem; color: var(--text-muted);
   }
   .toc-divider {
-    height: 6px; background: linear-gradient(90deg, transparent, var(--accent), transparent);
-    margin: 35px 0;
+    height: 4px; background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 14px 0;
   }
   ul.toc-list { list-style: none; margin: 0; padding: 0; }
   .toc-item {
     border-bottom: 1px dashed var(--border-color);
-    padding: 16px 8px;
+    padding: 7px 4px;
   }
   .toc-item:last-child { border-bottom: none; }
   .toc-item a {
-    display: flex; align-items: center; gap: 16px;
+    display: flex; align-items: center; gap: 12px;
     text-decoration: none; color: var(--text-main);
-    font-weight: 600; font-size: 1.05rem;
+    font-weight: 600; font-size: 0.88rem;
   }
   .toc-num {
-    width: 36px; height: 36px; flex-shrink: 0;
+    width: 26px; height: 26px; flex-shrink: 0;
     background: var(--primary); color: #fff;
-    font-size: 0.95rem; font-weight: 700;
+    font-size: 0.75rem; font-weight: 700;
     border-radius: 50%; display: flex;
     align-items: center; justify-content: center;
   }
   .toc-sublist { 
-    list-style: none; margin: 12px 0 0 52px; padding: 0; 
+    list-style: none; margin: 4px 0 0 40px; padding: 0; 
   }
   .toc-sublist a {
-    color: var(--text-muted); font-weight: 500; font-size: 0.93rem;
+    color: var(--text-muted); font-weight: 500; font-size: 0.8rem;
   }
   .toc-sublist a::before {
-    content: "→"; color: var(--accent); margin-right: 8px;
+    content: "→"; color: var(--accent); margin-right: 6px;
   }
 
   .content { padding: 40px 50px 80px; }
@@ -139,8 +139,8 @@
     margin: 28px 0 12px; page-break-after: avoid;
   }
   p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
-  ul, ol { margin: 8px 0 20px 24px; }
-  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; }
+  ul, ol { margin: 8px 0 20px 24px; page-break-inside: avoid; break-inside: avoid; }
+  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; page-break-inside: avoid; break-inside: avoid; }
   strong { color: #0f172a; font-weight: 600; }
 
   .nota, .info, .tip {
@@ -167,8 +167,11 @@
   tr:last-child td { border-bottom: none; }
   tr:nth-child(even) td { background: #F8FAFC; }
 
+  figure { page-break-inside: avoid; break-inside: avoid; margin: 0; }
+  figcaption { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
+
   .img-container {
-    display: block; margin: 28px auto; page-break-inside: avoid; text-align: center;
+    display: block; margin: 28px auto; page-break-inside: avoid; break-inside: avoid; text-align: center;
   }
   .img-screenshot {
     display: block; max-width: 100%; height: auto;
@@ -185,12 +188,15 @@
   .img-row {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-    gap: 20px;
+    gap: 16px;
     justify-content: center;
     align-items: start;
-    margin: 28px 0;
+    margin: 20px 0;
     page-break-inside: avoid;
+    break-inside: avoid;
   }
+
+  .page-break { page-break-before: always; break-before: page; }
 
   .doc-footer {
     margin-top: 80px; padding-top: 32px;
@@ -265,8 +271,8 @@
       </li>
     </ul>
 
-    <div class="toc-divider"></div>
-    <p style="text-align:center; color:var(--text-muted); font-size:0.95rem; margin-top:30px;">
+    <div class="toc-divider" style="margin-bottom:8px;"></div>
+    <p style="text-align:center; color:var(--text-muted); font-size:0.75rem; margin:0;">
       <strong>● Fin del Índice ●</strong><br>
       Desplácese hacia abajo para comenzar con el contenido
     </p>
@@ -363,6 +369,7 @@
     </div>
 
     <!-- 3. PANTALLA 1: EL SISTEMA DE TRANSPORTE -->
+    <div class="page-break"></div>
     <h2 id="pantalla1">3. Pantalla 1: El Sistema de Transporte (panel principal)</h2>
 
     <p>Cuando usted ingresa al sistema siendo operativo, jefe, administrador o liquidador, lo primero que verá es la pantalla principal. Esta no es una pantalla con una sola función, sino que es el <strong>"centro de comando"</strong> del sistema. Desde aquí puede acceder a todas las funciones a través del menú lateral izquierdo.</p>

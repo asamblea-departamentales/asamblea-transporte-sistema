@@ -72,11 +72,11 @@
   .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
   .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
 
-  .content { padding: 40px 50px 80px; }
+  .content { padding: 20px 40px 60px; }
 
   h2 {
-    font-size: 1.6rem; font-weight: 700; color: var(--primary);
-    margin: 56px 0 24px; padding-bottom: 12px;
+    font-size: 1.5rem; font-weight: 700; color: var(--primary);
+    margin: 16px 0 14px; padding-bottom: 8px;
     border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
     position: relative;
   }
@@ -84,23 +84,30 @@
     content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
   }
   h3 {
-    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
-    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+    font-size: 1.1rem; font-weight: 600; color: var(--primary-light);
+    margin: 14px 0 8px; page-break-after: avoid; break-after: avoid;
   }
   h4 {
-    font-size: 1.05rem; font-weight: 600; color: var(--accent);
-    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+    font-size: 0.95rem; font-weight: 600; color: var(--accent);
+    margin: 10px 0 6px; page-break-after: avoid; break-after: avoid;
   }
 
-  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
-  ul, ol { margin: 8px 0 20px 24px; }
-  li { font-size: 0.98rem; color: #334155; margin-bottom: 8px; }
+  p { font-size: 0.95rem; color: #334155; margin-bottom: 10px; text-align: justify; }
+  ul, ol { margin: 4px 0 14px 22px; page-break-inside: avoid; break-inside: avoid; }
+  li { font-size: 0.95rem; color: #334155; margin-bottom: 5px; page-break-inside: avoid; break-inside: avoid; }
   strong { color: #0f172a; font-weight: 600; }
 
   .nota, .info, .tip, .warn-box {
-    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
-    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    padding: 14px 20px; border-radius: 8px; margin: 16px 0;
+    font-size: 0.9rem; line-height: 1.6; page-break-inside: avoid; break-inside: avoid;
     border: 1px solid transparent;
+  }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 14px 0 20px;
+    font-size: 0.85rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
   }
   .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
   .nota strong { color: #92400E; }
@@ -111,12 +118,6 @@
   .warn-box { background: #FEF2F2; border-left: 4px solid #DC2626; border-color: #FEE2E2 #FEE2E2 #FEE2E2 #DC2626; }
   .warn-box strong { color: #991B1B; }
 
-  table {
-    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
-    font-size: 0.9rem; page-break-inside: avoid; break-inside: avoid;
-    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
-  }
   th {
     background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
     padding: 12px 16px; font-size: 0.8rem; text-transform: uppercase;
@@ -131,26 +132,26 @@
 
   .img-screenshot {
     display: block; max-width: 100%; height: auto;
-    margin: 24px auto; border-radius: 8px;
+    margin: 12px auto; border-radius: 6px;
     border: 1px solid var(--border-color);
-    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.06);
     page-break-inside: avoid; break-inside: avoid;
   }
   .img-phone {
-    display: block; max-width: 280px; height: auto;
-    margin: 24px auto; border-radius: 12px;
-    border: 1px solid var(--border-color);
-    box-shadow: 0 4px 16px rgba(0,0,0,0.12);
+    display: block; max-width: 260px; height: auto;
+    margin: 10px auto; border-radius: 10px;
+    border: 3px solid #1e293b;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.08);
     page-break-inside: avoid; break-inside: avoid;
   }
   .img-icon {
-    display: block; max-width: 120px; height: auto;
-    margin: 16px auto; border-radius: 6px;
+    display: block; max-width: 100px; height: auto;
+    margin: 8px auto; border-radius: 4px;
     page-break-inside: avoid; break-inside: avoid;
   }
   .img-row {
-    display: flex; flex-wrap: wrap; gap: 16px; justify-content: center;
-    margin: 20px 0; page-break-inside: avoid; break-inside: avoid;
+    display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;
+    margin: 10px 0; page-break-inside: avoid; break-inside: avoid;
   }
 
   .badge-sample {
@@ -178,6 +179,65 @@
   .rol-ti  { background: #6366F1; }
   .rol-sad { background: #DC2626; }
   .rol-liq { background: #EC4899; }
+
+  figure { page-break-inside: avoid; break-inside: avoid; margin: 0; }
+  figcaption { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
+
+  .toc-section {
+    background: #f8fafc;
+    border: 4px solid var(--primary);
+    border-radius: 12px;
+    padding: 24px 28px 16px;
+    margin: 20px 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .toc-header {
+    text-align: center;
+    margin-bottom: 14px;
+  }
+  .toc-eyebrow {
+    font-size: 0.7rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.15em;
+  }
+  .toc-title {
+    font-size: 1.6rem; font-weight: 800; color: var(--primary);
+    margin: 6px 0 4px;
+  }
+  .toc-subtitle {
+    font-size: 0.85rem; color: var(--text-muted);
+  }
+  .toc-divider {
+    height: 4px; background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 14px 0;
+  }
+  ul.toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-item {
+    border-bottom: 1px dashed var(--border-color);
+    padding: 7px 4px;
+  }
+  .toc-item:last-child { border-bottom: none; }
+  .toc-item a {
+    display: flex; align-items: center; gap: 12px;
+    text-decoration: none; color: var(--text-main);
+    font-weight: 600; font-size: 0.88rem;
+  }
+  .toc-num {
+    width: 26px; height: 26px; flex-shrink: 0;
+    background: var(--primary); color: #fff;
+    font-size: 0.75rem; font-weight: 700;
+    border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .toc-sublist { 
+    list-style: none; margin: 4px 0 0 40px; padding: 0; 
+  }
+  .toc-sublist a {
+    color: var(--text-muted); font-weight: 500; font-size: 0.8rem;
+  }
+  .toc-sublist a::before {
+    content: "→"; color: var(--accent); margin-right: 6px;
+  }
 
   .page-break { page-break-before: always; break-before: page; }
 
@@ -222,6 +282,59 @@
       <span class="bar"></span>
       <span>Departamento de Transporte</span>
     </div>
+  </div>
+
+  <!-- ═══════════════ ÍNDICE ═══════════════ -->
+  <div class="toc-section">
+    <div class="toc-header">
+      <div class="toc-eyebrow">Manual de Roles y Accesos</div>
+      <div class="toc-title">ÍNDICE</div>
+      <p class="toc-subtitle">Haga clic en cualquier sección para ir directamente a ella</p>
+    </div>
+
+    <div class="toc-divider"></div>
+
+    <ul class="toc-list">
+      <li class="toc-item">
+        <a href="#intro"><span class="toc-num">1</span> Los roles del sistema</a>
+      </li>
+      <li class="toc-item">
+        <a href="#solicitante"><span class="toc-num">2</span> Rol: Solicitante</a>
+      </li>
+      <li class="toc-item">
+        <a href="#motorista"><span class="toc-num">3</span> Rol: Motorista</a>
+      </li>
+      <li class="toc-item">
+        <a href="#operativo"><span class="toc-num">4</span> Rol: Operativo</a>
+      </li>
+      <li class="toc-item">
+        <a href="#jefe"><span class="toc-num">5</span> Rol: Jefe</a>
+      </li>
+      <li class="toc-item">
+        <a href="#ti"><span class="toc-num">6</span> Rol: TI (Soporte Técnico)</a>
+      </li>
+      <li class="toc-item">
+        <a href="#superadmin"><span class="toc-num">7</span> Rol: Super Admin</a>
+      </li>
+      <li class="toc-item">
+        <a href="#liquidador"><span class="toc-num">8</span> Rol: Liquidador</a>
+      </li>
+      <li class="toc-item">
+        <a href="#mapa"><span class="toc-num">9</span> Mapa rápido</a>
+      </li>
+      <li class="toc-item">
+        <a href="#glosario"><span class="toc-num">10</span> Glosario de estados</a>
+      </li>
+      <li class="toc-item">
+        <a href="#faq"><span class="toc-num">11</span> Preguntas frecuentes</a>
+      </li>
+    </ul>
+
+    <div class="toc-divider" style="margin-bottom:8px;"></div>
+    <p style="text-align:center; color:var(--text-muted); font-size:0.75rem; margin:0;">
+      <strong>● Fin del Índice ●</strong><br>
+      Desplácese hacia abajo para comenzar con el contenido
+    </p>
   </div>
 
   <!-- CONTENIDO -->
