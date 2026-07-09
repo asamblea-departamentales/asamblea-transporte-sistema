@@ -207,6 +207,48 @@
   .doc-footer .line-cl { width: 50px; height: 3px; background: var(--accent); border-radius: 3px; margin: 0 auto 20px; }
   .doc-footer p { text-align: center; margin-bottom: 4px; font-size: 0.85rem; color: var(--text-muted); }
 
+  /* ÍNDICE / TABLA DE CONTENIDO */
+  .toc-page {
+    padding: 20px 10px 40px;
+    page-break-after: always; break-after: page;
+  }
+  .toc-eyebrow {
+    font-size: 0.78rem; font-weight: 700; color: var(--accent);
+    text-transform: uppercase; letter-spacing: 0.12em; margin-bottom: 10px;
+  }
+  .toc-title {
+    font-size: 2rem; font-weight: 800; color: var(--primary);
+    letter-spacing: -0.02em; margin-bottom: 8px;
+  }
+  .toc-subtitle {
+    font-size: 0.95rem; color: var(--text-muted); margin-bottom: 40px;
+  }
+  ul.toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-item {
+    border-bottom: 1px dashed var(--border-color);
+    padding: 14px 4px;
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .toc-item a {
+    display: flex; align-items: center; gap: 14px;
+    text-decoration: none; color: var(--text-main);
+    font-weight: 600; font-size: 1.02rem;
+  }
+  .toc-num {
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 30px; height: 30px; flex-shrink: 0; border-radius: 50%;
+    background: var(--primary); color: #fff; font-size: 0.85rem; font-weight: 700;
+  }
+  .toc-sublist { list-style: none; margin: 8px 0 4px 44px; padding: 0; }
+  .toc-sublist li { margin-bottom: 6px; }
+  .toc-sublist a {
+    text-decoration: none; color: var(--text-muted); font-weight: 500;
+    font-size: 0.88rem; display: inline-flex; align-items: center; gap: 8px;
+  }
+  .toc-sublist a::before {
+    content: '—'; color: var(--accent); font-weight: 700;
+  }
+
   @media print {
     body { background: #fff; font-size: 11pt; }
     .content { padding: 0 10px; }
@@ -239,6 +281,46 @@
       <span class="bar"></span>
       <span>Departamento de Transporte</span>
     </div>
+  </div>
+
+  <!-- ÍNDICE -->
+  <div class="toc-page">
+    <div class="toc-eyebrow">Manual General de Uso</div>
+    <div class="toc-title">Índice</div>
+    <p class="toc-subtitle">Haga clic en cualquier sección para ir directo a ella.</p>
+
+    <ul class="toc-list">
+      <li class="toc-item">
+        <a href="#ingreso"><span class="toc-num">1</span> Cómo ingresar al sistema</a>
+      </li>
+      <li class="toc-item">
+        <a href="#que-es"><span class="toc-num">2</span> ¿Qué es el sistema?</a>
+        <ul class="toc-sublist">
+          <li><a href="#instalar-app">Instalar el sistema en su móvil (APP)</a></li>
+        </ul>
+      </li>
+      <li class="toc-item">
+        <a href="#pantalla1"><span class="toc-num">3</span> Pantalla 1: El Sistema de Transporte (panel principal)</a>
+      </li>
+      <li class="toc-item">
+        <a href="#pantalla2"><span class="toc-num">4</span> Pantalla 2: Panel de Solicitudes</a>
+      </li>
+      <li class="toc-item">
+        <a href="#pantalla3"><span class="toc-num">5</span> Pantalla 3: Módulo de Motorista</a>
+        <ul class="toc-sublist">
+          <li><a href="#motorista-panel">5.1 Panel Principal (Inicio del Motorista)</a></li>
+          <li><a href="#motorista-ruta">5.2 Ruta Activa (Modo Conducción)</a></li>
+          <li><a href="#motorista-historial">5.3 Historial de Viajes</a></li>
+          <li><a href="#motorista-disponibilidad">5.4 Disponibilidad e Incapacidad</a></li>
+        </ul>
+      </li>
+      <li class="toc-item">
+        <a href="#pantalla4"><span class="toc-num">6</span> Pantalla 4: Módulo de Aprobaciones (Jefatura)</a>
+      </li>
+      <li class="toc-item">
+        <a href="#recursos"><span class="toc-num">7</span> Recursos adicionales</a>
+      </li>
+    </ul>
   </div>
 
   <!-- CONTENIDO -->
@@ -305,7 +387,7 @@
 
     <p>El sistema está dividido en <strong>4 pantallas</strong>, cada una dedicada a un proceso específico dentro del flujo de trabajo del Departamento de Transporte. Las 4 pantallas se pueden instalar como aplicación en cualquier dispositivo móvil.</p>
 
-    <h3>Instalar el sistema en su móvil (APP)</h3>
+    <h3 id="instalar-app">Instalar el sistema en su móvil (APP)</h3>
     <p>Todas las pantallas del sistema tienen la capacidad de instalarse como una app en cualquier dispositivo móvil. Para hacerlo:</p>
     <ol>
       <li>Abra el sistema desde el navegador de su móvil (Chrome o Safari).</li>
@@ -423,7 +505,7 @@
 
     <p>Está dividida en 4 pantallas internas a las que se accede desde un menú en la parte inferior o lateral.</p>
 
-    <h3>5.1 Pantalla 3.1 &#8212; Panel Principal (Inicio del Motorista)</h3>
+    <h3 id="motorista-panel">5.1 Pantalla 3.1 &#8212; Panel Principal (Inicio del Motorista)</h3>
     <p>Es lo primero que ve el conductor al iniciar sesión. Muestra solo la información que le sirve en el día a día:</p>
     <table>
       <tr><th>¿Qué muestra?</th><th>¿Para qué sirve?</th></tr>
@@ -442,7 +524,7 @@
       <figcaption>Figura 5: Vista de inicio en la app de motoristas con las asignaciones diarias.</figcaption>
     </figure>
 
-    <h3>5.2 Pantalla 3.2 &#8212; Ruta Activa (Modo Conducción)</h3>
+    <h3 id="motorista-ruta">5.2 Pantalla 3.2 &#8212; Ruta Activa (Modo Conducción)</h3>
     <p>Cuando el motorista hace clic en "Iniciar Viaje", se abre esta pantalla que lo guía paso a paso. La pantalla bloquea distracciones y solo muestra lo necesario para completar la ruta.</p>
     <p>La ruta tiene <strong>4 fases obligatorias</strong> que el conductor debe ir marcando una tras otra:</p>
     <table>
@@ -463,7 +545,7 @@
       <figcaption>Figura 6: Interfaz de monitoreo de ruta activa con los selectores de fase.</figcaption>
     </figure>
 
-    <h3>5.3 Pantalla 3.3 &#8212; Historial de Viajes</h3>
+    <h3 id="motorista-historial">5.3 Pantalla 3.3 &#8212; Historial de Viajes</h3>
     <p>El archivo personal del motorista. Muestra todos sus viajes, ordenados por mes y año. Puede seleccionar un mes específico para ver:</p>
     <ul>
       <li>Fecha del viaje.</li>
@@ -473,7 +555,7 @@
     </ul>
     <p>Le sirve al conductor para auditar su propio trabajo &#8212; por ejemplo, si necesita comprobar cuántas horas manejó la semana pasada.</p>
 
-    <h3>5.4 Pantalla 3.4 &#8212; Disponibilidad e Incapacidad</h3>
+    <h3 id="motorista-disponibilidad">5.4 Pantalla 3.4 &#8212; Disponibilidad e Incapacidad</h3>
     <p>Esta pantalla le permite al motorista comunicarle al sistema si está disponible o no para trabajar. Tiene un interruptor grande:</p>
     <ul>
       <li><strong>Verde = Disponible</strong> &#8212; puede recibir viajes.</li>
