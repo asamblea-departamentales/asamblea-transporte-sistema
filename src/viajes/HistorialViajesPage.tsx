@@ -10,75 +10,9 @@ const MESES = [
   "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre",
 ];
 
-const ESTADO_COLORS: Record<string, string> = {
-  ASIGNADA: "bg-amber-500",
-  EN_EJECUCION: "bg-blue-500",
-  FINALIZADA: "bg-emerald-500",
-  CANCELADA: "bg-red-500",
-};
+import { TripCard, SkeletonCard } from "../shared/components/ui/TripCard";
 
-function SkeletonCard() {
-  return (
-    <div style={{ background: "#fff", border: "1px solid #e5e7eb", borderRadius: 14, padding: "22px 24px", display: "flex", flexDirection: "column", gap: 14 }}>
-      <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-          <div style={{ height: 11, width: 70, borderRadius: 6, background: "#f1f5f9", animation: "skpulse 1.4s ease-in-out infinite" }} />
-          <div style={{ height: 34, width: 55, borderRadius: 8, background: "#e2e8f0", animation: "skpulse 1.4s ease-in-out infinite" }} />
-        </div>
-        <div style={{ width: 42, height: 42, borderRadius: 11, background: "#f1f5f9", animation: "skpulse 1.4s ease-in-out infinite" }} />
-      </div>
-      <div style={{ height: 10, width: 90, borderRadius: 6, background: "#f1f5f9", animation: "skpulse 1.4s ease-in-out infinite" }} />
-    </div>
-  );
-}
 
-function TripCard({ viaje }: { viaje: ViajeAsignado }) {
-  const isFinalizada = viaje.estado === "FINALIZADA";
-  const dateObj = new Date(viaje.fecha + "T00:00:00");
-  const formattedDate = dateObj.toLocaleDateString("es-SV", { weekday: "long", day: "numeric", month: "long" });
-
-  return (
-    <div className={`relative flex flex-col p-5 md:p-6 bg-white border border-slate-200 hover:border-slate-300 hover:shadow-md rounded-[20px] transition-all duration-300 group overflow-hidden opacity-90 hover:opacity-100`}>
-       <div className="flex items-center justify-between mb-5 z-10">
-          <div className="flex flex-col">
-            <span className="text-[11px] font-black text-slate-400 uppercase tracking-[0.15em] mb-0.5">{formattedDate}</span>
-            <span className="text-[18px] font-black tracking-tight text-[#0f172a] leading-none">{viaje.hora_salida}</span>
-          </div>
-          <span className={`px-3 py-1 text-[10px] font-black uppercase rounded-full tracking-wider ${ESTADO_COLORS[viaje.estado] || 'bg-slate-500'} text-white shadow-sm`}>
-            {viaje.estado.replace("_", " ")}
-          </span>
-       </div>
-       <div className="flex items-stretch gap-4 z-10 w-full mb-1">
-          <div className="flex flex-col items-center justify-between py-1.5 w-[20px]">
-             <div className="w-4 h-4 bg-[#0f172a] rounded-full border-[3px] border-white shadow-sm shrink-0" />
-             <div className="w-[2px] bg-slate-200/80 flex-1 my-1 rounded-full" />
-             <div className={`w-4 h-4 ${isFinalizada ? 'bg-emerald-500' : 'bg-slate-400'} rounded-full border-[3px] border-white shadow-sm shrink-0`} />
-          </div>
-          <div className="flex flex-col flex-1 gap-5 py-1">
-             <div>
-               <p className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 leading-none">Punto de Origen</p>
-               <p className="text-[14.5px] font-bold text-slate-800 leading-tight">{viaje.origen}</p>
-             </div>
-             <div>
-               <p className="text-[10.5px] font-bold text-slate-400 uppercase tracking-wider mb-1 leading-none">Destino Principal</p>
-               <p className="text-[14.5px] font-bold text-slate-800 leading-tight">{viaje.destino}</p>
-             </div>
-          </div>
-       </div>
-       {viaje.solicitante && (
-         <div className="mt-5 pt-4 border-t border-slate-100 flex items-center justify-between z-10 bg-slate-50/50 -mx-5 -mb-5 px-5 md:-mx-6 md:-mb-6 md:px-6 pb-5 rounded-b-[20px]">
-           <div className="flex items-center gap-3">
-             <div className="w-8 h-8 rounded-full bg-[#0f172a] flex items-center justify-center text-white text-[12px] font-black shadow-sm shrink-0">{viaje.solicitante.charAt(0)}</div>
-             <div className="flex flex-col">
-               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest leading-none mb-1">Pasajero Asignado</span>
-               <span className="text-[13px] font-bold text-[#0f172a] leading-none truncate max-w-[150px] sm:max-w-xs">{viaje.solicitante}</span>
-             </div>
-           </div>
-         </div>
-       )}
-    </div>
-  )
-}
 
 export default function HistorialViajesPage() {
   const today = new Date();

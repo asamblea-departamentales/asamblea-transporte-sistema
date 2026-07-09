@@ -3,15 +3,9 @@ import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthContext";
 import { useNotification } from "../../../shared/contexts/NotificationContext";
 import { getDisponibilidad } from "../../../disponibilidad/disponibilidad.service";
-import { clsx, type ClassValue } from "clsx";
-import { twMerge } from "tailwind-merge";
+import { cn } from "../../../shared/lib/utils";
 import { GlobalLoading } from "../../../shared/components/GlobalLoading";
 import logo from "../../../shared/assets/asamble.png";
-
-// ─── Utils ────────────────────────────────────────────────────────────────────
-export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
-}// 
 
 // ─── Types & Interfaces ─────────────────────────────────────────────────────────
 export interface SidebarProps {
