@@ -10,6 +10,11 @@ import { cancelRequest as cancelTransporte } from "../services/requests.service"
 import { cancelarMantenimiento } from "../services/mantenimiento.service";
 import { cancelarSolicitud as cancelCombustible } from "../services/combustible.service";
 import type { CombinedRequest, Modulo } from "../hooks/useCombinedRequests";
+import { 
+  CarFront, Wrench, Fuel, Inbox, ChevronLeft, ChevronRight, 
+  Search, SlidersHorizontal, LayoutDashboard, AlertTriangle,
+  X, Check, ChevronDown
+} from "lucide-react";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -40,38 +45,21 @@ const MODULO_CONFIG: Record<Modulo, ModuloConfig> = {
     badgeClass: "bg-blue-50 text-blue-700 ring-blue-200/70",
     dotClass: "bg-blue-500",
     borderClass: "border-l-blue-500",
-    icon: (
-      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M6.5 15.5h11M7.5 6.5h9l1.6 4.8c.26.78.4 1.6.4 2.42V17a2 2 0 01-2 2h-.5a2 2 0 01-4 0h-4a2 2 0 01-4 0H5a2 2 0 01-2-2v-3.28c0-.82.14-1.64.4-2.42L5 6.5h2.5Z" strokeLinejoin="round" />
-        <path d="M6 11.5h12" strokeLinecap="round" />
-      </svg>
-    ),
+    icon: <CarFront className="h-3.5 w-3.5" strokeWidth={2.5} />,
   },
   mantenimiento: {
     label: "Mantenimiento",
     badgeClass: "bg-emerald-50 text-emerald-700 ring-emerald-200/70",
     dotClass: "bg-emerald-500",
     borderClass: "border-l-emerald-500",
-    icon: (
-      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M20 7l-7 7-4-4 7-7 4 4Z" strokeLinejoin="round" />
-        <path d="M3 21l6-2 10-10-4-4L5 15l-2 6Z" strokeLinejoin="round" />
-      </svg>
-    ),
+    icon: <Wrench className="h-3.5 w-3.5" strokeWidth={2.5} />,
   },
   combustible: {
     label: "Combustible",
     badgeClass: "bg-amber-50 text-amber-700 ring-amber-200/70",
     dotClass: "bg-amber-500",
     borderClass: "border-l-amber-500",
-    icon: (
-      <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-        <path d="M7 3h8v18H7V3Z" strokeLinejoin="round" />
-        <path d="M15 7h2l2 2v10a2 2 0 01-2 2h-2" strokeLinejoin="round" />
-        <path d="M9 7h4" strokeLinecap="round" />
-        <path d="M9 11h4" strokeLinecap="round" opacity="0.7" />
-      </svg>
-    ),
+    icon: <Fuel className="h-3.5 w-3.5" strokeWidth={2.5} />,
   },
 };
 
@@ -92,11 +80,7 @@ function ModuloBadge({ modulo }: { modulo: Modulo }) {
 function StatusBadge({ estado }: { estado: string }) {
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-bold uppercase tracking-wide ${getStatusStyle(estado)}`}>
-      {isCompleted(estado) && (
-        <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-        </svg>
-      )}
+      {isCompleted(estado) && <Check className="h-3 w-3" strokeWidth={3} />}
       {estado.replace("_", " ")}
     </span>
   );
@@ -123,16 +107,14 @@ function getDotColor(estado: string): string {
 
 function EmptyState({ message }: { message: string }) {
   return (
-    <div className="flex flex-col items-center gap-3 py-16 text-center">
-      <div className="grid h-14 w-14 place-items-center rounded-2xl bg-slate-100 ring-1 ring-slate-200">
-        <svg className="h-7 w-7 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5}
-            d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-          />
-        </svg>
+    <div className="flex flex-col items-center justify-center gap-4 py-20 text-center px-4 rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50">
+      <div className="grid h-16 w-16 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-200/50">
+        <Inbox className="h-8 w-8 text-slate-300" strokeWidth={1.5} />
       </div>
-      <p className="text-sm font-semibold text-slate-700">No hay solicitudes</p>
-      <p className="text-xs text-slate-500">{message}</p>
+      <div>
+        <p className="text-base font-bold text-slate-700">No hay solicitudes</p>
+        <p className="mt-1 text-sm text-slate-500 max-w-sm mx-auto">{message}</p>
+      </div>
     </div>
   );
 }
@@ -142,7 +124,7 @@ function EmptyState({ message }: { message: string }) {
 function Pagination({ page, totalPages, onPageChange }: {
   page: number; totalPages: number; onPageChange: (p: number) => void;
 }) {
-  const btn = "inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-40";
+  const btn = "inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-600 shadow-sm transition hover:bg-slate-50 focus:ring-2 focus:ring-slate-200 disabled:cursor-not-allowed disabled:opacity-40";
   return (
     <div className="flex items-center justify-between pt-2">
       <p className="text-xs text-slate-500">
@@ -151,12 +133,12 @@ function Pagination({ page, totalPages, onPageChange }: {
       </p>
       <div className="flex gap-2">
         <button onClick={() => onPageChange(Math.max(1, page - 1))} disabled={page === 1} className={btn}>
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" /></svg>
+          <ChevronLeft className="h-4 w-4" strokeWidth={2.5} />
           Anterior
         </button>
         <button onClick={() => onPageChange(Math.min(totalPages, page + 1))} disabled={page === totalPages} className={btn}>
           Siguiente
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" /></svg>
+          <ChevronRight className="h-4 w-4" strokeWidth={2.5} />
         </button>
       </div>
     </div>
@@ -186,26 +168,24 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
 
   return (
     <>
-      <div className="fixed inset-0 z-40 bg-black/30 backdrop-blur-sm" onClick={onClose} />
-      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-2xl bg-white p-6 shadow-2xl sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[440px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
+      <div className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity" onClick={onClose} />
+      <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white p-6 shadow-2xl sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[440px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-2xl">
         {/* Handle móvil */}
-        <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+        <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" />
 
         <div className="mb-5 flex items-center justify-between">
           <div>
-            <h2 className="text-base font-bold text-slate-900">Filtrar solicitudes</h2>
-            <p className="text-xs text-slate-500">Por módulo y estado</p>
+            <h2 className="text-lg font-bold text-slate-900 tracking-tight">Filtrar solicitudes</h2>
+            <p className="text-sm text-slate-500">Por módulo y estado</p>
           </div>
-          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-lg text-slate-400 hover:bg-slate-100 transition">
-            <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-            </svg>
+          <button onClick={onClose} className="grid h-8 w-8 place-items-center rounded-full bg-slate-100 text-slate-500 hover:bg-slate-200 transition">
+            <X className="h-4 w-4" strokeWidth={2.5} />
           </button>
         </div>
 
         {/* ── Módulo ── */}
-        <p className="mb-2 text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Módulo</p>
-        <div className="mb-4 grid grid-cols-2 gap-2">
+        <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Módulo</p>
+        <div className="mb-5 grid grid-cols-2 gap-2">
           {MODULOS_FILTER.map((opt) => {
             const active = currentModulo === opt.value;
             const cfg = opt.value ? MODULO_CONFIG[opt.value] : null;
@@ -213,10 +193,10 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
               <button
                 key={opt.value}
                 onClick={() => onModuloChange(opt.value)}
-                className={`flex items-center justify-between rounded-xl border px-3.5 py-3 text-sm font-semibold transition
+                className={`flex items-center justify-between rounded-xl border px-3.5 py-3 text-sm font-semibold transition-all duration-200
                   ${active
-                    ? "border-slate-900 bg-slate-900 text-white shadow"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-200"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
               >
                 <div className="flex items-center gap-2">
@@ -227,18 +207,14 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
                   )}
                   {opt.label}
                 </div>
-                {active && (
-                  <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+                {active && <Check className="h-4 w-4 flex-shrink-0" strokeWidth={3} />}
               </button>
             );
           })}
         </div>
 
         {/* ── Estado ── */}
-        <p className="mb-2 text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Estado</p>
+        <p className="mb-2.5 text-[11px] font-extrabold uppercase tracking-widest text-slate-400">Estado</p>
         <div className="grid grid-cols-2 gap-2">
           {ESTADOS.map((opt) => {
             const active = currentEstado === opt.value;
@@ -246,23 +222,19 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
               <button
                 key={opt.value}
                 onClick={() => onEstadoChange(opt.value as RequestStatus | "")}
-                className={`flex items-center justify-between rounded-xl border px-3.5 py-3 text-sm font-semibold transition
+                className={`flex items-center justify-between rounded-xl border px-3.5 py-3 text-sm font-semibold transition-all duration-200
                   ${active
-                    ? "border-indigo-500 bg-indigo-600 text-white shadow"
-                    : "border-slate-200 bg-white text-slate-700 hover:bg-slate-50"
+                    ? "border-indigo-600 bg-indigo-600 text-white shadow-md shadow-indigo-200"
+                    : "border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50"
                   }`}
               >
                 <div className="flex items-center gap-2">
                   {opt.value && (
-                    <div className={`h-2 w-2 rounded-full ${active ? "bg-white/60" : getDotColor(opt.value)}`} />
+                    <div className={`h-2.5 w-2.5 rounded-full ring-2 ring-white ${active ? "bg-white" : getDotColor(opt.value)}`} />
                   )}
                   {opt.label}
                 </div>
-                {active && (
-                  <svg className="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                  </svg>
-                )}
+                {active && <Check className="h-4 w-4 flex-shrink-0" strokeWidth={3} />}
               </button>
             );
           })}
@@ -271,7 +243,7 @@ function FilterModal({ open, onClose, currentEstado, currentModulo, onEstadoChan
         {hasFilters && (
           <button
             onClick={() => { onClear(); onClose(); }}
-            className="mt-4 w-full rounded-xl border border-slate-200 py-2.5 text-sm font-semibold text-slate-500 hover:bg-slate-50 transition"
+            className="mt-6 w-full rounded-xl border border-slate-200 py-3 text-sm font-semibold text-slate-500 hover:bg-slate-50 hover:text-slate-700 transition"
           >
             Limpiar todos los filtros
           </button>
@@ -291,51 +263,48 @@ function RequestCard({ req, isExpanded, onToggle, onCancel }: {
 }) {
   const cfg = MODULO_CONFIG[req.modulo];
   return (
-    <div className={`overflow-hidden rounded-2xl border-l-4 bg-white shadow-sm ring-1 transition-all
+    <div className={`overflow-hidden rounded-2xl border-l-4 bg-white shadow-sm ring-1 transition-all duration-300
       ${cfg.borderClass}
-      ${isExpanded ? "ring-indigo-200 shadow-md" : "ring-slate-100 hover:shadow-md hover:ring-slate-200"}
+      ${isExpanded ? "ring-indigo-200 shadow-md translate-y-[-2px]" : "ring-slate-200/60 hover:shadow-md hover:ring-slate-300"}
     `}>
-      <button onClick={onToggle} className="w-full px-5 py-4 text-left">
+      <button onClick={onToggle} className="w-full px-5 py-4 text-left outline-none">
         {/* Código + badge estado */}
         <div className="flex items-start justify-between gap-3">
-          <span className="text-[15px] font-extrabold tracking-tight text-slate-900">{req.codigo}</span>
+          <span className="text-[15px] font-black tracking-tight text-slate-900">{req.codigo}</span>
           <StatusBadge estado={req.estado} />
         </div>
 
         {/* Módulo badge + fecha */}
-        <div className="mt-1.5 flex items-center gap-2">
+        <div className="mt-2 flex items-center gap-2">
           <ModuloBadge modulo={req.modulo} />
-          <span className="text-xs text-slate-400">{formatFechaLinda(req.fecha_salida)}</span>
+          <span className="text-xs font-medium text-slate-400">{formatFechaLinda(req.fecha_salida)}</span>
         </div>
 
         {/* Descripción / ruta */}
-        <div className="mt-3 space-y-1.5">
-          <div className="flex items-center gap-2 text-sm text-slate-400">
-            <div className="h-2 w-2 flex-shrink-0 rounded-full bg-slate-300" />
+        <div className="mt-4 space-y-2 rounded-xl bg-slate-50 p-3 ring-1 ring-slate-100">
+          <div className="flex items-center gap-2.5 text-sm text-slate-500">
+            <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-400" />
             <span className="truncate">{req.origen}</span>
           </div>
-          <div className="flex items-center gap-2 text-sm font-semibold text-slate-800">
-            <div className="h-2 w-2 flex-shrink-0 rounded-full bg-slate-800" />
+          <div className="flex items-center gap-2.5 text-sm font-bold text-slate-800">
+            <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-900" />
             <span className="truncate">{req.destino}</span>
           </div>
         </div>
 
         {/* Ver detalles */}
-        <div className="mt-3.5 flex items-center justify-between flex-wrap gap-2">
+        <div className="mt-4 flex items-center justify-between flex-wrap gap-2">
           {isExpanded && (
-            <div className="flex gap-2">
+            <div className="flex gap-2 animate-in fade-in slide-in-from-top-2 duration-300">
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  const targetId = req.codigo;
-                  window.location.href = `/solicitudes/${req.modulo}/${targetId}`;
+                  window.location.href = `/solicitudes/${req.modulo}/${req.codigo}`;
                 }}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
+                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-slate-800"
               >
-                Ver detalle completo
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                </svg>
+                Ver detalle
+                <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
               </button>
               {canUserCancel(req.estado) && onCancel && (
                 <button
@@ -343,22 +312,16 @@ function RequestCard({ req, isExpanded, onToggle, onCancel }: {
                     e.stopPropagation();
                     onCancel(req);
                   }}
-                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-rose-50/50 px-4 py-2 text-xs font-bold text-rose-600 transition hover:bg-rose-100 active:scale-95"
                 >
                   Cancelar
                 </button>
               )}
             </div>
           )}
-          <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
-          >
-            {isExpanded ? "Ocultar detalles" : "Ver detalles"}
-            <svg
-              className={`ml-auto h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
-            >
-              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-            </svg>
+          <span className={`ml-auto inline-flex items-center gap-1 text-xs font-bold transition-colors ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}>
+            {isExpanded ? "Ocultar" : "Detalles"}
+            <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? "rotate-180" : ""}`} strokeWidth={3} />
           </span>
         </div>
       </button>
@@ -412,15 +375,12 @@ export default function MyRequestsPage() {
     }
   };
 
-  // Solo mostrar spinner completo cuando NO hay datos todavía
   const showFullSpinner = loading && requests.length === 0;
-
   const hasFilters = filters.estado !== "" || filters.modulo !== "";
-
   const emptyMessage =
     hasFilters || filters.search
-      ? "Cambia los filtros para ver resultados."
-      : "Aún no tienes solicitudes registradas.";
+      ? "No encontramos resultados con los filtros actuales."
+      : "Aún no tienes solicitudes registradas en el sistema.";
 
   const toggleExpand = (id: number) => setExpandedId((prev) => (prev === id ? null : id));
 
@@ -430,94 +390,82 @@ export default function MyRequestsPage() {
       {/* ENCABEZADO */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-slate-900 sm:text-4xl">
+          <h1 className="text-3xl font-black tracking-tight text-slate-900 sm:text-4xl">
             Historial
           </h1>
-          <p className="mt-1 text-sm text-slate-500">
+          <p className="mt-1.5 text-sm font-medium text-slate-500">
             {total > 0 ? `${total} solicitud${total !== 1 ? "es" : ""} encontradas` : "Sin solicitudes"}
           </p>
         </div>
         <button
           onClick={() => navigate("/")}
-          className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50 sm:inline-flex"
+          className="hidden items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50 hover:shadow sm:inline-flex"
         >
-          <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
-          </svg>
+          <LayoutDashboard className="h-4 w-4" strokeWidth={2.5} />
           Dashboard
         </button>
       </div>
 
       {/* Error banner */}
       {error && (
-        <div className="flex items-center gap-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
-          <svg className="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-          </svg>
+        <div className="flex items-center gap-3 rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3.5 text-sm font-bold text-rose-700">
+          <AlertTriangle className="h-5 w-5 flex-shrink-0" strokeWidth={2.5} />
           {error}
         </div>
       )}
 
       {/* BUSCADOR + BOTÓN FILTRO */}
-      <div className="flex gap-2">
-        <div className="relative flex-1">
-          <svg className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-          </svg>
+      <div className="flex gap-3">
+        <div className="relative flex-1 group">
+          <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400 group-focus-within:text-indigo-500 transition-colors" strokeWidth={2} />
           <input
             type="text"
             value={searchInput}
             onChange={(e) => setSearchInput(e.target.value)}
             placeholder="Buscar por código, origen o destino..."
-            className="w-full rounded-2xl border border-slate-200 bg-white py-3 pl-10 pr-4 text-sm text-slate-900 shadow-sm outline-none transition focus:border-indigo-400 focus:ring-4 focus:ring-indigo-100"
+            className="w-full rounded-2xl border border-slate-200 bg-white py-3.5 pl-12 pr-4 text-sm font-medium text-slate-900 shadow-sm outline-none transition focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/10"
           />
         </div>
 
         {/* Botón filtros */}
         <button
           onClick={() => setFilterOpen(true)}
-          className={`relative grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl border shadow-sm transition
+          className={`relative grid h-[52px] w-[52px] flex-shrink-0 place-items-center rounded-2xl border shadow-sm transition duration-200
             ${hasFilters
-              ? "border-slate-900 bg-slate-900 text-white"
-              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50"
+              ? "border-slate-900 bg-slate-900 text-white shadow-md shadow-slate-300"
+              : "border-slate-200 bg-white text-slate-600 hover:bg-slate-50 hover:border-slate-300"
             }`}
         >
-          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-            <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2a1 1 0 01-.293.707L13 13.414V19a1 1 0 01-.553.894l-4 2A1 1 0 017 21v-7.586L3.293 6.707A1 1 0 013 6V4z" />
-          </svg>
+          <SlidersHorizontal className="h-5 w-5" strokeWidth={2} />
           {hasFilters && (
-            <span className="absolute -right-1 -top-1 h-3 w-3 rounded-full border-2 border-white bg-emerald-400" />
+            <span className="absolute -right-1.5 -top-1.5 h-3.5 w-3.5 rounded-full border-2 border-white bg-indigo-500" />
           )}
         </button>
       </div>
 
       {/* Tags de filtros activos */}
       {hasFilters && (
-        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
-          <span>Filtrando por:</span>
+        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500 animate-in fade-in slide-in-from-top-1">
+          <span className="font-medium">Filtrando por:</span>
           {filters.modulo && (
-            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-semibold ring-1 ${MODULO_CONFIG[filters.modulo].badgeClass}`}>
+            <span className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 font-bold ring-1 ${MODULO_CONFIG[filters.modulo].badgeClass}`}>
               {MODULO_CONFIG[filters.modulo].icon}
               {MODULO_CONFIG[filters.modulo].label}
-              <button onClick={() => handleModuloChange("")} className="ml-0.5 hover:opacity-70">
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => handleModuloChange("")} className="ml-0.5 rounded-full hover:bg-black/10 transition p-0.5">
+                <X className="h-3 w-3" strokeWidth={3} />
               </button>
             </span>
           )}
           {filters.estado && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-2.5 py-1 font-semibold text-indigo-700 ring-1 ring-indigo-200/70">
-              <div className={`h-2 w-2 rounded-full ${getDotColor(filters.estado)}`} />
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 font-bold text-slate-700 ring-1 ring-slate-200/70">
+              <div className={`h-2 w-2 rounded-full ring-2 ring-white ${getDotColor(filters.estado)}`} />
               {ESTADOS.find((e) => e.value === filters.estado)?.label}
-              <button onClick={() => handleEstadoChange("")} className="ml-0.5 hover:opacity-70">
-                <svg className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+              <button onClick={() => handleEstadoChange("")} className="ml-0.5 rounded-full hover:bg-black/10 transition p-0.5">
+                <X className="h-3 w-3" strokeWidth={3} />
               </button>
             </span>
           )}
-          <button onClick={clearFilters} className="text-slate-400 hover:text-slate-600 underline underline-offset-2">
+          <button onClick={clearFilters} className="ml-2 font-semibold text-slate-400 hover:text-slate-700 transition">
             Limpiar todo
           </button>
         </div>
@@ -525,17 +473,17 @@ export default function MyRequestsPage() {
 
       {/* Indicador de carga parcial */}
       {isPartiallyLoaded && (
-        <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-2.5">
+        <div className="flex items-center gap-3 rounded-2xl border border-blue-100 bg-blue-50/50 px-4 py-3 shadow-sm animate-in fade-in">
           <svg className="h-4 w-4 animate-spin text-blue-500 flex-shrink-0" viewBox="0 0 24 24" fill="none">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z" />
           </svg>
-          <span className="text-xs font-semibold text-blue-600">Cargando más módulos...</span>
+          <span className="text-xs font-bold text-blue-700 tracking-wide">Actualizando datos en segundo plano...</span>
         </div>
       )}
 
       {/* ── TARJETAS (mobile + tablet) ── */}
-      <div className="block space-y-3 lg:hidden">
+      <div className="block space-y-4 lg:hidden">
         {showFullSpinner
           ? <InnerLoading message="Cargando solicitudes..." />
           : requests.length === 0 && !loading
@@ -551,21 +499,23 @@ export default function MyRequestsPage() {
             ))
         }
         {!loading && totalPages > 1 && (
-          <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          <div className="pt-2">
+            <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
+          </div>
         )}
       </div>
 
       {/* ── TABLA (desktop lg+) ── */}
-      <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-100 lg:block">
+      <div className="hidden overflow-hidden rounded-2xl bg-white shadow-sm ring-1 ring-slate-200/60 lg:block">
         <table className="w-full">
           <thead>
-            <tr className="border-b border-slate-100 bg-slate-50 text-left text-[11px] font-bold uppercase tracking-wider text-slate-500">
-              <th className="px-6 py-4">Código</th>
-              <th className="px-6 py-4">Módulo</th>
-              <th className="px-6 py-4">Fecha</th>
-              <th className="px-6 py-4">Descripción</th>
-              <th className="px-6 py-4">Estado</th>
-              <th className="px-6 py-4 text-right">Acción</th>
+            <tr className="border-b border-slate-200 bg-white text-left text-[11px] font-black uppercase tracking-widest text-slate-400">
+              <th className="px-6 py-5">Código</th>
+              <th className="px-6 py-5">Módulo</th>
+              <th className="px-6 py-5">Fecha</th>
+              <th className="px-6 py-5">Descripción</th>
+              <th className="px-6 py-5">Estado</th>
+              <th className="px-6 py-5 text-right">Acción</th>
             </tr>
           </thead>
           <tbody>
@@ -574,7 +524,7 @@ export default function MyRequestsPage() {
               : requests.length === 0 && !loading
                 ? (
                   <tr>
-                    <td colSpan={6} className="py-16">
+                    <td colSpan={6} className="p-8">
                       <EmptyState message={emptyMessage} />
                     </td>
                   </tr>
@@ -583,39 +533,38 @@ export default function MyRequestsPage() {
                   const cfg = MODULO_CONFIG[req.modulo];
                   const isExpanded = expandedId === req.id;
                   return (
-                    <>
+                    <React.Fragment key={`${req.modulo}-${req.id}`}>
                       <tr
-                        key={`${req.modulo}-${req.id}`}
                         onClick={() => toggleExpand(req.id)}
-                        className={`cursor-pointer border-b border-slate-50 transition-colors
-                            ${isExpanded ? "bg-indigo-50/40" : "hover:bg-slate-50"}`}
+                        className={`group cursor-pointer border-b border-slate-100 transition-colors duration-200
+                            ${isExpanded ? "bg-indigo-50/30" : "hover:bg-slate-50"}`}
                       >
                         {/* Código + barra de color del módulo */}
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4.5">
                           <div className="flex items-center gap-3">
-                            <div className={`h-8 w-1 flex-shrink-0 rounded-full ${cfg.dotClass}`} />
-                            <span className="font-extrabold tracking-tight text-slate-900">{req.codigo}</span>
+                            <div className={`h-8 w-1.5 flex-shrink-0 rounded-full ${cfg.dotClass}`} />
+                            <span className="font-black tracking-tight text-slate-900">{req.codigo}</span>
                           </div>
                         </td>
 
                         {/* Módulo */}
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4.5">
                           <ModuloBadge modulo={req.modulo} />
                         </td>
 
                         {/* Fecha */}
-                        <td className="px-6 py-4 text-sm text-slate-500">
+                        <td className="px-6 py-4.5 text-sm font-medium text-slate-500">
                           {formatFechaLinda(req.fecha_salida)}
                         </td>
 
                         {/* Descripción / ruta */}
-                        <td className="max-w-[220px] px-6 py-4">
-                          <div className="space-y-1">
-                            <div className="flex items-center gap-1.5 text-sm text-slate-400">
+                        <td className="max-w-[240px] px-6 py-4.5">
+                          <div className="space-y-1.5">
+                            <div className="flex items-center gap-2 text-sm text-slate-400">
                               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-300" />
                               <span className="truncate" title={req.origen}>{req.origen}</span>
                             </div>
-                            <div className="flex items-center gap-1.5 text-sm font-semibold text-slate-800">
+                            <div className="flex items-center gap-2 text-sm font-bold text-slate-800">
                               <div className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-slate-800" />
                               <span className="truncate" title={req.destino}>{req.destino}</span>
                             </div>
@@ -623,62 +572,65 @@ export default function MyRequestsPage() {
                         </td>
 
                         {/* Estado */}
-                        <td className="px-6 py-4">
+                        <td className="px-6 py-4.5">
                           <StatusBadge estado={req.estado} />
                         </td>
 
                         {/* Acción */}
-                        <td className="px-6 py-4 text-right">
-                          <span className={`inline-flex items-center gap-1 text-xs font-semibold transition-colors
-                              ${isExpanded ? "text-indigo-600" : "text-slate-400"}`}
-                          >
-                            {isExpanded ? "Ocultar" : "Ver detalles"}
-                            <svg
-                              className={`h-3.5 w-3.5 transition-transform ${isExpanded ? "rotate-90" : ""}`}
-                              fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}
+                        <td className="px-6 py-4.5 text-right">
+                          <div className="flex justify-end items-center gap-1">
+                            <span className={`inline-flex items-center gap-1 text-xs font-bold transition-colors
+                                ${isExpanded ? "text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`}
                             >
-                              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                            </svg>
-                          </span>
+                              {isExpanded ? "Ocultar" : "Detalles"}
+                            </span>
+                            <ChevronDown 
+                              className={`h-4 w-4 transition-transform duration-300 ${isExpanded ? "rotate-180 text-indigo-600" : "text-slate-400 group-hover:text-slate-600"}`} 
+                              strokeWidth={3} 
+                            />
+                          </div>
                         </td>
                       </tr>
 
-                      {/* Fila de detalle expandida — por ahora placeholder hasta conectar detalle por módulo */}
+                      {/* Fila de detalle expandida */}
                       {isExpanded && (
-                        <tr key={`detail-${req.modulo}-${req.id}`} className="border-b border-slate-100">
-                          <td colSpan={6} className="bg-slate-50/60 px-8 py-4">
-                            <p className="text-sm text-slate-500">
-                              <span className="font-bold text-slate-700">Unidad:</span>{" "}
-                              {req.unidad?.nombre ?? "—"} &nbsp;·&nbsp;
-                              <span className="font-bold text-slate-700">Solicitante:</span>{" "}
-                              {req.solicitante?.name ?? "—"}
-                            </p>
-                            <div className="mt-3 flex gap-2">
-                              <button
-                                onClick={() => {
-                                  const targetId = req.codigo;
-                                  navigate(`/solicitudes/${req.modulo}/${targetId}`);
-                                }}
-                                className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:opacity-90"
-                              >
-                                Ver detalle completo
-                                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-                                </svg>
-                              </button>
-                              {canUserCancel(req.estado) && (
+                        <tr className="border-b border-slate-200">
+                          <td colSpan={6} className="bg-slate-50/80 px-8 py-5 animate-in fade-in slide-in-from-top-2 duration-300">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-6 text-sm">
+                                <div>
+                                  <span className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Unidad Solicitante</span>
+                                  <span className="font-bold text-slate-800">{req.unidad?.nombre ?? "—"}</span>
+                                </div>
+                                <div className="h-8 w-px bg-slate-200" />
+                                <div>
+                                  <span className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400">Usuario</span>
+                                  <span className="font-bold text-slate-800">{req.solicitante?.name ?? "—"}</span>
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-2.5">
+                                {canUserCancel(req.estado) && (
+                                  <button
+                                    onClick={() => setCancelTarget(req)}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+                                  >
+                                    Cancelar solicitud
+                                  </button>
+                                )}
                                 <button
-                                  onClick={() => setCancelTarget(req)}
-                                  className="inline-flex items-center gap-1.5 rounded-xl border border-rose-200 bg-white px-4 py-2 text-xs font-bold text-rose-600 shadow-sm transition hover:bg-rose-50 active:scale-95"
+                                  onClick={() => navigate(`/solicitudes/${req.modulo}/${req.codigo}`)}
+                                  className="inline-flex items-center gap-1.5 rounded-xl bg-slate-900 px-5 py-2 text-xs font-bold text-white shadow-md shadow-slate-200 transition hover:bg-slate-800 hover:shadow-lg active:scale-95"
                                 >
-                                  Cancelar
+                                  Ver información completa
+                                  <ChevronRight className="h-3.5 w-3.5" strokeWidth={3} />
                                 </button>
-                              )}
+                              </div>
                             </div>
                           </td>
                         </tr>
                       )}
-                    </>
+                    </React.Fragment>
                   );
                 })
             }
@@ -686,57 +638,42 @@ export default function MyRequestsPage() {
         </table>
 
         {!loading && totalPages > 1 && (
-          <div className="border-t border-slate-100 px-6 py-4">
+          <div className="border-t border-slate-100 bg-slate-50/50 px-6 py-3.5">
             <Pagination page={page} totalPages={totalPages} onPageChange={setPage} />
           </div>
         )}
       </div>
 
-      {/* Modal filtros */}
-      <FilterModal
-        open={filterOpen}
-        onClose={() => setFilterOpen(false)}
-        currentEstado={filters.estado}
-        currentModulo={filters.modulo}
-        onEstadoChange={handleEstadoChange}
-        onModuloChange={handleModuloChange}
-        onClear={() => { clearFilters(); setFilterOpen(false); }}
-      />
-
       {/* Modal de Cancelación */}
       {cancelTarget && (
         <>
           <div
-            className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
+            className="fixed inset-0 z-40 bg-slate-900/40 backdrop-blur-sm transition-opacity"
             onClick={() => { if (!submittingCancel) setCancelTarget(null); }}
           />
-          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white p-6 shadow-2xl transition-all sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[480px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[24px]">
-            <div className="mx-auto mb-5 h-1 w-10 rounded-full bg-slate-200 sm:hidden" />
+          <div className="fixed bottom-0 left-0 right-0 z-50 rounded-t-[24px] bg-white p-6 shadow-2xl transition-all sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[480px] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-[24px] animate-in slide-in-from-bottom-4 sm:slide-in-from-bottom-0 sm:zoom-in-95 duration-200">
+            <div className="mx-auto mb-5 h-1.5 w-12 rounded-full bg-slate-200 sm:hidden" />
 
             <div className="flex items-start gap-4">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600">
-                <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                </svg>
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-rose-50 text-rose-600 ring-1 ring-rose-100">
+                <AlertTriangle className="h-6 w-6" strokeWidth={2.5} />
               </div>
               <div className="flex-1">
                 <h3 className="text-lg font-black tracking-tight text-slate-900">¿Cancelar esta solicitud?</h3>
-                <p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+                <p className="mt-1.5 text-xs font-medium text-slate-500 leading-relaxed">
                   La solicitud <strong className="text-slate-800">{cancelTarget.codigo}</strong> será cancelada de forma permanente. Esta acción es irreversible.
                 </p>
 
                 {cancelError && (
-                  <div className="mt-3 flex items-center gap-2 rounded-xl bg-rose-50 border border-rose-100 p-3 text-xs font-semibold text-rose-600">
-                    <svg className="h-4 w-4 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
+                  <div className="mt-4 flex items-start gap-2.5 rounded-xl bg-rose-50 border border-rose-100 p-3.5 text-xs font-bold text-rose-700">
+                    <AlertTriangle className="h-4 w-4 shrink-0 mt-0.5" strokeWidth={2.5} />
                     {cancelError}
                   </div>
                 )}
 
-                <div className="mt-4">
-                  <label className="block text-[10px] font-extrabold uppercase tracking-wider text-slate-400 mb-1.5">
-                    Motivo de la cancelación *
+                <div className="mt-5">
+                  <label className="block text-[10px] font-extrabold uppercase tracking-widest text-slate-400 mb-2">
+                    Motivo de la cancelación <span className="text-rose-500">*</span>
                   </label>
                   <textarea
                     value={motivoCancelacion}
@@ -744,11 +681,11 @@ export default function MyRequestsPage() {
                     placeholder="Ej. Se canceló la reunión programada o los datos fueron ingresados con errores..."
                     disabled={submittingCancel}
                     rows={3}
-                    className="w-full rounded-2xl border border-slate-200 bg-white p-3.5 text-xs text-slate-800 outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-50/50 resize-none disabled:bg-slate-50"
+                    className="w-full rounded-2xl border border-slate-200 bg-white p-4 text-xs font-medium text-slate-800 shadow-sm outline-none transition focus:border-rose-400 focus:ring-4 focus:ring-rose-50 resize-none disabled:bg-slate-50"
                   />
-                  <div className="mt-1.5 flex justify-between text-[10px] font-semibold text-slate-400">
+                  <div className="mt-2 flex justify-between text-[10px] font-bold text-slate-400">
                     <span>Mínimo 10 caracteres</span>
-                    <span className={motivoCancelacion.trim().length >= 10 ? "text-emerald-500 font-bold" : "text-slate-400"}>
+                    <span className={motivoCancelacion.trim().length >= 10 ? "text-emerald-500" : "text-slate-400"}>
                       {motivoCancelacion.trim().length} / 10
                     </span>
                   </div>
@@ -758,14 +695,14 @@ export default function MyRequestsPage() {
                   <button
                     onClick={() => { if (!submittingCancel) setCancelTarget(null); }}
                     disabled={submittingCancel}
-                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                    className="rounded-xl border border-slate-200 bg-white px-5 py-2.5 text-xs font-bold text-slate-600 transition hover:bg-slate-50 hover:border-slate-300 disabled:opacity-50"
                   >
                     Volver atrás
                   </button>
                   <button
                     onClick={handleConfirmCancel}
                     disabled={submittingCancel || motivoCancelacion.trim().length < 10}
-                    className="inline-flex items-center gap-1.5 rounded-xl bg-rose-600 px-4 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-200 transition hover:bg-rose-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                    className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-5 py-2.5 text-xs font-bold text-white shadow-md shadow-rose-200 transition hover:bg-rose-700 active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                   >
                     {submittingCancel ? (
                       <>
