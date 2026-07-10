@@ -1,5 +1,5 @@
 // src/pages/MyRequestsPage.tsx
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useCombinedRequests } from "../hooks/useCombinedRequests";
 import { ESTADOS } from "../constants/requests.constants";
@@ -643,6 +643,17 @@ export default function MyRequestsPage() {
           </div>
         )}
       </div>
+
+      {/* Modal filtros */}
+      <FilterModal
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        currentEstado={filters.estado}
+        currentModulo={filters.modulo}
+        onEstadoChange={handleEstadoChange}
+        onModuloChange={handleModuloChange}
+        onClear={() => { clearFilters(); setFilterOpen(false); }}
+      />
 
       {/* Modal de Cancelación */}
       {cancelTarget && (
