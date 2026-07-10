@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import {
@@ -6,10 +6,51 @@ import {
   getRecentRequests,
 } from "../services/dashboard.service";
 import { cn } from "../lib/utils";
-import { 
-  Clock, Zap, CheckCircle, FileText, Plus, 
-  ArrowRight, AlertTriangle, Inbox 
-} from "lucide-react";
+
+// ─── Icons ─────────────────────────────────────────────────────────
+
+const Icons = {
+  Clock: () => (
+    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Lightning: () => (
+    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  CheckCircle: () => (
+    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Document: () => (
+    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+    </svg>
+  ),
+  Plus: () => (
+    <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} className="stroke-current">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
+    </svg>
+  ),
+  ArrowRight: () => (
+    <svg width={12} height={12} fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
+      <path d="M3 8h10M9 4l4 4-4 4" />
+    </svg>
+  ),
+  Alert: () => (
+    <svg width={15} height={15} fill="none" viewBox="0 0 24 24" stroke="#dc2626" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+  ),
+  Truck: () => (
+    <svg width={22} height={22} fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={1.5}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+    </svg>
+  ),
+};
 
 // ─── Skeleton ────────────────────────────────────────────────────
 
@@ -32,7 +73,7 @@ function SkeletonRow() {
   return (
     <tr className="animate-pulse">
       {[90, 110, 100, 72].map((w, i) => (
-        <td key={i} className="p-4.5 border-b border-slate-100">
+        <td key={i} className="p-4 border-b border-slate-100">
           <div className="h-3 rounded bg-slate-200" style={{ width: w }} />
         </td>
       ))}
@@ -40,38 +81,38 @@ function SkeletonRow() {
   );
 }
 
-// ─── Status Badge ───────────────
+// ─── Status Badge (usa tokens del tailwind.config.js) ───────────────
 
 function StatusBadge({ status }: { status: string }) {
   const s = status.toLowerCase();
-  let classes = "inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-bold uppercase tracking-wide border ";
+  let classes = "inline-flex items-center gap-1.5 px-3 py-1 rounded-badge text-xs font-semibold border ";
   
   if (s.includes("aprob") || s.includes("aceptad") || s.includes("pre_apro")) {
-    classes += "bg-emerald-50 text-emerald-700 border-emerald-200/60";
+    classes += "bg-emerald-50 text-emerald-700 border-emerald-200";
   } else if (s.includes("pend")) {
-    classes += "bg-amber-50 text-amber-700 border-amber-200/60";
+    classes += "bg-amber-50 text-amber-700 border-amber-200";
   } else if (s.includes("rechaz")) {
-    classes += "bg-rose-50 text-rose-700 border-rose-200/60";
+    classes += "bg-red-50 text-red-700 border-red-200";
   } else if (s.includes("progres") || s.includes("ejecu")) {
-    classes += "bg-indigo-50 text-indigo-700 border-indigo-200/60";
+    classes += "bg-indigo-50 text-indigo-700 border-indigo-200";
   } else {
-    classes += "bg-slate-50 text-slate-700 border-slate-200/60";
+    classes += "bg-slate-50 text-slate-700 border-slate-200";
   }
 
   const dotClass = s.includes("aprob") || s.includes("aceptad") ? "bg-emerald-500" :
                    s.includes("pend") ? "bg-amber-500" :
-                   s.includes("rechaz") ? "bg-rose-500" :
+                   s.includes("rechaz") ? "bg-red-500" :
                    s.includes("progres") || s.includes("ejecu") ? "bg-indigo-500" : "bg-slate-500";
 
   return (
     <span className={classes}>
       <span className={cn("w-1.5 h-1.5 rounded-full flex-shrink-0", dotClass)} />
-      {status.replace("_", " ")}
+      {status}
     </span>
   );
 }
 
-// ─── Stat Card ────────
+// ─── Stat Card (usa tokens y sombras de tailwind.config.js) ────────
 
 function StatCard({ title, value, tag, icon, accent, loading }: {
   title: string; value: number | null; tag: string;
@@ -87,39 +128,39 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(
-        "relative bg-white border rounded-2xl p-6 flex flex-col overflow-hidden transition-all duration-300 cursor-default",
-        hovered ? "shadow-lg shadow-slate-200/50 -translate-y-1 border-slate-300" : "shadow-sm border-slate-200"
+        "relative bg-white border border-slate-200 rounded-2xl p-6 flex flex-col overflow-hidden transition-all duration-200 cursor-default",
+        hovered ? "shadow-md -translate-y-0.5 border-slate-300" : "shadow-sm"
       )}
     >
       {/* Top color line on hover */}
       <div className={cn(
-        "absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl transition-transform duration-300 origin-left",
+        "absolute top-0 left-0 right-0 h-[3px] rounded-t-2xl transition-transform duration-250 origin-left",
         accent.line,
         hovered ? "scale-x-100" : "scale-x-0"
       )} />
 
       {/* Corner glow */}
       <div className={cn(
-        "absolute -top-8 -right-8 w-20 h-20 rounded-full blur-xl pointer-events-none transition-opacity duration-300",
+        "absolute -top-8 -right-8 w-20 h-20 rounded-full blur-xl pointer-events-none transition-opacity duration-250",
         accent.bg,
-        hovered ? "opacity-30" : "opacity-0"
+        hovered ? "opacity-20" : "opacity-0"
       )} />
 
       {/* Content */}
-      <div className="flex justify-between items-start mb-3.5 relative z-10">
+      <div className="flex justify-between items-start mb-3.5">
         <div>
-          <p className="text-[11px] font-black uppercase tracking-widest text-slate-400 mb-1.5">{title}</p>
-          <p className="text-3xl font-black text-slate-900 tracking-tight leading-none">{value ?? 0}</p>
+          <p className="text-2xs font-bold uppercase tracking-[0.07em] text-slate-500 mb-1.5">{title}</p>
+          <p className="text-3xl font-extrabold text-slate-900 tracking-[-0.04em] leading-none">{value ?? 0}</p>
         </div>
         <div className={cn(
-          "w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors duration-300",
-          hovered ? accent.iconBg : "bg-slate-50 text-slate-500"
+          "w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 transition-colors duration-200",
+          hovered ? accent.iconBg : "bg-slate-50"
         )}>
           {icon}
         </div>
       </div>
 
-      <span className={cn("inline-flex items-center gap-1.5 text-xs font-bold relative z-10", accent.text)}>
+      <span className={cn("inline-flex items-center gap-1 text-xs font-semibold", accent.text)}>
         <span className={cn("w-1.5 h-1.5 rounded-full", accent.dot)} />
         {tag}
       </span>
@@ -131,19 +172,19 @@ function StatCard({ title, value, tag, icon, accent, loading }: {
 
 function EmptyState({ onNewRequest }: { onNewRequest: () => void }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-4 py-16 px-4 text-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 m-4">
-      <div className="grid h-14 w-14 place-items-center rounded-full bg-white shadow-sm ring-1 ring-slate-200/50">
-        <Inbox className="h-7 w-7 text-slate-300" strokeWidth={1.5} />
+    <div className="flex flex-col items-center gap-3 py-14">
+      <div className="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center">
+        <Icons.Truck />
       </div>
-      <div>
-        <p className="text-sm font-bold text-slate-700">Sin solicitudes recientes</p>
-        <p className="mt-1 text-xs font-medium text-slate-500">Crea tu primera solicitud para comenzar.</p>
+      <div className="text-center">
+        <p className="text-sm font-semibold text-slate-900">Sin solicitudes recientes</p>
+        <p className="text-xs text-slate-500 mt-1">Crea tu primera solicitud para comenzar.</p>
       </div>
       <button
         onClick={onNewRequest}
-        className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-slate-900 text-white text-xs font-bold hover:bg-slate-800 shadow-md shadow-slate-200 transition-all active:scale-95"
+        className="mt-1 inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-asamblea text-white text-xs font-semibold hover:bg-asamblea/90 transition-all active:scale-95"
       >
-        <Plus className="h-3.5 w-3.5" strokeWidth={3} />
+        <Icons.Plus />
         Nueva solicitud
       </button>
     </div>
@@ -175,87 +216,87 @@ export default function DashboardPage() {
       title: "Pendientes",
       value: summary?.pending ?? null,
       tag: "Por aprobar",
-      accent: { bg: "bg-amber-50", iconBg: "bg-amber-100 text-amber-600", text: "text-amber-600", dot: "bg-amber-500", line: "bg-amber-500" },
-      icon: <Clock className="h-5 w-5" strokeWidth={2} />,
+      accent: { bg: "bg-amber-50", iconBg: "bg-amber-50", text: "text-amber-600", dot: "bg-amber-500", line: "bg-amber-500" },
+      icon: <Icons.Clock />,
     },
     {
       title: "En Progreso",
       value: summary?.in_progress ?? null,
       tag: "En proceso",
-      accent: { bg: "bg-indigo-50", iconBg: "bg-indigo-100 text-indigo-600", text: "text-indigo-600", dot: "bg-indigo-500", line: "bg-indigo-500" },
-      icon: <Zap className="h-5 w-5" strokeWidth={2} />,
+      accent: { bg: "bg-indigo-50", iconBg: "bg-indigo-50", text: "text-indigo-600", dot: "bg-indigo-500", line: "bg-indigo-500" },
+      icon: <Icons.Lightning />,
     },
     {
       title: "Aceptadas",
       value: summary?.accepted ?? null,
       tag: "Aprobadas",
-      accent: { bg: "bg-emerald-50", iconBg: "bg-emerald-100 text-emerald-600", text: "text-emerald-600", dot: "bg-emerald-500", line: "bg-emerald-500" },
-      icon: <CheckCircle className="h-5 w-5" strokeWidth={2} />,
+      accent: { bg: "bg-emerald-50", iconBg: "bg-emerald-50", text: "text-emerald-600", dot: "bg-emerald-500", line: "bg-emerald-500" },
+      icon: <Icons.CheckCircle />,
     },
     {
       title: "Finalizadas",
       value: summary?.completed ?? null,
       tag: "Completadas",
-      accent: { bg: "bg-slate-100", iconBg: "bg-slate-200 text-slate-700", text: "text-slate-600", dot: "bg-slate-500", line: "bg-slate-500" },
-      icon: <FileText className="h-5 w-5" strokeWidth={2} />,
+      accent: { bg: "bg-slate-100", iconBg: "bg-slate-100", text: "text-slate-600", dot: "bg-slate-500", line: "bg-slate-500" },
+      icon: <Icons.Document />,
     },
   ], [summary]);
 
   return (
-    <div className="animate-in fade-in duration-300 pb-10">
+    <div className="animate-fade-in">
       <div className="max-w-7xl mx-auto">
         
         {/* ── Header ── */}
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-8 gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between mb-7 gap-4">
           <div>
-            <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-400">
+            <p className="text-2xs font-bold uppercase tracking-[0.08em] text-slate-500">
               Asamblea Legislativa · Transporte
             </p>
-            <h1 className="mt-1 text-3xl md:text-4xl font-black text-slate-900 tracking-tight leading-tight">
+            <h1 className="mt-1 text-2xl md:text-3xl font-extrabold text-slate-900 tracking-[-0.035em] leading-tight">
               Dashboard
             </h1>
-            <p className="mt-1.5 text-sm font-medium text-slate-500">
+            <p className="mt-1.5 text-sm text-slate-500">
               Resumen general de solicitudes de transporte
             </p>
           </div>
 
           <button
             onClick={() => navigate("/nueva-solicitud")}
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-blue-600 text-white text-sm font-bold shadow-md shadow-blue-200 hover:bg-blue-700 focus:ring-4 focus:ring-blue-100 focus:outline-none transition-all active:scale-95 flex-shrink-0"
+            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold shadow-blue-glow hover:bg-blue-glass-hover focus:ring-2 focus:ring-blue-400 focus:outline-none transition-all active:scale-95 flex-shrink-0"
           >
-            <Plus className="h-4 w-4" strokeWidth={3} />
+            <Icons.Plus />
             Nueva solicitud
           </button>
         </div>
 
         {/* ── Error ── */}
         {error && (
-          <div className="flex items-center gap-3 p-4 rounded-xl bg-rose-50 border border-rose-100 mb-8 shadow-sm">
-            <AlertTriangle className="h-5 w-5 text-rose-600" strokeWidth={2.5} />
-            <p className="text-sm font-bold text-rose-700">{error}</p>
+          <div className="flex items-center gap-2.5 p-3.5 rounded-lg bg-red-50 border border-red-200 mb-6">
+            <Icons.Alert />
+            <p className="text-sm font-medium text-red-600">{error}</p>
           </div>
         )}
 
         {/* ── Cards Grid ── */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-7">
           {cards.map(c => <StatCard key={c.title} {...c} loading={loading} />)}
         </div>
 
         {/* ── Recent Requests Table ── */}
-        <div className="bg-white border border-slate-200/60 rounded-2xl overflow-hidden shadow-sm ring-1 ring-slate-100">
+        <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
           {/* Table Header */}
-          <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <div className="flex items-center justify-between p-5 border-b border-slate-100">
             <div>
-              <h2 className="text-lg font-black text-slate-900 tracking-tight">Solicitudes recientes</h2>
-              <p className="text-xs font-medium text-slate-500 mt-1">Últimas solicitudes registradas en el sistema</p>
+              <h2 className="text-base font-bold text-slate-900 tracking-[-0.02em]">Solicitudes recientes</h2>
+              <p className="text-xs text-slate-500 mt-0.5">Últimas solicitudes registradas en el sistema</p>
             </div>
             {!loading && recent.length > 0 && (
               <button
                 onClick={() => navigate("/mis-solicitudes")}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-700 hover:bg-slate-50 hover:border-slate-300 transition-all active:scale-95 shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
               >
-                Ver historial completo
-                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                Ver todas
+                <Icons.ArrowRight />
               </button>
             )}
           </div>
@@ -264,10 +305,10 @@ export default function DashboardPage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-white border-b border-slate-200">
+                <tr className="bg-slate-50 border-b border-slate-100">
                   {(["Código", "Fecha", "Tipo", "Estado"] as const).map((h, i) => (
                     <th key={h} className={cn(
-                      "text-[11px] font-black uppercase tracking-widest text-slate-400 px-6 py-4",
+                      "text-2xs font-bold uppercase tracking-[0.07em] text-slate-500 p-3",
                       i === 3 ? "text-right" : "text-left"
                     )}>
                       {h}
@@ -277,7 +318,7 @@ export default function DashboardPage() {
               </thead>
               <tbody>
                 {loading ? (
-                  <>{[1,2,3,4].map(i => <SkeletonRow key={i} />)}</>
+                  <>{[1,2,3].map(i => <SkeletonRow key={i} />)}</>
                 ) : recent.length === 0 ? (
                   <tr>
                     <td colSpan={4}>
@@ -285,28 +326,21 @@ export default function DashboardPage() {
                     </td>
                   </tr>
                 ) : (
-                  recent.map((r, index) => (
-                    <tr 
-                      key={r.code} 
-                      className={cn(
-                        "group hover:bg-slate-50/80 cursor-pointer transition-colors duration-200",
-                        index !== recent.length - 1 && "border-b border-slate-100"
-                      )}
-                      onClick={() => navigate(`/solicitudes/transporte/${r.code}`)}
-                    >
-                      <td className="px-6 py-4.5">
-                        <div className="flex items-center gap-3">
-                          <span className="w-1.5 h-8 rounded-full bg-indigo-500 flex-shrink-0" />
-                          <span className="text-sm font-black text-slate-900 tracking-tight">{r.code}</span>
+                  recent.map(r => (
+                    <tr key={r.code} className="border-b border-slate-100 hover:bg-slate-50 transition-colors duration-120 last:border-b-0">
+                      <td className="p-4">
+                        <div className="flex items-center gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 flex-shrink-0" />
+                          <span className="text-sm font-semibold text-slate-900">{r.code}</span>
                         </div>
                       </td>
-                      <td className="px-6 py-4.5">
-                        <span className="text-sm font-medium text-slate-500">{r.date}</span>
+                      <td className="p-4">
+                        <span className="text-sm text-slate-500">{r.date}</span>
                       </td>
-                      <td className="px-6 py-4.5">
-                        <span className="text-sm font-bold text-slate-800">{r.type}</span>
+                      <td className="p-4">
+                        <span className="text-sm text-slate-900 font-medium">{r.type}</span>
                       </td>
-                      <td className="px-6 py-4.5 text-right">
+                      <td className="p-4 text-right">
                         <StatusBadge status={r.status} />
                       </td>
                     </tr>
@@ -318,13 +352,13 @@ export default function DashboardPage() {
 
           {/* Table Footer */}
           {!loading && recent.length > 0 && (
-            <div className="p-4 border-t border-slate-100 bg-slate-50/50">
+            <div className="p-4 border-t border-slate-100">
               <button
                 onClick={() => navigate("/mis-solicitudes")}
-                className="w-full flex items-center justify-center gap-1.5 p-3 rounded-xl border border-slate-200 bg-white text-xs font-bold text-slate-600 hover:bg-slate-50 hover:text-slate-900 transition-all active:scale-95 shadow-sm"
+                className="w-full flex items-center justify-center gap-1.5 p-2.5 rounded-lg border border-slate-200 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition-all active:scale-95"
               >
                 Ver todas las solicitudes
-                <ArrowRight className="h-3.5 w-3.5" strokeWidth={2.5} />
+                <Icons.ArrowRight />
               </button>
             </div>
           )}
