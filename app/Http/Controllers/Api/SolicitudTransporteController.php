@@ -43,7 +43,7 @@ class SolicitudTransporteController extends BaseSolicitudController
         $user = $request->user();
 
         $query = SolicitudTransporte::query()
-            ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista']); // Carga relaciones para optimizar consultas
+            ->with(['unidad', 'solicitante', 'autorizador', 'vehiculo', 'motorista', 'destinosAdicionales']);
 
         if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
             $query->where('solicitante_id', $user->id);
@@ -584,6 +584,13 @@ class SolicitudTransporteController extends BaseSolicitudController
     public function recursosDisponibles(Request $request)
     {
         $this->authorizeJefe();
+
+        if ($request->has('fecha')) {
+            $request->merge([
+                'fecha_salida' => $request->input('fecha_salida', $request->input('fecha')),
+                'fecha_retorno' => $request->input('fecha_retorno', $request->input('fecha')),
+            ]);
+        }
 
         $data = $request->validate([
             'fecha_salida' => ['required', 'date'],
