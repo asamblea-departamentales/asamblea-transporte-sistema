@@ -403,6 +403,8 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $userId) {
+            $solicitud = SolicitudTransporte::lockForUpdate()->findOrFail($solicitud->id);
+
             if ($solicitud->fecha_salida_real && $solicitud->fecha_retorno_real) {
                 if ($solicitud->fecha_llegada_destino && $solicitud->fecha_inicio_retorno) {
                     $horasIda = $solicitud->fecha_salida_real

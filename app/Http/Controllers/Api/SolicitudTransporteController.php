@@ -808,6 +808,8 @@ class SolicitudTransporteController extends BaseSolicitudController
 
     public function cancelar(Request $request, SolicitudTransporte $solicitud)
     {
+        $this->authorizeOwner($solicitud);
+
         $data = $request->validate([
             'motivo_cancelacion' => ['required', 'string', 'min:10', 'max:2000'],
         ]);

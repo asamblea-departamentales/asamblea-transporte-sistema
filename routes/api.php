@@ -233,6 +233,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-mantenimiento/{solicitud}/aprobar', [SolicitudMantenimientoController::class, 'aprobar']);
         Route::post('solicitudes-mantenimiento/{solicitud}/rechazar', [SolicitudMantenimientoController::class, 'rechazar']);
         Route::post('solicitudes-mantenimiento/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
+        Route::post('solicitudes-mantenimiento/{solicitud}/evaluar', [SolicitudMantenimientoController::class, 'evaluar']);
     });
 
     // ── COMBUSTIBLE ─────────────────────────────────────────────────
@@ -263,28 +264,29 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('solicitudes-combustible/{solicitud:codigo}/asignar-vales', [SolicitudCombustibleController::class, 'asignarVales'])
         ->middleware('role:operativo|admin|ti|super_admin');
 
-    // Rutas para motoristas
+    // ── RUTAS SELF-SERVICE (solo motorista autenticado) ──────────
     Route::middleware(['auth:sanctum', 'role:motorista'])
         ->prefix('motoristas')
         ->group(function () {
-
-            // NUEVAS (self-service motorista)
             Route::get('me/estado', [MotoristaEstadoController::class, 'miEstado']);
             Route::post('me/estado', [MotoristaEstadoController::class, 'cambiarMiEstado']);
             Route::get('me/historial', [MotoristaEstadoController::class, 'miHistorial']);
-
-            // Operativas (admin/jefe)
-            Route::get('/', [MotoristaEstadoController::class, 'index']);
-            Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
-            Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
-            Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
-
-            // Viajes — flujo de 4 pasos + detalle
+            Route::get('me/viajes', [MotoristaEstadoController::class, 'misViajes']);
             Route::get('me/viajes/{solicitud}', [MotoristaViajeController::class, 'show']);
             Route::post('me/viajes/{solicitud}/iniciar', [MotoristaViajeController::class, 'iniciar']);
             Route::post('me/viajes/{solicitud}/llegada', [MotoristaViajeController::class, 'llegadaDestino']);
             Route::post('me/viajes/{solicitud}/retorno', [MotoristaViajeController::class, 'iniciarRetorno']);
             Route::post('me/viajes/{solicitud}/finalizar', [MotoristaViajeController::class, 'finalizar']);
+        });
+
+    // ── RUTAS ADMINISTRATIVAS (jefe/operativo pueden gestionar motoristas) ─
+    Route::middleware(['auth:sanctum', 'role:jefe|admin|ti|super_admin|operativo'])
+        ->prefix('motoristas')
+        ->group(function () {
+            Route::get('/', [MotoristaEstadoController::class, 'index']);
+            Route::get('{motorista}/estado', [MotoristaEstadoController::class, 'estadoActual']);
+            Route::post('{motorista}/estado', [MotoristaEstadoController::class, 'cambiarEstado']);
+            Route::get('{motorista}/historial', [MotoristaEstadoController::class, 'historial']);
         });
 
     // ── CATÁLOGOS (para el frontend) ────────────────────────
@@ -472,8 +474,6 @@ Route::middleware('auth:sanctum')->group(function () {
                     ->get(['id', 'nombre'])
             );
         });
-
-        Route::get('me/viajes', [MotoristaEstadoController::class, 'misViajes']);
     });
 
 });
