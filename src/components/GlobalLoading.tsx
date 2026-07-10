@@ -9,7 +9,7 @@ interface GlobalLoadingProps {
 
 export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing, message = "Iniciando Sesión Segura" }) => {
   return (
-    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-[#f8fafc] ${isClosing ? 'animate-fade-out-bg' : ''}`}>
+    <div className={`fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-slate-50 ${isClosing ? 'animate-fade-out-bg' : ''}`}>
       <div className="relative flex flex-col items-center">
         
         {/* Contenedor con perspectiva para el giro 3D */}
@@ -33,9 +33,9 @@ export const GlobalLoading: React.FC<GlobalLoadingProps> = ({ isClosing, message
         {/* Barra de carga */}
         <div className={`flex flex-col items-center transition-opacity duration-300 ${isClosing ? 'opacity-0' : 'opacity-100'}`}>
           <div className="h-1.5 w-48 overflow-hidden rounded-full bg-slate-200">
-            <div className="h-full w-full origin-left animate-progress-buffer bg-[#2d3a61]"></div>
+            <div className="h-full w-full origin-left animate-progress-buffer bg-asamblea"></div>
           </div>
-          <span className="mt-4 text-[10px] font-bold uppercase tracking-[0.3em] text-[#2d3a61] opacity-70">
+          <span className="mt-4 text-[10px] font-bold uppercase tracking-ultrawide text-asamblea opacity-70">
             {message}
           </span>
         </div>

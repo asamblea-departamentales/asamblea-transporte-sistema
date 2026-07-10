@@ -107,8 +107,8 @@ export function useCombinedRequests() {
   }, [searchInput]);
 
   const apiFilters = {
-    per_page: 1000,
-    page: 1,
+    per_page: PER_PAGE,
+    page: page,
     estado: filters.estado || undefined,
     search: filters.search || undefined,
   };

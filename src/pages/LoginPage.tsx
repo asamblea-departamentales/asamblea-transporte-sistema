@@ -53,7 +53,7 @@ export default function LoginPage() {
           </div>
 
           {/* Título */}
-          <h1 className="text-center text-2xl font-bold text-[#1a1f36] mb-1">
+          <h1 className="text-center text-2xl font-bold text-slate-900 mb-1">
             Bienvenido
           </h1>
           <p className="text-center text-sm text-slate-500 mb-10">

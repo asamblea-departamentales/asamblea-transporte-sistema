@@ -6,50 +6,19 @@ import {
   getRecentRequests,
 } from "../services/dashboard.service";
 import { cn } from "../lib/utils";
+import { Clock, Zap, CheckCircle, FileText, Plus, ArrowRight, AlertTriangle, Truck } from "lucide-react";
 
 // ─── Icons ─────────────────────────────────────────────────────────
 
 const Icons = {
-  Clock: () => (
-    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  Lightning: () => (
-    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z" />
-    </svg>
-  ),
-  CheckCircle: () => (
-    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-  ),
-  Document: () => (
-    <svg width={19} height={19} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} className="stroke-current">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-    </svg>
-  ),
-  Plus: () => (
-    <svg width={14} height={14} fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5} className="stroke-current">
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" />
-    </svg>
-  ),
-  ArrowRight: () => (
-    <svg width={12} height={12} fill="none" viewBox="0 0 16 16" stroke="currentColor" strokeWidth={2} strokeLinecap="round">
-      <path d="M3 8h10M9 4l4 4-4 4" />
-    </svg>
-  ),
-  Alert: () => (
-    <svg width={15} height={15} fill="none" viewBox="0 0 24 24" stroke="#dc2626" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-    </svg>
-  ),
-  Truck: () => (
-    <svg width={22} height={22} fill="none" viewBox="0 0 24 24" stroke="#94a3b8" strokeWidth={1.5}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
-    </svg>
-  ),
+  Clock: () => <Clock size={19} strokeWidth={2} className="stroke-current" />,
+  Lightning: () => <Zap size={19} strokeWidth={2} className="stroke-current" />,
+  CheckCircle: () => <CheckCircle size={19} strokeWidth={2} className="stroke-current" />,
+  Document: () => <FileText size={19} strokeWidth={2} className="stroke-current" />,
+  Plus: () => <Plus size={14} strokeWidth={2.5} className="stroke-current" />,
+  ArrowRight: () => <ArrowRight size={12} strokeWidth={2} />,
+  Alert: () => <AlertTriangle size={15} color="#dc2626" strokeWidth={2} />,
+  Truck: () => <Truck size={22} color="#94a3b8" strokeWidth={1.5} />,
 };
 
 // ─── Skeleton ────────────────────────────────────────────────────

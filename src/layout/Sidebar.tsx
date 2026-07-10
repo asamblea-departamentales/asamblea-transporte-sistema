@@ -1,130 +1,14 @@
-// src/layout/Sidebar.tsx
+import { useState, useEffect } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import logo from "../assets/asamble.png";
 import { useAuth } from "../auth/AuthContext";
-import React, { useState, useEffect } from "react";
-import { useNotifications, type Notification, type NotiTipo } from "../notifications/NotificationContext";
+import { useNotifications } from "../notifications/NotificationContext";
 import { cn } from "../lib/utils";
 import { GlobalLoading } from "../components/GlobalLoading";
+import { Icons, T, Avatar, getMagicLink, type NavItem } from "./sidebar/sidebar.constants";
+import { NotificacionesDrawer } from "./sidebar/NotificationDrawer";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-type Props   = { open: boolean; onClose: () => void; onOpen: () => void };
-type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number };
-
-// ─── Design tokens (Reverted to Original Gradient) ────────────────────────────
-
-const T = {
-  headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
-  bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
-  goldenLine:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
-  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
-};
-
-// ─── Notification config ──────────────────────────────────────────────────────
-
-const notiCfg: Record<NotiTipo, { dot: string; iconBg: string; iconBorder: string }> = {
-  aprobada:     { dot: "bg-emerald-500", iconBg: "bg-emerald-50",  iconBorder: "ring-emerald-200" },
-  pre_aprobada: { dot: "bg-violet-500",  iconBg: "bg-violet-50",   iconBorder: "ring-violet-200"  },
-  asignada:     { dot: "bg-cyan-500",    iconBg: "bg-cyan-50",     iconBorder: "ring-cyan-200"    },
-  programada:   { dot: "bg-indigo-500",  iconBg: "bg-indigo-50",   iconBorder: "ring-indigo-200"  },
-  rechazada:    { dot: "bg-red-500",     iconBg: "bg-red-50",      iconBorder: "ring-red-200"     },
-  observada:    { dot: "bg-blue-500",    iconBg: "bg-blue-50",     iconBorder: "ring-blue-200"    },
-  en_revision:  { dot: "bg-amber-400",   iconBg: "bg-amber-50",    iconBorder: "ring-amber-200"   },
-  finalizada:   { dot: "bg-slate-400",   iconBg: "bg-slate-50",    iconBorder: "ring-slate-200"   },
-  cancelada:    { dot: "bg-slate-300",   iconBg: "bg-slate-50",    iconBorder: "ring-slate-100"   },
-  recordatorio: { dot: "bg-amber-400",   iconBg: "bg-amber-50",    iconBorder: "ring-amber-200"   },
-  info:         { dot: "bg-blue-400",    iconBg: "bg-blue-50",     iconBorder: "ring-blue-200"    },
-};
-
-// ─── Icons ────────────────────────────────────────────────────────────────────
-
-const Icons = {
-  Dashboard: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <rect x="3" y="3" width="7" height="7" rx="1.5" /><rect x="14" y="3" width="7" height="7" rx="1.5" />
-      <rect x="3" y="14" width="7" height="7" rx="1.5" /><rect x="14" y="14" width="7" height="7" rx="1.5" />
-    </svg>
-  ),
-  Plus: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <circle cx="12" cy="12" r="9" /><path d="M12 8v8M8 12h8" />
-    </svg>
-  ),
-  List: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <path d="M9 6h11M9 12h11M9 18h6" />
-      <circle cx="5" cy="6" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="12" r="1.5" fill="currentColor" stroke="none" />
-      <circle cx="5" cy="18" r="1.5" fill="currentColor" stroke="none" />
-    </svg>
-  ),
-  Menu: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <path d="M4 7h16M4 12h10M4 17h13" />
-    </svg>
-  ),
-  X: () => (
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <path d="M18 6L6 18M6 6l12 12" />
-    </svg>
-  ),
-
-  Bell: () => (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9" /><path d="M13.73 21a2 2 0 01-3.46 0" />
-    </svg>
-  ),
-  Logout: () => (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4" /><path d="M16 17l5-5-5-5M21 12H9" />
-    </svg>
-  ),
-  Check: () => (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
-      <path d="M5 13l4 4L19 7" />
-    </svg>
-  ),
-  Trash: () => (
-    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M3 6h18M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2M10 11v6M14 11v6" />
-    </svg>
-  ),
-  User: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round">
-      <circle cx="12" cy="8" r="4" /><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
-    </svg>
-  ),
-  Shield: () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-    </svg>
-  ),
-};
-
-// ─── Avatar ───────────────────────────────────────────────────────────────────
-
-const avatarDim = {
-  sm: "w-8 h-8 text-[12px] rounded-md",
-  md: "w-10 h-10 text-[14px] rounded-lg",
-  lg: "w-12 h-12 text-[16px] rounded-xl",
-};
-
-function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" | "md" | "lg" }) {
-  return (
-    <div
-      className={cn("flex items-center justify-center font-bold text-white flex-shrink-0", avatarDim[size])}
-      style={{
-        background: "linear-gradient(135deg, #2354b4 0%, #0f2548 100%)",
-        boxShadow: "0 2px 8px rgba(35,84,180,0.35)",
-      }}
-    >
-      {initial}
-    </div>
-  );
-}
-
-// ─── NavLink Desktop (Sidebar Style) ──────────────────────────────────────────
+type Props = { open: boolean; onClose: () => void; onOpen: () => void };
 
 function NavLinkDesktop({ item, pathname }: { item: NavItem; pathname: string }) {
   const { to, label, icon: Icon, badge } = item;
@@ -155,8 +39,6 @@ function NavLinkDesktop({ item, pathname }: { item: NavItem; pathname: string })
   );
 }
 
-// ─── NavLink Bottom (Mobile) ──────────────────────────────────────────────────
-
 function NavLinkBottom({ item }: { item: NavItem }) {
   const { to, mobileLabel, icon: Icon } = item;
   return (
@@ -171,8 +53,6 @@ function NavLinkBottom({ item }: { item: NavItem }) {
     </NavLink>
   );
 }
-
-// ─── NavLink Drawer (Mobile Sidebar) ──────────────────────────────────────────
 
 function NavLinkDrawer({ item, onClick, pathname }: { item: NavItem; onClick?: () => void; pathname: string }) {
   const { to, label, icon: Icon, badge } = item;
@@ -203,172 +83,6 @@ function NavLinkDrawer({ item, onClick, pathname }: { item: NavItem; onClick?: (
   );
 }
 
-// ─── timeAgo ──────────────────────────────────────────────────────────────────
-
-function timeAgo(iso: string): string {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)    return "Ahora";
-  if (diff < 3600)  return `Hace ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
-  return `Hace ${Math.floor(diff / 86400)} días`;
-}
-
-// ─── Notification Slide-Over Drawer ───────────────────────────────────────────
-
-function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () => void }) {
-  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, permission, requestPermission } = useNotifications();
-  const navigate  = useNavigate();
-  // Mostramos más notificaciones en el drawer (ej. 20)
-  const recientes = notifications.slice(0, 20);
-
-  return (
-    <>
-      <div 
-        onClick={onClose} 
-        className={cn(
-          "fixed inset-0 z-[100] bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        )} 
-      />
-      <div 
-        className={cn(
-          "fixed top-0 right-0 z-[101] h-screen w-full max-w-[380px] bg-white shadow-[-10px_0_40px_rgba(0,0,0,0.1)] flex flex-col transition-transform duration-300 ease-custom-cubic",
-          open ? "translate-x-0" : "translate-x-full"
-        )}
-      >
-        {/* Header Drawer */}
-        <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-white">
-          <div className="flex items-center gap-3">
-            <span className="text-[16px] font-bold text-slate-800 tracking-wide">Notificaciones</span>
-            {unreadCount > 0 && (
-              <span className="flex h-5 items-center justify-center rounded-full bg-blue-600 px-2.5 text-[10px] font-bold text-white shadow-sm">
-                {unreadCount} nuevas
-              </span>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {unreadCount > 0 && (
-              <button onClick={markAllRead} title="Marcar todo como leído"
-                className="flex items-center justify-center w-8 h-8 rounded-full text-blue-600 hover:bg-blue-50 transition-colors">
-                <Icons.Check />
-              </button>
-            )}
-            {notifications.length > 0 && (
-              <button onClick={deleteAllNotifications} title="Eliminar todas las notificaciones"
-                className="flex items-center justify-center w-8 h-8 rounded-full text-red-600 hover:bg-red-50 transition-colors">
-                <Icons.Trash />
-              </button>
-            )}
-            <button onClick={onClose} title="Cerrar"
-              className="flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
-              <Icons.X />
-            </button>
-          </div>
-        </div>
-
-        {/* Permission Prompt (Mobile Friendly) */}
-        {permission === "default" && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex flex-col gap-3">
-            <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
-                <Icons.Bell />
-              </div>
-              <div className="flex-1">
-                <p className="text-[13px] font-bold text-blue-900 leading-tight">Activar Notificaciones</p>
-                <p className="text-[12px] text-blue-700 mt-0.5 leading-snug">Recibe alertas de tus solicitudes en tu dispositivo.</p>
-              </div>
-            </div>
-            <button 
-              onClick={requestPermission}
-              className="w-full py-2 bg-blue-600 text-white rounded-xl text-[12.5px] font-bold shadow-sm shadow-blue-200 active:scale-95 transition-all"
-            >
-              Habilitar ahora
-            </button>
-          </div>
-        )}
-
-        {/* Content */}
-        <div className="overflow-y-auto flex-1 bg-white">
-          {recientes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 px-8 text-center h-[50vh]">
-              <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
-                <Icons.Bell />
-              </div>
-              <div>
-                <p className="text-[14px] font-semibold text-slate-700">No hay notificaciones</p>
-                <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">Estás al día con tus solicitudes.</p>
-              </div>
-            </div>
-          ) : (
-            recientes.map((n: Notification) => {
-              const cfg = notiCfg[n.tipo];
-              const isUnread = !n.leida;
-              return (
-                <div key={n.id} 
-                  className={cn(
-                    "relative w-full flex items-start gap-4 px-6 py-5 text-left transition-colors border-b border-slate-50 group hover:bg-slate-50/80 cursor-pointer",
-                    !isUnread && "opacity-60 hover:opacity-100"
-                  )}
-                  onClick={(e) => {
-                    // Evitar marcar como leído si hizo click en el botón de basura
-                    if ((e.target as HTMLElement).closest('.btn-delete')) return;
-                    if(isUnread) markAsRead(n.id);
-                    navigate(`/solicitudes/${n.modulo}/${n.reqId}`);
-                    onClose();
-                  }}
-                >
-                  
-                  {/* Punto Azul de No Leído */}
-                  {isUnread && (
-                    <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />
-                  )}
-
-                  {/* Icono de Estado */}
-                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 mt-0.5", cfg.iconBg, cfg.dot.replace('bg-', 'text-'))}>
-                     <span className={cn("w-2 h-2 rounded-full block", cfg.dot)} />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0 pr-6"> {/* Espacio extra derecho para el botón delete */}
-                    <span className={cn(
-                      "block text-[14px] leading-tight tracking-wide mb-1.5 transition-colors", 
-                      isUnread ? "text-slate-900 font-bold group-hover:text-blue-600" : "text-slate-600 font-semibold"
-                    )}>
-                      {n.titulo}
-                    </span>
-                    <p className="text-[13px] text-slate-500 leading-relaxed mb-2 line-clamp-3">{n.mensaje}</p>
-                    <span className="text-[11px] font-medium text-slate-400">
-                      {timeAgo(n.createdAt)}
-                    </span>
-                  </div>
-
-                  {/* Botón Flotante Eliminar (Aparece en Hover) */}
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                    title="Eliminar Notificación"
-                    className="btn-delete absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all translate-x-2 group-hover:translate-x-0"
-                  >
-                    <Icons.Trash />
-                  </button>
-                </div>
-              );
-            })
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-center mt-auto">
-          <button onClick={() => { onClose(); navigate("/notificaciones"); }}
-            className="w-full text-[13px] font-bold text-slate-700 bg-white border border-slate-200 shadow-sm hover:shadow hover:text-blue-600 transition-all py-2.5 rounded-xl">
-            Ir al Centro de Notificaciones
-          </button>
-        </div>
-      </div>
-    </>
-  );
-}
-
-// ─── MAIN ─────────────────────────────────────────────────────────────────────
-
 export default function Sidebar({ open, onClose, onOpen }: Props) {
   const navigate = useNavigate();
   const location = useLocation();
@@ -379,24 +93,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const initial = (user?.name?.trim()?.[0] || "U").toUpperCase();
-  const isPrivileged = user?.roles?.some(r => ["jefe", "operativo", "superadmin", "super_admin"].includes(r.toLowerCase())) || false;
-
-  const getMagicLink = () => {
-    const token = localStorage.getItem("auth_token") || "";
-    let base = import.meta.env.VITE_API_BASE_URL || "";
-    if (base.startsWith('/')) {
-      base = window.location.origin;
-    } else if (base) {
-      try {
-        base = new URL(base).origin;
-      } catch (e) {
-        base = window.location.origin;
-      }
-    } else {
-      base = window.location.origin;
-    }
-    return `${base}/api/magic-sso?token=${token}`;
-  };
+  const isPrivileged = user?.roles?.some((r: string) => ["jefe", "operativo", "superadmin", "super_admin"].includes(r.toLowerCase())) || false;
 
   const navItems: NavItem[] = [
     { to: "/dashboard",       label: "Dashboard",       mobileLabel: "Inicio",      icon: Icons.Dashboard },
@@ -413,14 +110,11 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
 
   useEffect(() => {
     onClose(); setNotiOpen(false);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
   const iconBtnClass = (active: boolean) => cn(
     "relative flex items-center justify-center w-10 h-10 rounded-xl transition-all",
-    active
-      ? "bg-white/10 text-white"
-      : "text-white/60 hover:bg-white/5 hover:text-white",
+    active ? "bg-white/10 text-white" : "text-white/60 hover:bg-white/5 hover:text-white",
   );
 
   return (
@@ -428,46 +122,29 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       {loggingOut && <GlobalLoading message="Cerrando Sesión Segura" isClosing={true} />}
       <NotificacionesDrawer open={notiOpen} onClose={() => setNotiOpen(false)} />
 
-      {/* ── DESKTOP SIDEBAR (Permanent Left) ────────────────────────────────── */}
+      {/* ── DESKTOP SIDEBAR ────────────────────────────────── */}
       <aside
         className="hidden lg:flex fixed top-0 left-0 z-50 w-[280px] h-screen flex-col border-r border-[#1a2d54]"
         style={{ background: T.headerBg, boxShadow: "4px 0 30px rgba(15,37,72,0.15)" }}
       >
         <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
 
-        {/* Brand / Logo Area */}
         <div className="flex flex-col items-center justify-center gap-4 px-5 pt-10 pb-8 border-b border-white/5 relative text-center">
           <img src={logo} alt="Asamblea" className="h-[80px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" />
           <div className="flex flex-col items-center">
-            <span className="block text-[10px] font-black uppercase tracking-[.2em] text-[#86a8e7] leading-tight mb-0.5">
-              Asamblea Legislativa
-            </span>
-            <span className="block text-[18px] font-extrabold text-white leading-tight">
-              Transporte
-            </span>
+            <span className="block text-[10px] font-black uppercase tracking-[.2em] text-[#86a8e7] leading-tight mb-0.5">Asamblea Legislativa</span>
+            <span className="block text-[18px] font-extrabold text-white leading-tight">Transporte</span>
           </div>
         </div>
 
-        {/* Navigation Links */}
         <nav className="flex-1 px-4 pt-6 space-y-1.5 overflow-y-auto">
-          <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-white/30">
-            Menú Principal
-          </p>
-          {navItems.map(item => (
-            <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />
-          ))}
+          <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-white/30">Menú Principal</p>
+          {navItems.map(item => <NavLinkDesktop key={item.to} item={item} pathname={location.pathname} />)}
 
           {isPrivileged && (
             <div className="pt-4 mt-4 border-t border-white/10">
-              <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">
-                Administración
-              </p>
-              <a
-                href={getMagicLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10 border border-transparent hover:border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0)] hover:shadow-[0_0_15px_rgba(251,191,36,0.15)]"
-              >
+              <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">Administración</p>
+              <a href={getMagicLink()} target="_blank" rel="noopener noreferrer" className="group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10 border border-transparent hover:border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0)] hover:shadow-[0_0_15px_rgba(251,191,36,0.15)]">
                 <div className="flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all text-amber-400/60 group-hover:text-amber-400 bg-amber-400/5 group-hover:bg-amber-400/10">
                   <Icons.Shield />
                 </div>
@@ -477,79 +154,49 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
           )}
         </nav>
 
-        {/* Bottom Section: Profile & Logout */}
         <div className="px-6 py-5 pb-8 mt-auto flex flex-col gap-5 border-t border-white/5 bg-black/10">
             <div className="flex items-center justify-between gap-2">
               <div className="flex items-center gap-3 min-w-0">
                 <Avatar initial={initial} size="md" />
                 <div className="min-w-0 flex-1">
                   <p className="text-[13px] font-bold text-white truncate leading-tight tracking-wide">{user?.name || "Usuario"}</p>
-                  <p className="text-[11px] font-medium text-[#86a8e7] truncate mt-0.5">
-                    {user?.roles?.[0] || "Administrador"}
-                  </p>
+                  <p className="text-[11px] font-medium text-[#86a8e7] truncate mt-0.5">{user?.roles?.[0] || "Administrador"}</p>
                 </div>
               </div>
-              
               <div className="relative flex-shrink-0">
                 <button onClick={() => setNotiOpen(v => !v)} className={iconBtnClass(notiOpen)} title="Notificaciones">
                   <Icons.Bell />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548] shadow-sm">
-                      {unreadCount > 9 ? "9+" : unreadCount}
-                    </span>
-                  )}
+                  {unreadCount > 0 && <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548] shadow-sm">{unreadCount > 9 ? "9+" : unreadCount}</span>}
                 </button>
               </div>
             </div>
-
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 hover:bg-white/5 transition-all duration-200 border border-transparent"
-            >
+            <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 hover:bg-white/5 transition-all duration-200 border border-transparent">
               <Icons.Logout /> Cerrar Sesión
             </button>
         </div>
       </aside>
 
       {/* ── MOBILE TOP BAR ────────────────────────────────────────────────── */}
-      <header
-        className="lg:hidden fixed top-0 left-0 right-0 z-50 h-[60px] flex items-center justify-between px-4"
-        style={{ background: T.headerBg, boxShadow: "0 2px 10px rgba(15,37,72,0.22)" }}
-      >
+      <header className="lg:hidden fixed top-0 left-0 right-0 z-50 h-[60px] flex items-center justify-between px-4" style={{ background: T.headerBg, boxShadow: "0 2px 10px rgba(15,37,72,0.22)" }}>
         <div className="absolute bottom-0 left-0 right-0 h-[2px]" style={{ background: T.goldenLine }} />
-
         <button onClick={open ? onClose : onOpen} className="flex items-center justify-center w-10 h-10 rounded-xl text-white/70 hover:text-white bg-white/10 hover:bg-white/20 transition-all" aria-label="Menú">
           {open ? <Icons.X /> : <Icons.Menu />}
         </button>
-
         <button onClick={() => navigate("/dashboard")} className="flex items-center gap-3">
           <img src={logo} alt="Logo" className="h-[28px] brightness-0 invert opacity-100 drop-shadow-md" />
           <span className="text-[16px] font-extrabold text-white tracking-wide">Transporte</span>
         </button>
-
         <div className="relative">
           <button onClick={() => setNotiOpen(v => !v)} className={iconBtnClass(notiOpen)}>
             <Icons.Bell />
-            {unreadCount > 0 && (
-              <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548]">
-                {unreadCount > 9 ? "9+" : unreadCount}
-              </span>
-            )}
+            {unreadCount > 0 && <span className="absolute -top-[5px] -right-[5px] flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548]">{unreadCount > 9 ? "9+" : unreadCount}</span>}
           </button>
         </div>
       </header>
 
       {/* ── DRAWER (Mobile) ───────────────────────────────────────────────── */}
-      <aside
-        className={cn(
-          "fixed top-0 left-0 z-[70] w-[280px] h-full flex flex-col border-r lg:hidden",
-          "transition-transform duration-300",
-          open ? "translate-x-0" : "-translate-x-full",
-        )}
-        style={{ background: T.headerBg, borderColor: "rgba(255,255,255,0.08)", boxShadow: open ? "6px 0 32px rgba(15,37,72,0.35)" : "none", transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)" }}
-      >
+      <aside className={cn("fixed top-0 left-0 z-[70] w-[280px] h-full flex flex-col border-r lg:hidden transition-transform duration-300", open ? "translate-x-0" : "-translate-x-full")} style={{ background: T.headerBg, borderColor: "rgba(255,255,255,0.08)", boxShadow: open ? "6px 0 32px rgba(15,37,72,0.35)" : "none", transitionTimingFunction: "cubic-bezier(.34,1.56,.64,1)" }}>
         <div className="absolute top-0 right-0 bottom-0 w-[2px]" style={{ background: T.drawerGlow }} />
-
         <div className="p-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.08)" }}>
           <div className="flex flex-col items-center gap-3 mb-6 px-1 pt-4 text-center">
             <img src={logo} alt="Logo" className="h-[60px] brightness-0 invert opacity-100 drop-shadow-lg mb-1" />
@@ -558,7 +205,6 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
               <p className="text-[15px] font-extrabold text-white leading-none">Transporte</p>
             </div>
           </div>
-
           <div className="flex items-center gap-3 p-3.5 rounded-xl bg-white/5 border border-white/10">
             <Avatar initial={initial} size="md" />
             <div className="min-w-0 flex-1">
@@ -568,30 +214,19 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 flex-shrink-0 shadow-[0_0_8px_rgba(52,211,153,0.6)]" />
           </div>
         </div>
-
         <nav className="flex-1 overflow-y-auto px-3 py-5 space-y-1">
           <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-white/30">Navegación</p>
           {navItems.map(item => <NavLinkDrawer key={item.to} item={item} onClick={onClose} pathname={location.pathname} />)}
-
           {isPrivileged && (
             <div className="pt-4 mt-4 border-t border-white/10">
               <p className="px-4 pb-2 text-[10px] font-black uppercase tracking-[.25em] text-blue-400/50">Administración</p>
-              <a
-                href={getMagicLink()}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={onClose}
-                className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10"
-              >
-                <div className="flex items-center justify-center w-8 h-8 flex-shrink-0 text-amber-400/60">
-                  <Icons.Shield />
-                </div>
+              <a href={getMagicLink()} target="_blank" rel="noopener noreferrer" onClick={onClose} className="flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-sm font-semibold transition-all duration-150 text-amber-300/80 hover:text-amber-300 hover:bg-amber-400/10">
+                <div className="flex items-center justify-center w-8 h-8 flex-shrink-0 text-amber-400/60"><Icons.Shield /></div>
                 <span>Panel Backend</span>
               </a>
             </div>
           )}
         </nav>
-
         <div className="p-4 bg-white/5 border-t border-white/10">
           <button onClick={handleLogout} className="w-full flex items-center justify-center gap-3 px-4 py-3.5 rounded-xl text-[13px] font-bold transition-all hover:bg-red-500/20 text-white/60 hover:text-red-300">
             <Icons.Logout /> Cerrar sesión
@@ -603,10 +238,7 @@ export default function Sidebar({ open, onClose, onOpen }: Props) {
       {open && <div onClick={onClose} className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm lg:hidden" />}
 
       {/* ── BOTTOM NAV (Mobile) ───────────────────────────────────────────── */}
-      <nav
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2"
-        style={{ height: "64px", background: T.bottomNavBg, borderTop: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 -4px 20px rgba(15,37,72,0.28)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
-      >
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2" style={{ height: "64px", background: T.bottomNavBg, borderTop: "1px solid rgba(255,255,255,0.07)", boxShadow: "0 -4px 20px rgba(15,37,72,0.28)", paddingBottom: "env(safe-area-inset-bottom, 0px)" }}>
         <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.35) 50%, transparent 100%)" }} />
         {navItems.map(item => <NavLinkBottom key={item.to} item={item} />)}
         <button className="flex-1 flex flex-col items-center justify-center gap-1.5 py-2.5 rounded-xl transition-all text-white/50" onClick={onOpen}>
