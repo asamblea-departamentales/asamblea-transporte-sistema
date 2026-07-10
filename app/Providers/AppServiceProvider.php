@@ -22,6 +22,10 @@ class AppServiceProvider extends ServiceProvider
             NotificarCambioEstado::class,
         );
 
+        \App\Models\SolicitudCombustible::observe(
+            \App\Observers\SolicitudCombustibleObserver::class,
+        );
+
         // Forzar HTTPS si viene de proxy (ngrok, cloudflare, etc)
         if (request()->server('HTTP_X_FORWARDED_PROTO') === 'https' ||
             request()->server('HTTP_X_FORWARDED_SSL') === 'on' ||

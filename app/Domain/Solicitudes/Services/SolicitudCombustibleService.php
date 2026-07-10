@@ -168,6 +168,8 @@ class SolicitudCombustibleService
             throw new \DomainException('No se puede liquidar sin comprobantes.');
         }
 
+        $this->verificarNoEnLoteActivo($record, 'liquidar');
+
         DB::transaction(function () use ($record, $userId, $data) {
             $record->liquidacion()->create([
                 'user_id' => $userId,
@@ -190,6 +192,8 @@ class SolicitudCombustibleService
 
     public function asignarVales(SolicitudCombustible $solicitud, int $userId, array $data): SolicitudCombustible
     {
+        $this->verificarNoEnLoteActivo($solicitud, 'asignar vales');
+
         if ($solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
             $current = $solicitud->estado?->value ?? $solicitud->estado;
             $guia = match ($solicitud->estado) {
@@ -286,6 +290,8 @@ class SolicitudCombustibleService
             throw new \DomainException('Debes subir al menos un comprobante antes de completar.');
         }
 
+        $this->verificarNoEnLoteActivo($solicitud, 'completar');
+
         return DB::transaction(function () use ($solicitud, $userId, $data, $todosComprobantes) {
             $solicitud->forma_pago = $data['forma_pago'] ?? null;
             $solicitud->numero_vale_ticket = $data['numero_vale_ticket'] ?? null;
@@ -309,6 +315,8 @@ class SolicitudCombustibleService
 
     public function rechazar(SolicitudCombustible $solicitud, int $jefeId, string $motivo): SolicitudCombustible
     {
+        $this->verificarNoEnLoteActivo($solicitud, 'rechazar');
+
         $solicitud->motivo_rechazo = $motivo;
         $solicitud->aprobador_id = $jefeId;
         $solicitud->fecha_aprobacion = now();
@@ -352,6 +360,8 @@ class SolicitudCombustibleService
         float $montoAprobado,
         ?string $justificacion = null
     ): array {
+        $this->verificarNoEnLoteActivo($solicitud, 'asignar carga operativa');
+
         return DB::transaction(function () use ($solicitud, $userId, $montoAprobado, $justificacion) {
             DecisionOperativa::updateOrCreate(
                 [
@@ -385,6 +395,8 @@ class SolicitudCombustibleService
         ?float $montoAprobado = null,
         ?string $comentario = null
     ): array {
+        $this->verificarNoEnLoteActivo($solicitud, 'aprobar con decisión');
+
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
             $montoOriginal = $solicitud->decisionOperativa?->monto_aprobado;
 
@@ -455,6 +467,8 @@ class SolicitudCombustibleService
 
     public function desbloquear(SolicitudCombustible $solicitud, int $userId): array
     {
+        $this->verificarNoEnLoteActivo($solicitud, 'desbloquear');
+
         return DB::transaction(function () use ($solicitud, $userId) {
             $solicitud->aprobador_id = null;
             $solicitud->fecha_aprobacion = null;
@@ -476,6 +490,8 @@ class SolicitudCombustibleService
             throw new \DomainException('Solo el solicitante puede cancelar esta solicitud.');
         }
 
+        $this->verificarNoEnLoteActivo($solicitud, 'cancelar');
+
         $solicitud->motivo_cancelacion = $motivoCancelacion;
 
         $this->workflow->cancelar($solicitud, User::findOrFail($userId), $motivoCancelacion);
@@ -487,6 +503,15 @@ class SolicitudCombustibleService
     }
 
     // ── Helpers ──────────────────────────────────────────
+
+    private function verificarNoEnLoteActivo(SolicitudCombustible $solicitud, string $accion): void
+    {
+        if ($solicitud->estaEnLoteActivo()) {
+            throw new \DomainException(
+                "No se puede {$accion} la solicitud {$solicitud->codigo}: está siendo procesada en un Lote de combustible activo."
+            );
+        }
+    }
 
     public function registrarEvento(SolicitudCombustible $solicitud, string $accion, int $userId, ?array $extra = null): void
     {

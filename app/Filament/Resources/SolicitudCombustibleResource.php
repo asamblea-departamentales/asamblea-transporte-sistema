@@ -585,6 +585,11 @@ class SolicitudCombustibleResource extends Resource
                                 ->success()
                                 ->send();
                         })
+                        ->disabled(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo())
+                        ->tooltip(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo()
+                            ? 'Esta solicitud está siendo procesada en un Lote de combustible activo'
+                            : false
+                        )
                         ->visible(fn ($record) => auth()->user()?->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                             in_array($record->estado, [
                                 EstadoSolicitudEnum::PENDIENTE,
@@ -601,9 +606,11 @@ class SolicitudCombustibleResource extends Resource
                         ->modalHeading('Enviar a liquidador')
                         ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
 
-                    // 1. VALIDACIÓN PREVIA (UX): Deshabilitar o mostrar tooltip si no hay comprobantes
-                        ->disabled(fn (SolicitudCombustible $record) => ! $record->tieneComprobantes())
-                        ->tooltip(fn (SolicitudCombustible $record) => ! $record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
+                    // 1. VALIDACIÓN PREVIA (UX): Deshabilitar o mostrar tooltip si no hay comprobantes o si está en lote activo
+                        ->disabled(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo() || ! $record->tieneComprobantes())
+                        ->tooltip(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo()
+                            ? 'Esta solicitud está siendo procesada en un Lote de combustible activo'
+                            : (! $record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión')
                         )
                         ->action(function (SolicitudCombustible $record, \Filament\Actions\StaticAction $action) {
                             try {

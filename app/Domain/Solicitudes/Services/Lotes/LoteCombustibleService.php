@@ -131,6 +131,7 @@ class LoteCombustibleService
                 ->whereNotNull('ticket') // <-- Cambiado de numero_ticket a ticket
                 ->whereNotNull('vehiculo_id')
                 ->whereNotIn('id', $yaImportados)
+                ->whereDoesntHave('loteDetalles', fn ($q) => $q->whereHas('lote', fn ($q2) => $q2->where('estado', '!=', EstadoLoteEnum::COMPLETADO)))
                 ->with('vehiculo')
                 ->get();
 
@@ -236,9 +237,11 @@ class LoteCombustibleService
                 && optional($d->solicitudCombustible)->estado !== EstadoSolicitudEnum::APROBADA
             );
             if ($noAprobadas->isNotEmpty()) {
+                $codigos = $noAprobadas
+                    ->map(fn ($d) => optional($d->solicitudCombustible)->codigo ?? 'N/A')
+                    ->implode(', ');
                 throw new \DomainException(
-                    'Todas las solicitudes del lote deben estar aprobadas antes de finalizar. '
-                    ."Hay {$noAprobadas->count()} detalle(s) pendiente(s) de aprobación."
+                    "No se puede finalizar: las siguientes solicitudes no están aprobadas: {$codigos}"
                 );
             }
 
@@ -333,6 +336,13 @@ class LoteCombustibleService
 
                 $solicitud = $detalle->solicitudCombustible;
                 if (! $solicitud || $solicitud->estado !== EstadoSolicitudEnum::APROBADA) {
+                    Log::warning('Detalle de lote saltado en completarLote: solicitud no está APROBADA', [
+                        'lote_id' => $lote->id,
+                        'detalle_id' => $detalle->id,
+                        'solicitud_id' => $detalle->solicitud_combustible_id,
+                        'estado_actual' => optional($solicitud)->estado?->value ?? 'sin solicitud',
+                    ]);
+
                     continue;
                 }
 

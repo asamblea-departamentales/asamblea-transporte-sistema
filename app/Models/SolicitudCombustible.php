@@ -3,11 +3,13 @@
 namespace App\Models;
 
 use App\Domain\Solicitudes\Contracts\Workflowable;
+use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\TicketService;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class SolicitudCombustible extends Model implements Workflowable
@@ -162,6 +164,20 @@ class SolicitudCombustible extends Model implements Workflowable
     public function grupo()
     {
         return $this->belongsTo(Grupo::class, 'prioridad_grupo');
+    }
+
+    // ── Relación con Lotes de combustible ───────────────────
+
+    public function loteDetalles(): HasMany
+    {
+        return $this->hasMany(AsignacionCombustibleLoteDetalle::class, 'solicitud_combustible_id');
+    }
+
+    public function estaEnLoteActivo(): bool
+    {
+        return $this->loteDetalles()
+            ->whereHas('lote', fn ($q) => $q->where('estado', '!=', EstadoLoteEnum::COMPLETADO))
+            ->exists();
     }
 
     // ── Workflowable ─────────────────────────────────────────

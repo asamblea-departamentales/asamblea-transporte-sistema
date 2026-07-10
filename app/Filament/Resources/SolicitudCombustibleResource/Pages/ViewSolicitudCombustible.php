@@ -42,8 +42,10 @@ class ViewSolicitudCombustible extends ViewRecord
                 ->modalDescription('La solicitud será enviada para proceso de liquidación. Asegúrese de haber cargado los comprobantes.')
 
                 // Validación UX
-                ->disabled(fn (SolicitudCombustible $record) => ! $record->tieneComprobantes())
-                ->tooltip(fn (SolicitudCombustible $record) => ! $record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión'
+                ->disabled(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo() || ! $record->tieneComprobantes())
+                ->tooltip(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo()
+                    ? 'Esta solicitud está siendo procesada en un Lote de combustible activo'
+                    : (! $record->tieneComprobantes() ? 'Debe cargar comprobantes antes de enviar' : 'Enviar a revisión')
                 )
 
                 ->action(function (SolicitudCombustible $record, Actions\StaticAction $action) {
@@ -87,6 +89,11 @@ class ViewSolicitudCombustible extends ViewRecord
                         ->required()
                         ->maxLength(2000),
                 ])
+                ->disabled(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo())
+                ->tooltip(fn (SolicitudCombustible $record) => $record->estaEnLoteActivo()
+                    ? 'Esta solicitud está siendo procesada en un Lote de combustible activo'
+                    : false
+                )
                 ->action(function (SolicitudCombustible $record, array $data) {
                     $estadoAnterior = $record->estado;
 
