@@ -3,14 +3,14 @@
 namespace App\Domain\Solicitudes\Services\Operativo;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
-use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Models\BitacoraEvento;
 use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
+use App\Models\User;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Log;
 
 class AprobacionesService
 {
@@ -53,6 +53,7 @@ class AprobacionesService
     public function aprobar(string $tipo, int $id, int $userId, string $comentario, ?string $firma = null): void
     {
         $record = $this->resolverModelo($tipo, $id);
+        $actor = User::findOrFail($userId);
 
         $relations = match ($tipo) {
             'transporte' => ['solicitante'],
@@ -70,8 +71,6 @@ class AprobacionesService
         $this->guardarAprobador($record, $userId);
         $this->guardarFirma($record, $firma);  // ← nuevo
         $record->save();
-
-        $this->enviarCorreoAprobacion($record, $tipo);
 
         HistorialEstado::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
@@ -93,33 +92,16 @@ class AprobacionesService
                 'con_firma' => ! empty($firma),
             ],
         ]);
-    }
 
-    private function enviarCorreoAprobacion($record, string $tipo): void
-    {
-        try {
-            app(SolicitudEmailDispatchService::class)->toSolicitante(
-                $record, $tipo, 'solicitud_aprobada'
-            );
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de aprobación: '.$e->getMessage());
-        }
-    }
-
-    private function enviarCorreoRechazo($record, string $tipo, string $motivo): void
-    {
-        try {
-            app(SolicitudEmailDispatchService::class)->toSolicitante(
-                $record, $tipo, 'solicitud_rechazada'
-            );
-        } catch (\Exception $e) {
-            Log::error('Error enviando correo de rechazo: '.$e->getMessage());
-        }
+        event(new SolicitudEstadoCambiado($record, $estadoAnterior, $nuevoEstado, $actor, [
+            'accion' => 'aprobar_final',
+        ]));
     }
 
     public function rechazar(string $tipo, int $id, int $userId, string $comentario): void
     {
         $record = $this->resolverModelo($tipo, $id);
+        $actor = User::findOrFail($userId);
 
         $relations = match ($tipo) {
             'transporte' => ['solicitante'],
@@ -136,8 +118,6 @@ class AprobacionesService
         $this->guardarAprobador($record, $userId);
         $this->guardarMotivoRechazo($record, $comentario);
         $record->save();
-
-        $this->enviarCorreoRechazo($record, $tipo, $comentario);
 
         HistorialEstado::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
@@ -157,6 +137,10 @@ class AprobacionesService
                 'comentario' => $comentario,
             ],
         ]);
+
+        event(new SolicitudEstadoCambiado($record, $estadoAnterior, EstadoSolicitudEnum::RECHAZADA, $actor, [
+            'accion' => 'rechazar_final',
+        ]));
     }
 
     public function condicionar(string $tipo, int $id, int $userId, string $comentario): void

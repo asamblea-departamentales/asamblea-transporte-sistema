@@ -124,6 +124,29 @@ class SolicitudEmailDispatchService
         $this->send($subject, $payload, $emails);
     }
 
+    public function toMotorista($record, string $tipo, string $evento, ?string $mensaje = null, array $attachments = []): void
+    {
+        $motorista = match ($tipo) {
+            'combustible' => $record->motorista,
+            'mantenimiento' => $record->vehiculo?->asignacionVigenteMotorista?->motorista,
+            default => null,
+        };
+
+        $email = $motorista?->correo ?: $motorista?->user?->email;
+        if (empty($email)) {
+            Log::warning("Correo no enviado [{$tipo}/{$evento}]: motorista sin email", [
+                'solicitud_id' => $record->id ?? null,
+                'codigo' => $record->codigo ?? null,
+                'motorista_id' => $motorista?->id,
+            ]);
+
+            return;
+        }
+
+        [$subject, $payload] = $this->messageFor($record, $tipo, $evento, $mensaje, true, $attachments);
+        $this->send($subject, $payload, $email);
+    }
+
     /**
      * Envía un correo a una o varias direcciones electrónicas específicas.
      *
