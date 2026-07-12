@@ -46,7 +46,7 @@ class EditAsignacionCombustibleLote extends EditRecord
                 ->color('primary')
                 ->requiresConfirmation()
                 ->modalHeading('Iniciar asignación operativa')
-                ->modalDescription('El lote pasará a estado EN PROCESO y el operativo podrá registrar series, contratos y galones.')
+                ->modalDescription('El lote pasará a estado EN PROCESO y el operativo podrá registrar series, contratos y cargas.')
                 ->action(function ($record) {
 
                     app(\App\Domain\Solicitudes\Services\Lotes\LoteCombustibleService::class)

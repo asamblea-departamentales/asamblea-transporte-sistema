@@ -489,7 +489,7 @@
             <div class="info-card">
                 <div class="info-card-title">Combustible</div>
                 @if(isset($payload['solicitud']['cantidad_combustible']))
-                    <div class="info-row"><strong>Cantidad:</strong> {{ $payload['solicitud']['cantidad_combustible'] }} galones</div>
+                    <div class="info-row"><strong>Cantidad:</strong> {{ $payload['solicitud']['cantidad_combustible'] }} cargas</div>
                 @endif
                 @if(isset($payload['solicitud']['valor_total']))
                     <div class="info-row"><strong>Valor total:</strong> ${{ number_format($payload['solicitud']['valor_total'], 2) }}</div>

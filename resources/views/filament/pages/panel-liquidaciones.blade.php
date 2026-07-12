@@ -1174,8 +1174,8 @@
                     <span class="liq-drawer-row-value">{{ $this->detalleItem['correlativo_rango'] ?? '—' }}</span>
                 </div>
                 <div class="liq-drawer-row">
-                    <span class="liq-drawer-row-label">Galones</span>
-                    <span class="liq-drawer-row-value">{{ number_format($this->detalleItem['cantidad_galones'] ?? 0, 2) }} gal</span>
+                    <span class="liq-drawer-row-label">Cargas</span>
+                    <span class="liq-drawer-row-value">{{ number_format($this->detalleItem['cantidad_galones'] ?? 0, 2) }} cargas</span>
                 </div>
                 <div class="liq-drawer-row">
                     <span class="liq-drawer-row-label">Cant. vales</span>

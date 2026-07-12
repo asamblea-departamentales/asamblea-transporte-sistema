@@ -117,7 +117,7 @@
     <table class="kpis" style="border-collapse: separate; border-spacing: 6px;">
         <tr>
             <td><div class="kpi-box"><span class="kpi-label">Total</span><span class="kpi-value">{{ $rows->count() }}</span></div></td>
-            <td><div class="kpi-box"><span class="kpi-label">Galones</span><span class="kpi-value">{{ number_format($rows->sum('cantidad_combustible'), 2) }}</span></div></td>
+            <td><div class="kpi-box"><span class="kpi-label">Cargas</span><span class="kpi-value">{{ number_format($rows->sum('cantidad_combustible'), 2) }}</span></div></td>
             <td><div class="kpi-box"><span class="kpi-label">Valor total</span><span class="kpi-value">${{ number_format($rows->sum('valor_total'), 2) }}</span></div></td>
             <td><div class="kpi-box"><span class="kpi-label">Monto asignado</span><span class="kpi-value">${{ number_format($rows->sum('monto_asignado'), 2) }}</span></div></td>
             <td><div class="kpi-box"><span class="kpi-label">Asignadas</span><span class="kpi-value">{{ $rows->where('estado', 'asignada')->count() }}</span></div></td>
@@ -150,7 +150,7 @@
                 <th width="6%">Correlativo</th>
                 <th width="5%">Cargas</th>
                 <th width="7%">Monto Asig.</th>
-                <th width="5%">Galones</th>
+                <th width="5%">Cargas</th>
                 <th width="6%">Valor Total</th>
                 <th width="5%">Vale #</th>
                 <th width="6%">Estado</th>

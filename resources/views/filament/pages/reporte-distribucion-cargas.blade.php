@@ -22,7 +22,7 @@
 </x-filament::section>
 
 <x-filament::section>
-<div class="text-sm text-gray-500">Galones</div>
+<div class="text-sm text-gray-500">Cargas</div>
 <div class="text-2xl font-bold">{{ number_format($kpi_galones,2) }}</div>
 </x-filament::section>
 

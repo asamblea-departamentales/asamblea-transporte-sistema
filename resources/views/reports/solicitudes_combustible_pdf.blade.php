@@ -146,9 +146,9 @@
             </td>
             <td>
                 <div class="kpi-box gray">
-                    <span class="kpi-label">Total Galones</span>
+                    <span class="kpi-label">Total Cargas</span>
                     <span class="kpi-value" style="color:#374151; font-size:13px;">
-                        {{ number_format($rows->sum(fn($r) => $r->cantidad_combustible ?? 0), 2) }} gal
+                        {{ number_format($rows->sum(fn($r) => $r->cantidad_combustible ?? 0), 2) }} cargas
                     </span>
                 </div>
             </td>
@@ -186,8 +186,8 @@
                 <th width="9%">Motorista</th>
                 <th width="7%">Fecha</th>
                 <th>Destino / Actividad</th>
-                <th width="6%">Galones</th>
-                <th width="6%">$/gal</th>
+                <th width="6%">Cargas</th>
+                <th width="6%">$/Carga</th>
                 <th width="7%">Total</th>
                 <th width="6%">Pago</th>
                 <th width="6%">Prioridad</th>

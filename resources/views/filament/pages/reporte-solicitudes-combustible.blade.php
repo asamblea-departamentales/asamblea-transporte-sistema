@@ -24,7 +24,7 @@
         </div>
 
         <div class="rounded-xl border border-blue-200 bg-blue-50 dark:bg-blue-900/20 p-4 shadow-sm text-center">
-            <p class="text-xs text-blue-600 uppercase tracking-wide mb-1">Galones</p>
+            <p class="text-xs text-blue-600 uppercase tracking-wide mb-1">Cargas</p>
             <p class="text-2xl font-bold text-blue-600">
                 {{ number_format($kpi_galones, 2) }}
             </p>

@@ -105,7 +105,7 @@ class ViewAsignacionCombustibleLote extends ViewRecord
                 ->modalHeading('Completar lote')
                 ->modalDescription(
                     'El lote será marcado como COMPLETADO y ya no podrá modificarse. '.
-                    'Se verificará que todos los vehículos tengan serie, contrato, tipo de combustible y galones.'
+                    'Se verificará que todos los vehículos tengan serie, contrato, tipo de combustible y cargas.'
                 )
                 ->action(function ($record) {
                     try {
