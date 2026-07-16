@@ -7,13 +7,13 @@ export default {
   theme: {
     extend: {
       colors: {
-        // --- 1. Mapeo para no romper los componentes existentes (Dark UI) ---
-        bgMain: "rgba(7,11,22,1)",       // Antes era #f8fafc (blanco), ahora es oscuro
+        // --- 1. Mapeo para el Dashboard Principal (Light UI) ---
+        bgMain: "#f8fafc",               // Fondo principal del dashboard (slate-50)
         bgSidebar: "rgba(7,11,22,1)",    // Dark
-        bgCard: "rgba(8,12,24,0.97)",    // Tarjetas dark glass
-        borderColor: "rgba(255,255,255,0.06)",
-        textMain: "#ffffff",             // Texto principal ahora es blanco
-        textMuted: "#94a3b8",            // Texto secundario
+        bgCard: "#ffffff",               // Tarjetas blancas
+        borderColor: "#e2e8f0",          // Bordes claros para tarjetas (slate-200)
+        textMain: "#0f172a",             // Texto principal oscuro (slate-900)
+        textMuted: "#64748b",            // Texto secundario gris (slate-500)
 
         // --- 2. Colores Institucionales Originales ---
         asamblea: "#2d3a61",
