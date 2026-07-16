@@ -3,7 +3,6 @@ import { dashboardApi, RecentRequest } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 import { History, Search, Calendar, Filter } from 'lucide-react';
 import { Pagination } from '../../../shared/components/Pagination';
-import { axiosClient } from '../../../shared/api/axiosClient';
 
 export const HistorialPage: React.FC = () => {
   const [requests, setRequests] = useState<RecentRequest[]>([]);
@@ -23,14 +22,6 @@ export const HistorialPage: React.FC = () => {
   useEffect(() => {
     const fetchHistorial = async () => {
       try {
-        // DEBUG GIGANTE
-        try {
-          const debugRes = await axiosClient.get('/solicitudes-transporte/TR-2026-000008');
-          console.error("====== DEBUG TR-08 ======", debugRes.data);
-        } catch (e) {
-          console.error("====== ERROR TR-08 ======", e);
-        }
-
         const data = await dashboardApi.getHistorialJefatura();
         console.log("RESPUESTA REAL DEL BACKEND (historial-jefatura):", data);
         setRequests(data.data || []);
@@ -53,7 +44,11 @@ export const HistorialPage: React.FC = () => {
       result = result.filter(req => {
         const code = typeof req.code === 'string' ? req.code : '';
         const type = typeof req.type === 'string' ? req.type : '';
-        return code.toLowerCase().includes(lowerSearch) || type.toLowerCase().includes(lowerSearch);
+        const status = typeof req.status === 'string' ? req.status : '';
+        
+        // Expandir búsqueda a más campos para mejor UX
+        const searchStr = `${code} ${type} ${status} ${(req as any).solicitante || ''} ${(req as any).destino || ''}`.toLowerCase();
+        return searchStr.includes(lowerSearch);
       });
     }
 

@@ -32,6 +32,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
       iconBg: 'bg-white/20',
       textValue: 'text-white',
       textLabel: 'text-indigo-100',
+      type: 'pending',
       action: undefined
     },
     {
@@ -44,6 +45,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
       iconBg: 'bg-blue-50',
       textValue: 'text-[#182645]',
       textLabel: 'text-slate-400',
+      type: 'in_progress',
       action: () => navigate('/historial')
     },
     {
@@ -56,6 +58,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
       iconBg: 'bg-emerald-50',
       textValue: 'text-[#182645]',
       textLabel: 'text-slate-400',
+      type: 'accepted',
       action: () => navigate('/historial')
     },
     {
@@ -68,6 +71,7 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
       iconBg: 'bg-slate-50',
       textValue: 'text-[#182645]',
       textLabel: 'text-slate-400',
+      type: 'completed',
       action: () => navigate('/historial')
     }
   ];
@@ -86,8 +90,23 @@ export const SummaryCards: React.FC<SummaryCardsProps> = ({ summary, isLoading }
               {card.icon}
             </div>
           </div>
-          <div className="mt-2 flex items-baseline gap-3">
+          <div className="mt-2 flex flex-col items-start justify-center flex-1">
             <h3 className={`text-[44px] leading-none font-bold ${card.textValue}`}>{card.value}</h3>
+            
+            {/* Badges por módulo si existen en el backend */}
+            {summary?.by_module && (
+              <div className="flex gap-1.5 mt-2 flex-wrap">
+                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${idx === 0 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  🚗 {summary.by_module.transporte[card.type as keyof typeof summary.by_module.transporte]}
+                </span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${idx === 0 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  ⛽ {summary.by_module.combustible[card.type as keyof typeof summary.by_module.combustible]}
+                </span>
+                <span className={`px-2 py-0.5 rounded text-[10px] font-semibold ${idx === 0 ? 'bg-white/20 text-white' : 'bg-slate-100 text-slate-600'}`}>
+                  🔧 {summary.by_module.mantenimiento[card.type as keyof typeof summary.by_module.mantenimiento]}
+                </span>
+              </div>
+            )}
           </div>
           <div className="mt-4">
             <span className={`text-[14px] font-semibold ${idx === 0 ? 'text-white' : 'text-slate-700'}`}>{card.title}</span>

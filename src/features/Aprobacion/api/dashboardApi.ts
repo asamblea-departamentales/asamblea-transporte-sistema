@@ -40,9 +40,7 @@ export const dashboardApi = {
     }));
     return { data: mappedData };
   },
-  // TODO: Reemplazar el endpoint cuando el backend libere /api/solicitudes/historial-jefatura
   getHistorialJefatura: async (): Promise<{ data: RecentRequest[] }> => {
-    // Ya no usamos el fallback, forzamos a que llame a historial-jefatura
     const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
     const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
     
@@ -51,7 +49,7 @@ export const dashboardApi = {
       code: item.codigo || item.code || '',
       date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
       rawDate: item.created_at || item.date || '',
-      type: item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte'),
+      type: item.modulo ? (item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1)) : (item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte')),
       status: item.estado || item.status || ''
     }));
     

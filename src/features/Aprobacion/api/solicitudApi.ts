@@ -13,7 +13,13 @@ export const solicitudApi = {
   },
 
   aprobarConDecision: async (id: string, decision_final: 'operativo' | 'sistema' | 'manual', comentario: string, vehiculo_id?: number, motorista_id?: number) => {
-    const payload: any = { decision_final, comentario };
+    interface AprobarPayload {
+      decision_final: 'operativo' | 'sistema' | 'manual';
+      comentario: string;
+      vehiculo_id?: number;
+      motorista_id?: number;
+    }
+    const payload: AprobarPayload = { decision_final, comentario };
     if (vehiculo_id) payload.vehiculo_id = vehiculo_id;
     if (motorista_id) payload.motorista_id = motorista_id;
     const response = await axiosClient.post(`/solicitudes-transporte/${id}/aprobar-con-decision`, payload);
