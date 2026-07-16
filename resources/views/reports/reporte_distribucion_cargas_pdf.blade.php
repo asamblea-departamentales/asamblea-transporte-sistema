@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Informe de Distribución de Cupones / Cargas de Combustible</title>
+    <title>Informe de Distribución de Cargas de Combustible</title>
     <style>
         body {
             font-family: 'DejaVu Sans', sans-serif;
@@ -168,7 +168,7 @@
         <div class="title-container">
             <h2>Transporte y Logística</h2>
             <p style="margin:4px 0 0; color:#6b7280;">
-                Informe de Distribución de Cupones / Cargas de Combustible
+                Informe de Distribución de Cargas de Combustible
             </p>
         </div>
 

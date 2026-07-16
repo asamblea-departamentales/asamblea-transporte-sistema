@@ -15,7 +15,7 @@ use Livewire\Attributes\Url;
 
 class PanelLiquidaciones extends Page
 {
-    protected static ?string $navigationGroup = 'Listado / Liquidaciones';
+    protected static ?string $navigationGroup = 'Listado de Solicitudes';
 
     protected static ?string $navigationLabel = 'Listado de Solicitudes';
 

@@ -32,7 +32,7 @@ class UserResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-shield-check';
 
     // Agrupa este recurso en el menú bajo "Administración".
-    protected static ?string $navigationGroup = 'Administracion';
+    protected static ?string $navigationGroup = 'Administración';
 
     // Orden en el que aparece en el menú.
     protected static ?int $navigationSort = 1;

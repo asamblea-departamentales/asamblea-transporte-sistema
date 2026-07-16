@@ -1,0 +1,1123 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<title>Manual de Mantenimiento — Sistema de Transporte</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+  :root {
+    --primary: #0B2545;
+    --primary-light: #134074;
+    --accent: #8A7043;
+    --text-main: #1E293B;
+    --text-muted: #64748B;
+    --bg-light: #F8FAFC;
+    --border-color: #E2E8F0;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Inter', sans-serif; color: var(--text-main); background: #fff; line-height: 1.7; font-size: 16px; orphans: 3; widows: 3; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+  @page {
+    size: A4;
+    margin: 2.5cm 2cm 2.5cm 2cm;
+    @top-center {
+      content: element(header);
+      font-family: 'Inter', sans-serif;
+      font-size: 8pt;
+      color: #94a3b8;
+    }
+    @bottom-center {
+      content: "Confidencial — Documento Interno | Asamblea Legislativa · Depto. Transporte | Pág. " counter(page);
+      font-family: 'Inter', sans-serif;
+      font-size: 7.5pt;
+      color: #94a3b8;
+    }
+  }
+
+  .page { max-width: 210mm; margin: 0 auto; padding: 0; }
+
+  .cover {
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    min-height: 100vh; text-align: center; padding: 80px 40px;
+    page-break-after: always; break-after: page;
+    background: radial-gradient(circle at top right, #f1f5f9 0%, #ffffff 60%);
+    position: relative;
+  }
+  .cover::before {
+    content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 8px; background: linear-gradient(90deg, var(--primary), var(--accent));
+  }
+  .cover .logo-wrap {
+    width: 280px; margin-bottom: 50px; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.05));
+  }
+  .cover .logo-wrap img { width: 100%; height: auto; display: block; }
+  .cover .line {
+    width: 60px; height: 4px; background: var(--accent); border-radius: 4px; margin: 0 auto 32px;
+  }
+  .cover h1 {
+    font-size: 3rem; font-weight: 800; color: var(--primary); letter-spacing: -.03em;
+    margin-bottom: 16px; line-height: 1.15;
+  }
+  .cover h2 {
+    font-size: 1.4rem; font-weight: 600; color: var(--primary-light); margin-bottom: 36px; text-transform: uppercase; letter-spacing: 0.05em;
+  }
+  .cover .desc {
+    font-size: 1.05rem; color: var(--text-muted); max-width: 600px; margin: 0 auto 50px; line-height: 1.8; font-weight: 400;
+  }
+  .cover .meta {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 20px;
+    font-size: 0.88rem; color: var(--text-muted); margin-top: 8px; background: var(--bg-light); padding: 12px 24px; border-radius: 30px; border: 1px solid var(--border-color);
+  }
+  .cover .meta span { display: inline-flex; align-items: center; gap: 6px; font-weight: 500; }
+  .cover .bar { width: 1px; height: 16px; background: #cbd5e1; }
+
+  .content { padding: 20px 40px 60px; }
+
+  h2 {
+    font-size: 1.5rem; font-weight: 700; color: var(--primary);
+    margin: 16px 0 14px; padding-bottom: 8px;
+    border-bottom: 2px solid var(--primary); page-break-after: avoid; break-after: avoid;
+    position: relative;
+  }
+  h2::after {
+    content: ''; position: absolute; bottom: -2px; left: 0; width: 60px; height: 2px; background: var(--accent);
+  }
+  h3 {
+    font-size: 1.25rem; font-weight: 600; color: var(--primary-light);
+    margin: 36px 0 16px; page-break-after: avoid; break-after: avoid;
+  }
+  h4 {
+    font-size: 1.05rem; font-weight: 600; color: var(--accent);
+    margin: 28px 0 12px; page-break-after: avoid; break-after: avoid;
+  }
+
+  p { font-size: 0.98rem; color: #334155; margin-bottom: 16px; text-align: justify; }
+  ul, ol { margin: 8px 0 20px 24px; page-break-inside: avoid; break-inside: avoid; }
+  li { font-size: 0.95rem; color: #334155; margin-bottom: 6px; page-break-inside: avoid; break-inside: avoid; }
+  strong { color: #0f172a; font-weight: 600; }
+  code { font-family: 'Cascadia Code', 'Fira Code', monospace; font-size: 0.85rem; background: #f1f5f9; padding: 1px 5px; border-radius: 3px; color: #0B2545; word-break: break-word; }
+
+  .nota, .info, .tip, .warn {
+    padding: 18px 24px; border-radius: 8px; margin: 24px 0;
+    font-size: 0.95rem; line-height: 1.65; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid transparent;
+  }
+  .nota { background: #FFFDF5; border-left: 4px solid #D97706; border-color: #FEF3C7 #FEF3C7 #FEF3C7 #D97706; }
+  .nota strong { color: #92400E; }
+  .info { background: #F8FAFC; border-left: 4px solid var(--primary); border-color: #E2E8F0 #E2E8F0 #E2E8F0 var(--primary); }
+  .info strong { color: var(--primary); }
+  .tip { background: #F0FDF4; border-left: 4px solid #16A34A; border-color: #DCFCE7 #DCFCE7 #DCFCE7 #16A34A; }
+  .tip strong { color: #14532D; }
+  .warn { background: #FEF2F2; border-left: 4px solid #DC2626; border-color: #FEE2E2 #FEE2E2 #FEE2E2 #DC2626; }
+  .warn strong { color: #991B1B; }
+
+  table {
+    width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0 28px;
+    font-size: 0.85rem; page-break-inside: avoid; break-inside: avoid;
+    border: 1px solid var(--border-color); border-radius: 8px; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  th {
+    background: var(--primary); color: #ffffff; font-weight: 600; text-align: left;
+    padding: 10px 14px; font-size: 0.75rem; text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+  td {
+    padding: 10px 14px; border-bottom: 1px solid var(--border-color); color: #334155;
+    background: #ffffff; word-break: break-word;
+  }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: #F8FAFC; }
+  tr { page-break-inside: avoid; break-inside: avoid; }
+
+  pre {
+    background: #1E293B; color: #E2E8F0; padding: 14px 18px; border-radius: 8px;
+    font-size: 0.78rem; line-height: 1.5; overflow-x: auto; margin: 16px 0;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    page-break-inside: avoid; break-inside: avoid; white-space: pre-wrap; word-break: break-word;
+  }
+  pre .comment { color: #94a3b8; font-style: italic; }
+  pre .keyword { color: #818cf8; }
+  pre .string { color: #34d399; }
+  pre .prop { color: #fbbf24; }
+
+  .file-path {
+    display: inline-block; font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 0.78rem; background: #1E293B; color: #E2E8F0;
+    padding: 2px 8px; border-radius: 4px; margin: 1px 0; word-break: break-word;
+  }
+
+  .nav-card {
+    display: inline-block; background: #334155; color: #fff;
+    font-size: 0.7rem; font-weight: 600; padding: 3px 8px;
+    border-radius: 4px; margin: 1px 0; letter-spacing: 0.02em;
+  }
+
+  .toc-section {
+    background: #f8fafc;
+    border: 2px solid var(--primary);
+    border-radius: 8px;
+    padding: 8px 16px 6px;
+    margin: 0;
+    page-break-after: always;
+    break-after: page;
+  }
+  .toc-header { text-align: center; margin-bottom: 3px; }
+  .toc-title {
+    font-size: 1.1rem; font-weight: 800; color: var(--primary);
+    margin: 0;
+  }
+  .toc-subtitle { display: none; }
+  .toc-divider {
+    height: 2px; background: linear-gradient(90deg, transparent, var(--accent), transparent);
+    margin: 4px 0;
+  }
+  ul.toc-list { list-style: none; margin: 0; padding: 0; }
+  .toc-item {
+    padding: 1px 2px;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  .toc-item a {
+    display: flex; align-items: center; gap: 5px;
+    text-decoration: none; color: var(--text-main);
+    font-weight: 500; font-size: 0.7rem; line-height: 1.25;
+  }
+  .toc-num {
+    width: 16px; height: 16px; flex-shrink: 0;
+    background: var(--primary); color: #fff;
+    font-size: 0.55rem; font-weight: 700;
+    border-radius: 50%; display: flex;
+    align-items: center; justify-content: center;
+  }
+  .toc-sublist {
+    list-style: none; margin: 1px 0 0 22px; padding: 0;
+  }
+  .toc-sublist a {
+    color: var(--text-muted); font-weight: 500; font-size: 0.65rem;
+  }
+  .toc-sublist a::before {
+    content: '—'; margin-right: 3px; color: var(--accent);
+  }
+
+  .card {
+    background: var(--bg-light); border: 1px solid var(--border-color); border-radius: 8px;
+    padding: 16px 20px; margin: 20px 0; page-break-inside: avoid; break-inside: avoid;
+  }
+  .card-title { font-weight: 700; font-size: 0.95rem; color: var(--primary); margin-bottom: 6px; }
+
+  .step-box {
+    background: #fff; border: 2px solid var(--primary); border-radius: 10px;
+    padding: 18px 22px; margin: 16px 0; page-break-inside: avoid; break-inside: avoid;
+  }
+  .step-box h4 { margin-top: 0; color: var(--primary); font-size: 1rem; }
+
+  .doc-footer {
+    margin-top: 60px; padding-top: 24px; text-align: center; font-size: 0.8rem; color: var(--text-muted);
+    page-break-inside: avoid; break-inside: avoid;
+  }
+  .line-cl { width: 40px; height: 3px; background: var(--accent); margin: 0 auto 16px; border-radius: 4px; }
+
+  figure { page-break-inside: avoid; break-inside: avoid; margin: 0; }
+  figcaption { font-size: 0.85rem; color: var(--text-muted); margin-top: 8px; }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- ═══════════════ PORTADA ═══════════════ -->
+<div class="cover">
+  <div class="logo-wrap">
+    <img src="../images/logo-azul-fondo-transparente.png" alt="Asamblea Legislativa">
+  </div>
+  <div class="line"></div>
+  <h1>Manual de<br>Mantenimiento</h1>
+  <h2>Sistema de Gesti&oacute;n de Transporte</h2>
+  <div class="desc">
+    Gu&iacute;a t&eacute;cnica completa para realizar cambios, agregar funcionalidades y solucionar problemas
+    en el Sistema de Gesti&oacute;n de Transporte Institucional de la Asamblea Legislativa.
+  </div>
+  <div class="meta">
+    <span>&#128214; Documento Interno</span>
+    <span class="bar"></span>
+    <span>&#128295; Depto. de Transporte</span>
+    <span class="bar"></span>
+    <span>&#128197; Julio 2026 &middot; v2.0</span>
+    <span class="bar"></span>
+    <span>&#128274; Confidencial</span>
+  </div>
+</div>
+
+<!-- ═══════════════ ÍNDICE ═══════════════ -->
+<div class="toc-section">
+  <div class="toc-header">
+    <div class="toc-title">Contenido</div>
+  </div>
+  <div class="toc-divider"></div>
+  <ul class="toc-list">
+    <li class="toc-item"><a href="#s1"><span class="toc-num">1</span> Estructura del proyecto</a></li>
+    <li class="toc-item"><a href="#s2"><span class="toc-num">2</span> Cambiar un nombre en el men&uacute; lateral</a></li>
+    <li class="toc-item"><a href="#s3"><span class="toc-num">3</span> Cambiar el &iacute;cono del men&uacute;</a></li>
+    <li class="toc-item"><a href="#s4"><span class="toc-num">4</span> Cambiar el t&iacute;tulo de una pantalla</a></li>
+    <li class="toc-item"><a href="#s5"><span class="toc-num">5</span> Ocultar un elemento del men&uacute; (sin borrarlo)</a></li>
+    <li class="toc-item"><a href="#s6"><span class="toc-num">6</span> Crear un grupo de navegaci&oacute;n nuevo</a></li>
+    <li class="toc-item"><a href="#s7"><span class="toc-num">7</span> Agregar un reporte nuevo al men&uacute;</a></li>
+    <li class="toc-item"><a href="#s8"><span class="toc-num">8</span> Cambiar un PDF descargable</a></li>
+    <li class="toc-item"><a href="#s9"><span class="toc-num">9</span> Agregar o quitar columnas en la tabla de un reporte</a></li>
+    <li class="toc-item"><a href="#s10"><span class="toc-num">10</span> Agregar o quitar filtros en un reporte</a></li>
+    <li class="toc-item"><a href="#s11"><span class="toc-num">11</span> Cambiar los indicadores (KPIs) de un reporte</a></li>
+    <li class="toc-item"><a href="#s12"><span class="toc-num">12</span> Cambiar qui&eacute;n puede ver un reporte o cat&aacute;logo</a></li>
+    <li class="toc-item"><a href="#s13"><span class="toc-num">13</span> Agregar o quitar botones de exportaci&oacute;n</a></li>
+    <li class="toc-item"><a href="#s14"><span class="toc-num">14</span> Cambiar un cat&aacute;logo (Resource)</a></li>
+    <li class="toc-item"><a href="#s15"><span class="toc-num">15</span> Agregar un cat&aacute;logo nuevo</a></li>
+    <li class="toc-item"><a href="#s16"><span class="toc-num">16</span> Agregar, cambiar o quitar manuales</a></li>
+    <li class="toc-item"><a href="#s17"><span class="toc-num">17</span> Cambiar el logo, colores y favicon del sistema</a></li>
+    <li class="toc-item"><a href="#s18"><span class="toc-num">18</span> Cambiar la pantalla de inicio de sesi&oacute;n</a></li>
+    <li class="toc-item"><a href="#s19"><span class="toc-num">19</span> Cambiar los widgets del Dashboard</a></li>
+    <li class="toc-item"><a href="#s20"><span class="toc-num">20</span> Cambiar la API (para la aplicaci&oacute;n m&oacute;vil)</a></li>
+    <li class="toc-item"><a href="#s21"><span class="toc-num">21</span> Cambiar los correos electr&oacute;nicos</a></li>
+    <li class="toc-item"><a href="#s22"><span class="toc-num">22</span> Cambiar la aplicaci&oacute;n instalable (PWA)</a></li>
+    <li class="toc-item"><a href="#s23"><span class="toc-num">23</span> Base de datos: agregar una columna nueva</a></li>
+    <li class="toc-item"><a href="#s24"><span class="toc-num">24</span> Base de datos: crear una tabla nueva</a></li>
+    <li class="toc-item"><a href="#s25"><span class="toc-num">25</span> Escenarios comunes (26 ejemplos)</a></li>
+    <li class="toc-item"><a href="#s26"><span class="toc-num">26</span> Comandos &uacute;tiles</a></li>
+    <li class="toc-item"><a href="#s27"><span class="toc-num">27</span> Referencia r&aacute;pida</a></li>
+    <li class="toc-item"><a href="#s28"><span class="toc-num">28</span> Glosario</a></li>
+  </ul>
+</div>
+
+<!-- ═══════════════ CONTENIDO ═══════════════ -->
+<div class="content">
+
+<div class="info">
+  <strong>&#9888; Antes de empezar:</strong> Para hacer cualquier cambio necesita:
+  <ul style="margin:8px 0 0 20px;">
+    <li>Acceso al servidor donde est&aacute; instalado el sistema</li>
+    <li>Un editor de texto (recomendado: <strong>VS Code</strong> o <strong>Sublime Text</strong>)</li>
+    <li>Acceso a la carpeta del proyecto (ej: <span class="file-path">C:\transporte</span>)</li>
+    <li>Una terminal (s&iacute;mbolo del sistema o PowerShell) para ejecutar comandos</li>
+    <li>Si el cambio no se ve: ejecute <code>php artisan cache:clear</code> + <code>php artisan view:clear</code></li>
+  </ul>
+</div>
+
+<!-- 1 -->
+<h2 id="s1">1. Estructura del proyecto</h2>
+<p>El sistema est&aacute; organizado en carpetas. Estas son las m&aacute;s importantes para realizar cambios:</p>
+<table>
+<tr><th>Carpeta</th><th>Qu&eacute; contiene</th><th>Lo usa cuando...</th></tr>
+<tr><td><span class="file-path">app/Filament/Pages/</span></td><td>Pantallas de reportes (19 archivos)</td><td>Quiere cambiar nombres, t&iacute;tulos, &iacute;conos, filtros, columnas de reportes</td></tr>
+<tr><td><span class="file-path">app/Filament/Resources/</span></td><td>Cat&aacute;logos y CRUDs (42 resources)</td><td>Quiere cambiar listados (Veh&iacute;culos, Motoristas, Solicitudes, etc.)</td></tr>
+<tr><td><span class="file-path">app/Filament/Clusters/</span></td><td>Agrupadores de recursos (1 archivo)</td><td>Quiere crear un grupo con subcarpeta en el men&uacute;</td></tr>
+<tr><td><span class="file-path">app/Filament/Widgets/</span></td><td>Tarjetas del dashboard (7 archivos)</td><td>Quiere cambiar los n&uacute;meros de la pantalla principal</td></tr>
+<tr><td><span class="file-path">app/Http/Controllers/Reportes/</span></td><td>Controladores que generan PDF (11 archivos)</td><td>Quiere cambiar la l&oacute;gica de un PDF</td></tr>
+<tr><td><span class="file-path">routes/web.php</span></td><td>Rutas del sistema web</td><td>Quiere agregar/cambiar rutas de PDF, Excel, CSV</td></tr>
+<tr><td><span class="file-path">routes/api.php</span></td><td>Rutas para la aplicaci&oacute;n m&oacute;vil</td><td>Quiere cambiar lo que devuelve la API</td></tr>
+<tr><td><span class="file-path">resources/views/filament/pages/</span></td><td>Plantillas Blade de los reportes (17 archivos)</td><td>Quiere cambiar el dise&ntilde;o visual de un reporte en pantalla</td></tr>
+<tr><td><span class="file-path">resources/views/reports/</span></td><td>Plantillas de los PDF (16 archivos)</td><td>Quiere cambiar el dise&ntilde;o de un PDF descargable</td></tr>
+<tr><td><span class="file-path">resources/views/emails/</span></td><td>Plantillas de correos electr&oacute;nicos</td><td>Quiere cambiar el dise&ntilde;o de las notificaciones</td></tr>
+<tr><td><span class="file-path">public/docs/</span></td><td>Manuales PDF y HTML</td><td>Quiere agregar, cambiar o quitar manuales</td></tr>
+<tr><td><span class="file-path">public/images/</span></td><td>Logos e im&aacute;genes del sistema</td><td>Quiere cambiar el logo o las im&aacute;genes</td></tr>
+<tr><td><span class="file-path">app/Providers/Filament/AdminPanelProvider.php</span></td><td>Configuraci&oacute;n principal</td><td>Logo, colores, manuales, grupos del men&uacute;, widgets</td></tr>
+<tr><td><span class="file-path">app/Mail/</span></td><td>Clases para enviar correos</td><td>Cambiar asunto o adjuntos del correo</td></tr>
+<tr><td><span class="file-path">app/Filament/Pages/Auth/Login.php</span></td><td>Pantalla de inicio de sesi&oacute;n</td><td>Cambiar texto del login (t&iacute;tulo, etiquetas, bot&oacute;n)</td></tr>
+<tr><td><span class="file-path">app/Models/</span></td><td>Modelos de base de datos (48 modelos)</td><td>Cambiar reglas de validaci&oacute;n o relaciones</td></tr>
+<tr><td><span class="file-path">config/</span></td><td>Configuraciones generales</td><td>Cambiar PWA, permisos, par&aacute;metros globales</td></tr>
+</table>
+
+<div class="tip">
+  <strong>Consejo:</strong> Use el buscador de su editor (Ctrl+Shift+F) para encontrar cualquier texto del sistema r&aacute;pidamente. Por ejemplo, si busca "Reporte Solicitudes Transporte", lo encontrar&aacute; en segundos en todo el proyecto.
+</div>
+
+<!-- 2 -->
+<h2 id="s2">2. Cambiar un nombre en el men&uacute; lateral</h2>
+
+<h3>2.1 Para un Reporte</h3>
+<ol>
+  <li>Abra la carpeta <span class="file-path">app/Filament/Pages/</span></li>
+  <li>Busque el archivo del reporte. Ej: <span class="file-path">ReporteSolicitudesTransporte.php</span></li>
+  <li>Busque la l&iacute;nea: <code>protected static ?string $navigationLabel = 'Reporte de Solicitudes de Transporte';</code></li>
+  <li>Cambie el texto entre comillas por el nuevo nombre</li>
+  <li>Guarde el archivo. El cambio se ve inmediatamente al recargar la p&aacute;gina</li>
+</ol>
+
+<div class="card"><div class="card-title">&#9997; Ejemplo:</div><p style="margin:0;">Cambiar <code>'Reporte de Solicitudes de Transporte'</code> a <code>'Reporte de Viajes'</code></p></div>
+
+<h3>2.2 Para un Cat&aacute;logo (listado como Veh&iacute;culos, Motoristas)</h3>
+<ol>
+  <li>Abra la carpeta <span class="file-path">app/Filament/Resources/</span></li>
+  <li>Busque el archivo. Ej: <span class="file-path">VehiculoResource.php</span></li>
+  <li>Busque y cambie <code>$navigationLabel = 'Veh&iacute;culos';</code></li>
+</ol>
+
+<h3>2.3 Cambiar el grupo al que pertenece</h3>
+<p>Busque la l&iacute;nea:</p>
+<pre><span class="prop">protected static ?string $navigationGroup</span> = <span class="string">'Reportes'</span>;</pre>
+<p>Grupos disponibles en el sistema:</p>
+<table>
+<tr><th>Grupo</th><th>Qu&eacute; contiene</th></tr>
+<tr><td>Administraci&oacute;n</td><td>Usuarios, roles, grupos, permisos</td></tr>
+<tr><td>Transporte</td><td>Grupo general de transporte</td></tr>
+<tr><td>Gesti&oacute;n Operativa</td><td>Gesti&oacute;n solicitudes, bandeja, aprobaciones, calendario, revisi&oacute;n</td></tr>
+<tr><td>Procesos</td><td>Solicitudes de transporte, combustible, mantenimiento</td></tr>
+<tr><td>Operatividad Diaria</td><td>Lotes de combustible, plan diario</td></tr>
+<tr><td>Reportes</td><td>Todos los reportes (10+)</td></tr>
+<tr><td>Listado de Solicitudes</td><td>Panel de liquidaci&oacute;n / listado unificado</td></tr>
+<tr><td>Liquidaci&oacute;n</td><td>Liquidaci&oacute;n de combustible</td></tr>
+<tr><td>Auditor&iacute;a</td><td>Bit&aacute;cora de eventos, historial de estados</td></tr>
+<tr><td>Cat&aacute;logos</td><td>Veh&iacute;culos, motoristas, tipos de veh&iacute;culo</td></tr>
+<tr><td>Cat&aacute;logos de Veh&iacute;culos</td><td>Marcas, modelos, colores, motores (cluster)</td></tr>
+<tr><td>Cat&aacute;logos Globales</td><td>Pa&iacute;ses, departamentos, proveedores, contratos, etc.</td></tr>
+<tr><td>Flota</td><td>Asignaci&oacute;n veh&iacute;culo-motorista</td></tr>
+<tr><td>Gesti&oacute;n de Veh&iacute;culos</td><td>Recepciones y entregas</td></tr>
+<tr><td>Gesti&oacute;n</td><td>Oficinas departamentales</td></tr>
+<tr><td>Operaci&oacute;n</td><td>Incidencias</td></tr>
+</table>
+
+<h3>2.4 Cambiar el orden dentro del grupo</h3>
+<pre><span class="prop">protected static ?int $navigationSort</span> = <span class="string">3</span>;</pre>
+<p>Un n&uacute;mero m&aacute;s peque&ntilde;o (1, 2, 3&hellip;) sube el elemento en la lista. Un n&uacute;mero m&aacute;s grande lo baja.</p>
+
+<!-- 3 -->
+<h2 id="s3">3. Cambiar el &iacute;cono del men&uacute;</h2>
+<p>Busque la l&iacute;nea:</p>
+<pre><span class="prop">protected static ?string $navigationIcon</span> = <span class="string">'heroicon-o-document-chart-bar'</span>;</pre>
+<p>Cambie el valor por otro &iacute;cono de Heroicons. Los m&aacute;s usados:</p>
+<table>
+<tr><th>&Iacute;cono</th><th>Se ve como</th></tr>
+<tr><td><code>heroicon-o-home</code></td><td>Casita (inicio)</td></tr>
+<tr><td><code>heroicon-o-document-chart-bar</code></td><td>Documento con gr&aacute;fica</td></tr>
+<tr><td><code>heroicon-o-document-text</code></td><td>Documento con texto</td></tr>
+<tr><td><code>heroicon-o-truck</code></td><td>Cami&oacute;n</td></tr>
+<tr><td><code>heroicon-o-wrench-screwdriver</code></td><td>Llave inglesa (mantenimiento)</td></tr>
+<tr><td><code>heroicon-o-calendar-days</code></td><td>Calendario</td></tr>
+<tr><td><code>heroicon-o-inbox-stack</code></td><td>Bandeja de entrada</td></tr>
+<tr><td><code>heroicon-o-check-badge</code></td><td>Insignia de aprobado</td></tr>
+<tr><td><code>heroicon-o-ticket</code></td><td>Ticket</td></tr>
+<tr><td><code>heroicon-o-clipboard-document-list</code></td><td>Clipboard con lista</td></tr>
+<tr><td><code>heroicon-o-users</code></td><td>Usuarios/personas</td></tr>
+<tr><td><code>heroicon-o-cog-6-tooth</code></td><td>Engranaje (configuraci&oacute;n)</td></tr>
+</table>
+<div class="tip"><strong>Consejo:</strong> Visite <a href="https://heroicons.com/" target="_blank">heroicons.com</a> para ver todos los disponibles.</div>
+
+<!-- 4 -->
+<h2 id="s4">4. Cambiar el t&iacute;tulo de una pantalla</h2>
+<p>El t&iacute;tulo grande de cada p&aacute;gina puede estar definido de dos formas:</p>
+<pre><span class="comment">// Forma 1: propiedad $title</span>
+<span class="prop">protected static ?string $title</span> = <span class="string">'Panel de Control'</span>;
+
+<span class="comment">// Forma 2: m&eacute;todo getTitle()</span>
+<span class="keyword">public function</span> getTitle(): <span class="prop">string</span> {
+    <span class="keyword">return</span> <span class="string">'Reporte de Solicitudes de Transporte'</span>;
+}</pre>
+<p>Busque cualquiera de las dos formas en el archivo y c&aacute;mbiela.</p>
+
+<!-- 5 -->
+<h2 id="s5">5. Ocultar un elemento del men&uacute; (sin borrarlo)</h2>
+<p>Algunas p&aacute;ginas (Bandeja Operativa, Aprobaciones, Revisi&oacute;n Operativa) existen pero no aparecen en el men&uacute;. Se acceden desde otras p&aacute;ginas.</p>
+<p>Busque esta l&iacute;nea:</p>
+<pre><span class="prop">protected static bool $shouldRegisterNavigation</span> = <span class="keyword">false</span>;</pre>
+<p><strong>Para ocultar:</strong> c&aacute;mbielo a <code>false</code>. <strong>Para mostrar:</strong> c&aacute;mbielo a <code>true</code> o borre la l&iacute;nea.</p>
+
+<!-- 6 -->
+<h2 id="s6">6. Crear un grupo de navegaci&oacute;n nuevo</h2>
+<ol>
+  <li>Abra <span class="file-path">AdminPanelProvider.php</span></li>
+  <li>Busque: <code>->navigationGroups([ 'Administraci&oacute;n', 'Transporte' ])</code></li>
+  <li>Agregue el nuevo grupo: <code>'Reportes Especiales'</code></li>
+  <li>En cada Page/Resource que quiera mover, cambie <code>$navigationGroup = 'Reportes Especiales';</code></li>
+</ol>
+
+<!-- 7 -->
+<h2 id="s7">7. Agregar un reporte nuevo al men&uacute;</h2>
+
+<h3>Paso 1: Crear el archivo PHP del reporte</h3>
+<ol>
+  <li>Vaya a <span class="file-path">app/Filament/Pages/</span></li>
+  <li>Copie un reporte existente (ej: <span class="file-path">ReporteSolicitudesTransporte.php</span>) con otro nombre, como <span class="file-path">ReporteControlKilometraje.php</span></li>
+  <li>Dentro, cambie: nombre de clase, <code>$navigationLabel</code>, <code>$navigationGroup</code>, <code>$navigationIcon</code>, <code>$navigationSort</code>, <code>$view</code></li>
+</ol>
+
+<div class="nota"><strong>&#9888; Importante:</strong> La vista (<code>$view</code>) usa min&uacute;sculas y guiones. Ej: <code>'filament.pages.reporte-control-kilometraje'</code></div>
+
+<h3>Paso 2: Crear la plantilla visual (Blade)</h3>
+<ol>
+  <li>Vaya a <span class="file-path">resources/views/filament/pages/</span></li>
+  <li>Cree un archivo <code>.blade.php</code> con el nombre que puso en <code>$view</code></li>
+  <li>Copie el contenido de otro reporte como base</li>
+</ol>
+
+<h3>Paso 3 (opcional): Agregar descarga de PDF</h3>
+<table>
+<tr><th>Qu&eacute;</th><th>D&oacute;nde va</th><th>Comando / archivo</th></tr>
+<tr><td>1. Controlador</td><td><span class="file-path">app/Http/Controllers/Reportes/</span></td><td><code>php artisan make:controller Reportes/MiReporteController</code></td></tr>
+<tr><td>2. Ruta</td><td><span class="file-path">routes/web.php</span></td><td><code>Route::get('/reportes/mi-reporte/pdf', ...)</code></td></tr>
+<tr><td>3. Plantilla PDF</td><td><span class="file-path">resources/views/reports/</span></td><td><span class="file-path">mi_reporte_pdf.blade.php</span></td></tr>
+</table>
+
+<h3>Paso 4: Agregar botones de exportaci&oacute;n</h3>
+<p>En <code>getHeaderActions()</code> agregue acciones como:</p>
+<pre><span class="keyword">protected function</span> getHeaderActions(): <span class="prop">array</span> {
+    <span class="keyword">return</span> [
+        Action::make(<span class="string">'export_pdf'</span>)
+            ->label(<span class="string">'Exportar PDF'</span>)
+            ->icon(<span class="string">'heroicon-o-printer'</span>)
+            ->url(fn () => route(<span class="string">'reportes.mi-reporte.pdf'</span>))
+            ->openUrlInNewTab(),
+    ];
+}</pre>
+
+<!-- 8 -->
+<h2 id="s8">8. Cambiar un PDF descargable</h2>
+
+<h3>8.1 Cambiar el dise&ntilde;o del PDF</h3>
+<p>Vaya a <span class="file-path">resources/views/reports/</span>, busque la plantilla (ej: <span class="file-path">solicitudes_transporte_pdf.blade.php</span>) y modifique el HTML.</p>
+
+<h3>8.2 Cambiar el nombre del archivo</h3>
+<p>Busque en <span class="file-path">routes/web.php</span>:</p>
+<pre>$filename = <span class="string">'reporte_solicitudes_'</span>.now()->format(<span class="string">'Ymd_His'</span>).<span class="string">'.pdf'</span>;</pre>
+<p>Cambie el texto <code>'reporte_solicitudes_'</code>.</p>
+
+<h3>8.3 Cambiar orientaci&oacute;n del papel</h3>
+<p>Busque en <span class="file-path">routes/web.php</span>:</p>
+<pre>->setPaper(<span class="string">'a4'</span>, <span class="string">'landscape'</span>)</pre>
+<p><code>'landscape'</code> = horizontal, <code>'portrait'</code> = vertical.</p>
+
+<h3>8.4 Cambiar los filtros del PDF</h3>
+<p>En <span class="file-path">routes/web.php</span>, las rutas de PDF tienen condiciones:</p>
+<pre><span class="keyword">if</span> ($request->filled(<span class="string">'estado'</span>)) {
+    $q->where(<span class="string">'estado'</span>, $request->input(<span class="string">'estado'</span>));
+}</pre>
+<p>Agregue o elimine bloques <code>if</code> seg&uacute;n necesite.</p>
+
+<h3>8.5 Cambiar los roles que pueden descargar</h3>
+<pre>abort_unless(auth()->check() && auth()->user()->hasAnyRole([
+    <span class="string">'jefe'</span>, <span class="string">'admin'</span>, <span class="string">'ti'</span>, <span class="string">'operativo'</span>, <span class="string">'liquidador'</span>, <span class="string">'super_admin'</span>
+]), 403);</pre>
+<p>Agregue o quite nombres de roles dentro de los corchetes.</p>
+
+<!-- 9 -->
+<h2 id="s9">9. Agregar o quitar columnas en la tabla de un reporte</h2>
+<p>Busque el m&eacute;todo <code>table()</code> dentro del archivo del reporte:</p>
+<pre><span class="keyword">public function</span> table(Table $table): <span class="prop">Table</span> {
+    <span class="keyword">return</span> $table->columns([
+        Tables\Columns\TextColumn::make(<span class="string">'codigo'</span>)
+            ->label(<span class="string">'C&oacute;digo'</span>)->sortable()->searchable(),
+
+        Tables\Columns\TextColumn::make(<span class="string">'fecha_salida'</span>)
+            ->label(<span class="string">'Salida'</span>)->dateTime(<span class="string">'d/m/Y H:i'</span>),
+
+        Tables\Columns\TextColumn::make(<span class="string">'estado'</span>)->badge(),
+    ]);
+}</pre>
+<p><strong>Agregar:</strong> copie una columna y cambie <code>make('campo')</code> y <code>->label('Texto')</code>.<br>
+<strong>Quitar:</strong> elimine el bloque completo de la columna.</p>
+
+<table>
+<tr><th>Modificador</th><th>Qu&eacute; hace</th><th>Ejemplo</th></tr>
+<tr><td><code>->dateTime('d/m/Y')</code></td><td>Formato de fecha</td><td>15/07/2026</td></tr>
+<tr><td><code>->sortable()</code></td><td>Permite ordenar</td><td>&nbsp;</td></tr>
+<tr><td><code>->searchable()</code></td><td>Permite buscar</td><td>&nbsp;</td></tr>
+<tr><td><code>->badge()</code></td><td>Etiqueta de color</td><td>[Aprobado]</td></tr>
+<tr><td><code>->color('success')</code></td><td>Color: success, danger, warning</td><td>&nbsp;</td></tr>
+<tr><td><code>->money('USD')</code></td><td>Formato moneda</td><td>$1,500.00</td></tr>
+<tr><td><code>->copyable()</code></td><td>Copiar al hacer clic</td><td>&nbsp;</td></tr>
+<tr><td><code>->toggleable()</code></td><td>Usuario puede mostrar/ocultar</td><td>&nbsp;</td></tr>
+</table>
+
+<!-- 10 -->
+<h2 id="s10">10. Agregar o quitar filtros en un reporte</h2>
+<p>Los filtros se definen en el m&eacute;todo <code>form()</code>. Para agregar un filtro nuevo:</p>
+<ol>
+  <li>Agregue el campo en <code>form()</code>: <code>Select::make('estado')->label('Estado')->options([...])->live()</code></li>
+  <li>Agregue una propiedad: <code>public ?string $estado = null;</code></li>
+  <li>En <code>buildQuery()</code>: <code>if ($this->estado) { $q->where('estado', $this->estado); }</code></li>
+  <li>En <code>getFilterState()</code> agregue el campo para que se env&iacute;e al PDF</li>
+</ol>
+<p><strong>Para quitar:</strong> elimine el campo del formulario, la propiedad, la condici&oacute;n en buildQuery() y la entrada en getFilterState().</p>
+
+<!-- 11 -->
+<h2 id="s11">11. Cambiar los indicadores (KPIs) de un reporte</h2>
+<p>Los KPIs se calculan en el m&eacute;todo <code>refreshKpis()</code>:</p>
+<pre><span class="keyword">private function</span> refreshKpis(): <span class="prop">void</span> {
+    $base = SolicitudTransporte::query();
+    <span class="comment">// ... filtros base ...</span>
+    $this->kpi_total = (clone $base)->count();
+    $this->kpi_pendientes = (clone $base)->whereIn(<span class="string">'estado'</span>, ['pendiente'])->count();
+}</pre>
+<p><strong>Agregar un KPI nuevo:</strong></p>
+<ol>
+  <li>Propiedad: <code>public int $kpi_nuevo = 0;</code></li>
+  <li>C&aacute;lculo en <code>refreshKpis()</code>: <code>$this->kpi_nuevo = (clone $base)->where(...)->count();</code></li>
+  <li>Tarjeta en la plantilla Blade</li>
+</ol>
+
+<!-- 12 -->
+<h2 id="s12">12. Cambiar qui&eacute;n puede ver un reporte o cat&aacute;logo</h2>
+<pre><span class="comment">// Para Pages (reportes):</span>
+<span class="keyword">public static function</span> canAccess(): <span class="prop">bool</span> {
+    <span class="keyword">return</span> auth()->user()?->hasAnyRole([
+        <span class="string">'jefe'</span>, <span class="string">'admin'</span>, <span class="string">'ti'</span>, <span class="string">'operativo'</span>, <span class="string">'liquidador'</span>, <span class="string">'super_admin'</span>
+    ]) ?? <span class="keyword">false</span>;
+}
+
+<span class="comment">// Para Resources (cat&aacute;logos):</span>
+<span class="keyword">public static function</span> canViewAny(): <span class="prop">bool</span> {
+    <span class="keyword">return</span> auth()->user()->hasAnyRole([<span class="string">'admin'</span>, <span class="string">'ti'</span>, <span class="string">'jefe'</span>, <span class="string">'super_admin'</span>]);
+}</pre>
+
+<p>Roles disponibles:</p>
+<table>
+<tr><th>Rol</th><th>Qu&eacute; puede hacer</th></tr>
+<tr><td><code>super_admin</code></td><td>Acceso total a todo</td></tr>
+<tr><td><code>admin</code></td><td>Administraci&oacute;n general</td></tr>
+<tr><td><code>ti</code></td><td>Soporte t&eacute;cnico</td></tr>
+<tr><td><code>jefe</code></td><td>Jefe de transporte (aprueba)</td></tr>
+<tr><td><code>operativo</code></td><td>Personal operativo (asigna recursos)</td></tr>
+<tr><td><code>liquidador</code></td><td>Liquida solicitudes</td></tr>
+<tr><td><code>solicitante</code></td><td>Solo crea y ve sus solicitudes</td></tr>
+<tr><td><code>motorista</code></td><td>Accede desde la app m&oacute;vil</td></tr>
+</table>
+<div class="nota"><strong>&#9888; Despu&eacute;s de cambiar permisos:</strong> Ejecute <code>php artisan shield:generate --all</code> para actualizar los permisos.</div>
+
+<!-- 13 -->
+<h2 id="s13">13. Agregar o quitar botones de exportaci&oacute;n</h2>
+<p>Busque el m&eacute;todo <code>getHeaderActions()</code> en el reporte:</p>
+<pre><span class="keyword">protected function</span> getHeaderActions(): <span class="prop">array</span> {
+    <span class="keyword">return</span> [
+        Action::make(<span class="string">'export_excel'</span>)->label(<span class="string">'Exportar Excel'</span>)->icon(<span class="string">'heroicon-o-arrow-down-tray'</span>)
+            ->action(<span class="keyword">function</span> () { <span class="comment">// l&oacute;gica</span> }),
+
+        Action::make(<span class="string">'export_pdf'</span>)->label(<span class="string">'Exportar PDF'</span>)->icon(<span class="string">'heroicon-o-printer'</span>)
+            ->url(fn () => route(<span class="string">'reportes...pdf'</span>))->openUrlInNewTab(),
+    ];
+}</pre>
+<p><strong>Agregar:</strong> copie un bloque y personal&iacute;celo. <strong>Quitar:</strong> elimine el bloque completo.</p>
+
+<!-- 14 -->
+<h2 id="s14">14. Cambiar un cat&aacute;logo (Resource)</h2>
+
+<h3>14.1 Agregar un campo al formulario</h3>
+<p>Busque el m&eacute;todo <code>form()</code> y dentro de <code>schema([...])</code> agregue:</p>
+<pre>Forms\Components\TextInput::make(<span class="string">'nuevo_campo'</span>)
+    ->label(<span class="string">'Nuevo Campo'</span>)->required()->maxLength(100),</pre>
+
+<table>
+<tr><th>Tipo</th><th>Clase</th><th>Para</th></tr>
+<tr><td>Texto corto</td><td><code>TextInput::make('campo')</code></td><td>Nombre, placa, c&oacute;digo</td></tr>
+<tr><td>Texto largo</td><td><code>Textarea::make('campo')</code></td><td>Observaciones</td></tr>
+<tr><td>N&uacute;mero</td><td><code>TextInput::make('campo')->numeric()</code></td><td>Edad, cantidad</td></tr>
+<tr><td>Fecha</td><td><code>DatePicker::make('campo')</code></td><td>Fecha nacimiento</td></tr>
+<tr><td>Fecha y hora</td><td><code>DateTimePicker::make('campo')</code></td><td>Fecha salida</td></tr>
+<tr><td>S&iacute;/No</td><td><code>Toggle::make('campo')</code></td><td>Activo</td></tr>
+<tr><td>Selecci&oacute;n &uacute;nica</td><td><code>Select::make('campo_id')</code></td><td>Relaci&oacute;n con otra tabla</td></tr>
+<tr><td>Selecci&oacute;n m&uacute;ltiple</td><td><code>CheckboxList::make('campo')</code></td><td>Accesorios, opciones</td></tr>
+<tr><td>Subir archivo</td><td><code>FileUpload::make('campo')</code></td><td>Foto, documento</td></tr>
+</table>
+
+<h3>14.2 Agregar una columna a la tabla del listado</h3>
+<p>En <code>table()</code> → <code>columns([...])</code>:</p>
+<pre>Tables\Columns\TextColumn::make(<span class="string">'nuevo_campo'</span>)
+    ->label(<span class="string">'Nuevo Campo'</span>)->sortable()->searchable()</pre>
+
+<h3>14.3 Agregar un filtro a la tabla</h3>
+<pre>Tables\Filters\SelectFilter::make(<span class="string">'campo_id'</span>)
+    ->label(<span class="string">'Campo'</span>)->relationship(<span class="string">'relacion'</span>, <span class="string">'nombre'</span>)</pre>
+
+<h3>14.4 Cambiar permisos por operaci&oacute;n</h3>
+<pre><span class="keyword">public static function</span> canViewAny(): <span class="prop">bool</span> { ... }
+<span class="keyword">public static function</span> canCreate(): <span class="prop">bool</span> { ... }
+<span class="keyword">public static function</span> canEdit($record): <span class="prop">bool</span> { ... }
+<span class="keyword">public static function</span> canDelete($record): <span class="prop">bool</span> { ... }</pre>
+
+<!-- 15 -->
+<h2 id="s15">15. Agregar un cat&aacute;logo nuevo</h2>
+<ol>
+  <li><code>php artisan make:migration create_tipos_seguro_table</code></li>
+  <li>Edite la migraci&oacute;n con las columnas</li>
+  <li><code>php artisan migrate</code></li>
+  <li><code>php artisan make:model TipoSeguro</code></li>
+  <li><code>php artisan make:filament-resource TipoSeguro --generate</code></li>
+  <li><code>php artisan shield:generate --all</code></li>
+  <li>Ajuste <code>$navigationGroup</code>, <code>$navigationLabel</code>, <code>$navigationSort</code></li>
+</ol>
+
+<!-- 16 -->
+<h2 id="s16">16. Agregar, cambiar o quitar manuales</h2>
+
+<h3>Agregar un manual nuevo</h3>
+<ol>
+  <li>Coloque el archivo en <span class="file-path">public/docs/</span></li>
+  <li>Abra <span class="file-path">AdminPanelProvider.php</span>, busque la lista <code>$manuales</code></li>
+  <li>Agregue: <code>[ "label" => "Nombre", "file" => "archivo.pdf" ],</code></li>
+  <li>Guarde y recargue</li>
+</ol>
+
+<h3>Cambiar nombre de un manual</h3>
+<p>En el mismo arreglo, cambie el valor de <code>"label"</code>.</p>
+
+<h3>Quitar un manual</h3>
+<p>Elimine la l&iacute;nea completa del arreglo <code>$manuales</code>.</p>
+
+<h3>Reemplazar un archivo</h3>
+<p>Sobrescriba el archivo en <span class="file-path">public/docs/</span> con el mismo nombre. No necesita cambiar c&oacute;digo.</p>
+
+<!-- 17 -->
+<h2 id="s17">17. Cambiar el logo, colores y favicon del sistema</h2>
+<p>Todo se configura en <span class="file-path">AdminPanelProvider.php</span>:</p>
+<table>
+<tr><th>Qu&eacute; cambiar</th><th>L&iacute;nea</th><th>Ejemplo</th></tr>
+<tr><td>Logo (esquina superior izquierda)</td><td><code>->brandLogo(asset('images/logo.png'))</code></td><td>Cambie la ruta</td></tr>
+<tr><td>Alto del logo</td><td><code>->brandLogoHeight('3rem')</code></td><td><code>'4rem'</code> m&aacute;s grande</td></tr>
+<tr><td>Icono de pesta&ntilde;a (favicon)</td><td><code>->favicon(asset('images/icon.png'))</code></td><td>Cambie la ruta</td></tr>
+<tr><td>Color principal</td><td><code>->colors(['primary' => Color::Blue])</code></td><td><code>Color::Red</code>, <code>Color::Emerald</code>, etc.</td></tr>
+<tr><td>Modo oscuro</td><td><code>->darkMode(false)</code></td><td><code>true</code> para activar</td></tr>
+</table>
+
+<!-- 18 -->
+<h2 id="s18">18. Cambiar la pantalla de inicio de sesi&oacute;n</h2>
+<p>Todo en <span class="file-path">app/Filament/Pages/Auth/Login.php</span>:</p>
+<table>
+<tr><th>Qu&eacute; cambiar</th><th>M&eacute;todo / l&iacute;nea</th></tr>
+<tr><td>T&iacute;tulo de la pesta&ntilde;a</td><td><code>getTitle()</code></td></tr>
+<tr><td>Encabezado grande</td><td><code>getHeading()</code></td></tr>
+<tr><td>Sub-encabezado</td><td><code>getSubHeading()</code></td></tr>
+<tr><td>Etiqueta del campo de usuario</td><td><code>->label('Nombre de Usuario')</code></td></tr>
+<tr><td>Etiqueta de contrase&ntilde;a</td><td><code>->label('Contrasena')</code></td></tr>
+<tr><td>Texto del bot&oacute;n</td><td><code>->label('Iniciar Sesion')</code></td></tr>
+<tr><td>Texto de "Recordarme"</td><td><code>->label('Recordarme')</code></td></tr>
+</table>
+
+<!-- 19 -->
+<h2 id="s19">19. Cambiar los widgets del Dashboard</h2>
+
+<h3>Cambiar tarjetas de resumen</h3>
+<p>Abra <span class="file-path">app/Filament/Widgets/DashboardStats.php</span>:</p>
+<pre><span class="keyword">protected function</span> getStats(): <span class="prop">array</span> {
+    $data = app(DashboardService::class)->getKpis();
+    <span class="keyword">return</span> [
+        Stat::make(<span class="string">'Total solicitudes'</span>, $data['total'])
+            ->icon(<span class="string">'heroicon-o-clipboard-document'</span>),
+        Stat::make(<span class="string">'En ejecuci&oacute;n'</span>, $data['enEjecucion'])
+            ->color(<span class="string">'warning'</span>),
+    ];
+}</pre>
+
+<h3>Agregar o quitar widgets del dashboard</h3>
+<p>En <span class="file-path">AdminPanelProvider.php</span>:</p>
+<pre>->widgets([
+    \App\Filament\Widgets\SolicitudesPorPrioridadStats::class,
+])</pre>
+
+<!-- 20 -->
+<h2 id="s20">20. Cambiar la API (para la aplicaci&oacute;n m&oacute;vil)</h2>
+<p>La API est&aacute; en <span class="file-path">routes/api.php</span>. Los controladores en <span class="file-path">app/Http/Controllers/Api/</span>:</p>
+<ul>
+  <li><span class="file-path">SolicitudTransporteController.php</span></li>
+  <li><span class="file-path">SolicitudCombustibleController.php</span></li>
+  <li><span class="file-path">SolicitudMantenimientoController.php</span></li>
+  <li><span class="file-path">MotoristaEstadoController.php</span></li>
+  <li><span class="file-path">MotoristaViajeController.php</span></li>
+  <li><span class="file-path">TokenAuthController.php</span></li>
+</ul>
+<p>Para cambiar lo que devuelve un endpoint, busque la ruta en <span class="file-path">routes/api.php</span> y modifique el arreglo dentro de <code>response()->json([...])</code>.</p>
+
+<!-- 21 -->
+<h2 id="s21">21. Cambiar los correos electr&oacute;nicos</h2>
+
+<h3>Cambiar el dise&ntilde;o del correo</h3>
+<p>Abra <span class="file-path">resources/views/emails/notificacion_event.blade.php</span> y modifique el HTML.</p>
+
+<h3>Cambiar el asunto</h3>
+<p>En <span class="file-path">app/Mail/NotificacionEventMail.php</span>, el asunto se pasa desde donde se env&iacute;a el correo. Busque <code>Mail::to(...)->send(new NotificacionEventMail('ASUNTO', ...))</code>.</p>
+
+<h3>Cambiar archivos adjuntos</h3>
+<p>En <span class="file-path">NotificacionEventMail.php</span>, el m&eacute;todo <code>attachFilesFromPayload()</code> controla los adjuntos.</p>
+
+<!-- 22 -->
+<h2 id="s22">22. Cambiar la aplicaci&oacute;n instalable (PWA)</h2>
+<p>Se configura en <span class="file-path">config/filament-pwa.php</span>:</p>
+<table>
+<tr><th>Qu&eacute; cambiar</th><th>L&iacute;nea</th></tr>
+<tr><td>Nombre de la app</td><td><code>'name'</code></td></tr>
+<tr><td>Nombre corto (debajo del icono)</td><td><code>'short_name'</code></td></tr>
+<tr><td>Descripci&oacute;n</td><td><code>'description'</code></td></tr>
+<tr><td>Color de fondo</td><td><code>'background_color'</code></td></tr>
+<tr><td>Color del tema (barra superior)</td><td><code>'theme_color'</code></td></tr>
+</table>
+
+<!-- 23 -->
+<h2 id="s23">23. Base de datos: agregar una columna nueva</h2>
+<ol>
+  <li><code>php artisan make:migration add_numero_seguro_to_vehiculos_table</code></li>
+  <li>Edite la migraci&oacute;n:</li>
+</ol>
+<pre>Schema::table(<span class="string">'vehiculos'</span>, <span class="keyword">function</span> (Blueprint $table) {
+    $table->string(<span class="string">'numero_seguro'</span>, 50)->nullable()->after(<span class="string">'placa'</span>);
+});</pre>
+<ol start="3"><li><code>php artisan migrate</code></li><li>Agregue el campo en el formulario del Resource</li></ol>
+
+<table>
+<tr><th>Tipo</th><th>Ejemplo</th></tr>
+<tr><td>Texto corto</td><td><code>$table->string('campo', 100)</code></td></tr>
+<tr><td>Texto largo</td><td><code>$table->text('campo')</code></td></tr>
+<tr><td>N&uacute;mero entero</td><td><code>$table->integer('campo')</code></td></tr>
+<tr><td>Decimal</td><td><code>$table->decimal('campo', 10, 2)</code></td></tr>
+<tr><td>S&iacute;/No</td><td><code>$table->boolean('campo')</code></td></tr>
+<tr><td>Fecha</td><td><code>$table->date('campo')</code></td></tr>
+<tr><td>Relaci&oacute;n</td><td><code>$table->foreignId('otro_id')</code></td></tr>
+</table>
+
+<p>Para deshacer: <code>php artisan migrate:rollback</code></p>
+
+<!-- 24 -->
+<h2 id="s24">24. Base de datos: crear una tabla nueva</h2>
+<ol>
+  <li><code>php artisan make:migration create_tipos_seguro_table</code></li>
+</ol>
+<pre>Schema::create(<span class="string">'tipos_seguro'</span>, <span class="keyword">function</span> (Blueprint $table) {
+    $table->id();
+    $table->string(<span class="string">'nombre'</span>, 100);
+    $table->boolean(<span class="string">'activo'</span>)->default(<span class="keyword">true</span>);
+    $table->timestamps();
+});</pre>
+<ol start="3">
+  <li><code>php artisan migrate</code></li>
+  <li><code>php artisan make:model TipoSeguro</code></li>
+  <li><code>php artisan make:filament-resource TipoSeguro --generate</code></li>
+  <li><code>php artisan shield:generate --all</code></li>
+</ol>
+<div class="warn"><strong>&#9888; Precauci&oacute;n:</strong> Aseg&uacute;rese de tener un respaldo de la BD antes de ejecutar migraciones en producci&oacute;n.</div>
+
+<!-- 25 -->
+<h2 id="s25">25. Escenarios comunes</h2>
+
+<div class="step-box">
+<h4>&#128221; Escenario 1: "Cambiar el nombre del reporte de Transporte"</h4>
+<ol>
+  <li>Abra <span class="file-path">app/Filament/Pages/ReporteSolicitudesTransporte.php</span></li>
+  <li>Busque <code>$navigationLabel</code> y c&aacute;mbielo</li>
+  <li>Busque <code>getTitle()</code> y c&aacute;mbielo tambi&eacute;n</li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 2: "Agregar un reporte nuevo (Control de Kilometraje)"</h4>
+<ol>
+  <li>Copie <span class="file-path">ReporteSolicitudesTransporte.php</span> como <span class="file-path">ReporteControlKilometraje.php</span></li>
+  <li>Cambie: clase, <code>$navigationLabel</code>, <code>$view</code>, <code>$navigationGroup</code>, <code>$navigationIcon</code></li>
+  <li>Copie la vista Blade con el nombre que puso en <code>$view</code></li>
+  <li>Personalice filtros, columnas y KPIs</li>
+  <li>Si necesita PDF: cree controlador, ruta y plantilla</li>
+  <li>Recargue el navegador</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 3: "Cambiar orientaci&oacute;n del PDF (vertical/horizontal)"</h4>
+<ol>
+  <li>Abra <span class="file-path">routes/web.php</span></li>
+  <li>Busque <code>->setPaper('a4', 'landscape')</code></li>
+  <li>Cambie <code>'landscape'</code> por <code>'portrait'</code> (o viceversa)</li>
+  <li>Guarde y pruebe descargando el PDF</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 4: "No se ve el cambio que hice"</h4>
+<ol>
+  <li><code>php artisan cache:clear</code></li>
+  <li><code>php artisan view:clear</code></li>
+  <li>Recargue la p&aacute;gina (F5)</li>
+  <li>Si sigue sin verse, limpie la cach&eacute; del navegador (Ctrl+Shift+Delete)</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 5: "Agregar un manual nuevo al bot&oacute;n de libros"</h4>
+<ol>
+  <li>Coloque el archivo en <span class="file-path">public/docs/</span></li>
+  <li>Abra <span class="file-path">AdminPanelProvider.php</span>, busque <code>$manuales</code></li>
+  <li>Agregue: <code>[ "label" => "Nombre", "file" => "archivo.pdf" ],</code></li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 6: "Quitar un manual del bot&oacute;n de libros"</h4>
+<ol>
+  <li>Abra <span class="file-path">AdminPanelProvider.php</span>, busque <code>$manuales</code></li>
+  <li>Elimine la l&iacute;nea del manual</li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 7: "Cambiar el logo del sistema"</h4>
+<ol>
+  <li>Reemplace el archivo en <span class="file-path">public/images/logo-azul-fondo-transparente.png</span></li>
+  <li>O cambie la ruta en <span class="file-path">AdminPanelProvider.php</span> → <code>->brandLogo(asset('images/nuevo-logo.png'))</code></li>
+  <li><code>php artisan cache:clear</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 8: "Cambiar el color del sistema"</h4>
+<ol>
+  <li>Abra <span class="file-path">AdminPanelProvider.php</span></li>
+  <li>Busque <code>->colors(['primary' => Color::Blue])</code></li>
+  <li>Cambie <code>Color::Blue</code> por <code>Color::Red</code>, <code>Color::Emerald</code>, <code>Color::Amber</code>, etc.</li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 9: "Cambiar el nombre del Dashboard"</h4>
+<ol>
+  <li>Abra <span class="file-path">app/Filament/Pages/Dashboard.php</span></li>
+  <li>Cambie <code>$title</code> y <code>$navigationLabel</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 10: "Agregar una columna a la tabla de Solicitudes de Transporte"</h4>
+<ol>
+  <li>Abra <span class="file-path">ReporteSolicitudesTransporte.php</span></li>
+  <li>Busque <code>table()</code> → <code>columns([...])</code></li>
+  <li>Agregue: <code>TextColumn::make('motivo')->label('Motivo')->sortable(),</code></li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 11: "Agregar un filtro de tipo de veh&iacute;culo al reporte"</h4>
+<ol>
+  <li>Agregue propiedad: <code>public ?int $tipo_vehiculo_id = null;</code></li>
+  <li>En <code>form()</code> agregue un <code>Select</code></li>
+  <li>En <code>buildQuery()</code>: <code>if ($this->tipo_vehiculo_id) { ... }</code></li>
+  <li>En <code>getFilterState()</code> agregue el campo</li>
+  <li>En <code>refreshKpis()</code> agregue la misma condici&oacute;n</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 12: "Restringir un reporte solo para Jefe y Admin"</h4>
+<ol>
+  <li>Busque <code>canAccess()</code></li>
+  <li>Cambie: <code>return auth()->user()?->hasAnyRole(['jefe', 'admin', 'super_admin']) ?? false;</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 13: "Quitar el bot&oacute;n Exportar Excel de un reporte"</h4>
+<ol>
+  <li>Busque <code>getHeaderActions()</code></li>
+  <li>Elimine el bloque <code>Action::make('export_excel') ...</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 14: "Cambiar el nombre del archivo Excel que se descarga"</h4>
+<ol>
+  <li>Busque <code>$filename = '...';</code> en <code>getHeaderActions()</code> o en <span class="file-path">routes/web.php</span></li>
+  <li>Cambie el texto</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 15: "Agregar un campo nuevo al formulario de Veh&iacute;culos"</h4>
+<ol>
+  <li>Cree una migraci&oacute;n para agregar la columna a la BD</li>
+  <li><code>php artisan migrate</code></li>
+  <li>En <span class="file-path">VehiculoResource.php</span>, agregue el campo en <code>form()</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 16: "Cambiar el &iacute;cono del men&uacute; de un reporte"</h4>
+<ol>
+  <li>Busque <code>$navigationIcon</code></li>
+  <li>Cambie por otro (ver secci&oacute;n 3)</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 17: "Ocultar un elemento del men&uacute; sin borrarlo"</h4>
+<ol>
+  <li>Agregue: <code>protected static bool $shouldRegisterNavigation = false;</code></li>
+  <li>Guarde y recargue</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 18: "Cambiar el texto del login"</h4>
+<ol>
+  <li>Abra <span class="file-path">app/Filament/Pages/Auth/Login.php</span></li>
+  <li>Cambie <code>getTitle()</code>, <code>getHeading()</code>, <code>getSubHeading()</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 19: "Cambiar la descripci&oacute;n de la app instalable (PWA)"</h4>
+<ol>
+  <li>Abra <span class="file-path">config/filament-pwa.php</span></li>
+  <li>Cambie <code>'description'</code>, <code>'name'</code> o <code>'short_name'</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 20: "Agregar un cat&aacute;logo nuevo (Tipos de Seguro)"</h4>
+<ol>
+  <li><code>php artisan make:migration create_tipos_seguro_table</code></li>
+  <li>Edite la migraci&oacute;n</li>
+  <li><code>php artisan migrate</code></li>
+  <li><code>php artisan make:model TipoSeguro</code></li>
+  <li><code>php artisan make:filament-resource TipoSeguro --generate</code></li>
+  <li><code>php artisan shield:generate --all</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 21: "Cambiar los KPIs del reporte de Transporte"</h4>
+<ol>
+  <li>Busque <code>refreshKpis()</code></li>
+  <li>Cambie los conteos o agregue nuevos KPIs</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 22: "Corregir un error: la tabla no muestra datos"</h4>
+<ol>
+  <li><code>php artisan cache:clear</code></li>
+  <li><code>php artisan view:clear</code></li>
+  <li><code>php artisan config:clear</code></li>
+  <li>Recargue (F5). Si persiste, revise la consola del navegador (F12)</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 23: "Crear un grupo nuevo en el men&uacute; y mover reportes"</h4>
+<ol>
+  <li>En <span class="file-path">AdminPanelProvider.php</span>, agregue el grupo a <code>->navigationGroups([...])</code></li>
+  <li>En cada reporte, cambie <code>$navigationGroup = 'Nuevo Grupo';</code></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 24: "Cambiar el nombre del archivo PDF que se descarga"</h4>
+<ol>
+  <li>Abra <span class="file-path">routes/web.php</span></li>
+  <li>Busque la variable <code>$filename</code> y cambie el texto</li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 25: "Agregar un bot&oacute;n de exportar CSV al reporte"</h4>
+<ol>
+  <li>Copie el bloque del bot&oacute;n Excel y c&aacute;mbielo a CSV</li>
+  <li>Use <code>Excel::download(..., ..., \Maatwebsite\Excel\Excel::CSV)</code></li>
+  <li>Si no existe la ruta CSV, cr&eacute;ela en <span class="file-path">routes/web.php</span></li>
+</ol>
+</div>
+
+<div class="step-box">
+<h4>&#128221; Escenario 26: "Reemplazar el logo por uno nuevo"</h4>
+<ol>
+  <li>Coloque el archivo en <span class="file-path">public/images/</span></li>
+  <li>Cambie la ruta en <span class="file-path">AdminPanelProvider.php</span></li>
+  <li><code>php artisan cache:clear</code></li>
+</ol>
+</div>
+
+<!-- 26 -->
+<h2 id="s26">26. Comandos &uacute;tiles</h2>
+<p>Ejec&uacute;telos en la terminal desde la carpeta del proyecto.</p>
+<table>
+<tr><th>Comando</th><th>Qu&eacute; hace</th><th>Cu&aacute;ndo usarlo</th></tr>
+<tr><td><code>php artisan cache:clear</code></td><td>Limpia toda la cach&eacute;</td><td>Cuando cambios no se reflejan</td></tr>
+<tr><td><code>php artisan view:clear</code></td><td>Limpia cach&eacute; de plantillas</td><td>Despu&eacute;s de cambiar .blade.php</td></tr>
+<tr><td><code>php artisan config:clear</code></td><td>Limpia configuraci&oacute;n</td><td>Despu&eacute;s de cambiar config/</td></tr>
+<tr><td><code>php artisan route:list</code></td><td>Muestra todas las rutas</td><td>Verificar que una ruta existe</td></tr>
+<tr><td><code>php artisan route:list --path=reportes</code></td><td>Filtra rutas con "reportes"</td><td>Buscar rutas de un reporte</td></tr>
+<tr><td><code>php artisan migrate</code></td><td>Ejecuta migraciones</td><td>Despu&eacute;s de crear/editar migraciones</td></tr>
+<tr><td><code>php artisan migrate:rollback</code></td><td>Revierte &uacute;ltima migraci&oacute;n</td><td>Deshacer un cambio en BD</td></tr>
+<tr><td><code>php artisan make:migration nombre</code></td><td>Crea migraci&oacute;n nueva</td><td>Agregar columnas o tablas</td></tr>
+<tr><td><code>php artisan make:model Nombre</code></td><td>Crea modelo nuevo</td><td>Despu&eacute;s de crear tabla</td></tr>
+<tr><td><code>php artisan make:filament-resource Nombre --generate</code></td><td>Crea Resource + p&aacute;ginas</td><td>Crear cat&aacute;logo CRUD</td></tr>
+<tr><td><code>php artisan make:controller Reportes/Nombre</code></td><td>Crea controlador PDF</td><td>Nuevo PDF descargable</td></tr>
+<tr><td><code>php artisan shield:generate --all</code></td><td>Actualiza permisos</td><td>Despu&eacute;s de crear Resource</td></tr>
+<tr><td><code>php artisan tinker</code></td><td>Consola PHP interactiva</td><td>Probar c&oacute;digo / debuggear</td></tr>
+<tr><td><code>npm run build</code></td><td>Compila CSS/JS</td><td>Despu&eacute;s de cambiar CSS</td></tr>
+</table>
+<div class="tip"><strong>Consejo:</strong> Si un cambio no se ve, ejecute en orden: <code>php artisan cache:clear</code>, <code>php artisan view:clear</code>, <code>php artisan config:clear</code>.</div>
+
+<!-- 27 -->
+<h2 id="s27">27. Referencia r&aacute;pida</h2>
+<table>
+<tr><th>Si le piden...</th><th>Busque en...</th></tr>
+<tr><td>Cambiar el nombre de un reporte en el men&uacute;</td><td><span class="file-path">app/Filament/Pages/&lt;Reporte&gt;.php</span> → <code>$navigationLabel</code></td></tr>
+<tr><td>Cambiar el nombre de un listado en el men&uacute;</td><td><span class="file-path">app/Filament/Resources/&lt;Recurso&gt;.php</span> → <code>$navigationLabel</code></td></tr>
+<tr><td>Cambiar el &iacute;cono de un elemento</td><td>Mismo archivo → <code>$navigationIcon</code></td></tr>
+<tr><td>Cambiar el t&iacute;tulo de una pantalla</td><td>Mismo archivo → <code>$title</code> o <code>getTitle()</code></td></tr>
+<tr><td>Cambiar el orden en el men&uacute;</td><td>Mismo archivo → <code>$navigationSort</code></td></tr>
+<tr><td>Cambiar el grupo del men&uacute;</td><td>Mismo archivo → <code>$navigationGroup</code></td></tr>
+<tr><td>Ocultar un elemento del men&uacute;</td><td>Mismo archivo → <code>$shouldRegisterNavigation = false</code></td></tr>
+<tr><td>Cambiar el logo del sistema</td><td><span class="file-path">AdminPanelProvider.php</span> → <code>->brandLogo(...)</code></td></tr>
+<tr><td>Cambiar el color del sistema</td><td><span class="file-path">AdminPanelProvider.php</span> → <code>->colors([...])</code></td></tr>
+<tr><td>Agregar/quitar manuales</td><td><span class="file-path">AdminPanelProvider.php</span> → arreglo <code>$manuales</code></td></tr>
+<tr><td>Dise&ntilde;o de un PDF</td><td><span class="file-path">resources/views/reports/&lt;nombre&gt;_pdf.blade.php</span></td></tr>
+<tr><td>Dise&ntilde;o de un reporte en pantalla</td><td><span class="file-path">resources/views/filament/pages/&lt;reporte&gt;.blade.php</span></td></tr>
+<tr><td>Nombre del archivo PDF al descargar</td><td><span class="file-path">routes/web.php</span> → variable <code>$filename</code></td></tr>
+<tr><td>Columnas de la tabla de un reporte</td><td>Page → <code>table()</code> → <code>columns([...])</code></td></tr>
+<tr><td>Filtros de un reporte</td><td>Page → <code>form()</code> + <code>buildQuery()</code></td></tr>
+<tr><td>KPIs de un reporte</td><td>Page → <code>refreshKpis()</code></td></tr>
+<tr><td>Botones de exportaci&oacute;n</td><td>Page → <code>getHeaderActions()</code></td></tr>
+<tr><td>Qui&eacute;n puede ver un reporte</td><td>Page → <code>canAccess()</code></td></tr>
+<tr><td>Roles del PDF</td><td><span class="file-path">routes/web.php</span> → <code>hasAnyRole([...])</code></td></tr>
+<tr><td>Campo en formulario de cat&aacute;logo</td><td>Resource → <code>form()</code></td></tr>
+<tr><td>Permisos de cat&aacute;logo</td><td>Resource → <code>canViewAny()</code>, <code>canCreate()</code>, etc.</td></tr>
+<tr><td>Pantalla de login</td><td><span class="file-path">app/Filament/Pages/Auth/Login.php</span></td></tr>
+<tr><td>Widgets del Dashboard</td><td><span class="file-path">app/Filament/Widgets/</span> + <span class="file-path">AdminPanelProvider.php</span></td></tr>
+<tr><td>API (app m&oacute;vil)</td><td><span class="file-path">routes/api.php</span></td></tr>
+<tr><td>Correos electr&oacute;nicos</td><td><span class="file-path">resources/views/emails/</span> + <span class="file-path">app/Mail/</span></td></tr>
+<tr><td>PWA (app instalable)</td><td><span class="file-path">config/filament-pwa.php</span></td></tr>
+<tr><td>Agregar columna a la BD</td><td>Crear migraci&oacute;n + <code>php artisan migrate</code></td></tr>
+<tr><td>Agregar tabla nueva</td><td>Migraci&oacute;n + Modelo + Resource</td></tr>
+</table>
+
+<!-- 28 -->
+<h2 id="s28">28. Glosario</h2>
+<table>
+<tr><th>T&eacute;rmino</th><th>Significado</th></tr>
+<tr><td><strong>Artisan</strong></td><td>La l&iacute;nea de comandos de Laravel. Todos los comandos empiezan con <code>php artisan</code></td></tr>
+<tr><td><strong>Blade</strong></td><td>Sistema de plantillas de Laravel. Archivos terminan en <code>.blade.php</code></td></tr>
+<tr><td><strong>Cluster</strong></td><td>Grupo de cat&aacute;logos en una subcarpeta del men&uacute;</td></tr>
+<tr><td><strong>Controller</strong></td><td>Archivo PHP con la l&oacute;gica para PDF o acciones</td></tr>
+<tr><td><strong>CRUD</strong></td><td>Create, Read, Update, Delete — operaciones b&aacute;sicas sobre datos</td></tr>
+<tr><td><strong>Endpoint</strong></td><td>Direcci&oacute;n web de la API que devuelve JSON</td></tr>
+<tr><td><strong>Filament</strong></td><td>El "esqueleto" del sistema que genera men&uacute;s, formularios y tablas</td></tr>
+<tr><td><strong>KPI</strong></td><td>Indicador num&eacute;rico en tarjetas arriba de los reportes</td></tr>
+<tr><td><strong>Migraci&oacute;n</strong></td><td>Archivo que describe cambios en la base de datos</td></tr>
+<tr><td><strong>Modelo</strong></td><td>Clase PHP que representa una tabla de la BD</td></tr>
+<tr><td><strong>Navigation Group</strong></td><td>Secci&oacute;n del men&uacute; (ej: "Reportes", "Cat&aacute;logos")</td></tr>
+<tr><td><strong>Navigation Label</strong></td><td>Texto visible en el men&uacute; lateral</td></tr>
+<tr><td><strong>Page</strong></td><td>Pantalla completa del sistema (reporte)</td></tr>
+<tr><td><strong>PWA</strong></td><td>Progressive Web App — instalar como app en celular/PC</td></tr>
+<tr><td><strong>Resource</strong></td><td>Listado con formulario CRUD (ej: lista de veh&iacute;culos)</td></tr>
+<tr><td><strong>Route</strong></td><td>Direcci&oacute;n web definida en <span class="file-path">routes/web.php</span> o <span class="file-path">routes/api.php</span></td></tr>
+<tr><td><strong>Schema</strong></td><td>Arreglo de campos de un formulario en Filament</td></tr>
+<tr><td><strong>Widget</strong></td><td>Tarjeta o componente peque&ntilde;o en el Dashboard</td></tr>
+</table>
+
+<!-- PIE -->
+<div class="doc-footer">
+  <div class="line-cl"></div>
+  <p>Asamblea Legislativa — Departamento de Transporte</p>
+  <p>Manual de Mantenimiento v2.0 &middot; Julio 2026 — Documento interno &middot; Confidencial</p>
+</div>
+
+</div><!-- /content -->
+</div><!-- /page -->
+</body>
+</html>

@@ -21,6 +21,8 @@ class ReporteGeneralServicios extends Page implements Forms\Contracts\HasForms
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte General de Servicios (Transporte, Combustible y Mantenimiento)';
+
     protected static ?string $navigationLabel = 'Informe General de Servicios';
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';
@@ -108,14 +110,14 @@ class ReporteGeneralServicios extends Page implements Forms\Contracts\HasForms
                         Forms\Components\Grid::make(12)->schema([
 
                             Forms\Components\DateTimePicker::make('date_from')
-                                ->label('Desde')
+                                ->label('Fecha Inicio')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DateTimePicker::make('date_to')
-                                ->label('Hasta')
+                                ->label('Fecha Fin')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()

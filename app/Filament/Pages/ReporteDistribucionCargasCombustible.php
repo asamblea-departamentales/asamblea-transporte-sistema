@@ -21,6 +21,8 @@ class ReporteDistribucionCargasCombustible extends Page implements Forms\Contrac
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte de Distribución de Cargas de Combustible';
+
     protected static ?string $navigationLabel = 'Distribución de Cargas';
 
     protected static ?string $navigationIcon = 'heroicon-o-ticket';
@@ -74,8 +76,8 @@ class ReporteDistribucionCargasCombustible extends Page implements Forms\Contrac
         return $form->schema([
             Forms\Components\Grid::make(12)->schema([
 
-                Forms\Components\DatePicker::make('date_from')->label('Desde')->live()->columnSpan(3),
-                Forms\Components\DatePicker::make('date_to')->label('Hasta')->live()->columnSpan(3),
+                Forms\Components\DatePicker::make('date_from')->label('Fecha Inicio')->live()->columnSpan(3),
+                Forms\Components\DatePicker::make('date_to')->label('Fecha Fin')->live()->columnSpan(3),
 
                 Forms\Components\Select::make('vehiculo_id')
                     ->label('Vehículo')
@@ -93,7 +95,7 @@ class ReporteDistribucionCargasCombustible extends Page implements Forms\Contrac
                     ->searchable()->columnSpan(3)->live(),
 
                 Forms\Components\Select::make('serie_vale_id')
-                    ->label('Serie Carga')
+                    ->label('Serie de Cargas')
                     ->options(SerieCarga::pluck('nombre', 'id'))
                     ->searchable()->columnSpan(3)->live(),
 

@@ -22,6 +22,8 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte de Solicitudes de Combustible';
+
     protected static ?string $navigationLabel = 'Reporte Solicitudes Combustible';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
@@ -121,14 +123,14 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DateTimePicker::make('date_from')
-                                ->label('Desde')
+                                ->label('Fecha Inicio')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DateTimePicker::make('date_to')
-                                ->label('Hasta')
+                                ->label('Fecha Fin')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
@@ -152,7 +154,7 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\TextInput::make('ticket')
-                                ->label('Ticket')
+                                ->label('# Ticket')
                                 ->numeric()
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),

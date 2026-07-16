@@ -56,8 +56,20 @@ class AdminPanelProvider extends PanelProvider
 
             // Definición de Grupos de Navegación
             ->navigationGroups([
-                'Administracion',
-                'Transporte',
+                'Procesos',
+                'Listado de Solicitudes',
+                'Operatividad Diaria',
+                'Gestión Operativa',
+                'Operación',
+                'Gestión',
+                'Flota',
+                'Gestión de Vehículos',
+                'Reportes',
+                'Catálogos',
+                'Catálogos de Vehículos',
+                'Catálogos Globales',
+                'Auditoría',
+                'Administración',
             ])
 
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')

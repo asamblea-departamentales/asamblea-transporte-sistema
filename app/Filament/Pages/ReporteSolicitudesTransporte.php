@@ -27,7 +27,9 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
 
     protected static ?string $navigationGroup = 'Reportes';
 
-    protected static ?string $navigationLabel = 'Reporte Solicitudes Transporte';
+    protected static ?string $title = 'Reporte de Solicitudes de Transporte';
+
+    protected static ?string $navigationLabel = 'Reporte de Solicitudes de Transporte';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
 
@@ -162,7 +164,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                                 ]),
 
                             Forms\Components\DateTimePicker::make('date_from')
-                                ->label('Desde')
+                                ->label('Fecha Inicio')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
@@ -172,7 +174,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                                 ]),
 
                             Forms\Components\DateTimePicker::make('date_to')
-                                ->label('Hasta')
+                                ->label('Fecha Fin')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
@@ -182,7 +184,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                                 ]),
 
                             Forms\Components\Select::make('unidad_solicitante_id')
-                                ->label('Unidad')
+                                ->label('Unidad Solicitante')
                                 ->options(fn () => UnidadSolicitante::orderBy('nombre')->pluck('nombre', 'id'))
                                 ->searchable()
                                 ->native(false)
@@ -193,7 +195,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                                 ]),
 
                             Forms\Components\Select::make('estado')
-                                ->label('Estado')
+                                ->label('Estado Operativo')
                                 ->options(collect(EstadoSolicitudEnum::cases())
                                     ->mapWithKeys(fn ($c) => [$c->value => str($c->name)->replace('_', ' ')->title()]))
                                 ->searchable()
@@ -216,7 +218,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                                 ]),
 
                             Forms\Components\TextInput::make('ticket')
-                                ->label('Ticket')
+                                ->label(' # de Ticket')
                                 ->numeric()
                                 ->live()
                                 ->columnSpan([

@@ -27,7 +27,9 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
 
     protected static ?string $navigationGroup = 'Reportes';
 
-    protected static ?string $navigationLabel = 'Distribución Flota Vehicular';
+    protected static ?string $title = 'Distribución de Flota Vehicular';
+
+    protected static ?string $navigationLabel = 'Distribución de Flota Vehicular';
 
     protected static ?string $navigationIcon = 'heroicon-o-truck';
 
@@ -138,7 +140,7 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\Select::make('veh_tipo_combustible_id')
-                                ->label('Combustible')
+                                ->label('Tipo de Combustible')
                                 ->options(fn () => VehTipoCombustible::orderBy('nombre')->pluck('nombre', 'id'))
                                 ->searchable()
                                 ->native(false)
@@ -146,7 +148,7 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\Select::make('veh_clasificacion_id')
-                                ->label('Clase')
+                                ->label('Clase de Vehículo')
                                 ->options(fn () => VehClasificacion::orderBy('nombre')->pluck('nombre', 'id'))
                                 ->searchable()
                                 ->native(false)
@@ -154,7 +156,7 @@ class ReporteFlotaVehicular extends Page implements Forms\Contracts\HasForms, Ta
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\Select::make('veh_estado_catalogo_id')
-                                ->label('Estado catálogo')
+                                ->label('Estado del vehículo en catálogo')
                                 ->options(fn () => VehEstadoCatalogo::orderBy('nombre')->pluck('nombre', 'id'))
                                 ->searchable()
                                 ->native(false)

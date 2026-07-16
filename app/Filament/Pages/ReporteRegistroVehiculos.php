@@ -15,6 +15,8 @@ class ReporteRegistroVehiculos extends Page
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte de Registro de Vehículos';
+
     protected static ?string $navigationLabel = 'Registro de Vehículos';
 
     protected static ?string $navigationIcon = 'heroicon-o-clipboard-document-list';

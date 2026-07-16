@@ -26,6 +26,8 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte Control Mensual de Combustible';
+
     protected static ?string $navigationLabel = 'Control Mensual de Combustible';
 
     protected static ?string $navigationIcon = 'heroicon-o-document-chart-bar';
@@ -128,14 +130,14 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DateTimePicker::make('date_from')
-                                ->label('Desde')
+                                ->label('Fecha Inicio')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DateTimePicker::make('date_to')
-                                ->label('Hasta')
+                                ->label('Fecha Fin')
                                 ->seconds(false)
                                 ->native(false)
                                 ->live()

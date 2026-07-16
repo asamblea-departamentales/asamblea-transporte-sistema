@@ -27,6 +27,8 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
 
     protected static ?string $navigationGroup = 'Reportes';
 
+    protected static ?string $title = 'Reporte de Solicitudes de Mantenimiento';
+
     protected static ?string $navigationLabel = 'Reporte Solicitudes Mantenimiento';
 
     protected static ?string $navigationIcon = 'heroicon-o-wrench-screwdriver';
@@ -158,11 +160,11 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DatePicker::make('date_from')
-                                ->label('Desde')->native(false)->live()
+                                ->label('Fecha Inicial')->native(false)->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\DatePicker::make('date_to')
-                                ->label('Hasta')->native(false)->live()
+                                ->label('Fecha Final')->native(false)->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\Select::make('veh_tipo_mantenimiento_id')
@@ -195,7 +197,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                                 ->columnSpan(['default' => 12, 'md' => 3]),
 
                             Forms\Components\TextInput::make('ticket')
-                                ->label('Ticket')
+                                ->label('# Ticket')
                                 ->numeric()
                                 ->live()
                                 ->columnSpan(['default' => 12, 'md' => 3]),
