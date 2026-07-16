@@ -395,8 +395,6 @@ class SolicitudCombustibleService
         ?float $montoAprobado = null,
         ?string $comentario = null
     ): array {
-        $this->verificarNoEnLoteActivo($solicitud, 'aprobar con decisión');
-
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
             $montoOriginal = $solicitud->decisionOperativa?->monto_aprobado;
 
