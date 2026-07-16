@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Mail, Lock } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
@@ -9,6 +9,7 @@ const LoginPage: React.FC = () => {
   const { login, isAuthenticated } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
@@ -22,6 +23,8 @@ const LoginPage: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (isLoading) return;
+    
     setError('');
     setIsShaking(false);
     setIsLoading(true);
@@ -52,102 +55,119 @@ const LoginPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-between items-center p-6 bg-surface-base font-body text-ink-primary">
+    <div className="min-h-screen min-h-[100dvh] flex flex-col bg-white font-body">
       {/* Spacer to push content to middle */}
       <div className="flex-1"></div>
 
       {/* Main Container */}
-      <div className="w-full max-w-md mx-auto flex flex-col items-center">
-        
-        {/* Logo Area */}
-        <div className="flex flex-col items-center mb-8 relative">
-          <div className="absolute inset-0 bg-blue-glow rounded-full blur-3xl opacity-20 pointer-events-none"></div>
-          <div className="flex flex-col items-center justify-center relative z-10">
+      <div className="w-full flex flex-col items-center px-6">
+        <div className="w-full max-w-sm">
+          
+          {/* Logo Area */}
+          <div className="flex justify-center mb-8">
             <img 
               src="/logo.png" 
               alt="Asamblea Legislativa Logo" 
-              className="h-16 md:h-20 w-auto object-contain mb-1 drop-shadow-lg"
+              className="h-20 w-auto object-contain"
             />
           </div>
+
+          {/* Welcome Text */}
+          <h1 className="text-center text-2xl font-bold text-slate-900 mb-1 font-display">
+            Acceso Restringido
+          </h1>
+          <p className="text-center text-sm text-slate-500 mb-10">
+            Módulo exclusivo para Jefaturas y Administración
+          </p>
+
+          {/* Login Form */}
+          <form onSubmit={handleSubmit} className={`w-full space-y-6 ${isShaking ? 'animate-shake' : ''}`}>
+            
+            {/* Input Usuario */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-slate-700">Usuario institucional</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Mail className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  value={username}
+                  onChange={(e) => setUsername(e.target.value)}
+                  className="block w-full pl-10 pr-3 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-[15px] transition-all duration-200 text-slate-900 placeholder-gray-400 outline-none bg-white"
+                  placeholder="usuario.institucional"
+                  autoComplete="username"
+                  required
+                />
+              </div>
+            </div>
+
+            {/* Input Contraseña */}
+            <div className="space-y-1.5">
+              <label className="block text-sm font-medium text-slate-700">Contraseña</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Lock className="h-5 w-5 text-gray-400" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-[15px] transition-all duration-200 text-slate-900 placeholder-gray-400 outline-none bg-white"
+                  placeholder="••••••••"
+                  autoComplete="current-password"
+                  required
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  tabIndex={-1}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-5 w-5" />
+                  ) : (
+                    <Eye className="h-5 w-5" />
+                  )}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Message */}
+            <div className={`transition-all duration-300 overflow-hidden ${error ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
+              <div className="bg-red-50 px-4 py-3 rounded-lg text-sm text-red-600 flex items-start space-x-2">
+                <span className="shrink-0 mt-0.5">⚠️</span>
+                <span>{error}</span>
+              </div>
+            </div>
+
+            {/* Submit Button */}
+            <button
+              type="submit"
+              disabled={isLoading || !username || !password}
+              className={`w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-base font-medium text-white transition-all duration-200 min-h-[48px]
+                ${(isLoading || !username || !password) ? 'bg-primary/70 cursor-not-allowed' : 'bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary'}`}
+            >
+              {isLoading ? (
+                <span className="flex items-center space-x-2">
+                  <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  <span>Verificando...</span>
+                </span>
+              ) : 'INICIAR SESIÓN'}
+            </button>
+          </form>
         </div>
-
-        {/* Welcome Text */}
-        <h2 className="text-[26px] font-extrabold text-white mb-2 font-display tracking-tight">Acceso Restringido</h2>
-        <p className="text-[13px] text-ink-secondary mb-8 font-body text-center">
-          Ingresa tus credenciales institucionales.
-          <br/>
-          <span className="text-blue-light/80 text-xs">Módulo exclusivo para Jefaturas y Administración</span>
-        </p>
-
-        {/* Login Form */}
-        <form onSubmit={handleSubmit} className={`w-full space-y-5 md:space-y-6 ${isShaking ? 'animate-shake' : ''}`}>
-          <div className="space-y-1.5">
-            <label className="block text-sm md:text-[13px] font-medium text-ink-primary">Usuario institucional</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Mail className="h-4 md:h-5 w-4 md:w-5 text-ink-muted" />
-              </div>
-              <input
-                type="text"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 md:py-2.5 bg-surface-card border border-surface-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-base md:text-[14px] transition-all duration-200 text-white placeholder-ink-muted outline-none shadow-sm"
-                placeholder="usuario.institucional"
-                required
-              />
-            </div>
-          </div>
-
-          <div className="space-y-1.5">
-            <label className="block text-sm md:text-[13px] font-medium text-ink-primary">Contraseña</label>
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Lock className="h-4 md:h-5 w-4 md:w-5 text-ink-muted" />
-              </div>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="block w-full pl-10 pr-3 py-3 md:py-2.5 bg-surface-card border border-surface-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-base md:text-[14px] transition-all duration-200 text-white placeholder-ink-muted outline-none shadow-sm"
-                placeholder="••••••••"
-                required
-              />
-            </div>
-          </div>
-
-          {/* Smooth error transition */}
-          <div className={`transition-all duration-300 overflow-hidden ${error ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="bg-danger-glass border border-danger-border text-danger-text p-3 rounded-lg text-sm mt-1 flex items-start space-x-2 shadow-sm">
-              <span className="shrink-0 mt-0.5">⚠️</span>
-              <span>{error}</span>
-            </div>
-          </div>
-
-          <button
-            type="submit"
-            disabled={isLoading}
-            className={`w-full flex justify-center py-3 md:py-2.5 px-4 border border-transparent rounded-lg shadow-blue-glow text-[15px] md:text-[14px] font-semibold text-white transition-all duration-200 mt-4 md:mt-2
-              ${isLoading ? 'bg-primary/70 cursor-wait' : 'bg-primary hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary focus:ring-offset-surface-base'}`}
-          >
-            {isLoading ? (
-              <span className="flex items-center space-x-2">
-                <svg className="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-                <span>Verificando Acceso...</span>
-              </span>
-            ) : 'INICIAR SESIÓN'}
-          </button>
-        </form>
       </div>
 
       {/* Spacer */}
       <div className="flex-1"></div>
 
       {/* Footer */}
-      <div className="text-center pb-4 w-full">
-        <p className="text-[11px] text-ink-disabled font-medium">© 2026 Asamblea Legislativa de El Salvador</p>
+      <div className="pb-6 text-center text-xs text-slate-400 w-full">
+        © 2026 Asamblea Legislativa de El Salvador
       </div>
     </div>
   );
