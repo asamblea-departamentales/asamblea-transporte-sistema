@@ -131,7 +131,7 @@ class AdminPanelProvider extends PanelProvider
                             ["label" => "Manual de Uso General",         "file" => "Manual_General_de_Uso.pdf"],
                             ["label" => "Manual del Rol Operativo",      "file" => "manual_rol_operativo.pdf"],
                             ["label" => "Manual del Rol Super Admin",    "file" => "manual_super_admin.html"],
-                            ["label" => "Roles y Accesos",               "file" => "manual_roles_acceso.pdf"],
+                            ["label" => "Roles y Accesos",               "file" => "manual_roles_acceso.html"],
                         ];
                     @endphp
 
