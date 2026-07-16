@@ -25,17 +25,17 @@ export default {
           light: "#eff6ff",
         },
         surface: {
-          base:    "rgba(7,11,22,1)",
-          overlay: "rgba(7,11,22,0.85)",
-          card:    "rgba(8,12,24,0.97)",
-          subtle:  "rgba(255,255,255,0.04)",
-          border:  "rgba(255,255,255,0.06)",
-          "border-strong": "rgba(255,255,255,0.08)",
+          base:    "#182645",               // Azul institucional marino para el sidebar
+          overlay: "rgba(24,38,69,0.95)",   // Azul marino con algo de transparencia
+          card:    "#1e2d52",               // Tarjetas y paneles con un azul un poco más claro
+          subtle:  "rgba(255,255,255,0.06)",// items hover suave
+          border:  "rgba(255,255,255,0.1)", // bordes generales
+          "border-strong": "rgba(255,255,255,0.15)",
         },
         blue: {
-          glass:        "rgba(59,130,246,0.15)",
-          "glass-hover":"rgba(59,130,246,0.20)",
-          border:       "rgba(59,130,246,0.30)",
+          glass:        "rgba(255,255,255,0.1)", // Para el item activo en el sidebar (fondo sutil)
+          "glass-hover":"rgba(255,255,255,0.15)",
+          border:       "rgba(255,255,255,0.15)",
           glow:         "rgba(59,130,246,0.20)",
           badge:        "rgba(59,130,246,0.25)",
           solid:        "#3b82f6",
@@ -44,10 +44,10 @@ export default {
         },
         ink: {
           primary:   "#ffffff",
-          secondary: "#94a3b8",
-          muted:     "#64748b",
-          disabled:  "#475569",
-          accent:    "#60a5fa",
+          secondary: "#cbd5e1",  // slate-300 (más claro para contrastar con el fondo azul)
+          muted:     "#94a3b8",  // slate-400
+          disabled:  "#64748b",  // slate-500
+          accent:    "#60a5fa",  // blue-400
         },
         // Old colors kept for compatibility
         purple: { DEFAULT: "#8b5cf6", hover: "#7c3aed", light: "#f5f3ff", border: "#cbd5e1" },
@@ -56,11 +56,10 @@ export default {
         danger: { DEFAULT: "#ef4444", light: "#fef2f2" },
       },
       fontFamily: {
-        // Sustituimos ambas por Plus Jakarta Sans para dar ese look premium
-        title: ['"Plus Jakarta Sans"', 'sans-serif'],
-        body: ['"Plus Jakarta Sans"', 'sans-serif'],
-        display: ['"Plus Jakarta Sans"', 'sans-serif'],
-        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+        title: ['"Inter"', 'sans-serif'],
+        body: ['"Inter"', 'sans-serif'],
+        display: ['"Inter"', 'sans-serif'],
+        sans: ['"Inter"', 'sans-serif'],
       },
       letterSpacing: {
         ultrawide: "0.3em",
