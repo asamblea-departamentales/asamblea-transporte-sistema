@@ -23,6 +23,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (token) {
         try {
           const profile = await authApi.getProfile();
+          const hasAccess = profile.roles?.some(r => ['jefe', 'admin', 'administrador', 'super_admin'].includes(r));
+          
+          if (!hasAccess) {
+            throw new Error("Acceso denegado: Privilegios insuficientes.");
+          }
+
           setUser(profile);
           setIsAuthenticated(true);
         } catch (error) {
@@ -38,6 +44,12 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   const login = async (credentials: LoginCredentials) => {
     const data = await authApi.login(credentials);
+    
+    const hasAccess = data.user.roles?.some(r => ['jefe', 'admin', 'administrador', 'super_admin'].includes(r));
+    if (!hasAccess) {
+      throw new Error("Acceso denegado: Este módulo es exclusivo para Jefaturas y Administradores.");
+    }
+
     localStorage.setItem('auth_token', data.token);
     setUser(data.user);
     setIsAuthenticated(true);
