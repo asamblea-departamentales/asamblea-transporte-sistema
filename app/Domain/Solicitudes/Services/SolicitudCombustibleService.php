@@ -63,7 +63,7 @@ class SolicitudCombustibleService
             HistorialEstado::create([
                 'entidad_tipo' => 'solicitud_combustible',
                 'entidad_id' => $solicitud->id,
-                'estado_anterior' => null,
+                'estado_anterior' => 'ninguno',
                 'estado_nuevo' => EstadoSolicitudEnum::BORRADOR,
                 'user_id' => $userId,
                 'comentario' => 'Creación inicial de borrador.',

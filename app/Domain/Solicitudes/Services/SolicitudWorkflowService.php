@@ -77,7 +77,7 @@ class SolicitudWorkflowService
         HistorialEstado::create([
             'entidad_tipo' => $entidadTipo,
             'entidad_id' => $solicitud->getKey(),
-            'estado_anterior' => $anterior?->value,
+            'estado_anterior' => $anterior ? ($anterior->value ?? (string) $anterior) : 'ninguno',
             'estado_nuevo' => $nuevoEstado->value,
             'user_id' => $actor->id,
             'comentario' => $comentario,

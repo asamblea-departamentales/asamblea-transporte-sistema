@@ -338,9 +338,6 @@ class SolicitudTransporteController extends BaseSolicitudController
     /**
      * Finalizar (Acción desde el Frontend para el Solicitante)
      */
-    /**
-     * Finalizar (Acción desde el Frontend para el Solicitante)
-     */
     public function finalizar(SolicitudTransporte $solicitud)
     {
         // Usamos el helper de autorización para asegurar que sea el dueño
