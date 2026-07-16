@@ -1,9 +1,9 @@
 import axios from 'axios';
 
 export const axiosClient = axios.create({
-  // Se usa ruta relativa para que las peticiones pasen por el Proxy
-  // configurado en vite.config.ts (local) o vercel.json (producción).
-  baseURL: '/api',
+  // Se usa VITE_BACKEND_URL en producción. Si no existe, cae a '/api' 
+  // para usar el proxy local de Vite en desarrollo.
+  baseURL: import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : '/api',
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
