@@ -20,8 +20,8 @@ export default defineConfig(({ mode }) => {
           name: 'Asamblea Legislativa - Transporte',
           short_name: 'AsambleaLogística',
           description: 'Sistema de Aprobaciones de Transporte y Combustible',
-          theme_color: '#182645',
-          background_color: '#f8fafc',
+          theme_color: '#1a1f36',
+          background_color: '#1a1f36',
           display: 'standalone',
           icons: [
             {

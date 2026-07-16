@@ -7,50 +7,74 @@ export default {
   theme: {
     extend: {
       colors: {
+        // --- 1. Mapeo para no romper los componentes existentes (Dark UI) ---
+        bgMain: "rgba(7,11,22,1)",       // Antes era #f8fafc (blanco), ahora es oscuro
+        bgSidebar: "rgba(7,11,22,1)",    // Dark
+        bgCard: "rgba(8,12,24,0.97)",    // Tarjetas dark glass
+        borderColor: "rgba(255,255,255,0.06)",
+        textMain: "#ffffff",             // Texto principal ahora es blanco
+        textMuted: "#94a3b8",            // Texto secundario
+
+        // --- 2. Colores Institucionales Originales ---
         asamblea: "#2d3a61",
-        bgMain: "#f8fafc",
-        bgSidebar: "#0b1528",
-        bgCard: "#ffffff",
-        borderColor: "#cbd5e1",
+        
+        // --- 3. Paleta Premium de Transporte (Dark UI / Glassmorphism) ---
         primary: {
-          DEFAULT: "#3b82f6",
+          DEFAULT: "#4F67E4", // Nuevo primary blue
           hover: "#2563eb",
           light: "#eff6ff",
         },
-        purple: {
-          DEFAULT: "#8b5cf6",
-          hover: "#7c3aed",
-          light: "#f5f3ff",
-          border: "#cbd5e1",
+        surface: {
+          base:    "rgba(7,11,22,1)",
+          overlay: "rgba(7,11,22,0.85)",
+          card:    "rgba(8,12,24,0.97)",
+          subtle:  "rgba(255,255,255,0.04)",
+          border:  "rgba(255,255,255,0.06)",
+          "border-strong": "rgba(255,255,255,0.08)",
         },
-        success: {
-          DEFAULT: "#10b981",
-          light: "#ecfdf5",
+        blue: {
+          glass:        "rgba(59,130,246,0.15)",
+          "glass-hover":"rgba(59,130,246,0.20)",
+          border:       "rgba(59,130,246,0.30)",
+          glow:         "rgba(59,130,246,0.20)",
+          badge:        "rgba(59,130,246,0.25)",
+          solid:        "#3b82f6",
+          light:        "#60a5fa",
+          muted:        "rgba(96,165,250,0.15)",
         },
-        warning: {
-          DEFAULT: "#f59e0b",
-          light: "#fef9c3",
-          border: "#fef08a",
+        ink: {
+          primary:   "#ffffff",
+          secondary: "#94a3b8",
+          muted:     "#64748b",
+          disabled:  "#475569",
+          accent:    "#60a5fa",
         },
-        danger: {
-          DEFAULT: "#ef4444",
-          light: "#fef2f2",
-        },
-        textMain: "#1e293b",
-        textMuted: "#64748b",
+        // Old colors kept for compatibility
+        purple: { DEFAULT: "#8b5cf6", hover: "#7c3aed", light: "#f5f3ff", border: "#cbd5e1" },
+        success: { DEFAULT: "#10b981", light: "#ecfdf5" },
+        warning: { DEFAULT: "#f59e0b", light: "#fef9c3", border: "#fef08a" },
+        danger: { DEFAULT: "#ef4444", light: "#fef2f2" },
       },
       fontFamily: {
-        title: ['Outfit', 'sans-serif'],
-        body: ['Inter', 'sans-serif'],
+        // Sustituimos ambas por Plus Jakarta Sans para dar ese look premium
+        title: ['"Plus Jakarta Sans"', 'sans-serif'],
+        body: ['"Plus Jakarta Sans"', 'sans-serif'],
+        display: ['"Plus Jakarta Sans"', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', 'sans-serif'],
       },
       letterSpacing: {
         ultrawide: "0.3em",
+        megawide: "0.25em",
       },
       boxShadow: {
         sm: "0 1px 3px rgba(0, 0, 0, 0.05)",
         md: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
         lg: "0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",
         premium: "0 20px 25px -5px rgba(0, 0, 0, 0.05), 0 10px 10px -5px rgba(0, 0, 0, 0.02)",
+        // Transporte shadows
+        card: "0 10px 40px rgba(0,0,0,0.1), 0 0 20px rgba(59,130,246,0.05)",
+        "blue-glow": "0 0 20px rgba(59,130,246,0.15)",
+        "blue-badge": "0 0 10px rgba(59,130,246,0.5)",
       },
       keyframes: {
         shake: {
