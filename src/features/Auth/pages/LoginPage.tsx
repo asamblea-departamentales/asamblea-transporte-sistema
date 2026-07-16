@@ -1,15 +1,24 @@
 import React, { useState } from 'react';
 import { Mail, Lock } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 import { useAuth } from '../context/AuthContext';
 
 const LoginPage: React.FC = () => {
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login, isAuthenticated } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
+
+  // Redirigir automáticamente si ya está autenticado
+  React.useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/', { replace: true });
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -19,6 +28,7 @@ const LoginPage: React.FC = () => {
     
     try {
       await login({ username, password });
+      navigate('/', { replace: true });
     } catch (err: any) {
       // Manejo de errores amigable
       let errorMessage = 'Credenciales inválidas. Por favor intenta de nuevo.';
