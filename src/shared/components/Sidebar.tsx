@@ -10,6 +10,13 @@ interface SidebarProps {
   onClose?: () => void;
 }
 
+const T = {
+  headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
+  bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
+  goldenLine:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
+  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
+};
+
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -32,19 +39,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   return (
     <>
       {/* ── DESKTOP SIDEBAR & MOBILE DRAWER ── */}
-      <aside className={`
-        fixed inset-y-0 left-0 z-50 flex flex-col w-[260px] bg-surface-base border-r border-surface-border
-        transition-transform duration-300 ease-in-out shadow-drawer
-        md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-50 flex flex-col w-[280px] border-r border-[#1a2d54]
+          transition-transform duration-300 ease-in-out
+          md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
+        `}
+        style={{ background: T.headerBg, boxShadow: "4px 0 30px rgba(15,37,72,0.15)" }}
+      >
+        {/* Golden line decorative */}
+        <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
+
         {/* Logo Section */}
-        <div className="p-8 pb-6 flex flex-col items-center border-b border-surface-border relative">
-          {/* Subtle Glow */}
-          <div className="absolute top-0 inset-x-0 h-[1px] bg-gradient-to-r from-transparent via-blue-glow to-transparent opacity-50"></div>
-          
+        <div className="p-8 pb-6 flex flex-col items-center border-b border-white/5 relative">
           <div className="w-full flex justify-center mb-4 relative">
-            <div className="absolute inset-0 bg-blue-glow rounded-full blur-2xl opacity-20"></div>
             <img 
               src="/logo.png" 
               alt="Logo Asamblea" 
@@ -52,14 +60,14 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               onError={(e) => { e.currentTarget.style.display = 'none'; }}
             />
           </div>
-          <h2 className="font-display font-extrabold text-[11px] tracking-[0.25em] text-ink-muted text-center uppercase">
+          <h2 className="font-display font-extrabold text-[11px] tracking-[0.25em] text-[#86a8e7] text-center uppercase">
             Asamblea Legislativa
             <span className="block text-base font-bold text-white tracking-wide mt-1.5 drop-shadow-sm">Logística</span>
           </h2>
         </div>
 
         <div className="px-6 mt-8 mb-3">
-          <p className="text-[10px] font-bold text-ink-disabled tracking-[0.2em] uppercase">Navegación</p>
+          <p className="text-[10px] font-bold text-white/30 tracking-[0.2em] uppercase">Navegación</p>
         </div>
 
         {/* Navigation Links */}
@@ -70,23 +78,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
               to={item.to} 
               onClick={onClose}
               className={({ isActive }) => `
-                group flex items-center gap-3.5 px-3 py-3 rounded-xl text-[13.5px] font-medium transition-all duration-200
+                group flex items-center gap-3.5 px-4 py-3.5 rounded-xl text-[14px] font-semibold transition-all duration-200
                 ${isActive 
-                  ? 'bg-blue-glass/10 text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.05)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] border border-white/5' 
-                  : 'text-ink-secondary hover:bg-surface-subtle hover:text-white'
+                  ? 'bg-white/[0.08] text-white shadow-[inset_0_1px_0_rgba(255,255,255,0.1)] shadow-[0_4px_12px_rgba(0,0,0,0.15)] border-t border-white/[0.15]' 
+                  : 'text-white/60 hover:text-white hover:bg-white/5 border border-transparent'
                 }
               `}
             >
               {({ isActive }) => (
                 <>
-                  <div className={`p-1.5 rounded-lg flex items-center justify-center transition-colors duration-200 ${
+                  <div className={`flex items-center justify-center w-8 h-8 rounded-lg flex-shrink-0 transition-all ${
                     isActive 
                       ? 'bg-blue-500/15 text-blue-300 shadow-[inset_0_0_8px_rgba(59,130,246,0.2)]' 
-                      : 'text-ink-muted group-hover:text-ink-primary'
+                      : 'text-white/30 group-hover:text-white/70'
                   }`}>
                     <item.icon size={18} strokeWidth={isActive ? 2.5 : 2} />
                   </div>
-                  {item.label}
+                  <span className="tracking-wide">{item.label}</span>
                 </>
               )}
             </NavLink>
@@ -94,17 +102,23 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         </nav>
 
         {/* Desktop Profile Section */}
-        <div className="hidden md:block p-4 border-t border-surface-border bg-surface-overlay backdrop-blur-md">
-          <div className="flex items-center justify-between mb-4">
-            <div className="flex items-center gap-3 overflow-hidden">
-              <div className="w-9 h-9 rounded-full bg-blue-glass/20 border border-blue-border/30 flex items-center justify-center font-display font-bold text-blue-300 shadow-blue-glow shrink-0">
+        <div className="hidden md:block px-6 py-5 pb-8 mt-auto flex flex-col gap-5 border-t border-white/5 bg-black/10">
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-3 min-w-0">
+              <div 
+                className="w-10 h-10 flex items-center justify-center font-bold text-white flex-shrink-0 rounded-lg"
+                style={{
+                  background: "linear-gradient(135deg, #2354b4 0%, #0f2548 100%)",
+                  boxShadow: "0 2px 8px rgba(35,84,180,0.35)",
+                }}
+              >
                 {user?.name?.substring(0, 1).toUpperCase() || 'J'}
               </div>
               <div className="overflow-hidden">
                 <p className="text-[13px] font-bold text-white truncate" title={user?.name}>
                   {user?.name || 'Usuario'}
                 </p>
-                <p className="text-[11px] text-ink-muted truncate tracking-wide uppercase">
+                <p className="text-[11px] text-[#86a8e7] truncate tracking-wide">
                   {user?.roles?.[0] || 'operativo'}
                 </p>
               </div>
@@ -116,18 +130,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 setIsNotifOpen(!isNotifOpen);
                 if (pendingCount > 0) markAllAsRead();
               }}
-              className="relative cursor-pointer text-ink-muted hover:text-white transition-colors p-2 rounded-lg hover:bg-surface-subtle"
+              className="relative cursor-pointer text-white/60 hover:text-white transition-colors p-2 rounded-xl hover:bg-white/5"
             >
               <Bell size={18} strokeWidth={2} />
               {pendingCount > 0 && (
-                <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-blue-500 rounded-full shadow-blue-dot animate-pulse"></span>
+                <span className="absolute top-1.5 right-1.5 flex h-[18px] w-[18px] items-center justify-center rounded-full text-[9px] font-black text-[#0f2548] bg-amber-400 border-[2px] border-[#0f2548] shadow-sm">
+                  {pendingCount > 9 ? '9+' : pendingCount}
+                </span>
               )}
             </div>
           </div>
           
           <button 
             onClick={logout}
-            className="flex items-center justify-center gap-2 w-full py-2.5 rounded-lg text-danger-text hover:bg-danger-glass transition-colors text-[13px] font-semibold border border-transparent hover:border-danger-border/30"
+            className="w-full flex items-center justify-center gap-2.5 py-3 rounded-xl text-[12.5px] font-bold tracking-wide text-white/70 hover:text-red-300 hover:bg-white/5 transition-all duration-200 border border-transparent"
           >
             <LogOut size={16} /> Cerrar Sesión
           </button>
@@ -135,8 +151,20 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       </aside>
 
       {/* ── MOBILE BOTTOM NAVIGATION (App-like feel) ── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-surface-overlay/95 backdrop-blur-xl border-t border-surface-border z-40 pb-safe">
-        <ul className="flex items-center justify-around px-2 py-2">
+      <nav 
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2"
+        style={{ 
+          height: "64px", 
+          background: T.bottomNavBg, 
+          borderTop: "1px solid rgba(255,255,255,0.07)", 
+          boxShadow: "0 -4px 20px rgba(15,37,72,0.28)",
+          paddingBottom: "env(safe-area-inset-bottom, 0px)"
+        }}
+      >
+        {/* Golden line top */}
+        <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.35) 50%, transparent 100%)" }} />
+        
+        <ul className="flex items-center justify-around px-2 py-2 w-full">
           {navItems.filter(item => item.show).map((item) => (
             <li key={item.label} className="flex-1">
               <NavLink 
@@ -144,7 +172,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
                 onClick={onClose}
                 className={({ isActive }) => `
                   flex flex-col items-center justify-center py-2 px-1 rounded-xl transition-all duration-200
-                  ${isActive ? 'text-blue-400' : 'text-ink-muted hover:text-ink-primary'}
+                  ${isActive ? 'text-white bg-white/10' : 'text-white/50 hover:text-white/80'}
                 `}
               >
                 {({ isActive }) => (
@@ -168,7 +196,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <li className="flex-1">
             <button 
               onClick={logout}
-              className="w-full flex flex-col items-center justify-center py-2 px-1 rounded-xl text-ink-muted hover:text-danger-text transition-colors"
+              className="w-full flex flex-col items-center justify-center py-2 px-1 rounded-xl text-white/50 hover:text-red-300 transition-colors"
             >
               <LogOut size={22} strokeWidth={2} className="mb-1" />
               <span className="text-[10px] font-medium opacity-70 mt-1">Salir</span>

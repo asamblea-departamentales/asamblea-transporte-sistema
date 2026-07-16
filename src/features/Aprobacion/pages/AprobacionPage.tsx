@@ -266,7 +266,7 @@ export default function AprobacionPage() {
 
       {/* Wizard Footer Navigation */}
       {!isEnEjecucion && (
-        <div className="fixed bottom-0 left-0 md:left-[260px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-[100] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
+        <div className="fixed bottom-0 left-0 md:left-[280px] right-0 bg-white border-t border-slate-200 p-4 flex justify-between items-center z-[100] shadow-[0_-10px_15px_-3px_rgba(0,0,0,0.05)]">
           <button 
             onClick={prevStep}
             disabled={step === 1}
