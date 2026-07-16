@@ -20,3 +20,15 @@ axiosClient.interceptors.request.use((config) => {
 }, (error) => {
   return Promise.reject(error);
 });
+
+// Interceptor global para capturar errores de sesión (401)
+axiosClient.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('auth_token'); // Limpiar token
+      window.location.href = '/login';       // Redirigir al login
+    }
+    return Promise.reject(error);
+  }
+);
