@@ -17,7 +17,7 @@
 
 @layer base {
   body {
-    @apply font-body bg-surface-base text-white antialiased min-h-screen overflow-x-hidden;
+    @apply font-body bg-bgMain text-textMain antialiased min-h-screen overflow-x-hidden;
   }
 
   h1, h2, h3, h4, h5, h6 {

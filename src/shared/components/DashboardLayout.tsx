@@ -13,7 +13,7 @@ export const DashboardLayout: React.FC = () => {
   const { pendingCount } = useNotifications(user);
 
   return (
-    <div className="flex min-h-screen bg-surface-base font-body flex-col md:flex-row text-textMain overflow-x-hidden">
+    <div className="flex min-h-screen bg-bgMain font-body flex-col md:flex-row text-textMain overflow-x-hidden">
       
       {/* ── MOBILE HEADER (Glassmorphism) ── */}
       <div 
