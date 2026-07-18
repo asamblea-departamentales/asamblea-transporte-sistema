@@ -32,3 +32,8 @@ dist-ssr
 
 # Typescript cache
 *.tsbuildinfo
+
+# Tool artifacts
+.codebase-memory/
+eslint_output.json
+coverage/

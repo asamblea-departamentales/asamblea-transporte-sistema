@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { toast } from 'sonner';
 import { axiosClient } from '../../../shared/api/axiosClient';
 import { solicitudApi, RecursoDisponible } from '../api/solicitudApi';
+import { getApiErrorMessage } from '@/shared/api/errors';
 
-export function useReasignacion(id: string | undefined, onSuccess: () => void) {
+export function useReasignacion(codigo: string | undefined, onSuccess: () => void) {
   const [showReasignarModal, setShowReasignarModal] = useState(false);
   const [recursos, setRecursos] = useState<RecursoDisponible | null>(null);
   const [loadingRecursos, setLoadingRecursos] = useState(false);
@@ -37,15 +38,15 @@ export function useReasignacion(id: string | undefined, onSuccess: () => void) {
   };
 
   const handleReasignar = async () => {
-    if (!id || !selectedVehiculo || !selectedMotorista || !motivoReasignacion.trim()) return;
+    if (!codigo || !selectedVehiculo || !selectedMotorista || !motivoReasignacion.trim()) return;
     try {
       setIsSubmitting(true);
-      await solicitudApi.reasignar(id, Number(selectedVehiculo), Number(selectedMotorista), motivoReasignacion);
+      await solicitudApi.reasignar(codigo, Number(selectedVehiculo), Number(selectedMotorista), motivoReasignacion);
       toast.success('¡Reasignación exitosa! El motorista y vehículo han sido actualizados.');
       setShowReasignarModal(false);
       onSuccess();
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al reasignar recursos.');
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, 'Error al reasignar recursos.'));
     } finally {
       setIsSubmitting(false);
     }

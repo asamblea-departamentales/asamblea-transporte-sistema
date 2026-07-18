@@ -2,27 +2,27 @@ import { axiosClient } from '../../../shared/api/axiosClient';
 import { SolicitudMantenimientoDetalle } from '../types';
 
 export const solicitudMantenimientoApi = {
-  getById: async (id: string): Promise<SolicitudMantenimientoDetalle> => {
-    const { data } = await axiosClient.get(`/solicitudes-mantenimiento/${id}`);
+  getById: async (codigo: string): Promise<SolicitudMantenimientoDetalle> => {
+    const { data } = await axiosClient.get(`/solicitudes-mantenimiento/${codigo}`);
     return data;
   },
 
-  aprobar: async (id: string, observaciones: string) => {
-    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${id}/aprobar`, {
+  aprobar: async (codigo: string, observaciones: string) => {
+    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${codigo}/aprobar`, {
       observaciones
     });
     return data;
   },
 
-  rechazar: async (id: string, observaciones: string) => {
-    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${id}/rechazar`, {
+  rechazar: async (codigo: string, observaciones: string) => {
+    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${codigo}/rechazar`, {
       observaciones
     });
     return data;
   },
 
-  observacion: async (id: string, observaciones: string) => {
-    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${id}/observacion`, {
+  observacion: async (codigo: string, observaciones: string) => {
+    const { data } = await axiosClient.post(`/solicitudes-mantenimiento/${codigo}/observacion`, {
       observaciones
     });
     return data;

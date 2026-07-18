@@ -56,8 +56,10 @@ npm run validate     # Lint + Test + Build (CI)
 Crea un archivo `.env` en la raíz:
 
 ```env
-VITE_API_BASE_URL=http://localhost:3000/api
+VITE_BACKEND_URL=http://127.0.0.1:8000
 ```
+
+En producción, si `VITE_BACKEND_URL` no está definido, las peticiones van a `/api` relativo (depende del reverse proxy / nginx).
 
 ### Path aliases
 

@@ -3,9 +3,10 @@ import { ArrowLeft, CheckCircle, Info } from 'lucide-react';
 import { useAprobacionCombustible } from '../hooks/useAprobacionCombustible';
 import { ColumnaCombustibleSolicitud } from '../components/ColumnaCombustibleSolicitud';
 import { ColumnaCombustibleOperativo } from '../components/ColumnaCombustibleOperativo';
+import { getEstadoString } from '../types';
 
 export default function AprobacionCombustiblePage() {
-  const { id } = useParams();
+  const { codigo } = useParams();
   const { 
     data, 
     isLoading, 
@@ -20,7 +21,7 @@ export default function AprobacionCombustiblePage() {
     handleObservacion,
     handleRechazar,
     isSubmitting 
-  } = useAprobacionCombustible(id);
+  } = useAprobacionCombustible(codigo);
 
   if (isLoading) {
     return (
@@ -53,7 +54,7 @@ export default function AprobacionCombustiblePage() {
         <div className="flex justify-between items-start">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Aprobación de Combustible <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
+              Aprobación de Combustible <span className="text-slate-500 font-medium">#{solicitud.codigo || codigo}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Revisa la asignación del operativo y aprueba o modifica las cargas.</p>
           </div>
@@ -86,15 +87,15 @@ export default function AprobacionCombustiblePage() {
       </div>
 
       {/* FINALIZACIÓN o ESTADO ACTUAL */}
-      {['aprobada', 'rechazada', 'completada'].includes(solicitud?.estado?.toLowerCase() || solicitud?.estado?.value?.toLowerCase()) ? (
+      {['aprobada', 'rechazada', 'completada'].includes(getEstadoString(solicitud?.estado)) ? (
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-12">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-4">
             <CheckCircle size={32} />
           </div>
           <h2 className="text-xl font-bold text-slate-800 mb-2">Solicitud Ya Procesada</h2>
-          <p className="text-slate-500 mb-6">Esta solicitud de combustible se encuentra en estado: <span className="font-bold uppercase">{solicitud?.estado?.value || solicitud?.estado}</span> y no puede ser modificada.</p>
+          <p className="text-slate-500 mb-6">Esta solicitud de combustible se encuentra en estado: <span className="font-bold uppercase">{getEstadoString(solicitud?.estado) || 'procesada'}</span> y no puede ser modificada.</p>
           <Link 
-            to={`/historial/${solicitud.codigo || solicitud.id}`}
+            to={`/historial/${solicitud.codigo || codigo}`}
             className="inline-flex items-center justify-center px-6 py-3 font-bold rounded-lg text-white transition-all shadow-sm bg-primary hover:bg-primary-hover text-sm"
           >
             Ver en el Historial

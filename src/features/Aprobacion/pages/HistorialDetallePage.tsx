@@ -12,7 +12,7 @@ export interface HistorialDataDetalle {
 }
 
 export default function HistorialDetallePage() {
-  const { id } = useParams();
+  const { codigo } = useParams();
   const [data, setData] = useState<HistorialDataDetalle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -22,10 +22,10 @@ export default function HistorialDetallePage() {
     showReasignarModal, setShowReasignarModal, recursos, loadingRecursos,
     selectedVehiculo, setSelectedVehiculo, selectedMotorista, setSelectedMotorista,
     motivoReasignacion, setMotivoReasignacion, isSubmitting, openReasignarModal, handleReasignar
-  } = useReasignacion(id, () => {
+  } = useReasignacion(codigo, () => {
     Promise.all([
-      axiosClient.get(`/solicitudes-transporte/${id}`),
-      axiosClient.get(`/solicitudes-transporte/${id}/comparativa`)
+      axiosClient.get(`/solicitudes-transporte/${codigo}`),
+      axiosClient.get(`/solicitudes-transporte/${codigo}/comparativa`)
     ]).then(([showRes, compRes]) => {
       setData({ raw: showRes.data.data || showRes.data, comparativa: compRes.data });
     });
@@ -35,15 +35,15 @@ export default function HistorialDetallePage() {
   const [showDestinoModal, setShowDestinoModal] = useState(false);
 
   useEffect(() => {
-    if (!id) return;
+    if (!codigo) return;
     const fetchData = async () => {
       try {
         setIsLoading(true);
         let showData = null;
         let compData = null;
 
-        const isCombustible = id?.startsWith('CB-');
-        const endpoint = isCombustible ? `/solicitudes-combustible/${id}` : `/solicitudes-transporte/${id}`;
+        const isCombustible = codigo?.startsWith('CB-');
+        const endpoint = isCombustible ? `/solicitudes-combustible/${codigo}` : `/solicitudes-transporte/${codigo}`;
 
         // 1. Obtener los datos reales finales (estado, asignación real)
         try {
@@ -74,7 +74,7 @@ export default function HistorialDetallePage() {
       }
     };
     fetchData();
-  }, [id]);
+  }, [codigo]);
 
 
 
@@ -119,7 +119,7 @@ export default function HistorialDetallePage() {
   const fechaSalidaVal = raw.fecha_salida || comp.fechas?.salida;
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
   
-  const isCombustibleView = (raw.codigo || comp.codigo || id)?.toString().startsWith('CB-');
+  const isCombustibleView = (raw.codigo || comp.codigo || codigo)?.toString().startsWith('CB-');
 
   // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible)
   const canReasignar = !isCombustibleView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
@@ -163,7 +163,7 @@ export default function HistorialDetallePage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Detalle de Solicitud <span className="text-slate-500 font-medium">#{raw.codigo || comp.codigo || id}</span>
+              Detalle de Solicitud <span className="text-slate-500 font-medium">#{raw.codigo || comp.codigo || codigo}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Información completa del proceso.</p>
           </div>
@@ -380,11 +380,11 @@ export default function HistorialDetallePage() {
       <ModalDestinoAdicional 
         isOpen={showDestinoModal}
         onClose={() => setShowDestinoModal(false)}
-        solicitudId={raw.codigo || comp.codigo || id || ''}
+        solicitudId={raw.codigo ?? comp.codigo ?? codigo ?? ''}
         onSuccess={() => {
           setShowDestinoModal(false);
           // Recargar datos para reflejar el cambio si el backend devuelve el nuevo campo
-          axiosClient.get(`/solicitudes-transporte/${id}`).then(res => {
+          axiosClient.get(`/solicitudes-transporte/${codigo}`).then(res => {
             setData((prev: any) => ({ ...prev, raw: res.data.data || res.data }));
           });
         }}

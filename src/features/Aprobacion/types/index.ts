@@ -1,5 +1,15 @@
 // Interfaces basadas en la respuesta de /comparativa
 
+/** Backend puede enviar estado como string, objeto con .value, o null */
+export type EstadoType = string | { value?: string; nombre?: string; status?: string } | null;
+
+/** Extrae el string de estado sin importar el formato del backend */
+export function getEstadoString(estado: EstadoType | undefined): string {
+  if (!estado) return '';
+  if (typeof estado === 'string') return estado.trim().toLowerCase();
+  return (estado.value ?? estado.nombre ?? estado.status ?? '').trim().toLowerCase();
+}
+
 export interface SolicitudDetalle {
   id: string;
   horas_estimadas: number | null;
@@ -18,8 +28,8 @@ export interface SolicitudDetalle {
   motivo: string;
   decision_final?: 'operativo' | 'sistema' | null;
   comentario_jefe?: string | null;
-  estado?: any;
-  codigo?: string;
+  estado?: EstadoType;
+  codigo: string;
 }
 
 export interface VehiculoSugerido {
@@ -68,13 +78,13 @@ export interface AprobacionState {
 
 export interface SolicitudCombustibleDetalle {
   id: string;
-  codigo?: string;
+  codigo: string;
   solicitante: string;
   vehiculo: string;
   placa: string;
   motivo: string;
   fecha_solicitud: string;
-  estado?: any;
+  estado?: EstadoType;
   decision_final?: 'mantener' | 'manual' | null;
   comentario_jefe?: string | null;
 }
@@ -96,7 +106,7 @@ export type DecisionCombustibleType = 'mantener' | 'manual' | 'ninguna';
 
 export interface SolicitudMantenimientoDetalle {
   id: string;
-  codigo?: string;
+  codigo: string;
   solicitante: string;
   vehiculo: string;
   placa: string;
@@ -104,7 +114,7 @@ export interface SolicitudMantenimientoDetalle {
   fecha_sugerida?: string;
   kilometraje_actual?: number;
   tipo_mantenimiento?: string;
-  estado?: any;
+  estado?: EstadoType;
   decision_final?: string | null;
   comentario_jefe?: string | null;
 }

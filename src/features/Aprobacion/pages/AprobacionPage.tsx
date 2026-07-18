@@ -10,7 +10,7 @@ import { ModalDestinoAdicional } from '../components/ModalDestinoAdicional';
 import { extractStatusString } from '../../../shared/api/apiMapper';
 
 export default function AprobacionPage() {
-  const { id } = useParams();
+  const { codigo } = useParams();
   const [step, setStep] = useState(1);
   const [isModalDestinoOpen, setIsModalDestinoOpen] = useState(false);
   const { 
@@ -26,7 +26,7 @@ export default function AprobacionPage() {
     handleRechazar,
     handleDesbloquear,
     isSubmitting 
-  } = useAprobacion(id);
+  } = useAprobacion(codigo);
 
   if (isLoading) {
     return (
@@ -70,7 +70,7 @@ export default function AprobacionPage() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight">
-              Aprobación de Solicitud <span className="text-slate-500 font-medium">#{solicitud.id || id}</span>
+              Aprobación de Solicitud <span className="text-slate-500 font-medium">#{solicitud.codigo || codigo}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Sigue los pasos para revisar y autorizar esta solicitud.</p>
           </div>
@@ -296,7 +296,7 @@ export default function AprobacionPage() {
       <ModalDestinoAdicional 
         isOpen={isModalDestinoOpen}
         onClose={() => setIsModalDestinoOpen(false)}
-        solicitudId={solicitud.codigo || solicitud.id || id || ''}
+        solicitudId={solicitud.codigo ?? codigo ?? ''}
         onSuccess={() => setIsModalDestinoOpen(false)}
       />
     </div>

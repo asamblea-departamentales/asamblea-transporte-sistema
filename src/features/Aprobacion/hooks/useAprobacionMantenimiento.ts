@@ -3,8 +3,9 @@ import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { solicitudMantenimientoApi } from '../api/solicitudMantenimientoApi';
 import { SolicitudMantenimientoDetalle } from '../types';
+import { getApiErrorMessage } from '@/shared/api/errors';
 
-export function useAprobacionMantenimiento(id: string | undefined) {
+export function useAprobacionMantenimiento(codigo: string | undefined) {
   const navigate = useNavigate();
   const [data, setData] = useState<SolicitudMantenimientoDetalle | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -14,17 +15,17 @@ export function useAprobacionMantenimiento(id: string | undefined) {
   const [comentario, setComentario] = useState('');
 
   useEffect(() => {
-    if (!id) return;
+    if (!codigo) return;
 
     const fetchData = async () => {
       try {
         setIsLoading(true);
-        const result = await solicitudMantenimientoApi.getById(id);
+        const result = await solicitudMantenimientoApi.getById(codigo);
         setData(result);
         setError(null);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('Error cargando la solicitud de mantenimiento:', err);
-        setError(err.response?.data?.message || 'Error al cargar la solicitud');
+        setError(getApiErrorMessage(err, 'Error al cargar la solicitud'));
         toast.error('No se pudo cargar la solicitud');
       } finally {
         setIsLoading(false);
@@ -32,10 +33,10 @@ export function useAprobacionMantenimiento(id: string | undefined) {
     };
 
     fetchData();
-  }, [id]);
+  }, [codigo]);
 
   const handleAprobar = async () => {
-    if (!id) return;
+    if (!codigo) return;
     
     // Para mantenimiento, no exigimos comentario en la aprobación obligatoriamente,
     // pero si lo escribieron lo mandamos. (Podemos poner un default si el backend lo exige).
@@ -43,18 +44,18 @@ export function useAprobacionMantenimiento(id: string | undefined) {
     
     try {
       setIsSubmitting(true);
-      await solicitudMantenimientoApi.aprobar(id, obs);
+      await solicitudMantenimientoApi.aprobar(codigo, obs);
       toast.success('Mantenimiento aprobado oficialmente');
       navigate('/');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al aprobar la solicitud');
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, 'Error al aprobar la solicitud'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleRechazar = async () => {
-    if (!id) return;
+    if (!codigo) return;
     if (!comentario.trim()) {
       toast.error('Debe ingresar un comentario para rechazar');
       return;
@@ -62,18 +63,18 @@ export function useAprobacionMantenimiento(id: string | undefined) {
 
     try {
       setIsSubmitting(true);
-      await solicitudMantenimientoApi.rechazar(id, comentario.trim());
+      await solicitudMantenimientoApi.rechazar(codigo, comentario.trim());
       toast.success('Solicitud rechazada');
       navigate('/');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al rechazar la solicitud');
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, 'Error al rechazar la solicitud'));
     } finally {
       setIsSubmitting(false);
     }
   };
 
   const handleObservacion = async () => {
-    if (!id) return;
+    if (!codigo) return;
     if (!comentario.trim()) {
       toast.error('Debe ingresar un comentario');
       return;
@@ -81,11 +82,11 @@ export function useAprobacionMantenimiento(id: string | undefined) {
 
     try {
       setIsSubmitting(true);
-      await solicitudMantenimientoApi.observacion(id, comentario.trim());
+      await solicitudMantenimientoApi.observacion(codigo, comentario.trim());
       toast.success('Observación guardada. Regresando al panel...');
       navigate('/');
-    } catch (err: any) {
-      toast.error(err.response?.data?.message || 'Error al guardar observación');
+    } catch (err: unknown) {
+      toast.error(getApiErrorMessage(err, 'Error al guardar observación'));
     } finally {
       setIsSubmitting(false);
     }

@@ -7,12 +7,12 @@ export interface RecursoDisponible {
 }
 
 export const solicitudApi = {
-  getComparativa: async (id: string): Promise<ComparativaResponse> => {
-    const response = await axiosClient.get<ComparativaResponse>(`/solicitudes-transporte/${id}/comparativa`);
+  getComparativa: async (codigo: string): Promise<ComparativaResponse> => {
+    const response = await axiosClient.get<ComparativaResponse>(`/solicitudes-transporte/${codigo}/comparativa`);
     return response.data;
   },
 
-  aprobarConDecision: async (id: string, decision_final: 'operativo' | 'sistema' | 'manual', comentario: string, vehiculo_id?: number, motorista_id?: number) => {
+  aprobarConDecision: async (codigo: string, decision_final: 'operativo' | 'sistema' | 'manual', comentario: string, vehiculo_id?: number, motorista_id?: number) => {
     interface AprobarPayload {
       decision_final: 'operativo' | 'sistema' | 'manual';
       comentario: string;
@@ -22,22 +22,22 @@ export const solicitudApi = {
     const payload: AprobarPayload = { decision_final, comentario };
     if (vehiculo_id) payload.vehiculo_id = vehiculo_id;
     if (motorista_id) payload.motorista_id = motorista_id;
-    const response = await axiosClient.post(`/solicitudes-transporte/${id}/aprobar-con-decision`, payload);
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/aprobar-con-decision`, payload);
     return response.data;
   },
 
-  desbloquear: async (id: string) => {
-    const response = await axiosClient.post(`/solicitudes-transporte/${id}/desbloquear`);
+  desbloquear: async (codigo: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/desbloquear`);
     return response.data;
   },
 
-  programar: async (id: string) => {
-    const response = await axiosClient.post(`/solicitudes-transporte/${id}/programar`);
+  programar: async (codigo: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/programar`);
     return response.data;
   },
 
-  rechazar: async (id: string, comentario: string) => {
-    const response = await axiosClient.post(`/solicitudes-transporte/${id}/rechazar`, { comentario });
+  rechazar: async (codigo: string, comentario: string) => {
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/rechazar`, { comentario });
     return response.data;
   },
 
@@ -53,7 +53,7 @@ export const solicitudApi = {
 
   // Nuevo: Obtener recursos disponibles para reasignación
   getRecursosDisponibles: async (fecha_salida?: string, fecha_retorno?: string): Promise<RecursoDisponible> => {
-    const params: any = {};
+    const params: Record<string, string> = {};
     if (fecha_salida) params.fecha_salida = fecha_salida;
     if (fecha_retorno) params.fecha_retorno = fecha_retorno;
     const response = await axiosClient.get<RecursoDisponible>('/recursos/disponibles', { params });
@@ -62,7 +62,7 @@ export const solicitudApi = {
 
   // Nuevo: Añadir un destino adicional a una solicitud que ya está en curso (EN_EJECUCION)
   addDestinoEnEjecucion: async (codigo: string, destino_adicional: string, lat?: number, lng?: number) => {
-    const payload: any = { nombre: destino_adicional };
+    const payload: Record<string, unknown> = { nombre: destino_adicional };
     if (lat !== undefined && lng !== undefined) {
       payload.lat = lat;
       payload.lng = lng;

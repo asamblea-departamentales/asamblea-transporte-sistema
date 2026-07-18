@@ -1,9 +1,10 @@
 import { useParams, Link } from 'react-router-dom';
 import { ArrowLeft, CheckCircle, Info, Wrench, Calendar, Car, User } from 'lucide-react';
 import { useAprobacionMantenimiento } from '../hooks/useAprobacionMantenimiento';
+import { getEstadoString } from '../types';
 
 export default function AprobacionMantenimientoPage() {
-  const { id } = useParams();
+  const { codigo } = useParams();
   const { 
     data, 
     isLoading, 
@@ -14,7 +15,7 @@ export default function AprobacionMantenimientoPage() {
     handleObservacion,
     handleRechazar,
     isSubmitting 
-  } = useAprobacionMantenimiento(id);
+  } = useAprobacionMantenimiento(codigo);
 
   if (isLoading) {
     return (
@@ -37,7 +38,7 @@ export default function AprobacionMantenimientoPage() {
 
   // Comprobar si ya está procesada
   const isProcesada = ['aprobada', 'rechazada', 'completada', 'en_ejecucion', 'programada'].includes(
-    data.estado?.toLowerCase() || data.estado?.value?.toLowerCase() || ''
+    getEstadoString(data?.estado)
   );
 
   return (
@@ -51,7 +52,7 @@ export default function AprobacionMantenimientoPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
               <Wrench className="text-primary" />
-              Aprobación de Mantenimiento <span className="text-slate-500 font-medium">#{data.codigo || id}</span>
+               Aprobación de Mantenimiento <span className="text-slate-500 font-medium">#{data.codigo || codigo}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Revisa los detalles del mantenimiento solicitado y autoriza el proceso.</p>
           </div>
@@ -127,9 +128,9 @@ export default function AprobacionMantenimientoPage() {
             <CheckCircle size={32} />
           </div>
           <h2 className="text-xl font-bold text-slate-800 mb-2">Solicitud Ya Procesada</h2>
-          <p className="text-slate-500 mb-6">Esta solicitud de mantenimiento se encuentra en estado: <span className="font-bold uppercase">{data.estado?.value || data.estado}</span> y no puede ser modificada.</p>
+          <p className="text-slate-500 mb-6">Esta solicitud de mantenimiento se encuentra en estado: <span className="font-bold uppercase">{getEstadoString(data?.estado) || 'procesada'}</span> y no puede ser modificada.</p>
           <Link 
-            to={`/historial/${data.codigo || data.id}`}
+            to={`/historial/${data.codigo || codigo}`}
             className="inline-flex items-center justify-center px-6 py-3 font-bold rounded-lg text-white transition-all shadow-sm bg-primary hover:bg-primary-hover text-sm"
           >
             Ver en el Historial
