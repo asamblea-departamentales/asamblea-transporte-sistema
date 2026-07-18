@@ -103,6 +103,7 @@ class Vehiculo extends Model
     }
 
     // Filtra vehiculos sin viajes activos (en ejecución, programada, aprobada o asignada)
+    // y cuyo estado de catálogo no sea "En Taller" ni "Baja"
     public function scopeDisponibles(Builder $query): Builder
     {
         $idsOcupados = SolicitudTransporte::whereIn('estado', [
@@ -115,7 +116,12 @@ class Vehiculo extends Model
             ->pluck('vehiculo_id')
             ->unique();
 
-        return $query->whereNotIn('id', $idsOcupados);
+        return $query
+            ->whereNotIn('id', $idsOcupados)
+            ->where(function ($q) {
+                $q->whereNull('veh_estado_catalogo_id')
+                    ->orWhereHas('estadoCatalogo', fn ($q) => $q->where('nombre', 'Disponible'));
+            });
     }
 
     // Filtra vehiculos con al menos un viaje activo (en ejecución, programada, aprobada o asignada)

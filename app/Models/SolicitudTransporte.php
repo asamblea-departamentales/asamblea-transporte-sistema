@@ -63,6 +63,9 @@ class SolicitudTransporte extends Model implements Workflowable
         'destino_lng',
         'destino_adicional_lat',
         'destino_adicional_lng',
+
+        'encargado',
+        'subencargado',
     ];
 
     protected $casts = [
@@ -94,16 +97,18 @@ class SolicitudTransporte extends Model implements Workflowable
         static::creating(function ($solicitud) {
             $year = now()->year;
 
-            // 1. Buscamos la última solicitud del año a nivel GLOBAL (sin filtrar por usuario)
-            $ultima = static::where('codigo', 'like', "TR-{$year}-%")
-                ->latest('id')
-                ->first();
+            $codigo = \Illuminate\Support\Facades\DB::transaction(function () use ($year) {
+                $ultima = static::where('codigo', 'like', "TR-{$year}-%")
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
 
-            // 2. Si hay una, extraemos los últimos 6 dígitos y sumamos 1. Si no, empezamos en 1.
-            $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+                $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
 
-            // 3. Formateamos el código único (Ej: TR-2026-000001, TR-2026-000002...)
-            $solicitud->codigo = "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+                return "TR-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+            });
+
+            $solicitud->codigo = $codigo;
 
             // 4. Generamos el ticket
             app(TicketService::class)->generar($solicitud);

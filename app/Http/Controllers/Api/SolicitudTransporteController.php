@@ -227,26 +227,7 @@ class SolicitudTransporteController extends BaseSolicitudController
             ],
         ]);
 
-        // ── Notificar modificación de ruta ──
-        dispatch(function () use ($solicitud) {
-            try {
-                $dispatch = app(SolicitudEmailDispatchService::class);
-
-                if ($solicitud->solicitante?->email) {
-                    $dispatch->toSolicitante($solicitud, 'transporte', 'ruta_modificada');
-                }
-
-                $motorista = $solicitud->motorista;
-                if ($motorista) {
-                    $email = $motorista->user?->email ?? $motorista->correo;
-                    if ($email) {
-                        $dispatch->toEmail($solicitud, 'transporte', 'ruta_modificada', $email);
-                    }
-                }
-            } catch (\Exception $e) {
-                Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: ".$e->getMessage());
-            }
-        });
+        $this->notificarModificacionRuta($solicitud);
 
         return response()->json($destino->load('agregadoPor'), 201);
     }
@@ -276,12 +257,25 @@ class SolicitudTransporteController extends BaseSolicitudController
             ],
         ]);
 
+        $this->notificarModificacionRuta($solicitud);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Destino adicional guardado correctamente.',
+            'destino_adicional' => $solicitud->fresh()->destino_adicional,
+        ]);
+    }
+
+    private function notificarModificacionRuta(SolicitudTransporte $solicitud): void
+    {
         dispatch(function () use ($solicitud) {
             try {
                 $dispatch = app(SolicitudEmailDispatchService::class);
+
                 if ($solicitud->solicitante?->email) {
                     $dispatch->toSolicitante($solicitud, 'transporte', 'ruta_modificada');
                 }
+
                 $motorista = $solicitud->motorista;
                 if ($motorista) {
                     $email = $motorista->user?->email ?? $motorista->correo;
@@ -293,12 +287,6 @@ class SolicitudTransporteController extends BaseSolicitudController
                 Log::error("Error notificando modificacion de ruta [{$solicitud->codigo}]: ".$e->getMessage());
             }
         });
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Destino adicional guardado correctamente.',
-            'destino_adicional' => $solicitud->fresh()->destino_adicional,
-        ]);
     }
 
     /**

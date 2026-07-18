@@ -90,9 +90,13 @@ class SolicitudCombustibleService
     private function generarCodigoCorrelativo(): string
     {
         $anio = now()->year;
-        $ultimo = SolicitudCombustible::whereYear('created_at', $anio)->count();
+        $ultimo = SolicitudCombustible::whereYear('created_at', $anio)
+            ->latest('id')
+            ->lockForUpdate()
+            ->first();
+        $numero = $ultimo ? ((int) substr($ultimo->codigo, -6)) + 1 : 1;
 
-        return "CB-{$anio}-".str_pad($ultimo + 1, 6, '0', STR_PAD_LEFT);
+        return "CB-{$anio}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
     }
 
     public function enviarSolicitud(SolicitudCombustible $solicitud, int $userId): SolicitudCombustible

@@ -1,6 +1,6 @@
 <?php
 
-use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Http\Controllers\Api\MotoristaViajeController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
@@ -22,126 +22,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [TokenAuthController::class, 'me']);
 
     // Dashboard Summary (Transporte + Mantenimiento + Combustible)
-    Route::get('/dashboard/summary', function () {
-        $user = request()->user();
-
-        $qTransporte = \App\Models\SolicitudTransporte::query();
-        $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
-        $qCombustible = \App\Models\SolicitudCombustible::query();
-
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            $qTransporte->where('solicitante_id', $user->id);
-            $qMantenimiento->where('solicitante_id', $user->id);
-            $qCombustible->where('solicitante_id', $user->id);
-        }
-
-        $estadosPendientes = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
-        $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
-
-        if ($user->hasRole('jefe')) {
-            $estadosPendientes = [EstadoSolicitudEnum::PRE_APROBADA];
-            // MINIMAL CHANGE: Excluir PRE_APROBADA de aprobados para evitar doble conteo en Jefes
-            $estadosAprobados = [EstadoSolicitudEnum::APROBADA];
-        }
-
-        $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
-        $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
-
-        return response()->json([
-            'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count()
-                       + (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count()
-                       + (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
-
-            'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count()
-                           + (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count()
-                           + (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
-
-            'accepted' => (clone $qTransporte)->where('estado', EstadoSolicitudEnum::APROBADA)->count()
-                        + (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count()
-                        + (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
-
-            'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count()
-                         + (clone $qMantenimiento)->where('estado', $estadoCompletado)->count()
-                         + (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
-
-            // Desglose por módulo si el frontend lo necesita
-            'by_module' => [
-                'transporte' => [
-                    'pending' => (clone $qTransporte)->whereIn('estado', $estadosPendientes)->count(),
-                    'in_progress' => (clone $qTransporte)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted' => (clone $qTransporte)->where('estado', EstadoSolicitudEnum::APROBADA)->count(),
-                    'completed' => (clone $qTransporte)->where('estado', $estadoCompletado)->count(),
-                ],
-                'mantenimiento' => [
-                    'pending' => (clone $qMantenimiento)->whereIn('estado', $estadosPendientes)->count(),
-                    'in_progress' => (clone $qMantenimiento)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted' => (clone $qMantenimiento)->whereIn('estado', $estadosAprobados)->count(),
-                    'completed' => (clone $qMantenimiento)->where('estado', $estadoCompletado)->count(),
-                ],
-                'combustible' => [
-                    'pending' => (clone $qCombustible)->whereIn('estado', $estadosPendientes)->count(),
-                    'in_progress' => (clone $qCombustible)->whereIn('estado', $estadosEnProceso)->count(),
-                    'accepted' => (clone $qCombustible)->whereIn('estado', $estadosAprobados)->count(),
-                    'completed' => (clone $qCombustible)->where('estado', $estadoCompletado)->count(),
-                ],
-            ],
-        ]);
-    });
+    Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
 
     // Solicitudes Recientes (Transporte + Mantenimiento + Combustible)
-    Route::get('/solicitudes/recientes', function () {
-        $user = request()->user();
-
-        $qTransporte = \App\Models\SolicitudTransporte::query();
-        $qMantenimiento = \App\Models\SolicitudMantenimiento::query();
-        $qCombustible = \App\Models\SolicitudCombustible::query();
-
-        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
-            $qTransporte->where('solicitante_id', $user->id);
-            $qMantenimiento->where('solicitante_id', $user->id);
-            $qCombustible->where('solicitante_id', $user->id);
-        }
-
-        $transporte = $qTransporte->latest('created_at')->take(5)->get()
-            ->map(fn ($s) => [
-                'id' => $s->id,
-                'code' => $s->codigo,
-                'ticket' => $s->ticket,
-                'date' => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
-                'type' => 'Transporte',
-                'status' => $s->estado?->value ?? (string) $s->estado,
-            ]);
-
-        $mantenimiento = $qMantenimiento->latest('created_at')->take(5)->get()
-            ->map(fn ($s) => [
-                'id' => $s->id,
-                'code' => $s->codigo,
-                'ticket' => $s->ticket,
-                'date' => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
-                'type' => 'Mantenimiento',
-                'status' => $s->estado?->value ?? (string) $s->estado,
-            ]);
-
-        $combustible = $qCombustible->latest('created_at')->take(5)->get()
-            ->map(fn ($s) => [
-                'id' => $s->id,
-                'code' => $s->codigo,
-                'ticket' => $s->ticket,
-                'date' => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
-                'type' => 'Combustible',
-                'status' => $s->estado?->value ?? (string) $s->estado,
-            ]);
-
-        // Combinar, ordenar por fecha y tomar los 10 más recientes
-        $rows = $transporte
-            ->concat($mantenimiento)
-            ->concat($combustible)
-            ->sortByDesc('date')
-            ->take(10)
-            ->values();
-
-        return response()->json(['data' => $rows]);
-    });
+    Route::get('/solicitudes/recientes', [DashboardController::class, 'recientes']);
 
     // ── TRANSPORTE ──────────────────────────────────────────────────
     Route::apiResource('solicitudes-transporte', SolicitudTransporteController::class)
@@ -165,51 +49,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-transporte/{solicitud:codigo}/programar', [SolicitudTransporteController::class, 'programar']);
         Route::post('solicitudes-transporte/{solicitud:codigo}/destinos', [SolicitudTransporteController::class, 'agregarDestinoViaje']);
         Route::patch('solicitudes-transporte/{solicitud:codigo}/destino-adicional', [SolicitudTransporteController::class, 'agregarDestinoAdicional']);
-        Route::post('solicitudes-transporte/{solicitud:codigo}/destino-en-ejecucion', [SolicitudTransporteController::class, 'agregarDestinoViaje']);
         Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
 
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
-        Route::get('solicitudes/historial-jefatura', function (Request $request) {
-            $perPage = $request->query('per_page', 15);
-
-            $qTransporte = \App\Models\SolicitudTransporte::query()
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
-
-            $qMantenimiento = \App\Models\SolicitudMantenimiento::query()
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
-
-            $qCombustible = \App\Models\SolicitudCombustible::query()
-                ->whereIn('estado', [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::COMPLETADA, EstadoSolicitudEnum::RECHAZADA, EstadoSolicitudEnum::EN_EJECUCION]);
-
-            $rows = $qTransporte->get()->map(fn ($s) => [
-                'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
-                'date' => optional($s->updated_at)->format('Y-m-d H:i'),
-                'type' => 'Transporte', 'status' => $s->estado?->value,
-            ])->concat(
-                $qMantenimiento->get()->map(fn ($s) => [
-                    'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
-                    'date' => optional($s->updated_at)->format('Y-m-d H:i'),
-                    'type' => 'Mantenimiento', 'status' => $s->estado?->value,
-                ])
-            )->concat(
-                $qCombustible->get()->map(fn ($s) => [
-                    'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
-                    'date' => optional($s->updated_at)->format('Y-m-d H:i'),
-                    'type' => 'Combustible', 'status' => $s->estado?->value,
-                ])
-            )->sortByDesc('date')->values();
-
-            $page = \Illuminate\Pagination\Paginator::resolveCurrentPage();
-            $total = $rows->count();
-            $slice = $rows->slice(($page - 1) * $perPage, $perPage)->values();
-
-            return response()->json(
-                new \Illuminate\Pagination\LengthAwarePaginator(
-                    $slice, $total, $perPage, $page,
-                    ['path' => \Illuminate\Pagination\Paginator::resolveCurrentPath()]
-                )
-            );
-        });
+        Route::get('solicitudes/historial-jefatura', [DashboardController::class, 'historialJefatura']);
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])

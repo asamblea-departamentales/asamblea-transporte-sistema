@@ -85,6 +85,15 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $userId, $vehiculoId, $motoristaId, $justificacion) {
+            $v = Vehiculo::lockForUpdate()->find($vehiculoId);
+            if ($v && ! $v->esta_disponible) {
+                throw new \DomainException("El vehículo {$v->placa} seleccionado ya no está disponible.");
+            }
+            $m = Motorista::lockForUpdate()->find($motoristaId);
+            if ($m && ! $m->esta_disponible) {
+                throw new \DomainException("El motorista {$m->nombre} seleccionado ya no está disponible.");
+            }
+
             $sugerencia = $solicitud->sugerencia;
             if (! $sugerencia) {
                 $sugerencia = $this->generarSugerencia($solicitud);
@@ -184,6 +193,18 @@ class SolicitudTransporteService
                 $decision = $solicitud->decisionOperativa;
                 if (! $decision) {
                     throw new \DomainException('No hay decisión operativa registrada.');
+                }
+                $vOp = Vehiculo::lockForUpdate()->find($decision->vehiculo_final_id);
+                if ($vOp && ! $vOp->esta_disponible) {
+                    throw new \DomainException(
+                        "El vehículo {$vOp->placa} asignado por el operativo ya no está disponible. Solicite una re-asignación."
+                    );
+                }
+                $mOp = Motorista::lockForUpdate()->find($decision->motorista_final_id);
+                if ($mOp && ! $mOp->esta_disponible) {
+                    throw new \DomainException(
+                        "El motorista {$mOp->nombre} asignado por el operativo ya no está disponible. Solicite una re-asignación."
+                    );
                 }
                 $solicitud->vehiculo_id = $decision->vehiculo_final_id;
                 $solicitud->motorista_id = $decision->motorista_final_id;

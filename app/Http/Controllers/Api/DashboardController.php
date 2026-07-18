@@ -1,0 +1,185 @@
+<?php
+
+namespace App\Http\Controllers\Api;
+
+use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Http\Controllers\Controller;
+use App\Models\SolicitudCombustible;
+use App\Models\SolicitudMantenimiento;
+use App\Models\SolicitudTransporte;
+use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
+
+class DashboardController extends Controller
+{
+    public function summary(Request $request)
+    {
+        $user = $request->user();
+
+        $qTransporte = SolicitudTransporte::query();
+        $qMantenimiento = SolicitudMantenimiento::query();
+        $qCombustible = SolicitudCombustible::query();
+
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
+            $qTransporte->where('solicitante_id', $user->id);
+            $qMantenimiento->where('solicitante_id', $user->id);
+            $qCombustible->where('solicitante_id', $user->id);
+        }
+
+        $estadosPendientes = [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION];
+        $estadosAprobados = [EstadoSolicitudEnum::APROBADA, EstadoSolicitudEnum::PRE_APROBADA];
+
+        if ($user->hasRole('jefe')) {
+            $estadosPendientes = [EstadoSolicitudEnum::PRE_APROBADA];
+            $estadosAprobados = [EstadoSolicitudEnum::APROBADA];
+        }
+
+        $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
+        $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
+
+        $tCounts = (clone $qTransporte)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
+        $mCounts = (clone $qMantenimiento)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
+        $cCounts = (clone $qCombustible)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
+
+        $sum = function (array $counts, array $estados) {
+            $total = 0;
+            foreach ($estados as $estado) {
+                $total += $counts[$estado->value] ?? 0;
+            }
+
+            return $total;
+        };
+
+        $get = function (array $counts, EstadoSolicitudEnum $estado) {
+            return $counts[$estado->value] ?? 0;
+        };
+
+        return response()->json([
+            'pending' => $sum($tCounts, $estadosPendientes) + $sum($mCounts, $estadosPendientes) + $sum($cCounts, $estadosPendientes),
+            'in_progress' => $sum($tCounts, $estadosEnProceso) + $sum($mCounts, $estadosEnProceso) + $sum($cCounts, $estadosEnProceso),
+            'accepted' => $get($tCounts, EstadoSolicitudEnum::APROBADA) + $sum($mCounts, $estadosAprobados) + $sum($cCounts, $estadosAprobados),
+            'completed' => $get($tCounts, $estadoCompletado) + $get($mCounts, $estadoCompletado) + $get($cCounts, $estadoCompletado),
+
+            'by_module' => [
+                'transporte' => [
+                    'pending' => $sum($tCounts, $estadosPendientes),
+                    'in_progress' => $sum($tCounts, $estadosEnProceso),
+                    'accepted' => $get($tCounts, EstadoSolicitudEnum::APROBADA),
+                    'completed' => $get($tCounts, $estadoCompletado),
+                ],
+                'mantenimiento' => [
+                    'pending' => $sum($mCounts, $estadosPendientes),
+                    'in_progress' => $sum($mCounts, $estadosEnProceso),
+                    'accepted' => $sum($mCounts, $estadosAprobados),
+                    'completed' => $get($mCounts, $estadoCompletado),
+                ],
+                'combustible' => [
+                    'pending' => $sum($cCounts, $estadosPendientes),
+                    'in_progress' => $sum($cCounts, $estadosEnProceso),
+                    'accepted' => $sum($cCounts, $estadosAprobados),
+                    'completed' => $get($cCounts, $estadoCompletado),
+                ],
+            ],
+        ]);
+    }
+
+    public function recientes(Request $request)
+    {
+        $user = $request->user();
+
+        $qTransporte = SolicitudTransporte::query();
+        $qMantenimiento = SolicitudMantenimiento::query();
+        $qCombustible = SolicitudCombustible::query();
+
+        if (! $user->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin'])) {
+            $qTransporte->where('solicitante_id', $user->id);
+            $qMantenimiento->where('solicitante_id', $user->id);
+            $qCombustible->where('solicitante_id', $user->id);
+        }
+
+        $transporte = $qTransporte->latest('created_at')->take(5)->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'code' => $s->codigo,
+                'ticket' => $s->ticket,
+                'date' => optional($s->fecha_salida ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Transporte',
+                'status' => $s->estado?->value ?? (string) $s->estado,
+            ]);
+
+        $mantenimiento = $qMantenimiento->latest('created_at')->take(5)->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'code' => $s->codigo,
+                'ticket' => $s->ticket,
+                'date' => optional($s->fecha_sugerida ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Mantenimiento',
+                'status' => $s->estado?->value ?? (string) $s->estado,
+            ]);
+
+        $combustible = $qCombustible->latest('created_at')->take(5)->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'code' => $s->codigo,
+                'ticket' => $s->ticket,
+                'date' => optional($s->fecha_solicitud ?? $s->created_at)->format('Y-m-d H:i'),
+                'type' => 'Combustible',
+                'status' => $s->estado?->value ?? (string) $s->estado,
+            ]);
+
+        $rows = $transporte
+            ->concat($mantenimiento)
+            ->concat($combustible)
+            ->sortByDesc('date')
+            ->take(10)
+            ->values();
+
+        return response()->json(['data' => $rows]);
+    }
+
+    public function historialJefatura(Request $request)
+    {
+        $perPage = (int) $request->query('per_page', 15);
+        $page = Paginator::resolveCurrentPage();
+        $estadosTransporte = [EstadoSolicitudEnum::APROBADA->value, EstadoSolicitudEnum::PROGRAMADA->value, EstadoSolicitudEnum::COMPLETADA->value, EstadoSolicitudEnum::RECHAZADA->value, EstadoSolicitudEnum::EN_EJECUCION->value];
+        $estadosOtros = [EstadoSolicitudEnum::APROBADA->value, EstadoSolicitudEnum::COMPLETADA->value, EstadoSolicitudEnum::RECHAZADA->value, EstadoSolicitudEnum::EN_EJECUCION->value];
+
+        $first = DB::table('solicitud_transportes')
+            ->select('id', 'codigo', 'ticket', 'updated_at', DB::raw("'Transporte' as type"), 'estado')
+            ->whereIn('estado', $estadosTransporte);
+
+        $union = DB::table('solicitud_mantenimientos')
+            ->select('id', 'codigo', DB::raw('NULL as ticket'), 'updated_at', DB::raw("'Mantenimiento' as type"), 'estado')
+            ->whereIn('estado', $estadosOtros)
+            ->unionAll($first);
+
+        $union = DB::table('solicitudes_combustible')
+            ->select('id', 'codigo', 'numero_vale_ticket as ticket', 'updated_at', DB::raw("'Combustible' as type"), 'estado')
+            ->whereIn('estado', $estadosOtros)
+            ->unionAll($union);
+
+        $total = DB::table(DB::raw("({$union->toSql()}) as u"))
+            ->mergeBindings($union)
+            ->count();
+
+        $rows = $union->orderByDesc('updated_at')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id, 'code' => $s->codigo, 'ticket' => $s->ticket,
+                'date' => Carbon::parse($s->updated_at)->format('Y-m-d H:i'),
+                'type' => $s->type, 'status' => $s->estado,
+            ]);
+
+        return response()->json(
+            new LengthAwarePaginator(
+                $rows, $total, $perPage, $page,
+                ['path' => Paginator::resolveCurrentPath()]
+            )
+        );
+    }
+}

@@ -24,9 +24,14 @@ class EstadoFlotaService
         }
     }
 
-    // Libera un vehículo, cambiando su estado a "Disponible" solo si no tiene otro viaje activo. Cambia el estado del motorista a disponible solo si no tiene otro viaje activo.
+    // Libera un vehículo, cambiando su estado a "Disponible" solo si no tiene otro viaje activo
+    // y su estado actual es "Reservado". Preserva estados manuales como "En Taller" o "Baja".
     public function liberarVehiculo(Vehiculo $vehiculo): void
     {
+        if (! $this->esEstadoReservado($vehiculo)) {
+            return;
+        }
+
         $tieneOtroViajeActivo = SolicitudTransporte::where('vehiculo_id', $vehiculo->id)
             ->whereIn('estado', [
                 EstadoSolicitudEnum::EN_EJECUCION,
@@ -42,6 +47,17 @@ class EstadoFlotaService
                 $vehiculo->update(['veh_estado_catalogo_id' => $disponible]);
             }
         }
+    }
+
+    private function esEstadoReservado(Vehiculo $vehiculo): bool
+    {
+        if ($vehiculo->veh_estado_catalogo_id === null) {
+            return false;
+        }
+
+        $estadoNombre = VehEstadoCatalogo::where('id', $vehiculo->veh_estado_catalogo_id)->value('nombre');
+
+        return $estadoNombre === 'Reservado';
     }
 
     // Ocupar un motorista, cambiando su estado a inactivo solo si no tiene otro viaje activo. Cambia el estado del motorista a inactivo.
