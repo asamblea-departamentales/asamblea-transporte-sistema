@@ -40,9 +40,9 @@ class DashboardController extends Controller
         $estadosEnProceso = [EstadoSolicitudEnum::PROGRAMADA, EstadoSolicitudEnum::EN_EJECUCION];
         $estadoCompletado = EstadoSolicitudEnum::COMPLETADA;
 
-        $tCounts = (clone $qTransporte)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
-        $mCounts = (clone $qMantenimiento)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
-        $cCounts = (clone $qCombustible)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado');
+        $tCounts = (clone $qTransporte)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado')->toArray();
+        $mCounts = (clone $qMantenimiento)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado')->toArray();
+        $cCounts = (clone $qCombustible)->selectRaw('estado, COUNT(*) as total')->groupBy('estado')->pluck('total', 'estado')->toArray();
 
         $sum = function (array $counts, array $estados) {
             $total = 0;
@@ -151,7 +151,7 @@ class DashboardController extends Controller
             ->select('id', 'codigo', 'ticket', 'updated_at', DB::raw("'Transporte' as type"), 'estado')
             ->whereIn('estado', $estadosTransporte);
 
-        $union = DB::table('solicitud_mantenimientos')
+        $union = DB::table('solicitudes_mantenimiento')
             ->select('id', 'codigo', DB::raw('NULL as ticket'), 'updated_at', DB::raw("'Mantenimiento' as type"), 'estado')
             ->whereIn('estado', $estadosOtros)
             ->unionAll($first);
