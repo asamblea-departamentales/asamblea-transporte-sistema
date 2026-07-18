@@ -1,4 +1,5 @@
-import { axiosClient } from '../../../shared/api/axiosClient';
+import { axiosClient } from '@/shared/api/axiosClient';
+import { extractArrayData, mapToRecentRequest } from '@/shared/api/apiMapper';
 
 export interface DashboardSummary {
   pending: number;
@@ -23,36 +24,24 @@ export interface RecentRequest {
 }
 
 export const dashboardApi = {
-  getSummary: async (): Promise<DashboardSummary> => {
-    const response = await axiosClient.get<DashboardSummary>('/dashboard/summary');
+  getSummary: async (signal?: AbortSignal): Promise<DashboardSummary> => {
+    const response = await axiosClient.get<DashboardSummary>('/dashboard/summary', { signal });
     return response.data;
   },
-  getRecentRequests: async (): Promise<{ data: RecentRequest[] }> => {
-    const response = await axiosClient.get<{ data: any[] }>('/solicitudes/recientes');
-    const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-    const mappedData: RecentRequest[] = rawData.map((item: any) => ({
-      id: item.id?.toString() || '',
-      code: item.codigo || item.code || '',
-      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
-      rawDate: item.created_at || item.date || '',
-      type: item.modulo ? (item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1)) : (item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte')),
-      status: item.estado || item.status || ''
-    }));
+  getRecentRequests: async (signal?: AbortSignal): Promise<{ data: RecentRequest[] }> => {
+    const response = await axiosClient.get('/solicitudes/recientes', { signal });
+    const rawData = extractArrayData(response.data);
+    const mappedData = rawData
+      .map(mapToRecentRequest)
+      .filter((item): item is RecentRequest => item !== null);
     return { data: mappedData };
   },
-  getHistorialJefatura: async (): Promise<{ data: RecentRequest[] }> => {
-    const response = await axiosClient.get<{ data: RecentRequest[] }>('/solicitudes/historial-jefatura');
-    const rawData = Array.isArray(response.data) ? response.data : (response.data?.data || []);
-    
-    const mappedData: RecentRequest[] = rawData.map((item: any) => ({
-      id: item.id?.toString() || '',
-      code: item.codigo || item.code || '',
-      date: item.created_at ? new Date(item.created_at).toLocaleDateString() : (item.date || ''),
-      rawDate: item.created_at || item.date || '',
-      type: item.modulo ? (item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1)) : (item.tipo_vehiculo_nombre ? 'Transporte' : (item.type || 'Transporte')),
-      status: item.estado || item.status || ''
-    }));
-    
+  getHistorialJefatura: async (signal?: AbortSignal): Promise<{ data: RecentRequest[] }> => {
+    const response = await axiosClient.get('/solicitudes/historial-jefatura', { signal });
+    const rawData = extractArrayData(response.data);
+    const mappedData = rawData
+      .map(mapToRecentRequest)
+      .filter((item): item is RecentRequest => item !== null);
     return { data: mappedData };
   }
 };

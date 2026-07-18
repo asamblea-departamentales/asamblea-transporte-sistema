@@ -6,7 +6,7 @@ import { AprobacionDashboardPage } from './features/Aprobacion/pages/AprobacionD
 import { HistorialPage } from './features/Aprobacion/pages/HistorialPage';
 import HistorialDetallePage from './features/Aprobacion/pages/HistorialDetallePage';
 import LoginPage from './features/Auth/pages/LoginPage';
-import { DashboardLayout } from './shared/components/DashboardLayout';
+import { DashboardLayout } from './widgets/DashboardLayout';
 import { ProtectedRoute } from './features/Auth/components/ProtectedRoute';
 
 function App() {

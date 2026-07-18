@@ -3,22 +3,19 @@ import { Outlet, useLocation } from 'react-router-dom';
 import { Sidebar } from './Sidebar';
 import { Menu, Bell } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { useNotifications } from '../hooks/useNotifications';
-import { useAuth } from '../../features/Auth/context/AuthContext';
+import { useNotifications } from '@/shared/notifications';
 
 export const DashboardLayout: React.FC = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
-  const { pendingCount } = useNotifications(user);
+  const { pendingCount } = useNotifications();
 
   return (
     <div className="flex min-h-screen bg-bgMain font-body flex-col md:flex-row text-textMain overflow-x-hidden">
       
       {/* ── MOBILE HEADER (Glassmorphism) ── */}
       <div 
-        className="md:hidden sticky top-0 flex items-center justify-between p-4 text-white z-40 border-b border-white/5"
-        style={{ background: "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)", boxShadow: "0 2px 10px rgba(15,37,72,0.22)" }}
+        className="md:hidden sticky top-0 flex items-center justify-between p-4 text-white z-40 border-b border-white/5 bg-gradient-header shadow-header-mobile"
       >
         <div className="flex items-center gap-3">
           <img src="/logo.png" alt="Logo" className="w-8 h-8 object-contain brightness-0 invert drop-shadow-lg" />

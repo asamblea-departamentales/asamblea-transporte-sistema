@@ -1,26 +1,20 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { LayoutDashboard, FileCheck, History, LogOut, Bell } from 'lucide-react';
-import { useAuth } from '../../features/Auth/context/AuthContext';
-import { useNotifications } from '../hooks/useNotifications';
-import { NotificationPanel } from './NotificationPanel';
+import { useAuth } from '@/features/Auth/context/AuthContext';
+import { useNotifications } from '@/shared/notifications';
+import { hasJefaturaAccess } from '@/shared/auth/roles';
+import { NotificationPanel } from '@/shared/components/NotificationPanel';
 
 interface SidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-const T = {
-  headerBg:    "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
-  bottomNavBg: "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
-  goldenLine:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
-  drawerGlow:  "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.4) 40%, rgba(251,191,36,0.4) 60%, transparent 100%)",
-};
-
 export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const { user, logout } = useAuth();
   const location = useLocation();
-  const { notifications, pendingCount, markAllAsRead, clearNotifications, deleteNotification } = useNotifications(user);
+  const { notifications, pendingCount, markAllAsRead, clearNotifications, deleteNotification } = useNotifications();
   const [isNotifOpen, setIsNotifOpen] = useState(false);
 
   const isAprobando = location.pathname.includes('/aprobaciones/') || location.pathname.includes('/combustible/aprobaciones/') || location.pathname.includes('/mantenimiento/aprobaciones/');
@@ -31,7 +25,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       to: location.pathname, 
       icon: FileCheck, 
       label: 'Por Aprobar', 
-      show: user?.roles?.some(r => ['jefe', 'admin', 'ti', 'super_admin'].includes(r)) && isAprobando 
+      show: hasJefaturaAccess(user?.roles) && isAprobando 
     },
     { to: '/historial', icon: History, label: 'Historial', show: true },
   ];
@@ -41,14 +35,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
       {/* ── DESKTOP SIDEBAR & MOBILE DRAWER ── */}
       <aside
         className={`
-          fixed inset-y-0 left-0 z-50 flex flex-col w-[280px] border-r border-[#1a2d54]
+          fixed inset-y-0 left-0 z-50 flex flex-col w-[280px] border-r border-[#1a2d54] bg-gradient-header shadow-sidebar
           transition-transform duration-300 ease-in-out
           md:translate-x-0 ${isOpen ? 'translate-x-0' : '-translate-x-full'}
         `}
-        style={{ background: T.headerBg, boxShadow: "4px 0 30px rgba(15,37,72,0.15)" }}
       >
         {/* Golden line decorative */}
-        <div className="absolute right-0 top-0 bottom-0 w-[2px]" style={{ background: T.goldenLine, opacity: 0.6 }} />
+        <div className="absolute right-0 top-0 bottom-0 w-[2px] bg-gradient-golden-v opacity-60" />
 
         {/* Logo Section */}
         <div className="p-8 pb-6 flex flex-col items-center border-b border-white/5 relative">
@@ -106,11 +99,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
           <div className="flex items-center justify-between gap-2">
             <div className="flex items-center gap-3 min-w-0">
               <div 
-                className="w-10 h-10 flex items-center justify-center font-bold text-white flex-shrink-0 rounded-lg"
-                style={{
-                  background: "linear-gradient(135deg, #2354b4 0%, #0f2548 100%)",
-                  boxShadow: "0 2px 8px rgba(35,84,180,0.35)",
-                }}
+                className="w-10 h-10 flex items-center justify-center font-bold text-white flex-shrink-0 rounded-lg bg-gradient-profile shadow-profile"
               >
                 {user?.name?.substring(0, 1).toUpperCase() || 'J'}
               </div>
@@ -152,17 +141,13 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
 
       {/* ── MOBILE BOTTOM NAVIGATION (App-like feel) ── */}
       <nav 
-        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-40 flex items-center justify-around px-2 h-16 bg-gradient-bottom-nav border-t border-white/5 shadow-bottom-nav"
         style={{ 
-          height: "64px", 
-          background: T.bottomNavBg, 
-          borderTop: "1px solid rgba(255,255,255,0.07)", 
-          boxShadow: "0 -4px 20px rgba(15,37,72,0.28)",
           paddingBottom: "env(safe-area-inset-bottom, 0px)"
         }}
       >
         {/* Golden line top */}
-        <div className="absolute top-0 left-0 right-0 h-[1.5px]" style={{ background: "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.35) 50%, transparent 100%)" }} />
+        <div className="absolute top-0 left-0 right-0 h-[1.5px] bg-gradient-golden-h" />
         
         <ul className="flex items-center justify-around px-2 py-2 w-full">
           {navItems.filter(item => item.show).map((item) => (

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { dashboardApi, RecentRequest } from '../api/dashboardApi';
 import { useNavigate } from 'react-router-dom';
 import { History, Search, Calendar, Filter } from 'lucide-react';
@@ -6,7 +6,6 @@ import { Pagination } from '../../../shared/components/Pagination';
 
 export const HistorialPage: React.FC = () => {
   const [requests, setRequests] = useState<RecentRequest[]>([]);
-  const [filteredRequests, setFilteredRequests] = useState<RecentRequest[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   
   // Filters
@@ -25,7 +24,6 @@ export const HistorialPage: React.FC = () => {
         const data = await dashboardApi.getHistorialJefatura();
         console.log("RESPUESTA REAL DEL BACKEND (historial-jefatura):", data);
         setRequests(data.data || []);
-        setFilteredRequests(data.data || []);
       } catch (error) {
         console.error("Error fetching historial data", error);
       } finally {
@@ -35,8 +33,8 @@ export const HistorialPage: React.FC = () => {
     fetchHistorial();
   }, []);
 
-  // Apply filters
-  useEffect(() => {
+  // Apply filters (useMemo en lugar de useEffect)
+  const filteredRequests = useMemo(() => {
     let result = requests;
 
     if (searchTerm) {
@@ -92,13 +90,23 @@ export const HistorialPage: React.FC = () => {
       });
     }
 
-    setFilteredRequests(result);
-    setCurrentPage(1); // Reset page on filter change
+    return result;
   }, [searchTerm, dateFilter, requests]);
 
+  const searchTermChangeHandler = (term: string) => {
+    setSearchTerm(term);
+    setCurrentPage(1);
+  };
+
+  const dateFilterChangeHandler = (value: string) => {
+    setDateFilter(value);
+    setCurrentPage(1);
+  };
+
   // Paginate results
-  const totalPages = Math.ceil(filteredRequests.length / itemsPerPage);
-  const paginatedRequests = filteredRequests.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+  const totalPages = Math.max(1, Math.ceil(filteredRequests.length / itemsPerPage));
+  const safePage = Math.min(currentPage, totalPages);
+  const paginatedRequests = filteredRequests.slice((safePage - 1) * itemsPerPage, safePage * itemsPerPage);
 
 
   const getStatusBadge = (status?: any) => {
@@ -106,7 +114,7 @@ export const HistorialPage: React.FC = () => {
     let colorClass = "border-slate-200 text-slate-600";
     let dotClass = "bg-slate-500";
     const statusVal = typeof status === 'string' ? status : status.value || '';
-    let text = statusVal.toLowerCase();
+    const text = statusVal.toLowerCase();
 
     if (text.includes('aprobada')) {
       colorClass = "border-emerald-200 text-emerald-600";
@@ -155,7 +163,7 @@ export const HistorialPage: React.FC = () => {
             type="text" 
             placeholder="Buscar por código..." 
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+            onChange={(e) => searchTermChangeHandler(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
           />
         </div>
@@ -164,7 +172,7 @@ export const HistorialPage: React.FC = () => {
             <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={16} />
             <select 
               value={dateFilter}
-              onChange={(e) => setDateFilter(e.target.value)}
+              onChange={(e) => dateFilterChangeHandler(e.target.value)}
               className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none appearance-none cursor-pointer"
             >
               <option value="todos">Todas las fechas</option>
@@ -280,7 +288,7 @@ export const HistorialPage: React.FC = () => {
       {totalPages > 1 && !isLoading && (
         <div className="mt-4">
           <Pagination 
-            currentPage={currentPage} 
+            currentPage={safePage} 
             totalPages={totalPages} 
             onPageChange={setCurrentPage} 
             className="rounded-2xl shadow-[0_2px_10px_-4px_rgba(0,0,0,0.05)] border border-slate-100/80"

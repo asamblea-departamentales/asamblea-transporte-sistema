@@ -6,6 +6,13 @@ export default {
   ],
   theme: {
     extend: {
+      backgroundImage: {
+        "gradient-header": "linear-gradient(135deg, #0f2548 0%, #1a3a75 100%)",
+        "gradient-bottom-nav": "linear-gradient(180deg, #163166 0%, #0f2548 100%)",
+        "gradient-golden-v": "linear-gradient(180deg, transparent 0%, rgba(251,191,36,0.3) 30%, rgba(251,191,36,0.85) 50%, rgba(251,191,36,0.3) 70%, transparent 100%)",
+        "gradient-golden-h": "linear-gradient(90deg, transparent 0%, rgba(251,191,36,0.35) 50%, transparent 100%)",
+        "gradient-profile": "linear-gradient(135deg, #2354b4 0%, #0f2548 100%)",
+      },
       colors: {
         // --- 1. Mapeo para el Dashboard Principal (Light UI) ---
         bgMain: "#f8fafc",               // Fondo principal del dashboard (slate-50)
@@ -73,6 +80,10 @@ export default {
         megawide: "0.25em",
       },
       boxShadow: {
+        "header-mobile": "0 2px 10px rgba(15,37,72,0.22)",
+        "sidebar": "4px 0 30px rgba(15,37,72,0.15)",
+        "bottom-nav": "0 -4px 20px rgba(15,37,72,0.28)",
+        "profile": "0 2px 8px rgba(35,84,180,0.35)",
         sm: "0 1px 3px rgba(0, 0, 0, 0.05)",
         md: "0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03)",
         lg: "0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04)",

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, LoginCredentials } from '../types';
 import { authApi } from '../api/authApi';
+import { hasJefaturaAccess } from '@/shared/auth/roles';
 
 interface AuthContextType {
   user: User | null;
@@ -23,9 +24,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
       if (token) {
         try {
           const profile = await authApi.getProfile();
-          const hasAccess = profile.roles?.some(r => ['jefe', 'admin', 'administrador', 'super_admin'].includes(r));
           
-          if (!hasAccess) {
+          if (!hasJefaturaAccess(profile.roles)) {
             throw new Error("Acceso denegado: Privilegios insuficientes.");
           }
 
@@ -45,8 +45,7 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const login = async (credentials: LoginCredentials) => {
     const data = await authApi.login(credentials);
     
-    const hasAccess = data.user.roles?.some(r => ['jefe', 'admin', 'administrador', 'super_admin'].includes(r));
-    if (!hasAccess) {
+    if (!hasJefaturaAccess(data.user.roles)) {
       throw new Error("Acceso denegado: Este módulo es exclusivo para Jefaturas y Administradores.");
     }
 

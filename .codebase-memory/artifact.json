@@ -1,0 +1,11 @@
+{
+    "schema_version": 2,
+    "commit": "faa76aef4cb49f6255c4800f86d12957dfab326d",
+    "indexed_at": "2026-07-18T17:30:52Z",
+    "project": "asamblea-aprobaciones-ui",
+    "nodes": 280,
+    "edges": 505,
+    "original_size": 2490368,
+    "compressed_size": 304379,
+    "compression_level": 3
+}

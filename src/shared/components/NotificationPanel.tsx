@@ -1,15 +1,9 @@
 import React from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { CheckCircle, X, Trash2, Check } from 'lucide-react';
+import { NotificationItem } from '@/shared/notifications/types';
 
-export interface NotificationItem {
-  id: string | number;
-  title: string;
-  description: string;
-  time: string;
-  read: boolean;
-  action_url: string;
-}
+export type { NotificationItem } from '@/shared/notifications/types';
 
 interface NotificationPanelProps {
   isOpen: boolean;

@@ -12,14 +12,13 @@ export function useReasignacion(id: string | undefined, onSuccess: () => void) {
   const [motivoReasignacion, setMotivoReasignacion] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const openReasignarModal = async (fechaS: any, fechaR: any) => {
+  const openReasignarModal = async (fechaS?: string, fechaR?: string) => {
     setShowReasignarModal(true);
     setLoadingRecursos(true);
     try {
-      // @ts-ignore
       const result = await solicitudApi.getRecursosDisponibles(fechaS, fechaR);
       setRecursos(result);
-    } catch (_err) {
+    } catch {
       try {
         const [vRes, mRes] = await Promise.all([
           axiosClient.get('/catalogos/vehiculos/disponibles'),
@@ -29,7 +28,7 @@ export function useReasignacion(id: string | undefined, onSuccess: () => void) {
           vehiculos: Array.isArray(vRes.data) ? vRes.data : [],
           motoristas: Array.isArray(mRes.data) ? mRes.data : []
         });
-      } catch (_err2) {
+      } catch {
         setRecursos({ vehiculos: [], motoristas: [] });
       }
     } finally {
@@ -41,7 +40,6 @@ export function useReasignacion(id: string | undefined, onSuccess: () => void) {
     if (!id || !selectedVehiculo || !selectedMotorista || !motivoReasignacion.trim()) return;
     try {
       setIsSubmitting(true);
-      // @ts-ignore
       await solicitudApi.reasignar(id, Number(selectedVehiculo), Number(selectedMotorista), motivoReasignacion);
       toast.success('¡Reasignación exitosa! El motorista y vehículo han sido actualizados.');
       setShowReasignarModal(false);

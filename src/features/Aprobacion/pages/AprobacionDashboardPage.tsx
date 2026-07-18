@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 // Componentes
 
 import { SummaryCards } from '../components/SummaryCards';
@@ -11,22 +12,26 @@ export const AprobacionDashboardPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    const controller = new AbortController();
+    const signal = controller.signal;
+
     const fetchData = async () => {
       // Cargar independientemente para que si uno falla, el otro siga funcionando
       try {
-        const sumData = await dashboardApi.getSummary();
+        const sumData = await dashboardApi.getSummary(signal);
         setSummary(sumData);
       } catch (error) {
+        if (axios.isCancel(error)) return;
         console.error("Error fetching summary", error);
         // Mostrar valores en 0 para que no quede vacío
         setSummary({ pending: 0, in_progress: 0, accepted: 0, completed: 0 });
       }
 
       try {
-        const reqData = await dashboardApi.getRecentRequests();
-        const rows = Array.isArray(reqData) ? reqData : (reqData.data || []);
-        setRequests(rows);
+        const reqData = await dashboardApi.getRecentRequests(signal);
+        setRequests(reqData.data);
       } catch (error) {
+        if (axios.isCancel(error)) return;
         console.error("Error fetching recent requests", error);
         setRequests([]);
       }
@@ -35,6 +40,10 @@ export const AprobacionDashboardPage: React.FC = () => {
     };
 
     fetchData();
+
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   return (

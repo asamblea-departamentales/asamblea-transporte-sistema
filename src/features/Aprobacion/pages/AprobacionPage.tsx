@@ -7,6 +7,7 @@ import { ColumnaOperativo } from '../components/ColumnaOperativo';
 import { ColumnaSistema } from '../components/ColumnaSistema';
 import { MapaViaje } from '../components/MapaViaje';
 import { ModalDestinoAdicional } from '../components/ModalDestinoAdicional';
+import { extractStatusString } from '../../../shared/api/apiMapper';
 
 export default function AprobacionPage() {
   const { id } = useParams();
@@ -47,7 +48,7 @@ export default function AprobacionPage() {
   }
 
   const solicitud = data.solicitud || data;
-  const statusStr = typeof solicitud.estado === 'string' ? solicitud.estado : (solicitud.estado?.value || solicitud.estado?.nombre || '');
+  const statusStr = extractStatusString(solicitud.estado);
   const isEnEjecucion = statusStr.toLowerCase().includes('ejecucion');
 
   const nextStep = () => setStep(s => Math.min(3, s + 1));
