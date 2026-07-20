@@ -11,8 +11,8 @@ use App\Models\Motorista;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
-// AUTH POR TOKEN (PUBLICO)
-Route::post('/auth/login', [TokenAuthController::class, 'login']);
+// AUTH POR TOKEN (PUBLICO) — rate limited: 5 intentos/min por email+IP
+Route::post('/auth/login', [TokenAuthController::class, 'login'])->middleware('throttle:login');
 
 Route::middleware('auth:sanctum')->group(function () {
 

@@ -256,7 +256,7 @@ class SolicitudMantenimientoController extends BaseSolicitudController
     public function evaluar(Request $request, SolicitudMantenimiento $solicitud)
     {
         if (! auth()->user()->hasAnyRole(['jefe', 'operativo', 'liquidador', 'super_admin'])) {
-            abort(403);
+            return response()->json(['message' => 'No tienes permiso para realizar esta acción.'], 403);
         }
 
         $data = $request->validate([

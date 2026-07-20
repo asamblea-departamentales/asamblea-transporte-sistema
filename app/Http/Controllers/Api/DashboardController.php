@@ -161,9 +161,7 @@ class DashboardController extends Controller
             ->whereIn('estado', $estadosOtros)
             ->unionAll($union);
 
-        $total = DB::table(DB::raw("({$union->toSql()}) as u"))
-            ->mergeBindings($union)
-            ->count();
+        $total = DB::query()->fromSub($union, 'u')->count();
 
         $rows = $union->orderByDesc('updated_at')
             ->skip(($page - 1) * $perPage)

@@ -25,4 +25,21 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e) {
             return response()->json(['message' => 'Unauthenticated'], 401);
         });
+
+        $exceptions->render(function (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'message' => 'Validation failed',
+                'errors' => $e->errors(),
+            ], 422);
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e) {
+            return response()->json(['message' => 'Resource not found'], 404);
+        });
+
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json([
+                'message' => $e->getMessage() ?: 'Server error',
+            ], $e->getStatusCode());
+        });
     })->create();

@@ -20,6 +20,7 @@ use App\Models\SolicitudTransporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Symfony\Component\HttpFoundation\Response;
 
 class MotoristaViajeController extends Controller
 {
@@ -31,7 +32,7 @@ class MotoristaViajeController extends Controller
     {
         $motorista = Auth::user()->motorista;
         if (! $motorista || $solicitud->motorista_id !== $motorista->id) {
-            abort(403, 'Este viaje no te está asignado.');
+            abort(Response::HTTP_FORBIDDEN, 'Este viaje no te está asignado.');
         }
     }
 

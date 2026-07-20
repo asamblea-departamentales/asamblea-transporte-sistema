@@ -7,6 +7,7 @@
 /storage/framework/views
 /storage/pail
 /vendor
+opencode.json
 .env
 .env.backup
 .env.production
