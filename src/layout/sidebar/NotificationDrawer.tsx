@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification } from "../../notifications/NotificationContext";
 import { cn } from "../../lib/utils";
 import { Icons, timeAgo, notiCfg } from "./sidebar.constants";
+import { getRequestDetailPath } from "../../lib/requestIdentity";
 
 export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () => void }) {
   const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, permission, requestPermission } = useNotifications();
@@ -12,6 +13,7 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose
     <>
       <div 
         onClick={onClose} 
+        aria-hidden="true"
         className={cn(
           "fixed inset-0 z-[100] bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300",
           open ? "opacity-100" : "opacity-0 pointer-events-none"
@@ -87,7 +89,7 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose
                   onClick={(e) => {
                     if ((e.target as HTMLElement).closest('.btn-delete')) return;
                     if(isUnread) markAsRead(n.id);
-                    navigate(`/solicitudes/${n.modulo}/${n.reqId}`);
+                    navigate(getRequestDetailPath({ modulo: n.modulo, id: n.reqId, codigo: n.codigo }));
                     onClose();
                   }}
                 >

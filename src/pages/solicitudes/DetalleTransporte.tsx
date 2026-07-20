@@ -1,15 +1,15 @@
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Check, User, Building2, Calendar, Users, MapPin, Wrench } from "lucide-react";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-import { geocodeAddress, getOSRMRoute, haversineKm } from "../../lib/geo";
 import { completeRequest } from "../../services/requests.service";
 import { str, DetailItem, FinalizacionDataSection } from "./components/SharedDetailComponents";
 import type { GenericRequest } from "./components/SharedDetailComponents";
 import { getStatusStyle } from "../../lib/format";
 import AsignacionBloque from "../../components/ui/AsignacionBloque";
+import MapViewer from "../../components/transport/MapViewer";
+import type { MapPoint } from "../../components/transport/MapViewer";
 import { Spinner } from "./Combustible/components/FormUI";
+
 interface Props {
   data: GenericRequest;
   isOwner: boolean;
@@ -36,6 +36,14 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
       setFinalizandoTransporte(false);
     }
   };
+
+  const mapOrigin: MapPoint = { address: data.origen || "", lat: data.origen_lat, lng: data.origen_lng };
+  const mapDestinations: MapPoint[] = [
+    ...(data.destino ? [{ address: data.destino, lat: data.destino_lat, lng: data.destino_lng }] : []),
+    ...(data.destino_adicional
+      ? data.destino_adicional.split("|").map((s) => ({ address: s.trim(), lat: null, lng: null }))
+      : []),
+  ];
 
   return (
     <div className="mx-auto max-w-4xl space-y-6 pb-12 animate-fade-in">
@@ -76,7 +84,7 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <DetailItem icon={<User className="h-4 w-4" />} label="Solicitante" value={str(data.solicitante?.name ?? data.solicitante)} />
             <DetailItem icon={<Building2 className="h-4 w-4" />} label="Unidad" value={str(data.unidad?.nombre ?? data.unidad)} />
-            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={new Date(data.fecha_salida ?? Date.now()).toLocaleDateString()} />
+            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={data.fecha_salida ? new Date(data.fecha_salida).toLocaleDateString() : "No disponible"} />
             <DetailItem icon={<Users className="h-4 w-4" />} label="Pasajeros" value={`${data.cantidad_personas} Personas`} />
             <DetailItem icon={<MapPin className="h-4 w-4" />} label="Origen" value={str(data.origen)} />
             <DetailItem icon={<MapPin className="h-4 w-4" />} label="Destino" value={str(data.destino)} />
@@ -97,17 +105,20 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
             <MapPin className="h-4 w-4" />
             Itinerario en Mapa
           </h2>
-          <MapSection 
-            origen={data.origen!} 
-            origenLat={data.origen_lat}
-            origenLng={data.origen_lng}
-            destinosRaw={data.destino!} 
-            destinoLat={data.destino_lat}
-            destinoLng={data.destino_lng}
-            destinosAdicionales={data.destino_adicional} 
-            destinoAdicionalLat={data.destino_adicional_lat}
-            destinoAdicionalLng={data.destino_adicional_lng}
-          />
+          <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
+            <MapViewer
+              origin={mapOrigin}
+              destinations={mapDestinations}
+              className="h-[300px] sm:h-[450px]"
+            />
+            <div className="bg-slate-50/80 p-3.5 text-center border-t border-slate-100/80">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
+                <span className="h-1 w-1 rounded-full bg-slate-300" />
+                Ruta Institucional Optimizada
+                <span className="h-1 w-1 rounded-full bg-slate-300" />
+              </p>
+            </div>
+          </div>
         </section>
       )}
 
@@ -117,7 +128,7 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
             <Wrench className="h-4 w-4" />
             Asignación de recursos
           </h2>
-          <AsignacionBloque request={data as any} />
+          <AsignacionBloque request={data} />
         </section>
       )}
 
@@ -150,160 +161,6 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
           </div>
         </div>
       )}
-    </div>
-  );
-}
-
-// ─── COMPONENTE DE MAPA ───────────────────────────────────────────────────────
-function MapSection({ 
-  origen, origenLat, origenLng, 
-  destinosRaw, destinoLat, destinoLng, 
-  destinosAdicionales, destinoAdicionalLat, destinoAdicionalLng 
-}: {
-  origen: string;
-  origenLat?: number | null;
-  origenLng?: number | null;
-  destinosRaw: string;
-  destinoLat?: number | null;
-  destinoLng?: number | null;
-  destinosAdicionales?: string | null;
-  destinoAdicionalLat?: number | null;
-  destinoAdicionalLng?: number | null;
-}) {
-  const mapRef = useRef<L.Map | null>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const markersRef = useRef<L.Marker[]>([]);
-  const routeLayerRef = useRef<L.Polyline | null>(null);
-
-  const [loading, setLoading] = useState(true);
-  const [routeInfo, setRouteInfo] = useState<{ distance: number; duration: number } | null>(null);
-
-  const makeIcon = (color: string) => L.icon({
-    iconUrl: "data:image/svg+xml;base64," + btoa(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="${color}" width="32" height="32"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`),
-    iconSize: [32, 32], iconAnchor: [16, 32], popupAnchor: [0, -32],
-  });
-
-  const SV_BOUNDS: L.LatLngBoundsExpression = [[12.97, -90.20], [14.55, -87.60]];
-
-  useEffect(() => {
-    if (!containerRef.current || mapRef.current) return;
-    const map = L.map(containerRef.current, {
-      zoomControl: true, dragging: true, touchZoom: true, scrollWheelZoom: true, doubleClickZoom: true,
-      maxBounds: SV_BOUNDS, maxBoundsViscosity: 1.0, minZoom: 8,
-    }).setView([13.7942, -88.8965], 9);
-
-    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      attribution: '&copy; OpenStreetMap', maxZoom: 19
-    }).addTo(map);
-    
-    mapRef.current = map;
-    return () => { mapRef.current?.remove(); mapRef.current = null; };
-  }, []);
-
-  useEffect(() => {
-    if (!mapRef.current) return;
-    async function compute() {
-      if (!mapRef.current) return;
-      setLoading(true);
-      markersRef.current.forEach(m => m.remove());
-      markersRef.current = [];
-      routeLayerRef.current?.remove();
-      routeLayerRef.current = null;
-
-      const adicStrings = destinosAdicionales ? destinosAdicionales.split("|").map(s => s.trim()).filter(Boolean) : [];
-      const validCoords: { lat: number; lng: number; label: string; isOrigin: boolean }[] = [];
-
-      if (origenLat && origenLng) validCoords.push({ lat: origenLat, lng: origenLng, label: origen, isOrigin: true });
-      else if (origen) { const c = await geocodeAddress(origen); if (c) validCoords.push({ ...c, label: origen, isOrigin: true }); }
-
-      if (destinoLat && destinoLng) validCoords.push({ lat: destinoLat, lng: destinoLng, label: destinosRaw, isOrigin: false });
-      else if (destinosRaw) { const c = await geocodeAddress(destinosRaw); if (c) validCoords.push({ ...c, label: destinosRaw, isOrigin: false }); }
-
-      if (adicStrings.length > 0) {
-        if (destinoAdicionalLat && destinoAdicionalLng) validCoords.push({ lat: destinoAdicionalLat, lng: destinoAdicionalLng, label: adicStrings[0], isOrigin: false });
-        else { const c = await geocodeAddress(adicStrings[0]); if (c) validCoords.push({ ...c, label: adicStrings[0], isOrigin: false }); }
-        
-        if (adicStrings.length > 1) {
-          for (let i = 1; i < adicStrings.length; i++) {
-            const c = await geocodeAddress(adicStrings[i]);
-            if (c) validCoords.push({ ...c, label: adicStrings[i], isOrigin: false });
-          }
-        }
-      }
-
-      if (validCoords.length === 0) { setLoading(false); return; }
-      const bounds: [number, number][] = [];
-
-      validCoords.forEach((c, i) => {
-        const color = c.isOrigin ? "#0f2548" : "#ef4444";
-        const m = L.marker([c.lat, c.lng], { icon: makeIcon(color) }).addTo(mapRef.current!).bindPopup(`<b>${c.isOrigin ? 'Origen' : `Destino ${i}`}:</b><br>${c.label}`);
-        markersRef.current.push(m);
-        bounds.push([c.lat, c.lng]);
-      });
-
-      if (validCoords.length >= 2) {
-        const roundTripCoords = [...validCoords, validCoords[0]];
-        const osrm = await getOSRMRoute(roundTripCoords);
-        if (osrm?.geometry?.length) {
-          routeLayerRef.current = L.polyline(osrm.geometry, { color: "#3b82f6", weight: 6, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(mapRef.current);
-          setRouteInfo({ distance: osrm.distanceKm, duration: osrm.durationMin });
-        } else {
-          const pts: L.LatLngExpression[] = roundTripCoords.map(c => [c.lat, c.lng]);
-          routeLayerRef.current = L.polyline(pts, { color: "#94a3b8", weight: 4, opacity: 0.8, dashArray: "8, 8", lineCap: "round" }).addTo(mapRef.current);
-          let d = 0;
-          for (let i = 0; i < roundTripCoords.length - 1; i++) d += haversineKm(roundTripCoords[i].lat, roundTripCoords[i].lng, roundTripCoords[i + 1].lat, roundTripCoords[i + 1].lng);
-          setRouteInfo({ distance: d, duration: (d / 45) * 60 });
-        }
-      }
-
-      if (bounds.length > 0) mapRef.current.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], maxZoom: 15 });
-      setTimeout(() => mapRef.current?.invalidateSize(), 100);
-      setLoading(false);
-    }
-    compute();
-  }, [origen, destinosRaw, destinosAdicionales]);
-
-  return (
-    <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-xl shadow-slate-200/50">
-      <div className="relative">
-        <div ref={containerRef} className="h-[300px] w-full z-0 sm:h-[450px] transition-all duration-500" style={{ filter: loading ? 'grayscale(0.5) blur(1px)' : 'none' }} />
-        {loading && (
-          <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-white/40 backdrop-blur-[2px]">
-            <Spinner className="h-10 w-10 text-blue-600" />
-            <p className="mt-3 text-[11px] font-bold uppercase tracking-widest text-blue-900 animate-pulse">Calculando ruta...</p>
-          </div>
-        )}
-        {routeInfo && !loading && (
-          <div className="absolute bottom-4 right-4 left-4 z-[400] flex flex-wrap items-center justify-between gap-4 rounded-2xl bg-white/90 px-6 py-4 shadow-[0_8px_30px_rgb(0,0,0,0.12)] backdrop-blur-xl ring-1 ring-white/50 sm:bottom-6 sm:right-6 sm:left-auto sm:w-auto sm:justify-start transition-all hover:bg-white/95">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-50 text-blue-600 ring-1 ring-blue-100">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" /></svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Kilometraje</span>
-                <span className="mt-1 text-base font-extrabold text-slate-900 tracking-tight">{routeInfo.distance.toFixed(1)} <span className="text-xs font-bold text-slate-500">km</span></span>
-              </div>
-            </div>
-            <div className="h-10 w-[1px] bg-slate-200/60 hidden sm:block" />
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-amber-50 text-amber-600 ring-1 ring-amber-100">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}><path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              </div>
-              <div className="flex flex-col">
-                <span className="text-[10px] font-black uppercase tracking-widest text-slate-400 leading-none">Tiempo Redondo</span>
-                <span className="mt-1 text-base font-extrabold text-slate-900 tracking-tight">{routeInfo.duration.toFixed(0)} <span className="text-xs font-bold text-slate-500">min</span></span>
-              </div>
-            </div>
-          </div>
-        )}
-      </div>
-      <div className="bg-slate-50/80 p-3.5 text-center border-t border-slate-100/80">
-        <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest flex items-center justify-center gap-2">
-          <span className="h-1 w-1 rounded-full bg-slate-300" />
-          Ruta Institucional Optimizada
-          <span className="h-1 w-1 rounded-full bg-slate-300" />
-        </p>
-      </div>
     </div>
   );
 }

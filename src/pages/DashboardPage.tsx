@@ -178,7 +178,9 @@ export default function DashboardPage() {
   });
 
   const loading = loadingSummary || loadingRecent;
-  const error = (summaryError as any)?.message || (recentError as any)?.message || null;
+  const error = (summaryError instanceof Error ? summaryError.message : null) ||
+                (recentError instanceof Error ? recentError.message : null) ||
+                null;
 
   const cards = useMemo(() => [
     {
@@ -276,7 +278,7 @@ export default function DashboardPage() {
               <thead>
                 <tr className="bg-slate-50 border-b border-slate-100">
                   {(["Código", "Fecha", "Tipo", "Estado"] as const).map((h, i) => (
-                    <th key={h} className={cn(
+                    <th key={h} scope="col" className={cn(
                       "text-2xs font-bold uppercase tracking-[0.07em] text-slate-500 p-3",
                       i === 3 ? "text-right" : "text-left"
                     )}>

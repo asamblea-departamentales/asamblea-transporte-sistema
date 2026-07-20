@@ -28,7 +28,7 @@ export const InnerLoading: React.FC<InnerLoadingProps> = ({ message = "Cargando 
         {/* Barra de carga */}
         <div className="flex flex-col items-center">
           <div className="h-1.5 w-40 overflow-hidden rounded-full bg-slate-100 shadow-inner">
-            <div className="h-full w-full origin-left animate-progress-buffer bg-blue-600 rounded-full"></div>
+            <div className="h-full w-full origin-left animate-progress-buffer bg-asamblea rounded-full"></div>
           </div>
           <span className="mt-4 text-[11px] font-bold uppercase tracking-[0.2em] text-slate-500">
             {message}

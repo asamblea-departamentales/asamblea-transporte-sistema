@@ -10,7 +10,7 @@ export const ESTADOS: { value: RequestStatus | ""; label: string }[] = [
   { value: "aprobada",     label: "Aprobada"     },
   { value: "en_ejecucion", label: "En Ejecución" },
   { value: "completada",   label: "Completada"   },
-  { value: "finalizada",   label: "Finalizada"   },
+  { value: "liquidada",    label: "Liquidada"    },
   { value: "rechazada",    label: "Rechazada"    },
   { value: "observada",    label: "Observada"    },
   { value: "borrador",     label: "Borrador"     },
@@ -23,4 +23,5 @@ export const ESTADOS_CON_ASIGNACION = [
   "en_ejecucion",
   "completada",
   "finalizada",
+  "liquidada",
 ];

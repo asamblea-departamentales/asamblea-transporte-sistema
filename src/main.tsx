@@ -17,14 +17,6 @@ const queryClient = new QueryClient({
   },
 });
 
-if (import.meta.env.PROD) {
-  console.log = () => {};
-  console.debug = () => {};
-  console.info = () => {};
-  console.warn = () => {};
-  console.error = () => {};
-}
-
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>

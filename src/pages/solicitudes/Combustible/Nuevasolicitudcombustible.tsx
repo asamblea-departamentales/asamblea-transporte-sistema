@@ -42,40 +42,49 @@ export default function NuevaSolicitudCombustible() {
     loading: true,
     loadingSolicitudes: true,
     error: null,
+    warning: null,
   });
 
   // ── Carga inicial de catálogos desde el servicio ──────────────────────────
-  const fetchCatalogos = useCallback(async () => {
-    setCatalogos((prev) => ({ ...prev, loading: true, loadingSolicitudes: true, error: null }));
-    try {
-      const [vehiculos, motoristas, solicitudesTransporte] = await Promise.all([
-        getVehiculos(),
-        getMotoristas(),
-        getSolicitudesTransporteAsociables(),
-      ]);
+  const fetchCatalogos = useCallback(async (signal?: AbortSignal) => {
+    setCatalogos((prev) => ({
+      ...prev,
+      loading: true,
+      loadingSolicitudes: true,
+      error: null,
+      warning: null,
+    }));
 
-      setCatalogos({
-        vehiculos,
-        motoristas,
-        solicitudesTransporte,
-        loading: false,
-        loadingSolicitudes: false,
-        error: null,
-      });
-    } catch (err: unknown) {
-      const message =
-        err instanceof Error ? err.message : "No se pudieron cargar los catálogos.";
-      setCatalogos((prev) => ({
-        ...prev,
-        loading: false,
-        loadingSolicitudes: false,
-        error: message,
-      }));
-    }
+    const results = await Promise.allSettled([
+      getVehiculos(signal),
+      getMotoristas(signal),
+      getSolicitudesTransporteAsociables(signal),
+    ]);
+    if (signal?.aborted) return;
+
+    const [vehiculos, motoristas, solicitudesTransporte] = results;
+    const failed = results.filter((result) => result.status === "rejected").length;
+
+    setCatalogos((previous) => ({
+      vehiculos: vehiculos.status === "fulfilled" ? vehiculos.value : previous.vehiculos,
+      motoristas: motoristas.status === "fulfilled" ? motoristas.value : previous.motoristas,
+      solicitudesTransporte: solicitudesTransporte.status === "fulfilled"
+        ? solicitudesTransporte.value
+        : previous.solicitudesTransporte,
+      loading: false,
+      loadingSolicitudes: false,
+      error: failed === results.length ? "No se pudieron cargar los catálogos." : null,
+      warning: failed > 0 && failed < results.length
+        ? "Algunos catálogos no están disponibles. Puede reintentar sin perder los datos ingresados."
+        : null,
+    }));
   }, []);
 
-  useEffect(() => { fetchCatalogos(); }, [fetchCatalogos]);
-
+  useEffect(() => {
+    const controller = new AbortController();
+    void fetchCatalogos(controller.signal);
+    return () => controller.abort();
+  }, [fetchCatalogos]);
   // ── Helpers de estado del formulario ─────────────────────────────────────
   const update = useCallback((key: keyof FormData, value: string) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -182,6 +191,14 @@ export default function NuevaSolicitudCombustible() {
         </p>
       </div>
 
+      {catalogos.warning && (
+        <div role="status" className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
+          <span>{catalogos.warning}</span>
+          <button type="button" onClick={() => void fetchCatalogos()} className="shrink-0 rounded-lg px-3 py-1.5 font-bold hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600">
+            Reintentar
+          </button>
+        </div>
+      )}
       {/* ── Main card ──────────────────────────────────────────────────── */}
       <div className="rounded-2xl border border-slate-200 bg-white shadow-sm overflow-hidden">
           

@@ -53,22 +53,6 @@ export function timeAgo(iso: string): string {
   return `Hace ${Math.floor(diff / 86400)} días`;
 }
 
-export const getMagicLink = () => {
-  const token = localStorage.getItem("auth_token") || "";
-  let base = import.meta.env.VITE_API_BASE_URL || "";
-  if (base.startsWith('/')) {
-    base = window.location.origin;
-  } else if (base) {
-    try {
-      base = new URL(base).origin;
-    } catch (e) {
-      base = window.location.origin;
-    }
-  } else {
-    base = window.location.origin;
-  }
-  return `${base}/api/magic-sso?token=${token}`;
-};
 
 export const notiCfg: Record<string, { dot: string; iconBg: string; iconBorder: string }> = {
   aprobada:     { dot: "bg-emerald-500", iconBg: "bg-emerald-50",  iconBorder: "ring-emerald-200" },

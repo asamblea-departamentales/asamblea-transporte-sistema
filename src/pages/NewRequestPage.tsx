@@ -1,5 +1,4 @@
 // src/pages/NewRequestPage.tsx
-import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../auth/AuthContext";
 import { cn } from "../lib/utils"; 
@@ -220,8 +219,7 @@ export default function NewRequestPage() {
   const { user }    = useAuth();
   const userRoles   = user?.roles ?? [];
 
-  const visibleModules = useMemo(
-    () => MODULE_DEFINITIONS.filter(m => {
+  const visibleModules = MODULE_DEFINITIONS.filter(m => {
       // Si es super admin o admin informático, siempre puede ver todos los módulos
       if (userRoles.some(r => ["admin", "superadmin", "super_admin"].includes(r.toLowerCase()))) {
         return true;
@@ -232,9 +230,7 @@ export default function NewRequestPage() {
       }
       // Fallback a roles quemados por si acaso el usuario no tiene unidad configurada
       return m.allowedRoles.some(r => userRoles.includes(r));
-    }),
-    [userRoles, user?.unidad],
-  );
+    });
 
   const gridCols =
     visibleModules.length === 1 ? "grid-cols-1 max-w-sm mx-auto" :

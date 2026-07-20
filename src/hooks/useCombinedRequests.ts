@@ -1,206 +1,171 @@
-// hooks/useCombinedRequests.ts
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useQueries } from "@tanstack/react-query";
-import { getAllRequests } from "../services/requests.service";
+import { normalizeAppError } from "../lib/appError";
+import { queryKeys } from "../lib/queryKeys";
+import { getAllRequests, type Request, type RequestFilters, type RequestStatus } from "../services/requests.service";
 import { getAllMantenimientos } from "../services/mantenimiento.service";
-import { getAllCombustibles } from "../services/combustible.service";
-import type { RequestStatus } from "../services/requests.service";
-import type { SolicitudCombustibleNormalizada } from "../services/combustible.service";
+import { getAllCombustibles, type EstadoCombustible, type SolicitudCombustibleNormalizada } from "../services/combustible.service";
+import { normalizeRequestStatus } from "../lib/requestIdentity";
 
-// ─── Tipo unificado ────────────────────────────────────────────────────────────
 export type Modulo = "transporte" | "mantenimiento" | "combustible";
-
 export type CombinedRequest = {
-  id: number;
-  codigo: string;
-  estado: RequestStatus;
-  created_at: string;
-  updated_at: string;
-  fecha_salida: string;
-  origen: string;
-  destino: string;
+  id: number; codigo: string; estado: RequestStatus; created_at: string; updated_at: string;
+  fecha_salida: string; origen: string; destino: string; modulo: Modulo;
   unidad?: { id: number; nombre: string };
   solicitante?: { id: number; name: string; email: string };
   motorista?: { id: number; nombre: string } | null;
   vehiculo?: { id: number; placa: string } | null;
-  modulo: Modulo;
   _raw: Record<string, unknown>;
 };
-
-export type CombinedFilters = {
-  estado: RequestStatus | "";
-  modulo: Modulo | "";
-  search: string;
+export type CombinedFilters = { estado: RequestStatus | ""; modulo: Modulo | ""; search: string };
+export type ModuleLoadState = { module: Modulo; loading: boolean; error: string | null; retry: () => void };
+type PageResult = { data: CombinedRequest[]; total: number; page: number; per_page: number; total_pages: number };
+type MantenimientoItem = Awaited<ReturnType<typeof getAllMantenimientos>>["data"][number] & {
+  motorista?: { id: number; nombre: string } | null;
+  vehiculo?: { id: number; placa: string } | null;
 };
+export interface RequestModuleAdapter {
+  module: Modulo;
+  fetchPage(filters: RequestFilters): Promise<PageResult>;
+}
 
 const PER_PAGE = 10;
+const COMBUSTIBLE_STATES: readonly string[] = [
+  "borrador", "pendiente", "en_revision", "pre_aprobada", "aprobada", "asignada", "rechazada", "completada", "cancelada", "liquidada",
+];
+const toRecord = (value: object): Record<string, unknown> => Object.fromEntries(Object.entries(value));
+const isCombustibleStatus = (value: RequestStatus | undefined): value is EstadoCombustible =>
+  !!value && COMBUSTIBLE_STATES.includes(value);
+const person = (value?: { id: number; name: string; email: string }) => value
+  ? { id: value.id, name: value.name, email: value.email }
+  : undefined;
 
-// ─── Helpers para normalizar cada módulo ───────────────────────────────────────
-function normalizeTransporte(s: any): CombinedRequest {
+export function normalizeTransporte(value: Request): CombinedRequest {
   return {
-    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-    solicitante: s.solicitante, modulo: "transporte", motorista: s.motorista,
-    vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida,
-    updated_at: s.updated_at, _raw: s as Record<string, unknown>,
+    id: value.id, codigo: value.codigo, destino: value.destino, fecha_salida: value.fecha_salida,
+    estado: value.estado, origen: value.origen, unidad: value.unidad, solicitante: person(value.solicitante),
+    modulo: "transporte", motorista: value.motorista,
+    vehiculo: value.vehiculo ? { id: value.vehiculo.id, placa: value.vehiculo.placa } : null,
+    created_at: value.created_at || value.fecha_salida, updated_at: value.updated_at, _raw: toRecord(value),
   };
 }
 
-function normalizeMantenimiento(s: any): CombinedRequest {
+export function normalizeMantenimiento(value: MantenimientoItem): CombinedRequest {
   return {
-    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-    solicitante: s.solicitante, modulo: "mantenimiento", motorista: s.motorista,
-    vehiculo: s.vehiculo, created_at: s.created_at || s.fecha_salida,
-    updated_at: s.updated_at, _raw: s as Record<string, unknown>,
+    id: value.id, codigo: value.codigo, destino: value.destino, fecha_salida: value.fecha_salida,
+    estado: value.estado, origen: value.origen, unidad: value.unidad, solicitante: person(value.solicitante),
+    modulo: "mantenimiento", motorista: value.motorista,
+    vehiculo: value.vehiculo ? { id: value.vehiculo.id, placa: value.vehiculo.placa } : null,
+    created_at: value.created_at || value.fecha_salida, updated_at: value.updated_at, _raw: toRecord(value),
   };
 }
 
-function normalizeCombustible(s: SolicitudCombustibleNormalizada): CombinedRequest {
+export function normalizeCombustible(value: SolicitudCombustibleNormalizada): CombinedRequest {
   return {
-    id: s.id, codigo: s.codigo, destino: s.destino, fecha_salida: s.fecha_salida,
-    estado: s.estado as RequestStatus, origen: s.origen, unidad: s.unidad,
-    solicitante: s.solicitante ? { id: s.solicitante.id, name: s.solicitante.name, email: s.solicitante.email } : undefined,
-    modulo: "combustible", motorista: s.motorista, vehiculo: s.vehiculo,
-    created_at: (s as any).created_at || s.fecha_salida, updated_at: s.updated_at,
-    _raw: s as unknown as Record<string, unknown>,
+    id: value.id, codigo: value.codigo, destino: value.destino, fecha_salida: value.fecha_salida,
+    estado: value.estado, origen: value.origen, unidad: value.unidad, solicitante: person(value.solicitante ?? undefined),
+    modulo: "combustible", motorista: value.motorista, vehiculo: value.vehiculo,
+    created_at: value.created_at || value.fecha_salida, updated_at: value.updated_at, _raw: toRecord(value),
   };
 }
 
-async function fetchAllPages<T>(fetcher: (filters: any) => Promise<{ data: T[]; total: number }>, apiFilters: any): Promise<T[]> {
-  const first = await fetcher({ ...apiFilters, page: 1 });
-  const all = [...first.data];
-  if (all.length >= first.total) return all;
+export const requestModuleAdapters: readonly RequestModuleAdapter[] = [
+  {
+    module: "transporte",
+    fetchPage: async (filters) => {
+      const result = await getAllRequests(filters);
+      return { ...result, data: result.data.map(normalizeTransporte) };
+    },
+  },
+  {
+    module: "mantenimiento",
+    fetchPage: async (filters) => {
+      const result = await getAllMantenimientos(filters);
+      return { ...result, data: result.data.map(normalizeMantenimiento) };
+    },
+  },
+  {
+    module: "combustible",
+    fetchPage: async (filters) => {
+      const result = await getAllCombustibles({
+        page: filters.page, per_page: filters.per_page, search: filters.search,
+        estado: isCombustibleStatus(filters.estado) ? filters.estado : undefined,
+      });
+      return { ...result, data: result.data.map(normalizeCombustible) };
+    },
+  },
+];
 
-  const perPage = first.data.length || PER_PAGE;
-  const totalPages = Math.ceil(first.total / perPage);
-  const maxPages = Math.min(totalPages, 5);
-  if (maxPages <= 1) return all;
-
-  const pagePromises = [];
-  for (let p = 2; p <= maxPages; p++) {
-    pagePromises.push(fetcher({ ...apiFilters, page: p }).catch(() => ({ data: [] as T[], total: 0 })));
-  }
-  const results = await Promise.all(pagePromises);
-  results.forEach((r) => all.push(...r.data));
-  return all;
-}
-
-function sortByDate(arr: CombinedRequest[]): CombinedRequest[] {
-  return [...arr].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-}
+const sortByDate = (items: CombinedRequest[]) => [...items].sort(
+  (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+);
 
 export function useCombinedRequests() {
   const [page, setPage] = useState(1);
   const [searchInput, setSearchInput] = useState("");
   const [filters, setFilters] = useState<CombinedFilters>({ estado: "", modulo: "", search: "" });
-
   const searchTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     clearTimeout(searchTimer.current);
     searchTimer.current = setTimeout(() => {
-      setFilters((f) => ({ ...f, search: searchInput }));
-      setPage(1);
+      setFilters((current) => ({ ...current, search: searchInput })); setPage(1);
     }, 350);
     return () => clearTimeout(searchTimer.current);
   }, [searchInput]);
 
-  const apiFilters = {
-    per_page: PER_PAGE,
-    page: page,
-    estado: filters.estado || undefined,
-    search: filters.search || undefined,
+  const apiFilters: RequestFilters = {
+    per_page: PER_PAGE, page, estado: filters.estado || undefined, search: filters.search || undefined,
   };
-
-  const shouldFetchTransporte = !filters.modulo || filters.modulo === "transporte";
-  const shouldFetchMantenimiento = !filters.modulo || filters.modulo === "mantenimiento";
-  const shouldFetchCombustible = !filters.modulo || filters.modulo === "combustible";
-
-  const queries = useQueries({
-    queries: [
-      {
-        queryKey: ["transporte-all", apiFilters],
-        queryFn: async () => {
-          const data = await fetchAllPages(getAllRequests, apiFilters);
-          return data.map(normalizeTransporte);
-        },
-        enabled: shouldFetchTransporte,
-        staleTime: 60 * 1000,
-      },
-      {
-        queryKey: ["mantenimiento-all", apiFilters],
-        queryFn: async () => {
-          const data = await fetchAllPages(getAllMantenimientos, apiFilters);
-          return data.map(normalizeMantenimiento);
-        },
-        enabled: shouldFetchMantenimiento,
-        staleTime: 60 * 1000,
-      },
-      {
-        queryKey: ["combustible-all", apiFilters],
-        queryFn: async () => {
-          const data = await fetchAllPages(getAllCombustibles as any, apiFilters);
-          return (data as any[]).map((s) => normalizeCombustible(s));
-        },
-        enabled: shouldFetchCombustible,
-        staleTime: 60 * 1000,
-      },
-    ],
+  const enabled = requestModuleAdapters.map((adapter) => !filters.modulo || filters.modulo === adapter.module);
+  const queries = useQueries({ queries: requestModuleAdapters.map((adapter, index) => ({
+    queryKey: queryKeys.requests(adapter.module, apiFilters),
+    queryFn: () => adapter.fetchPage(apiFilters), enabled: enabled[index], staleTime: 60_000,
+  })) });
+  const activeQueries = queries.filter((_, index) => enabled[index]);
+  const loadedRequests = sortByDate(activeQueries.flatMap((query) => query.data?.data ?? []));
+  const normalizedSearch = filters.search.trim().toLocaleLowerCase("es");
+  const requests = loadedRequests.filter((request) => {
+    const matchesStatus = !filters.estado
+      || normalizeRequestStatus(request.estado) === normalizeRequestStatus(filters.estado);
+    const haystack = [request.codigo, request.origen, request.destino, request.unidad?.nombre]
+      .filter(Boolean)
+      .join(" ")
+      .toLocaleLowerCase("es");
+    return matchesStatus && (!normalizedSearch || haystack.includes(normalizedSearch));
   });
-
-  const allItems = useMemo(() => {
-    const items = queries.flatMap((q) => q.data || []);
-    return sortByDate(items);
-  }, [queries[0].data, queries[1].data, queries[2].data]);
-
-  const loading = queries.some((q) => q.isLoading && q.fetchStatus !== 'idle');
-  
-  const expectedQueries = [shouldFetchTransporte, shouldFetchMantenimiento, shouldFetchCombustible].filter(Boolean).length;
-  const loadedQueries = queries.filter((q) => q.isSuccess).length;
-  const isPartiallyLoaded = loadedQueries > 0 && loadedQueries < expectedQueries;
-  const error = queries.find((q) => q.error)?.error?.message || null;
-
-  const total = allItems.length;
-  const totalPages = Math.max(1, Math.ceil(total / PER_PAGE));
-  const safePage = Math.min(page, totalPages);
-  const requests = allItems.slice((safePage - 1) * PER_PAGE, safePage * PER_PAGE);
+  const selectedIndex = filters.modulo
+    ? requestModuleAdapters.findIndex((adapter) => adapter.module === filters.modulo)
+    : -1;
+  const selectedResult = selectedIndex >= 0 ? queries[selectedIndex].data : undefined;
+  const loading = activeQueries.some((query) => query.isLoading);
+  const loadedQueries = activeQueries.filter((query) => query.isSuccess).length;
+  const firstError = activeQueries.find((query) => query.error)?.error;
+  const hasClientFilters = Boolean(filters.estado || filters.search);
+  const total = hasClientFilters ? requests.length : selectedResult?.total ?? requests.length;
+  const totalPages = hasClientFilters ? 1 : selectedResult?.total_pages ?? 1;
+  const moduleStates: ModuleLoadState[] = requestModuleAdapters.map((adapter, index) => ({
+    module: adapter.module, loading: enabled[index] && queries[index].isLoading,
+    error: queries[index].error ? normalizeAppError(queries[index].error).message : null,
+    retry: () => { void queries[index].refetch(); },
+  }));
 
   const handleEstadoChange = (estado: RequestStatus | "") => {
-    setFilters((f) => ({ ...f, estado }));
-    setPage(1);
+    setFilters((current) => ({ ...current, estado })); setPage(1);
   };
-
   const handleModuloChange = (modulo: Modulo | "") => {
-    setFilters((f) => ({ ...f, modulo }));
-    setPage(1);
+    setFilters((current) => ({ ...current, modulo })); setPage(1);
   };
-
   const clearFilters = () => {
-    setFilters({ estado: "", modulo: "", search: "" });
-    setSearchInput("");
-    setPage(1);
+    setFilters({ estado: "", modulo: "", search: "" }); setSearchInput(""); setPage(1);
   };
-
-  const refresh = () => {
-    queries.forEach(q => q.refetch());
-  };
+  const refresh = () => activeQueries.forEach((query) => { void query.refetch(); });
 
   return {
-    loading,
-    isPartiallyLoaded,
-    error,
-    requests,
-    total,
-    totalPages,
-    page: safePage,
-    filters,
-    searchInput,
-    setPage,
-    setSearchInput,
-    handleEstadoChange,
-    handleModuloChange,
-    clearFilters,
-    refresh,
+    loading, isPartiallyLoaded: loadedQueries > 0 && loadedQueries < activeQueries.length,
+    error: firstError ? normalizeAppError(firstError).message : null,
+    requests, total, totalPages, page: Math.min(page, Math.max(1, totalPages)), filters, searchInput, moduleStates,
+    isBackendLimited: !filters.modulo || hasClientFilters,
+    setPage, setSearchInput, handleEstadoChange, handleModuloChange, clearFilters, refresh,
   };
 }

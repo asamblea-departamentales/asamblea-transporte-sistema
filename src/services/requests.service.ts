@@ -17,7 +17,8 @@ export type RequestStatus =
   | "completada"
   | "finalizada"
   | "en_revision"
-  | "cancelada";
+  | "cancelada"
+  | "liquidada";
 
 export type Unidad = {
   id: number;
@@ -172,10 +173,6 @@ export async function createRequest(
     solicitudId: data?.codigo ?? data?.data?.codigo ?? data?.id,
     message:     data?.message,
   };
-}
-
-export async function deleteRequest(id: string | number): Promise<void> {
-  await api.delete(`/api/solicitudes-transporte/${id}`);
 }
 
 export async function completeRequest(id: string | number): Promise<Request> {

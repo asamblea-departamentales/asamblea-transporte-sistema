@@ -2,7 +2,7 @@
 // Utilidades de geocodificación y routing
 // Usa proxy de Vercel para evitar CORS con Nominatim y OSRM
 
-const NOMINATIM_EMAIL = "app@transporte.institucional.sv";
+const NOMINATIM_EMAIL = import.meta.env.VITE_NOMINATIM_EMAIL as string;
 
 // ─── NOMINATIM (via proxy Vercel) ─────────────────────────────────────────────
 

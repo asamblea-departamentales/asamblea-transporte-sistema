@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { getRequestById } from "../../services/requests.service";
 import { getMantenimientoById } from "../../services/mantenimiento.service";
@@ -19,7 +19,7 @@ export default function RequestDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<GenericRequest | null>(null);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     if (!modulo || !id) return;
     setLoading(true);
     setError(null);
@@ -31,7 +31,7 @@ export default function RequestDetailPage() {
 
       if (!res) throw new Error("No se encontró la solicitud");
       
-      const raw = res as any;
+      const raw = res as GenericRequest;
       const normalized: GenericRequest = {
         ...raw,
         origen: raw.origen || raw.punto_salida,
@@ -45,11 +45,11 @@ export default function RequestDetailPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [modulo, id]);
 
   useEffect(() => {
-    fetchData();
-  }, [modulo, id]);
+    void fetchData();
+  }, [fetchData]);
 
   if (loading) {
     return (

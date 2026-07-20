@@ -15,6 +15,7 @@ export interface CatalogosState {
   loading: boolean;
   loadingSolicitudes: boolean;
   error: string | null;
+  warning: string | null;
 }
 
 export interface FormData {

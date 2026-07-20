@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
+import { getRequestDetailPath } from "../lib/requestIdentity";
 
 // ─── Config visual ─────────────────────────────────────────────────────────────
 
@@ -171,7 +172,7 @@ export default function NotificationsPage() {
                 key={n.id}
                 onClick={() => {
                   if (!n.leida) markAsRead(n.id);
-                  navigate(`/solicitudes/${n.modulo}/${n.reqId}`);
+                  navigate(getRequestDetailPath({ modulo: n.modulo, id: n.reqId, codigo: n.codigo }));
                 }}
                 className={`group w-full rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] ${
                   n.leida ? "border-slate-100 opacity-60" : "border-slate-200"

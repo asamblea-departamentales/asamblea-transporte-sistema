@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { finalizarMantenimiento } from "../../../../services/mantenimiento.service";
 import { finalizarMantenimientoSchema, type FinalizarMantenimientoFormValues } from "../../../../schemas/requests.schema";
 import { Spinner } from "../../Combustible/components/FormUI";
+import { FocusTrap } from "../../../../components/ui/FocusTrap";
 
 interface Props {
   isOpen: boolean;
@@ -78,10 +79,11 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
       });
       reset();
       onSuccess();
-    } catch (err: any) {
-      const msg = err.response?.data?.errors
-        ? Object.values(err.response.data.errors).flat().join(" • ")
-        : err.response?.data?.message || err.message || "Error al finalizar.";
+    } catch (err: unknown) {
+      const axiosErr = err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } }; message?: string };
+      const msg = axiosErr?.response?.data?.errors
+        ? Object.values(axiosErr.response.data.errors).flat().join(" • ")
+        : axiosErr?.response?.data?.message || axiosErr?.message || "Error al finalizar.";
       setGlobalError(msg);
     } finally {
       setLoading(false);
@@ -92,12 +94,13 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
   const fileIcon = (f: File) => (f.type === "application/pdf" ? "📄" : "🖼️");
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
-      {/* Backdrop */}
-      <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={loading ? undefined : onClose} />
+    <FocusTrap onEscape={loading ? undefined : onClose}>
+      <div className="fixed inset-0 z-[100] flex items-end justify-center p-0 sm:items-center sm:p-4">
+        {/* Backdrop */}
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-sm" onClick={loading ? undefined : onClose} />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:rounded-3xl">
+        {/* Modal */}
+        <div className="relative w-full max-w-lg animate-slide-up overflow-hidden rounded-t-3xl border border-slate-200 bg-white shadow-2xl sm:rounded-3xl" role="dialog" aria-modal="true" aria-label="Finalizar mantenimiento">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-slate-100 bg-gradient-to-r from-emerald-50 to-teal-50 px-6 py-4">
           <div className="flex items-center gap-3">
@@ -258,6 +261,7 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
           </div>
         </form>
       </div>
-    </div>
+      </div>
+    </FocusTrap>
   );
 }

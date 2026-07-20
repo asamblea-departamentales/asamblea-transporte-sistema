@@ -57,7 +57,7 @@ export default function DetalleMantenimiento({ data, isOwner, onRefresh }: Props
           <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             <DetailItem icon={<User className="h-4 w-4" />} label="Solicitante" value={str(data.solicitante?.name ?? data.solicitante)} />
             <DetailItem icon={<Building2 className="h-4 w-4" />} label="Unidad" value={str(data.unidad?.nombre ?? data.unidad)} />
-            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha Sugerida" value={new Date(data.fecha_sugerida ?? Date.now()).toLocaleDateString()} />
+            <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha Sugerida" value={data.fecha_sugerida ? new Date(data.fecha_sugerida).toLocaleDateString() : "Sin fecha"} />
             <DetailItem icon={<Wrench className="h-4 w-4" />} label="Tipo de Mantenimiento" value={str(data.tipo_mantenimiento)} />
             <DetailItem icon={<Clock className="h-4 w-4" />} label="Prioridad" value={str(data.prioridad)} />
           </div>

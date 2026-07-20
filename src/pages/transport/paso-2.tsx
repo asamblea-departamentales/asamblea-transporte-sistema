@@ -6,141 +6,33 @@ import "leaflet/dist/leaflet.css";
 import LocationInput from "../../components/transport/LocationInput";
 import TransportWizard from "../../components/ui/TransportWizard";
 import { reverseGeocode } from "@/lib/geo";
-
-// ─── Tipos ─────────────────────────────────────────────────────────────────────
-
-type DestinationPoint = {
-  id: string;
-  address: string;
-  lat?: number;
-  lng?: number;
-};
-
-type WizardData = {
-  fecha?: string;
-  hora?: string;
-  encargado?: string;
-  subencargado?: string;
-  pasajeros?: string;
-  origen?: string;
-  origenLat?: number;
-  origenLng?: number;
-  destinos?: DestinationPoint[];
-};
-
-// ─── Constantes ────────────────────────────────────────────────────────────────
-
-const STORAGE_KEY = "solicitud_transporte";
-
-const WIZARD_STEPS = [
-  { id: 1, label: "Datos" },
-  { id: 2, label: "Ruta" },
-  { id: 3, label: "Confirmar" },
-];
-
-const ICON_ORIGIN = L.icon({
-  iconUrl:
-    "data:image/svg+xml;base64," +
-    btoa(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#0f2548" width="32" height="32">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>`
-    ),
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
-
-const ICON_DEST = L.icon({
-  iconUrl:
-    "data:image/svg+xml;base64," +
-    btoa(
-      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="#ef4444" width="32" height="32">
-        <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/>
-      </svg>`
-    ),
-  iconSize: [32, 32],
-  iconAnchor: [16, 32],
-  popupAnchor: [0, -32],
-});
-
-// Límites geográficos de El Salvador
-const SV_BOUNDS: L.LatLngBoundsExpression = [
-  [12.97, -90.2],
-  [14.55, -87.6],
-];
-
-// ─── Utilidades ────────────────────────────────────────────────────────────────
-
-const uid = () => Math.random().toString(16).slice(2) + Date.now().toString(16);
-
-const safeParse = (json: string | null): WizardData => {
-  try {
-    return json ? JSON.parse(json) : {};
-  } catch {
-    return {};
-  }
-};
-
-const hasValidCoords = (lat?: number, lng?: number) => {
-  return Number.isFinite(lat) && Number.isFinite(lng);
-};
-
-// ─── Micro-componentes ────────────────────────────────────────────────────────
-
-function SectionTitle({
-  icon,
-  label,
-}: {
-  icon: React.ReactNode;
-  label: string;
-}) {
-  return (
-    <div className="flex items-center gap-2.5 mb-5">
-      <div
-        className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0"
-        style={{ background: "rgba(15,37,72,0.07)", color: "#0f2548" }}
-      >
-        {icon}
-      </div>
-      <span className="text-[14px] font-bold text-slate-800">{label}</span>
-    </div>
-  );
-}
-
-function Label({
-  children,
-  required,
-}: {
-  children: React.ReactNode;
-  required?: boolean;
-}) {
-  return (
-    <label className="mb-1.5 flex items-center gap-1.5 text-[11px] font-bold text-slate-600 uppercase tracking-wide">
-      {children}
-      {required && (
-        <span className="text-red-500 font-black normal-case tracking-normal">
-          *
-        </span>
-      )}
-    </label>
-  );
-}
+import { ICON_ORIGIN, ICON_DEST, SV_BOUNDS } from "./mapIcons";
+import {
+  STORAGE_KEY,
+  WIZARD_STEPS,
+  type DestinationPoint,
+  type WizardData,
+  uid,
+  safeParse,
+  hasValidCoords,
+} from "./transportUtils";
+import { SectionTitle, Label } from "./FormPrimitives";
 
 // ─── Página ────────────────────────────────────────────────────────────────────
 
 export default function TransportStep2Page() {
   const navigate = useNavigate();
 
-  const [origen, setOrigen] = useState("");
-  const [origenCoords, setOrigenCoords] = useState<{
-    lat: number;
-    lng: number;
-  } | null>(null);
-
-  const [destinos, setDestinos] = useState<DestinationPoint[]>([
-    { id: uid(), address: "" },
-  ]);
+  const [savedDraft] = useState<WizardData>(() => safeParse(localStorage.getItem(STORAGE_KEY)));
+  const [origen, setOrigen] = useState(() => savedDraft.origen ?? "");
+  const [origenCoords, setOrigenCoords] = useState<{ lat: number; lng: number } | null>(() =>
+    hasValidCoords(savedDraft.origenLat, savedDraft.origenLng)
+      ? { lat: savedDraft.origenLat!, lng: savedDraft.origenLng! }
+      : null,
+  );
+  const [destinos, setDestinos] = useState<DestinationPoint[]>(() =>
+    savedDraft.destinos?.length ? savedDraft.destinos : [{ id: uid(), address: "" }],
+  );
 
   const [submitted, setSubmitted] = useState(false);
 
@@ -162,25 +54,8 @@ export default function TransportStep2Page() {
     };
   }, [origen, origenCoords]);
 
-  // Cargar datos iniciales y escuchar clics del mapa
+  // Escuchar clics del mapa
   useEffect(() => {
-    const saved = safeParse(localStorage.getItem(STORAGE_KEY));
-
-    if (saved.origen) {
-      setOrigen(saved.origen);
-
-      if (hasValidCoords(saved.origenLat, saved.origenLng)) {
-        setOrigenCoords({
-          lat: saved.origenLat!,
-          lng: saved.origenLng!,
-        });
-      }
-    }
-
-    if (saved.destinos?.length) {
-      setDestinos(saved.destinos);
-    }
-
     const onMapClick = (e: Event) => {
       const customEvent = e as CustomEvent<{ lat: number; lng: number }>;
       const { lat, lng } = customEvent.detail;
@@ -188,46 +63,46 @@ export default function TransportStep2Page() {
       if (!hasValidCoords(lat, lng)) return;
 
       reverseGeocode(lat, lng)
-  .then((display_name) => {
-    const addr = display_name ?? `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+        .then((display_name) => {
+          const addr = display_name ?? `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-    if (!edenRef.current.oc) {
-      setOrigen(addr);
-      setOrigenCoords({ lat, lng });
-    } else {
-      setDestinos((ds) => {
-        const idxValue = ds.findIndex((d) => !d.address.trim());
+          if (!edenRef.current.oc) {
+            setOrigen(addr);
+            setOrigenCoords({ lat, lng });
+          } else {
+            setDestinos((ds) => {
+              const idxValue = ds.findIndex((d) => !d.address.trim());
 
-        if (idxValue !== -1) {
-          return ds.map((d, i) =>
-            i === idxValue ? { ...d, address: addr, lat, lng } : d
-          );
-        }
+              if (idxValue !== -1) {
+                return ds.map((d, i) =>
+                  i === idxValue ? { ...d, address: addr, lat, lng } : d
+                );
+              }
 
-        return [...ds, { id: uid(), address: addr, lat, lng }];
-      });
-    }
-  })
-  .catch(() => {
-    const addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
+              return [...ds, { id: uid(), address: addr, lat, lng }];
+            });
+          }
+        })
+        .catch(() => {
+          const addr = `${lat.toFixed(6)}, ${lng.toFixed(6)}`;
 
-    if (!edenRef.current.oc) {
-      setOrigen(addr);
-      setOrigenCoords({ lat, lng });
-    } else {
-      setDestinos((ds) => {
-        const idxValue = ds.findIndex((d) => !d.address.trim());
+          if (!edenRef.current.oc) {
+            setOrigen(addr);
+            setOrigenCoords({ lat, lng });
+          } else {
+            setDestinos((ds) => {
+              const idxValue = ds.findIndex((d) => !d.address.trim());
 
-        if (idxValue !== -1) {
-          return ds.map((d, i) =>
-            i === idxValue ? { ...d, address: addr, lat, lng } : d
-          );
-        }
+              if (idxValue !== -1) {
+                return ds.map((d, i) =>
+                  i === idxValue ? { ...d, address: addr, lat, lng } : d
+                );
+              }
 
-        return [...ds, { id: uid(), address: addr, lat, lng }];
-      });
-    }
-  });
+              return [...ds, { id: uid(), address: addr, lat, lng }];
+            });
+          }
+        });
     };
 
     window.addEventListener("map:click", onMapClick);
@@ -260,13 +135,11 @@ export default function TransportStep2Page() {
 
     mapRef.current = map;
 
-    L.tileLayer(
-      "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-      {
-        attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
-        maxZoom: 19,
-      }
-    ).addTo(map);
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution:
+        '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      maxZoom: 19,
+    }).addTo(map);
 
     map.on("click", (e: L.LeafletMouseEvent) => {
       window.dispatchEvent(
@@ -321,10 +194,7 @@ export default function TransportStep2Page() {
 
     const bounds: [number, number][] = [];
 
-    if (
-      origenCoords &&
-      hasValidCoords(origenCoords.lat, origenCoords.lng)
-    ) {
+    if (origenCoords && hasValidCoords(origenCoords.lat, origenCoords.lng)) {
       const m = L.marker([origenCoords.lat, origenCoords.lng], {
         icon: ICON_ORIGIN,
       })
@@ -337,9 +207,7 @@ export default function TransportStep2Page() {
 
     destinos.forEach((d, i) => {
       if (hasValidCoords(d.lat, d.lng)) {
-        const m = L.marker([d.lat!, d.lng!], {
-          icon: ICON_DEST,
-        })
+        const m = L.marker([d.lat!, d.lng!], { icon: ICON_DEST })
           .addTo(map)
           .bindPopup(`<b>Destino ${i + 1}:</b><br>${d.address}`);
 
@@ -348,9 +216,7 @@ export default function TransportStep2Page() {
       }
     });
 
-    const withCoords = destinos.filter((d) =>
-      hasValidCoords(d.lat, d.lng)
-    );
+    const withCoords = destinos.filter((d) => hasValidCoords(d.lat, d.lng));
 
     if (
       origenCoords &&
@@ -359,9 +225,7 @@ export default function TransportStep2Page() {
     ) {
       const pts: L.LatLngExpression[] = [
         [origenCoords.lat, origenCoords.lng],
-        ...withCoords.map(
-          (d) => [d.lat!, d.lng!] as L.LatLngExpression
-        ),
+        ...withCoords.map((d) => [d.lat!, d.lng!] as L.LatLngExpression),
       ];
 
       routeLayerRef.current = L.polyline(pts, {
@@ -426,18 +290,18 @@ export default function TransportStep2Page() {
       <TransportWizard steps={WIZARD_STEPS} currentStep={2} />
 
       <div className="px-1">
-        <div className="flex items-center gap-2 mb-1.5">
+        <div className="mb-1.5 flex items-center gap-2">
           <span className="inline-block h-[2px] w-5 rounded-full bg-blue-700" />
           <span className="text-[10px] font-black uppercase tracking-[.18em] text-blue-700">
             Ruta del Viaje
           </span>
         </div>
 
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 leading-none sm:text-[28px]">
+        <h1 className="text-2xl font-bold leading-none tracking-tight text-slate-900 sm:text-[28px]">
           Ubicaciones
         </h1>
 
-        <p className="mt-1.5 text-[13px] text-slate-500 leading-relaxed">
+        <p className="mt-1.5 text-[13px] leading-relaxed text-slate-500">
           Define el punto de salida y los destinos. Puedes usar el mapa para
           fijar puntos exactos.
         </p>
@@ -445,7 +309,7 @@ export default function TransportStep2Page() {
 
       {hasErrors && (
         <div className="flex items-start gap-3 rounded-xl border border-red-200 bg-red-50 px-4 py-3">
-          <div className="flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600 mt-0.5">
+          <div className="mt-0.5 flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg bg-red-100 text-red-600">
             <svg
               className="h-4 w-4"
               fill="none"
@@ -465,14 +329,14 @@ export default function TransportStep2Page() {
             <p className="text-[12px] font-bold text-red-900">
               Campos requeridos
             </p>
-            <p className="text-[11px] text-red-700 mt-0.5">
+            <p className="mt-0.5 text-[11px] text-red-700">
               Indique al menos el origen y un destino.
             </p>
           </div>
         </div>
       )}
 
-      <div className="rounded-2xl border border-slate-200 bg-white shadow-sm divide-y divide-slate-100 mx-0">
+      <div className="mx-0 divide-y divide-slate-100 rounded-2xl border border-slate-200 bg-white shadow-sm">
         <div className="p-4 sm:p-6">
           <SectionTitle
             label="Punto de Salida"
@@ -559,12 +423,8 @@ export default function TransportStep2Page() {
                           ? {
                               ...d,
                               address: v,
-                              lat: hasValidCoords(la, ln)
-                                ? la
-                                : undefined,
-                              lng: hasValidCoords(la, ln)
-                                ? ln
-                                : undefined,
+                              lat: hasValidCoords(la, ln) ? la : undefined,
+                              lng: hasValidCoords(la, ln) ? ln : undefined,
                             }
                           : d
                       )
@@ -613,23 +473,26 @@ export default function TransportStep2Page() {
           />
 
           <div className="overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 shadow-sm">
-            <div ref={mapContainerRef} className="h-[340px] sm:h-[420px] w-full" />
+            <div
+              ref={mapContainerRef}
+              className="h-[340px] w-full sm:h-[420px]"
+            />
           </div>
 
-          <p className="mt-3 text-center text-[11px] text-slate-400 italic">
+          <p className="mt-3 text-center text-[11px] italic text-slate-400">
             Puedes hacer clic en el mapa para fijar el origen y los destinos
             automáticamente.
           </p>
         </div>
 
-        <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between px-4 py-4 bg-slate-50/50">
+        <div className="flex flex-col-reverse gap-3 bg-slate-50/50 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <button
             type="button"
             onClick={() => {
               save();
               navigate("/solicitudes/transporte/paso-1");
             }}
-            className="inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:bg-white hover:text-slate-700 border border-transparent hover:border-slate-200 hover:shadow-sm focus:outline-none"
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-transparent px-4 py-2.5 text-[13px] font-semibold text-slate-500 transition hover:border-slate-200 hover:bg-white hover:text-slate-700 hover:shadow-sm focus:outline-none"
           >
             <svg
               className="h-4 w-4"

@@ -3,6 +3,7 @@ import {
   X, ChevronLeft, ChevronRight, Download, ZoomIn, ZoomOut,
   Maximize2, FileText,
 } from "lucide-react";
+import { FocusTrap } from "./FocusTrap";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
 
@@ -40,6 +41,11 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
   const canPrev = index > 0;
   const canNext = index < total - 1;
 
+  const handleClose = useCallback(() => {
+    setShow(false);
+    window.setTimeout(onClose, 280);
+  }, [onClose]);
+
   // ── Entrance animation ──────────────────────────────────────────────────
   useEffect(() => {
     const t = setTimeout(() => setShow(true), 20);
@@ -48,6 +54,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
 
   // ── Reset zoom & loaded state when index changes ────────────────────────
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- reset the viewer for the selected file.
     setZoom(1);
     setImgLoaded(false);
   }, [index]);
@@ -55,7 +62,6 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
   // ── Keyboard nav ────────────────────────────────────────────────────────
   const handleKey = useCallback(
     (e: KeyboardEvent) => {
-      if (e.key === "Escape") handleClose();
       if (e.key === "ArrowLeft" && canPrev) setIndex((i) => i - 1);
       if (e.key === "ArrowRight" && canNext) setIndex((i) => i + 1);
       if (e.key === "+" || e.key === "=") setZoom((z) => clamp(z + 0.5, 1, 4));
@@ -74,12 +80,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
   }, [handleKey]);
 
   // ── Close with exit animation ───────────────────────────────────────────
-  function handleClose() {
-    setShow(false);
-    setTimeout(onClose, 280);
-  }
-
-  // ── Swipe handlers (mobile) ─────────────────────────────────────────────
+// ── Swipe handlers (mobile) ─────────────────────────────────────────────
   function onTouchStart(e: React.TouchEvent) {
     if (zoom > 1) return;
     setDragStart(e.touches[0].clientX);
@@ -102,13 +103,20 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
   }
 
   return (
-    <div
-      className={`fixed inset-0 z-[9999] flex flex-col transition-all duration-300 ${
+    <FocusTrap
+      onEscape={handleClose}
+      className={`fixed inset-0 z-[9999] transition-all duration-300 ${
         show
           ? "bg-black/90 backdrop-blur-md"
           : "bg-black/0 backdrop-blur-none"
       }`}
-      onClick={(e) => {
+    >
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label={`Visor de archivos: ${file.name}`}
+        className="flex h-full flex-col"
+        onClick={(e) => {
         if (e.target === e.currentTarget) handleClose();
       }}
     >
@@ -151,6 +159,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
                 disabled={zoom <= 1}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
                 title="Reducir"
+                aria-label="Reducir imagen"
               >
                 <ZoomOut className="h-4 w-4" />
               </button>
@@ -159,6 +168,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
                 disabled={zoom >= 4}
                 className="flex h-9 w-9 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/10 hover:text-white disabled:opacity-30"
                 title="Ampliar"
+                aria-label="Ampliar imagen"
               >
                 <ZoomIn className="h-4 w-4" />
               </button>
@@ -173,6 +183,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
             rel="noopener noreferrer"
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white/60 transition hover:bg-white/10 hover:text-white"
             title="Descargar"
+            aria-label={`Descargar ${file.name}`}
             onClick={(e) => e.stopPropagation()}
           >
             <Download className="h-4 w-4" />
@@ -184,6 +195,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
             onClick={handleClose}
             className="flex h-9 w-9 items-center justify-center rounded-xl text-white/60 transition hover:bg-red-500/20 hover:text-red-400"
             title="Cerrar (ESC)"
+            aria-label="Cerrar visor"
           >
             <X className="h-5 w-5" />
           </button>
@@ -204,6 +216,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
               e.stopPropagation();
               setIndex((i) => i - 1);
             }}
+            aria-label="Archivo anterior"
             className={`absolute left-3 z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white/70 shadow-lg backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white active:scale-95 sm:left-6 ${
               show
                 ? "translate-x-0 opacity-100"
@@ -220,6 +233,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
               e.stopPropagation();
               setIndex((i) => i + 1);
             }}
+            aria-label="Archivo siguiente"
             className={`absolute right-3 z-10 flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 text-white/70 shadow-lg backdrop-blur-sm transition-all hover:bg-white/20 hover:text-white active:scale-95 sm:right-6 ${
               show
                 ? "translate-x-0 opacity-100"
@@ -308,6 +322,8 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
           {files.map((f, i) => (
             <button
               key={i}
+              aria-label={`Ver archivo ${i + 1}: ${f.name}`}
+              aria-current={i === index ? "true" : undefined}
               onClick={(e) => {
                 e.stopPropagation();
                 setIndex(i);
@@ -356,6 +372,7 @@ export default function Lightbox({ files, initialIndex, onClose }: Props) {
           Zoom
         </span>
       </div>
-    </div>
+      </div>
+    </FocusTrap>
   );
 }

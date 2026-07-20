@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type NotiTipo } from "./NotificationContext";
+import { getRequestDetailPath } from "../lib/requestIdentity";
 
 // ─── Config visual por tipo ───────────────────────────────────────────────────
 // Adaptado al tema institucional light — no dark
@@ -63,8 +64,8 @@ function ToastItem({ onDone }: { onDone: () => void }) {
     return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
   }, [toast, onDone]);
 
-  const handleClose = (e: React.MouseEvent) => {
-    e.stopPropagation(); // Evitar navegar al cerrar
+  const handleClose = (e?: React.MouseEvent) => {
+    e?.stopPropagation(); // Evitar navegar al cerrar
     setVisible(false);
     setProgress(false);
     timerRef.current = setTimeout(onDone, 350);
@@ -72,8 +73,8 @@ function ToastItem({ onDone }: { onDone: () => void }) {
 
   const handleNavigate = () => {
     if (!toast) return;
-    navigate(`/solicitudes/${toast.modulo}/${toast.reqId}`);
-    handleClose({ stopPropagation: () => {} } as any); // Cerrar tras navegar
+    navigate(getRequestDetailPath({ modulo: toast.modulo, id: toast.reqId, codigo: toast.codigo }));
+    handleClose(); // Cerrar tras navegar
   };
 
   if (!toast) return null;
@@ -81,9 +82,16 @@ function ToastItem({ onDone }: { onDone: () => void }) {
 
   return (
     <div
-      role="alert"
-      aria-live="polite"
+      role="button"
+      tabIndex={0}
+      aria-label={`Abrir solicitud ${toast.codigo}`}
       onClick={handleNavigate}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          handleNavigate();
+        }
+      }}
       className={`
         relative flex items-start gap-3
         w-80 rounded-xl border bg-white shadow-[0_8px_30px_rgba(15,37,72,0.12),0_2px_8px_rgba(15,37,72,0.06)]

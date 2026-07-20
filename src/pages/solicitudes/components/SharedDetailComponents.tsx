@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState } from "react";
 import { Receipt, CreditCard, DollarSign, Ticket, FileText, CalendarCheck, Hash } from "lucide-react";
 import Lightbox from "../../../components/ui/Lightbox";
 
@@ -17,9 +17,11 @@ export type GenericRequest = {
   prioridad?: string;
   motivo_actividad?: string;
   origen?: string;
+  punto_salida?: string;
   origen_lat?: number | null;
   origen_lng?: number | null;
   destino?: string;
+  destino_principal?: string;
   destino_lat?: number | null;
   destino_lng?: number | null;
   destino_adicional_lat?: number | null;
@@ -111,15 +113,15 @@ export function FinalizacionDataSection({ data, modulo }: { data: GenericRequest
     (isMantenimiento && (data.fecha_realizada || data.costo_real != null || data.adjuntos?.length)) ||
     isTransporte;
 
-  if (!hasData) return null;
-
   const archivos: string[] = isCombustible ? (data.comprobantes ?? []) : isMantenimiento ? (data.adjuntos ?? []) : [];
 
-  const lightboxFiles = useMemo(() => archivos.map((path) => ({
+  const lightboxFiles = archivos.map((path) => ({
     url: storageUrl(path),
     name: path.split("/").pop() ?? "archivo",
     isImage: isImage(path),
-  })), [archivos]);
+  }));
+
+  if (!hasData) return null;
 
   function openLightbox(index: number) {
     setLightboxIndex(index);

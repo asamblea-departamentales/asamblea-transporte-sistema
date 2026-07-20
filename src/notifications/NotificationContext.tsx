@@ -4,6 +4,9 @@ import {
   useRef, useCallback, type ReactNode,
 } from "react";
 import { useNavigate } from "react-router-dom";
+import { reportError } from "../lib/observability";
+import { getRequestDetailPath } from "../lib/requestIdentity";
+import { useNotificationPolling } from "./useNotificationPolling";
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -28,7 +31,7 @@ type Snap = { id: number; estado: string; fecha_salida: string; codigo: string; 
 
 const NOTIF_KEY = "app_notifications_v1";
 const SNAP_KEY = "app_snap_v1";
-const POLL_MS = 60_000;
+const POLL_MS = 180_000; // 3 minutos
 
 const load = <T,>(key: string, fallback: T): T => {
   try {
@@ -183,7 +186,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       body: n.mensaje,
       icon: "/icons/icon-192x192.png",
       tag: n.id,
-      data: { url: `/solicitudes/${n.modulo}/${n.reqId}` }
+      data: { url: getRequestDetailPath({ modulo: n.modulo, id: n.reqId, codigo: n.codigo }) }
     };
 
     // Intentar vía Service Worker (mejor para Móvil/PWA)
@@ -212,6 +215,7 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
   }, [showNativeNotification]);
 
   const poll = useCallback(async () => {
+    if (document.hidden || !navigator.onLine) return;
     try {
       const [{ getAllRequests }, { getAllMantenimientos }, { getAllCombustibles }] = await Promise.all([
         import("../services/requests.service"),
@@ -219,37 +223,27 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
         import("../services/combustible.service"),
       ]);
 
-      const BIG = 200;
+      const BIG = 20;
       const [t, m, c] = await Promise.allSettled([
         getAllRequests({ per_page: BIG, page: 1 }),
         getAllMantenimientos({ per_page: BIG, page: 1 }),
         getAllCombustibles({ per_page: BIG, page: 1 }),
       ]);
 
+      if ([t, m, c].every((result) => result.status === "rejected")) {
+        throw new Error("No fue posible actualizar las notificaciones.");
+      }
+
       const next: Snap[] = [];
 
-      // Helper to process results and potentially fetch page 2 if needed (for notifications we only need recent items)
       if (t.status === "fulfilled") {
         t.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
-        // Si hay muchísima actividad, cargamos una página más
-        if (t.value.total > t.value.data.length && t.value.data.length < 50) {
-           const p2 = await getAllRequests({ per_page: BIG, page: 2 });
-           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
-        }
       }
       if (m.status === "fulfilled") {
         m.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
-        if (m.value.total > m.value.data.length && m.value.data.length < 50) {
-           const p2 = await getAllMantenimientos({ per_page: BIG, page: 2 });
-           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
-        }
       }
       if (c.status === "fulfilled") {
         c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
-        if (c.value.total > c.value.data.length && c.value.data.length < 50) {
-           const p2 = await getAllCombustibles({ per_page: BIG, page: 2 });
-           p2.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
-        }
       }
 
       if (isFirstPoll.current) {
@@ -264,15 +258,12 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(SNAP_KEY, JSON.stringify(next));
       push(incoming);
     } catch (err) {
-      console.error("Polling error:", err);
+      reportError(err, { feature: "notification-polling" });
+      throw err;
     }
   }, [push]);
 
-  useEffect(() => {
-    poll();
-    const id = setInterval(poll, POLL_MS);
-    return () => clearInterval(id);
-  }, [poll]);
+  useNotificationPolling({ poll, intervalMs: POLL_MS });
 
   const markAsRead = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
   const markAllRead = useCallback(() => setNotifications(p => p.map(n => ({ ...n, leida: true }))), []);

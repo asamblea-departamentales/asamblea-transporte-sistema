@@ -1,24 +1,19 @@
-import { useState, useCallback, useEffect, useRef } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import TransportWizard from "../../../components/ui/TransportWizard";
 import { Label, SelectInput, Spinner, SectionTitle, FieldError, inputCls } from "../Combustible/components/FormUI";
-import { api, BASE_URL as API_BASE } from "../../../lib/api";
+import { api } from "../../../lib/api";
+import { VehicleDropdown, type Catalogo } from "../../../components/ui/VehicleDropdown";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TipoSolicitud = "taller" | "llantas";
-
-interface Catalogo {
-  id: string;
-  label: string;
-  image?: string | null;
-  placa?: string | null;
-}
 
 interface CatalogosState {
   vehiculos: Catalogo[];
   tiposMantenimiento: Catalogo[];
   loading: boolean;
   error: string | null;
+  warning: string | null;
 }
 
 interface FormData {
@@ -49,143 +44,6 @@ const STEPS = [
 ];
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
-
-// ─── Custom Vehicle Dropdown ──────────────────────────────────────────────────
-function VehicleDropdown({
-  value,
-  onChange,
-  options,
-  placeholder,
-  error,
-  disabled,
-}: {
-  value: string;
-  onChange: (v: string) => void;
-  options: Catalogo[];
-  placeholder?: string;
-  error?: boolean;
-  disabled?: boolean;
-}) {
-  const [open, setOpen] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClickOutside(e: MouseEvent) {
-      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  const selected = options.find((o) => o.id === value);
-
-  return (
-    <div className="relative w-full" ref={containerRef}>
-      <button
-        type="button"
-        disabled={disabled}
-        onClick={() => setOpen(!open)}
-        className={`${inputCls(error ? "error" : undefined)} flex min-h-[48px] w-full items-center justify-between gap-3 p-1.5 px-4 text-left ${
-          disabled ? "cursor-not-allowed opacity-60" : "cursor-pointer"
-        }`}
-      >
-        {selected ? (
-          <div className="flex items-center gap-3">
-            <div className="flex h-8 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200">
-              {selected.image ? (
-                <img
-                  src={selected.image.startsWith("http") ? selected.image : `${import.meta.env.VITE_API_BASE_URL || ""}/storage/${selected.image}`}
-                  alt=""
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <svg className="h-4 w-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                </svg>
-              )}
-            </div>
-            <div>
-              <p className="text-[13px] font-bold text-slate-900 leading-tight">
-                {selected.label}
-              </p>
-              {selected.placa && (
-                <p className="text-[10px] font-semibold text-slate-500 uppercase">
-                  {selected.placa}
-                </p>
-              )}
-            </div>
-          </div>
-        ) : (
-          <span className="text-[13px] text-slate-400">{placeholder}</span>
-        )}
-
-        <svg
-          className={`h-5 w-5 text-slate-400 transition-transform ${open ? "rotate-180" : ""}`}
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-        >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
-        </svg>
-      </button>
-
-      {open && !disabled && (
-        <div className="absolute z-50 mt-2 max-h-60 w-full overflow-y-auto rounded-2xl border border-slate-100 bg-white py-2 shadow-xl shadow-slate-200/50 outline-none ring-1 ring-black/5">
-          {options.length === 0 ? (
-            <div className="p-4 text-center text-sm text-slate-500">No hay vehículos disponibles</div>
-          ) : (
-            options.map((o) => (
-              <button
-                key={o.id}
-                type="button"
-                onClick={() => {
-                  onChange(o.id);
-                  setOpen(false);
-                }}
-                className={`flex w-full items-center gap-3 px-4 py-2.5 text-left transition-colors hover:bg-slate-50/80 ${
-                  o.id === value ? "bg-blue-50/50" : ""
-                }`}
-              >
-                <div className="flex h-10 w-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 ring-1 ring-slate-200/50">
-                  {o.image ? (
-                    <img
-                      src={o.image.startsWith("http") ? o.image : `${import.meta.env.VITE_API_BASE_URL || ""}/storage/${o.image}`}
-                      alt=""
-                      className="h-full w-full object-cover"
-                    />
-                  ) : (
-                    <svg className="h-5 w-5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4" />
-                    </svg>
-                  )}
-                </div>
-                <div>
-                  <p className={`text-[13px] font-bold ${o.id === value ? "text-blue-900" : "text-slate-700"}`}>
-                    {o.label}
-                  </p>
-                  {o.placa && (
-                    <p className="mt-0.5 text-[10px] font-semibold text-slate-500 uppercase">
-                      Placa: {o.placa}
-                    </p>
-                  )}
-                </div>
-                {o.id === value && (
-                  <div className="ml-auto">
-                    <svg className="h-5 w-5 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                  </div>
-                )}
-              </button>
-            ))
-          )}
-        </div>
-      )}
-    </div>
-  );
-}
 
 function TipoCard({
   selected, onClick, label, description, icon,
@@ -565,15 +423,6 @@ function validate(step: number, data: FormData): Partial<Record<keyof FormData, 
   return e;
 }
 
-// ─── API helper ───────────────────────────────────────────────────────────────
-function authHeaders(): HeadersInit {
-  const token = localStorage.getItem("auth_token");
-  return {
-    Accept: "application/json",
-    ...(token ? { Authorization: `Bearer ${token}` } : {}),
-  };
-}
-
 // ─── Main Page ────────────────────────────────────────────────────────────────
 export default function NuevaSolicitudMantenimiento() {
   const navigate  = useNavigate();
@@ -590,48 +439,55 @@ export default function NuevaSolicitudMantenimiento() {
     tiposMantenimiento: [],
     loading: true,
     error: null,
+    warning: null,
   });
 
-  const fetchCatalogos = useCallback(async () => {
-    setCatalogos((prev) => ({ ...prev, loading: true, error: null }));
-    try {
-      const headers = authHeaders();
-      const [resVehs, resTipos] = await Promise.all([
-        fetch(`${API_BASE}/api/catalogos/vehiculos`,           { headers }),
-        fetch(`${API_BASE}/api/catalogos/tipos-mantenimiento`, { headers }),
-      ]);
+  const fetchCatalogos = useCallback(async (signal?: AbortSignal) => {
+    setCatalogos((prev) => ({ ...prev, loading: true, error: null, warning: null }));
 
-      if (!resVehs.ok || !resTipos.ok) throw new Error("No se pudieron cargar los catálogos técnicos del módulo.");
+    const [vehiculosResult, tiposResult] = await Promise.allSettled([
+      api.get("/api/catalogos/vehiculos", { signal }),
+      api.get("/api/catalogos/tipos-mantenimiento", { signal }),
+    ]);
+    if (signal?.aborted) return;
 
-      const [jsonVehs, jsonTipos] = await Promise.all([resVehs.json(), resTipos.json()]);
+    const getItems = <T,>(response: unknown): T[] => {
+      if (Array.isArray(response)) return response as T[];
+      if (response && typeof response === "object" && "data" in response) {
+        const nested = (response as { data?: unknown }).data;
+        return Array.isArray(nested) ? nested as T[] : [];
+      }
+      return [];
+    };
 
-      const vehiculos: Catalogo[] = (Array.isArray(jsonVehs) ? jsonVehs : jsonVehs.data ?? []).map(
-        (v: { id: number | string; label?: string; nombre?: string; placa?: string; fotografia_url?: string; imagen?: string }) => ({ 
-          id: String(v.id), 
-          label: v.placa ? `${v.placa} - ${v.label ?? v.nombre ?? ''}` : (v.label ?? v.nombre ?? String(v.id)),
+    const vehiculos = vehiculosResult.status === "fulfilled"
+      ? getItems<{ id: number | string; label?: string; nombre?: string; placa?: string; fotografia_url?: string; imagen?: string }>(vehiculosResult.value.data).map((v) => ({
+          id: String(v.id),
+          label: v.placa ? `${v.placa} - ${v.label ?? v.nombre ?? ""}` : (v.label ?? v.nombre ?? String(v.id)),
           image: v.fotografia_url || v.imagen || null,
-          placa: v.placa || null
-        })
-      );
+          placa: v.placa || null,
+        }))
+      : undefined;
+    const tiposMantenimiento = tiposResult.status === "fulfilled"
+      ? getItems<{ id: number | string; nombre?: string; label?: string }>(tiposResult.value.data)
+          .map((tipo) => ({ id: String(tipo.id), label: tipo.nombre ?? tipo.label ?? String(tipo.id) }))
+      : undefined;
+    const failed = [vehiculosResult, tiposResult].filter((result) => result.status === "rejected").length;
 
-      const tiposMantenimiento: Catalogo[] = (Array.isArray(jsonTipos) ? jsonTipos : jsonTipos.data ?? []).map(
-        (t: { id: number | string; nombre?: string; label?: string }) => ({ id: String(t.id), label: t.nombre ?? t.label ?? String(t.id) })
-      );
-
-      setCatalogos({ vehiculos, tiposMantenimiento, loading: false, error: null });
-    } catch (err: unknown) {
-      setCatalogos((prev) => ({
-        ...prev,
-        loading: false,
-        error: err instanceof Error ? err.message : "Desconexión detectada al recabar paramétros técnicos.",
-      }));
-    }
+    setCatalogos((previous) => ({
+      vehiculos: vehiculos ?? previous.vehiculos,
+      tiposMantenimiento: tiposMantenimiento ?? previous.tiposMantenimiento,
+      loading: false,
+      error: failed === 2 ? "No se pudieron cargar los catálogos técnicos del módulo." : null,
+      warning: failed === 1 ? "Un catálogo técnico no está disponible. Puede reintentar sin perder el formulario." : null,
+    }));
   }, []);
 
   useEffect(() => {
-    fetchCatalogos();
+    const controller = new AbortController();
+    void fetchCatalogos(controller.signal);
+    return () => controller.abort();
   }, [fetchCatalogos]);
-
   // ── Handlers ───────────────────────────────────────────────────────────────
   const update = useCallback((key: keyof FormData, value: string) => {
     setData((prev) => ({ ...prev, [key]: value }));
@@ -697,7 +553,7 @@ export default function NuevaSolicitudMantenimiento() {
         <div className="text-center w-full max-w-sm rounded-3xl border border-slate-200 bg-white p-8 shadow-sm">
           <svg className="mx-auto h-12 w-12 text-slate-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
           <p className="text-sm font-bold text-slate-800 mb-6">{catalogos.error}</p>
-          <button onClick={fetchCatalogos} className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800">
+          <button onClick={() => void fetchCatalogos()} className="rounded-xl bg-slate-900 px-6 py-2.5 text-xs font-bold text-white hover:bg-slate-800">
             Reintentar Conexión
           </button>
         </div>
@@ -728,6 +584,14 @@ export default function NuevaSolicitudMantenimiento() {
         </p>
       </div>
 
+      {catalogos.warning && (
+        <div role="status" className="flex items-center justify-between gap-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs font-semibold text-amber-900">
+          <span>{catalogos.warning}</span>
+          <button type="button" onClick={() => void fetchCatalogos()} className="shrink-0 rounded-lg px-3 py-1.5 font-bold hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-600">
+            Reintentar
+          </button>
+        </div>
+      )}
       {/* Global Alert */}
       {apiError && (
           <div className="mb-6 flex items-start gap-3 rounded-2xl border border-red-200 bg-red-50 px-5 py-4">

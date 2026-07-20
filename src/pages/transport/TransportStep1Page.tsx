@@ -1,7 +1,8 @@
 // src/pages/transport/TransportStep1Page.tsx
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { transportDraftStorage } from "./useTransportDraft";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -20,7 +21,6 @@ type FieldErrors = Partial<Record<keyof FormState, string>>;
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const STORAGE_KEY     = "solicitud_transporte";
 const MIN_HOURS_AHEAD = 2;
 
 const VEHICULOS = [
@@ -77,17 +77,7 @@ function validate(form: FormState): FieldErrors {
 
 // ─── Micro-components ────────────────────────────────────────────────────────
 
-function FieldError({ msg }: { msg?: string }) {
-  if (!msg) return null;
-  return (
-    <p className="mt-1.5 flex items-center gap-1.5 text-[11px] font-medium text-red-500">
-      <svg className="h-3 w-3 flex-shrink-0" viewBox="0 0 16 16" fill="currentColor">
-        <path d="M8 1a7 7 0 100 14A7 7 0 008 1zm-.75 3.75a.75.75 0 011.5 0v3.5a.75.75 0 01-1.5 0v-3.5zm.75 7a.875.875 0 110-1.75.875.875 0 010 1.75z" />
-      </svg>
-      {msg}
-    </p>
-  );
-}
+import { FieldError } from "../../components/ui/FieldError";
 
 function SectionTitle({ icon, label }: { icon: React.ReactNode; label: string }) {
   return (
@@ -129,31 +119,29 @@ const WIZARD_STEPS = [
   { id: 3, label: "Confirmar" },
 ];
 
+function getInitialForm(): FormState {
+  const fallback: FormState = {
+    tipoVehiculo: "", fecha: "", hora: "", encargado: "", subencargado: "", pasajeros: "",
+  };
+  const saved = transportDraftStorage.read();
+  return saved ? { ...fallback, ...saved } : fallback;
+}
 export default function TransportStep1Page() {
   const navigate = useNavigate();
   const today    = getTodayStr();
 
-  const [form, setForm] = useState<FormState>({
-    tipoVehiculo: "", fecha: "", hora: "",
-    encargado: "", subencargado: "", pasajeros: "",
-  });
+  const [form, setForm] = useState<FormState>(getInitialForm);
   const [errors,    setErrors]    = useState<FieldErrors>({});
   const [submitted, setSubmitted] = useState(false);
 
-  // Restore wizard state from localStorage
-  useEffect(() => {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return;
-    try { setForm(p => ({ ...p, ...JSON.parse(raw) })); } catch { /* ignore */ }
-  }, []);
 
-  // Live re-validation after first submit attempt
-  useEffect(() => {
-    if (submitted) setErrors(validate(form));
-  }, [form, submitted]);
-
-  const set = <K extends keyof FormState>(k: K, v: FormState[K]) =>
-    setForm(p => ({ ...p, [k]: v }));
+  const set = <K extends keyof FormState>(k: K, v: FormState[K]) => {
+    setForm((previous) => {
+      const next = { ...previous, [k]: v };
+      if (submitted) setErrors(validate(next));
+      return next;
+    });
+  };
 
   function handleNext() {
     setSubmitted(true);
@@ -163,11 +151,13 @@ export default function TransportStep1Page() {
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
     }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    transportDraftStorage.write({
+      ...transportDraftStorage.read(),
       ...form,
       encargado:    form.encargado.trim(),
       subencargado: form.subencargado.trim(),
-    }));
+      tipoVehiculo: form.tipoVehiculo || undefined,
+    });
     navigate("/solicitudes/transporte/paso-2");
   }
 

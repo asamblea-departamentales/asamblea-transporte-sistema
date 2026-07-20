@@ -26,7 +26,8 @@ export type EstadoCombustible =
   | "asignada"
   | "rechazada"
   | "completada"
-  | "cancelada";
+  | "cancelada"
+  | "liquidada";
 
 export type FormaPago =
   | "carga"
@@ -193,9 +194,11 @@ export type CombustibleFilters = Pick<RequestFilters, "page" | "per_page"> & {
   search?: string;
 };
 
-type PaginatedSolicitudesCombustible = Omit<LaravelPaginatedResponse, "data"> & {
-  data: SolicitudCombustible[];
+type PaginatedResponse<T> = Omit<LaravelPaginatedResponse, "data"> & {
+  data: T[];
 };
+
+type PaginatedSolicitudesCombustible = PaginatedResponse<SolicitudCombustible>;
 
 export type CombustibleListResult = {
   data: SolicitudCombustible[];
@@ -234,23 +237,23 @@ function normalizePaginated(raw: PaginatedSolicitudesCombustible): CombustibleLi
 // CATÁLOGOS
 // ══════════════════════════════════════════════════════════════════════════════
 
-export async function getVehiculos(): Promise<VehiculoCatalogo[]> {
-  const { data } = await api.get<VehiculoCatalogo[]>("/api/catalogos/vehiculos");
+export async function getVehiculos(signal?: AbortSignal): Promise<VehiculoCatalogo[]> {
+  const { data } = await api.get<VehiculoCatalogo[]>("/api/catalogos/vehiculos", { signal });
   return data;
 }
 
-export async function getMotoristas(): Promise<MotoristaCatalogo[]> {
-  const { data } = await api.get<MotoristaCatalogo[]>("/api/catalogos/motoristas");
+export async function getMotoristas(signal?: AbortSignal): Promise<MotoristaCatalogo[]> {
+  const { data } = await api.get<MotoristaCatalogo[]>("/api/catalogos/motoristas", { signal });
   return data;
 }
 
-export async function getSolicitudesTransporteAsociables(): Promise<SolicitudTransporteRef[]> {
-  const { data } = await api.get<PaginatedSolicitudesCombustible | SolicitudTransporteRef[]>(
-    "/api/solicitudes-transporte?per_page=100"
+export async function getSolicitudesTransporteAsociables(signal?: AbortSignal): Promise<SolicitudTransporteRef[]> {
+  const { data } = await api.get<PaginatedResponse<SolicitudTransporteRef> | SolicitudTransporteRef[]>(
+    "/api/solicitudes-transporte?per_page=100", { signal }
   );
   const rows: SolicitudTransporteRef[] = Array.isArray(data)
     ? data
-    : (data as PaginatedSolicitudesCombustible).data as unknown as SolicitudTransporteRef[];
+    : data.data;
 
   return rows.filter((s) =>
     ["aprobada", "programada"].includes(s.estado?.toLowerCase?.() ?? "")
@@ -343,33 +346,7 @@ export async function cancelarSolicitud(
 // UTILIDADES PARA EL FRONTEND
 // ══════════════════════════════════════════════════════════════════════════════
 
-export const ESTADO_CONFIG: Record<
-  EstadoCombustible,
-  { label: string; badge: string; dot: string }
-> = {
-  borrador: { label: "Borrador", dot: "bg-slate-400", badge: "bg-slate-50   text-slate-600   ring-slate-200" },
-  pendiente: { label: "Pendiente", dot: "bg-amber-400", badge: "bg-amber-50   text-amber-700   ring-amber-200" },
-  en_revision: { label: "En revisión", dot: "bg-blue-400", badge: "bg-blue-50    text-blue-700    ring-blue-200" },
-  pre_aprobada: { label: "Pre-aprobada", dot: "bg-violet-400", badge: "bg-violet-50  text-violet-700  ring-violet-200" },
-  aprobada: { label: "Aprobada", dot: "bg-emerald-400", badge: "bg-emerald-50 text-emerald-700 ring-emerald-200" },
-  asignada: { label: "Asignada", dot: "bg-cyan-400", badge: "bg-cyan-50    text-cyan-700    ring-cyan-200" }, // ✅ nuevo
-  rechazada: { label: "Rechazada", dot: "bg-red-400", badge: "bg-red-50     text-red-700     ring-red-200" },
-  completada: { label: "Completada", dot: "bg-teal-400", badge: "bg-teal-50    text-teal-700    ring-teal-200" },
-  cancelada: { label: "Cancelada", dot: "bg-slate-300", badge: "bg-slate-50   text-slate-400   ring-slate-200" },
-};
-
-export const FORMA_PAGO_LABELS: Record<FormaPago, string> = {
-  carga: "Carga",
-  ticket: "Ticket",
-  tarjeta: "Tarjeta",
-  efectivo: "Efectivo",
-  otro: "Otro",
-};
-
-export const ESTADOS_ACCIONABLES_SOLICITANTE: EstadoCombustible[] = [
-  "borrador",
-  "aprobada", // ✅ puede finalizar cuando está aprobada
-];
+export { ESTADO_CONFIG, FORMA_PAGO_LABELS, ESTADOS_ACCIONABLES_SOLICITANTE } from "../constants/combustible.constants";
 
 /** El solicitante puede finalizar cuando el estado es "aprobada" */
 export function puedeFinalizarSolicitud(solicitud: SolicitudCombustible): boolean {
