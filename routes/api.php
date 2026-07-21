@@ -53,6 +53,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
         Route::get('dashboard/historial-jefatura', [DashboardController::class, 'historialJefatura']);
+
+        // Pendientes de jefatura (PRE_APROBADAS): Transporte + Mantenimiento + Combustible
+        Route::get('solicitudes/pendientes-jefatura', [DashboardController::class, 'pendientesJefatura']);
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])

@@ -178,6 +178,55 @@ class DashboardService
         );
     }
 
+    public function pendientesJefatura(Request $request): LengthAwarePaginator
+    {
+        $perPage = (int) $request->query('per_page', 15);
+        $page = Paginator::resolveCurrentPage();
+
+        $estadoPre = EstadoSolicitudEnum::PRE_APROBADA->value;
+
+        $first = DB::table('solicitud_transportes')
+            ->select('id', 'codigo', 'ticket', 'updated_at',
+                DB::raw("'Transporte' as type"), 'estado',
+                'fecha_salida as fecha_ejecucion')
+            ->where('estado', $estadoPre);
+
+        $union = DB::table('solicitudes_mantenimiento')
+            ->select('id', 'codigo', DB::raw('NULL as ticket'), 'updated_at',
+                DB::raw("'Mantenimiento' as type"), 'estado',
+                'fecha_sugerida as fecha_ejecucion')
+            ->where('estado', $estadoPre)
+            ->unionAll($first);
+
+        $union = DB::table('solicitudes_combustible')
+            ->select('id', 'codigo', 'numero_vale_ticket as ticket', 'updated_at',
+                DB::raw("'Combustible' as type"), 'estado',
+                'fecha_solicitud as fecha_ejecucion')
+            ->where('estado', $estadoPre)
+            ->unionAll($union);
+
+        $total = DB::query()->fromSub($union, 'u')->count();
+
+        $rows = $union->orderByDesc('updated_at')
+            ->skip(($page - 1) * $perPage)
+            ->take($perPage)
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'code' => $s->codigo,
+                'ticket' => $s->ticket,
+                'date' => Carbon::parse($s->updated_at)->format('Y-m-d H:i'),
+                'type' => $s->type,
+                'status' => $s->estado,
+                'fecha_ejecucion' => $s->fecha_ejecucion,
+            ]);
+
+        return new LengthAwarePaginator(
+            $rows, $total, $perPage, $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+    }
+
     public function getKpis(): array
     {
         $total = SolicitudCombustible::count() + SolicitudMantenimiento::count();

@@ -26,4 +26,9 @@ class DashboardController extends Controller
     {
         return response()->json($this->dashboardService->historialJefatura($request));
     }
+
+    public function pendientesJefatura(Request $request)
+    {
+        return response()->json($this->dashboardService->pendientesJefatura($request));
+    }
 }
