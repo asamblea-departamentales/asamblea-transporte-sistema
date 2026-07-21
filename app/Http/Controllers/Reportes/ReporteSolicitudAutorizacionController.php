@@ -28,6 +28,7 @@ class ReporteSolicitudAutorizacionController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             $datos['modo'] === 'solo_combustible' ? 'solicitudes_combustible' : 'solicitudes_transporte',
+            null,
             ['codigo' => $codigo, 'tipo' => 'documento_autorizacion']
         );
 
