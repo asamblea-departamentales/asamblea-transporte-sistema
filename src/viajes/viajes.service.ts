@@ -16,7 +16,7 @@ export interface ViajeAsignado {
 
 export async function getViajesMes(mes: string): Promise<ViajeAsignado[]> {
   // mes formato: "YYYY-MM"
-  const { data } = await api.get("/api/catalogos/me/viajes", { params: { mes } });
+  const { data } = await api.get("/api/motoristas/me/viajes", { params: { mes } });
   return data as ViajeAsignado[];
 }
 
