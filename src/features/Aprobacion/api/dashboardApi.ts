@@ -37,7 +37,7 @@ export const dashboardApi = {
     return { data: mappedData };
   },
   getHistorialJefatura: async (signal?: AbortSignal): Promise<{ data: RecentRequest[] }> => {
-    const response = await axiosClient.get('/solicitudes/historial-jefatura', { signal });
+    const response = await axiosClient.get('/dashboard/historial-jefatura', { signal });
     const rawData = extractArrayData(response.data);
     const mappedData = rawData
       .map(mapToRecentRequest)
