@@ -3,6 +3,7 @@ import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './widgets/DashboardLayout';
 import { ProtectedRoute } from './features/Auth/components/ProtectedRoute';
 import { FullPageLoader } from './shared/components/FullPageLoader';
+import { EnvironmentBanner } from './shared/components/EnvironmentBanner';
 
 const LoginPage = lazy(() => import('./features/Auth/pages/LoginPage'));
 const AprobacionDashboardPage = lazy(() => import('./features/Aprobacion/pages/AprobacionDashboardPage').then(m => ({ default: m.AprobacionDashboardPage })));
@@ -17,6 +18,7 @@ const AprobacionMantenimientoPage = lazy(() => import('./features/Aprobacion/pag
 function App() {
   return (
     <BrowserRouter>
+      <EnvironmentBanner />
       <Suspense fallback={<FullPageLoader />}>
         <Routes>
           {/* Rutas Públicas */}

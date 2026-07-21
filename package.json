@@ -7,6 +7,8 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
+    "build:prueba": "tsc -b && vite build --mode staging",
+    "build:prod": "tsc -b && vite build --mode production",
     "preview": "vite preview",
     "lint": "eslint . --max-warnings 20",
     "lint:fix": "eslint . --fix",

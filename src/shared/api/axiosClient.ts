@@ -1,9 +1,8 @@
 import axios from 'axios';
+import { ENV } from '../config/environment';
 
 export const axiosClient = axios.create({
-  // Se usa VITE_BACKEND_URL en producción. Si no existe, cae a '/api' 
-  // para usar el proxy local de Vite en desarrollo.
-  baseURL: import.meta.env.VITE_BACKEND_URL ? `${import.meta.env.VITE_BACKEND_URL}/api` : '/api',
+  baseURL: ENV.apiUrl,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',
