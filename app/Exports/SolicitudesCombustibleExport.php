@@ -55,7 +55,7 @@ class SolicitudesCombustibleExport implements FromCollection, ShouldAutoSize, Wi
 
         return [
             $clean($row->codigo),
-            ucfirst($row->prioridad_grupo ?? 'baja'), // NUEVO - para mostrar el nivel de prioridad en el reporte
+            ucfirst($row->prioridad_grupo?->value ?? 'baja'), // NUEVO - para mostrar el nivel de prioridad en el reporte
             $row->ticket, // NUEVO - para mostrar el número de ticket en el reporte
             $row->numero_vale_ticket ?? '', // NUEVO - para mostrar el número de vale en el reporte
             $clean($row->vehiculo?->placa ?? ''),

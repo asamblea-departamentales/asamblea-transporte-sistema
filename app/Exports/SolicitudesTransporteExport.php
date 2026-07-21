@@ -69,7 +69,7 @@ class SolicitudesTransporteExport implements FromCollection, ShouldAutoSize, Wit
             optional($row->fecha_salida)->format('Y-m-d H:i'),
             optional($row->fecha_retorno)->format('Y-m-d H:i'),
             $row->cantidad_personas,
-            ucfirst($row->prioridad_grupo ?? 'baja'), // NUEVO - prioridad institucional
+            ucfirst($row->prioridad_grupo?->value ?? 'baja'), // NUEVO - prioridad institucional
             strtoupper($prioridad),
             strtoupper($estado),
             $clean($row->autorizador?->name ?? ''),
