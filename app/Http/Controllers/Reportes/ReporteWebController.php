@@ -62,6 +62,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_transporte',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
         );
 
@@ -126,6 +127,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_mantenimiento',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
         );
 
@@ -190,6 +192,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_combustible',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $rows->count()]
         );
 
@@ -238,6 +241,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_EXCEL,
             'solicitudes_combustible',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
         );
 
@@ -277,6 +281,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_EXCEL,
             'solicitudes_mantenimiento',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
         );
 
@@ -320,6 +325,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_CSV,
             'solicitudes_transporte',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
         );
 
@@ -371,6 +377,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_CSV,
             'solicitudes_mantenimiento',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
         );
 
@@ -414,6 +421,7 @@ class ReporteWebController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_CSV,
             'solicitudes_combustible',
+            null,
             ['filtros' => $request->all(), 'cantidad_registros' => $q->count()]
         );
 

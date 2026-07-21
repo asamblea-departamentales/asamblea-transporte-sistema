@@ -38,6 +38,7 @@ class ReporteControlMensualCombustibleController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_combustible',
+            null,
             ['cantidad_registros' => $rows->count(), 'tipo' => 'control_mensual']
         );
 

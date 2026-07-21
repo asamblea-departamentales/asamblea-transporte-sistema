@@ -65,6 +65,7 @@ class ReporteMisionOficialController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_transporte',
+            null,
             ['cantidad_registros' => $rows->count(), 'tipo' => 'mision_oficial']
         );
 

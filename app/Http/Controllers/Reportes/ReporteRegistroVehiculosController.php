@@ -43,6 +43,7 @@ class ReporteRegistroVehiculosController extends Controller
         app(Auditoria::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'reporte_registro_vehiculos',
+            null,
             [
                 'vehiculo_id' => $vehiculoId,
                 'fecha_inicio' => $fechaInicio,

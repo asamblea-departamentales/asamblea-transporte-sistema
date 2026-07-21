@@ -44,6 +44,7 @@ class ReporteOrdenTrabajoController extends Controller
         app(AuditoriaService::class)->registrar(
             AccionBitacoraEnum::EXPORTAR_PDF,
             'solicitudes_mantenimiento',
+            null,
             ['cantidad_registros' => $rows->count(), 'tipo' => 'orden_trabajo']
         );
 
