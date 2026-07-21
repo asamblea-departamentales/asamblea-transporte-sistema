@@ -127,12 +127,14 @@ export default function HistorialDetallePage() {
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
   
   const isCombustibleView = (raw.codigo || comp.codigo || codigo)?.toString().startsWith('CB-');
+  const isMantenimientoView = (raw.codigo || comp.codigo || codigo)?.toString().startsWith('SM-');
+  const isTransporteView = !isCombustibleView && !isMantenimientoView;
 
   // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible)
-  const canReasignar = !isCombustibleView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
+  const canReasignar = isTransporteView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
 
   // Añadir destino adicional solo en ejecución
-  const canAddDestino = !isCombustibleView && status === 'en_ejecucion';
+  const canAddDestino = isTransporteView && status === 'en_ejecucion';
 
   // Valores a mostrar
   const solicitanteName = raw.solicitante?.name || raw.solicitante?.nombre || (typeof raw.solicitante === 'string' ? raw.solicitante : '') || comp.solicitante || 'N/A';
@@ -183,11 +185,13 @@ export default function HistorialDetallePage() {
 
       {/* Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-        {/* Card: Datos del Viaje / Combustible */}
+        {/* Card: Datos de la Solicitud */}
         <div className="bg-white rounded-xl p-6 shadow-sm border border-slate-200">
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-200">
             <FileText className="text-slate-400" size={18} />
-            <h3 className="font-bold text-slate-800 text-lg tracking-tight">{isCombustibleView ? 'Datos de Combustible' : 'Datos del Viaje'}</h3>
+            <h3 className="font-bold text-slate-800 text-lg tracking-tight">
+              {isCombustibleView ? 'Datos de Combustible' : isMantenimientoView ? 'Datos de Mantenimiento' : 'Datos del Viaje'}
+            </h3>
           </div>
           <div className="space-y-4">
             <div className="flex justify-between items-start gap-4">
@@ -203,7 +207,7 @@ export default function HistorialDetallePage() {
               </div>
             </div>
             
-            {!isCombustibleView && (
+            {isTransporteView && (
               <>
                 <div>
                   <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
@@ -245,6 +249,17 @@ export default function HistorialDetallePage() {
                 </p>
                 <p className="text-sm text-slate-800 font-medium">
                   {raw.created_at ? new Date(raw.created_at).toLocaleString() : (comp.fecha_solicitud ? new Date(comp.fecha_solicitud).toLocaleString() : 'N/A')}
+                </p>
+              </div>
+            )}
+
+            {isMantenimientoView && (
+              <div>
+                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                  <Calendar size={12} /> Fecha Sugerida
+                </p>
+                <p className="text-sm text-slate-800 font-medium">
+                  {raw.fecha_sugerida ? new Date(raw.fecha_sugerida).toLocaleString() : 'N/A'}
                 </p>
               </div>
             )}
