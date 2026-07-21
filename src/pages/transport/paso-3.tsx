@@ -9,6 +9,7 @@ import MapViewer from "../../components/transport/MapViewer";
 import { VEHICULO_LABELS, type WizardData } from "./transportUtils";
 import { transportDraftStorage } from "./useTransportDraft";
 import { SectionTitle } from "./FormPrimitives";
+import { getTodayLocal } from "../../lib/format";
 
 export default function TransportStep3Page() {
   const navigate = useNavigate();
@@ -65,7 +66,7 @@ export default function TransportStep3Page() {
     setErrorMsg(null);
     setSubmitting(true);
     try {
-      const fechaStr = wizardData.fecha || new Date().toISOString().split("T")[0];
+      const fechaStr = wizardData.fecha || getTodayLocal();
       const horaStr = wizardData.hora || "08:00";
       const horaFinal = horaStr.length === 5 ? `${horaStr}:00` : horaStr;
 

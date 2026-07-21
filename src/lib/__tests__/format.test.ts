@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { getStatusStyle, isCompleted, formatFecha, formatFechaCorta } from "../format";
+import { getStatusStyle, isCompleted, formatFecha, formatFechaCorta, getTodayLocal, formatCurrency } from "../format";
 
 describe("getStatusStyle", () => {
   it("returns correct style for known statuses", () => {
@@ -48,5 +48,20 @@ describe("formatFechaCorta", () => {
   it("returns YYYY-MM-DD HH:mm format", () => {
     const result = formatFechaCorta("2025-03-15T08:30:00");
     expect(result).toMatch(/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/);
+  });
+});
+
+describe("getTodayLocal", () => {
+  it("formats the local calendar date without UTC conversion", () => {
+    const localDate = new Date(2025, 5, 15, 19, 0, 0);
+    expect(getTodayLocal(localDate)).toBe("2025-06-15");
+  });
+});
+
+describe("formatCurrency", () => {
+  it("formats valid amounts and handles missing values", () => {
+    expect(formatCurrency("12.5")).toBe("$12.50");
+    expect(formatCurrency(null)).toBe("—");
+    expect(formatCurrency("invalid")).toBe("—");
   });
 });

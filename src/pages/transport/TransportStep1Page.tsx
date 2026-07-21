@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { cn } from "../../lib/utils";
+import { getTodayLocal } from "../../lib/format";
 import { transportDraftStorage } from "./useTransportDraft";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -31,10 +32,6 @@ const VEHICULOS = [
 
 // ─── Date/time helpers ────────────────────────────────────────────────────────
 
-function getTodayStr() {
-  return new Date().toISOString().split("T")[0];
-}
-
 function calcMinTime(): string {
   const d = new Date();
   d.setHours(d.getHours() + MIN_HOURS_AHEAD);
@@ -45,7 +42,7 @@ function calcMinTime(): string {
 
 function validate(form: FormState): FieldErrors {
   const errs: FieldErrors = {};
-  const today = getTodayStr();
+  const today = getTodayLocal();
 
   if (!form.tipoVehiculo)
     errs.tipoVehiculo = "Seleccione un tipo de vehículo para continuar.";
@@ -128,7 +125,7 @@ function getInitialForm(): FormState {
 }
 export default function TransportStep1Page() {
   const navigate = useNavigate();
-  const today    = getTodayStr();
+  const today    = getTodayLocal();
 
   const [form, setForm] = useState<FormState>(getInitialForm);
   const [errors,    setErrors]    = useState<FieldErrors>({});

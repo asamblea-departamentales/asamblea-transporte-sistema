@@ -2,10 +2,10 @@
 // Input de ubicación con autocompletado de sedes de la Asamblea Legislativa
 // + búsqueda en Nominatim como fallback
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useId } from "react";
 import { buscarSedes, type SedeAsamblea } from "../../data/sedesAsamblea";
 
-const NOMINATIM_EMAIL = "app@transporte.institucional.sv";
+const NOMINATIM_EMAIL = import.meta.env.VITE_NOMINATIM_EMAIL || "app@transporte.institucional.sv";
 
 type NominatimResult = {
   lat: string;
@@ -36,6 +36,9 @@ export default function LocationInput({
 }: Props) {
   const [suggestions, setSuggestions]   = useState<Suggestion[]>([]);
   const [open, setOpen]                 = useState(false);
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const listboxId = useId();
+  const activeSuggestionIndex = suggestions.length ? Math.min(highlightedIndex, suggestions.length - 1) : 0;
   const [loading, setLoading]           = useState(false);
   const nominatimTimer                  = useRef<ReturnType<typeof setTimeout>>(undefined);
   const abortRef                        = useRef<AbortController | null>(null);
@@ -99,6 +102,27 @@ export default function LocationInput({
     return () => clearTimeout(nominatimTimer.current);
   }, [value]);
 
+  function handleKeyDown(event: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open || suggestions.length === 0) {
+      if (event.key === "ArrowDown") setOpen(true);
+      if (event.key === "Escape") setOpen(false);
+      return;
+    }
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      setHighlightedIndex((index) => Math.min(index + 1, suggestions.length - 1));
+    } else if (event.key === "ArrowUp") {
+      event.preventDefault();
+      setHighlightedIndex((index) => Math.max(index - 1, 0));
+    } else if (event.key === "Enter") {
+      event.preventDefault();
+      handleSelect(suggestions[activeSuggestionIndex]);
+    } else if (event.key === "Escape") {
+      event.preventDefault();
+      setOpen(false);
+    }
+  }
+
   function handleSelect(sug: Suggestion) {
     if (sug.type === "sede") {
       onChange(sug.data.nombreCompleto, sug.data.lat, sug.data.lng);
@@ -121,8 +145,14 @@ export default function LocationInput({
         <input
           id={id}
           type="text"
+          role="combobox"
+          aria-autocomplete="list"
+          aria-expanded={open}
+          aria-controls={open ? listboxId : undefined}
+          aria-activedescendant={open && suggestions[activeSuggestionIndex] ? `${listboxId}-option-${activeSuggestionIndex}` : undefined}
           value={value}
-          onChange={(e) => onChange(e.target.value)}
+          onChange={(e) => { setHighlightedIndex(0); onChange(e.target.value); }}
+          onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoComplete="off"
           className="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 pr-10 text-sm text-slate-900 outline-none transition focus:border-blue-400 focus:ring-4 focus:ring-blue-100/60"
@@ -139,15 +169,15 @@ export default function LocationInput({
 
       {/* Dropdown */}
       {open && suggestions.length > 0 && (
-        <ul className="absolute left-0 right-0 z-[100] mt-1.5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/60 ring-1 ring-black/5">
+        <ul id={listboxId} role="listbox" aria-label="Sugerencias de ubicación" className="absolute left-0 right-0 z-[100] mt-1.5 overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl shadow-slate-300/60 ring-1 ring-black/5">
           {suggestions.map((sug, i) => {
             if (sug.type === "sede") {
               const esCentral = sug.data.tipo === "central";
               return (
-                <li key={`sede-${sug.data.id}`}>
+                <li id={`${listboxId}-option-${i}`} role="option" aria-selected={i === highlightedIndex} key={`sede-${sug.data.id}`}>
                   <button
                     type="button"
-                    onMouseDown={() => handleSelect(sug)}
+                    onMouseDown={(event) => { event.preventDefault(); handleSelect(sug); }}
                     className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition hover:bg-blue-50"
                   >
                     {/* Ícono */}
@@ -172,10 +202,10 @@ export default function LocationInput({
 
             // Nominatim result
             return (
-              <li key={`nom-${i}`}>
+              <li id={`${listboxId}-option-${i}`} role="option" aria-selected={i === highlightedIndex} key={`nom-${i}`}>
                 <button
                   type="button"
-                  onMouseDown={() => handleSelect(sug)}
+                  onMouseDown={(event) => { event.preventDefault(); handleSelect(sug); }}
                   className="flex w-full items-center gap-3 px-4 py-3 text-left text-sm transition hover:bg-slate-50"
                 >
                   <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl bg-slate-100">

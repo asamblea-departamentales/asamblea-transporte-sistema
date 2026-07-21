@@ -32,12 +32,25 @@ export default defineConfig({
       include: [
         "src/lib/appError.ts", "src/lib/format.ts", "src/lib/geo.ts", "src/lib/storage.ts",
         "src/lib/requestIdentity.ts",
+        "src/components/ui/FocusTrap.tsx",
+        "src/components/ui/VehicleDropdown.tsx",
         "src/pages/transport/useTransportDraft.ts",
       ],
       thresholds: { lines: 70, functions: 70, branches: 60, statements: 70 },
     },
   },
-  server: {
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-map": ["leaflet"],
+          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+        },
+      },
+    },
+  },  server: {
     allowedHosts: [".trycloudflare.com", ".transporte.test"],
     proxy: {
       "/nominatim": { target: "https://nominatim.openstreetmap.org", changeOrigin: true, rewrite: (url) => url.replace(/^\/nominatim/, "") },

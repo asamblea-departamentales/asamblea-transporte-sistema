@@ -7,7 +7,7 @@
 //
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { api, BASE_URL } from "../lib/api";
+import { api, getStorageUrl } from "../lib/api";
 import type {
   LaravelPaginatedResponse,
   RequestFilters,
@@ -358,7 +358,7 @@ export function puedeCancelarSolicitud(solicitud: SolicitudCombustible): boolean
 }
 
 export function getComprobantUrl(ruta: string): string {
-  return `${BASE_URL}/storage/${ruta}`;
+  return getStorageUrl(ruta);
 }
 
 // ══════════════════════════════════════════════════════════════════════════════

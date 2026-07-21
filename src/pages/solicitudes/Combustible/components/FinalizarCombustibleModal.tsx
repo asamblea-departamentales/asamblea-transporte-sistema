@@ -5,6 +5,7 @@ import { finalizarSolicitud, type FormaPago } from "../../../../services/combust
 import { finalizarCombustibleSchema, type FinalizarCombustibleFormValues } from "../../../../schemas/requests.schema";
 import { Spinner } from "./FormUI";
 import { FocusTrap } from "../../../../components/ui/FocusTrap";
+import { ALLOWED_FILE_ACCEPT, ALLOWED_FILE_MIME, MAX_FILE_SIZE_BYTES } from "../../../../constants/requests.constants";
 
 interface Props {
   isOpen: boolean;
@@ -53,8 +54,8 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
     if (!newFiles) return;
     const MAX_FILES = 5;
     const valid = Array.from(newFiles).filter((f) => {
-      const okType = ["image/jpeg", "image/png", "application/pdf"].includes(f.type);
-      const okSize = f.size <= 5 * 1024 * 1024; // 5 MB
+      const okType = ALLOWED_FILE_MIME.includes(f.type as typeof ALLOWED_FILE_MIME[number]);
+      const okSize = f.size <= MAX_FILE_SIZE_BYTES; // 5 MB
       return okType && okSize;
     });
 
@@ -257,7 +258,7 @@ export default function FinalizarCombustibleModal({ isOpen, onClose, solicitudId
                 <input
                   type="file"
                   multiple
-                  accept="image/jpeg,image/png,application/pdf"
+                  accept={ALLOWED_FILE_ACCEPT}
                   ref={fileInputRef}
                   onChange={(e) => addFiles(e.target.files)}
                   className="hidden"

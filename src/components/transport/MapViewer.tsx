@@ -23,6 +23,8 @@ export default function MapViewer({ origin, destinations, className = "h-[400px]
   const containerRef = useRef<HTMLDivElement>(null);
   const markersRef = useRef<L.Marker[]>([]);
   const routeLayerRef = useRef<L.Polyline | null>(null);
+  const generationRef = useRef(0);
+  const sizeTimerRef = useRef<number | null>(null);
 
   const [loading, setLoading] = useState(true);
 
@@ -50,11 +52,15 @@ export default function MapViewer({ origin, destinations, className = "h-[400px]
 
     mapRef.current = map;
 
-    setTimeout(() => {
+    sizeTimerRef.current = window.setTimeout(() => {
       if (mapRef.current) mapRef.current.invalidateSize();
+      sizeTimerRef.current = null;
     }, 200);
 
     return () => {
+      if (sizeTimerRef.current !== null) window.clearTimeout(sizeTimerRef.current);
+      sizeTimerRef.current = null;
+      generationRef.current += 1;
       markersRef.current.forEach((m) => m.remove());
       markersRef.current = [];
       routeLayerRef.current?.remove();
@@ -65,27 +71,38 @@ export default function MapViewer({ origin, destinations, className = "h-[400px]
   }, []);
 
   useEffect(() => {
-    if (!mapRef.current || !origin.address) return;
+    const generation = ++generationRef.current;
+    const renderMap = mapRef.current!;
+    if (!renderMap) return;
 
-    async function calculateAndRender() {
-      const map = mapRef.current;
-      if (!map) return;
-
-      setLoading(true);
-
-      markersRef.current.forEach((m) => m.remove());
+    const isCurrent = () => generation === generationRef.current && mapRef.current === renderMap;
+    const clearLayers = () => {
+      markersRef.current.forEach((marker) => marker.remove());
       markersRef.current = [];
       routeLayerRef.current?.remove();
       routeLayerRef.current = null;
+    };
+
+    if (!origin.address) {
+      clearLayers();
+      queueMicrotask(() => {
+        if (isCurrent()) setLoading(false);
+      });
+      return () => { generationRef.current += 1; };
+    }
+
+    async function calculateAndRender() {
+      setLoading(true);
+      clearLayers();
 
       const points: { lat: number; lng: number; label: string; iconColor: string }[] = [];
       const bounds: [number, number][] = [];
 
-      // Origen
       let oLat = origin.lat;
       let oLng = origin.lng;
       if (oLat == null || oLng == null) {
         const coords = await geocodeAddress(origin.address);
+        if (!isCurrent()) return;
         if (coords) { oLat = coords.lat; oLng = coords.lng; }
       }
 
@@ -94,65 +111,58 @@ export default function MapViewer({ origin, destinations, className = "h-[400px]
         bounds.push([oLat, oLng]);
       }
 
-      // Destinos
       for (let i = 0; i < destinations.length; i++) {
-        const d = destinations[i];
-        if (!d.address?.trim()) continue;
+        const destination = destinations[i];
+        if (!destination.address?.trim()) continue;
 
-        let dLat = d.lat;
-        let dLng = d.lng;
+        let dLat = destination.lat;
+        let dLng = destination.lng;
         if (dLat == null || dLng == null) {
-          const coords = await geocodeAddress(d.address);
+          const coords = await geocodeAddress(destination.address);
+          if (!isCurrent()) return;
           if (coords) { dLat = coords.lat; dLng = coords.lng; }
         }
 
         if (dLat != null && dLng != null) {
-          points.push({
-            lat: dLat,
-            lng: dLng,
-            label: `Destino ${i + 1}: ${d.address}`,
-            iconColor: "#ef4444",
-          });
+          points.push({ lat: dLat, lng: dLng, label: `Destino ${i + 1}: ${destination.address}`, iconColor: "#ef4444" });
           bounds.push([dLat, dLng]);
         }
       }
 
-      // Dibujar marcadores
-      points.forEach((p) => {
-        const icon = makeIcon(p.iconColor);
-        const marker = L.marker([p.lat, p.lng], { icon }).bindPopup(p.label).addTo(map);
+      if (!isCurrent()) return;
+      points.forEach((point) => {
+        const marker = L.marker([point.lat, point.lng], { icon: makeIcon(point.iconColor) })
+          .bindPopup(point.label)
+          .addTo(renderMap);
         markersRef.current.push(marker);
       });
 
-      // Calcular ruta
       if (points.length >= 2) {
-        const routeData = await getOSRMRoute(points.map((p) => ({ lat: p.lat, lng: p.lng })));
+        const routeData = await getOSRMRoute(points.map((point) => ({ lat: point.lat, lng: point.lng })));
+        if (!isCurrent()) return;
         if (routeData?.geometry?.length) {
-          const polyline = L.polyline(routeData.geometry, { color: "#3b82f6", weight: 6, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(map);
-          routeLayerRef.current = polyline;
+          routeLayerRef.current = L.polyline(routeData.geometry, { color: "#3b82f6", weight: 6, opacity: 0.9, lineCap: "round", lineJoin: "round" }).addTo(renderMap);
           onRouteCalculated?.({ distance: routeData.distanceKm, duration: routeData.durationMin, isReal: true });
         } else {
-          const pathCoords: [number, number][] = points.map((p) => [p.lat, p.lng]);
-          const polyline = L.polyline(pathCoords, { color: "#94a3b8", weight: 4, opacity: 0.8, dashArray: "8, 8", lineCap: "round" }).addTo(map);
-          routeLayerRef.current = polyline;
-
-          let distSum = 0;
-          for (let i = 0; i < points.length - 1; i++) {
-            distSum += haversineKm(points[i].lat, points[i].lng, points[i + 1].lat, points[i + 1].lng);
-          }
-          onRouteCalculated?.({ distance: distSum, duration: (distSum / 45) * 60, isReal: false });
+          const pathCoords: [number, number][] = points.map((point) => [point.lat, point.lng]);
+          routeLayerRef.current = L.polyline(pathCoords, { color: "#94a3b8", weight: 4, opacity: 0.8, dashArray: "8, 8", lineCap: "round" }).addTo(renderMap);
+          const distance = points.slice(1).reduce((sum, point, index) => sum + haversineKm(points[index].lat, points[index].lng, point.lat, point.lng), 0);
+          onRouteCalculated?.({ distance, duration: (distance / 45) * 60, isReal: false });
         }
       }
 
-      if (bounds.length > 0) {
-        map.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], animate: false });
-      }
-
-      setTimeout(() => map.invalidateSize(), 100);
+      if (!isCurrent()) return;
+      if (bounds.length > 0) renderMap.fitBounds(bounds as L.LatLngBoundsExpression, { padding: [50, 50], animate: false });
+      if (sizeTimerRef.current !== null) window.clearTimeout(sizeTimerRef.current);
+      sizeTimerRef.current = window.setTimeout(() => {
+        if (isCurrent()) renderMap.invalidateSize();
+        sizeTimerRef.current = null;
+      }, 100);
       setLoading(false);
     }
 
-    calculateAndRender();
+    void calculateAndRender();
+    return () => { generationRef.current += 1; };
   }, [origin.address, origin.lat, origin.lng, destinations, onRouteCalculated]);
 
   return (

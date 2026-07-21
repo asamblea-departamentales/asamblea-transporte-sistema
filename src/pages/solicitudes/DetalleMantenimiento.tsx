@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, CheckCircle2, User, Building2, Calendar, Wrench, Clock } from "lucide-react";
 import { str, DetailItem, FinalizacionDataSection } from "./components/SharedDetailComponents";
 import type { GenericRequest } from "./components/SharedDetailComponents";
-import { getStatusStyle } from "../../lib/format";
+import { getStatusStyle, isCompleted } from "../../lib/format";
 import FinalizarMantenimientoModal from "./mantenimiento/components/FinalizarMantenimientoModal";
 
 interface Props {
@@ -71,7 +71,7 @@ export default function DetalleMantenimiento({ data, isOwner, onRefresh }: Props
         </div>
       </div>
 
-      {["completada", "finalizada"].includes(data.estado) && <FinalizacionDataSection data={data} modulo="mantenimiento" />}
+      {isCompleted(data.estado) && <FinalizacionDataSection data={data} modulo="mantenimiento" />}
 
       <FinalizarMantenimientoModal
         isOpen={isFinalizarModalOpen}

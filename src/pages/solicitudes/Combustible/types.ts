@@ -1,3 +1,4 @@
+import { getTodayLocal } from "../../../lib/format";
 import type {
   VehiculoCatalogo,
   MotoristaCatalogo,
@@ -39,7 +40,7 @@ export const INITIAL: FormData = {
   vehiculo_id: "",
   motorista_id: "",
   destino_actividad: "",
-  fecha_solicitud: new Date().toISOString().split("T")[0],
+  fecha_solicitud: getTodayLocal(),
   fecha_inicio_periodo: "",
   fecha_fin_periodo: "",
   cantidad_combustible: "",

@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { Receipt, CreditCard, DollarSign, Ticket, FileText, CalendarCheck, Hash } from "lucide-react";
 import Lightbox from "../../../components/ui/Lightbox";
+import { getStorageUrl } from "../../../lib/api";
+import { formatCurrency } from "../../../lib/format";
 
 export type GenericRequest = {
   id: number;
@@ -91,10 +93,7 @@ const FORMA_PAGO_MAP: Record<string, { label: string; Icon: typeof Receipt }> = 
   otro: { label: "Otro", Icon: FileText },
 };
 
-function storageUrl(path: string): string {
-  const base = import.meta.env.VITE_API_BASE_URL || "";
-  return `${base}/storage/${path}`;
-}
+
 
 function isImage(path: string): boolean {
   return /\.(jpg|jpeg|png|gif|webp)$/i.test(path);
@@ -116,7 +115,7 @@ export function FinalizacionDataSection({ data, modulo }: { data: GenericRequest
   const archivos: string[] = isCombustible ? (data.comprobantes ?? []) : isMantenimiento ? (data.adjuntos ?? []) : [];
 
   const lightboxFiles = archivos.map((path) => ({
-    url: storageUrl(path),
+    url: getStorageUrl(path),
     name: path.split("/").pop() ?? "archivo",
     isImage: isImage(path),
   }));
@@ -150,14 +149,14 @@ export function FinalizacionDataSection({ data, modulo }: { data: GenericRequest
                   const PayIcon = FORMA_PAGO_MAP[key]?.Icon ?? Receipt;
                   return <InfoChip label="Forma de Pago" value={FORMA_PAGO_MAP[key]?.label ?? String(data.forma_pago)} icon={<PayIcon className="h-4 w-4" />} />;
                 })()}
-                {data.valor_total != null && <InfoChip label="Valor Total" value={`$${parseFloat(String(data.valor_total)).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />}
+                {data.valor_total != null && <InfoChip label="Valor Total" value={formatCurrency(data.valor_total)} icon={<DollarSign className="h-4 w-4" />} />}
                 {data.numero_vale_ticket && <InfoChip label="Nº Vale / Ticket" value={data.numero_vale_ticket} icon={<Hash className="h-4 w-4" />} />}
               </>
             )}
             {isMantenimiento && (
               <>
                 {data.fecha_realizada && <InfoChip label="Fecha Realizada" value={new Date(data.fecha_realizada).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric" })} icon={<CalendarCheck className="h-4 w-4" />} />}
-                {data.costo_real != null && <InfoChip label="Costo Real" value={`$${parseFloat(String(data.costo_real)).toFixed(2)}`} icon={<DollarSign className="h-4 w-4" />} />}
+                {data.costo_real != null && <InfoChip label="Costo Real" value={formatCurrency(data.costo_real)} icon={<DollarSign className="h-4 w-4" />} />}
               </>
             )}
             {isTransporte && data.updated_at && <InfoChip label="Fecha Finalización" value={new Date(data.updated_at).toLocaleDateString("es-ES", { day: "2-digit", month: "long", year: "numeric", hour: "2-digit", minute: "2-digit" })} icon={<CalendarCheck className="h-4 w-4" />} />}
@@ -171,7 +170,7 @@ export function FinalizacionDataSection({ data, modulo }: { data: GenericRequest
               </p>
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
                 {archivos.map((path: string, i: number) => {
-                  const url = storageUrl(path);
+                  const url = getStorageUrl(path);
                   const name = path.split("/").pop() ?? `archivo-${i + 1}`;
                   if (isImage(path)) {
                     return (

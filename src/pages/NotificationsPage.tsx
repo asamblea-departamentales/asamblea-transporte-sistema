@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification, type NotiTipo, type NotiModulo } from "../notifications/NotificationContext";
 import { getRequestDetailPath } from "../lib/requestIdentity";
+import { timeAgo as formatTimeAgo } from "../lib/format";
 
 // ─── Config visual ─────────────────────────────────────────────────────────────
 
@@ -49,14 +50,6 @@ const MODULO_CONFIG: Record<NotiModulo, { label: string; icon: React.ReactNode }
     ),
   },
 };
-
-function timeAgo(iso: string): string {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)   return "Hace un momento";
-  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
-  if (diff < 86400)return `Hace ${Math.floor(diff / 3600)} h`;
-  return `Hace ${Math.floor(diff / 86400)} días`;
-}
 
 // ─── PÁGINA ────────────────────────────────────────────────────────────────────
 
@@ -213,7 +206,7 @@ export default function NotificationsPage() {
                     <p className="mt-1 text-xs leading-relaxed text-slate-500">{n.mensaje}</p>
 
                     <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">
-                      {timeAgo(n.createdAt)}
+                      {formatTimeAgo(n.createdAt, "Hace un momento")}
                     </p>
                   </div>
 

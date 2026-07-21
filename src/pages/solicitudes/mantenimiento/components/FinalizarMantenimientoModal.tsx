@@ -5,6 +5,8 @@ import { finalizarMantenimiento } from "../../../../services/mantenimiento.servi
 import { finalizarMantenimientoSchema, type FinalizarMantenimientoFormValues } from "../../../../schemas/requests.schema";
 import { Spinner } from "../../Combustible/components/FormUI";
 import { FocusTrap } from "../../../../components/ui/FocusTrap";
+import { getTodayLocal } from "../../../../lib/format";
+import { ALLOWED_FILE_ACCEPT, ALLOWED_FILE_MIME, MAX_FILE_SIZE_BYTES } from "../../../../constants/requests.constants";
 
 interface Props {
   isOpen: boolean;
@@ -29,7 +31,7 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
   } = useForm<FinalizarMantenimientoFormValues>({
     resolver: zodResolver(finalizarMantenimientoSchema),
     defaultValues: {
-      fechaRealizada: new Date().toISOString().split("T")[0],
+      fechaRealizada: getTodayLocal(),
       costoReal: undefined,
       archivos: [],
     },
@@ -43,8 +45,8 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
   const addFiles = (newFiles: FileList | null) => {
     if (!newFiles) return;
     const valid = Array.from(newFiles).filter((f) => {
-      const okType = ["image/jpeg", "image/png", "application/pdf"].includes(f.type);
-      const okSize = f.size <= 5 * 1024 * 1024; // 5 MB
+      const okType = ALLOWED_FILE_MIME.includes(f.type as typeof ALLOWED_FILE_MIME[number]);
+      const okSize = f.size <= MAX_FILE_SIZE_BYTES; // 5 MB
       return okType && okSize;
     });
 
@@ -144,7 +146,7 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
               </label>
               <input
                 type="date"
-                max={new Date().toISOString().split("T")[0]}
+                max={getTodayLocal()}
                 {...register("fechaRealizada")}
                 className={`w-full rounded-2xl border bg-white px-4 py-3 text-sm font-bold shadow-sm outline-none transition focus:ring-4 ${
                   errors.fechaRealizada ? "border-red-400 focus:ring-red-500/10" : "border-slate-200 focus:border-emerald-500 focus:ring-emerald-500/10"
@@ -207,7 +209,7 @@ export default function FinalizarMantenimientoModal({ isOpen, onClose, solicitud
                 <input
                   type="file"
                   multiple
-                  accept="image/jpeg,image/png,application/pdf"
+                  accept={ALLOWED_FILE_ACCEPT}
                   ref={fileInputRef}
                   onChange={(e) => addFiles(e.target.files)}
                   className="hidden"

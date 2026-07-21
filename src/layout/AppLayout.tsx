@@ -13,6 +13,7 @@ export default function AppLayout() {
   return (
     <NotificationProvider>
       <div className="min-h-screen bg-slate-50 flex">
+        <a href="#main-content" className="sr-only z-[100] rounded bg-white px-4 py-2 text-sm font-bold text-slate-900 focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:ring-2 focus:ring-blue-600">Saltar al contenido principal</a>
 
         <Sidebar
           open={sidebarOpen}
@@ -27,7 +28,7 @@ export default function AppLayout() {
             pb-[76px]  → compensa bottom nav 60px + safe area en móvil
             lg:pt-0, lg:pb-0 → en desktop no hay header ni bottom nav, el sidebar maneja todo.
           */}
-          <main className="flex-1 pt-[60px] pb-[76px] lg:pt-0 lg:pb-0">
+          <main id="main-content" className="flex-1 pt-[60px] pb-[76px] lg:pt-0 lg:pb-0">
             <AnimatePresence mode="wait">
               <motion.div
                 key={location.pathname}

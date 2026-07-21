@@ -4,6 +4,7 @@ import TransportWizard from "../../../components/ui/TransportWizard";
 import { Label, SelectInput, Spinner, SectionTitle, FieldError, inputCls } from "../Combustible/components/FormUI";
 import { api } from "../../../lib/api";
 import { VehicleDropdown, type Catalogo } from "../../../components/ui/VehicleDropdown";
+import { formatCurrency, getTodayLocal } from "../../../lib/format";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type TipoSolicitud = "taller" | "llantas";
@@ -308,7 +309,7 @@ function Step2({ data, update, errors }: { data: FormData; update: (k: keyof For
             type="date"
             value={data.fecha_sugerida}
             onChange={(e) => update("fecha_sugerida", e.target.value)}
-            min={new Date().toISOString().split("T")[0]}
+            min={getTodayLocal()}
             className={inputCls(errors.fecha_sugerida)}
           />
           <FieldError msg={errors.fecha_sugerida} />
@@ -376,7 +377,7 @@ function Step3({ data, vehiculos, tiposMantenimiento }: {
           <ReviewRow label="Operación" value={tipoMant} />
           <ReviewRow label="Categoría" value={data.tipo_solicitud === "taller" ? "Mecánica / Taller" : "Llantas / Neumáticos"} />
           <ReviewRow label="Ejecución" value={data.fecha_sugerida.split("-").reverse().join("/")} />
-          <ReviewRow label="Costo Mínimo" value={data.costo_estimado ? `$${parseFloat(data.costo_estimado).toFixed(2)}` : "—"} />
+          <ReviewRow label="Costo Mínimo" value={formatCurrency(data.costo_estimado)} />
           
           <div className="pt-3 flex flex-col gap-1.5">
             <span className="text-[11px] font-bold text-slate-500 uppercase tracking-widest mt-0.5">Descripción Técnica</span>

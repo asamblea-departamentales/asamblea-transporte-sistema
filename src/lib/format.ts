@@ -38,3 +38,23 @@ export function formatFecha(fecha: string): string {
 export function formatFechaCorta(fecha: string): string {
   return new Date(fecha).toISOString().slice(0, 16).replace("T", " ");
 }
+/** Returns YYYY-MM-DD using the browser's local calendar date. */
+export function getTodayLocal(date = new Date()): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+export function formatCurrency(value: number | string | null | undefined): string {
+  if (value == null || value === "") return "—";
+  const numeric = Number(value);
+  return Number.isFinite(numeric) ? `$${numeric.toFixed(2)}` : "—";
+}
+
+export function timeAgo(iso: string, nowLabel = "Ahora"): string {
+  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
+  if (diff < 60) return nowLabel;
+  if (diff < 3600) return `Hace ${Math.floor(diff / 60)} min`;
+  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
+  return `Hace ${Math.floor(diff / 86400)} días`;
+}

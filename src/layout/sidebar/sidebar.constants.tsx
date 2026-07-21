@@ -1,6 +1,7 @@
 import React from "react";
 import { LayoutGrid, PlusCircle, List, Menu as MenuIcon, X, Bell, LogOut, Check, Trash2, User, Shield } from "lucide-react";
 import { cn } from "../../lib/utils";
+export { timeAgo } from "../../lib/format";
 
 export type NavItem = { to: string; label: string; mobileLabel: string; icon: () => React.ReactElement; badge?: number };
 
@@ -43,14 +44,6 @@ export function Avatar({ initial, size = "md" }: { initial: string; size?: "sm" 
       {initial}
     </div>
   );
-}
-
-export function timeAgo(iso: string): string {
-  const diff = (Date.now() - new Date(iso).getTime()) / 1000;
-  if (diff < 60)    return "Ahora";
-  if (diff < 3600)  return `Hace ${Math.floor(diff / 60)} min`;
-  if (diff < 86400) return `Hace ${Math.floor(diff / 3600)} h`;
-  return `Hace ${Math.floor(diff / 86400)} días`;
 }
 
 

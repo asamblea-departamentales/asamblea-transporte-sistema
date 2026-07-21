@@ -4,7 +4,7 @@ import { ChevronLeft, Check, User, Building2, Calendar, Users, MapPin, Wrench } 
 import { completeRequest } from "../../services/requests.service";
 import { str, DetailItem, FinalizacionDataSection } from "./components/SharedDetailComponents";
 import type { GenericRequest } from "./components/SharedDetailComponents";
-import { getStatusStyle } from "../../lib/format";
+import { getStatusStyle, isCompleted } from "../../lib/format";
 import AsignacionBloque from "../../components/ui/AsignacionBloque";
 import MapViewer from "../../components/transport/MapViewer";
 import type { MapPoint } from "../../components/transport/MapViewer";
@@ -132,7 +132,7 @@ export default function DetalleTransporte({ data, isOwner, onRefresh }: Props) {
         </section>
       )}
 
-      {["completada", "finalizada"].includes(data.estado) && <FinalizacionDataSection data={data} modulo="transporte" />}
+      {isCompleted(data.estado) && <FinalizacionDataSection data={data} modulo="transporte" />}
 
       {showConfirmTransporte && (
         <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-lg animate-fade-in-up">

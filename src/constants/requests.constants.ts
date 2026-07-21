@@ -25,3 +25,7 @@ export const ESTADOS_CON_ASIGNACION = [
   "finalizada",
   "liquidada",
 ];
+export const ALLOWED_FILE_MIME = ["image/jpeg", "image/png", "application/pdf"] as const;
+export const ALLOWED_FILE_ACCEPT = ALLOWED_FILE_MIME.join(",");
+export const MAX_FILE_SIZE_MB = 5;
+export const MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024;

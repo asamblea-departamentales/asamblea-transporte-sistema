@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { ChevronLeft, CheckCircle2, User, Building2, Calendar, Fuel, ClipboardList, Hash } from "lucide-react";
 import { str, DetailItem, FinalizacionDataSection } from "./components/SharedDetailComponents";
 import type { GenericRequest } from "./components/SharedDetailComponents";
-import { getStatusStyle } from "../../lib/format";
+import { getStatusStyle, isCompleted } from "../../lib/format";
 import FinalizarCombustibleModal from "./Combustible/components/FinalizarCombustibleModal";
 interface Props {
   data: GenericRequest;
@@ -71,7 +71,7 @@ export default function DetalleCombustible({ data, isOwner, onRefresh }: Props) 
         </div>
       </div>
 
-      {["completada", "finalizada"].includes(data.estado) && <FinalizacionDataSection data={data} modulo="combustible" />}
+      {isCompleted(data.estado) && <FinalizacionDataSection data={data} modulo="combustible" />}
 
       <FinalizarCombustibleModal
         isOpen={isFinalizarModalOpen}

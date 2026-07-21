@@ -15,6 +15,7 @@ const TransportStep3Page = lazy(() => import("../pages/transport/paso-3"));
 const NuevaSolicitudMantenimiento = lazy(() => import("../pages/solicitudes/mantenimiento/NuevaSolicitudMantenimiento"));
 const NuevaSolicitudCombustible = lazy(() => import("../pages/solicitudes/Combustible/Nuevasolicitudcombustible"));
 const RequestDetailPage = lazy(() => import("../pages/solicitudes/RequestDetailPage"));
+const NotificationsPage = lazy(() => import("../pages/NotificationsPage"));
 
 function PageFallback() {
   return (
@@ -52,6 +53,7 @@ export default function App() {
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/nueva-solicitud" element={<NewRequestPage />} />
                 <Route path="/mis-solicitudes" element={<MyRequestsPage />} />
+                <Route path="/notificaciones" element={<NotificationsPage />} />
                 <Route path="/solicitudes/transporte/paso-1" element={<TransportStep1Page />} />
                 <Route path="/solicitudes/transporte/paso-2" element={<TransportStep2Page />} />
                 <Route path="/solicitudes/transporte/paso-3" element={<TransportStep3Page />} />
