@@ -11,7 +11,7 @@ export function getRequestKey(request: Pick<RequestIdentity, "modulo" | "id">): 
 }
 
 export function getRequestRouteIdentifier(request: RequestIdentity): string {
-  return request.modulo === "mantenimiento" ? String(request.id) : request.codigo;
+  return request.codigo;
 }
 
 export function getRequestDetailPath(request: RequestIdentity): string {

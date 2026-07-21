@@ -46,7 +46,7 @@ export default function MyRequestsPage() {
       if (cancelTarget.modulo === "transporte") {
         await cancelTransporte(cancelTarget.codigo, motivoCancelacion.trim());
       } else if (cancelTarget.modulo === "mantenimiento") {
-        await cancelarMantenimiento(cancelTarget.id);
+        await cancelarMantenimiento(cancelTarget.codigo);
       } else if (cancelTarget.modulo === "combustible") {
         await cancelCombustible(cancelTarget.codigo);
       }
