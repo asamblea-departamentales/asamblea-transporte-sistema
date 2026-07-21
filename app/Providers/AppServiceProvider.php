@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Domain\Solicitudes\Listeners\NotificarCambioEstado;
+use App\Domain\Solicitudes\Listeners\RegistrarHistorialEstado;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -23,6 +24,11 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(
             SolicitudEstadoCambiado::class,
             NotificarCambioEstado::class,
+        );
+
+        Event::listen(
+            SolicitudEstadoCambiado::class,
+            RegistrarHistorialEstado::class,
         );
 
         \App\Models\SolicitudCombustible::observe(

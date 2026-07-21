@@ -2,9 +2,10 @@
 
 namespace App\Mail;
 
+use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 
-class NotificacionEventMail extends Mailable
+class NotificacionEventMail extends Mailable implements ShouldQueue
 {
     public $subject;
 

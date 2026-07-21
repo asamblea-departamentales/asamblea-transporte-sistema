@@ -3,11 +3,12 @@
 namespace App\Domain\Solicitudes\Services\Operativo;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class BandejaOperativaService
@@ -32,14 +33,13 @@ class BandejaOperativaService
 
         $record->save();
 
-        HistorialEstado::create([
-            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-            'entidad_id' => $record->id,
-            'estado_anterior' => $this->enumValue($estadoAnterior),
-            'estado_nuevo' => EstadoSolicitudEnum::EN_REVISION->value,
-            'user_id' => $userId,
-            'comentario' => $comentario ?: 'Solicitud tomada para revisión operativa.',
-        ]);
+        SolicitudEstadoCambiado::dispatch(
+            $record,
+            $estadoAnterior,
+            EstadoSolicitudEnum::EN_REVISION,
+            User::findOrFail($userId),
+            ['comentario' => $comentario ?: 'Solicitud tomada para revisión operativa.', 'accion' => 'tomar_revision'],
+        );
 
         BitacoraEvento::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
@@ -86,7 +86,7 @@ class BandejaOperativaService
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudTransporte $r) {
+        return $query->take(200)->get()->map(function (SolicitudTransporte $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'transporte',
@@ -122,7 +122,7 @@ class BandejaOperativaService
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudCombustible $r) {
+        return $query->take(200)->get()->map(function (SolicitudCombustible $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'combustible',
@@ -161,7 +161,7 @@ class BandejaOperativaService
             $query->where('created_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudMantenimiento $r) {
+        return $query->take(200)->get()->map(function (SolicitudMantenimiento $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'mantenimiento',

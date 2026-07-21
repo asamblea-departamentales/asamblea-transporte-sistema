@@ -11,11 +11,11 @@
 namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Domain\Solicitudes\Services\EstadoFlotaService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Controllers\Controller;
 use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudTransporte;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -64,14 +64,13 @@ class MotoristaViajeController extends Controller
 
             app(EstadoFlotaService::class)->aplicarPorEstado($solicitud);
 
-            HistorialEstado::create([
-                'entidad_tipo' => 'solicitud_transporte',
-                'entidad_id' => $solicitud->id,
-                'estado_anterior' => $anterior?->value,
-                'estado_nuevo' => EstadoSolicitudEnum::EN_EJECUCION->value,
-                'user_id' => Auth::id(),
-                'comentario' => 'Viaje iniciado por el motorista.',
-            ]);
+            SolicitudEstadoCambiado::dispatch(
+                $solicitud,
+                $anterior,
+                EstadoSolicitudEnum::EN_EJECUCION,
+                Auth::user(),
+                ['comentario' => 'Viaje iniciado por el motorista.', 'accion' => 'iniciar_viaje'],
+            );
 
             BitacoraEvento::create([
                 'entidad_tipo' => 'solicitud_transporte',

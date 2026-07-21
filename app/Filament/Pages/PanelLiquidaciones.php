@@ -92,9 +92,14 @@ class PanelLiquidaciones extends Page
         $this->fecha_hasta = now()->format('Y-m-d');
     }
 
-    public function getData(): \Illuminate\Support\Collection
+    #[Url]
+    public int $page = 1;
+
+    public function getData(): \Illuminate\Contracts\Pagination\LengthAwarePaginator
     {
-        return app(LiquidacionUnifiedService::class)->getAll(
+        return app(LiquidacionUnifiedService::class)->getAllPaginated(
+            page: $this->page,
+            perPage: 25,
             fechaDesde: $this->fecha_desde ?: null,
             fechaHasta: $this->fecha_hasta ?: null,
             tipo: $this->tipo ?: null,

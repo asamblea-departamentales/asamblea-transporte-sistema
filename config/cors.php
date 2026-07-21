@@ -8,7 +8,7 @@ return [
     'allowed_origins' => [
         'https://asamblea-transporte.vercel.app',
         'https://asamble-transporte-motorista.vercel.app',
-        'https://asamblea-transporte-sistema.vercel.app/',
+        'https://asamblea-transporte-sistema.vercel.app',
     ],
 
     'allowed_origins_patterns' => [
@@ -19,7 +19,7 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400,
 
     'supports_credentials' => false, // ✅ ya no cookies
 ];

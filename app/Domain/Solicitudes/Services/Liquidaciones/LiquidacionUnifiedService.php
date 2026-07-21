@@ -6,6 +6,8 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\LengthAwarePaginator as LengthAwarePaginatorImpl;
 use Illuminate\Support\Collection;
 
 class LiquidacionUnifiedService
@@ -121,6 +123,130 @@ class LiquidacionUnifiedService
         }
 
         return $resultado;
+    }
+
+    public function getAllPaginated(
+        int $page = 1,
+        int $perPage = 25,
+        ?string $fechaDesde = null,
+        ?string $fechaHasta = null,
+        ?string $tipo = null,
+        ?string $estado = null,
+        ?string $modo = 'liquidacion',
+        ?int $solicitanteId = null,
+        ?int $motoristaId = null,
+    ): LengthAwarePaginator {
+
+        $estadosLiquidacion = [
+            EstadoSolicitudEnum::COMPLETADA,
+            EstadoSolicitudEnum::LIQUIDADA,
+        ];
+
+        $dateFieldTransporte = 'created_at';
+        $dateFieldCombustible = 'fecha_solicitud';
+        $dateFieldMantenimiento = 'created_at';
+
+        $transporte = collect();
+        $combustible = collect();
+        $mantenimiento = collect();
+
+        if (! $tipo || $tipo === 'transporte') {
+            $q = SolicitudTransporte::query()
+                ->with(['vehiculo', 'solicitante', 'motorista', 'unidad']);
+
+            if ($modo === 'liquidacion') {
+                $q->whereIn('estado', $estadosLiquidacion);
+            }
+
+            if ($fechaDesde) {
+                $q->whereDate($dateFieldTransporte, '>=', $fechaDesde);
+            }
+            if ($fechaHasta) {
+                $q->whereDate($dateFieldTransporte, '<=', $fechaHasta);
+            }
+            if ($solicitanteId) {
+                $q->where('solicitante_id', $solicitanteId);
+            }
+            if ($motoristaId) {
+                $q->where('motorista_id', $motoristaId);
+            }
+
+            $transporte = $q->get()->map(fn ($item) => $this->mapTransporte($item));
+        }
+
+        if (! $tipo || $tipo === 'combustible') {
+            $q = SolicitudCombustible::query()
+                ->with(['vehiculo', 'solicitante', 'motorista', 'liquidacion', 'solicitudTransporte.vehiculo', 'solicitudTransporte.motorista']);
+
+            if ($modo === 'liquidacion') {
+                $q->whereIn('estado', $estadosLiquidacion);
+            }
+
+            if ($fechaDesde) {
+                $q->whereDate($dateFieldCombustible, '>=', $fechaDesde);
+            }
+            if ($fechaHasta) {
+                $q->whereDate($dateFieldCombustible, '<=', $fechaHasta);
+            }
+            if ($solicitanteId) {
+                $q->where('solicitante_id', $solicitanteId);
+            }
+            if ($motoristaId) {
+                $q->where('motorista_id', $motoristaId);
+            }
+
+            $combustible = $q->get()->map(fn ($item) => $this->mapCombustible($item));
+        }
+
+        if (! $tipo || $tipo === 'mantenimiento') {
+            $q = SolicitudMantenimiento::query()
+                ->with(['vehiculo', 'solicitante', 'liquidacion', 'tipoMantenimiento']);
+
+            if ($modo === 'liquidacion') {
+                $q->whereIn('estado', $estadosLiquidacion);
+            }
+
+            if ($fechaDesde) {
+                $q->whereDate($dateFieldMantenimiento, '>=', $fechaDesde);
+            }
+            if ($fechaHasta) {
+                $q->whereDate($dateFieldMantenimiento, '<=', $fechaHasta);
+            }
+            if ($solicitanteId) {
+                $q->where('solicitante_id', $solicitanteId);
+            }
+
+            $mantenimiento = $q->get()->map(fn ($item) => $this->mapMantenimiento($item));
+        }
+
+        $resultado = $transporte
+            ->merge($combustible)
+            ->merge($mantenimiento)
+            ->sortByDesc('fecha')
+            ->values();
+
+        if ($estado) {
+            if ($estado === 'liquidado') {
+                $resultado = $resultado->filter(fn ($i) => ($i['liquidado'] ?? false) === true);
+            } elseif ($estado === 'pendiente_liquidacion') {
+                $resultado = $resultado->filter(fn ($i) => ($i['liquidado'] ?? false) === false &&
+                    in_array($i['estado_raw'] ?? '', ['completada'], true));
+            } else {
+                $resultado = $resultado->filter(fn ($i) => ($i['estado_raw'] ?? '') === $estado);
+            }
+            $resultado = $resultado->values();
+        }
+
+        $total = $resultado->count();
+        $paginated = $resultado->slice(($page - 1) * $perPage, $perPage)->values();
+
+        return new LengthAwarePaginatorImpl(
+            items: $paginated,
+            total: $total,
+            perPage: $perPage,
+            currentPage: $page,
+            options: ['path' => request()->url()]
+        );
     }
 
     private function mapTransporte($r): array

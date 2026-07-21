@@ -6,13 +6,15 @@ use App\Domain\Solicitudes\Contracts\Workflowable;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\TicketService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudMantenimiento extends Model implements Workflowable
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'solicitudes_mantenimiento';
 
@@ -64,13 +66,19 @@ class SolicitudMantenimiento extends Model implements Workflowable
     {
         static::creating(function ($solicitud) {
             $year = now()->year;
-            $ultima = static::where('codigo', 'like', "SM-{$year}-%")
-                ->latest('id')
-                ->first();
 
-            $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+            $codigo = DB::transaction(function () use ($year) {
+                $ultima = static::where('codigo', 'like', "SM-{$year}-%")
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
 
-            $solicitud->codigo = "SM-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+                $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+
+                return "SM-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+            });
+
+            $solicitud->codigo = $codigo;
 
             app(TicketService::class)->generar($solicitud);
         });

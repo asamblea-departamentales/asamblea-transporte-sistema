@@ -10,7 +10,10 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\LoginRequest;
 use App\Models\UserSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -18,12 +21,9 @@ use Illuminate\Support\Facades\DB;
 
 class AuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => ['required', 'email'],
-            'password' => ['required'],
-        ]);
+        $credentials = $request->validated();
 
         if (! Auth::validate($credentials)) {
             return response()->json(['message' => 'Credenciales inválidas'], 401);
@@ -63,6 +63,12 @@ class AuthController extends Controller
             'session_id' => $request->session()->getId(),
         ]);
 
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::LOGIN,
+            'users',
+            $user->id,
+        );
+
         return response()->json([
             'message' => 'Login exitoso',
             'user' => $this->userPayload(Auth::user()),
@@ -72,6 +78,12 @@ class AuthController extends Controller
     public function logout(Request $request)
     {
         $sessionId = $request->session()->getId();
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::LOGOUT,
+            'users',
+            Auth::id(),
+        );
 
         // Eliminar el registro de sesión
         UserSession::where('session_id', $sessionId)->delete();

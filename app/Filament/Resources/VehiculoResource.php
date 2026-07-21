@@ -495,6 +495,7 @@ class VehiculoResource extends Resource
                 'tipoCombustible',
                 'clasificacion',
                 'estadoCatalogo',
+                'departamental',
                 'asignacionVigenteMotorista.motorista',
             ]);
     }

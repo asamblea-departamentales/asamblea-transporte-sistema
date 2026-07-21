@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\DashboardController;
+use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Http\Controllers\Api\MotoristaViajeController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
@@ -19,7 +20,6 @@ Route::middleware('auth:sanctum')->group(function () {
     // Usuario autenticado
     Route::get('/auth/me', [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
-    Route::get('/user', [TokenAuthController::class, 'me']);
 
     // Dashboard Summary (Transporte + Mantenimiento + Combustible)
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
@@ -52,7 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('recursos/disponibles', [SolicitudTransporteController::class, 'recursosDisponibles']);
 
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
-        Route::get('solicitudes/historial-jefatura', [DashboardController::class, 'historialJefatura']);
+        Route::get('dashboard/historial-jefatura', [DashboardController::class, 'historialJefatura']);
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])
@@ -320,3 +320,5 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
 });
+
+Route::get('health', HealthController::class);

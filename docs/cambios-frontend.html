@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backend Release Notes - Sistema de Transporte Institucional</title>
+    
+    <!-- Script Mermaid para renderizar diagramas si los agregas -->
+    <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #0f172a;
+            --primary-accent: #2563eb;
+            --text-main: #334155;
+            --text-dark: #0f172a;
+            --bg-body: #f8fafc;
+            --bg-card: #ffffff;
+            --border-color: #e2e8f0;
+            --success-bg: #dcfce7;
+            --success-text: #166534;
+            --warning-bg: #fef3c7;
+            --warning-text: #92400e;
+            --danger-bg: #fee2e2;
+            --danger-text: #991b1b;
+        }
+
+        @page {
+            size: A4;
+            margin: 15mm;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-main);
+            background-color: var(--bg-body);
+            margin: 0;
+            padding: 2rem 1rem;
+        }
+
+        .container {
+            max-width: 860px;
+            margin: 0 auto;
+            background: var(--bg-card);
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Banner Encabezado */
+        .header-card {
+            background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);
+            color: #ffffff;
+            padding: 2rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+        }
+
+        .header-card h1 {
+            font-size: 1.75rem;
+            margin: 0 0 0.5rem 0;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            border: none;
+            color: #ffffff;
+            padding-bottom: 0;
+        }
+
+        .header-card .subtitle {
+            font-size: 1.1rem;
+            color: #93c5fd;
+            margin: 0 0 1rem 0;
+            font-weight: 500;
+        }
+
+        .header-meta {
+            display: flex;
+            gap: 1.5rem;
+            font-size: 0.875rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.15);
+            padding-top: 1rem;
+            color: #cbd5e1;
+        }
+
+        /* Estilos de Títulos */
+        h1, h2, h3 {
+            color: var(--text-dark);
+            font-weight: 700;
+            letter-spacing: -0.01em;
+        }
+
+        h2 {
+            font-size: 1.25rem;
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 2px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        h3 {
+            font-size: 1rem;
+            margin-top: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        p {
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        /* Listas */
+        ul {
+            padding-left: 1.25rem;
+            margin-top: 0;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.35rem;
+        }
+
+        /* Código e Inlines */
+        code {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875em;
+            background-color: #f1f5f9;
+            color: #0f172a;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            border: 1px solid #e2e8f0;
+        }
+
+        pre {
+            background-color: #0f172a;
+            color: #f8fafc;
+            padding: 1rem;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin-bottom: 1rem;
+        }
+
+        pre code {
+            background-color: transparent;
+            color: inherit;
+            border: none;
+            padding: 0;
+        }
+
+        /* Tablas */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1rem 0 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        th {
+            background-color: #f8fafc;
+            color: var(--text-dark);
+            font-weight: 600;
+            text-align: left;
+            padding: 0.75rem 1rem;
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:nth-child(even) td {
+            background-color: #fafafa;
+        }
+
+        /* Callouts y Tarjetas */
+        .card {
+            background: #ffffff;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin-bottom: 1rem;
+        }
+
+        .card-danger {
+            border-left: 4px solid #dc2626;
+            background-color: #fff5f5;
+        }
+
+        .card-warning {
+            border-left: 4px solid #d97706;
+            background-color: #fffbeb;
+        }
+
+        .card-info {
+            border-left: 4px solid var(--primary-accent);
+            background-color: #eff6ff;
+        }
+
+        .card-success {
+            border-left: 4px solid #16a34a;
+            background-color: #f0fdf4;
+        }
+
+        /* Badges / Etiquetas */
+        .badge {
+            display: inline-block;
+            padding: 0.2em 0.6em;
+            font-size: 0.75rem;
+            font-weight: 700;
+            border-radius: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-green { background: var(--success-bg); color: var(--success-text); }
+        .badge-yellow { background: var(--warning-bg); color: var(--warning-text); }
+        .badge-red { background: var(--danger-bg); color: var(--danger-text); }
+        .badge-blue { background: #dbeafe; color: #1e40af; }
+
+        /* Checklist */
+        .checklist {
+            list-style: none;
+            padding-left: 0;
+        }
+
+        .checklist li {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.4rem 0;
+            border-bottom: 1px dashed var(--border-color);
+        }
+
+        .checklist li:last-child {
+            border-bottom: none;
+        }
+
+        .checklist input[type="checkbox"] {
+            width: 16px;
+            height: 16px;
+            accent-color: var(--primary-accent);
+            cursor: pointer;
+        }
+
+        /* Utilidad de cambio de endpoint */
+        .endpoint-row {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin: 0.5rem 0;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+
+        .endpoint-label {
+            width: 70px;
+            font-weight: bold;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border-color);
+            margin: 2rem 0;
+        }
+
+        .page-break {
+            page-break-after: always;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- Header -->
+    <div class="header-card">
+        <h1>Backend Release Notes</h1>
+        <div class="subtitle">Sistema de Transporte Institucional</div>
+        <div class="header-meta">
+            <div><strong>Versión Backend:</strong> 2.1.0</div>
+            <div><strong>Fecha:</strong> 20 de Julio, 2026</div>
+            <div><strong>Entorno:</strong> Staging / Production</div>
+        </div>
+    </div>
+
+    <!-- Objetivo -->
+    <h2>🎯 Objetivo de esta actualización</h2>
+    <p>Esta versión incluye mejoras integrales en múltiples capas del sistema:</p>
+    <ul>
+        <li>Optimización de rendimiento y consultas en Base de Datos</li>
+        <li>Refactorización de arquitectura hacia Capas de Servicio</li>
+        <li>Refuerzo de políticas de seguridad (CORS, Sanctum, CSRF)</li>
+        <li>Procesamiento asíncrono y colas de trabajo</li>
+        <li>Aumento de cobertura con pruebas automatizadas</li>
+    </ul>
+    <p>El objetivo central fue <strong>fortalecer el core del backend</strong> manteniendo la mayor estabilidad y transparencia frente a las aplicaciones clientes en React.</p>
+
+    <!-- Nivel de Impacto -->
+    <h2>📊 Nivel de Impacto para Frontend</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Área / Módulo</th>
+                <th>Nivel de Impacto</th>
+                <th>Observación</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><strong>API REST</strong></td>
+                <td><span class="badge badge-green">🟢 Bajo</span></td>
+                <td>Mantenimiento general de endpoints existentes</td>
+            </tr>
+            <tr>
+                <td><strong>Payload JSON</strong></td>
+                <td><span class="badge badge-green">🟢 Ninguno</span></td>
+                <td>Estructuras de respuesta 100% idénticas</td>
+            </tr>
+            <tr>
+                <td><strong>Reportes (PDF/Excel/CSV)</strong></td>
+                <td><span class="badge badge-green">🟢 Ninguno</span></td>
+                <td>Mismas descargas y parámetros</td>
+            </tr>
+            <tr>
+                <td><strong>Autenticación</strong></td>
+                <td><span class="badge badge-green">🟢 Ninguno</span></td>
+                <td>Mismo comportamiento y tokens JWT/Sanctum</td>
+            </tr>
+            <tr>
+                <td><strong>Nuevos Endpoints</strong></td>
+                <td><span class="badge badge-yellow">🟡 Disponible</span></td>
+                <td>Nuevos servicios para monitoreo (/api/health)</td>
+            </tr>
+            <tr>
+                <td><strong>Cambios de Ruta (URL)</strong></td>
+                <td><span class="badge badge-red">🔴 Requiere Acción</span></td>
+                <td>Un endpoint obligatorio modificado</td>
+            </tr>
+        </tbody>
+    </table>
+
+    <!-- Breaking Changes -->
+    <h2>🚨 Breaking Changes (Cambios Obligatorios)</h2>
+    <div class="card card-danger">
+        <h3 style="margin-top:0; color: #991b1b;">1. Cambio de Endpoint para Historial de Jefatura</h3>
+        <p>Se reestructuró la ruta de consulta del historial de jefatura dentro del módulo de dashboard. La URL antigua fue deshabilitada.</p>
+        
+        <div class="endpoint-row">
+            <span class="endpoint-label" style="color: #dc2626;">ANTES</span>
+            <span class="badge badge-red">GET</span>
+            <code>/api/solicitudes/historial-jefatura</code>
+        </div>
+        <div class="endpoint-row">
+            <span class="endpoint-label" style="color: #16a34a;">AHORA</span>
+            <span class="badge badge-green">GET</span>
+            <code>/api/dashboard/historial-jefatura</code>
+        </div>
+
+        <p style="margin-bottom:0; margin-top:0.75rem; font-size: 0.85rem; color: #7f1d1d;">
+            <strong>Nota:</strong> La estructura del JSON retornado es exactamente la misma. Únicamente se debe actualizar la constante del path en la capa de servicios de React.
+        </p>
+    </div>
+
+    <!-- Cambios Recomendados -->
+    <h2>💡 Cambios Recomendados</h2>
+    <div class="card card-info">
+        <h3 style="margin-top:0; color: #1e40af;">Perfil del Usuario Autenticado</h3>
+        <p>El endpoint redundante <code>GET /api/user</code> fue removido para estandarizar la API.</p>
+        <div class="endpoint-row">
+            <span class="endpoint-label">USAR</span>
+            <span class="badge badge-blue">GET</span>
+            <code>/api/auth/me</code>
+        </div>
+        <p style="margin-bottom:0; margin-top:0.5rem; font-size: 0.85rem; color: #1e3a8a;">
+            Retorna la misma información y modelo del usuario en sesión.
+        </p>
+    </div>
+
+    <!-- Nuevos Endpoints -->
+    <h2>⚡ Nuevos Endpoints</h2>
+    <div class="card card-success">
+        <h3 style="margin-top:0; color: #166534;">Health Check Service</h3>
+        <div class="endpoint-row">
+            <span class="badge badge-green">GET</span>
+            <code>/api/health</code>
+        </div>
+        <p>Permite diagnosticar en tiempo real el estado de infraestructura:</p>
+        <ul style="margin-bottom:0;">
+            <li>Disponibilidad de la API</li>
+            <li>Conectividad con la base de datos (MySQL/PostgreSQL)</li>
+            <li>Estado del sistema para monitoreo o alertas de mantenimiento</li>
+        </ul>
+    </div>
+
+    <!-- Cambios Internos -->
+    <h2>🛠️ Cambios Internos (Sin Impacto en Frontend)</h2>
+    <p>Se realizaron mejoras técnicas en la arquitectura interna que mejoran la velocidad de respuesta y estabilidad general:</p>
+    <div class="card">
+        <ul style="margin-bottom:0;">
+            <li><strong>Consultas SQL:</strong> Solución a problemas de carga diferida N+1 en listados masivos.</li>
+            <li><strong>Validaciones:</strong> Migración de validaciones en controladores hacia <em>Form Requests</em>.</li>
+            <li><strong>Desacoplamiento:</strong> Abstracción de reglas de negocio hacia <em>Services</em> independientes.</li>
+            <li><strong>Asincronía:</strong> Envíos de correos delegados a colas (<em>Queues</em>) para respuestas HTTP inmediatas.</li>
+            <li><strong>Eventos:</strong> Trazabilidad del historial de estados impulsado por arquitectura orientada a eventos.</li>
+            <li><strong>Seguridad:</strong> Refuerzo en middleware de CORS, manejo de sesiones y respuestas de excepciones centralizadas.</li>
+        </ul>
+    </div>
+
+    <!-- Tabla de Matriz de Compatibilidad -->
+    <h2>✅ Matriz de Compatibilidad de Módulos</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Módulo Frontend</th>
+                <th>Estado de Integración</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Autenticación (Login / Logout / Refresh)</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Dashboard Principal</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Solicitudes de Transporte</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Solicitudes de Combustible</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Solicitudes de Mantenimiento</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Reportes y Descargas PDF</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+            <tr><td>Exportaciones (Excel / CSV)</td><td><span class="badge badge-green">✅ Totalmente Compatible</span></td></tr>
+        </tbody>
+    </table>
+
+    <!-- Plan de Pruebas QA -->
+    <h2>🧪 Plan de Pruebas Recomendado (QA)</h2>
+    <p>Ejecutar prueba de humo (*Sanity Check*) en las siguientes vistas antes del despliegue a producción:</p>
+    <ul>
+        <li>Inicio de sesión y cierre de sesión</li>
+        <li>Carga de métricas en Dashboard</li>
+        <li>Consulta de Historial de Jefatura (Verificar nueva URL)</li>
+        <li>Creación y flujo de aprobación de solicitudes</li>
+        <li>Módulo de liquidaciones operativas</li>
+        <li>Generación y descarga de archivos PDF/Excel</li>
+    </ul>
+
+    <!-- Checklist Frontend -->
+    <h2>☑️ Checklist de Integración Frontend</h2>
+    <div class="card">
+        <ul class="checklist">
+            <li>
+                <input type="checkbox" id="chk1">
+                <label for="chk1">Actualizar endpoint de historial de jefatura a <code>/api/dashboard/historial-jefatura</code></label>
+            </li>
+            <li>
+                <input type="checkbox" id="chk2">
+                <label for="chk2">Reemplazar llamados a <code>/api/user</code> por <code>/api/auth/me</code> (si aplica)</label>
+            </li>
+            <li>
+                <input type="checkbox" id="chk3">
+                <label for="chk3">Validar flujo completo de inicio y fin de sesión</label>
+            </li>
+            <li>
+                <input type="checkbox" id="chk4">
+                <label for="chk4">Confirmar visualización de gráficos y tablas del Dashboard</label>
+            </li>
+            <li>
+                <input type="checkbox" id="chk5">
+                <label for="chk5">Validar creación de solicitudes (Transporte, Mantenimiento, Combustible)</label>
+            </li>
+            <li>
+                <input type="checkbox" id="chk6">
+                <label for="chk6">Comprobar descarga correcta de reportes en PDF y hojas de cálculo</label>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Resumen Ejecutivo -->
+    <h2>📈 Resumen Métrico de Cambios</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Métrica de Control</th>
+                <th style="text-align: right;">Valor / Cantidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr><td>Archivos modificados en Backend</td><td style="text-align: right;"><strong>~60</strong></td></tr>
+            <tr><td>Nuevos archivos / clases agregadas</td><td style="text-align: right;"><strong>15</strong></td></tr>
+            <tr><td>Nuevas pruebas unitarias/integración</td><td style="text-align: right;"><strong>11</strong></td></tr>
+            <tr><td>Breaking Changes (Cambios obligatorios)</td><td style="text-align: right;"><span class="badge badge-red">1</span></td></tr>
+            <tr><td>Cambios en la estructura JSON</td><td style="text-align: right;"><span class="badge badge-green">0</span></td></tr>
+        </tbody>
+    </table>
+
+    <hr>
+
+    <!-- Contacto -->
+    <h2>📞 Soporte y Reporte de Bugs</h2>
+    <p>Si durante el proceso de validación encuentran inconsistencias en los entornos de prueba, por favor reportar:</p>
+    <ul>
+        <li>URL y método HTTP consumido</li>
+        <li>Payload o parámetros enviados</li>
+        <li>Código de estado HTTP recibido</li>
+        <li>Respuesta en JSON devuelta por la API</li>
+    </ul>
+
+</div>
+
+<script>
+    // Inicialización del motor de diagramas en caso de incluir grafos
+    mermaid.initialize({ startOnLoad: true, theme: 'default' });
+</script>
+
+</body>
+</html>

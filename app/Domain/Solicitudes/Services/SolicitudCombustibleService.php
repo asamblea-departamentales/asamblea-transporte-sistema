@@ -4,10 +4,10 @@ namespace App\Domain\Solicitudes\Services;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Models\BitacoraEvento;
 use App\Models\ContratoCombustible;
 use App\Models\DecisionOperativa;
-use App\Models\HistorialEstado;
 use App\Models\SerieCarga;
 use App\Models\SolicitudCombustible;
 use App\Models\User;
@@ -60,14 +60,13 @@ class SolicitudCombustibleService
 
             $solicitud = SolicitudCombustible::create($data);
 
-            HistorialEstado::create([
-                'entidad_tipo' => 'solicitud_combustible',
-                'entidad_id' => $solicitud->id,
-                'estado_anterior' => 'ninguno',
-                'estado_nuevo' => EstadoSolicitudEnum::BORRADOR,
-                'user_id' => $userId,
-                'comentario' => 'Creación inicial de borrador.',
-            ]);
+            SolicitudEstadoCambiado::dispatch(
+                $solicitud,
+                null,
+                EstadoSolicitudEnum::BORRADOR,
+                User::findOrFail($userId),
+                ['comentario' => 'Creación inicial de borrador.', 'accion' => 'crear'],
+            );
 
             $this->registrarEvento($solicitud, AccionBitacoraEnum::CREAR->value, $userId, [
                 'prioridad_grupo' => $solicitud->prioridad_grupo,

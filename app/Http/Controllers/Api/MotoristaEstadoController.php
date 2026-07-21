@@ -162,7 +162,7 @@ class MotoristaEstadoController extends Controller
                     );
                 }
             } catch (\Exception $e) {
-                Log::error('Error enviando correo de motorista no disponible: '.$e->getMessage());
+                Log::error('Error enviando correo de motorista no disponible', ['error' => $e->getMessage()]);
             }
         }
 

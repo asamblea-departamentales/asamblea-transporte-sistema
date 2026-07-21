@@ -209,7 +209,7 @@ class SolicitudEmailDispatchService
                 new NotificacionEventMail($subject, $payload)
             );
         } catch (\Exception $e) {
-            Log::error("Error enviando correo [{$payload['tipo']}/{$payload['evento']}]: ".$e->getMessage());
+            Log::error("Error enviando correo [{$payload['tipo']}/{$payload['evento']}]", ['error' => $e->getMessage()]);
         }
     }
 
@@ -223,7 +223,7 @@ class SolicitudEmailDispatchService
                 new NotificacionEventMail($subject, $payload)
             );
         } catch (\Exception $e) {
-            Log::error("Error encolando correo [{$payload['tipo']}/{$payload['evento']}]: ".$e->getMessage());
+            Log::error("Error encolando correo [{$payload['tipo']}/{$payload['evento']}]", ['error' => $e->getMessage()]);
         }
     }
 }

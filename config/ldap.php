@@ -29,9 +29,9 @@ return [
     'connections' => [
 
         'default' => [
-            'hosts' => [env('LDAP_HOSTS', '172.19.10.7')],
-            'username' => env('LDAP_USERNAME', 'ASAMBLEA\\apache'),
-            'password' => env('LDAP_PASSWORD', 'mapache'),
+            'hosts' => [env('LDAP_HOSTS')],
+            'username' => env('LDAP_USERNAME'),
+            'password' => env('LDAP_PASSWORD'),
             'port' => env('LDAP_PORT', 389),
             'base_dn' => env('LDAP_BASE_DN', 'OU=Empleados,DC=asamblea,DC=gob,DC=sv'),
             'timeout' => 5,

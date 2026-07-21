@@ -4,16 +4,18 @@ namespace App\Models;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Storage;
 
 class Vehiculo extends Model
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'vehiculos';
 
@@ -77,24 +79,26 @@ class Vehiculo extends Model
     // NUEVOS: Scopes y Accesors para estados operativos
     public function getEstadoOperativoAttribute(): string
     {
-        $tieneViajeActivo = SolicitudTransporte::where('vehiculo_id', $this->id)
-            ->whereIn('estado', [
-                EstadoSolicitudEnum::EN_EJECUCION,
-                EstadoSolicitudEnum::PROGRAMADA,
-                EstadoSolicitudEnum::APROBADA,
-                EstadoSolicitudEnum::ASIGNADA,
-            ])
-            ->exists();
+        return Cache::remember("vehiculo_{$this->id}_estado", 60, function () {
+            $tieneViajeActivo = SolicitudTransporte::where('vehiculo_id', $this->id)
+                ->whereIn('estado', [
+                    EstadoSolicitudEnum::EN_EJECUCION,
+                    EstadoSolicitudEnum::PROGRAMADA,
+                    EstadoSolicitudEnum::APROBADA,
+                    EstadoSolicitudEnum::ASIGNADA,
+                ])
+                ->exists();
 
-        if (! $tieneViajeActivo) {
-            return 'disponible';
-        }
+            if (! $tieneViajeActivo) {
+                return 'disponible';
+            }
 
-        $enEjecucion = SolicitudTransporte::where('vehiculo_id', $this->id)
-            ->where('estado', EstadoSolicitudEnum::EN_EJECUCION)
-            ->exists();
+            $enEjecucion = SolicitudTransporte::where('vehiculo_id', $this->id)
+                ->where('estado', EstadoSolicitudEnum::EN_EJECUCION)
+                ->exists();
 
-        return $enEjecucion ? 'en_ruta' : 'reservado';
+            return $enEjecucion ? 'en_ruta' : 'reservado';
+        });
     }
 
     public function getEstaDisponibleAttribute(): bool
@@ -102,22 +106,24 @@ class Vehiculo extends Model
         return $this->estado_operativo === 'disponible';
     }
 
+    public function scopeActivos(Builder $query): Builder
+    {
+        return $query->whereNotIn('estado', ['Baja']);
+    }
+
     // Filtra vehiculos sin viajes activos (en ejecución, programada, aprobada o asignada)
     // y cuyo estado de catálogo no sea "En Taller" ni "Baja"
     public function scopeDisponibles(Builder $query): Builder
     {
-        $idsOcupados = SolicitudTransporte::whereIn('estado', [
-            EstadoSolicitudEnum::EN_EJECUCION,
-            EstadoSolicitudEnum::PROGRAMADA,
-            EstadoSolicitudEnum::APROBADA,
-            EstadoSolicitudEnum::ASIGNADA,
-        ])
-            ->whereNotNull('vehiculo_id')
-            ->pluck('vehiculo_id')
-            ->unique();
-
         return $query
-            ->whereNotIn('id', $idsOcupados)
+            ->whereDoesntHave('solicitudesTransporte', function ($q) {
+                $q->whereIn('estado', [
+                    EstadoSolicitudEnum::EN_EJECUCION,
+                    EstadoSolicitudEnum::PROGRAMADA,
+                    EstadoSolicitudEnum::APROBADA,
+                    EstadoSolicitudEnum::ASIGNADA,
+                ]);
+            })
             ->where(function ($q) {
                 $q->whereNull('veh_estado_catalogo_id')
                     ->orWhereHas('estadoCatalogo', fn ($q) => $q->where('nombre', 'Disponible'));
@@ -127,17 +133,14 @@ class Vehiculo extends Model
     // Filtra vehiculos con al menos un viaje activo (en ejecución, programada, aprobada o asignada)
     public function scopeNoDisponibles(Builder $query): Builder
     {
-        $idsOcupados = SolicitudTransporte::whereIn('estado', [
-            EstadoSolicitudEnum::EN_EJECUCION,
-            EstadoSolicitudEnum::PROGRAMADA,
-            EstadoSolicitudEnum::APROBADA,
-            EstadoSolicitudEnum::ASIGNADA,
-        ])
-            ->whereNotNull('vehiculo_id')
-            ->pluck('vehiculo_id')
-            ->unique();
-
-        return $query->whereIn('id', $idsOcupados);
+        return $query->whereHas('solicitudesTransporte', function ($q) {
+            $q->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ]);
+        });
     }
 
     // ──────────────────────────────────────────────
@@ -169,6 +172,11 @@ class Vehiculo extends Model
     }
 
     // Relaciones con otras tablas/modelos
+
+    public function solicitudesTransporte(): HasMany
+    {
+        return $this->hasMany(SolicitudTransporte::class);
+    }
 
     public function tipo(): BelongsTo
     {

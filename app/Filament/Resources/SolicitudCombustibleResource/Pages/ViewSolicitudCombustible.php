@@ -156,7 +156,7 @@ class ViewSolicitudCombustible extends ViewRecord
                 $solicitud, 'combustible', 'solicitud_aprobada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de aprobación: '.$e->getMessage());
+            Log::error('Error enviando correo de aprobación', ['error' => $e->getMessage()]);
         }
     }
 
@@ -167,7 +167,7 @@ class ViewSolicitudCombustible extends ViewRecord
                 $solicitud, 'combustible', 'solicitud_rechazada'
             );
         } catch (\Exception $e) {
-            Log::error('Error enviando correo de rechazo: '.$e->getMessage());
+            Log::error('Error enviando correo de rechazo', ['error' => $e->getMessage()]);
         }
     }
 }

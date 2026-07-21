@@ -6,7 +6,6 @@ use App\Domain\Solicitudes\Contracts\Workflowable;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Domain\Solicitudes\Exceptions\InvalidWorkflowTransitionException;
-use App\Models\HistorialEstado;
 use App\Models\User;
 
 class SolicitudWorkflowService
@@ -74,16 +73,10 @@ class SolicitudWorkflowService
         $solicitud->setEstado($nuevoEstado);
         $solicitud->save();
 
-        HistorialEstado::create([
-            'entidad_tipo' => $entidadTipo,
-            'entidad_id' => $solicitud->getKey(),
-            'estado_anterior' => $anterior ? ($anterior->value ?? (string) $anterior) : 'ninguno',
-            'estado_nuevo' => $nuevoEstado->value,
-            'user_id' => $actor->id,
-            'comentario' => $comentario,
-        ]);
-
-        event(new SolicitudEstadoCambiado($solicitud, $anterior, $nuevoEstado, $actor, $metadata));
+        event(new SolicitudEstadoCambiado($solicitud, $anterior, $nuevoEstado, $actor, array_merge(
+            $metadata,
+            array_filter(['comentario' => $comentario]),
+        )));
     }
 
     public function enviar(Workflowable $solicitud, User $actor): void

@@ -51,7 +51,7 @@ class RecordatorioLiquidacionJob implements ShouldQueue
             );
             Log::info("Recordatorio liquidación enviado: {$this->tipo} #{$solicitud->id} ({$solicitud->codigo})");
         } catch (\Exception $e) {
-            Log::error("Error recordatorio {$this->tipo} #{$solicitud->id}: ".$e->getMessage());
+            Log::error("Error recordatorio {$this->tipo} #{$solicitud->id}", ['error' => $e->getMessage()]);
         }
     }
 }

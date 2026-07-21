@@ -3,6 +3,7 @@
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,9 +13,14 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        // Esta sola línea hace TODO el trabajo sucio por ti:
-        // Carga EnsureFrontendRequestsAreStateful, maneja sesiones y cookies.
-        // $middleware->statefulApi();
+        $middleware->trustProxies(
+            at: '*',
+            headers: Request::HEADER_X_FORWARDED_FOR |
+                     Request::HEADER_X_FORWARDED_HOST |
+                     Request::HEADER_X_FORWARDED_PORT |
+                     Request::HEADER_X_FORWARDED_PROTO |
+                     Request::HEADER_X_FORWARDED_AWS_ELB,
+        );
 
         $middleware->alias([
             'role' => \Spatie\Permission\Middleware\RoleMiddleware::class,
@@ -41,5 +47,21 @@ return Application::configure(basePath: dirname(__DIR__))
             return response()->json([
                 'message' => $e->getMessage() ?: 'Server error',
             ], $e->getStatusCode());
+        });
+
+        $exceptions->render(function (\Illuminate\Database\QueryException $e) {
+            return response()->json([
+                'message' => 'Database error',
+            ], 500);
+        });
+
+        $exceptions->render(function (\Illuminate\Session\TokenMismatchException $e) {
+            return response()->json(['message' => 'Token mismatch'], 419);
+        });
+
+        $exceptions->render(function (\Throwable $e) {
+            return response()->json([
+                'message' => 'Server error',
+            ], 500);
         });
     })->create();

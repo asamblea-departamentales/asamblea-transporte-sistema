@@ -7,10 +7,12 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Models\BitacoraEvento;
 use App\Models\DecisionOperativa;
 use App\Models\Motorista;
+use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
 use App\Models\SugerenciaAsignacion;
 use App\Models\User;
 use App\Models\Vehiculo;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 class SolicitudTransporteService
@@ -18,6 +20,77 @@ class SolicitudTransporteService
     public function __construct(
         private SolicitudWorkflowService $workflow,
     ) {}
+
+    public function crear(array $data, User $user): SolicitudTransporte
+    {
+        $tipoVehiculoNombre = $data['tipo_vehiculo'];
+        $destinoReal = $data['destino_principal'];
+        $destinoAdicional = $data['destino_adicional'] ?? null;
+        $destinosAdicionales = $data['destinos_adicionales'] ?? [];
+
+        unset($data['tipo_vehiculo'], $data['destino_principal'], $data['destino_adicional'], $data['destinos_adicionales']);
+
+        return DB::transaction(function () use ($data, $tipoVehiculoNombre, $destinoReal, $destinoAdicional, $destinosAdicionales, $user) {
+            if (! empty($data['hora_salida']) && ! empty($data['fecha_salida'])) {
+                $fecha = $data['fecha_salida'] instanceof Carbon ? $data['fecha_salida'] : Carbon::parse($data['fecha_salida']);
+                $data['fecha_salida'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_salida']);
+            }
+            unset($data['hora_salida']);
+
+            if (! empty($data['hora_retorno']) && ! empty($data['fecha_retorno'])) {
+                $fecha = $data['fecha_retorno'] instanceof Carbon ? $data['fecha_retorno'] : Carbon::parse($data['fecha_retorno']);
+                $data['fecha_retorno'] = Carbon::parse($fecha->format('Y-m-d').' '.$data['hora_retorno']);
+            }
+            unset($data['hora_retorno']);
+
+            if (! empty($data['fecha_salida']) && ! empty($data['fecha_retorno'])) {
+                $data['horas_estimadas'] = round(
+                    Carbon::parse($data['fecha_salida'])->diffInMinutes(Carbon::parse($data['fecha_retorno']), true) / 60,
+                    2
+                );
+            }
+
+            $solicitud = SolicitudTransporte::create([
+                ...$data,
+                'destino' => $destinoReal,
+                'destino_adicional' => $destinoAdicional,
+                'tipo_vehiculo_nombre' => $tipoVehiculoNombre,
+                'solicitante_id' => $user->id,
+                'prioridad_grupo' => $user->grupo?->nivel_prioridad ?? 'baja',
+                'estado' => EstadoSolicitudEnum::BORRADOR,
+            ]);
+
+            $orden = 0;
+
+            if (! empty($destinosAdicionales) && is_array($destinosAdicionales)) {
+                foreach ($destinosAdicionales as $d) {
+                    SolicitudDestinoAdicional::create([
+                        'solicitud_transporte_id' => $solicitud->id,
+                        'nombre' => $d['nombre'] ?? 'Destino adicional',
+                        'lat' => $d['lat'] ?? null,
+                        'lng' => $d['lng'] ?? null,
+                        'agregado_por' => null,
+                        'agregado_durante_viaje' => false,
+                        'orden' => $orden++,
+                    ]);
+                }
+            } elseif ($destinoAdicional) {
+                $nombres = array_map('trim', preg_split('/\s*(?:\|| - )\s*/', $destinoAdicional));
+                $nombres = array_filter($nombres, fn ($n) => $n !== '');
+                foreach ($nombres as $nombre) {
+                    SolicitudDestinoAdicional::create([
+                        'solicitud_transporte_id' => $solicitud->id,
+                        'nombre' => $nombre,
+                        'agregado_por' => null,
+                        'agregado_durante_viaje' => false,
+                        'orden' => $orden++,
+                    ]);
+                }
+            }
+
+            return $this->enviarSolicitud($solicitud, $user->id);
+        });
+    }
 
     public function enviarSolicitud(SolicitudTransporte $solicitud, int $userId): SolicitudTransporte
     {
@@ -522,6 +595,77 @@ class SolicitudTransporteService
                 'estado_nuevo' => EstadoSolicitudEnum::PROGRAMADA->value,
             ];
         });
+    }
+
+    public function recursosDisponibles(string $fechaSalida, string $fechaRetorno): array
+    {
+        $fechaSalida = Carbon::parse($fechaSalida);
+        $fechaRetorno = Carbon::parse($fechaRetorno);
+
+        $vehiculosOcupados = SolicitudTransporte::query()
+            ->whereNotNull('vehiculo_id')
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
+                $query->where('fecha_salida', '<=', $fechaRetorno)
+                    ->where('fecha_retorno', '>=', $fechaSalida);
+            })
+            ->pluck('vehiculo_id')
+            ->filter()
+            ->unique();
+
+        $motoristasOcupados = SolicitudTransporte::query()
+            ->whereNotNull('motorista_id')
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
+                $query->where('fecha_salida', '<=', $fechaRetorno)
+                    ->where('fecha_retorno', '>=', $fechaSalida);
+            })
+            ->pluck('motorista_id')
+            ->filter()
+            ->unique();
+
+        $vehiculos = Vehiculo::query()
+            ->where('activo', true)
+            ->whereNotIn('id', $vehiculosOcupados)
+            ->with('vehMarca', 'ultimaRecepcionEntrega')
+            ->get()
+            ->map(fn ($vehiculo) => [
+                'id' => $vehiculo->id,
+                'placa' => $vehiculo->placa,
+                'marca' => $vehiculo->vehMarca?->nombre,
+                'capacidad' => $vehiculo->capacidad_personas,
+                'nivel_combustible' => $vehiculo->ultimaRecepcionEntrega ? [
+                    'valor' => $vehiculo->ultimaRecepcionEntrega->nivel_combustible,
+                    'label' => $vehiculo->ultimaRecepcionEntrega->nivel_combustible_label,
+                ] : null,
+            ]);
+
+        $motoristas = Motorista::query()
+            ->disponibles()
+            ->where('activo', true)
+            ->whereNotIn('id', $motoristasOcupados)
+            ->with('tipoLicencia')
+            ->get()
+            ->map(fn ($motorista) => [
+                'id' => $motorista->id,
+                'nombre' => $motorista->nombre,
+                'licencia' => $motorista->tipoLicencia?->nombre,
+            ]);
+
+        return [
+            'vehiculos' => $vehiculos,
+            'motoristas' => $motoristas,
+        ];
     }
 
     // ── Helpers ──────────────────────────────────────────

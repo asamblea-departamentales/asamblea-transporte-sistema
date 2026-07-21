@@ -263,7 +263,7 @@ class MotoristaResource extends Resource
     {
         return parent::getEloquentQuery()
             ->with([
-                'asignacionVigenteVehiculo.vehiculo.tipo', 'estadoActual',
+                'asignacionVigenteVehiculo.vehiculo.tipo', 'estadoActual', 'tipoLicencia',
             ]);
     }
 

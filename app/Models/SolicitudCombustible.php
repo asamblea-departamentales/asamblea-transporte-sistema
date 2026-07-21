@@ -8,13 +8,15 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\TicketService;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\DB;
 
 class SolicitudCombustible extends Model implements Workflowable
 {
-    use SoftDeletes;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'solicitudes_combustible';
 
@@ -83,13 +85,19 @@ class SolicitudCombustible extends Model implements Workflowable
     {
         static::creating(function ($solicitud) {
             $year = now()->year;
-            $ultima = static::where('codigo', 'like', "CB-{$year}-%")
-                ->latest('id')
-                ->first();
 
-            $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+            $codigo = DB::transaction(function () use ($year) {
+                $ultima = static::where('codigo', 'like', "CB-{$year}-%")
+                    ->latest('id')
+                    ->lockForUpdate()
+                    ->first();
 
-            $solicitud->codigo = "CB-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+                $numero = $ultima ? ((int) substr($ultima->codigo, -6)) + 1 : 1;
+
+                return "CB-{$year}-".str_pad($numero, 6, '0', STR_PAD_LEFT);
+            });
+
+            $solicitud->codigo = $codigo;
 
             app(TicketService::class)->generar($solicitud);
         });

@@ -80,12 +80,16 @@ class SolicitudTransporteResource extends Resource
             $motivoBloqueo = $ultimoEstado?->motivo ?? 'No disponible';
         }
 
-        $motoristasInactivos = \App\Models\MotoristaEstado::orderByDesc('fecha_inicio')
-            ->orderByDesc('id')
-            ->get()
-            ->unique('motorista_id')
-            ->filter(fn ($st) => ! filter_var($st->activo, FILTER_VALIDATE_BOOLEAN))
-            ->pluck('motorista_id')
+        $ultimosEstados = \App\Models\MotoristaEstado::selectRaw('motorista_id, MAX(fecha_inicio) as ultima_fecha')
+            ->groupBy('motorista_id');
+
+        $motoristasInactivos = \App\Models\MotoristaEstado::fromSub($ultimosEstados, 'ultimos')
+            ->join('motorista_estados as me', function ($join) {
+                $join->on('me.motorista_id', '=', 'ultimos.motorista_id')
+                    ->on('me.fecha_inicio', '=', 'ultimos.ultima_fecha');
+            })
+            ->where('me.activo', false)
+            ->pluck('me.motorista_id')
             ->toArray();
 
         $sugerido = Motorista::where('activo', true)

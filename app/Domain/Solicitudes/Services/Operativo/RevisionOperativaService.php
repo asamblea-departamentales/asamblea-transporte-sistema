@@ -3,11 +3,12 @@
 namespace App\Domain\Solicitudes\Services\Operativo;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
+use App\Models\User;
 use Illuminate\Support\Collection;
 
 class RevisionOperativaService
@@ -87,14 +88,13 @@ class RevisionOperativaService
         $this->guardarComentario($record, $comentario);
         $record->save();
 
-        HistorialEstado::create([
-            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-            'entidad_id' => $record->id,
-            'estado_anterior' => $this->enumValue($estadoAnterior),
-            'estado_nuevo' => $this->enumValue($record->estado),
-            'user_id' => $userId,
-            'comentario' => $comentario,
-        ]);
+        SolicitudEstadoCambiado::dispatch(
+            $record,
+            $estadoAnterior,
+            EstadoSolicitudEnum::EN_REVISION,
+            User::findOrFail($userId),
+            ['comentario' => $comentario, 'accion' => 'observar_revision'],
+        );
 
         BitacoraEvento::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
@@ -138,14 +138,13 @@ class RevisionOperativaService
             );
         }
 
-        HistorialEstado::create([
-            'entidad_tipo' => $this->resolverEntidadTipo($tipo),
-            'entidad_id' => $record->id,
-            'estado_anterior' => $this->enumValue($estadoAnterior),
-            'estado_nuevo' => EstadoSolicitudEnum::PRE_APROBADA->value,
-            'user_id' => $userId,
-            'comentario' => $comentario,
-        ]);
+        SolicitudEstadoCambiado::dispatch(
+            $record,
+            $estadoAnterior,
+            EstadoSolicitudEnum::PRE_APROBADA,
+            User::findOrFail($userId),
+            ['comentario' => $comentario, 'accion' => 'validar_preaprobar'],
+        );
 
         BitacoraEvento::create([
             'entidad_tipo' => $this->resolverEntidadTipo($tipo),
@@ -184,7 +183,7 @@ class RevisionOperativaService
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudTransporte $r) {
+        return $query->take(200)->get()->map(function (SolicitudTransporte $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'transporte',
@@ -217,7 +216,7 @@ class RevisionOperativaService
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudCombustible $r) {
+        return $query->take(200)->get()->map(function (SolicitudCombustible $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'combustible',
@@ -253,7 +252,7 @@ class RevisionOperativaService
             $query->where('updated_at', '<=', $filters['date_to']);
         }
 
-        return $query->get()->map(function (SolicitudMantenimiento $r) {
+        return $query->take(200)->get()->map(function (SolicitudMantenimiento $r) {
             return [
                 'id' => $r->id,
                 'tipo' => 'mantenimiento',

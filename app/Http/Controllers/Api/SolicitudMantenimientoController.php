@@ -14,6 +14,7 @@ namespace App\Http\Controllers\Api;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
+use App\Http\Requests\StoreSolicitudMantenimientoRequest;
 use App\Models\SolicitudMantenimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -40,18 +41,9 @@ class SolicitudMantenimientoController extends BaseSolicitudController
         );
     }
 
-    public function store(Request $request)
+    public function store(StoreSolicitudMantenimientoRequest $request)
     {
-        $data = $request->validate([
-            'vehiculo_id' => ['required', 'exists:vehiculos,id'],
-            'veh_tipo_mantenimiento_id' => ['required', 'exists:veh_tipo_mantenimientos,id'],
-            'tipo_solicitud' => ['required', 'in:taller,llantas'],
-            'detalle' => ['required', 'string'],
-            'fecha_sugerida' => ['required', 'date'],
-            // 'prioridad' ELIMINADO del request
-            'costo_estimado' => ['nullable', 'numeric', 'min:0'],
-            'observaciones' => ['nullable', 'string', 'max:2000'],
-        ]);
+        $data = $request->validated();
 
         // ASIGNACIÓN AUTOMÁTICA EN BACKEND
         // Al igual que en combustible, asignamos MEDIA por defecto
@@ -130,7 +122,7 @@ class SolicitudMantenimientoController extends BaseSolicitudController
                 'data' => $solicitud->fresh()->load(['vehiculo', 'tipoMantenimiento']),
             ]);
         } catch (\DomainException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 
@@ -278,7 +270,7 @@ class SolicitudMantenimientoController extends BaseSolicitudController
             ]);
 
         } catch (\DomainException $e) {
-            return response()->json(['error' => $e->getMessage()], 422);
+            return response()->json(['message' => $e->getMessage()], 422);
         }
     }
 }

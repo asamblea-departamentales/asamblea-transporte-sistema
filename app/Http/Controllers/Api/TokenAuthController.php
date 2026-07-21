@@ -11,8 +11,11 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Domain\Solicitudes\Services\LdapAuthenticator;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\TokenLoginRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
@@ -20,12 +23,9 @@ use Illuminate\Support\Str;
 
 class TokenAuthController extends Controller
 {
-    public function login(Request $request)
+    public function login(TokenLoginRequest $request)
     {
-        $credentials = $request->validate([
-            'username' => ['required'],
-            'password' => ['required'],
-        ]);
+        $credentials = $request->validated();
 
         $username = $credentials['username'];
         $password = $credentials['password'];
@@ -60,6 +60,13 @@ class TokenAuthController extends Controller
         $user->tokens()->where('name', 'vercel')->delete();
 
         $token = $user->createToken('vercel')->plainTextToken;
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::LOGIN,
+            'users',
+            $user->id,
+            ['via' => 'token'],
+        );
 
         return response()->json([
             'message' => 'Login exitoso',
@@ -132,6 +139,13 @@ class TokenAuthController extends Controller
 
     public function logout(Request $request)
     {
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::LOGOUT,
+            'users',
+            $request->user()->id,
+            ['via' => 'token'],
+        );
+
         $request->user()->currentAccessToken()?->delete();
 
         return response()->json(['message' => 'Logout exitoso']);

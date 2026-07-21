@@ -46,4 +46,7 @@ enum AccionBitacoraEnum: string
     case PROGRAMAR = 'programar';
     case AGREGAR_DESTINO_VIAJE = 'agregar_destino_viaje';
     case AGREGAR_DESTINO_ADICIONAL = 'agregar_destino_adicional';
+
+    case LOGIN = 'login';
+    case LOGOUT = 'logout';
 }
