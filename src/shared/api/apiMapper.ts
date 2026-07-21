@@ -72,6 +72,7 @@ export const mapToRecentRequest = (item: unknown): RecentRequest | null => {
     code: String(codeVal),
     date: parsedDate,
     rawDate: targetDate,
+    fechaEjecucion: item.fecha_de_ejecucion ? String(item.fecha_de_ejecucion) : undefined,
     type: typeStr,
     status: extractStatusString(item.estado || item.status)
   };

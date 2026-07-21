@@ -19,6 +19,7 @@ export interface RecentRequest {
   ticket?: string;
   date: string;
   rawDate?: string;
+  fechaEjecucion?: string;
   type: string;
   status: string;
 }
@@ -38,6 +39,14 @@ export const dashboardApi = {
   },
   getHistorialJefatura: async (signal?: AbortSignal): Promise<{ data: RecentRequest[] }> => {
     const response = await axiosClient.get('/dashboard/historial-jefatura', { signal });
+    const rawData = extractArrayData(response.data);
+    const mappedData = rawData
+      .map(mapToRecentRequest)
+      .filter((item): item is RecentRequest => item !== null);
+    return { data: mappedData };
+  },
+  getPendientesJefatura: async (signal?: AbortSignal): Promise<{ data: RecentRequest[] }> => {
+    const response = await axiosClient.get('/solicitudes/pendientes-jefatura', { signal });
     const rawData = extractArrayData(response.data);
     const mappedData = rawData
       .map(mapToRecentRequest)

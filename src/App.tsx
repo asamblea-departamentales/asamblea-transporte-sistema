@@ -7,6 +7,7 @@ import { FullPageLoader } from './shared/components/FullPageLoader';
 const LoginPage = lazy(() => import('./features/Auth/pages/LoginPage'));
 const AprobacionDashboardPage = lazy(() => import('./features/Aprobacion/pages/AprobacionDashboardPage').then(m => ({ default: m.AprobacionDashboardPage })));
 const HistorialPage = lazy(() => import('./features/Aprobacion/pages/HistorialPage').then(m => ({ default: m.HistorialPage })));
+const PreAprobadasPage = lazy(() => import('./features/Aprobacion/pages/PreAprobadasPage').then(m => ({ default: m.PreAprobadasPage })));
 const HistorialDetallePage = lazy(() => import('./features/Aprobacion/pages/HistorialDetallePage'));
 const AprobacionPage = lazy(() => import('./features/Aprobacion/pages/AprobacionPage'));
 const AprobacionCombustiblePage = lazy(() => import('./features/Aprobacion/pages/AprobacionCombustiblePage'));
@@ -24,6 +25,7 @@ function App() {
           <Route element={<ProtectedRoute />}>
             <Route path="/" element={<DashboardLayout />}>
               <Route index element={<AprobacionDashboardPage />} />
+              <Route path="pre-aprobadas" element={<PreAprobadasPage />} />
               <Route path="historial" element={<HistorialPage />} />
               <Route path="historial/:codigo" element={<HistorialDetallePage />} />
               <Route path="aprobaciones/:codigo" element={<AprobacionPage />} />
