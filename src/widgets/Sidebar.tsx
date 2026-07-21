@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { LayoutDashboard, FileCheck, History, LogOut, Bell, CheckCircle } from 'lucide-react';
+import { LayoutDashboard, FileCheck, History, LogOut, Bell, CheckCircle, MapPin } from 'lucide-react';
 import { useAuth } from '@/features/Auth/context/AuthContext';
 import { useNotifications } from '@/shared/notifications';
 import { hasJefaturaAccess } from '@/shared/auth/roles';
@@ -22,6 +22,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
   const navItems = [
     { to: '/', icon: LayoutDashboard, label: 'Dashboard', show: true },
     { to: '/pre-aprobadas', icon: CheckCircle, label: 'Pre-Aprobadas', show: hasJefaturaAccess(user?.roles) },
+    { to: '/en-ejecucion', icon: MapPin, label: 'En Ruta', show: true },
     { 
       to: location.pathname, 
       icon: FileCheck, 

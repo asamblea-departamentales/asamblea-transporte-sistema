@@ -9,6 +9,7 @@ const AprobacionDashboardPage = lazy(() => import('./features/Aprobacion/pages/A
 const HistorialPage = lazy(() => import('./features/Aprobacion/pages/HistorialPage').then(m => ({ default: m.HistorialPage })));
 const PreAprobadasPage = lazy(() => import('./features/Aprobacion/pages/PreAprobadasPage').then(m => ({ default: m.PreAprobadasPage })));
 const HistorialDetallePage = lazy(() => import('./features/Aprobacion/pages/HistorialDetallePage'));
+const EnEjecucionPage = lazy(() => import('./features/Aprobacion/pages/EnEjecucionPage').then(m => ({ default: m.EnEjecucionPage })));
 const AprobacionPage = lazy(() => import('./features/Aprobacion/pages/AprobacionPage'));
 const AprobacionCombustiblePage = lazy(() => import('./features/Aprobacion/pages/AprobacionCombustiblePage'));
 const AprobacionMantenimientoPage = lazy(() => import('./features/Aprobacion/pages/AprobacionMantenimientoPage'));
@@ -26,6 +27,7 @@ function App() {
             <Route path="/" element={<DashboardLayout />}>
               <Route index element={<AprobacionDashboardPage />} />
               <Route path="pre-aprobadas" element={<PreAprobadasPage />} />
+              <Route path="en-ejecucion" element={<EnEjecucionPage />} />
               <Route path="historial" element={<HistorialPage />} />
               <Route path="historial/:codigo" element={<HistorialDetallePage />} />
               <Route path="aprobaciones/:codigo" element={<AprobacionPage />} />

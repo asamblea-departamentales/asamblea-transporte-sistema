@@ -43,7 +43,12 @@ export default function HistorialDetallePage() {
         let compData = null;
 
         const isCombustible = codigo?.startsWith('CB-');
-        const endpoint = isCombustible ? `/solicitudes-combustible/${codigo}` : `/solicitudes-transporte/${codigo}`;
+        const isMantenimiento = codigo?.startsWith('SM-');
+        const endpoint = isCombustible 
+          ? `/solicitudes-combustible/${codigo}` 
+          : isMantenimiento 
+            ? `/solicitudes-mantenimiento/${codigo}` 
+            : `/solicitudes-transporte/${codigo}`;
 
         // 1. Obtener los datos reales finales (estado, asignación real)
         try {
@@ -54,11 +59,13 @@ export default function HistorialDetallePage() {
         }
 
         // 2. Obtener la comparativa (para datos de sugerencias si aplica)
-        try {
-          const compRes = await axiosClient.get(`${endpoint}/comparativa`);
-          compData = compRes.data;
-        } catch (e) {
-          console.error('Error fetching comparativa data', e);
+        if (!isMantenimiento) {
+          try {
+            const compRes = await axiosClient.get(`${endpoint}/comparativa`);
+            compData = compRes.data;
+          } catch (e) {
+            console.error('Error fetching comparativa data', e);
+          }
         }
 
         if (!showData && !compData) {
