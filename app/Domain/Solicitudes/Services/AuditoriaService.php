@@ -16,12 +16,13 @@ class AuditoriaService
         string $modelo,
         ?int $entidadId = null,
         array $datos = [],
+        ?int $userId = null,
     ): void {
         BitacoraEvento::create([
             'entidad_tipo' => $modelo,
             'entidad_id' => $entidadId,
             'accion' => $accion->value,
-            'user_id' => auth()->id(),
+            'user_id' => $userId ?? auth()->id(),
             'datos_extras' => $datos,
         ]);
     }

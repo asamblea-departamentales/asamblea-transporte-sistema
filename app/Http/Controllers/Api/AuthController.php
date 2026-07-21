@@ -67,6 +67,7 @@ class AuthController extends Controller
             AccionBitacoraEnum::LOGIN,
             'users',
             $user->id,
+            userId: $user->id,
         );
 
         return response()->json([

@@ -66,6 +66,7 @@ class TokenAuthController extends Controller
             'users',
             $user->id,
             ['via' => 'token'],
+            $user->id,
         );
 
         return response()->json([
