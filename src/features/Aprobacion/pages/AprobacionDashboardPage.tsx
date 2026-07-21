@@ -1,5 +1,6 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState, useMemo } from 'react';
 import axios from 'axios';
+import { Layers, Car, Droplet, Wrench } from 'lucide-react';
 import { SummaryCards } from '../components/SummaryCards';
 import { RecentTable } from '../components/RecentTable';
 import { dashboardApi, DashboardSummary, RecentRequest } from '../api/dashboardApi';
@@ -12,6 +13,31 @@ export const AprobacionDashboardPage: React.FC = () => {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [requestsError, setRequestsError] = useState<string | null>(null);
   const [retryToken, setRetryToken] = useState(0);
+
+  type TabType = 'todas' | 'transporte' | 'combustible' | 'mantenimiento';
+  const [activeTab, setActiveTab] = useState<TabType>('todas');
+
+  const counts = useMemo(() => {
+    const defaultCounts = { todas: 0, transporte: 0, combustible: 0, mantenimiento: 0 };
+    if (!requests) return defaultCounts;
+    
+    return requests.reduce((acc, req) => {
+      const type = (req.type || 'Transporte').toLowerCase();
+      acc.todas++;
+      if (type.includes('transporte')) acc.transporte++;
+      if (type.includes('combustible')) acc.combustible++;
+      if (type.includes('mantenimiento')) acc.mantenimiento++;
+      return acc;
+    }, defaultCounts);
+  }, [requests]);
+
+  const filteredRequests = useMemo(() => {
+    if (activeTab === 'todas') return requests;
+    return requests.filter(req => {
+        const type = (req.type || 'Transporte').toLowerCase();
+        return type.includes(activeTab);
+    });
+  }, [requests, activeTab]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -66,7 +92,62 @@ export const AprobacionDashboardPage: React.FC = () => {
 
       <SummaryCards summary={summary} isLoading={isLoading} />
       
-      <RecentTable requests={requests} isLoading={isLoading} />
+      <div className="flex overflow-x-auto gap-3 mb-6 hide-scrollbar pb-2 mt-8">
+        <button
+          onClick={() => setActiveTab('todas')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all whitespace-nowrap ${
+            activeTab === 'todas' 
+              ? 'bg-slate-800 text-white shadow-md' 
+              : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Layers size={16} /> Todas
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'todas' ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
+            {counts.todas}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('transporte')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all whitespace-nowrap ${
+            activeTab === 'transporte' 
+              ? 'bg-[#859BFF] text-white shadow-md' 
+              : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Car size={16} /> Transporte
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'transporte' ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
+            {counts.transporte}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('combustible')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all whitespace-nowrap ${
+            activeTab === 'combustible' 
+              ? 'bg-orange-500 text-white shadow-md' 
+              : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Droplet size={16} /> Combustible
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'combustible' ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
+            {counts.combustible}
+          </span>
+        </button>
+        <button
+          onClick={() => setActiveTab('mantenimiento')}
+          className={`flex items-center gap-2 px-5 py-2.5 rounded-full font-semibold text-sm transition-all whitespace-nowrap ${
+            activeTab === 'mantenimiento' 
+              ? 'bg-emerald-500 text-white shadow-md' 
+              : 'bg-white text-slate-500 hover:bg-slate-100 border border-slate-200'
+          }`}
+        >
+          <Wrench size={16} /> Mantenimiento
+          <span className={`px-2 py-0.5 rounded-full text-xs font-bold ${activeTab === 'mantenimiento' ? 'bg-white/20' : 'bg-slate-100 text-slate-600'}`}>
+            {counts.mantenimiento}
+          </span>
+        </button>
+      </div>
+
+      <RecentTable requests={filteredRequests} isLoading={isLoading} />
     </div>
   );
 };
