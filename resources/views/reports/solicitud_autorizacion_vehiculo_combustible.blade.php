@@ -252,7 +252,7 @@
                 <tr>
                     <td class="label">Valor:</td>
                     <td class="valor">
-                        $ {{ number_format($datos['monto_combustible'], 2) }}
+                        $ {{ number_format($datos['valor_unitario'], 2) }}
                     </td>
                 </tr>
                 @endif
@@ -261,7 +261,7 @@
                 <tr>
                     <td class="label">Total vales:</td>
                     <td class="valor">
-                        1
+                        $ {{ number_format($datos['monto_combustible'], 2) }}
                     </td>
                 </tr>
                 @endif

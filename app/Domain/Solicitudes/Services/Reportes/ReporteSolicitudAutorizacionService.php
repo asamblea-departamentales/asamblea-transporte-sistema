@@ -43,6 +43,7 @@ class ReporteSolicitudAutorizacionService
                 'ticket' => $combustible->ticket,
                 'numero_vale_ticket' => $combustible->numero_vale_ticket ?? '—',
                 'tipo_combustible' => $combustible->vehiculo?->tipoCombustible?->nombre ?? '—',
+                'valor_unitario' => 1,
                 'monto_combustible' => $combustible->monto_asignado ?? $combustible->cantidad_combustible ?? 0,
 
                 // Extras
@@ -93,6 +94,7 @@ class ReporteSolicitudAutorizacionService
             'tipo_combustible' => $combustible?->vehiculo?->tipoCombustible?->nombre
                 ?? $solicitud->vehiculo?->tipoCombustible?->nombre
                 ?? '—',
+            'valor_unitario' => 1,
             'monto_combustible' => $combustible?->monto_asignado ?? 0,
 
             // Extras

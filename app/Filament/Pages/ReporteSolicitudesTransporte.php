@@ -99,6 +99,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     app(AuditoriaService::class)->registrar(
                         AccionBitacoraEnum::EXPORTAR_EXCEL,
                         'solicitudes_transporte',
+                        null,
                         ['cantidad_registros' => $query->count()]
                     );
 
@@ -119,6 +120,7 @@ class ReporteSolicitudesTransporte extends Page implements Forms\Contracts\HasFo
                     app(AuditoriaService::class)->registrar(
                         AccionBitacoraEnum::EXPORTAR_CSV,
                         'solicitudes_transporte',
+                        null,
                         ['cantidad_registros' => $query->count()]
                     );
 

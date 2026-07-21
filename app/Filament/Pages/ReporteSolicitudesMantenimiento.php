@@ -104,6 +104,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                     app(AuditoriaService::class)->registrar(
                         AccionBitacoraEnum::EXPORTAR_EXCEL,
                         'solicitudes_mantenimiento',
+                        null,
                         ['cantidad_registros' => $query->count()]
                     );
 
@@ -122,6 +123,7 @@ class ReporteSolicitudesMantenimiento extends Page implements Forms\Contracts\Ha
                     app(AuditoriaService::class)->registrar(
                         AccionBitacoraEnum::EXPORTAR_CSV,
                         'solicitudes_mantenimiento',
+                        null,
                         ['cantidad_registros' => $query->count()]
                     );
 
