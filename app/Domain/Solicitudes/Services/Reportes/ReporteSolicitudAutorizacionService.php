@@ -40,7 +40,7 @@ class ReporteSolicitudAutorizacionService
                 'motorista' => $combustible->motorista?->nombre ?? '—',
 
                 // Combustible
-                'ticket' => $combustible->numero_vale_ticket ?? '—',
+                'ticket' => $combustible->codigo,
                 'numero_vale_ticket' => $combustible->numero_vale_ticket ?? '—',
                 'tipo_combustible' => $combustible->vehiculo?->tipoCombustible?->nombre ?? '—',
                 'monto_combustible' => $combustible->monto_asignado ?? $combustible->cantidad_combustible ?? 0,
