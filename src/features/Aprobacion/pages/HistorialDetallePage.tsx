@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { ArrowLeft, MapPin, Calendar, Clock, FileText, User, Car, RefreshCw, CheckCircle, XCircle } from 'lucide-react';
+import { ArrowLeft, MapPin, Calendar, Clock, FileText, User, Car, RefreshCw, CheckCircle, XCircle, Wrench } from 'lucide-react';
 import { axiosClient } from '../../../shared/api/axiosClient';
 import { ModalDestinoAdicional } from '../components/ModalDestinoAdicional';
 import { useReasignacion } from '../hooks/useReasignacion';
@@ -42,8 +42,9 @@ export default function HistorialDetallePage() {
         let showData = null;
         let compData = null;
 
-        const isCombustible = codigo?.startsWith('CB-');
-        const isMantenimiento = codigo?.startsWith('SM-');
+        const codeUpper = (codigo || '').toUpperCase();
+        const isCombustible = codeUpper.startsWith('CB-');
+        const isMantenimiento = codeUpper.startsWith('SM-') || codeUpper.startsWith('MAN-') || codeUpper.startsWith('MANT-') || codeUpper.startsWith('MT-');
         const endpoint = isCombustible 
           ? `/solicitudes-combustible/${codigo}` 
           : isMantenimiento 
@@ -126,14 +127,22 @@ export default function HistorialDetallePage() {
   const fechaSalidaVal = raw.fecha_salida || comp.fechas?.salida;
   const fechaRetornoVal = raw.fecha_retorno || comp.fechas?.retorno;
   
-  const isCombustibleView = (raw.codigo || comp.codigo || codigo)?.toString().startsWith('CB-');
-  const isMantenimientoView = (raw.codigo || comp.codigo || codigo)?.toString().startsWith('SM-');
+  const codeUpper = (raw.codigo || comp.codigo || codigo || '').toString().toUpperCase();
+  const moduloStr = (raw.modulo || raw.tipo || raw.type || '').toString().toLowerCase();
+
+  const isCombustibleView = codeUpper.startsWith('CB-') || moduloStr === 'combustible';
+  const isMantenimientoView = 
+    codeUpper.startsWith('SM-') || 
+    codeUpper.startsWith('MAN-') || 
+    codeUpper.startsWith('MANT-') || 
+    codeUpper.startsWith('MT-') || 
+    moduloStr === 'mantenimiento';
   const isTransporteView = !isCombustibleView && !isMantenimientoView;
 
-  // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible)
+  // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible o Mantenimiento)
   const canReasignar = isTransporteView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
 
-  // Añadir destino adicional solo en ejecución
+  // Añadir destino adicional solo en ejecución y SOLO para Transporte
   const canAddDestino = isTransporteView && status === 'en_ejecucion';
 
   // Valores a mostrar
@@ -143,11 +152,17 @@ export default function HistorialDetallePage() {
   const motivo = raw.motivo || comp.motivo || raw.observaciones || 'Sin motivo';
   const decisionFinal = raw.decision_final || comp.decision_final || status;
   
-  // Asignaciones finales
+  // Asignaciones finales de transporte
   const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || data.comparativa?.operativo?.autor || 'Sin asignar';
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
   const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
   
+  // Valores específicos de mantenimiento
+  const vehiculoMantenimientoMarca = typeof raw.vehiculo === 'object' ? (raw.vehiculo?.marca || raw.vehiculo?.nombre) : (raw.vehiculo || '');
+  const vehiculoMantenimientoPlaca = raw.placa || (typeof raw.vehiculo === 'object' ? raw.vehiculo?.placa : '') || comp.vehiculo_placa || '';
+  const tipoMantenimientoNombre = typeof raw.tipo_mantenimiento === 'object' ? raw.tipo_mantenimiento?.nombre : (raw.tipo_mantenimiento || 'General');
+  const kilometrajeVal = raw.kilometraje_actual || raw.kilometraje || null;
+
   // El jefe guarda su decisión manual en cantidad_combustible (en show API) o cantidad_estimada (en comparativa API)
   const montoFinal = raw.cantidad_combustible || comp.cantidad_estimada || raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
   const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
@@ -254,14 +269,41 @@ export default function HistorialDetallePage() {
             )}
 
             {isMantenimientoView && (
-              <div>
-                <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
-                  <Calendar size={12} /> Fecha Sugerida
-                </p>
-                <p className="text-sm text-slate-800 font-medium">
-                  {raw.fecha_sugerida ? new Date(raw.fecha_sugerida).toLocaleString() : 'N/A'}
-                </p>
-              </div>
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Car size={12} /> Vehículo
+                    </p>
+                    <p className="text-sm text-slate-800 font-medium">
+                      {vehiculoMantenimientoMarca || vehiculoMantenimientoPlaca || 'N/A'}
+                      {vehiculoMantenimientoPlaca && vehiculoMantenimientoMarca && (
+                        <span className="text-slate-500 font-normal ml-1">({vehiculoMantenimientoPlaca})</span>
+                      )}
+                    </p>
+                    {kilometrajeVal && (
+                      <p className="text-xs text-slate-500 mt-0.5">Km: {kilometrajeVal} km</p>
+                    )}
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                      <Wrench size={12} /> Tipo Mantenimiento
+                    </p>
+                    <p className="text-sm text-slate-800 font-medium">
+                      {tipoMantenimientoNombre}
+                    </p>
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Calendar size={12} /> Fecha Sugerida
+                  </p>
+                  <p className="text-sm text-slate-800 font-medium">
+                    {raw.fecha_sugerida ? new Date(raw.fecha_sugerida).toLocaleString() : 'N/A'}
+                  </p>
+                </div>
+              </>
             )}
 
             <div>
@@ -278,7 +320,7 @@ export default function HistorialDetallePage() {
           <div className="flex items-center gap-2 mb-5 pb-4 border-b border-slate-200">
             {isEnEjecucion ? <MapPin className="text-indigo-500" size={18} /> : (isAprobada ? <CheckCircle className="text-emerald-500" size={18} /> : <XCircle className="text-red-500" size={18} />)}
             <h3 className="font-bold text-slate-800 text-lg tracking-tight">
-              {isEnEjecucion ? 'Viaje en Curso' : (isAprobada ? 'Asignación Aprobada' : 'Decisión Final')}
+              {isEnEjecucion ? (isMantenimientoView ? 'En Mantenimiento' : 'Viaje en Curso') : (isAprobada ? (isMantenimientoView ? 'Mantenimiento Aprobado' : 'Asignación Aprobada') : 'Decisión Final')}
             </h3>
           </div>
           <div className="space-y-4">
@@ -311,6 +353,30 @@ export default function HistorialDetallePage() {
                       {vehiculoMarca}
                     </p>
                   )}
+                </div>
+              </div>
+            ) : isMantenimientoView ? (
+              <div className="grid grid-cols-2 gap-4 bg-slate-50 p-3.5 rounded-xl border border-slate-200/80">
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Car size={12} /> Vehículo a Taller
+                  </p>
+                  <p className="text-sm font-bold text-slate-800">
+                    {vehiculoMantenimientoMarca || vehiculoMantenimientoPlaca || 'Sin especificar'}
+                  </p>
+                  {vehiculoMantenimientoPlaca && vehiculoMantenimientoMarca && (
+                    <p className="text-xs text-slate-500">
+                      Placa: {vehiculoMantenimientoPlaca}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1 flex items-center gap-1">
+                    <Wrench size={12} /> Servicio
+                  </p>
+                  <p className="text-sm font-semibold text-slate-800">
+                    {tipoMantenimientoNombre}
+                  </p>
                 </div>
               </div>
             ) : (

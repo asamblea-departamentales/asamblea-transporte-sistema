@@ -207,4 +207,21 @@ describe('mapToRecentRequest', () => {
 
     expect(result!.type).toBe('Mantenimiento');
   });
+
+  it('detecta Mantenimiento y Combustible por prefijo de código cuando no viene modulo', () => {
+    const mantResult = mapToRecentRequest({
+      id: 11,
+      codigo: 'SM-001',
+      estado: 'aprobada',
+    });
+    expect(mantResult!.type).toBe('Mantenimiento');
+
+    const combResult = mapToRecentRequest({
+      id: 12,
+      codigo: 'CB-002',
+      estado: 'aprobada',
+    });
+    expect(combResult!.type).toBe('Combustible');
+  });
 });
+

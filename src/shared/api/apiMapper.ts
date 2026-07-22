@@ -63,9 +63,25 @@ export const mapToRecentRequest = (item: unknown): RecentRequest | null => {
   }
 
   // Tipo de solicitud
-  const typeStr = typeof item.modulo === 'string'
-    ? (item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1))
-    : (typeof item.tipo_vehiculo_nombre === 'string' ? 'Transporte' : (typeof item.type === 'string' ? item.type : 'Transporte'));
+  const codeStr = String(codeVal || '').toUpperCase();
+  let typeStr = 'Transporte';
+
+  if (typeof item.modulo === 'string' && item.modulo.trim()) {
+    typeStr = item.modulo.charAt(0).toUpperCase() + item.modulo.slice(1);
+  } else if (typeof item.type === 'string' && item.type.trim()) {
+    typeStr = item.type.charAt(0).toUpperCase() + item.type.slice(1);
+  } else if (codeStr.startsWith('CB-')) {
+    typeStr = 'Combustible';
+  } else if (
+    codeStr.startsWith('SM-') ||
+    codeStr.startsWith('MAN-') ||
+    codeStr.startsWith('MANT-') ||
+    codeStr.startsWith('MT-')
+  ) {
+    typeStr = 'Mantenimiento';
+  } else if (typeof item.tipo_vehiculo_nombre === 'string') {
+    typeStr = 'Transporte';
+  }
 
   return {
     id: isValidId ? String(idVal) : '',
