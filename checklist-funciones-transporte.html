@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checklist - Funciones Reales en Sistema de Transporte</title>
+    <style>
+        /* ===== CONFIGURACIÓN PÁGINA IMPRESA ===== */
+        @page {
+            size: letter portrait;
+            margin: 12mm 12mm 12mm 12mm;
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: "Segoe UI", -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
+            font-size: 8.5pt;
+            line-height: 1.3;
+            color: #2d3436;
+            background-color: #f4f6f9;
+            padding: 20px;
+        }
+
+        .paper {
+            max-width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        /* ===== HEADER ===== */
+        .header {
+            text-align: center;
+            padding: 16px 15px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #1e3a5f 0%, #2c5d8f 100%);
+            color: #fff;
+            border-radius: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::after {
+            content: "";
+            display: block;
+            height: 4px;
+            background: linear-gradient(90deg, #f39c12, #e67e22, #f39c12);
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+        }
+
+        .header .escudo {
+            font-size: 20pt;
+            margin-bottom: 2px;
+            line-height: 1;
+        }
+
+        .header h1 {
+            font-size: 11.5pt;
+            font-weight: 700;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .header .divider {
+            width: 50px;
+            height: 2px;
+            background: #f39c12;
+            margin: 6px auto;
+        }
+
+        .header h2 {
+            font-size: 9.5pt;
+            font-weight: 400;
+            opacity: 0.95;
+            letter-spacing: 0.3px;
+        }
+
+        /* ===== INTRO ===== */
+        .intro {
+            font-size: 8.5pt;
+            color: #4a5568;
+            margin-bottom: 12px;
+            padding: 8px 12px;
+            background: #f8fafc;
+            border-left: 3.5px solid #2c5d8f;
+            border-radius: 0 4px 4px 0;
+            text-align: justify;
+        }
+
+        .intro strong {
+            color: #1a202c;
+        }
+
+        /* ===== CONTENT (2 COLUMNS) ===== */
+        .content {
+            column-count: 2;
+            column-gap: 12px;
+            width: 100%;
+        }
+
+        .section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-bottom: 8px;
+            padding: 8px 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 5px;
+            background: #ffffff;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .section-num {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #2c5d8f;
+            color: #fff;
+            font-size: 7.5pt;
+            font-weight: 700;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            margin-right: 6px;
+            flex-shrink: 0;
+        }
+
+        .section h3 {
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 4px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid #edf2f7;
+            display: flex;
+            align-items: center;
+        }
+
+        .section h4 {
+            font-size: 8pt;
+            font-weight: 700;
+            color: #4a5568;
+            margin: 6px 0 3px 0;
+            padding-left: 18px;
+            font-style: italic;
+        }
+
+        /* ===== CHECKLIST ITEMS ===== */
+        ul {
+            list-style: none;
+        }
+
+        ul li {
+            position: relative;
+            font-size: 8pt;
+            color: #2d3436;
+            margin-bottom: 3px;
+        }
+
+        ul li label {
+            display: flex;
+            align-items: flex-start;
+            cursor: pointer;
+            line-height: 1.25;
+        }
+
+        ul li input[type="checkbox"] {
+            appearance: none;
+            -webkit-appearance: none;
+            width: 12px;
+            height: 12px;
+            border: 1.5px solid #a0aec0;
+            border-radius: 2px;
+            margin-right: 6px;
+            margin-top: 1px;
+            flex-shrink: 0;
+            cursor: pointer;
+            position: relative;
+            background: #fff;
+        }
+
+        ul li input[type="checkbox"]:checked {
+            background-color: #2c5d8f;
+            border-color: #2c5d8f;
+        }
+
+        ul li input[type="checkbox"]:checked::after {
+            content: "✓";
+            position: absolute;
+            color: white;
+            font-size: 9px;
+            font-weight: bold;
+            top: -2px;
+            left: 1px;
+        }
+
+        /* ===== SIGNATURE ===== */
+        .signature-section {
+            break-inside: avoid;
+            page-break-inside: avoid;
+            margin-top: 10px;
+            padding: 10px 14px;
+            border: 1.5px solid #1e3a5f;
+            border-radius: 6px;
+            background: #f8fafc;
+            column-span: all;
+        }
+
+        .signature-section h3 {
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #1e3a5f;
+            margin-bottom: 10px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .sig-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px 20px;
+        }
+
+        .sig-item {
+            display: flex;
+            align-items: flex-end;
+        }
+
+        .sig-item.full {
+            grid-column: 1 / -1;
+        }
+
+        .sig-label {
+            font-weight: 600;
+            font-size: 8.5pt;
+            color: #1e3a5f;
+            min-width: 110px;
+            white-space: nowrap;
+        }
+
+        .sig-line {
+            flex: 1;
+            border-bottom: 1.5px solid #718096;
+            margin-left: 6px;
+            padding-bottom: 2px;
+            min-height: 16px;
+        }
+
+        .sig-line.filled {
+            border-bottom-color: #1e3a5f;
+            color: #1e3a5f;
+            font-weight: 600;
+            font-size: 8.5pt;
+        }
+
+        /* ===== FOOTER ===== */
+        .footer {
+            margin-top: 10px;
+            text-align: center;
+            font-size: 7.5pt;
+            color: #718096;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 6px;
+            column-span: all;
+        }
+
+        /* ===== BOTÓN ACCIÓN (NO IMPRESO) ===== */
+        .print-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: #2c5d8f;
+            color: #fff;
+            border: none;
+            padding: 10px 18px;
+            border-radius: 30px;
+            font-size: 9pt;
+            font-weight: 600;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .print-btn:hover {
+            background: #1e3a5f;
+            transform: translateY(-2px);
+        }
+
+        /* ===== ADAPTACIÓN A IMPRESIÓN ===== */
+        @media print {
+            body {
+                background: #fff;
+                padding: 0;
+            }
+
+            .paper {
+                box-shadow: none;
+                padding: 0;
+                max-width: 100%;
+            }
+
+            .print-btn {
+                display: none;
+            }
+
+            .header, .section-num, .signature-section {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            ul li input[type="checkbox"] {
+                border-color: #4a5568 !important;
+            }
+        }
+    </style>
+</head>
+<body>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir / Guardar PDF</button>
+
+<div class="paper">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="escudo">&#9635;</div>
+        <h1>Departamento de Sistemas &mdash; Desarrollo de Software</h1>
+        <div class="divider"></div>
+        <h2>Sistema de Gestión de Transporte &mdash; Asamblea Legislativa de El Salvador</h2>
+    </div>
+
+    <!-- INTRO -->
+    <p class="intro">
+        Este checklist tiene como objetivo que el personal de transporte marque <strong>qué funciones realmente realiza</strong> en su trabajo diario, más allá del rol que tenga asignado en el sistema. Marca con una <strong>[X]</strong> las tareas que ejecutas. La información servirá para contrastar roles reales vs. roles del sistema y ajustar permisos donde haga falta.
+    </p>
+
+    <!-- CONTENT (2 COLUMNS) -->
+    <div class="content">
+
+        <!-- 1 -->
+        <div class="section">
+            <h3><span class="section-num">1</span> Solicitudes de Transporte</h3>
+            <ul>
+                <li><label><input type="checkbox"> Crear una solicitud de traslado (origen, destino, fecha, motivo, pasajeros)</label></li>
+                <li><label><input type="checkbox"> Enviar la solicitud para aprobación</label></li>
+                <li><label><input type="checkbox"> Ver el detalle de una solicitud (ruta y paradas)</label></li>
+                <li><label><input type="checkbox"> Agregar observaciones a una solicitud como jefe</label></li>
+                <li><label><input type="checkbox"> Agregar destinos adicionales durante un viaje activo</label></li>
+                <li><label><input type="checkbox"> Aprobar o rechazar solicitudes de transporte</label></li>
+                <li><label><input type="checkbox"> Aprobar con decisión final (sistema / operativo / manual)</label></li>
+                <li><label><input type="checkbox"> Rechazar una solicitud con motivo</label></li>
+                <li><label><input type="checkbox"> Pre-aprobar una solicitud (estado "pre_aprobada")</label></li>
+                <li><label><input type="checkbox"> Comparar la decisión del sistema vs. la del operador</label></li>
+                <li><label><input type="checkbox"> Asignar vehículo y motorista a una solicitud</label></li>
+                <li><label><input type="checkbox"> Reasignar vehículo y motorista</label></li>
+                <li><label><input type="checkbox"> Ver recursos disponibles en un rango de fechas</label></li>
+                <li><label><input type="checkbox"> Programar una solicitud (fijar fecha de salida)</label></li>
+                <li><label><input type="checkbox"> Desbloquear una solicitud bloqueada</label></li>
+                <li><label><input type="checkbox"> Cancelar una solicitud con motivo</label></li>
+                <li><label><input type="checkbox"> Finalizar un viaje (completar la misión)</label></li>
+                <li><label><input type="checkbox"> Ver dashboard resumen de transporte (KPIs)</label></li>
+                <li><label><input type="checkbox"> Ver historial de decisiones del jefe</label></li>
+                <li><label><input type="checkbox"> Ver solicitudes pendientes de jefatura (pre_aprobadas)</label></li>
+                <li><label><input type="checkbox"> Generar Misión Oficial PDF</label></li>
+                <li><label><input type="checkbox"> Generar Solicitud/Autorización PDF de combustible</label></li>
+            </ul>
+        </div>
+
+        <!-- 2 -->
+        <div class="section">
+            <h3><span class="section-num">2</span> Solicitudes de Combustible</h3>
+            <ul>
+                <li><label><input type="checkbox"> Crear una solicitud de carga de combustible</label></li>
+                <li><label><input type="checkbox"> Enviar la solicitud para aprobación</label></li>
+                <li><label><input type="checkbox"> Ver detalle de una solicitud de combustible</label></li>
+                <li><label><input type="checkbox"> Agregar observaciones como jefe</label></li>
+                <li><label><input type="checkbox"> Pre-aprobar una solicitud de combustible</label></li>
+                <li><label><input type="checkbox"> Aprobar o rechazar una solicitud de combustible</label></li>
+                <li><label><input type="checkbox"> Aprobar con decisión final</label></li>
+                <li><label><input type="checkbox"> Comparar decisión del sistema vs. operador</label></li>
+                <li><label><input type="checkbox"> Asignar monto/carga de combustible a una solicitud</label></li>
+                <li><label><input type="checkbox"> Asignar vales de combustible (series de vales)</label></li>
+                <li><label><input type="checkbox"> Desbloquear una solicitud de combustible</label></li>
+                <li><label><input type="checkbox"> Cancelar una solicitud con motivo</label></li>
+                <li><label><input type="checkbox"> Finalizar una carga (comprobantes, método de pago, número de vale)</label></li>
+                <li><label><input type="checkbox"> Ver dashboard resumen de combustible (KPIs)</label></li>
+                <li><label><input type="checkbox"> Enviar a liquidación (con comprobantes)</label></li>
+            </ul>
+        </div>
+
+        <!-- 3 -->
+        <div class="section">
+            <h3><span class="section-num">3</span> Solicitudes de Mantenimiento</h3>
+            <ul>
+                <li><label><input type="checkbox"> Crear una solicitud de mantenimiento (taller o llantas)</label></li>
+                <li><label><input type="checkbox"> Ver detalle de una solicitud de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Agregar observaciones como jefe</label></li>
+                <li><label><input type="checkbox"> Pre-aprobar una solicitud de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Aprobar o rechazar una solicitud de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Iniciar ejecución del mantenimiento</label></li>
+                <li><label><input type="checkbox"> Finalizar un mantenimiento (costo real, fecha, adjuntos)</label></li>
+                <li><label><input type="checkbox"> Evaluar calidad del trabajo (conforme / no conforme / obs.)</label></li>
+                <li><label><input type="checkbox"> Cancelar una solicitud con motivo</label></li>
+                <li><label><input type="checkbox"> Generar Orden de Trabajo PDF</label></li>
+                <li><label><input type="checkbox"> Enviar a liquidación (con adjuntos)</label></li>
+                <li><label><input type="checkbox"> Ver dashboard resumen de mantenimiento (KPIs)</label></li>
+            </ul>
+        </div>
+
+        <!-- 4 -->
+        <div class="section">
+            <h3><span class="section-num">4</span> Combustible por Lotes</h3>
+            <ul>
+                <li><label><input type="checkbox"> Crear un lote de asignación de combustible</label></li>
+                <li><label><input type="checkbox"> Agregar vehículos al lote</label></li>
+                <li><label><input type="checkbox"> Ver detalle de un lote de combustible</label></li>
+                <li><label><input type="checkbox"> Editar un lote en borrador</label></li>
+                <li><label><input type="checkbox"> Ver dashboard de lotes de combustible</label></li>
+                <li><label><input type="checkbox"> Importar solicitudes aprobadas a un lote</label></li>
+                <li><label><input type="checkbox"> Generar PDF de un lote</label></li>
+                <li><label><input type="checkbox"> Generar Excel de un lote</label></li>
+                <li><label><input type="checkbox"> Generar CSV de auditoría de un lote</label></li>
+            </ul>
+        </div>
+
+        <!-- 5 -->
+        <div class="section">
+            <h3><span class="section-num">5</span> Recepción y Entrega</h3>
+            <ul>
+                <li><label><input type="checkbox"> Registrar entrega de vehículo a motorista</label></li>
+                <li><label><input type="checkbox"> Registrar recepción de vehículo devuelto por motorista</label></li>
+                <li><label><input type="checkbox"> Ver detalle de una recepción/entrega</label></li>
+                <li><label><input type="checkbox"> Editar registro de recepción/entrega</label></li>
+                <li><label><input type="checkbox"> Registrar kilometraje y nivel de combustible</label></li>
+                <li><label><input type="checkbox"> Verificar herramientas y accesorios del vehículo</label></li>
+                <li><label><input type="checkbox"> Evaluar condición exterior e interior del vehículo</label></li>
+                <li><label><input type="checkbox"> Adjuntar fotos del vehículo</label></li>
+                <li><label><input type="checkbox"> Generar PDF de recepción/entrega</label></li>
+                <li><label><input type="checkbox"> Ver listado histórico de recepciones/entregas</label></li>
+            </ul>
+        </div>
+
+        <!-- 6 -->
+        <div class="section">
+            <h3><span class="section-num">6</span> Vehículo &mdash; Motorista</h3>
+            <ul>
+                <li><label><input type="checkbox"> Asignar un motorista titular a un vehículo</label></li>
+                <li><label><input type="checkbox"> Desasignar motorista de un vehículo</label></li>
+                <li><label><input type="checkbox"> Ver asignaciones vigentes (solo activas)</label></li>
+                <li><label><input type="checkbox"> Ver historial de asignaciones</label></li>
+            </ul>
+        </div>
+
+        <!-- 7 -->
+        <div class="section">
+            <h3><span class="section-num">7</span> Gestión de Flota</h3>
+            <ul>
+                <li><label><input type="checkbox"> Ver planificación de flota (tarjeta visual por vehículo)</label></li>
+                <li><label><input type="checkbox"> Ver disponibilidad de vehículos (disponible / reservado / en ruta)</label></li>
+                <li><label><input type="checkbox"> Ver solicitudes activas asociadas a cada vehículo</label></li>
+                <li><label><input type="checkbox"> Filtrar flota por estado operativo</label></li>
+            </ul>
+        </div>
+
+        <!-- 8 -->
+        <div class="section">
+            <h3><span class="section-num">8</span> Gestión de Motoristas</h3>
+            <ul>
+                <li><label><input type="checkbox"> Registrar un motorista (datos personales, licencia)</label></li>
+                <li><label><input type="checkbox"> Editar datos de un motorista</label></li>
+                <li><label><input type="checkbox"> Activar / desactivar un motorista</label></li>
+                <li><label><input type="checkbox"> Ver estado actual de un motorista</label></li>
+                <li><label><input type="checkbox"> Cambiar estado (disponible / viaje / descanso / incapacitado)</label></li>
+                <li><label><input type="checkbox"> Ver historial de estados de un motorista</label></li>
+                <li><label><input type="checkbox"> Subir archivo adjunto al cambiar estado (ej. constancia)</label></li>
+                <li><label><input type="checkbox"> Consultar listado de motoristas disponibles</label></li>
+            </ul>
+            <h4>Auto-gestión del motorista (app móvil)</h4>
+            <ul>
+                <li><label><input type="checkbox"> Ver mi propio estado actual</label></li>
+                <li><label><input type="checkbox"> Cambiar mi estado (disponible / no disponible con motivo)</label></li>
+                <li><label><input type="checkbox"> Ver mi historial de estados</label></li>
+                <li><label><input type="checkbox"> Ver mis viajes asignados por mes</label></li>
+                <li><label><input type="checkbox"> Ver detalle de un viaje asignado</label></li>
+                <li><label><input type="checkbox"> Iniciar un viaje (marcar salida)</label></li>
+                <li><label><input type="checkbox"> Registrar llegada a destino</label></li>
+                <li><label><input type="checkbox"> Iniciar retorno</label></li>
+                <li><label><input type="checkbox"> Finalizar viaje (completar)</label></li>
+            </ul>
+        </div>
+
+        <!-- 9 -->
+        <div class="section">
+            <h3><span class="section-num">9</span> Liquidaciones</h3>
+            <ul>
+                <li><label><input type="checkbox"> Liquidar solicitud de combustible (monto validado)</label></li>
+                <li><label><input type="checkbox"> Liquidar una solicitud de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Ver detalle de una liquidación</label></li>
+                <li><label><input type="checkbox"> Generar PDF de liquidación de combustible</label></li>
+                <li><label><input type="checkbox"> Generar PDF de liquidación de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Ver panel unificado de liquidaciones pendientes</label></li>
+            </ul>
+        </div>
+
+        <!-- 14 -->
+        <div class="section">
+            <h3><span class="section-num">10</span> Incidencias</h3>
+            <ul>
+                <li><label><input type="checkbox"> Registrar incidencia (daño, accidente, falla, etc.)</label></li>
+                <li><label><input type="checkbox"> Editar una incidencia</label></li>
+                <li><label><input type="checkbox"> Cambiar severidad (baja / media / alta / crítica)</label></li>
+                <li><label><input type="checkbox"> Cambiar estado (abierta / proceso / resuelta / cerrada)</label></li>
+                <li><label><input type="checkbox"> Asignar una incidencia a un responsable</label></li>
+                <li><label><input type="checkbox"> Documentar resolución de una incidencia</label></li>
+                <li><label><input type="checkbox"> Ver listado de incidencias filtrado</label></li>
+            </ul>
+        </div>
+
+        <!-- 15 -->
+        <div class="section">
+            <h3><span class="section-num">11</span> Gestión Operativa Unificada</h3>
+            <ul>
+                <li><label><input type="checkbox"> Ver bandeja unificada de solicitudes pendientes</label></li>
+                <li><label><input type="checkbox"> Tomar una solicitud para revisión</label></li>
+                <li><label><input type="checkbox"> Cambiar prioridad de una solicitud</label></li>
+                <li><label><input type="checkbox"> Observar una solicitud durante la revisión</label></li>
+                <li><label><input type="checkbox"> Validar y pre-aprobar una solicitud</label></li>
+                <li><label><input type="checkbox"> Validar y asignar recursos (vehículo + motorista)</label></li>
+                <li><label><input type="checkbox"> Validar y asignar combustible a una solicitud</label></li>
+                <li><label><input type="checkbox"> Validar y asignar mantenimiento a una solicitud</label></li>
+                <li><label><input type="checkbox"> Aprobar o rechazar desde panel de aprobaciones</label></li>
+                <li><label><input type="checkbox"> Aprobar con condiciones</label></li>
+                <li><label><input type="checkbox"> Reabrir una solicitud previamente cerrada</label></li>
+                <li><label><input type="checkbox"> Ver KPIs por tipo de solicitud</label></li>
+                <li><label><input type="checkbox"> Ver calendario de flota</label></li>
+            </ul>
+        </div>
+
+        <!-- 16 -->
+        <div class="section">
+            <h3><span class="section-num">12</span> Reportes PDF</h3>
+            <ul>
+                <li><label><input type="checkbox"> Generar reporte de solicitudes de transporte</label></li>
+                <li><label><input type="checkbox"> Generar reporte de solicitudes de mantenimiento</label></li>
+                <li><label><input type="checkbox"> Generar reporte de solicitudes de combustible</label></li>
+                <li><label><input type="checkbox"> Generar Plan Diario de Transporte</label></li>
+                <li><label><input type="checkbox"> Generar reporte de flota vehicular</label></li>
+                <li><label><input type="checkbox"> Generar reporte de control mensual de combustible</label></li>
+                <li><label><input type="checkbox"> Generar reporte de distribución de cargas</label></li>
+                <li><label><input type="checkbox"> Generar reporte general de servicios</label></li>
+                <li><label><input type="checkbox"> Generar reporte de misiones oficiales</label></li>
+                <li><label><input type="checkbox"> Generar reporte de órdenes de trabajo</label></li>
+                <li><label><input type="checkbox"> Generar reporte de recepción/entrega de vehículos</label></li>
+                <li><label><input type="checkbox"> Generar reporte de registro de vehículos</label></li>
+            </ul>
+        </div>
+
+        <!-- 17 -->
+        <div class="section">
+            <h3><span class="section-num">13</span> Reportes Excel / CSV</h3>
+            <ul>
+                <li><label><input type="checkbox"> Exportar solicitudes de combustible a Excel</label></li>
+                <li><label><input type="checkbox"> Exportar solicitudes de mantenimiento a Excel</label></li>
+                <li><label><input type="checkbox"> Exportar detalle de lote de combustible a Excel</label></li>
+                <li><label><input type="checkbox"> Exportar solicitudes de transporte a CSV</label></li>
+                <li><label><input type="checkbox"> Exportar solicitudes de mantenimiento a CSV</label></li>
+                <li><label><input type="checkbox"> Exportar solicitudes de combustible a CSV</label></li>
+                <li><label><input type="checkbox"> Exportar detalle de lote a CSV (auditoría)</label></li>
+            </ul>
+        </div>
+
+        <!-- 18 -->
+        <div class="section">
+            <h3><span class="section-num">14</span> Vistas de Reportes</h3>
+            <ul>
+                <li><label><input type="checkbox"> Ver reporte de solicitudes de transporte con filtros</label></li>
+                <li><label><input type="checkbox"> Ver reporte de solicitudes de mantenimiento con filtros</label></li>
+                <li><label><input type="checkbox"> Ver reporte de solicitudes de combustible con filtros</label></li>
+                <li><label><input type="checkbox"> Ver reporte de registro de vehículos</label></li>
+                <li><label><input type="checkbox"> Ver reporte de control mensual de combustible</label></li>
+                <li><label><input type="checkbox"> Ver reporte de distribución de cargas de combustible</label></li>
+                <li><label><input type="checkbox"> Ver reporte general de servicios</label></li>
+                <li><label><input type="checkbox"> Ver reporte de flota vehicular</label></li>
+                <li><label><input type="checkbox"> Ver reporte de misiones oficiales</label></li>
+                <li><label><input type="checkbox"> Ver reporte de órdenes de trabajo</label></li>
+            </ul>
+        </div>
+
+        <!-- 19 -->
+        <div class="section">
+            <h3><span class="section-num">15</span> Auditoría</h3>
+            <ul>
+                <li><label><input type="checkbox"> Ver bitácora de eventos (crear, enviar, aprobar, etc.)</label></li>
+                <li><label><input type="checkbox"> Ver detalle de un evento de auditoría (JSON)</label></li>
+                <li><label><input type="checkbox"> Ver historial de cambios de estado de solicitudes</label></li>
+                <li><label><input type="checkbox"> Filtrar bitácora por tipo de acción y entidad</label></li>
+            </ul>
+        </div>
+
+    </div><!-- /content -->
+
+    <!-- SIGNATURE -->
+    <div class="signature-section">
+        <h3>&mdash; Datos de quien completa este checklist &mdash;</h3>
+
+        <div class="sig-grid">
+            <div class="sig-item full">
+                <span class="sig-label">Nombre completo:</span>
+                <span class="sig-line">&nbsp;</span>
+            </div>
+            <div class="sig-item">
+                <span class="sig-label">Firma:</span>
+                <span class="sig-line">&nbsp;</span>
+            </div>
+            <div class="sig-item">
+                <span class="sig-label">Fecha:</span>
+                <span class="sig-line filled">21 de julio de 2026</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOOTER -->
+    <div class="footer">
+        Departamento de Sistemas &mdash; Desarrollo de Software &bull; Asamblea Legislativa de El Salvador &bull; 2026
+    </div>
+
+</div>
+
+</body>
+</html>
