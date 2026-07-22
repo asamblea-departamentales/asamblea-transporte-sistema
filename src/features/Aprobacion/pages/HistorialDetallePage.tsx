@@ -23,12 +23,15 @@ export default function HistorialDetallePage() {
     selectedVehiculo, setSelectedVehiculo, selectedMotorista, setSelectedMotorista,
     motivoReasignacion, setMotivoReasignacion, isSubmitting, openReasignarModal, handleReasignar
   } = useReasignacion(codigo, () => {
-    Promise.all([
-      axiosClient.get(`/solicitudes-transporte/${codigo}`),
-      axiosClient.get(`/solicitudes-transporte/${codigo}/comparativa`)
-    ]).then(([showRes, compRes]) => {
-      setData({ raw: showRes.data.data || showRes.data, comparativa: compRes.data });
-    });
+    if (!codigo) return;
+    const codeUpper = codigo.toUpperCase();
+    const isComb = codeUpper.startsWith('CB-');
+    const isMant = codeUpper.startsWith('SM-') || codeUpper.startsWith('MAN-') || codeUpper.startsWith('MANT-') || codeUpper.startsWith('MT-');
+    const ep = isComb ? `/solicitudes-combustible/${codigo}` : isMant ? `/solicitudes-mantenimiento/${codigo}` : `/solicitudes-transporte/${codigo}`;
+
+    axiosClient.get(ep).then((showRes) => {
+      setData((prev) => ({ ...prev, raw: showRes.data.data || showRes.data }));
+    }).catch(e => console.error('Error refreshing detail after reasignar', e));
   });
 
   // Destino Adicional
@@ -56,16 +59,33 @@ export default function HistorialDetallePage() {
           const showRes = await axiosClient.get(endpoint);
           showData = showRes.data.data || showRes.data;
         } catch (e) {
-          console.error('Error fetching show data', e);
+          // Si el endpoint inicial devolvió 404, intentar con los otros módulos
+          const fallbackEndpoints = [
+            `/solicitudes-transporte/${codigo}`,
+            `/solicitudes-mantenimiento/${codigo}`,
+            `/solicitudes-combustible/${codigo}`
+          ].filter(ep => ep !== endpoint);
+
+          for (const altEp of fallbackEndpoints) {
+            try {
+              const altRes = await axiosClient.get(altEp);
+              if (altRes.data) {
+                showData = altRes.data.data || altRes.data;
+                break;
+              }
+            } catch {
+              // Continuar
+            }
+          }
         }
 
-        // 2. Obtener la comparativa (para datos de sugerencias si aplica)
-        if (!isMantenimiento) {
+        // 2. Obtener la comparativa (SOLO si es Transporte)
+        if (!isMantenimiento && !isCombustible) {
           try {
             const compRes = await axiosClient.get(`${endpoint}/comparativa`);
             compData = compRes.data;
           } catch (e) {
-            console.error('Error fetching comparativa data', e);
+            // Comparativa no disponible
           }
         }
 

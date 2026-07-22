@@ -67,7 +67,7 @@ export const solicitudApi = {
       payload.lat = lat;
       payload.lng = lng;
     }
-    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/destino-en-ejecucion`, payload);
+    const response = await axiosClient.post(`/solicitudes-transporte/${codigo}/destinos`, payload);
     return response.data;
   }
 };
