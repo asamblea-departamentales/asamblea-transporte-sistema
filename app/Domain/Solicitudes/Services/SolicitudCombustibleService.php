@@ -126,6 +126,10 @@ class SolicitudCombustibleService
 
     public function aprobar(SolicitudCombustible $solicitud, int $jefeId, ?string $observaciones): SolicitudCombustible
     {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         $solicitud->aprobador_id = $jefeId;
         $solicitud->fecha_aprobacion = now();
         $solicitud->observaciones = $observaciones;
@@ -398,6 +402,10 @@ class SolicitudCombustibleService
         ?float $montoAprobado = null,
         ?string $comentario = null
     ): array {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         return DB::transaction(function () use ($solicitud, $jefeId, $decisionFinal, $montoAprobado, $comentario) {
             $montoOriginal = $solicitud->decisionOperativa?->monto_aprobado;
 

@@ -30,6 +30,7 @@ class User extends Authenticatable implements FilamentUser
         'unidad_solicitante_id',
         'activo',
         'departamental_id',
+        'debe_cambiar_password',
     ];
 
     /**
@@ -52,6 +53,7 @@ class User extends Authenticatable implements FilamentUser
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'debe_cambiar_password' => 'boolean',
         ];
     }
 

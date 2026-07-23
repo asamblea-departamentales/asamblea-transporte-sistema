@@ -52,6 +52,10 @@ class SolicitudMantenimientoService
 
     public function aprobar(SolicitudMantenimiento $solicitud, int $jefeId, ?string $observaciones): SolicitudMantenimiento
     {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         $solicitud->aprobador_id = $jefeId;
         $solicitud->fecha_aprobacion = now();
         $solicitud->observaciones = $observaciones;
@@ -284,6 +288,10 @@ class SolicitudMantenimientoService
         ?string $firma = null,
         ?int $contratoId = null
     ): array {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }

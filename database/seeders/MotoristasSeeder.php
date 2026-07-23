@@ -89,40 +89,38 @@ class MotoristasSeeder extends Seeder
 
             /*
             |--------------------------------------------------------------------------
-            | Buscar usuario o crearlo
+            | Username = teléfono normalizado (solo dígitos)
             |--------------------------------------------------------------------------
             */
 
-            $user = User::where('name', $nombre)->first();
+            $telefonoLimpio = preg_replace('/\D/', '', $telefono ?? '');
 
-            if (! $user) {
+            $username = $telefonoLimpio ?: $baseIdentity;
 
-                $username = $baseIdentity;
+            /*
+            |--------------------------------------------------------------------------
+            | Evitar usernames duplicados
+            |--------------------------------------------------------------------------
+            */
 
-                /*
-                |--------------------------------------------------------------------------
-                | Evitar usernames duplicados
-                |--------------------------------------------------------------------------
-                */
+            $counter = 1;
 
-                $counter = 1;
-
-                while (
-                    User::where('username', $username)->exists()
-                ) {
-                    $username = "{$baseIdentity}{$counter}";
-                    $counter++;
-                }
-
-                $user = User::create([
-                    'name' => $nombre,
-                    'username' => $username,
-                    'email' => $correo,
-                    'password' => bcrypt('password'),
-                ]);
-
-                $user->assignRole('motorista');
+            while (
+                User::where('username', $username)->exists()
+            ) {
+                $username = "{$telefonoLimpio}{$counter}";
+                $counter++;
             }
+
+            $user = User::create([
+                'name' => $nombre,
+                'username' => $username,
+                'email' => $correo,
+                'password' => bcrypt('password'),
+                'debe_cambiar_password' => true,
+            ]);
+
+            $user->assignRole('motorista');
 
             /*
             |--------------------------------------------------------------------------

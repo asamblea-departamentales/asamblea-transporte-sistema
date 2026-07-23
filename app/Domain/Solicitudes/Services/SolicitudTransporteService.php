@@ -112,6 +112,10 @@ class SolicitudTransporteService
 
     public function aprobar(SolicitudTransporte $solicitud, int $jefeId): SolicitudTransporte
     {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         $solicitud->decidido_por = $jefeId;
         $solicitud->decidido_en = now();
 
@@ -234,6 +238,10 @@ class SolicitudTransporteService
         ?int $vehiculoId = null,
         ?int $motoristaId = null
     ): array {
+        if ($solicitud->solicitante_id === $jefeId) {
+            throw new \DomainException('No puedes aprobar tu propia solicitud.');
+        }
+
         if ($solicitud->estado !== EstadoSolicitudEnum::PRE_APROBADA) {
             throw new \DomainException('Solo se puede aprobar una solicitud en pre-aprobada.');
         }

@@ -72,6 +72,7 @@ class TokenAuthController extends Controller
         return response()->json([
             'message' => 'Login exitoso',
             'token' => $token,
+            'debe_cambiar_password' => (bool) $user->debe_cambiar_password,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,

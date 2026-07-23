@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthController;
+use App\Http\Controllers\Api\MotoristaAuthController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Http\Controllers\Api\MotoristaViajeController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
@@ -15,11 +16,18 @@ use Illuminate\Support\Facades\Route;
 // AUTH POR TOKEN (PUBLICO) — rate limited: 5 intentos/min por email+IP
 Route::post('/auth/login', [TokenAuthController::class, 'login'])->middleware('throttle:login');
 
+// AUTH MOTORISTA (PUBLICO) — activación de cuenta + cambio de PIN
+Route::post('/auth/motorista/activar-cuenta', [MotoristaAuthController::class, 'activarCuenta'])
+    ->middleware('throttle:5,1');
+
 Route::middleware('auth:sanctum')->group(function () {
 
     // Usuario autenticado
     Route::get('/auth/me', [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
+
+    // Cambio de PIN inicial (motoristas)
+    Route::post('/auth/motorista/cambiar-pin-inicial', [MotoristaAuthController::class, 'cambiarPinInicial']);
 
     // Dashboard Summary (Transporte + Mantenimiento + Combustible)
     Route::get('/dashboard/summary', [DashboardController::class, 'summary']);
@@ -59,10 +67,10 @@ Route::middleware('auth:sanctum')->group(function () {
     });
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/observacion', [SolicitudTransporteController::class, 'observacion'])
-        ->middleware('role:operativo|admin|ti|super_admin');
+        ->middleware('role:operativo|jefe|admin|ti|super_admin');
 
     Route::post('solicitudes-transporte/{solicitud:codigo}/asignar-recursos', [SolicitudTransporteController::class, 'asignarRecursos'])
-        ->middleware('role:operativo|admin|ti|super_admin');
+        ->middleware('role:operativo|jefe|admin|ti|super_admin');
 
     // ── MANTENIMIENTO ───────────────────────────────────────────────
     Route::apiResource('solicitudes-mantenimiento', SolicitudMantenimientoController::class)
