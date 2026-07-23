@@ -83,26 +83,29 @@ export default function CambiarPinInicialPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col justify-between">
+    <div className="min-h-screen min-h-[100dvh] bg-slate-50/60 sm:bg-slate-100/70 flex flex-col justify-between">
       {loading && <GlobalLoading message="Guardando tu PIN Privado" />}
 
+      {/* Spacer superior PC */}
+      <div className="hidden sm:block flex-1" />
+
       {/* Contenido Principal */}
-      <div className="flex flex-col flex-1 justify-center items-center px-6 py-6">
-        <div className="w-full max-w-sm">
+      <div className="flex flex-col flex-1 sm:flex-none justify-center items-center px-4 sm:px-6 py-6">
+        <div className="w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-10 sm:rounded-3xl sm:shadow-xl sm:border sm:border-slate-200/80">
           {/* Logo */}
-          <div className="flex justify-center mb-6">
+          <div className="flex justify-center mb-6 sm:mb-8">
             <img
               src={logo}
               alt="Asamblea Legislativa"
-              className="h-16 w-auto object-contain"
+              className="h-16 sm:h-20 w-auto object-contain"
             />
           </div>
 
           <div className="text-center mb-6">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-amber-600 mb-3">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-amber-600 mb-3 shadow-sm border border-amber-100">
               <KeyRound className="w-6 h-6" />
             </span>
-            <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f36] mb-1">
               Establece tu PIN Privado
             </h1>
             <p className="text-sm text-slate-500">
@@ -128,6 +131,7 @@ export default function CambiarPinInicialPage() {
               value={password}
               onChange={setPassword}
               autoComplete="new-password"
+              inputMode="numeric"
               name="password"
             />
 
@@ -138,6 +142,7 @@ export default function CambiarPinInicialPage() {
               value={passwordConfirm}
               onChange={setPasswordConfirm}
               autoComplete="new-password"
+              inputMode="numeric"
               name="password_confirmation"
             />
 
@@ -160,6 +165,9 @@ export default function CambiarPinInicialPage() {
         </div>
       </div>
 
+      {/* Spacer inferior PC */}
+      <div className="flex-1" />
+
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Asamblea Legislativa de El Salvador
@@ -167,3 +175,4 @@ export default function CambiarPinInicialPage() {
     </div>
   );
 }
+

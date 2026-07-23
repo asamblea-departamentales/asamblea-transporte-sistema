@@ -6,6 +6,7 @@ type Props = {
   onChange: (v: string) => void;
   autoComplete?: string;
   name?: string;
+  inputMode?: React.HTMLAttributes<HTMLInputElement>["inputMode"];
 };
 
 function MailIcon() {
@@ -30,7 +31,7 @@ function LockIcon() {
   );
 }
 
-export default function TextField({ label, type = "text", placeholder, value, onChange, autoComplete, name }: Props) {
+export default function TextField({ label, type = "text", placeholder, value, onChange, autoComplete, name, inputMode }: Props) {
   const icon = type === "password" ? <LockIcon /> : autoComplete === "email" ? <MailIcon /> : null;
 
   return (
@@ -45,6 +46,7 @@ export default function TextField({ label, type = "text", placeholder, value, on
           type={type}
           value={value}
           autoComplete={autoComplete}
+          inputMode={inputMode}
           placeholder={placeholder}
           onChange={(e) => onChange(e.target.value)}
           className={`w-full rounded-xl border border-slate-200 bg-white py-3 text-slate-700 outline-none transition
@@ -55,3 +57,4 @@ export default function TextField({ label, type = "text", placeholder, value, on
     </label>
   );
 }
+

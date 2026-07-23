@@ -76,24 +76,27 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col">
+    <div className="min-h-screen min-h-[100dvh] bg-slate-50/60 sm:bg-slate-100/70 flex flex-col justify-between">
       {loading && <GlobalLoading message="Iniciando Sesión Segura" />}
 
-      {/* Contenido principal */}
-      <div className="flex flex-col flex-1 justify-center items-center px-6">
-        <div className="w-full max-w-sm">
+      {/* Spacer superior para centrado perfecto */}
+      <div className="hidden sm:block flex-1" />
+
+      {/* Contenido principal con diseño responsive adaptativo */}
+      <div className="flex flex-col flex-1 sm:flex-none justify-center items-center px-4 sm:px-6">
+        <div className="w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-10 sm:rounded-3xl sm:shadow-xl sm:border sm:border-slate-200/80">
 
           {/* Logo */}
-          <div className="flex justify-center mb-8">
+          <div className="flex justify-center mb-6 sm:mb-8">
             <img
               src={logo}
               alt="Asamblea Legislativa"
-              className="h-20 w-auto object-contain"
+              className="h-16 sm:h-20 w-auto object-contain"
             />
           </div>
 
           {/* Título */}
-          <h1 className="text-center text-2xl font-bold text-[#1a1f36] mb-1">
+          <h1 className="text-center text-2xl sm:text-3xl font-bold text-[#1a1f36] mb-1">
             Bienvenido
           </h1>
           <p className="text-center text-sm text-slate-500 mb-8">
@@ -101,13 +104,14 @@ export default function LoginPage() {
           </p>
 
           {/* Formulario */}
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-5">
             <TextField
               label="Número Celular o Usuario"
               placeholder="77971102"
               value={username}
               onChange={setUsername}
               autoComplete="username"
+              inputMode="tel"
               name="username"
             />
 
@@ -118,12 +122,14 @@ export default function LoginPage() {
               value={password}
               onChange={setPassword}
               autoComplete="current-password"
+              inputMode="numeric"
               name="password"
             />
 
             {error && (
-              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
-                {error}
+              <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-100 flex items-start space-x-2">
+                <span className="shrink-0 text-red-500 font-bold">•</span>
+                <span>{error}</span>
               </div>
             )}
 
@@ -138,19 +144,22 @@ export default function LoginPage() {
           </form>
 
           {/* Enlace para primera vez / activación */}
-          <div className="mt-8 text-center">
+          <div className="mt-8 text-center pt-2 border-t border-slate-100">
             <p className="text-xs text-slate-500">
               ¿Es la primera vez que ingresas a la app?
             </p>
             <Link
               to="/activar-cuenta"
-              className="mt-1 inline-block text-sm font-bold text-[#1a1f36] hover:underline"
+              className="mt-1.5 inline-block text-sm font-bold text-[#1a1f36] hover:text-blue-700 hover:underline transition"
             >
-              Activar mi cuenta aquí
+              Activar mi cuenta aquí →
             </Link>
           </div>
         </div>
       </div>
+
+      {/* Spacer inferior para centrado en PC */}
+      <div className="flex-1" />
 
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400">
@@ -160,4 +169,5 @@ export default function LoginPage() {
     </div>
   );
 }
+
 
