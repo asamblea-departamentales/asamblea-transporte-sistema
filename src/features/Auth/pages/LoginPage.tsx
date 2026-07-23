@@ -34,14 +34,10 @@ const LoginPage: React.FC = () => {
       navigate('/', { replace: true });
     } catch (err: any) {
       // Manejo de errores amigable
-      let errorMessage = 'Credenciales inválidas. Por favor intenta de nuevo.';
+      let errorMessage = err.response?.data?.message || err.message || 'Credenciales inválidas. Por favor intenta de nuevo.';
       
-      if (err.message && err.message.includes('Acceso denegado')) {
-        errorMessage = err.message;
-      } else if (err.response?.status === 422) {
-        errorMessage = 'Por favor, completa todos los campos correctamente.';
-      } else if (err.response?.data?.message) {
-        errorMessage = err.response.data.message;
+      if (err.response?.status === 422) {
+        errorMessage = err.response?.data?.message || 'Por favor, completa todos los campos correctamente.';
       }
       
       setError(errorMessage);
