@@ -7,7 +7,7 @@ import type { ActivarCuentaData } from "../auth.service";
 import logo from "../../shared/assets/asamble.png";
 import { GlobalLoading } from "../../shared/components/GlobalLoading";
 import { toast } from "sonner";
-import { Check, Copy, ArrowLeft, ShieldCheck, UserCheck } from "lucide-react";
+import { Check, Copy, ArrowLeft } from "lucide-react";
 
 export default function ActivarCuentaPage() {
   const navigate = useNavigate();
@@ -121,9 +121,6 @@ export default function ActivarCuentaPage() {
             /* PASO 1: Formulario de Solicitud */
             <>
               <div className="text-center mb-6">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-3">
-                  <UserCheck className="w-6 h-6" />
-                </span>
                 <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
                   Activar mi Cuenta
                 </h1>
@@ -138,16 +135,16 @@ export default function ActivarCuentaPage() {
                   label="Número de Expediente"
                   placeholder="Ej. 1078"
                   value={expediente}
-                  onChange={setExpediente}
+                  onChange={(val) => setExpediente(val.replace(/\D/g, ''))}
                   inputMode="numeric"
                   name="expediente"
                 />
 
                 <TextField
                   label="Número de Celular"
-                  placeholder="Ej. 7797-1102"
+                  placeholder="Ej. 77971102"
                   value={telefono}
-                  onChange={setTelefono}
+                  onChange={(val) => setTelefono(val.replace(/\D/g, ''))}
                   inputMode="tel"
                   name="telefono"
                 />
@@ -186,10 +183,6 @@ export default function ActivarCuentaPage() {
           ) : (
             /* PASO 2: Confirmación con PIN Temporal */
             <div className="text-center space-y-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 mb-1">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-
               <div>
                 <h2 className="text-xl font-bold text-slate-800">
                   ¡Hola, {resultado.nombre}!

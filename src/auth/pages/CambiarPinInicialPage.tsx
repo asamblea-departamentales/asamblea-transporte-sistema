@@ -7,7 +7,6 @@ import { useAuth } from "../AuthContext";
 import logo from "../../shared/assets/asamble.png";
 import { GlobalLoading } from "../../shared/components/GlobalLoading";
 import { toast } from "sonner";
-import { KeyRound, ShieldAlert } from "lucide-react";
 
 export default function CambiarPinInicialPage() {
   const { setDebeCambiarPassword, user } = useAuth();
@@ -25,12 +24,12 @@ export default function CambiarPinInicialPage() {
     setError(null);
 
     if (password.length < 4) {
-      setError("El nuevo PIN o contraseña debe tener al menos 4 caracteres.");
+      setError("El nuevo PIN debe tener al menos 4 dígitos.");
       return;
     }
 
     if (password !== passwordConfirm) {
-      setError("Las contraseñas ingresadas no coinciden.");
+      setError("Los PIN ingresados no coinciden.");
       return;
     }
 
@@ -68,7 +67,7 @@ export default function CambiarPinInicialPage() {
         if (data?.errors) {
           const firstKey = Object.keys(data.errors)[0];
           const firstMsg = data.errors[firstKey]?.[0];
-          setError(firstMsg || "Error al validar la nueva contraseña.");
+          setError(firstMsg || "Error al validar el nuevo PIN.");
         } else if (data?.message) {
           setError(data.message);
         } else {
@@ -99,45 +98,39 @@ export default function CambiarPinInicialPage() {
           </div>
 
           <div className="text-center mb-6">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-amber-600 mb-3">
-              <KeyRound className="w-6 h-6" />
-            </span>
             <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
               Establece tu PIN Privado
             </h1>
             <p className="text-sm text-slate-500">
               {user?.name ? `Hola ${user.name}. ` : ""}
-              Por tu seguridad, define la contraseña o PIN privado que usarás en tus accesos futuros.
+              Por tu seguridad, define el PIN privado que usarás en tus accesos futuros.
             </p>
           </div>
 
           {/* Banner Informativo Obligatorio */}
-          <div className="rounded-lg bg-amber-50 px-4 py-3 mb-6 text-xs text-amber-800 border border-amber-200 flex items-start space-x-2">
-            <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
-            <span>
-              Este paso es obligatorio para activar tu cuenta por primera vez.
-              Recuerda memorizar tu nueva contraseña.
-            </span>
+          <div className="rounded-lg bg-amber-50 px-4 py-3 mb-6 text-xs text-amber-800 border border-amber-200">
+            Este paso es obligatorio para activar tu cuenta por primera vez.
+            Recuerda memorizar tu nuevo PIN.
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextField
-              label="Nueva Contraseña o PIN Privado"
+              label="Nuevo PIN Privado"
               type="password"
               placeholder="••••••••"
               value={password}
-              onChange={setPassword}
+              onChange={(val) => setPassword(val.replace(/\D/g, ''))}
               autoComplete="new-password"
               inputMode="numeric"
               name="password"
             />
 
             <TextField
-              label="Confirmar Nueva Contraseña"
+              label="Confirmar Nuevo PIN"
               type="password"
               placeholder="••••••••"
               value={passwordConfirm}
-              onChange={setPasswordConfirm}
+              onChange={(val) => setPasswordConfirm(val.replace(/\D/g, ''))}
               autoComplete="new-password"
               inputMode="numeric"
               name="password_confirmation"
