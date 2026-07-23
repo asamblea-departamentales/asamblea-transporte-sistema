@@ -14,18 +14,15 @@ use Illuminate\Support\Str;
 class MotoristaAuthController extends Controller
 {
     /**
-     * Activar cuenta de motorista (primera vez).
+     * Activar cuenta de motorista.
      *
-     * Valida expediente + teléfono, genera PIN temporal y lo retorna en pantalla.
+     * Valida solo el N° de expediente, genera PIN temporal de 4 dígitos.
      */
     public function activarCuenta(Request $request): JsonResponse
     {
         $data = $request->validate([
             'numero_expediente' => ['required', 'string', 'max:50'],
-            'telefono' => ['required', 'string', 'max:20'],
         ]);
-
-        $telefonoLimpio = preg_replace('/\D/', '', $data['telefono']);
 
         $motorista = Motorista::where('numero_empleado', $data['numero_expediente'])->first();
 
@@ -50,28 +47,22 @@ class MotoristaAuthController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $telefonoMotorista = preg_replace('/\D/', '', $motorista->telefono ?? '');
+        $user = $motorista->user;
 
-        if ($telefonoMotorista !== $telefonoLimpio) {
-            return response()->json([
-                'status' => false,
-                'message' => 'El expediente y número de celular no coinciden con nuestros registros.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
-        }
-
-        if (! $motorista->user_id) {
-            $username = $telefonoLimpio;
-
+        if (! $user) {
+            $username = "motorista_{$motorista->numero_empleado}";
             $counter = 1;
             while (User::where('username', $username)->exists()) {
-                $username = "{$telefonoLimpio}{$counter}";
+                $username = "motorista_{$motorista->numero_empleado}_{$counter}";
                 $counter++;
             }
+
+            $correo = $motorista->correo ?? strtolower(Str::slug($motorista->nombre, '.')).'@asamblea.gob.sv';
 
             $user = User::create([
                 'name' => $motorista->nombre,
                 'username' => $username,
-                'email' => $motorista->correo ?? strtolower(Str::slug($motorista->nombre, '.')).'@asamblea.gob.sv',
+                'email' => $correo,
                 'password' => bcrypt('password'),
                 'debe_cambiar_password' => true,
             ]);
@@ -79,59 +70,41 @@ class MotoristaAuthController extends Controller
             $user->assignRole('motorista');
 
             $motorista->update(['user_id' => $user->id]);
-        } else {
-            $user = $motorista->user;
-
-            if (! $user) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Error interno: la cuenta de usuario no fue encontrada. Contacta al administrador.',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
-
-            if (! $user->debe_cambiar_password) {
-                return response()->json([
-                    'status' => false,
-                    'message' => 'Esta cuenta ya fue activada. Por favor inicia sesión directamente con tu número celular.',
-                ], Response::HTTP_UNPROCESSABLE_ENTITY);
-            }
         }
 
-        $pin = str_pad(random_int(100000, 999999), 6, '0', STR_PAD_LEFT);
-
-        $usernameFinal = $telefonoLimpio;
-        if ($user->username !== $telefonoLimpio) {
-            $counter = 1;
-            while (User::where('username', $usernameFinal)->where('id', '!=', $user->id)->exists()) {
-                $usernameFinal = "{$telefonoLimpio}{$counter}";
-                $counter++;
-            }
+        if (! $user->debe_cambiar_password) {
+            return response()->json([
+                'status' => false,
+                'message' => 'Esta cuenta ya fue activada. Por favor inicia sesión directamente.',
+            ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+
+        $pin = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
 
         $user->update([
-            'username' => $usernameFinal,
             'password' => Hash::make($pin),
             'debe_cambiar_password' => true,
         ]);
 
         return response()->json([
             'status' => true,
-            'message' => 'Cuenta verificada exitosamente.',
+            'message' => 'PIN temporal generado exitosamente.',
             'data' => [
                 'nombre' => $motorista->nombre,
-                'username' => $usernameFinal,
+                'username' => $user->username,
                 'pin_temporal' => $pin,
             ],
         ]);
     }
 
     /**
-     * Establecer PIN/contraseña privada definitiva (después de primer login con PIN temporal).
+     * Establecer PIN definitivo (después de primer login con PIN temporal).
      */
     public function cambiarPinInicial(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'password' => ['required', 'string', 'min:4', 'max:50', 'confirmed'],
+            'pin' => ['required', 'string', 'regex:/^\d{4}$/'],
+            'pin_confirmation' => ['required', 'string', 'same:pin'],
         ]);
 
         $user = $request->user();
@@ -139,18 +112,18 @@ class MotoristaAuthController extends Controller
         if (! $user->debe_cambiar_password) {
             return response()->json([
                 'status' => false,
-                'message' => 'Tu cuenta ya tiene una contraseña configurada.',
+                'message' => 'Tu PIN ya fue configurado.',
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
         $user->update([
-            'password' => Hash::make($data['password']),
+            'password' => Hash::make($data['pin']),
             'debe_cambiar_password' => false,
         ]);
 
         return response()->json([
             'status' => true,
-            'message' => 'PIN privado configurado correctamente. Tu cuenta ha sido activada.',
+            'message' => 'PIN configurado correctamente.',
         ]);
     }
 }

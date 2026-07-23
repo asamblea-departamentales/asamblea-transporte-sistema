@@ -3,15 +3,72 @@
 namespace App\Filament\Resources\MotoristaResource\Pages;
 
 use App\Filament\Resources\MotoristaResource;
+use App\Models\Motorista;
+use App\Models\User;
+use Filament\Actions;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Infolist;
+use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 
 class ViewMotorista extends ViewRecord
 {
     protected static string $resource = MotoristaResource::class;
+
+    protected function getHeaderActions(): array
+    {
+        return [
+            Actions\Action::make('generarPin')
+                ->label('Generar PIN temporal')
+                ->icon('heroicon-o-key')
+                ->color('success')
+                ->visible(fn (Motorista $record) => auth()->user()->hasAnyRole(['admin', 'ti', 'super_admin']))
+                ->action(function (Motorista $record) {
+                    $user = $record->user;
+
+                    if (! $user) {
+                        $username = "motorista_{$record->numero_empleado}";
+                        $counter = 1;
+                        while (User::where('username', $username)->exists()) {
+                            $username = "motorista_{$record->numero_empleado}_{$counter}";
+                            $counter++;
+                        }
+
+                        $correo = $record->correo ?? strtolower(Str::slug($record->nombre, '.')).'@asamblea.gob.sv';
+
+                        $user = User::create([
+                            'name' => $record->nombre,
+                            'username' => $username,
+                            'email' => $correo,
+                            'password' => bcrypt('password'),
+                            'debe_cambiar_password' => true,
+                        ]);
+
+                        $user->assignRole('motorista');
+
+                        $record->update(['user_id' => $user->id]);
+                    }
+
+                    $pin = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);
+
+                    $user->update([
+                        'password' => Hash::make($pin),
+                        'debe_cambiar_password' => true,
+                    ]);
+
+                    Notification::make()
+                        ->title('PIN temporal generado')
+                        ->body("PIN para {$record->nombre}: **{$pin}** — Entrégalo al motorista. Solo se muestra esta vez.")
+                        ->success()
+                        ->persistent()
+                        ->send();
+                }),
+        ];
+    }
 
     public function infolist(Infolist $infolist): Infolist
     {
