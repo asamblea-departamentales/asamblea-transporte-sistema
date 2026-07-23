@@ -103,16 +103,7 @@ export default function ActivarCuentaPage() {
     <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col justify-between">
       {loading && <GlobalLoading message="Verificando Expediente" />}
 
-      {/* Header con botón de regresar */}
-      <div className="pt-6 px-6 max-w-sm w-full mx-auto flex items-center justify-between">
-        <Link
-          to="/login"
-          className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
-        >
-          <ArrowLeft className="w-4 h-4 mr-1" />
-          Volver al Login
-        </Link>
-      </div>
+
 
       {/* Contenido Principal */}
       <div className="flex flex-col flex-1 justify-center items-center px-6 py-4">
@@ -177,6 +168,20 @@ export default function ActivarCuentaPage() {
                   VALIDAR Y ACTIVAR CUENTA
                 </Button>
               </form>
+
+              {/* Enlace para Volver al login */}
+              <div className="mt-8 text-center">
+                <p className="text-xs text-slate-500 mb-1">
+                  ¿Ya tienes tu cuenta activada?
+                </p>
+                <Link
+                  to="/login"
+                  className="inline-flex items-center text-sm font-bold text-[#1a1f36] hover:underline"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-1" />
+                  Volver al Login
+                </Link>
+              </div>
             </>
           ) : (
             /* PASO 2: Confirmación con PIN Temporal */
