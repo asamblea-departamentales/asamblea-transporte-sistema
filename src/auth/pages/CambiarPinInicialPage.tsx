@@ -83,29 +83,26 @@ export default function CambiarPinInicialPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-slate-50/60 sm:bg-slate-100/70 flex flex-col justify-between">
+    <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col justify-between">
       {loading && <GlobalLoading message="Guardando tu PIN Privado" />}
 
-      {/* Spacer superior PC */}
-      <div className="hidden sm:block flex-1" />
-
       {/* Contenido Principal */}
-      <div className="flex flex-col flex-1 sm:flex-none justify-center items-center px-4 sm:px-6 py-6">
-        <div className="w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-10 sm:rounded-3xl sm:shadow-xl sm:border sm:border-slate-200/80">
+      <div className="flex flex-col flex-1 justify-center items-center px-6 py-6">
+        <div className="w-full max-w-sm">
           {/* Logo */}
-          <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="flex justify-center mb-8">
             <img
               src={logo}
               alt="Asamblea Legislativa"
-              className="h-16 sm:h-20 w-auto object-contain"
+              className="h-20 w-auto object-contain"
             />
           </div>
 
           <div className="text-center mb-6">
-            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-amber-600 mb-3 shadow-sm border border-amber-100">
+            <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-amber-50 text-amber-600 mb-3">
               <KeyRound className="w-6 h-6" />
             </span>
-            <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f36] mb-1">
+            <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
               Establece tu PIN Privado
             </h1>
             <p className="text-sm text-slate-500">
@@ -115,7 +112,7 @@ export default function CambiarPinInicialPage() {
           </div>
 
           {/* Banner Informativo Obligatorio */}
-          <div className="rounded-xl bg-amber-50 p-4 mb-6 text-xs text-amber-800 border border-amber-200 flex items-start space-x-2">
+          <div className="rounded-lg bg-amber-50 px-4 py-3 mb-6 text-xs text-amber-800 border border-amber-200 flex items-start space-x-2">
             <ShieldAlert className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
             <span>
               Este paso es obligatorio para activar tu cuenta por primera vez.
@@ -123,7 +120,7 @@ export default function CambiarPinInicialPage() {
             </span>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-6">
             <TextField
               label="Nueva Contraseña o PIN Privado"
               type="password"
@@ -147,9 +144,8 @@ export default function CambiarPinInicialPage() {
             />
 
             {error && (
-              <div className="rounded-xl bg-red-50 p-4 text-sm text-red-600 border border-red-100 flex items-start space-x-2">
-                <span className="shrink-0 text-red-500 font-bold">•</span>
-                <span>{error}</span>
+              <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
+                {error}
               </div>
             )}
 
@@ -164,9 +160,6 @@ export default function CambiarPinInicialPage() {
           </form>
         </div>
       </div>
-
-      {/* Spacer inferior PC */}
-      <div className="flex-1" />
 
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400">

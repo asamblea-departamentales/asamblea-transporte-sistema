@@ -100,32 +100,29 @@ export default function ActivarCuentaPage() {
   }
 
   return (
-    <div className="min-h-screen min-h-[100dvh] bg-slate-50/60 sm:bg-slate-100/70 flex flex-col justify-between">
+    <div className="min-h-screen min-h-[100dvh] bg-white flex flex-col justify-between">
       {loading && <GlobalLoading message="Verificando Expediente" />}
 
       {/* Header con botón de regresar */}
-      <div className="pt-6 px-4 sm:px-6 max-w-sm sm:max-w-md w-full mx-auto flex items-center justify-between">
+      <div className="pt-6 px-6 max-w-sm w-full mx-auto flex items-center justify-between">
         <Link
           to="/login"
-          className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition py-1 px-2 rounded-lg hover:bg-slate-200/50"
+          className="inline-flex items-center text-xs font-semibold text-slate-500 hover:text-slate-800 transition"
         >
           <ArrowLeft className="w-4 h-4 mr-1" />
           Volver al Login
         </Link>
       </div>
 
-      {/* Spacer superior PC */}
-      <div className="hidden sm:block flex-1" />
-
       {/* Contenido Principal */}
-      <div className="flex flex-col flex-1 sm:flex-none justify-center items-center px-4 sm:px-6 py-4">
-        <div className="w-full max-w-sm sm:max-w-md bg-white p-6 sm:p-10 sm:rounded-3xl sm:shadow-xl sm:border sm:border-slate-200/80">
+      <div className="flex flex-col flex-1 justify-center items-center px-6 py-4">
+        <div className="w-full max-w-sm">
           {/* Logo */}
-          <div className="flex justify-center mb-6 sm:mb-8">
+          <div className="flex justify-center mb-6">
             <img
               src={logo}
               alt="Asamblea Legislativa"
-              className="h-16 sm:h-20 w-auto object-contain"
+              className="h-16 w-auto object-contain"
             />
           </div>
 
@@ -133,10 +130,10 @@ export default function ActivarCuentaPage() {
             /* PASO 1: Formulario de Solicitud */
             <>
               <div className="text-center mb-6">
-                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-3 shadow-sm border border-blue-100">
+                <span className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-blue-50 text-blue-600 mb-3">
                   <UserCheck className="w-6 h-6" />
                 </span>
-                <h1 className="text-2xl sm:text-3xl font-bold text-[#1a1f36] mb-1">
+                <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
                   Activar mi Cuenta
                 </h1>
                 <p className="text-sm text-slate-500">
@@ -184,12 +181,12 @@ export default function ActivarCuentaPage() {
           ) : (
             /* PASO 2: Confirmación con PIN Temporal */
             <div className="text-center space-y-6">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 mb-1 shadow-sm border border-emerald-100">
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-emerald-50 text-emerald-600 mb-1">
                 <ShieldCheck className="w-8 h-8" />
               </div>
 
               <div>
-                <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                <h2 className="text-xl font-bold text-slate-800">
                   ¡Hola, {resultado.nombre}!
                 </h2>
                 <p className="text-sm text-slate-500 mt-1">
@@ -199,15 +196,15 @@ export default function ActivarCuentaPage() {
               </div>
 
               {/* Tarjeta con PIN de 6 dígitos */}
-              <div className="bg-slate-50/80 border-2 border-dashed border-slate-300 rounded-2xl p-6 relative">
+              <div className="bg-slate-50 border-2 border-dashed border-slate-300 rounded-2xl p-6 relative">
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
                   PIN Temporal de Acceso
                 </span>
-                <div className="text-3xl sm:text-4xl font-mono font-extrabold tracking-[0.3em] text-[#1a1f36] my-2 select-all">
+                <div className="text-3xl font-mono font-extrabold tracking-[0.3em] text-[#1a1f36] my-2 select-all">
                   {resultado.pin_temporal}
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  Usuario de acceso: <span className="font-bold text-slate-700">{resultado.username}</span>
+                <p className="text-xs text-slate-400 mt-2">
+                  Usuario: <span className="font-semibold text-slate-600">{resultado.username}</span>
                 </p>
               </div>
 
@@ -215,7 +212,7 @@ export default function ActivarCuentaPage() {
                 <button
                   type="button"
                   onClick={handleCopiarPin}
-                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 transition shadow-sm active:scale-[0.99]"
+                  className="w-full flex items-center justify-center space-x-2 py-3 px-4 rounded-xl border border-slate-300 bg-white text-slate-700 font-semibold text-sm hover:bg-slate-50 transition shadow-sm"
                 >
                   {copiado ? (
                     <>
@@ -243,9 +240,6 @@ export default function ActivarCuentaPage() {
         </div>
       </div>
 
-      {/* Spacer inferior PC */}
-      <div className="flex-1" />
-
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400">
         © {new Date().getFullYear()} Asamblea Legislativa de El Salvador
@@ -253,4 +247,5 @@ export default function ActivarCuentaPage() {
     </div>
   );
 }
+
 
