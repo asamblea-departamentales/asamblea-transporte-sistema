@@ -15,13 +15,17 @@ class MotoristaAuthController extends Controller
     /**
      * Activar cuenta de motorista.
      *
-     * Valida solo el N° de expediente, genera PIN temporal de 4 dígitos.
+     * Recibe celular + expediente. Solo valida que el expediente exista.
+     * El celular se convierte en el username del sistema.
      */
     public function activarCuenta(Request $request): JsonResponse
     {
         $data = $request->validate([
             'numero_expediente' => ['required', 'string', 'max:50'],
+            'telefono' => ['required', 'string', 'max:20'],
         ]);
+
+        $telefonoLimpio = preg_replace('/\D/', '', $data['telefono']);
 
         $motorista = Motorista::where('numero_empleado', $data['numero_expediente'])->first();
 
@@ -46,13 +50,11 @@ class MotoristaAuthController extends Controller
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
 
-        $user = $motorista->user;
-
-        if (! $user) {
-            $username = "motorista_{$motorista->numero_empleado}";
+        if (! $motorista->user_id) {
+            $username = $telefonoLimpio;
             $counter = 1;
             while (User::where('username', $username)->exists()) {
-                $username = "motorista_{$motorista->numero_empleado}_{$counter}";
+                $username = "{$telefonoLimpio}{$counter}";
                 $counter++;
             }
 
@@ -68,14 +70,37 @@ class MotoristaAuthController extends Controller
 
             $user->assignRole('motorista');
 
-            $motorista->update(['user_id' => $user->id]);
-        }
+            $motorista->update([
+                'user_id' => $user->id,
+                'telefono' => $motorista->telefono ?? $data['telefono'],
+            ]);
+        } else {
+            $user = $motorista->user;
 
-        if (! $user->debe_cambiar_password) {
-            return response()->json([
-                'status' => false,
-                'message' => 'Esta cuenta ya fue activada. Por favor inicia sesión directamente.',
-            ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            if (! $user) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Error interno: la cuenta de usuario no fue encontrada. Contacta al administrador.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            if (! $user->debe_cambiar_password) {
+                return response()->json([
+                    'status' => false,
+                    'message' => 'Esta cuenta ya fue activada. Por favor inicia sesión directamente.',
+                ], Response::HTTP_UNPROCESSABLE_ENTITY);
+            }
+
+            $usernameActual = $user->username;
+            if ($usernameActual !== $telefonoLimpio) {
+                $counter = 1;
+                $usernameFinal = $telefonoLimpio;
+                while (User::where('username', $usernameFinal)->where('id', '!=', $user->id)->exists()) {
+                    $usernameFinal = "{$telefonoLimpio}{$counter}";
+                    $counter++;
+                }
+                $user->update(['username' => $usernameFinal]);
+            }
         }
 
         $pin = str_pad(random_int(1000, 9999), 4, '0', STR_PAD_LEFT);

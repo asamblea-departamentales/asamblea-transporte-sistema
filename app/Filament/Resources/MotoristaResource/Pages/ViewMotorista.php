@@ -30,10 +30,12 @@ class ViewMotorista extends ViewRecord
                     $user = $record->user;
 
                     if (! $user) {
-                        $username = "motorista_{$record->numero_empleado}";
+                        $telefonoLimpio = preg_replace('/\D/', '', $record->telefono ?? '');
+
+                        $username = $telefonoLimpio ?: "motorista_{$record->numero_empleado}";
                         $counter = 1;
                         while (User::where('username', $username)->exists()) {
-                            $username = "motorista_{$record->numero_empleado}_{$counter}";
+                            $username = ($telefonoLimpio ?: "motorista_{$record->numero_empleado}").$counter;
                             $counter++;
                         }
 
