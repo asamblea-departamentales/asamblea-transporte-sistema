@@ -8,8 +8,14 @@ export interface AppEnvironmentConfig {
   apiBaseUrl: string;
 }
 
-const rawEnv = (import.meta.env.VITE_APP_ENV as EnvironmentMode) || 'local';
-const rawApiUrl = import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000';
+const rawEnv = (import.meta.env.VITE_APP_ENV as EnvironmentMode) || (import.meta.env.PROD ? 'produccion' : 'local');
+
+// Si VITE_API_BASE_URL tiene un valor válido, lo usamos.
+// En entorno local (DEV), si no se especificó nada, usamos 'http://127.0.0.1:8000'.
+// En producción (PROD), el fallback predeterminado es la URL del backend en Cloudways.
+const rawApiUrl = import.meta.env.VITE_API_BASE_URL && import.meta.env.VITE_API_BASE_URL.trim() !== ''
+  ? import.meta.env.VITE_API_BASE_URL
+  : (import.meta.env.DEV ? 'http://127.0.0.1:8000' : 'https://phplaravel-1581457-6197806.cloudwaysapps.com');
 
 export const ENV: AppEnvironmentConfig = {
   mode: rawEnv,

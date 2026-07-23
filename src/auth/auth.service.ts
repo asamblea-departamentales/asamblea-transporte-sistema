@@ -57,13 +57,28 @@ export async function activarCuentaRequest(
 
 export async function loginRequest(payload: LoginPayload): Promise<LoginResult> {
   const { data } = await api.post("/api/auth/login", payload);
-  sessionStorage.setItem("auth_token", data.token);
-  const debeCambiar = Boolean(data.debe_cambiar_password);
+  
+  if (data && (data.success === false || data.status === 'error' || data.error)) {
+    const msg = data.message || data.error || 'Credenciales inválidas.';
+    throw new Error(msg);
+  }
+
+  const resPayload = data?.data && typeof data.data === 'object' ? data.data : data;
+  const user = resPayload?.user || data?.user || null;
+  const token = resPayload?.token || resPayload?.access_token || data?.token || data?.access_token || '';
+
+  if (!user || !token) {
+    const msg = data?.message || 'Credenciales inválidas o respuesta del servidor incompleta.';
+    throw new Error(msg);
+  }
+
+  sessionStorage.setItem("auth_token", token);
+  const debeCambiar = Boolean(resPayload?.debe_cambiar_password ?? data?.debe_cambiar_password);
   sessionStorage.setItem("debe_cambiar_password", String(debeCambiar));
   
   return {
-    user: data.user as AuthUser,
-    token: data.token,
+    user: user as AuthUser,
+    token: token,
     debe_cambiar_password: debeCambiar,
     message: data.message,
   };
@@ -82,7 +97,11 @@ export async function cambiarPinInicialRequest(
 
 export async function meRequest(): Promise<AuthUser> {
   const { data } = await api.get("/api/auth/me");
-  return data as AuthUser;
+  const user = data?.data?.user || data?.data || data?.user || data;
+  if (!user || typeof user !== 'object') {
+    throw new Error('No se pudo obtener el perfil del usuario');
+  }
+  return user as AuthUser;
 }
 
 export async function logoutRequest(): Promise<void> {
