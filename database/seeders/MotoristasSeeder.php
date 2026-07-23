@@ -12,108 +12,50 @@ class MotoristasSeeder extends Seeder
 {
     public function run(): void
     {
-        $rows = [
-
-            ['Carlos Ernesto López Martínez', 2, 1078, '0210-210957-003-3', null, '7797-1102', '2020-09-30', 1],
-            ['José Antonio Pérez González', 2, 1079, '0811-101257-001-6', null, '7749-7107', '2021-12-31', 0],
-            ['Miguel Ángel Ramos Flores', 2, 1080, '1001-110909-650-0', null, '7496-4259', '2019-09-30', 0],
-            ['Roberto Carlos Mejía Hernández', 2, 1081, '0103-110264-001-5', null, '7874-8681', '2019-02-28', 1],
-            ['Juan Pablo Castillo Rivera', 3, 1082, '0821-270662-002-6', null, '7807-8657', '2019-06-30', 1],
-            ['Eduardo José Morales Cruz', 3, 1083, '0814-010468-101-3', null, '7981-9391', '2016-04-13', 0],
-            ['Héctor Manuel Gutiérrez Díaz', 2, 1084, '0419-210366-101-4', null, '7870-9967', '2018-03-31', 1],
-            ['Oscar René Fuentes Aguilar', 3, 1085, '0407-260672-101-9', null, '6009-8954', '2019-06-30', 0],
-            ['Luis Alberto Vásquez Pineda', 2, 1086, '1006-081156-001-9', null, '7295-5141', '2020-11-30', 0],
-
+        $motoristas = [
+            ['nombre' => 'ALFREDO LOPEZ LOPEZ', 'expediente' => 3500, 'telefono' => '7000-0001'],
+            ['nombre' => 'ANGEL ORLANDO ZAPATA RAMIREZ', 'expediente' => 8766, 'telefono' => '7000-0002'],
+            ['nombre' => 'BRANDON ADONAY GOMEZ RODAS', 'expediente' => 7870, 'telefono' => '7000-0003'],
+            ['nombre' => 'CARLOS ERNESTO VILLACORTA PANAMEÑO', 'expediente' => 187, 'telefono' => '7000-0004'],
+            ['nombre' => 'CARLOS ROBERTO ROSALES PEREZ', 'expediente' => 8762, 'telefono' => '7000-0005'],
+            ['nombre' => 'JAIME EDGARDO CARRANZA DIMAS', 'expediente' => 1187, 'telefono' => '7000-0006'],
+            ['nombre' => 'JORGE HUMBERTO INTERIANO AGUILAR', 'expediente' => 481, 'telefono' => '7000-0007'],
+            ['nombre' => 'JOSE ANTONIO BATRES JAIMES', 'expediente' => 7765, 'telefono' => '7000-0008'],
+            ['nombre' => 'LUIS ANTONIO RECINOS MONGE', 'expediente' => 209, 'telefono' => '7000-0009'],
+            ['nombre' => 'LUIS OSMIN TAMACAS HUEZO', 'expediente' => 1544, 'telefono' => '7000-0010'],
+            ['nombre' => 'MARVIN ISAAC SOLIS BENAVIDES', 'expediente' => 6952, 'telefono' => '7000-0011'],
+            ['nombre' => 'MIGUEL ANGEL MENJIVAR', 'expediente' => 880, 'telefono' => '7000-0012'],
+            ['nombre' => 'NEFTALY AMILCAR RAMIREZ ORELLANA', 'expediente' => 7764, 'telefono' => '7000-0013'],
+            ['nombre' => 'NELSON EDGARDO COLORADO', 'expediente' => 2793, 'telefono' => '7000-0014'],
+            ['nombre' => 'OSCAR ERNESTO TOBAR ARGUIETA', 'expediente' => 4344, 'telefono' => '7000-0015'],
+            ['nombre' => 'OSCAR RENE RIVERA REYES', 'expediente' => 8767, 'telefono' => '7000-0016'],
+            ['nombre' => 'RICARDO HERRERA MERCADO', 'expediente' => 4369, 'telefono' => '7000-0017'],
+            ['nombre' => 'ROBERTO ALEXANDER RIVERA VILLEDA', 'expediente' => 7156, 'telefono' => '7000-0018'],
+            ['nombre' => 'ROBERTO CARLOS SARAVIA', 'expediente' => 7158, 'telefono' => '7000-0019'],
+            ['nombre' => 'RUBEN ALCIDES POSADA LEMUS', 'expediente' => 4699, 'telefono' => '7000-0020'],
+            ['nombre' => 'TOMAS VARELA ALFARO', 'expediente' => 5589, 'telefono' => '7000-0021'],
+            ['nombre' => 'VICTOR EMILIO ALVAREZ COLINDRES', 'expediente' => 8014, 'telefono' => '7000-0022'],
         ];
 
-        foreach ($rows as $r) {
+        $tipoLicencia = TipoLicencia::firstOrCreate(
+            ['id' => 3],
+            ['nombre' => 'LIVIANA', 'activo' => true]
+        );
 
-            [
-                $nombre,
-                $tipoLicenciaId,
-                $numeroEmpleado,
-                $numeroLicencia,
-                $correo,
-                $telefono,
-                $fechaVencimiento,
-                $activo
-            ] = $r;
+        foreach ($motoristas as $m) {
+            $telefonoLimpio = preg_replace('/\D/', '', $m['telefono']);
 
-            /*
-            |--------------------------------------------------------------------------
-            | Tipo licencia
-            |--------------------------------------------------------------------------
-            */
-
-            $tipo = TipoLicencia::firstOrCreate(
-                ['id' => $tipoLicenciaId],
-                [
-                    'nombre' => "TLC {$tipoLicenciaId}",
-                    'activo' => true,
-                ]
-            );
-
-            /*
-            |--------------------------------------------------------------------------
-            | Primer nombre + primer apellido
-            |--------------------------------------------------------------------------
-            */
-
-            $parts = array_values(array_filter(explode(' ', trim($nombre))));
-
-            $firstName = $parts[0] ?? '';
-            $lastName = $parts[1] ?? '';
-
-            $shortName = trim("{$firstName} {$lastName}");
-
-            /*
-            |--------------------------------------------------------------------------
-            | Username / correo limpio
-            |--------------------------------------------------------------------------
-            */
-
-            $baseIdentity = Str::of($shortName)
-                ->ascii()
-                ->lower()
-                ->slug('.');
-
-            /*
-            |--------------------------------------------------------------------------
-            | Correo fallback
-            |--------------------------------------------------------------------------
-            */
-
-            if (empty($correo)) {
-                $correo = "{$baseIdentity}@asamblea.gob.sv";
-            }
-
-            /*
-            |--------------------------------------------------------------------------
-            | Username = teléfono normalizado (solo dígitos)
-            |--------------------------------------------------------------------------
-            */
-
-            $telefonoLimpio = preg_replace('/\D/', '', $telefono ?? '');
-
-            $username = $telefonoLimpio ?: $baseIdentity;
-
-            /*
-            |--------------------------------------------------------------------------
-            | Evitar usernames duplicados
-            |--------------------------------------------------------------------------
-            */
-
+            $username = $telefonoLimpio;
             $counter = 1;
-
-            while (
-                User::where('username', $username)->exists()
-            ) {
+            while (User::where('username', $username)->exists()) {
                 $username = "{$telefonoLimpio}{$counter}";
                 $counter++;
             }
 
+            $correo = strtolower(Str::slug($m['nombre'], '.')).'@asamblea.gob.sv';
+
             $user = User::create([
-                'name' => $nombre,
+                'name' => $m['nombre'],
                 'username' => $username,
                 'email' => $correo,
                 'password' => bcrypt('password'),
@@ -122,42 +64,23 @@ class MotoristasSeeder extends Seeder
 
             $user->assignRole('motorista');
 
-            /*
-            |--------------------------------------------------------------------------
-            | Crear o actualizar motorista
-            |--------------------------------------------------------------------------
-            */
-
             Motorista::updateOrCreate(
-
-                [
-                    'numero_empleado' => $numeroEmpleado,
-                ],
-
+                ['numero_empleado' => $m['expediente']],
                 [
                     'user_id' => $user->id,
-
-                    'tipo_licencia_id' => $tipo->id,
-
-                    'nombre' => $nombre,
-
-                    'dui' => $numeroLicencia,
-
-                    'numero_licencia' => $numeroLicencia,
-
-                    'telefono' => $telefono ?? '0000-0000',
-
+                    'tipo_licencia_id' => $tipoLicencia->id,
+                    'nombre' => $m['nombre'],
+                    'dui' => null,
+                    'numero_licencia' => null,
+                    'telefono' => $m['telefono'],
                     'correo' => $correo,
-
                     'radio' => null,
-
-                    'fecha_vencimiento_licencia' => $fechaVencimiento,
-
-                    'activo' => (bool) $activo,
+                    'fecha_vencimiento_licencia' => null,
+                    'activo' => true,
                 ]
             );
         }
 
-        $this->command->info('MotoristasSeeder ejecutado correctamente.');
+        $this->command->info('MotoristasSeeder ejecutado correctamente. 22 motoristas creados.');
     }
 }
