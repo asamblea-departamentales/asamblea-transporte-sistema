@@ -23,8 +23,8 @@ export default function CambiarPinInicialPage() {
 
     setError(null);
 
-    if (password.length < 4) {
-      setError("El nuevo PIN debe tener al menos 4 dígitos.");
+    if (password.length !== 4) {
+      setError("El nuevo PIN debe tener exactamente 4 dígitos.");
       return;
     }
 
@@ -122,6 +122,7 @@ export default function CambiarPinInicialPage() {
               onChange={(val) => setPassword(val.replace(/\D/g, ''))}
               autoComplete="new-password"
               inputMode="numeric"
+              maxLength={4}
               name="password"
             />
 
@@ -133,6 +134,7 @@ export default function CambiarPinInicialPage() {
               onChange={(val) => setPasswordConfirm(val.replace(/\D/g, ''))}
               autoComplete="new-password"
               inputMode="numeric"
+              maxLength={4}
               name="password_confirmation"
             />
 

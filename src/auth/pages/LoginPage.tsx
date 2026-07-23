@@ -115,11 +115,12 @@ export default function LoginPage() {
             <TextField
               label="PIN de acceso"
               type="password"
-              placeholder="••••••••"
+              placeholder="••••"
               value={password}
               onChange={(val) => setPassword(val.replace(/\D/g, ''))}
               autoComplete="current-password"
               inputMode="numeric"
+              maxLength={4}
               name="password"
             />
 
