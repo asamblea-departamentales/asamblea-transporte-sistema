@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import TextField from "../../shared/components/ui/TextField";
 import Button from "../../shared/components/ui/Button";
 import { loginRequest } from "../auth.service";
@@ -8,13 +8,21 @@ import logo from "../../shared/assets/asamble.png";
 import { GlobalLoading } from "../../shared/components/GlobalLoading";
 
 export default function LoginPage() {
-  const { setUser } = useAuth();
+  const { setUser, setDebeCambiarPassword } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const usernameParam = searchParams.get("username");
+    if (usernameParam) {
+      setUsername(usernameParam);
+    }
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -25,20 +33,29 @@ export default function LoginPage() {
     
     // Limpieza preventiva: asegurar que no haya rastro de sesiones previas en este navegador
     sessionStorage.removeItem("auth_token");
+    sessionStorage.removeItem("debe_cambiar_password");
 
     try {
-      const user = await loginRequest({ username, password });
+      const loginResult = await loginRequest({ username: username.trim(), password });
+      const user = loginResult.user;
       
       // Validar que el usuario tenga el rol de motorista
-      const esMorista = user.roles?.includes("motorista");
-      if (!esMorista) {
+      const esMotorista = user.roles?.includes("motorista");
+      if (!esMotorista) {
         sessionStorage.removeItem("auth_token");
+        sessionStorage.removeItem("debe_cambiar_password");
         setError("Acceso denegado. Esta aplicación es exclusiva para motoristas.");
         return;
       }
 
       setUser(user);
-      navigate("/dashboard", { replace: true });
+      setDebeCambiarPassword(loginResult.debe_cambiar_password);
+
+      if (loginResult.debe_cambiar_password) {
+        navigate("/cambiar-pin", { replace: true });
+      } else {
+        navigate("/dashboard", { replace: true });
+      }
     } catch (err: unknown) {
       if (err && typeof err === "object" && "response" in err) {
         const response = (err as { response?: { status?: number, data?: { message?: string } } }).response;
@@ -79,15 +96,15 @@ export default function LoginPage() {
           <h1 className="text-center text-2xl font-bold text-[#1a1f36] mb-1">
             Bienvenido
           </h1>
-          <p className="text-center text-sm text-slate-500 mb-10">
+          <p className="text-center text-sm text-slate-500 mb-8">
             Ingresa tus credenciales institucionales
           </p>
 
           {/* Formulario */}
           <form onSubmit={handleSubmit} className="space-y-6">
             <TextField
-              label="Usuario"
-              placeholder="motorista.juan"
+              label="Número Celular o Usuario"
+              placeholder="77971102"
               value={username}
               onChange={setUsername}
               autoComplete="username"
@@ -95,7 +112,7 @@ export default function LoginPage() {
             />
 
             <TextField
-              label="Contraseña"
+              label="Contraseña o PIN"
               type="password"
               placeholder="••••••••"
               value={password}
@@ -119,6 +136,19 @@ export default function LoginPage() {
               INICIAR SESIÓN
             </Button>
           </form>
+
+          {/* Enlace para primera vez / activación */}
+          <div className="mt-8 text-center">
+            <p className="text-xs text-slate-500">
+              ¿Es la primera vez que ingresas a la app?
+            </p>
+            <Link
+              to="/activar-cuenta"
+              className="mt-1 inline-block text-sm font-bold text-[#1a1f36] hover:underline"
+            >
+              Activar mi cuenta aquí
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -130,3 +160,4 @@ export default function LoginPage() {
     </div>
   );
 }
+

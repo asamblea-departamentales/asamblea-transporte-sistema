@@ -1,11 +1,10 @@
 import axios from "axios";
+import { ENV } from "../config/environment";
 
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const BASE_URL = ENV.apiBaseUrl;
 
-if (!BASE_URL) {
-  if (import.meta.env.PROD) {
-    throw new Error("❌ Falta VITE_API_BASE_URL en el entorno de producción");
-  }
+if (!BASE_URL && ENV.isProduccion) {
+  throw new Error("❌ Falta VITE_API_BASE_URL en el entorno de producción");
 }
 
 /**

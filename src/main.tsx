@@ -3,13 +3,21 @@ import ReactDOM from "react-dom/client";
 import "./index.css";
 import App from "./App";
 import { AuthProvider } from "./auth/AuthContext";
+import { ENV } from "./shared/config/environment";
 
-if (import.meta.env.PROD) {
+if (ENV.isProduccion) {
   console.log = () => {};
   console.debug = () => {};
   console.info = () => {};
   console.warn = () => {};
   console.error = () => {};
+} else {
+  console.info(
+    `%c 🚀 APP MOTORISTA - ASAMBLEA %c Modo: ${ENV.mode.toUpperCase()} %c API: ${ENV.apiBaseUrl} `,
+    'background: #1e293b; color: #38bdf8; font-weight: bold; padding: 4px; border-radius: 4px 0 0 4px;',
+    'background: #0284c7; color: #ffffff; font-weight: bold; padding: 4px;',
+    'background: #334155; color: #94a3b8; padding: 4px; border-radius: 0 4px 4px 0;'
+  );
 }
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
