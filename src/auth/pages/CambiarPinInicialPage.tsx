@@ -37,8 +37,8 @@ export default function CambiarPinInicialPage() {
 
     try {
       const res = await cambiarPinInicialRequest({
-        password,
-        password_confirmation: passwordConfirm,
+        pin: password,
+        pin_confirmation: passwordConfirm,
       });
 
       if (res.status) {
@@ -123,7 +123,7 @@ export default function CambiarPinInicialPage() {
               autoComplete="new-password"
               inputMode="numeric"
               maxLength={4}
-              name="password"
+              name="pin"
             />
 
             <TextField
@@ -135,7 +135,7 @@ export default function CambiarPinInicialPage() {
               autoComplete="new-password"
               inputMode="numeric"
               maxLength={4}
-              name="password_confirmation"
+              name="pin_confirmation"
             />
 
             {error && (

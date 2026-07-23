@@ -36,8 +36,8 @@ export type ActivarCuentaResponse = {
 };
 
 export type CambiarPinPayload = {
-  password: string;
-  password_confirmation: string;
+  pin: string;
+  pin_confirmation: string;
 };
 
 export type CambiarPinResponse = {
