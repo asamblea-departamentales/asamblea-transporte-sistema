@@ -13,7 +13,6 @@ use Filament\Infolists\Infolist;
 use Filament\Notifications\Notification;
 use Filament\Resources\Pages\ViewRecord;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class ViewMotorista extends ViewRecord
 {
@@ -38,7 +37,7 @@ class ViewMotorista extends ViewRecord
                             $counter++;
                         }
 
-                        $correo = $record->correo ?? strtolower(Str::slug($record->nombre, '.')).'@asamblea.gob.sv';
+                        $correo = $record->correo ?? "motorista_{$record->numero_empleado}@asamblea.gob.sv";
 
                         $user = User::create([
                             'name' => $record->nombre,

@@ -6,7 +6,6 @@ use App\Models\Motorista;
 use App\Models\TipoLicencia;
 use App\Models\User;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Str;
 
 class MotoristasSeeder extends Seeder
 {
@@ -43,24 +42,21 @@ class MotoristasSeeder extends Seeder
         );
 
         foreach ($motoristas as $m) {
-            $correo = strtolower(Str::slug($m['nombre'], '.')).'@asamblea.gob.sv';
+            $correo = "motorista_{$m['expediente']}@asamblea.gob.sv";
 
-            $username = "motorista_{$m['expediente']}";
-            $counter = 1;
-            while (User::where('username', $username)->exists()) {
-                $username = "motorista_{$m['expediente']}_{$counter}";
-                $counter++;
+            $user = User::updateOrCreate(
+                ['email' => $correo],
+                [
+                    'name' => $m['nombre'],
+                    'username' => "motorista_{$m['expediente']}",
+                    'password' => bcrypt('password'),
+                    'debe_cambiar_password' => true,
+                ]
+            );
+
+            if (! $user->hasRole('motorista')) {
+                $user->assignRole('motorista');
             }
-
-            $user = User::create([
-                'name' => $m['nombre'],
-                'username' => $username,
-                'email' => $correo,
-                'password' => bcrypt('password'),
-                'debe_cambiar_password' => true,
-            ]);
-
-            $user->assignRole('motorista');
 
             Motorista::updateOrCreate(
                 ['numero_empleado' => $m['expediente']],

@@ -9,7 +9,6 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class MotoristaAuthController extends Controller
 {
@@ -57,7 +56,7 @@ class MotoristaAuthController extends Controller
                 $counter++;
             }
 
-            $correo = $motorista->correo ?? strtolower(Str::slug($motorista->nombre, '.')).'@asamblea.gob.sv';
+            $correo = $motorista->correo ?? "motorista_{$motorista->numero_empleado}@asamblea.gob.sv";
 
             $user = User::create([
                 'name' => $motorista->nombre,
