@@ -121,7 +121,7 @@ export default function ActivarCuentaPage() {
             /* PASO 1: Formulario de Solicitud */
             <>
               <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-[#1a1f36] mb-1">
+                <h1 className="text-2xl font-bold text-slate-900 mb-1">
                   Activar mi Cuenta
                 </h1>
                 <p className="text-sm text-slate-500">
@@ -173,7 +173,7 @@ export default function ActivarCuentaPage() {
                 </p>
                 <Link
                   to="/login"
-                  className="inline-flex items-center text-sm font-bold text-[#1a1f36] hover:underline"
+                  className="inline-flex items-center text-sm font-bold text-slate-900 hover:underline"
                 >
                   <ArrowLeft className="w-4 h-4 mr-1" />
                   Volver al Login
@@ -198,7 +198,7 @@ export default function ActivarCuentaPage() {
                 <span className="text-xs font-semibold uppercase tracking-wider text-slate-400 block mb-2">
                   PIN Temporal de Acceso
                 </span>
-                <div className="text-3xl font-mono font-extrabold tracking-[0.3em] text-[#1a1f36] my-2 select-all">
+                <div className="text-3xl font-mono font-extrabold tracking-[0.3em] text-slate-900 my-2 select-all">
                   {resultado.pin_temporal}
                 </div>
                 <p className="text-xs text-slate-400 mt-2">
