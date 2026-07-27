@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\HealthController;
 use App\Http\Controllers\Api\MotoristaAuthController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
+use App\Http\Controllers\Api\MotoristaNotificacionController;
 use App\Http\Controllers\Api\MotoristaViajeController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
@@ -131,6 +132,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('me/viajes/{solicitud}/llegada', [MotoristaViajeController::class, 'llegadaDestino']);
             Route::post('me/viajes/{solicitud}/retorno', [MotoristaViajeController::class, 'iniciarRetorno']);
             Route::post('me/viajes/{solicitud}/finalizar', [MotoristaViajeController::class, 'finalizar']);
+            Route::get('me/notificaciones', [MotoristaNotificacionController::class, 'index']);
+            Route::put('me/notificaciones/{notification}/leer', [MotoristaNotificacionController::class, 'marcarLeer']);
+            Route::put('me/notificaciones/marcar-todas', [MotoristaNotificacionController::class, 'marcarTodasLeer']);
         });
 
     // ── RUTAS ADMINISTRATIVAS (jefe/operativo pueden gestionar motoristas) ─

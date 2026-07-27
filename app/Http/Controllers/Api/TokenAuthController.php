@@ -73,6 +73,7 @@ class TokenAuthController extends Controller
             'message' => 'Login exitoso',
             'token' => $token,
             'debe_cambiar_password' => (bool) $user->debe_cambiar_password,
+            'motorista_id' => $user->motorista?->id,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
@@ -127,6 +128,7 @@ class TokenAuthController extends Controller
             'name' => $user->name,
             'email' => $user->email,
             'username' => $user->username,
+            'motorista_id' => $user->motorista?->id,
             'roles' => method_exists($user, 'getRoleNames') ? $user->getRoleNames() : [],
             'permissions' => method_exists($user, 'getAllPermissions') ? $user->getAllPermissions()->pluck('name') : [],
             'unidad' => $user->unidadSolicitante ? [

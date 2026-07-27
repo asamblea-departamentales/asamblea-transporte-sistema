@@ -21,6 +21,9 @@ use App\Http\Requests\StoreSolicitudTransporteRequest;
 use App\Models\BitacoraEvento;
 use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
+use App\Notifications\DestinoAgregado;
+use App\Notifications\ViajeObservado;
+use App\Notifications\ViajeReasignado;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -124,6 +127,10 @@ class SolicitudTransporteController extends BaseSolicitudController
         ]);
 
         $this->notificarModificacionRuta($solicitud);
+
+        if ($solicitud->motorista) {
+            $solicitud->motorista->notify(new DestinoAgregado($solicitud, $nombre));
+        }
 
         return response()->json($destino->load('agregadoPor'), 201);
     }
@@ -261,6 +268,10 @@ class SolicitudTransporteController extends BaseSolicitudController
 
         try {
             $solicitud = $this->service->observar($solicitud, Auth::id(), $data['comentario']);
+
+            if ($solicitud->motorista) {
+                $solicitud->motorista->notify(new ViajeObservado($solicitud, $data['comentario']));
+            }
 
             return response()->json([
                 'message' => 'Observación registrada',
@@ -513,6 +524,11 @@ class SolicitudTransporteController extends BaseSolicitudController
                 $data['motorista_id'],
                 $data['motivo_reasignacion'],
             );
+
+            $motorista = $solicitud->motorista;
+            if ($motorista) {
+                $motorista->notify(new ViajeReasignado($solicitud));
+            }
 
             return response()->json([
                 'success' => true,
