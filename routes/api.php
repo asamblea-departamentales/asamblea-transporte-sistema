@@ -32,6 +32,14 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
 
+    // Web Push VAPID — expuestas auth:sanctum (no solo motoristas)
+    Route::get('/me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
+    Route::post('/me/push-subscribe', [PushSubscriptionController::class, 'store']);
+    Route::delete('/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
+    Route::get('/motoristas/me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
+    Route::post('/motoristas/me/push-subscribe', [PushSubscriptionController::class, 'store']);
+    Route::delete('/motoristas/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
+
     // Cambio de PIN inicial (motoristas)
     Route::post('/auth/motorista/cambiar-pin-inicial', [MotoristaAuthController::class, 'cambiarPinInicial']);
 
@@ -141,6 +149,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::put('me/notificaciones/{notification}/leer', [MotoristaNotificacionController::class, 'marcarLeer']);
             Route::put('me/notificaciones/marcar-todas', [MotoristaNotificacionController::class, 'marcarTodasLeer']);
             Route::post('me/push-subscribe', [PushSubscriptionController::class, 'store']);
+            Route::delete('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
             Route::post('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
             Route::get('me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
         });
