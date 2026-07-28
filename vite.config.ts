@@ -22,6 +22,7 @@ export default defineConfig({
       manifest: {
         name: 'Transporte Motorista',
         short_name: 'Motorista',
+        gcm_sender_id: '103953800507',
         description: 'Aplicación para motoristas',
         theme_color: '#0f172a',
         background_color: '#ffffff',
