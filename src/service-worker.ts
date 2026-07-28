@@ -14,7 +14,32 @@ precacheAndRoute(self.__WB_MANIFEST)
 self.skipWaiting()
 clientsClaim()
 
+// ─── MANEJADOR DE EVENTO PUSH VAPID ─────────────────────────────────────────────
+
+self.addEventListener('push', (event) => {
+  let payload: any = {}
+
+  try {
+    payload = event.data ? event.data.json() : {}
+  } catch {
+    payload = { title: 'Notificación de Transporte', body: event.data ? event.data.text() : '' }
+  }
+
+  const title = payload.title || payload.titulo || 'Notificación Sistema de Transporte'
+  const options = {
+    body: payload.body || payload.mensaje || 'Tienes una nueva actualización de tu solicitud.',
+    icon: payload.icon || '/icon-192x192.png',
+    badge: payload.badge || '/icon-192x192.png',
+    data: {
+      url: payload.data?.url || payload.url || '/'
+    }
+  }
+
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
 // ─── MANEJADOR DE CLIC EN NOTIFICACIONES ────────────────────────────────────────
+
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();

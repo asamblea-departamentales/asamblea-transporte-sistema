@@ -7,6 +7,7 @@ import { useNavigate } from "react-router-dom";
 import { reportError } from "../lib/observability";
 import { getRequestDetailPath } from "../lib/requestIdentity";
 import { useNotificationPolling } from "./useNotificationPolling";
+import { subscribeUserToPush } from "../services/push.service";
 
 // ─── Tipos públicos ────────────────────────────────────────────────────────────
 
@@ -170,12 +171,18 @@ export function NotificationProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     localStorage.setItem(NOTIF_KEY, JSON.stringify(notifications.slice(0, 100)));
+    if (Notification.permission === "granted") {
+      subscribeUserToPush();
+    }
   }, [notifications]);
 
   const requestPermission = async () => {
     if (!("Notification" in window)) return;
     const res = await Notification.requestPermission();
     setPermission(res);
+    if (res === "granted") {
+      subscribeUserToPush();
+    }
   };
 
   const showNativeNotification = useCallback(async (n: Notification) => {

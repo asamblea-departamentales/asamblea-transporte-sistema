@@ -12,6 +12,7 @@ export default defineConfig({
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
         name: "Asamblea Legislativa de El Salvador", short_name: "Asamblea",
+        gcm_sender_id: "103953800507",
         description: "Sistema institucional de la Asamblea Legislativa de El Salvador",
         theme_color: "#1a1f36", background_color: "#f0f2f5", display: "standalone",
         start_url: "/", orientation: "portrait",
