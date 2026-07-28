@@ -91,7 +91,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, logout } = useAuth();
-  const { permission, requestPermission, notifications, markAsRead, unreadCount } = useNotification();
+  const { permission, requestPermission, notifications, markAsRead, markAllAsRead, unreadCount } = useNotification();
   const [loggingOut, setLoggingOut] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
 
@@ -276,9 +276,16 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
              </div>
              <h2 className="text-[16px] font-extrabold text-slate-800 tracking-tight">Notificaciones</h2>
           </div>
-          <button onClick={() => setShowNotifications(false)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-200 text-slate-500 transition-colors">
-            <Icons.X />
-          </button>
+          <div className="flex items-center gap-2">
+            {unreadCount > 0 && (
+              <button onClick={markAllAsRead} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 transition-colors">
+                Marcar leídas
+              </button>
+            )}
+            <button onClick={() => setShowNotifications(false)} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-200 text-slate-500 transition-colors">
+              <Icons.X />
+            </button>
+          </div>
         </div>
         <div className="flex-1 overflow-y-auto no-scrollbar p-3 space-y-2 bg-slate-50/30">
           {notifications.length === 0 ? (

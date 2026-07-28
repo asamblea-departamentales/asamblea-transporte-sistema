@@ -4,6 +4,7 @@ export type LoginPayload = { username: string; password: string };
 
 export type AuthUser = {
   id: number | string;
+  motorista_id?: number | string | null;
   name: string;
   email: string;
   username?: string;
@@ -64,7 +65,7 @@ export async function loginRequest(payload: LoginPayload): Promise<LoginResult> 
   }
 
   const resPayload = data?.data && typeof data.data === 'object' ? data.data : data;
-  const user = resPayload?.user || data?.user || null;
+  const user = resPayload?.user || data?.user || (typeof resPayload === 'object' ? resPayload : null);
   const token = resPayload?.token || resPayload?.access_token || data?.token || data?.access_token || '';
 
   if (!user || !token) {
@@ -72,12 +73,19 @@ export async function loginRequest(payload: LoginPayload): Promise<LoginResult> 
     throw new Error(msg);
   }
 
+  // Extraer motorista_id si está en el root del response, resPayload o dentro de user
+  const motoristaId = resPayload?.motorista_id ?? data?.motorista_id ?? user?.motorista_id ?? null;
+  const fullUser: AuthUser = {
+    ...user,
+    motorista_id: motoristaId,
+  };
+
   sessionStorage.setItem("auth_token", token);
   const debeCambiar = Boolean(resPayload?.debe_cambiar_password ?? data?.debe_cambiar_password);
   sessionStorage.setItem("debe_cambiar_password", String(debeCambiar));
   
   return {
-    user: user as AuthUser,
+    user: fullUser,
     token: token,
     debe_cambiar_password: debeCambiar,
     message: data.message,
@@ -97,12 +105,18 @@ export async function cambiarPinInicialRequest(
 
 export async function meRequest(): Promise<AuthUser> {
   const { data } = await api.get("/api/auth/me");
-  const user = data?.data?.user || data?.data || data?.user || data;
-  if (!user || typeof user !== 'object') {
+  const rawUser = data?.data?.user || data?.data || data?.user || data;
+  if (!rawUser || typeof rawUser !== 'object') {
     throw new Error('No se pudo obtener el perfil del usuario');
   }
-  return user as AuthUser;
+
+  const motoristaId = data?.motorista_id ?? data?.data?.motorista_id ?? rawUser?.motorista_id ?? null;
+  return {
+    ...rawUser,
+    motorista_id: motoristaId,
+  } as AuthUser;
 }
+
 
 export async function logoutRequest(): Promise<void> {
   try {

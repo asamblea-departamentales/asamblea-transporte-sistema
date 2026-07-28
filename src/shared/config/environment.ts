@@ -6,6 +6,10 @@ export interface AppEnvironmentConfig {
   isPrueba: boolean;
   isProduccion: boolean;
   apiBaseUrl: string;
+  reverbAppKey: string;
+  reverbHost: string;
+  reverbPort: number;
+  reverbScheme: string;
 }
 
 const rawEnv = (import.meta.env.VITE_APP_ENV as EnvironmentMode) || (import.meta.env.PROD ? 'produccion' : 'local');
@@ -23,4 +27,9 @@ export const ENV: AppEnvironmentConfig = {
   isPrueba: rawEnv === 'prueba',
   isProduccion: rawEnv === 'produccion',
   apiBaseUrl: rawApiUrl.replace(/\/$/, ''),
+  reverbAppKey: import.meta.env.VITE_REVERB_APP_KEY || 'hggzgtp4yx1twnwnqc6u',
+  reverbHost: import.meta.env.VITE_REVERB_HOST || 'localhost',
+  reverbPort: Number(import.meta.env.VITE_REVERB_PORT) || 8080,
+  reverbScheme: import.meta.env.VITE_REVERB_SCHEME || 'http',
 };
+
