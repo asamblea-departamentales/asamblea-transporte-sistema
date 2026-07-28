@@ -15,11 +15,15 @@ export default defineConfig(({ mode }) => {
     plugins: [
       react(),
       VitePWA({
+        strategies: 'injectManifest',
+        srcDir: 'src',
+        filename: 'sw.ts',
         registerType: 'autoUpdate',
         includeAssets: ['logo.png', 'favicon.ico', 'apple-touch-icon.png'],
         manifest: {
           name: 'Asamblea Legislativa - Transporte',
           short_name: 'AsambleaLogística',
+          gcm_sender_id: '103953800507',
           description: 'Sistema de Aprobaciones de Transporte y Combustible',
           theme_color: '#1a1f36',
           background_color: '#1a1f36',

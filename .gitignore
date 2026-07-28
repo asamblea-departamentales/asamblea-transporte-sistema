@@ -23,17 +23,28 @@ dist-ssr
 *.sln
 *.sw?
 
-# Env
+# Env (NUNCA SUBIR A GIT POR SEGURIDAD)
 .env
+.env.*
 .env.local
+.env.development
 .env.development.local
-.env.test.local
+.env.staging
+.env.production
 .env.production.local
+.env.test.local
+!.env.example
 
 # Typescript cache
 *.tsbuildinfo
 
-# Tool artifacts
+# Tool artifacts y datos de agentes (NUNCA SUBIR A GIT)
+.agents/
+.gemini/
 .codebase-memory/
 eslint_output.json
+lint_output.txt
+ts_errors.txt
+typescript_errors.txt
 coverage/
+
