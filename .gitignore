@@ -22,12 +22,15 @@ dist-ssr
 *.sln
 *.sw?
 
-# Entornos (NUNCA SUBIR A GIT)
+# Entornos (NUNCA SUBIR A GIT POR SEGURIDAD)
 .env
 .env.*
+.env.local
 .env.development
+.env.staging
 .env.production
 !.env.example
+
 
 # Archivos temporales generados
 typescript_errors.txt

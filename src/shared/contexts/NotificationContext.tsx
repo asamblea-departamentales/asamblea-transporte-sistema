@@ -8,6 +8,7 @@ import {
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
 } from '../services/notification.service';
+import { subscribeUserToPush } from '../services/push.service';
 
 export interface AppNotification {
   id: string;
@@ -122,12 +123,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       
       if (perm === 'granted') {
         toast.success('¡Notificaciones activadas con éxito!');
-        
-        if ('serviceWorker' in navigator) {
-          navigator.serviceWorker.ready.then((registration) => {
-            console.log('SW Ready. Podríamos suscribir usando PushManager:', registration.pushManager);
-          });
-        }
+        // Activar la suscripción Web Push VAPID inmediatamente
+        subscribeUserToPush();
       } else {
         toast.warning('Notificaciones bloqueadas o denegadas.');
       }
@@ -182,10 +179,10 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [markAsRead, navigate]);
 
-  // Cargar notificaciones REST y suscribirse a Echo WebSocket
+  // Cargar notificaciones REST, suscribir a Web Push y fallback Echo WebSocket
   useEffect(() => {
+    if (!user) return;
     const motoristaId = user?.motorista_id || (user as any)?.id;
-    if (!user || !motoristaId) return;
 
     // 1. Obtener notificaciones previas desde la API REST
     getNotificaciones(1, 20)
@@ -209,21 +206,30 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         console.warn('No se pudo cargar el historial de notificaciones:', err);
       });
 
-    // 2. Suscribirse al canal privado WebSocket de Laravel Echo
-    const channelName = `motorista.${motoristaId}`;
-    try {
-      const echo = getEcho();
-      echo.private(channelName).listen('.notification.received', handleIncomingNotification);
-    } catch (err) {
-      console.error('Error al suscribirse al canal privado de Echo:', err);
+    // 2. Intentar registrar suscripción Web Push VAPID si los permisos están dados
+    if (Notification.permission === 'granted') {
+      subscribeUserToPush();
+    }
+
+    // 3. Mantener Echo como canal secundario durante la migración
+    if (motoristaId) {
+      const channelName = `motorista.${motoristaId}`;
+      try {
+        const echo = getEcho();
+        echo.private(channelName).listen('.notification.received', handleIncomingNotification);
+      } catch (err) {
+        console.warn('Echo desacoplado o no disponible:', err);
+      }
     }
 
     return () => {
-      try {
-        const echo = getEcho();
-        echo.leave(`motorista.${motoristaId}`);
-        disconnectEcho();
-      } catch {}
+      if (motoristaId) {
+        try {
+          const echo = getEcho();
+          echo.leave(`motorista.${motoristaId}`);
+          disconnectEcho();
+        } catch {}
+      }
     };
   }, [user, handleIncomingNotification]);
 
@@ -240,4 +246,5 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     </NotificationContext.Provider>
   );
 };
+
 
