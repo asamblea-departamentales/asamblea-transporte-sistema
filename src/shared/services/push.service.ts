@@ -44,7 +44,23 @@ export async function subscribeUserToPush(): Promise<boolean> {
   }
 
   try {
-    const registration = await navigator.serviceWorker.ready;
+    let registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<ServiceWorkerRegistration | undefined>((resolve) =>
+        setTimeout(async () => {
+          try {
+            const reg = await navigator.serviceWorker.register('/sw.js');
+            resolve(reg);
+          } catch {
+            resolve(undefined);
+          }
+        }, 1000)
+      ),
+    ]);
+
+    if (!registration) {
+      registration = await navigator.serviceWorker.ready;
+    }
     const publicKey = await getVapidPublicKey();
     const convertedKey = urlBase64ToUint8Array(publicKey);
 
