@@ -211,12 +211,12 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       subscribeUserToPush();
     }
 
-    // 3. Mantener Echo como canal secundario durante la migración
+    // 3. Mantener Echo como canal secundario durante la migración (si está disponible)
     if (motoristaId) {
       const channelName = `motorista.${motoristaId}`;
       try {
         const echo = getEcho();
-        echo.private(channelName).listen('.notification.received', handleIncomingNotification);
+        echo?.private(channelName).listen('.notification.received', handleIncomingNotification);
       } catch (err) {
         console.warn('Echo desacoplado o no disponible:', err);
       }
@@ -226,7 +226,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       if (motoristaId) {
         try {
           const echo = getEcho();
-          echo.leave(`motorista.${motoristaId}`);
+          echo?.leave(`motorista.${motoristaId}`);
           disconnectEcho();
         } catch {}
       }

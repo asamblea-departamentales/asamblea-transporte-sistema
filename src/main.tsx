@@ -9,8 +9,6 @@ if (ENV.isProduccion) {
   console.log = () => {};
   console.debug = () => {};
   console.info = () => {};
-  console.warn = () => {};
-  console.error = () => {};
 } else {
   console.info(
     `%c 🚀 APP MOTORISTA - ASAMBLEA %c Modo: ${ENV.mode.toUpperCase()} %c API: ${ENV.apiBaseUrl} `,

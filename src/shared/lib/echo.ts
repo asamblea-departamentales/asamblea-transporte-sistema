@@ -7,33 +7,38 @@ import { ENV } from '../config/environment';
 let echoInstance: Echo<'pusher'> | null = null;
 
 /**
- * Retorna o crea la instancia singleton de Laravel Echo.
+ * Retorna o crea de forma segura la instancia singleton de Laravel Echo.
  */
-export function getEcho(): Echo<'pusher'> {
+export function getEcho(): Echo<'pusher'> | null {
   if (!echoInstance) {
-    const token = sessionStorage.getItem('auth_token');
-    echoInstance = new Echo({
-      broadcaster: 'pusher',
-      key: ENV.reverbAppKey,
-      wsHost: ENV.reverbHost,
-      wsPort: ENV.reverbPort,
-      wssPort: ENV.reverbPort,
-      forceTLS: ENV.reverbScheme === 'https',
-      enabledTransports: ['ws', 'wss'],
-      authEndpoint: `${ENV.apiBaseUrl}/broadcasting/auth`,
-      auth: {
-        headers: {
-          Authorization: token ? `Bearer ${token}` : '',
-          Accept: 'application/json',
+    try {
+      const token = sessionStorage.getItem('auth_token');
+      echoInstance = new Echo({
+        broadcaster: 'pusher',
+        key: ENV.reverbAppKey || 'hggzgtp4yx1twnwnqc6u',
+        wsHost: ENV.reverbHost || 'localhost',
+        wsPort: ENV.reverbPort || 8080,
+        wssPort: ENV.reverbPort || 8080,
+        forceTLS: ENV.reverbScheme === 'https',
+        enabledTransports: ['ws', 'wss'],
+        authEndpoint: `${ENV.apiBaseUrl}/broadcasting/auth`,
+        auth: {
+          headers: {
+            Authorization: token ? `Bearer ${token}` : '',
+            Accept: 'application/json',
+          },
         },
-      },
-    });
+      });
+    } catch (err) {
+      console.warn('No se pudo inicializar Laravel Echo:', err);
+      return null;
+    }
   }
   return echoInstance;
 }
 
 /**
- * Desconecta la instancia actual de Echo y limpia la referencia singleton.
+ * Desconecta la instancia actual de Echo si existe.
  */
 export function disconnectEcho() {
   if (echoInstance) {
