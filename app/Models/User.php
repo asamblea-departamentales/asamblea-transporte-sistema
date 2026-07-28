@@ -3,6 +3,8 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Domain\Solicitudes\Enums\NivelPrioridadEnum;
+use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,12 +12,13 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable implements FilamentUser
 {
-    /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory, HasRoles, Notifiable;
+    /** @use HasFactory<UserFactory> */
+    use HasApiTokens, HasFactory, HasPushSubscriptions, HasRoles, Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -142,6 +145,6 @@ class User extends Authenticatable implements FilamentUser
 
     public function getPriorityEnum()
     {
-        return $this->grupo?->nivelEnum() ?? \App\Domain\Solicitudes\Enums\NivelPrioridadEnum::BAJA;
+        return $this->grupo?->nivelEnum() ?? NivelPrioridadEnum::BAJA;
     }
 }
