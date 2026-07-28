@@ -11,10 +11,11 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Notifications\Notifiable;
+use NotificationChannels\WebPush\HasPushSubscriptions;
 
 class Motorista extends Model
 {
-    use HasFactory, Notifiable, SoftDeletes;
+    use HasFactory, HasPushSubscriptions, Notifiable, SoftDeletes;
 
     protected $table = 'motoristas';
 
@@ -59,7 +60,7 @@ class Motorista extends Model
 
     public function tipoLicencia(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\TipoLicencia::class);
+        return $this->belongsTo(TipoLicencia::class);
     }
 
     public function sugerencia()

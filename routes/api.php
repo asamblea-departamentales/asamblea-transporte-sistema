@@ -6,11 +6,16 @@ use App\Http\Controllers\Api\MotoristaAuthController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Http\Controllers\Api\MotoristaNotificacionController;
 use App\Http\Controllers\Api\MotoristaViajeController;
+use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
 use App\Http\Controllers\Api\SolicitudTransporteController;
 use App\Http\Controllers\Api\TokenAuthController;
 use App\Models\Motorista;
+use App\Models\Vehiculo;
+use App\Models\VehMarca;
+use App\Models\VehModelo;
+use App\Models\VehTipoMantenimiento;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -135,6 +140,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('me/notificaciones', [MotoristaNotificacionController::class, 'index']);
             Route::put('me/notificaciones/{notification}/leer', [MotoristaNotificacionController::class, 'marcarLeer']);
             Route::put('me/notificaciones/marcar-todas', [MotoristaNotificacionController::class, 'marcarTodasLeer']);
+            Route::post('me/push-subscribe', [PushSubscriptionController::class, 'store']);
+            Route::post('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
+            Route::get('me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
         });
 
     // ── RUTAS ADMINISTRATIVAS (jefe/operativo pueden gestionar motoristas) ─
@@ -152,7 +160,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/vehiculos', function () {
             return response()->json(
-                \App\Models\Vehiculo::with([
+                Vehiculo::with([
                     'vehMarca',
                     'vehModelo',
                     'tipo',
@@ -181,7 +189,7 @@ Route::middleware('auth:sanctum')->group(function () {
         // Ruta para obtener solo los vehículos disponibles (estado operativo disponible y estado catálogo disponible)
         Route::get('/vehiculos/disponibles', function () {
             return response()->json(
-                \App\Models\Vehiculo::with([
+                Vehiculo::with([
                     'vehMarca',
                     'vehModelo',
                     'tipo',
@@ -207,7 +215,7 @@ Route::middleware('auth:sanctum')->group(function () {
             );
         });
 
-        Route::get('/vehiculos/{vehiculo}/detalle', function (\App\Models\Vehiculo $vehiculo) {
+        Route::get('/vehiculos/{vehiculo}/detalle', function (Vehiculo $vehiculo) {
             if (! $vehiculo->activo) {
                 return response()->json(['message' => 'Vehículo no encontrado.'], 404);
             }
@@ -271,7 +279,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/motoristas', function () {
             return response()->json(
-                \App\Models\Motorista::with('estadoActual')
+                Motorista::with('estadoActual')
                     ->where('activo', true)
                     ->get()
                     ->map(fn ($m) => [
@@ -287,7 +295,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/motoristas/disponibles', function () {
             return response()->json(
-                \App\Models\Motorista::with('estadoActual')
+                Motorista::with('estadoActual')
                     ->where('activo', true)
                     ->disponibles()
                     ->get()
@@ -303,14 +311,14 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/marcas', function () {
             return response()->json(
-                \App\Models\VehMarca::where('activo', true)
+                VehMarca::where('activo', true)
                     ->orderBy('nombre')
                     ->get(['id', 'nombre'])
             );
         });
 
         Route::get('/modelos', function (Request $request) {
-            $query = \App\Models\VehModelo::with('marca')->where('activo', true);
+            $query = VehModelo::with('marca')->where('activo', true);
 
             if ($request->has('veh_marca_id')) {
                 $query->where('veh_marca_id', $request->veh_marca_id);
@@ -328,7 +336,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::get('/tipos-mantenimiento', function () {
             return response()->json(
-                \App\Models\VehTipoMantenimiento::where('activo', true)
+                VehTipoMantenimiento::where('activo', true)
                     ->get(['id', 'nombre'])
             );
         });

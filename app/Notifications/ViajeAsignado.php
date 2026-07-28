@@ -4,14 +4,15 @@ namespace App\Notifications;
 
 use App\Models\SolicitudTransporte;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use NotificationChannels\WebPush\WebPushChannel;
+use NotificationChannels\WebPush\WebPushMessage;
 
-class ViajeAsignado extends Notification implements ShouldBroadcast, ShouldQueue
+class ViajeAsignado extends Notification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -21,7 +22,7 @@ class ViajeAsignado extends Notification implements ShouldBroadcast, ShouldQueue
 
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database', WebPushChannel::class];
     }
 
     public function toArray(object $notifiable): array
@@ -36,13 +37,14 @@ class ViajeAsignado extends Notification implements ShouldBroadcast, ShouldQueue
         ];
     }
 
-    public function broadcastOn(): array
+    public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
-        return [new \Illuminate\Broadcasting\PrivateChannel('motorista.'.$this->notifiable->id)];
-    }
+        $data = $notification->data;
 
-    public function broadcastType(): string
-    {
-        return 'notification.received';
+        return (new WebPushMessage)
+            ->title($data['titulo'])
+            ->body($data['mensaje'])
+            ->icon('/icons/icon-192x192.png')
+            ->data(['url' => '/viajes']);
     }
 }
