@@ -22,8 +22,13 @@ export async function getVapidPublicKey(): Promise<string> {
     const { data } = await api.get<VapidPublicKeyResponse>('/api/motoristas/me/push-public-key');
     if (data?.public_key) return data.public_key;
   } catch {
-    const { data } = await api.get<VapidPublicKeyResponse>('/api/me/push-public-key');
-    return data.public_key;
+    // Fallback al endpoint genérico
+    try {
+      const { data } = await api.get<VapidPublicKeyResponse>('/api/me/push-public-key');
+      if (data?.public_key) return data.public_key;
+    } catch {
+      // Ambos endpoints fallaron
+    }
   }
   throw new Error('No se pudo obtener la clave pública VAPID del servidor');
 }
@@ -44,31 +49,27 @@ export async function subscribeUserToPush(): Promise<boolean> {
   }
 
   try {
-    let registration = await Promise.race([
-      navigator.serviceWorker.ready,
-      new Promise<ServiceWorkerRegistration | undefined>((resolve) =>
-        setTimeout(async () => {
-          try {
-            const reg = await navigator.serviceWorker.register('/sw.js');
-            resolve(reg);
-          } catch {
-            resolve(undefined);
-          }
-        }, 1000)
-      ),
-    ]);
-
-    if (!registration) {
-      registration = await navigator.serviceWorker.ready;
-    }
+    // Obtener la clave VAPID primero — si falla, no tiene sentido seguir
     const publicKey = await getVapidPublicKey();
+
+    // Validar que la clave tenga formato correcto (base64url, ~87 caracteres para P-256)
+    if (!publicKey || publicKey.length < 60) {
+      console.error('La clave VAPID pública es inválida o está vacía:', publicKey);
+      return false;
+    }
+
     const convertedKey = urlBase64ToUint8Array(publicKey);
 
+    // Esperar a que el Service Worker esté listo (VitePWA ya lo registra)
+    const registration = await navigator.serviceWorker.ready;
+
+    // Verificar si ya existe una suscripción activa
     let subscription = await registration.pushManager.getSubscription();
+
     if (!subscription) {
       subscription = await registration.pushManager.subscribe({
         userVisibleOnly: true,
-        applicationServerKey: convertedKey as unknown as BufferSource,
+        applicationServerKey: convertedKey,
       });
     }
 
