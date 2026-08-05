@@ -15,6 +15,7 @@ import {
   isStringRecord,
   generateId
 } from '@/shared/notifications/cache';
+import { subscribeUserToPush } from '@/shared/services/push.service';
 
 const POLL_MS = 60000;
 
@@ -83,6 +84,11 @@ export const NotificationProvider: React.FC<{ children: ReactNode }> = ({ childr
 
     // Señalar hidratación completada
     setHydratedUserId(currentUserId);
+
+    // Auto-suscribir a notificaciones push VAPID
+    subscribeUserToPush().catch((err) => {
+      console.warn('[NotificationProvider] Error al suscribirse a Push:', err);
+    });
 
     if (!canAccess) return;
 

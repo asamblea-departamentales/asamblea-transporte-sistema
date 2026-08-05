@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 import { User, LoginCredentials } from '../types';
 import { authApi } from '../api/authApi';
 import { hasJefaturaAccess } from '@/shared/auth/roles';
+import { subscribeUserToPush, unsubscribeUserFromPush } from '@/shared/services/push.service';
 
 interface AuthContextType {
   user: User | null;
@@ -17,6 +18,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Auto-suscribir a push cuando el usuario se autentica
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      subscribeUserToPush().catch((err) =>
+        console.error('[AuthContext] Error en auto-suscripción push:', err)
+      );
+    }
+  }, [isAuthenticated, user]);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -52,9 +62,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.setItem('auth_token', data.token);
     setUser(data.user);
     setIsAuthenticated(true);
+    // La auto-suscripción push se dispara vía el useEffect de arriba
   };
 
   const logout = async () => {
+    // Desuscribir push ANTES de cerrar sesión (necesita el token válido)
+    try {
+      await unsubscribeUserFromPush();
+    } catch (error) {
+      console.error("[AuthContext] Error al desuscribir push en logout:", error);
+    }
+
     try {
       await authApi.logout();
     } catch (error) {

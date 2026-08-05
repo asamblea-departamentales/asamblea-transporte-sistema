@@ -3,12 +3,8 @@
 /** Backend puede enviar estado como string, objeto con .value, o null */
 export type EstadoType = string | { value?: string; nombre?: string; status?: string } | null;
 
-/** Extrae el string de estado sin importar el formato del backend */
-export function getEstadoString(estado: EstadoType | undefined): string {
-  if (!estado) return '';
-  if (typeof estado === 'string') return estado.trim().toLowerCase();
-  return (estado.value ?? estado.nombre ?? estado.status ?? '').trim().toLowerCase();
-}
+/** @deprecated Usar `normalizeEstado` de `@/shared/lib/normalizeEstado` directamente */
+export { normalizeEstado as getEstadoString } from '@/shared/lib/normalizeEstado';
 
 export interface SolicitudDetalle {
   id: string;

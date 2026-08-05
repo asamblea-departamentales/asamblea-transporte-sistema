@@ -1,4 +1,5 @@
 import { RecentRequest } from '@/features/Aprobacion/api/dashboardApi';
+import { normalizeEstado } from '../lib/normalizeEstado';
 
 /** Guard: verifica que el valor sea un objeto plano (no array, no null) */
 const isRecord = (value: unknown): value is Record<string, unknown> =>
@@ -16,21 +17,8 @@ export const extractArrayData = (data: unknown): unknown[] => {
 /**
  * Estandariza el estado de la solicitud, normalizando a minúsculas
  */
-export const extractStatusString = (estadoRaw: unknown): string => {
-  if (!estadoRaw) return '';
-
-  if (typeof estadoRaw === 'string') {
-    return estadoRaw.trim().toLowerCase();
-  }
-
-  if (typeof estadoRaw === 'object' && estadoRaw !== null) {
-    const obj = estadoRaw as Record<string, unknown>;
-    const value = obj.value ?? obj.nombre ?? obj.status ?? '';
-    return typeof value === 'string' ? value.trim().toLowerCase() : '';
-  }
-
-  return '';
-};
+/** @deprecated Usar `normalizeEstado` de `@/shared/lib/normalizeEstado` directamente */
+export const extractStatusString = normalizeEstado;
 
 /**
  * Mapea un item crudo del backend a la interfaz estricta RecentRequest.

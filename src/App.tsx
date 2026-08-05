@@ -4,6 +4,7 @@ import { DashboardLayout } from './widgets/DashboardLayout';
 import { ProtectedRoute } from './features/Auth/components/ProtectedRoute';
 import { FullPageLoader } from './shared/components/FullPageLoader';
 import { EnvironmentBanner } from './shared/components/EnvironmentBanner';
+import { ErrorBoundary } from './shared/components/ErrorBoundary';
 
 const LoginPage = lazy(() => import('./features/Auth/pages/LoginPage'));
 const AprobacionDashboardPage = lazy(() => import('./features/Aprobacion/pages/AprobacionDashboardPage').then(m => ({ default: m.AprobacionDashboardPage })));
@@ -18,31 +19,33 @@ const AprobacionMantenimientoPage = lazy(() => import('./features/Aprobacion/pag
 function App() {
   return (
     <BrowserRouter>
-      <EnvironmentBanner />
-      <Suspense fallback={<FullPageLoader />}>
-        <Routes>
-          {/* Rutas Públicas */}
-          <Route path="/login" element={<LoginPage />} />
-          
-          {/* Rutas Protegidas */}
-          <Route element={<ProtectedRoute />}>
-            <Route path="/" element={<DashboardLayout />}>
-              <Route index element={<AprobacionDashboardPage />} />
-              <Route path="pre-aprobadas" element={<PreAprobadasPage />} />
-              <Route path="en-ejecucion" element={<EnEjecucionPage />} />
-              <Route path="historial" element={<HistorialPage />} />
-              <Route path="historial/:codigo" element={<HistorialDetallePage />} />
-              <Route path="aprobaciones/:codigo" element={<AprobacionPage />} />
-              <Route path="aprobaciones" element={<AprobacionPage />} />
-              <Route path="combustible/aprobaciones/:codigo" element={<AprobacionCombustiblePage />} />
-              <Route path="combustible/aprobaciones" element={<AprobacionCombustiblePage />} />
-              <Route path="mantenimiento/aprobaciones/:codigo" element={<AprobacionMantenimientoPage />} />
-              <Route path="mantenimiento/aprobaciones" element={<AprobacionMantenimientoPage />} />
-              <Route path="*" element={<Navigate to="/" replace />} />
+      <ErrorBoundary>
+        <EnvironmentBanner />
+        <Suspense fallback={<FullPageLoader />}>
+          <Routes>
+            {/* Rutas Públicas */}
+            <Route path="/login" element={<LoginPage />} />
+            
+            {/* Rutas Protegidas */}
+            <Route element={<ProtectedRoute />}>
+              <Route path="/" element={<DashboardLayout />}>
+                <Route index element={<AprobacionDashboardPage />} />
+                <Route path="pre-aprobadas" element={<PreAprobadasPage />} />
+                <Route path="en-ejecucion" element={<EnEjecucionPage />} />
+                <Route path="historial" element={<HistorialPage />} />
+                <Route path="historial/:codigo" element={<HistorialDetallePage />} />
+                <Route path="aprobaciones/:codigo" element={<AprobacionPage />} />
+                <Route path="aprobaciones" element={<AprobacionPage />} />
+                <Route path="combustible/aprobaciones/:codigo" element={<AprobacionCombustiblePage />} />
+                <Route path="combustible/aprobaciones" element={<AprobacionCombustiblePage />} />
+                <Route path="mantenimiento/aprobaciones/:codigo" element={<AprobacionMantenimientoPage />} />
+                <Route path="mantenimiento/aprobaciones" element={<AprobacionMantenimientoPage />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
+              </Route>
             </Route>
-          </Route>
-        </Routes>
-      </Suspense>
+          </Routes>
+        </Suspense>
+      </ErrorBoundary>
     </BrowserRouter>
   );
 }
