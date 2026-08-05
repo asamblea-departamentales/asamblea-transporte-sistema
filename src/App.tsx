@@ -1,20 +1,21 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { DashboardLayout } from './widgets/DashboardLayout';
 import { ProtectedRoute } from './features/Auth/components/ProtectedRoute';
 import { FullPageLoader } from './shared/components/FullPageLoader';
 import { EnvironmentBanner } from './shared/components/EnvironmentBanner';
 import { ErrorBoundary } from './shared/components/ErrorBoundary';
+import { lazyWithRetry } from './shared/lib/lazyWithRetry';
 
-const LoginPage = lazy(() => import('./features/Auth/pages/LoginPage'));
-const AprobacionDashboardPage = lazy(() => import('./features/Aprobacion/pages/AprobacionDashboardPage').then(m => ({ default: m.AprobacionDashboardPage })));
-const HistorialPage = lazy(() => import('./features/Aprobacion/pages/HistorialPage').then(m => ({ default: m.HistorialPage })));
-const PreAprobadasPage = lazy(() => import('./features/Aprobacion/pages/PreAprobadasPage').then(m => ({ default: m.PreAprobadasPage })));
-const HistorialDetallePage = lazy(() => import('./features/Aprobacion/pages/HistorialDetallePage'));
-const EnEjecucionPage = lazy(() => import('./features/Aprobacion/pages/EnEjecucionPage').then(m => ({ default: m.EnEjecucionPage })));
-const AprobacionPage = lazy(() => import('./features/Aprobacion/pages/AprobacionPage'));
-const AprobacionCombustiblePage = lazy(() => import('./features/Aprobacion/pages/AprobacionCombustiblePage'));
-const AprobacionMantenimientoPage = lazy(() => import('./features/Aprobacion/pages/AprobacionMantenimientoPage'));
+const LoginPage = lazyWithRetry(() => import('./features/Auth/pages/LoginPage'));
+const AprobacionDashboardPage = lazyWithRetry(() => import('./features/Aprobacion/pages/AprobacionDashboardPage'));
+const HistorialPage = lazyWithRetry(() => import('./features/Aprobacion/pages/HistorialPage'));
+const PreAprobadasPage = lazyWithRetry(() => import('./features/Aprobacion/pages/PreAprobadasPage'));
+const HistorialDetallePage = lazyWithRetry(() => import('./features/Aprobacion/pages/HistorialDetallePage'));
+const EnEjecucionPage = lazyWithRetry(() => import('./features/Aprobacion/pages/EnEjecucionPage'));
+const AprobacionPage = lazyWithRetry(() => import('./features/Aprobacion/pages/AprobacionPage'));
+const AprobacionCombustiblePage = lazyWithRetry(() => import('./features/Aprobacion/pages/AprobacionCombustiblePage'));
+const AprobacionMantenimientoPage = lazyWithRetry(() => import('./features/Aprobacion/pages/AprobacionMantenimientoPage'));
 
 function App() {
   return (

@@ -24,6 +24,20 @@ export class ErrorBoundary extends Component<Props, State> {
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error('Error no capturado:', error, errorInfo);
+
+    // Si el error se debe a un chunk desactualizado en Vercel/CDN (MIME type html o import fallido)
+    const msg = error?.message || '';
+    if (
+      msg.includes('Failed to fetch dynamically imported module') ||
+      msg.includes('Strict MIME type checking') ||
+      msg.includes('Expected a JavaScript-or-Wasm module script')
+    ) {
+      const refreshed = sessionStorage.getItem('error_boundary_chunk_refresh');
+      if (!refreshed || Number(refreshed) < 2) {
+        sessionStorage.setItem('error_boundary_chunk_refresh', String((Number(refreshed) || 0) + 1));
+        window.location.reload();
+      }
+    }
   }
 
   public render() {
