@@ -4,6 +4,7 @@ import { GlobalLoading } from "../components/GlobalLoading";
 import AppLayout from "../layout/AppLayout";
 import ProtectedRoute from "../auth/ProtectedRoute";
 import "leaflet/dist/leaflet.css";
+import { EnvironmentBanner } from "../components/EnvironmentBanner";
 
 const LoginPage = lazy(() => import("../pages/LoginPage"));
 const DashboardPage = lazy(() => import("../pages/DashboardPage"));
@@ -43,6 +44,7 @@ export default function App() {
 
   return (
     <BrowserRouter>
+      <EnvironmentBanner />
       <div className="animate-fade-in">
         <Suspense fallback={<PageFallback />}>
           <Routes>

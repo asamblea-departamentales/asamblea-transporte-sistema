@@ -1,6 +1,8 @@
 import axios from "axios";
+import { ENV } from "../config/environment";
 
-export const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+export const BASE_URL = ENV.apiBaseUrl;
+
 export function getStorageUrl(path: string): string {
   if (!path) return "";
   if (/^https?:\/\//i.test(path)) return path;
@@ -9,11 +11,8 @@ export function getStorageUrl(path: string): string {
   return `${base}/storage/${normalized.replace(/^storage\//, "")}`;
 }
 
-if (!BASE_URL) {
-  // En desarrollo podríamos permitir un fallback, pero en producción es crítico
-  if (import.meta.env.PROD) {
-    throw new Error("❌ Falta VITE_API_BASE_URL en el entorno de producción");
-  }
+if (!BASE_URL && ENV.isProduccion) {
+  throw new Error("❌ Falta VITE_API_BASE_URL en el entorno de producción");
 }
 
 /**
