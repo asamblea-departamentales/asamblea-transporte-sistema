@@ -16,6 +16,10 @@ class NotificarMotoristaInApp implements ShouldQueue
     {
         $solicitud = $event->solicitud;
 
+        if (! method_exists($solicitud, 'motorista')) {
+            return;
+        }
+
         if (! $solicitud->relationLoaded('motorista')) {
             $solicitud->load('motorista');
         }

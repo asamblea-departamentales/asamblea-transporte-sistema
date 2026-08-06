@@ -39,7 +39,7 @@ class ViajeAsignado extends Notification implements ShouldQueue
 
     public function toWebPush(object $notifiable, Notification $notification): WebPushMessage
     {
-        $data = $notification->data;
+        $data = $this->toArray($notifiable);
 
         return (new WebPushMessage)
             ->title($data['titulo'])

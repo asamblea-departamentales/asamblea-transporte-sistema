@@ -19,11 +19,15 @@ use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Requests\StoreSolicitudTransporteRequest;
 use App\Models\BitacoraEvento;
+use App\Models\Motorista;
 use App\Models\SolicitudDestinoAdicional;
 use App\Models\SolicitudTransporte;
 use App\Notifications\DestinoAgregado;
+use App\Notifications\ViajeDesasignado;
 use App\Notifications\ViajeObservado;
 use App\Notifications\ViajeReasignado;
+use Barryvdh\DomPDF\Facade\Pdf;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -249,7 +253,7 @@ class SolicitudTransporteController extends BaseSolicitudController
             ], Response::HTTP_UNPROCESSABLE_ENTITY);
         } catch (\Exception $e) {
             // Log por si algo falla a nivel de base de datos
-            \Illuminate\Support\Facades\Log::error('Error al finalizar', ['error' => $e->getMessage()]);
+            Log::error('Error al finalizar', ['error' => $e->getMessage()]);
 
             return response()->json(['message' => 'Error interno del servidor'], 500);
         }
@@ -330,7 +334,7 @@ class SolicitudTransporteController extends BaseSolicitudController
     public function pdf(
         Request $request,
         ReporteMisionOficialService $service,
-        ?\App\Models\SolicitudTransporte $solicitud = null // <-- Importante: mismo nombre que en la ruta
+        ?SolicitudTransporte $solicitud = null // <-- Importante: mismo nombre que en la ruta
     ) {
         if ($solicitud && $solicitud->exists) {
             // CASO A: Imprimir una sola misión oficial (Botón de Filament)
@@ -354,7 +358,7 @@ class SolicitudTransporteController extends BaseSolicitudController
 
         $kpis = $service->getKpis($filters);
 
-        return \Barryvdh\DomPDF\Facade\Pdf::loadView('reports.reporte_mision_oficial_pdf', [
+        return Pdf::loadView('reports.reporte_mision_oficial_pdf', [
             'rows' => $rows,
             'filters' => $filters,
             'kpis' => $kpis,
@@ -516,6 +520,8 @@ class SolicitudTransporteController extends BaseSolicitudController
             'motivo_reasignacion' => ['required', 'string', 'min:10'],
         ]);
 
+        $motoristaAnteriorId = $solicitud->motorista_id;
+
         try {
             $solicitud = $this->service->reasignar(
                 $solicitud,
@@ -525,9 +531,16 @@ class SolicitudTransporteController extends BaseSolicitudController
                 $data['motivo_reasignacion'],
             );
 
-            $motorista = $solicitud->motorista;
+            $motorista = Motorista::find($data['motorista_id']);
             if ($motorista) {
                 $motorista->notify(new ViajeReasignado($solicitud));
+            }
+
+            if ($motoristaAnteriorId && $motoristaAnteriorId !== (int) $data['motorista_id']) {
+                $motoristaAnterior = Motorista::find($motoristaAnteriorId);
+                if ($motoristaAnterior) {
+                    $motoristaAnterior->notify(new ViajeDesasignado($solicitud));
+                }
             }
 
             return response()->json([
@@ -668,11 +681,11 @@ class SolicitudTransporteController extends BaseSolicitudController
     private function rangeLabel(array $filters): string
     {
         $from = ! empty($filters['date_from'])
-            ? \Carbon\Carbon::parse($filters['date_from'])->format('d/m/Y')
+            ? Carbon::parse($filters['date_from'])->format('d/m/Y')
             : 'Inicio';
 
         $to = ! empty($filters['date_to'])
-            ? \Carbon\Carbon::parse($filters['date_to'])->format('d/m/Y')
+            ? Carbon::parse($filters['date_to'])->format('d/m/Y')
             : 'Fin';
 
         return "Periodo: {$from} al {$to}";

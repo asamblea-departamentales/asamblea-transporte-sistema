@@ -171,6 +171,15 @@ class SolicitudTransporteService
                 throw new \DomainException("El motorista {$m->nombre} seleccionado ya no está disponible.");
             }
 
+            $this->validarSolapamiento(
+                $solicitud->id,
+                Carbon::parse($solicitud->fecha_salida),
+                Carbon::parse($solicitud->fecha_retorno),
+                $v,
+                $m,
+            );
+            $this->validarLicencia($m, $solicitud->fecha_retorno);
+
             $sugerencia = $solicitud->sugerencia;
             if (! $sugerencia) {
                 $sugerencia = $this->generarSugerencia($solicitud);
@@ -268,6 +277,14 @@ class SolicitudTransporteService
                 if ($m && ! $m->esta_disponible) {
                     throw new \DomainException("El motorista {$m->nombre} seleccionado ya no está disponible.");
                 }
+                $this->validarSolapamiento(
+                    $solicitud->id,
+                    Carbon::parse($solicitud->fecha_salida),
+                    Carbon::parse($solicitud->fecha_retorno),
+                    $v,
+                    $m,
+                );
+                $this->validarLicencia($m, $solicitud->fecha_retorno);
                 $solicitud->vehiculo_id = $vehiculoId;
                 $solicitud->motorista_id = $motoristaId;
             } elseif ($decisionFinal === 'operativo') {
@@ -287,6 +304,14 @@ class SolicitudTransporteService
                         "El motorista {$mOp->nombre} asignado por el operativo ya no está disponible. Solicite una re-asignación."
                     );
                 }
+                $this->validarSolapamiento(
+                    $solicitud->id,
+                    Carbon::parse($solicitud->fecha_salida),
+                    Carbon::parse($solicitud->fecha_retorno),
+                    $vOp,
+                    $mOp,
+                );
+                $this->validarLicencia($mOp, $solicitud->fecha_retorno);
                 $solicitud->vehiculo_id = $decision->vehiculo_final_id;
                 $solicitud->motorista_id = $decision->motorista_final_id;
             } else {
@@ -314,6 +339,14 @@ class SolicitudTransporteService
                         .'Solicite al operativo una re-asignación.'
                     );
                 }
+                $this->validarSolapamiento(
+                    $solicitud->id,
+                    Carbon::parse($solicitud->fecha_salida),
+                    Carbon::parse($solicitud->fecha_retorno),
+                    $vehiculoSugerido,
+                    $motoristaSugerido,
+                );
+                $this->validarLicencia($motoristaSugerido, $solicitud->fecha_retorno);
             }
 
             if ($vehiculoAnteriorId) {
@@ -427,14 +460,25 @@ class SolicitudTransporteService
         }
 
         return DB::transaction(function () use ($solicitud, $jefeId, $vehiculoId, $motoristaId, $motivoReasignacion) {
-            $v = Vehiculo::find($vehiculoId);
-            $m = Motorista::find($motoristaId);
+            $solicitud = SolicitudTransporte::lockForUpdate()->findOrFail($solicitud->id);
+
+            $v = Vehiculo::lockForUpdate()->find($vehiculoId);
+            $m = Motorista::lockForUpdate()->find($motoristaId);
             if ($v && ! $v->esta_disponible) {
                 throw new \DomainException("El vehículo {$v->placa} seleccionado no está disponible.");
             }
             if ($m && ! $m->esta_disponible) {
                 throw new \DomainException("El motorista {$m->nombre} seleccionado no está disponible.");
             }
+
+            $this->validarSolapamiento(
+                $solicitud->id,
+                Carbon::parse($solicitud->fecha_salida),
+                Carbon::parse($solicitud->fecha_retorno),
+                $v,
+                $m,
+            );
+            $this->validarLicencia($m, $solicitud->fecha_retorno);
 
             $vehiculoAnteriorId = $solicitud->vehiculo_id;
             $motoristaAnteriorId = $solicitud->motorista_id;
@@ -610,41 +654,11 @@ class SolicitudTransporteService
         $fechaSalida = Carbon::parse($fechaSalida);
         $fechaRetorno = Carbon::parse($fechaRetorno);
 
-        $vehiculosOcupados = SolicitudTransporte::query()
-            ->whereNotNull('vehiculo_id')
-            ->whereIn('estado', [
-                EstadoSolicitudEnum::EN_EJECUCION,
-                EstadoSolicitudEnum::PROGRAMADA,
-                EstadoSolicitudEnum::APROBADA,
-                EstadoSolicitudEnum::ASIGNADA,
-            ])
-            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
-                $query->where('fecha_salida', '<=', $fechaRetorno)
-                    ->where('fecha_retorno', '>=', $fechaSalida);
-            })
-            ->pluck('vehiculo_id')
-            ->filter()
-            ->unique();
-
-        $motoristasOcupados = SolicitudTransporte::query()
-            ->whereNotNull('motorista_id')
-            ->whereIn('estado', [
-                EstadoSolicitudEnum::EN_EJECUCION,
-                EstadoSolicitudEnum::PROGRAMADA,
-                EstadoSolicitudEnum::APROBADA,
-                EstadoSolicitudEnum::ASIGNADA,
-            ])
-            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
-                $query->where('fecha_salida', '<=', $fechaRetorno)
-                    ->where('fecha_retorno', '>=', $fechaSalida);
-            })
-            ->pluck('motorista_id')
-            ->filter()
-            ->unique();
+        $ocupados = $this->idsOcupadosEnRango(null, $fechaSalida, $fechaRetorno);
 
         $vehiculos = Vehiculo::query()
             ->where('activo', true)
-            ->whereNotIn('id', $vehiculosOcupados)
+            ->whereNotIn('id', $ocupados['vehiculos'])
             ->with('vehMarca', 'ultimaRecepcionEntrega')
             ->get()
             ->map(fn ($vehiculo) => [
@@ -661,7 +675,7 @@ class SolicitudTransporteService
         $motoristas = Motorista::query()
             ->disponibles()
             ->where('activo', true)
-            ->whereNotIn('id', $motoristasOcupados)
+            ->whereNotIn('id', $ocupados['motoristas'])
             ->with('tipoLicencia')
             ->get()
             ->map(fn ($motorista) => [
@@ -687,5 +701,50 @@ class SolicitudTransporteService
             'user_id' => $userId,
             'datos_extras' => $extra,
         ]);
+    }
+
+    private function idsOcupadosEnRango(?int $excluirSolicitudId, Carbon $fechaSalida, Carbon $fechaRetorno): array
+    {
+        $base = SolicitudTransporte::query()
+            ->whereIn('estado', [
+                EstadoSolicitudEnum::EN_EJECUCION,
+                EstadoSolicitudEnum::PROGRAMADA,
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA,
+            ])
+            ->where(function ($query) use ($fechaSalida, $fechaRetorno) {
+                $query->where('fecha_salida', '<=', $fechaRetorno)
+                    ->where('fecha_retorno', '>=', $fechaSalida);
+            });
+
+        if ($excluirSolicitudId) {
+            $base->where('id', '!=', $excluirSolicitudId);
+        }
+
+        return [
+            'vehiculos' => (clone $base)->whereNotNull('vehiculo_id')->pluck('vehiculo_id')->filter()->unique()->values()->all(),
+            'motoristas' => (clone $base)->whereNotNull('motorista_id')->pluck('motorista_id')->filter()->unique()->values()->all(),
+        ];
+    }
+
+    private function validarSolapamiento(?int $excluirSolicitudId, Carbon $fechaSalida, Carbon $fechaRetorno, ?Vehiculo $vehiculo, ?Motorista $motorista): void
+    {
+        $ocupados = $this->idsOcupadosEnRango($excluirSolicitudId, $fechaSalida, $fechaRetorno);
+
+        if ($vehiculo && in_array($vehiculo->id, $ocupados['vehiculos'], true)) {
+            throw new \DomainException("El vehículo {$vehiculo->placa} ya tiene un viaje en el rango de fechas solicitado.");
+        }
+
+        if ($motorista && in_array($motorista->id, $ocupados['motoristas'], true)) {
+            throw new \DomainException("El motorista {$motorista->nombre} ya tiene un viaje en el rango de fechas solicitado.");
+        }
+    }
+
+    private function validarLicencia(?Motorista $motorista, $fechaRetorno): void
+    {
+        if ($motorista && $motorista->fecha_vencimiento_licencia
+            && Carbon::parse($motorista->fecha_vencimiento_licencia)->lt(Carbon::parse($fechaRetorno))) {
+            throw new \DomainException("La licencia del motorista {$motorista->nombre} vence antes de la fecha de retorno del viaje.");
+        }
     }
 }

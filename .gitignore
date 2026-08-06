@@ -33,3 +33,4 @@ yarn-error.log
 !/tests/
 !/tests/Feature/
 !/tests/Feature/SolicitudEmailNotificationsTest.php
+!/tests/Feature/ReasignacionTest.php

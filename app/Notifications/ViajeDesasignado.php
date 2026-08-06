@@ -12,13 +12,12 @@ use Illuminate\Queue\SerializesModels;
 use NotificationChannels\WebPush\WebPushChannel;
 use NotificationChannels\WebPush\WebPushMessage;
 
-class SolicitudRechazada extends Notification implements ShouldQueue
+class ViajeDesasignado extends Notification implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public function __construct(
         public SolicitudTransporte $solicitud,
-        public ?string $comentario = null,
     ) {}
 
     public function via(object $notifiable): array
@@ -29,14 +28,12 @@ class SolicitudRechazada extends Notification implements ShouldQueue
     public function toArray(object $notifiable): array
     {
         return [
-            'tipo' => 'solicitud_rechazada',
-            'titulo' => "Solicitud rechazada — Ticket #{$this->solicitud->ticket}",
-            'mensaje' => "Tu solicitud Ticket #{$this->solicitud->ticket} fue rechazada."
-                .($this->comentario ? " Motivo: {$this->comentario}" : ''),
+            'tipo' => 'viaje_desasignado',
+            'titulo' => "Viaje desasignado — Ticket #{$this->solicitud->ticket}",
+            'mensaje' => "Se retiró el viaje Ticket #{$this->solicitud->ticket} de tu agenda.",
             'solicitud_id' => $this->solicitud->id,
             'solicitud_codigo' => $this->solicitud->codigo,
             'ticket' => $this->solicitud->ticket,
-            'comentario' => $this->comentario,
         ];
     }
 
