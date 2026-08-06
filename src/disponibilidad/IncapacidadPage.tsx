@@ -7,7 +7,10 @@ import {
 
 export default function IncapacidadPage() {
   const navigate = useNavigate();
-  const [activo, setActivo] = useState<boolean>(true);
+  const [activo, setActivo] = useState<boolean>(() => {
+    const cached = localStorage.getItem("motorista_activo");
+    return cached !== null ? cached === "true" : true;
+  });
   const [motivo, setMotivo] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -21,7 +24,12 @@ export default function IncapacidadPage() {
         setActivo(d.activo);
         setMotivo(d.motivo ?? "");
       })
-      .catch(() => {})
+      .catch(() => {
+        const cached = localStorage.getItem("motorista_activo");
+        if (cached !== null) {
+          setActivo(cached === "true");
+        }
+      })
       .finally(() => setLoading(false));
   }, []);
 

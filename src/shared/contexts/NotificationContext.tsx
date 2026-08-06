@@ -167,51 +167,89 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
       },
     });
 
-    // 3. Notificación de Sistema Operativo
-    if (Notification.permission === 'granted' && 'serviceWorker' in navigator) {
-      navigator.serviceWorker.ready.then((reg) => {
-        reg.showNotification(newNotif.title, {
-          body: newNotif.body,
-          icon: '/icon-192x192.png',
-          vibrate: [200, 100, 200],
-        } as any);
-      });
+    // 3. Notificación de Sistema Operativo (con timeout de seguridad para Service Worker)
+    if (Notification.permission === 'granted') {
+      if ('serviceWorker' in navigator) {
+        Promise.race([
+          navigator.serviceWorker.ready,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
+        ]).then((reg) => {
+          if (reg) {
+            reg.showNotification(newNotif.title, {
+              body: newNotif.body,
+              icon: '/icon-192x192.png',
+              vibrate: [200, 100, 200],
+            } as any);
+          } else if (typeof Notification === 'function') {
+            try {
+              new Notification(newNotif.title, { body: newNotif.body, icon: '/icon-192x192.png' });
+            } catch {}
+          }
+        }).catch(() => {});
+      } else if (typeof Notification === 'function') {
+        try {
+          new Notification(newNotif.title, { body: newNotif.body, icon: '/icon-192x192.png' });
+        } catch {}
+      }
     }
   }, [markAsRead, navigate]);
 
-  // Cargar notificaciones REST, suscribir a Web Push y fallback Echo WebSocket
+  const knownIdsRef = React.useRef<Set<string>>(new Set());
+
+  const fetchLatestNotifications = useCallback(async (isPolling = false) => {
+    try {
+      const res = await getNotificaciones(1, 20);
+      const rawItems = res?.data && Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
+
+      const list: AppNotification[] = rawItems.map((item: any) => ({
+        id: String(item.id),
+        title: item.titulo || item.title || 'Notificación',
+        body: item.mensaje || item.body || '',
+        date: item.created_at ? new Date(item.created_at) : new Date(),
+        read: Boolean(item.read_at),
+        tipo: item.tipo,
+        solicitud_id: item.solicitud_id,
+        solicitud_codigo: item.solicitud_codigo,
+        ticket: item.ticket,
+      }));
+
+      if (isPolling) {
+        // Disparar alertas para notificaciones no leídas verdaderamente nuevas
+        list.forEach(item => {
+          if (!knownIdsRef.current.has(item.id) && !item.read) {
+            handleIncomingNotification(item);
+          }
+        });
+      }
+
+      list.forEach(item => knownIdsRef.current.add(item.id));
+      setNotifications(list);
+    } catch (err) {
+      if (!isPolling) {
+        console.warn('No se pudo cargar el historial de notificaciones:', err);
+      }
+    }
+  }, [handleIncomingNotification]);
+
+  // Cargar notificaciones REST, Polling recurrente cada 15s y Push VAPID
   useEffect(() => {
     if (!user) return;
     const motoristaId = user?.motorista_id || (user as any)?.id;
 
-    // 1. Obtener notificaciones previas desde la API REST
-    getNotificaciones(1, 20)
-      .then((res) => {
-        if (res?.data && Array.isArray(res.data)) {
-          const list: AppNotification[] = res.data.map((item) => ({
-            id: String(item.id),
-            title: item.titulo || 'Notificación',
-            body: item.mensaje || '',
-            date: item.created_at ? new Date(item.created_at) : new Date(),
-            read: Boolean(item.read_at),
-            tipo: item.tipo,
-            solicitud_id: item.solicitud_id,
-            solicitud_codigo: item.solicitud_codigo,
-            ticket: item.ticket,
-          }));
-          setNotifications(list);
-        }
-      })
-      .catch((err) => {
-        console.warn('No se pudo cargar el historial de notificaciones:', err);
-      });
+    // 1. Obtener notificaciones iniciales
+    fetchLatestNotifications(false);
 
-    // 2. Intentar registrar suscripción Web Push VAPID si los permisos están dados
+    // 2. Polling periódico de notificaciones REST cada 15 segundos
+    const pollInterval = setInterval(() => {
+      fetchLatestNotifications(true);
+    }, 15000);
+
+    // 3. Intentar registrar suscripción Web Push VAPID si los permisos están dados
     if (Notification.permission === 'granted') {
       subscribeUserToPush();
     }
 
-    // 3. Mantener Echo como canal secundario durante la migración (si está disponible)
+    // 4. Mantener Echo como canal secundario si está disponible
     if (motoristaId) {
       const channelName = `motorista.${motoristaId}`;
       try {
@@ -223,6 +261,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     return () => {
+      clearInterval(pollInterval);
       if (motoristaId) {
         try {
           const echo = getEcho();
@@ -231,7 +270,7 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
         } catch {}
       }
     };
-  }, [user, handleIncomingNotification]);
+  }, [user, fetchLatestNotifications, handleIncomingNotification]);
 
   const simulateNotification = (title: string, body: string) => {
     handleIncomingNotification({ titulo: title, mensaje: body });

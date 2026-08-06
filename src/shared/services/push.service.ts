@@ -61,8 +61,16 @@ export async function subscribeUserToPush(): Promise<boolean> {
 
     const convertedKey = urlBase64ToUint8Array(publicKey);
 
-    // 2. Esperar a que el Service Worker esté listo (VitePWA ya lo registra)
-    const registration = await navigator.serviceWorker.ready;
+    // 2. Esperar a que el Service Worker esté listo con timeout para prevenir bloqueos
+    const registration = await Promise.race([
+      navigator.serviceWorker.ready,
+      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+    ]);
+
+    if (!registration) {
+      console.info('[Push] Service worker no listo dentro del tiempo límite (ej. modo desarrollo o SW deshabilitado).');
+      return false;
+    }
 
     // 3. Verificar si ya existe una suscripción activa
     let subscription = await registration.pushManager.getSubscription();

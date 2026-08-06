@@ -12,7 +12,21 @@ export interface Disponibilidad {
  */
 export async function getDisponibilidad(): Promise<Disponibilidad> {
   const { data } = await api.get("/api/motoristas/me/estado");
-  return data as Disponibilidad;
+  const payload = data?.data && typeof data.data === 'object' ? data.data : data;
+  
+  // Normalizar el valor de activo (puede venir como true, 1, "1", false, 0, "0", o dentro de disponible/activo)
+  const rawActivo = payload?.activo ?? payload?.disponible;
+  const isActivo = rawActivo === undefined || rawActivo === null 
+    ? true 
+    : (rawActivo === true || rawActivo === 1 || rawActivo === "1" || rawActivo === "true");
+
+  localStorage.setItem("motorista_activo", String(isActivo));
+
+  return {
+    activo: isActivo,
+    motivo: payload?.motivo ?? null,
+    desde: payload?.desde ?? payload?.fecha_inicio ?? null,
+  };
 }
 
 export async function reportarDisponibilidad(
@@ -48,4 +62,6 @@ export async function reportarDisponibilidad(
       "Content-Type": "multipart/form-data"
     }
   });
+
+  localStorage.setItem("motorista_activo", String(activo));
 }

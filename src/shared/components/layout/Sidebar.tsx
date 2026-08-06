@@ -96,7 +96,10 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   const [showNotifications, setShowNotifications] = useState(false);
 
   // Estados de Disponibilidad Globales
-  const [activo, setActivo] = useState<boolean | null>(null);
+  const [activo, setActivo] = useState<boolean | null>(() => {
+    const cached = localStorage.getItem("motorista_activo");
+    return cached !== null ? cached === "true" : true;
+  });
   
   // Buscar si hay algún viaje activo guardado en LocalStorage
   const [viajeActivoId, setViajeActivoId] = useState<string | null>(localStorage.getItem("viaje_en_ejecucion_id"));
@@ -116,7 +119,12 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
   useEffect(() => {
     getDisponibilidad()
       .then((d) => setActivo(d.activo))
-      .catch((_) => setActivo(null));
+      .catch((_) => {
+        const cached = localStorage.getItem("motorista_activo");
+        if (cached !== null) {
+          setActivo(cached === "true");
+        }
+      });
   }, [location.pathname]); // Refrescar cuando cambie de ruta
 
   // Logic Handlers
