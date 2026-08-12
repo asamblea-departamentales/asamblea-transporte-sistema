@@ -16,8 +16,8 @@ export const ColumnaOperativo: React.FC<ColumnaOperativoProps> = ({ data, isSele
         <div className="w-12 h-12 bg-slate-100 rounded-lg flex items-center justify-center mb-4">
           <User className="text-slate-400" size={24} />
         </div>
-        <p className="text-sm font-bold text-slate-800">Sin AsignaciÃ³n Manual</p>
-        <p className="text-xs text-slate-500 mt-1">AÃºn no hay asignaciÃ³n por parte de operaciones.</p>
+        <p className="text-sm font-bold text-slate-800">Sin Asignación Manual</p>
+        <p className="text-xs text-slate-500 mt-1">Aún no hay asignación por parte de operaciones.</p>
       </div>
     );
   }
@@ -34,7 +34,7 @@ export const ColumnaOperativo: React.FC<ColumnaOperativoProps> = ({ data, isSele
     >
       <div className="flex justify-between items-start mb-5 pb-4 border-b border-slate-200">
         <div>
-          <h3 className="font-bold text-slate-800 text-lg tracking-tight">AsignaciÃ³n Manual</h3>
+          <h3 className="font-bold text-slate-800 text-lg tracking-tight">Asignación Manual</h3>
           <p className="text-xs text-slate-500 mt-1">Por Operador: {data.autor}</p>
         </div>
         <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 ${
@@ -47,7 +47,7 @@ export const ColumnaOperativo: React.FC<ColumnaOperativoProps> = ({ data, isSele
       <div className="space-y-4 flex-1">
         <ResourceCard 
           icon={<Car size={16} />} 
-          title="VehÃ­culo Asignado"
+          title="Vehículo Asignado"
           name={data.vehiculo.placa}
           subtitle={data.vehiculo.modelo}
           fuel={data.vehiculo.nivel_combustible}
@@ -63,7 +63,7 @@ export const ColumnaOperativo: React.FC<ColumnaOperativoProps> = ({ data, isSele
         {data.cambio_detectado !== 'ninguno' && data.justificacion && (
           <div className="bg-amber-50 border border-amber-200 p-4 rounded-lg mt-auto">
             <p className="text-[11px] font-bold text-amber-800 uppercase tracking-wider mb-2 flex items-center gap-1.5">
-              <MessageSquare size={14} /> JustificaciÃ³n Operativa
+              <MessageSquare size={14} /> Justificación Operativa
             </p>
             <p className="text-sm text-amber-900 italic">"{data.justificacion}"</p>
           </div>

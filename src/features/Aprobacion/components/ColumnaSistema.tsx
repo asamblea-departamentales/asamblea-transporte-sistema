@@ -52,7 +52,7 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
       <div className="space-y-4 flex-1">
         <ResourceCard 
           icon={<Car size={16} />} 
-          title="VehÃ­culo Ã“ptimo"
+          title="Vehículo Óptimo"
           name={data.vehiculo_sugerido.placa}
           subtitle={data.vehiculo_sugerido.modelo}
           fuel={data.vehiculo_sugerido.nivel_combustible}
@@ -60,13 +60,13 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
 
         <ResourceCard 
           icon={<User size={16} />} 
-          title="Motorista Ã“ptimo"
+          title="Motorista Óptimo"
           name={data.motorista_sugerido.nombre}
           hours={data.motorista_sugerido.horas_periodo_7d || data.horas_motorista_periodo}
         />
 
         <div className="bg-success/5 border border-success/20 p-4 rounded-lg mt-auto">
-          <p className="text-[11px] font-bold text-success uppercase tracking-wider mb-3">Razones de SelecciÃ³n</p>
+          <p className="text-[11px] font-bold text-success uppercase tracking-wider mb-3">Razones de Selección</p>
           <ul className="space-y-2">
             {data.bullets_tecnicos.map((bullet, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">

@@ -34,7 +34,7 @@ export const HistorialPage: React.FC = () => {
   }, []);
 
   const filteredRequests = useMemo(() => {
-    // Excluir los que estÃƒÆ’Ã‚Â¡n en ejecuciÃƒÆ’Ã‚Â³n, porque tienen su propia pÃƒÆ’Ã‚Â¡gina ahora
+    // Excluir los que están en ejecución, porque tienen su propia página ahora
     let result = requests.filter(req => {
       const status = typeof req.status === 'string' ? req.status.toLowerCase() : '';
       return !status.includes('ejecucion');
@@ -47,7 +47,7 @@ export const HistorialPage: React.FC = () => {
         const type = typeof req.type === 'string' ? req.type : '';
         const status = typeof req.status === 'string' ? req.status : '';
         
-        // Expandir bÃƒÆ’Ã‚Âºsqueda a mÃƒÆ’Ã‚Â¡s campos para mejor UX
+        // Expandir búsqueda a más campos para mejor UX
         const searchStr = `${code} ${type} ${status} ${req.solicitante || ''} ${req.destino || ''}`.toLowerCase();
         return searchStr.includes(lowerSearch);
       });
@@ -62,7 +62,7 @@ export const HistorialPage: React.FC = () => {
         if (!dateStr) return false;
         
         const reqDate = new Date(dateStr);
-        if (isNaN(reqDate.getTime())) return true; // Si la fecha es invÃƒÆ’Ã‚Â¡lida, mejor mostrarlo
+        if (isNaN(reqDate.getTime())) return true; // Si la fecha es inválida, mejor mostrarlo
 
         const reqDateMidnight = new Date(reqDate);
         reqDateMidnight.setHours(0, 0, 0, 0);
@@ -164,7 +164,7 @@ export const HistorialPage: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
-            placeholder="Buscar por cÃƒÆ’Ã‚Â³digo..."
+            placeholder="Buscar por código..."
             value={searchTerm}
             onChange={(e) => searchTermChangeHandler(e.target.value)}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -235,7 +235,7 @@ export const HistorialPage: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100/80">
-                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÃƒÆ’Ã¢â‚¬Å“DIGO</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO</th>
                 <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">FECHA</th>
                 <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIPO</th>
                 <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ESTADO</th>

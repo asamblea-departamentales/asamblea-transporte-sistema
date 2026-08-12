@@ -15,7 +15,7 @@ export const authApi = {
     const resData = isRecord(response.data) ? response.data : {};
 
     if (resData.success === false || resData.status === 'error' || resData.error) {
-      const msg = stringValue(resData.message) ?? stringValue(resData.error) ?? 'Credenciales invÃ¡lidas.';
+      const msg = stringValue(resData.message) ?? stringValue(resData.error) ?? 'Credenciales inválidas.';
       throw new Error(msg);
     }
 
@@ -28,7 +28,7 @@ export const authApi = {
       '';
 
     if (!isRecord(user) || !token) {
-      throw new Error(stringValue(resData.message) ?? 'Credenciales invÃ¡lidas o respuesta incompleta.');
+      throw new Error(stringValue(resData.message) ?? 'Credenciales inválidas o respuesta incompleta.');
     }
 
     return {

@@ -50,7 +50,7 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
       <div className="p-6 border-b border-slate-100/80 flex justify-between items-center bg-white">
         <div>
           <h3 className="font-extrabold text-[#182645] text-lg tracking-tight">Solicitudes recientes</h3>
-          <p className="text-xs text-slate-400 mt-1 font-medium">Ãšltimas solicitudes registradas en el sistema</p>
+          <p className="text-xs text-slate-400 mt-1 font-medium">Últimas solicitudes registradas en el sistema</p>
         </div>
         <button className="flex items-center gap-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-200 px-3 py-1.5 rounded-lg shadow-sm hover:bg-slate-50 transition-colors">
           Ver todas <span>&rarr;</span>
@@ -104,7 +104,7 @@ export const RecentTable: React.FC<RecentTableProps> = ({ requests, isLoading })
         <table className="w-full text-left border-collapse">
           <thead>
             <tr className="border-b border-slate-100/80">
-              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÃ“DIGO</th>
+              <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO</th>
               <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">FECHA</th>
               <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIPO</th>
               <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ESTADO</th>

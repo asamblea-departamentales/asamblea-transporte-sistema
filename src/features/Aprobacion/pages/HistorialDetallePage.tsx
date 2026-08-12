@@ -21,7 +21,7 @@ export default function HistorialDetallePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  // ReasignaciÃƒÆ’Ã‚Â³n
+  // Reasignación
   const {
     showReasignarModal, setShowReasignarModal, recursos, loadingRecursos,
     selectedVehiculo, setSelectedVehiculo, selectedMotorista, setSelectedMotorista,
@@ -58,12 +58,12 @@ export default function HistorialDetallePage() {
             ? `/solicitudes-mantenimiento/${codigo}` 
             : `/solicitudes-transporte/${codigo}`;
 
-        // 1. Obtener los datos reales finales (estado, asignaciÃƒÆ’Ã‚Â³n real)
+        // 1. Obtener los datos reales finales (estado, asignación real)
         try {
           const showRes = await axiosClient.get(endpoint);
           showData = showRes.data.data || showRes.data;
         } catch {
-          // Si el endpoint inicial devolviÃƒÆ’Ã‚Â³ 404, intentar con los otros mÃƒÆ’Ã‚Â³dulos
+          // Si el endpoint inicial devolvió 404, intentar con los otros módulos
           const fallbackEndpoints = [
             `/solicitudes-transporte/${codigo}`,
             `/solicitudes-mantenimiento/${codigo}`,
@@ -144,7 +144,7 @@ export default function HistorialDetallePage() {
   const getStatusColor = () => {
     if (isAprobada) return { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Aprobada' };
     if (isRechazada) return { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', dot: 'bg-red-500', label: 'Rechazada' };
-    if (status.includes('ejecucion')) return { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500', label: 'En EjecuciÃƒÆ’Ã‚Â³n' };
+    if (status.includes('ejecucion')) return { bg: 'bg-indigo-50', border: 'border-indigo-200', text: 'text-indigo-700', dot: 'bg-indigo-500', label: 'En Ejecución' };
     return { bg: 'bg-slate-50', border: 'border-slate-200', text: 'text-slate-700', dot: 'bg-slate-500', label: status || 'Desconocido' };
   };
 
@@ -164,10 +164,10 @@ export default function HistorialDetallePage() {
     moduloStr === 'mantenimiento';
   const isTransporteView = !isCombustibleView && !isMantenimientoView;
 
-  // Reasignar solo permitido antes de la ejecuciÃƒÆ’Ã‚Â³n y SOLO para Transporte (nunca para Combustible o Mantenimiento)
+  // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible o Mantenimiento)
   const canReasignar = isTransporteView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
 
-  // AÃƒÆ’Ã‚Â±adir destino adicional solo en ejecuciÃƒÆ’Ã‚Â³n y SOLO para Transporte
+  // Añadir destino adicional solo en ejecución y SOLO para Transporte
   const canAddDestino = isTransporteView && status === 'en_ejecucion';
 
   // Valores a mostrar
@@ -182,13 +182,13 @@ export default function HistorialDetallePage() {
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
   const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
   
-  // Valores especÃƒÆ’Ã‚Â­ficos de mantenimiento
+  // Valores específicos de mantenimiento
   const vehiculoMantenimientoMarca = typeof raw.vehiculo === 'object' ? (raw.vehiculo?.marca || raw.vehiculo?.nombre) : (raw.vehiculo || '');
   const vehiculoMantenimientoPlaca = raw.placa || (typeof raw.vehiculo === 'object' ? raw.vehiculo?.placa : '') || comp.vehiculo_placa || '';
   const tipoMantenimientoNombre = typeof raw.tipo_mantenimiento === 'object' ? raw.tipo_mantenimiento?.nombre : (raw.tipo_mantenimiento || 'General');
   const kilometrajeVal = raw.kilometraje_actual || raw.kilometraje || null;
 
-  // El jefe guarda su decisiÃƒÆ’Ã‚Â³n manual en cantidad_combustible (en show API) o cantidad_estimada (en comparativa API)
+  // El jefe guarda su decisión manual en cantidad_combustible (en show API) o cantidad_estimada (en comparativa API)
   const montoFinal = raw.cantidad_combustible || comp.cantidad_estimada || raw.monto_aprobado || comp.monto_aprobado || data.comparativa?.operativo?.monto_aprobado || null;
   const comentarioJefe = raw.comentario_jefe || comp.comentario_jefe || raw.comentario || 'Sin comentario';
   
@@ -248,7 +248,7 @@ export default function HistorialDetallePage() {
         />
       </div>
 
-      {/* Modal de ReasignaciÃƒÆ’Ã‚Â³n */}
+      {/* Modal de Reasignación */}
       <ModalReasignarViaje
         isOpen={showReasignarModal}
         onClose={() => setShowReasignarModal(false)}

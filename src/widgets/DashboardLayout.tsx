@@ -66,7 +66,7 @@ export const DashboardLayout: React.FC = () => {
           <button
             type="button"
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            aria-label="Abrir menÃº"
+            aria-label="Abrir menú"
             className="p-2 bg-white/10 hover:bg-white/20 rounded-xl transition-all"
           >
             <Menu size={22} />

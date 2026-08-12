@@ -29,13 +29,13 @@ export const EnEjecucionPage: React.FC = () => {
   }, []);
 
   const filteredRequests = useMemo(() => {
-    // 1. Mostrar SOLO lo que estÃƒÂ¡ en ejecuciÃƒÂ³n
+    // 1. Mostrar SOLO lo que está en ejecución
     let result = requests.filter(req => {
       const status = typeof req.status === 'string' ? req.status.toLowerCase() : '';
       return status.includes('ejecucion');
     });
 
-    // 2. Filtro de bÃƒÂºsqueda
+    // 2. Filtro de búsqueda
     if (searchTerm) {
       const lowerSearch = searchTerm.toLowerCase();
       result = result.filter(req => {
@@ -57,7 +57,7 @@ export const EnEjecucionPage: React.FC = () => {
     return (
       <span className="px-3 py-1 bg-white border border-indigo-200 text-indigo-600 rounded-full text-[11px] font-semibold flex items-center w-max shadow-sm capitalize">
         <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 mr-1.5 animate-pulse"></span>
-        En EjecuciÃƒÂ³n
+        En Ejecución
       </span>
     );
   };
@@ -70,7 +70,7 @@ export const EnEjecucionPage: React.FC = () => {
             <Navigation size={24} />
           </div>
           <div>
-            <h1 className="text-3xl font-extrabold text-[#182645] tracking-tight font-title">VehÃƒÂ­culos en Ruta</h1>
+            <h1 className="text-3xl font-extrabold text-[#182645] tracking-tight font-title">Vehículos en Ruta</h1>
             <p className="text-sm text-slate-500 mt-1 font-medium">Monitoreo en tiempo real de viajes y tareas operativas activas.</p>
           </div>
         </div>
@@ -81,7 +81,7 @@ export const EnEjecucionPage: React.FC = () => {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
           <input 
             type="text" 
-            placeholder="Buscar por cÃƒÂ³digo..."
+            placeholder="Buscar por código..."
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 transition-all"
@@ -102,7 +102,7 @@ export const EnEjecucionPage: React.FC = () => {
           ) : filteredRequests.length === 0 ? (
             <div className="py-12 text-center bg-slate-50 rounded-xl border border-dashed border-slate-200">
               <Map className="mx-auto text-slate-300 mb-3" size={32} />
-              <p className="text-slate-500 font-medium">No hay vehÃƒÂ­culos en ruta en este momento.</p>
+              <p className="text-slate-500 font-medium">No hay vehículos en ruta en este momento.</p>
             </div>
           ) : (
             paginatedRequests.map((req, idx) => (
@@ -134,10 +134,10 @@ export const EnEjecucionPage: React.FC = () => {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="border-b border-slate-100/80">
-                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÃƒâ€œDIGO</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">CÓDIGO</th>
                 <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">FECHA</th>
                 <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">TIPO</th>
-                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ACCIÃƒâ€œN</th>
+                <th className="py-4 px-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest text-right">ACCIÓN</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100/80">
@@ -154,7 +154,7 @@ export const EnEjecucionPage: React.FC = () => {
                 <tr>
                   <td colSpan={4} className="py-16 text-center">
                     <Map className="mx-auto text-slate-300 mb-3" size={32} />
-                    <p className="text-slate-500 font-medium">No hay vehÃƒÂ­culos en ruta en este momento.</p>
+                    <p className="text-slate-500 font-medium">No hay vehículos en ruta en este momento.</p>
                   </td>
                 </tr>
               ) : (

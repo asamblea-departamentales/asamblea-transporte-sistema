@@ -15,7 +15,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
-  // Redirigir automÃƒÂ¡ticamente si ya estÃƒÂ¡ autenticado
+  // Redirigir automáticamente si ya está autenticado
   React.useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
@@ -40,7 +40,7 @@ const LoginPage: React.FC = () => {
         ? responseMessage
         : err instanceof Error
           ? err.message
-          : 'Credenciales invÃ¡lidas. Por favor intenta de nuevo.';
+          : 'Credenciales inválidas. Por favor intenta de nuevo.';
 
       if (axios.isAxiosError(err) && err.response?.status === 422) {
         errorMessage = typeof responseMessage === 'string'
@@ -51,7 +51,7 @@ const LoginPage: React.FC = () => {
       setError(errorMessage);
       setIsShaking(true);
       
-      // Remover la clase de animaciÃƒÂ³n despuÃƒÂ©s de 500ms
+      // Remover la clase de animación después de 500ms
       setTimeout(() => setIsShaking(false), 500);
     } finally {
       setIsLoading(false);
@@ -81,7 +81,7 @@ const LoginPage: React.FC = () => {
             Acceso Restringido
           </h1>
           <p className="text-center text-sm text-slate-500 mb-10">
-            MÃƒÂ³dulo exclusivo para Jefaturas y AdministraciÃƒÂ³n
+            Módulo exclusivo para Jefaturas y Administración
           </p>
 
           {/* Login Form */}
@@ -106,9 +106,9 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Input ContraseÃƒÂ±a */}
+            {/* Input Contraseña */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">ContraseÃƒÂ±a</label>
+              <label className="block text-sm font-medium text-slate-700">Contraseña</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -118,7 +118,7 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-[15px] transition-all duration-200 text-slate-900 placeholder-gray-400 outline-none bg-white"
-                  placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
+                  placeholder="••••••••"
                   autoComplete="current-password"
                   required
                 />
@@ -160,7 +160,7 @@ const LoginPage: React.FC = () => {
                   </svg>
                   <span>Verificando...</span>
                 </span>
-              ) : 'INICIAR SESIÃƒâ€œN'}
+              ) : 'INICIAR SESIÓN'}
             </button>
           </form>
         </div>
@@ -171,7 +171,7 @@ const LoginPage: React.FC = () => {
 
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400 w-full">
-        Ã‚Â© 2026 Asamblea Legislativa de El Salvador
+        © 2026 Asamblea Legislativa de El Salvador
       </div>
     </div>
   );
