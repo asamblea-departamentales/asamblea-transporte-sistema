@@ -4,9 +4,11 @@ namespace App\Domain\Solicitudes\Listeners;
 
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
+use App\Models\SolicitudTransporte;
 use App\Notifications\SolicitudCancelada;
 use App\Notifications\SolicitudRechazada;
 use App\Notifications\ViajeAsignado;
+use App\Notifications\ViajeProgramado;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Log;
@@ -17,13 +19,11 @@ class NotificarMotoristaInApp implements ShouldQueue, ShouldQueueAfterCommit
     {
         $solicitud = $event->solicitud;
 
-        if (! method_exists($solicitud, 'motorista')) {
+        if (! $solicitud instanceof SolicitudTransporte) {
             return;
         }
 
-        if (! $solicitud->relationLoaded('motorista')) {
-            $solicitud->load('motorista');
-        }
+        $solicitud->unsetRelation('motorista')->load('motorista');
 
         $motorista = $solicitud->motorista;
 
@@ -33,8 +33,9 @@ class NotificarMotoristaInApp implements ShouldQueue, ShouldQueueAfterCommit
 
         try {
             match ($event->estadoNuevo) {
-                EstadoSolicitudEnum::ASIGNADA,
-                EstadoSolicitudEnum::PROGRAMADA => $motorista->notify(new ViajeAsignado($solicitud)),
+                EstadoSolicitudEnum::APROBADA,
+                EstadoSolicitudEnum::ASIGNADA => $motorista->notify(new ViajeAsignado($solicitud)),
+                EstadoSolicitudEnum::PROGRAMADA => $motorista->notify(new ViajeProgramado($solicitud)),
                 EstadoSolicitudEnum::RECHAZADA => $motorista->notify(new SolicitudRechazada($solicitud)),
                 EstadoSolicitudEnum::CANCELADA => $motorista->notify(new SolicitudCancelada($solicitud)),
                 default => null,

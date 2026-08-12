@@ -5,11 +5,14 @@ namespace App\Domain\Solicitudes\Services\Lotes;
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoLoteEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Models\AsignacionCombustibleLote;
 use App\Models\AsignacionCombustibleLoteDetalle;
 use App\Models\ContratoCombustible;
 use App\Models\SerieCarga;
 use App\Models\SolicitudCombustible;
+use App\Models\User;
 use App\Models\Vehiculo;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +38,7 @@ class LoteCombustibleService
                 'creado_por' => $userId,
             ]);
 
-            app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+            app(AuditoriaService::class)
                 ->registrar(
                     accion: AccionBitacoraEnum::CREAR,
                     modelo: 'AsignacionCombustibleLote',
@@ -145,7 +148,7 @@ class LoteCombustibleService
                     'fecha' => $lote->fecha,
                 ]);
 
-                app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+                app(AuditoriaService::class)
                     ->registrar(
                         accion: AccionBitacoraEnum::ASIGNAR,
                         modelo: 'AsignacionCombustibleLote',
@@ -192,7 +195,7 @@ class LoteCombustibleService
                 'importado_por' => $userId,
             ]);
 
-            app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+            app(AuditoriaService::class)
                 ->registrar(
                     accion: AccionBitacoraEnum::ASIGNAR,
                     modelo: 'AsignacionCombustibleLote',
@@ -255,7 +258,7 @@ class LoteCombustibleService
                 'monto_total' => $lote->total_monto,
             ]);
 
-            app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+            app(AuditoriaService::class)
                 ->registrar(
                     accion: AccionBitacoraEnum::COMPLETAR,
                     modelo: 'AsignacionCombustibleLote',
@@ -291,7 +294,7 @@ class LoteCombustibleService
                 'iniciado_por' => $userId,
             ]);
 
-            app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+            app(AuditoriaService::class)
                 ->registrar(
                     accion: AccionBitacoraEnum::ASIGNAR,
                     modelo: 'AsignacionCombustibleLote',
@@ -368,6 +371,14 @@ class LoteCombustibleService
                 $solicitud->estado = EstadoSolicitudEnum::ASIGNADA;
                 $solicitud->save();
 
+                SolicitudEstadoCambiado::dispatch(
+                    $solicitud,
+                    EstadoSolicitudEnum::APROBADA,
+                    EstadoSolicitudEnum::ASIGNADA,
+                    User::findOrFail($userId),
+                    ['accion' => 'asignar_lote'],
+                );
+
                 // Avanzar correlativo en la serie
                 $serie->correlativo_actual = $fin + 1;
                 $serie->save();
@@ -385,7 +396,7 @@ class LoteCombustibleService
                 'monto_total' => $lote->total_monto,
             ]);
 
-            app(\App\Domain\Solicitudes\Services\AuditoriaService::class)
+            app(AuditoriaService::class)
                 ->registrar(
                     accion: AccionBitacoraEnum::COMPLETAR,
                     modelo: 'AsignacionCombustibleLote',

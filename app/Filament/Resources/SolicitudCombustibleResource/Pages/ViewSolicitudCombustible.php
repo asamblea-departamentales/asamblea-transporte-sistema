@@ -7,8 +7,6 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Filament\Resources\SolicitudCombustibleResource;
-use App\Models\BitacoraEvento;
-use App\Models\HistorialEstado;
 use App\Models\SolicitudCombustible;
 use Filament\Actions;
 use Filament\Forms;
@@ -22,10 +20,10 @@ class ViewSolicitudCombustible extends ViewRecord
 
     protected function afterFill(): void
     {
-        app(\App\Domain\Solicitudes\Services\SolicitudCombustibleService::class)
+        app(SolicitudCombustibleService::class)
             ->registrarEvento(
                 $this->record,
-                \App\Domain\Solicitudes\Enums\AccionBitacoraEnum::VER->value,
+                AccionBitacoraEnum::VER->value,
                 auth()->id()
             );
     }
@@ -94,35 +92,24 @@ class ViewSolicitudCombustible extends ViewRecord
                     ? 'Esta solicitud está siendo procesada en un Lote de combustible activo'
                     : false
                 )
-                ->action(function (SolicitudCombustible $record, array $data) {
-                    $estadoAnterior = $record->estado;
+                ->action(function (SolicitudCombustible $record, array $data, Actions\StaticAction $action) {
+                    try {
+                        app(SolicitudCombustibleService::class)
+                            ->observar($record, auth()->id(), $data['observaciones']);
 
-                    $record->observaciones = $data['observaciones'];
+                        Notification::make()
+                            ->title('Observación registrada')
+                            ->success()
+                            ->send();
+                    } catch (\DomainException $e) {
+                        Notification::make()
+                            ->title('Error al registrar observación')
+                            ->body($e->getMessage())
+                            ->danger()
+                            ->send();
 
-                    if ($record->estado === EstadoSolicitudEnum::PENDIENTE) {
-                        $record->estado = EstadoSolicitudEnum::EN_REVISION;
+                        $action->halt();
                     }
-
-                    $record->save();
-
-                    if ($estadoAnterior !== $record->estado) {
-                        HistorialEstado::create([
-                            'entidad_tipo' => 'solicitud_combustible',
-                            'entidad_id' => $record->id,
-                            'estado_anterior' => $estadoAnterior?->value,
-                            'estado_nuevo' => $record->estado?->value,
-                            'user_id' => auth()->id(),
-                            'comentario' => $data['observaciones'],
-                        ]);
-                    }
-
-                    BitacoraEvento::create([
-                        'entidad_tipo' => 'solicitud_combustible',
-                        'entidad_id' => $record->id,
-                        'accion' => AccionBitacoraEnum::OBSERVAR->value,
-                        'user_id' => auth()->id(),
-                        'datos_extras' => ['comentario' => $data['observaciones']],
-                    ]);
                 })
                 ->visible(fn (SolicitudCombustible $record) => auth()->user()->hasAnyRole(['jefe', 'admin', 'ti', 'super_admin']) &&
                     in_array($record->estado, [EstadoSolicitudEnum::PENDIENTE, EstadoSolicitudEnum::EN_REVISION], true)

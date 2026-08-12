@@ -14,6 +14,7 @@ class RolesSeeder extends Seeder
     {
         // ── 1. Crear roles ──
         $superAdmin = Role::firstOrCreate(['name' => 'super_admin', 'guard_name' => 'web']);
+        Role::firstOrCreate(['name' => 'admin', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'solicitante', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'jefe', 'guard_name' => 'web']);
         Role::firstOrCreate(['name' => 'ti', 'guard_name' => 'web']);
@@ -122,7 +123,7 @@ class RolesSeeder extends Seeder
             'widget_StatsOverview',
         ];
         $fullPermissionModels = Permission::whereIn('name', $fullPermisos)->get();
-        foreach (['jefe', 'operativo', 'liquidador', 'ti'] as $roleName) {
+        foreach (['jefe', 'operativo', 'liquidador', 'ti', 'admin'] as $roleName) {
             $role = Role::findByName($roleName);
             $role->syncPermissions($fullPermissionModels);
         }

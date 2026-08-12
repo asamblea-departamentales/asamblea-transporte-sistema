@@ -33,13 +33,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/auth/me', [TokenAuthController::class, 'me']);
     Route::post('/auth/logout', [TokenAuthController::class, 'logout']);
 
-    // Web Push VAPID — expuestas auth:sanctum (no solo motoristas)
-    Route::get('/me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
-    Route::post('/me/push-subscribe', [PushSubscriptionController::class, 'store']);
-    Route::delete('/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
-    Route::get('/motoristas/me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
-    Route::post('/motoristas/me/push-subscribe', [PushSubscriptionController::class, 'store']);
-    Route::delete('/motoristas/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
+    // Web Push VAPID — expuestas auth:sanctum (usuarios)
+    Route::get('/me/push-public-key', [PushSubscriptionController::class, 'publicKey'])->name('me.push-public-key');
+    Route::post('/me/push-subscribe', [PushSubscriptionController::class, 'store'])->name('me.push-subscribe');
+    Route::delete('/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('me.push-unsubscribe');
 
     // Notificaciones in-app del usuario autenticado (jefatura/operativo)
     Route::get('/me/notificaciones', [NotificacionController::class, 'index']);
@@ -154,10 +151,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('me/notificaciones', [MotoristaNotificacionController::class, 'index']);
             Route::put('me/notificaciones/{notification}/leer', [MotoristaNotificacionController::class, 'marcarLeer']);
             Route::put('me/notificaciones/marcar-todas', [MotoristaNotificacionController::class, 'marcarTodasLeer']);
-            Route::post('me/push-subscribe', [PushSubscriptionController::class, 'store']);
-            Route::delete('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
-            Route::post('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
-            Route::get('me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
+            Route::get('me/push-public-key', [PushSubscriptionController::class, 'publicKey'])->name('motoristas.me.push-public-key');
+            Route::post('me/push-subscribe', [PushSubscriptionController::class, 'store'])->name('motoristas.me.push-subscribe');
+            Route::delete('me/push-unsubscribe', [PushSubscriptionController::class, 'destroy'])->name('motoristas.me.push-unsubscribe');
         });
 
     // ── RUTAS ADMINISTRATIVAS (jefe/operativo pueden gestionar motoristas) ─

@@ -61,8 +61,8 @@ class PushSubscriptionController extends Controller
     private function resolveNotifiable(Request $request): User|Motorista|null
     {
         $esRutaMotorista = $request->routeIs(
-            'api.motoristas.me.push-subscribe',
-            'api.motoristas.me.push-unsubscribe',
+            'motoristas.me.push-subscribe',
+            'motoristas.me.push-unsubscribe',
         );
 
         return $esRutaMotorista ? $request->user()->motorista : $request->user();

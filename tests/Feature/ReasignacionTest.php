@@ -15,6 +15,7 @@ use App\Notifications\SolicitudRechazada;
 use App\Notifications\ViajeAsignado;
 use App\Notifications\ViajeDesasignado;
 use App\Notifications\ViajeObservado;
+use App\Notifications\ViajeProgramado;
 use App\Notifications\ViajeReasignado;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Laravel\Sanctum\Sanctum;
@@ -195,6 +196,7 @@ class ReasignacionTest extends TestCase
             new SolicitudCancelada($solicitud, 'Cancelada por prueba'),
             new SolicitudRechazada($solicitud, 'Rechazada por prueba'),
             new ViajeDesasignado($solicitud),
+            new ViajeProgramado($solicitud),
         ];
 
         foreach ($notificaciones as $notificacion) {
@@ -205,5 +207,30 @@ class ReasignacionTest extends TestCase
             $this->assertSame($payload['titulo'], $message->toArray()['title']);
             $this->assertSame($payload['mensaje'], $message->toArray()['body']);
         }
+    }
+
+    public function test_viaje_programado_payload_incluye_modulo_y_url(): void
+    {
+        $this->setUpRoles();
+        $vehiculo = Vehiculo::factory()->create();
+        $motorista = Motorista::factory()->create();
+        $solicitud = $this->createSolicitudAprobada([
+            'vehiculo_id' => $vehiculo->id,
+            'motorista_id' => $motorista->id,
+        ]);
+
+        $notificacion = new ViajeProgramado($solicitud);
+
+        $data = $notificacion->toArray($motorista);
+        $this->assertSame('viaje_programado', $data['tipo']);
+        $this->assertSame('transporte', $data['modulo']);
+        $this->assertSame('/viajes', $data['url']);
+
+        $message = $notificacion->toWebPush($motorista, $notificacion);
+        $payload = $message->toArray();
+        $this->assertSame($data['titulo'], $payload['title']);
+        $this->assertSame($data['mensaje'], $payload['body']);
+        $this->assertArrayHasKey('url', $payload['data']);
+        $this->assertArrayHasKey('modulo', $payload['data']);
     }
 }
