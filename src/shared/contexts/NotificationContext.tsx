@@ -8,6 +8,7 @@ import {
   marcarNotificacionLeida,
   marcarTodasNotificacionesLeidas,
 } from '../services/notification.service';
+import type { NotificationPayload } from '../services/notification.service';
 import { subscribeUserToPush } from '../services/push.service';
 
 export interface AppNotification {
@@ -27,6 +28,9 @@ interface NotificationContextProps {
   requestPermission: () => Promise<void>;
   simulateNotification: (title: string, body: string) => void;
   notifications: AppNotification[];
+  refreshNotifications: () => Promise<void>;
+  isLoading: boolean;
+  notificationError: string | null;
   clearNotifications: () => void;
   markAsRead: (id: string) => void;
   markAllAsRead: () => void;
@@ -38,6 +42,9 @@ const NotificationContext = createContext<NotificationContextProps>({
   requestPermission: async () => {},
   simulateNotification: () => {},
   notifications: [],
+  refreshNotifications: async () => {},
+  isLoading: false,
+  notificationError: null,
   clearNotifications: () => {},
   markAsRead: () => {},
   markAllAsRead: () => {},
@@ -77,11 +84,56 @@ const playChime = () => {
   }
 };
 
+type NotificationInput = {
+  id?: string | number;
+  data?: NotificationPayload;
+  title?: string;
+  body?: string;
+  titulo?: string;
+  mensaje?: string;
+  date?: Date;
+  created_at?: string;
+  read?: boolean;
+  read_at?: string | null;
+  tipo?: string;
+  solicitud_id?: number;
+  solicitud_codigo?: string;
+  ticket?: number;
+};
+
+const parseNotificationDate = (value?: Date | string): Date => {
+  const date = value instanceof Date ? value : value ? new Date(value) : new Date();
+  return Number.isNaN(date.getTime()) ? new Date() : date;
+};
+
+/**
+ * Adapta tanto el registro database de Laravel como los eventos planos
+ * usados por las notificaciones locales/realtime al modelo de la interfaz.
+ */
+const normalizeNotification = (input: NotificationInput): AppNotification => {
+  const payload = input.data ?? input;
+
+  return {
+    id: String(input.id ?? Math.random().toString(36).substring(2, 9)),
+    title: payload.titulo || input.title || 'Nueva Notificacion',
+    body: payload.mensaje || input.body || '',
+    date: parseNotificationDate(input.date ?? input.created_at),
+    read: typeof input.read === 'boolean' ? input.read : Boolean(input.read_at),
+    tipo: payload.tipo || input.tipo,
+    solicitud_id: payload.solicitud_id ?? input.solicitud_id,
+    solicitud_codigo: payload.solicitud_codigo ?? input.solicitud_codigo,
+    ticket: payload.ticket ?? input.ticket,
+  };
+};
+
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [permission, setPermission] = useState<NotificationPermission | 'default'>('default');
   const [notifications, setNotifications] = useState<AppNotification[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [notificationError, setNotificationError] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
+  const knownIdsRef = React.useRef<Set<string>>(new Set());
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -133,21 +185,16 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   };
 
-  const handleIncomingNotification = useCallback((event: any) => {
-    const newNotif: AppNotification = {
-      id: String(event.id || Math.random().toString(36).substring(2, 9)),
-      title: event.titulo || event.title || 'Nueva Notificación',
-      body: event.mensaje || event.body || '',
-      date: event.created_at ? new Date(event.created_at) : new Date(),
-      read: false,
-      tipo: event.tipo,
-      solicitud_id: event.solicitud_id,
-      solicitud_codigo: event.solicitud_codigo,
-      ticket: event.ticket,
-    };
+  const handleIncomingNotification = useCallback((event: NotificationInput) => {
+    const newNotif = normalizeNotification({ ...event, read: false });
 
+    if (knownIdsRef.current.has(newNotif.id)) {
+      setNotifications(prev => prev.map(item => item.id === newNotif.id ? { ...item, ...newNotif } : item));
+      return;
+    }
+
+    knownIdsRef.current.add(newNotif.id);
     setNotifications(prev => [newNotif, ...prev]);
-
     // 1. Feedback Físico y Sonoro
     playChime();
     if (navigator.vibrate) {
@@ -194,27 +241,18 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
   }, [markAsRead, navigate]);
 
-  const knownIdsRef = React.useRef<Set<string>>(new Set());
-
   const fetchLatestNotifications = useCallback(async (isPolling = false) => {
+    if (!isPolling) {
+      setIsLoading(true);
+    }
+
     try {
       const res = await getNotificaciones(1, 20);
-      const rawItems = res?.data && Array.isArray(res.data) ? res.data : (Array.isArray(res) ? res : []);
-
-      const list: AppNotification[] = rawItems.map((item: any) => ({
-        id: String(item.id),
-        title: item.titulo || item.title || 'Notificación',
-        body: item.mensaje || item.body || '',
-        date: item.created_at ? new Date(item.created_at) : new Date(),
-        read: Boolean(item.read_at),
-        tipo: item.tipo,
-        solicitud_id: item.solicitud_id,
-        solicitud_codigo: item.solicitud_codigo,
-        ticket: item.ticket,
-      }));
+      const rawItems = Array.isArray(res?.data) ? res.data : [];
+      const list: AppNotification[] = rawItems.map(normalizeNotification);
 
       if (isPolling) {
-        // Disparar alertas para notificaciones no leídas verdaderamente nuevas
+        // Disparar alertas para notificaciones no leidas verdaderamente nuevas
         list.forEach(item => {
           if (!knownIdsRef.current.has(item.id) && !item.read) {
             handleIncomingNotification(item);
@@ -224,17 +262,31 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       list.forEach(item => knownIdsRef.current.add(item.id));
       setNotifications(list);
+      setNotificationError(null);
     } catch (err) {
       if (!isPolling) {
+        setNotificationError('No se pudieron cargar las notificaciones. Intenta nuevamente.');
         console.warn('No se pudo cargar el historial de notificaciones:', err);
+      }
+    } finally {
+      if (!isPolling) {
+        setIsLoading(false);
       }
     }
   }, [handleIncomingNotification]);
+
+  const refreshNotifications = useCallback(
+    () => fetchLatestNotifications(false),
+    [fetchLatestNotifications],
+  );
 
   // Cargar notificaciones REST, Polling recurrente cada 15s y Push VAPID
   useEffect(() => {
     if (!user) return;
     const motoristaId = user?.motorista_id || (user as any)?.id;
+
+    knownIdsRef.current.clear();
+    setNotificationError(null);
 
     // 1. Obtener notificaciones iniciales
     fetchLatestNotifications(false);
@@ -279,7 +331,8 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   return (
     <NotificationContext.Provider value={{ 
       permission, requestPermission, simulateNotification, 
-      notifications, clearNotifications, markAsRead, markAllAsRead, unreadCount 
+      notifications, refreshNotifications, isLoading, notificationError,
+      clearNotifications, markAsRead, markAllAsRead, unreadCount
     }}>
       {children}
     </NotificationContext.Provider>
