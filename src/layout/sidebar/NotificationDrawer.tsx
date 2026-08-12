@@ -1,9 +1,10 @@
-import { useEffect } from "react";
+﻿import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification } from "../../notifications/NotificationContext";
 import { getNotificationTargetPath } from "../../notifications/notification-routing";
+import { formatNotificationDate } from "../../notifications/notification-format";
 import { cn } from "../../lib/utils";
-import { Icons, timeAgo, notiCfg } from "./sidebar.constants";
+import { Icons, notiCfg } from "./sidebar.constants";
 
 export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
   const {
@@ -11,9 +12,12 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
     unreadCount,
     isLoading,
     error,
+    notificationActionError,
     refreshNotifications,
     markAsRead,
     markAllRead,
+    retryNotificationAction,
+    clearNotificationActionError,
     dismissNotification,
     dismissAllNotifications,
     permission,
@@ -27,7 +31,8 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
   }, [open, refreshNotifications]);
 
   const handleNotificationClick = async (notification: Notification) => {
-    await markAsRead(notification.id);
+    const readSucceeded = await markAsRead(notification.id);
+    if (!readSucceeded) return;
     onClose();
     navigate(getNotificationTargetPath({
       modulo: notification.modulo,
@@ -72,16 +77,26 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button onClick={() => void markAllRead()} title="Marcar todo como leído" className="flex h-8 w-8 items-center justify-center rounded-full text-blue-600 transition-colors hover:bg-blue-50">
+              <button
+                onClick={() => void markAllRead()}
+                aria-label="Marcar todas como leídas"
+                title="Marcar todo como leído"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-blue-600 transition-colors hover:bg-blue-50"
+              >
                 <Icons.Check />
               </button>
             )}
             {notifications.length > 0 && (
-              <button onClick={handleDismissAll} title="Limpiar todas las notificaciones" className="flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50">
+              <button
+                onClick={handleDismissAll}
+                aria-label="Limpiar todas las notificaciones"
+                title="Limpiar todas las notificaciones"
+                className="flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50"
+              >
                 <Icons.Trash />
               </button>
             )}
-            <button onClick={onClose} title="Cerrar" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
+            <button onClick={onClose} aria-label="Cerrar notificaciones" title="Cerrar" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
               <Icons.X />
             </button>
           </div>
@@ -113,6 +128,22 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
           </div>
         )}
 
+        {notificationActionError && (
+          <div className="mx-4 mt-3 flex items-start justify-between gap-3 rounded-xl border border-red-200 bg-red-50 px-3 py-2.5 text-xs text-red-800" role="alert">
+            <p className="min-w-0 flex-1">{notificationActionError}</p>
+            <div className="flex flex-shrink-0 items-center gap-2">
+              <button onClick={() => void retryNotificationAction()} className="font-bold underline">Reintentar</button>
+              <button onClick={clearNotificationActionError} aria-label="Cerrar aviso de acción" className="text-base leading-none text-red-500">×</button>
+            </div>
+          </div>
+        )}
+
+        {isLoading && recientes.length > 0 && (
+          <p className="px-6 py-2 text-[11px] font-semibold text-slate-400" role="status" aria-live="polite">
+            Actualizando notificaciones…
+          </p>
+        )}
+
         <div className="flex-1 overflow-y-auto bg-white">
           {isLoading && recientes.length === 0 ? (
             <div className="flex h-[50vh] flex-col items-center justify-center gap-3 px-8 text-center" role="status" aria-live="polite">
@@ -136,13 +167,22 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
               return (
                 <div
                   key={notification.id}
+                  role="button"
+                  tabIndex={0}
+                  aria-label={"Abrir notificación " + notification.titulo}
                   className={cn(
-                    "group relative flex w-full cursor-pointer items-start gap-4 border-b border-slate-50 px-6 py-5 text-left transition-colors hover:bg-slate-50/80",
+                    "group relative flex w-full cursor-pointer items-start gap-4 border-b border-slate-50 px-6 py-5 text-left transition-colors hover:bg-slate-50/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500",
                     !isUnread && "opacity-60 hover:opacity-100",
                   )}
                   onClick={(event) => {
                     if ((event.target as HTMLElement).closest(".btn-dismiss")) return;
                     void handleNotificationClick(notification);
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      void handleNotificationClick(notification);
+                    }
                   }}
                 >
                   {isUnread && <span className="absolute left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />}
@@ -150,17 +190,17 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose
                     <span className={cn("block h-2 w-2 rounded-full", cfg.dot)} />
                   </div>
                   <div className="min-w-0 flex-1 pr-6">
-                    <span className={cn("mb-1.5 block text-[14px] leading-tight tracking-wide transition-colors", isUnread ? "font-bold text-slate-900 group-hover:text-blue-600" : "font-semibold text-slate-600")}>
+                    <span className={cn("mb-1.5 block break-words text-[14px] leading-tight tracking-wide transition-colors", isUnread ? "font-bold text-slate-900 group-hover:text-blue-600" : "font-semibold text-slate-600")}>
                       {notification.titulo}
                     </span>
-                    <p className="mb-2 line-clamp-3 text-[13px] leading-relaxed text-slate-500">{notification.mensaje}</p>
-                    <span className="text-[11px] font-medium text-slate-400">{timeAgo(notification.createdAt)}</span>
+                    <p className="mb-2 line-clamp-3 break-words text-[13px] leading-relaxed text-slate-500">{notification.mensaje}</p>
+                    <span className="text-[11px] font-medium text-slate-400">{formatNotificationDate(notification.createdAt)}</span>
                   </div>
                   <button
                     onClick={(event) => { event.stopPropagation(); dismissNotification(notification.id); }}
                     title="Limpiar notificación"
-                    aria-label={`Limpiar ${notification.titulo}`}
-                    className="btn-dismiss absolute right-4 top-1/2 flex h-8 w-8 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full text-slate-400 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500"
+                    aria-label={"Limpiar " + notification.titulo}
+                    className="btn-dismiss absolute right-4 top-1/2 flex h-8 w-8 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full text-red-400 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-600 focus-visible:opacity-100"
                   >
                     <Icons.Trash />
                   </button>

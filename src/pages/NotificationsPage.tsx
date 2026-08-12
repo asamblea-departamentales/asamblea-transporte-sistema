@@ -1,8 +1,8 @@
-import { useEffect, useState, type ReactNode } from "react";
+﻿import { useEffect, useState, type ReactNode } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification, type NotiModulo, type NotiTipo } from "../notifications/NotificationContext";
 import { getNotificationTargetPath } from "../notifications/notification-routing";
-import { timeAgo as formatTimeAgo } from "../lib/format";
+import { formatNotificationDate } from "../notifications/notification-format";
 
 const TIPO_CONFIG: Record<NotiTipo, { label: string; dot: string; bg: string; border: string }> = {
   aprobada: { label: "Aprobada", dot: "#10b981", bg: "rgba(16,185,129,.12)", border: "rgba(16,185,129,.25)" },
@@ -11,7 +11,7 @@ const TIPO_CONFIG: Record<NotiTipo, { label: string; dot: string; bg: string; bo
   programada: { label: "Prog.", dot: "#6366f1", bg: "rgba(99,102,241,.12)", border: "rgba(99,102,241,.25)" },
   rechazada: { label: "Rechazada", dot: "#ef4444", bg: "rgba(239,68,68,.12)", border: "rgba(239,68,68,.25)" },
   observada: { label: "Observada", dot: "#60a5fa", bg: "rgba(96,165,250,.12)", border: "rgba(96,165,250,.25)" },
-  en_revision: { label: "Revisión", dot: "#f59e0b", bg: "rgba(245,158,11,.12)", border: "rgba(245,158,11,.25)" },
+  en_revision: { label: "RevisiÃ³n", dot: "#f59e0b", bg: "rgba(245,158,11,.12)", border: "rgba(245,158,11,.25)" },
   finalizada: { label: "Finalizada", dot: "#94a3b8", bg: "rgba(148,163,184,.12)", border: "rgba(148,163,184,.25)" },
   cancelada: { label: "Cancelada", dot: "#64748b", bg: "rgba(100,116,139,.12)", border: "rgba(100,116,139,.2)" },
   recordatorio: { label: "Recordatorio", dot: "#fbbf24", bg: "rgba(251,191,36,.12)", border: "rgba(251,191,36,.25)" },
@@ -43,6 +43,9 @@ export default function NotificationsPage() {
     unreadCount,
     isLoading,
     error,
+    notificationActionError,
+    retryNotificationAction,
+    clearNotificationActionError,
     refreshNotifications,
     markAsRead,
     markAllRead,
@@ -65,7 +68,8 @@ export default function NotificationsPage() {
   });
 
   const handleOpen = async (notification: Notification) => {
-    await markAsRead(notification.id);
+    const readSucceeded = await markAsRead(notification.id);
+    if (!readSucceeded) return;
     navigate(getNotificationTargetPath({
       modulo: notification.modulo,
       solicitudId: notification.reqId,
@@ -74,12 +78,12 @@ export default function NotificationsPage() {
   };
 
   const handleDismissAll = () => {
-    if (window.confirm("¿Limpiar todas las notificaciones de este navegador?")) dismissAllNotifications();
+    if (window.confirm("Â¿Limpiar todas las notificaciones de este navegador?")) dismissAllNotifications();
   };
 
   const filters: { value: typeof filter; label: string }[] = [
     { value: "todas", label: "Todas" },
-    { value: "no_leidas", label: "No leídas" },
+    { value: "no_leidas", label: "No leÃ­das" },
     { value: "aprobada", label: "Aprobadas" },
     { value: "rechazada", label: "Rechazadas" },
     { value: "recordatorio", label: "Recordatorios" },
@@ -91,13 +95,13 @@ export default function NotificationsPage() {
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">Notificaciones</h1>
-          <p className="mt-1 text-sm text-slate-500">{unreadCount > 0 ? `${unreadCount} sin leer` : "Todo al día"}</p>
+          <p className="mt-1 text-sm text-slate-500">{unreadCount > 0 ? `${unreadCount} sin leer` : "Todo al dÃ­a"}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {unreadCount > 0 && (
             <button onClick={() => void markAllRead()} className="inline-flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-semibold text-slate-700 shadow-sm transition hover:bg-slate-50">
               <svg className="h-4 w-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" /></svg>
-              Marcar todo leído
+              Marcar todo leÃ­do
             </button>
           )}
           {notifications.length > 0 && (
@@ -111,13 +115,22 @@ export default function NotificationsPage() {
       {permission === "default" && (
         <div className="flex flex-col items-center justify-between gap-4 rounded-3xl bg-blue-600 p-6 text-white shadow-xl shadow-blue-200 sm:flex-row">
           <div className="flex w-full items-center gap-4 text-left">
-            <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-white/20"><span className="text-xl">🔔</span></div>
-            <div><h3 className="text-lg font-bold">Activar notificaciones</h3><p className="text-sm text-blue-100">Recibe alertas instantáneas en tu celular o PC.</p></div>
+            <div className="grid h-12 w-12 flex-shrink-0 place-items-center rounded-2xl bg-white/20"><span className="text-xl">ðŸ””</span></div>
+            <div><h3 className="text-lg font-bold">Activar notificaciones</h3><p className="text-sm text-blue-100">Recibe alertas instantÃ¡neas en tu celular o PC.</p></div>
           </div>
           <button onClick={() => void requestPermission()} className="w-full flex-shrink-0 rounded-xl bg-white px-6 py-2.5 text-sm font-bold text-blue-600 shadow-lg transition hover:scale-105 active:scale-95 sm:w-auto">Habilitar ahora</button>
         </div>
       )}
 
+      {notificationActionError && (
+        <div className="flex flex-col gap-2 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-800 sm:flex-row sm:items-center sm:justify-between" role="alert">
+          <span>{notificationActionError}</span>
+          <div className="flex items-center gap-3">
+            <button onClick={() => void retryNotificationAction()} className="font-bold underline">Reintentar</button>
+            <button onClick={clearNotificationActionError} aria-label="Cerrar aviso de acción" className="text-base leading-none text-red-500">×</button>
+          </div>
+        </div>
+      )}
       {error && (
         <div className="flex flex-col gap-2 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 sm:flex-row sm:items-center sm:justify-between" role="alert">
           <span>No se pudieron actualizar. Se conserva el historial disponible.</span>
@@ -133,14 +146,14 @@ export default function NotificationsPage() {
         ))}
       </div>
 
-      {isLoading && <p className="text-xs font-semibold text-slate-400" role="status">Actualizando notificaciones…</p>}
+      {isLoading && <p className="text-xs font-semibold text-slate-400" role="status">Actualizando notificacionesâ€¦</p>}
 
       <div className="space-y-2">
         {filtered.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-20 text-center">
-            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-slate-200 bg-slate-50"><span className="text-xl text-slate-400">🔔</span></div>
+            <div className="grid h-14 w-14 place-items-center rounded-2xl border border-slate-200 bg-slate-50"><span className="text-xl text-slate-400">ðŸ””</span></div>
             <p className="text-sm font-semibold text-slate-700">Sin notificaciones</p>
-            <p className="text-xs text-slate-400">{filter === "todas" ? "Cuando haya actividad aparecerá aquí." : "No hay notificaciones con este filtro."}</p>
+            <p className="text-xs text-slate-400">{filter === "todas" ? "Cuando haya actividad aparecerÃ¡ aquÃ­." : "No hay notificaciones con este filtro."}</p>
           </div>
         ) : (
           filtered.map((notification) => {
@@ -153,7 +166,7 @@ export default function NotificationsPage() {
                 tabIndex={0}
                 onClick={() => void handleOpen(notification)}
                 onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); void handleOpen(notification); } }}
-                className={`group w-full cursor-pointer rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md active:scale-[0.99] ${notification.leida ? "border-slate-100 opacity-60" : "border-slate-200"}`}
+                className={`group w-full cursor-pointer rounded-2xl border bg-white text-left shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 active:scale-[0.99] ${notification.leida ? "border-slate-100 opacity-60" : "border-slate-200"}`}
               >
                 <div className="flex items-start gap-4 px-5 py-4">
                   <div className="mt-1 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl" style={{ background: cfg.bg, border: `1px solid ${cfg.border}` }}><span className="h-2.5 w-2.5 rounded-full" style={{ background: cfg.dot, boxShadow: `0 0 8px ${cfg.dot}` }} /></div>
@@ -164,11 +177,11 @@ export default function NotificationsPage() {
                       <span className="rounded-full px-2 py-0.5 text-[10px] font-extrabold" style={{ background: cfg.bg, color: cfg.dot }}>{cfg.label}</span>
                     </div>
                     <p className="mt-1 text-xs leading-relaxed text-slate-500">{notification.mensaje}</p>
-                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{formatTimeAgo(notification.createdAt, "Hace un momento")}</p>
+                    <p className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-slate-400">{formatNotificationDate(notification.createdAt)}</p>
                   </div>
                   <div className="flex flex-shrink-0 items-center gap-2">
                     {!notification.leida && <div className="mt-2 h-2 w-2 rounded-full bg-blue-500" style={{ boxShadow: "0 0 8px rgba(59,130,246,0.7)" }} />}
-                    <button onClick={(event) => { event.stopPropagation(); dismissNotification(notification.id); }} aria-label={`Limpiar ${notification.titulo}`} title="Limpiar notificación" className="rounded-full p-2 text-slate-400 transition hover:bg-red-50 hover:text-red-500"><span aria-hidden>×</span></button>
+                    <button onClick={(event) => { event.stopPropagation(); dismissNotification(notification.id); }} aria-label={`Limpiar ${notification.titulo}`} title="Limpiar notificaciÃ³n" className="rounded-full p-2 text-red-400 transition hover:bg-red-50 hover:text-red-600"><span aria-hidden>Ã—</span></button>
                   </div>
                 </div>
               </div>

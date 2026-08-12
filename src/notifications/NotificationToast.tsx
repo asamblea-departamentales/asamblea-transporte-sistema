@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+﻿import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type NotiTipo } from "./NotificationContext";
 import { getNotificationTargetPath } from "./notification-routing";
@@ -10,7 +10,7 @@ const toastCfg: Record<NotiTipo, { dot: string; bg: string; border: string; labe
   programada: { dot: "bg-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200", label: "Prog." },
   rechazada: { dot: "bg-red-500", bg: "bg-red-50", border: "border-red-200", label: "Rechazada" },
   observada: { dot: "bg-blue-500", bg: "bg-blue-50", border: "border-blue-200", label: "Observada" },
-  en_revision: { dot: "bg-amber-400", bg: "bg-amber-50", border: "border-amber-200", label: "Revisión" },
+  en_revision: { dot: "bg-amber-400", bg: "bg-amber-50", border: "border-amber-200", label: "RevisiÃ³n" },
   finalizada: { dot: "bg-slate-400", bg: "bg-slate-50", border: "border-slate-200", label: "Finalizada" },
   cancelada: { dot: "bg-slate-300", bg: "bg-slate-50", border: "border-slate-100", label: "Cancelada" },
   recordatorio: { dot: "bg-amber-500", bg: "bg-amber-50", border: "border-amber-200", label: "Aviso" },
@@ -18,7 +18,7 @@ const toastCfg: Record<NotiTipo, { dot: string; bg: string; border: string; labe
 };
 
 function ToastItem({ onDone }: { onDone: () => void }) {
-  const { toast, markAsRead } = useNotifications();
+  const { toast, markAsRead, notificationActionError, retryNotificationAction, clearNotificationActionError } = useNotifications();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(false);
@@ -47,7 +47,8 @@ function ToastItem({ onDone }: { onDone: () => void }) {
   };
 
   const handleNavigate = async () => {
-    await markAsRead(toast.id);
+    const readSucceeded = await markAsRead(toast.id);
+    if (!readSucceeded) return;
     navigate(getNotificationTargetPath({ modulo: toast.modulo, solicitudId: toast.reqId, url: toast.url }));
     handleClose();
   };
@@ -56,7 +57,7 @@ function ToastItem({ onDone }: { onDone: () => void }) {
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Abrir notificación ${toast.titulo}`}
+      aria-label={`Abrir notificaciÃ³n ${toast.titulo}`}
       onClick={() => void handleNavigate()}
       onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); void handleNavigate(); } }}
       className={`relative flex w-80 cursor-pointer items-start gap-3 rounded-xl border bg-white px-4 py-3.5 shadow-[0_8px_30px_rgba(15,37,72,0.12),0_2px_8px_rgba(15,37,72,0.06)] transition-all duration-350 hover:shadow-[0_12px_40px_rgba(15,37,72,0.18)] ${visible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"} ${cfg.border}`}
@@ -65,8 +66,17 @@ function ToastItem({ onDone }: { onDone: () => void }) {
       <div className="min-w-0 flex-1 pt-0.5">
         <div className="mb-0.5 flex items-center gap-2"><p className="truncate text-[12px] font-bold text-slate-900">{toast.titulo}</p><span className={`flex-shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${cfg.bg} ${cfg.border}`}>{cfg.label}</span></div>
         <p className="line-clamp-2 text-[11px] leading-relaxed text-slate-500">{toast.mensaje}</p>
+        {notificationActionError && (
+          <div className="mt-2 rounded-lg border border-red-200 bg-red-50 px-2 py-1.5 text-[10px] text-red-700" role="alert">
+            <p>{notificationActionError}</p>
+            <div className="mt-1 flex items-center gap-2">
+              <button onClick={(event) => { event.stopPropagation(); void retryNotificationAction(); }} className="font-bold underline">Reintentar</button>
+              <button onClick={(event) => { event.stopPropagation(); clearNotificationActionError(); }} aria-label="Cerrar aviso de acción">Cerrar</button>
+            </div>
+          </div>
+        )}
       </div>
-      <button onClick={handleClose} aria-label="Cerrar notificación" className="mt-0.5 flex-shrink-0 text-slate-300 transition-colors hover:text-slate-500">×</button>
+      <button onClick={handleClose} aria-label="Cerrar notificaciÃ³n" className="mt-0.5 flex-shrink-0 text-slate-300 transition-colors hover:text-slate-500">Ã—</button>
       <div className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-b-xl"><div className={`h-full transition-all ease-linear ${cfg.dot}`} style={{ width: progress ? "0%" : "100%", transitionDuration: progress ? "4700ms" : "0ms", opacity: 0.6 }} /></div>
     </div>
   );
