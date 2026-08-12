@@ -39,7 +39,7 @@
       "headers": [
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
-        { "key": "Content-Security-Policy", "value": "default-src 'self'; connect-src 'self' https://phplaravel-1581457-6197806.cloudwaysapps.com https://nominatim.openstreetmap.org https://router.project-osrm.org; img-src 'self' data: blob: https://phplaravel-1581457-6197806.cloudwaysapps.com https://*.tile.openstreetmap.org; frame-src 'self' https://phplaravel-1581457-6197806.cloudwaysapps.com; style-src 'self' 'unsafe-inline'; script-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'" },
+        { "key": "Content-Security-Policy", "value": "default-src 'self'; connect-src 'self' https://phplaravel-1581457-6197806.cloudwaysapps.com https://nominatim.openstreetmap.org https://router.project-osrm.org; img-src 'self' data: blob: https://phplaravel-1581457-6197806.cloudwaysapps.com https://tile.openstreetmap.org https://*.tile.openstreetmap.org; frame-src 'self' https://phplaravel-1581457-6197806.cloudwaysapps.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; script-src 'self'; worker-src 'self'; manifest-src 'self'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'; object-src 'none'" },
         { "key": "Permissions-Policy", "value": "geolocation=(), camera=(), microphone=(), payment=(), usb=()" },
         { "key": "Strict-Transport-Security", "value": "max-age=31536000; includeSubDomains; preload" },
         { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" }
