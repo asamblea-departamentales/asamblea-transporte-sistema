@@ -14,90 +14,98 @@ export interface PushSubscriptionPayload {
 }
 
 /**
- * Obtener la clave pública VAPID desde el backend API.
- * Intenta primero en /api/motoristas/me/push-public-key y como fallback /api/me/push-public-key
+ * Obtiene la clave VAPID exclusivamente para el usuario motorista autenticado.
  */
 export async function getVapidPublicKey(): Promise<string> {
-  try {
-    const { data } = await api.get<VapidPublicKeyResponse>('/api/motoristas/me/push-public-key');
-    if (data?.public_key) return data.public_key;
-  } catch {
-    // Fallback al endpoint genérico
-    try {
-      const { data } = await api.get<VapidPublicKeyResponse>('/api/me/push-public-key');
-      if (data?.public_key) return data.public_key;
-    } catch {
-      // Ambos endpoints fallaron
-    }
+  const { data } = await api.get<VapidPublicKeyResponse>(
+    '/api/motoristas/me/push-public-key'
+  );
+
+  if (!data?.public_key) {
+    throw new Error('El servidor no devolvió una clave pública VAPID válida');
   }
-  throw new Error('No se pudo obtener la clave pública VAPID del servidor');
+
+  return data.public_key;
 }
 
 /**
- * Suscribir el dispositivo actual a las notificaciones Push VAPID y enviar las claves al backend.
- * Maneja graciosamente navegadores que bloquean el servicio push (Brave, etc).
+ * Suscribe el dispositivo actual a Web Push.
+ * Si Push no está disponible, la aplicación continúa funcionando con notificaciones in-app.
  */
-export async function subscribeUserToPush(): Promise<boolean> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
-    console.warn('[Push] Web Push no es soportado en este navegador.');
-    return false;
-  }
-
-  const permission = await Notification.requestPermission();
-  if (permission !== 'granted') {
-    console.warn('[Push] El usuario denegó los permisos de notificación.');
+export async function subscribeUserToPush(
+  permissionOverride?: NotificationPermission
+): Promise<boolean> {
+  if (
+    typeof Notification === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
+    console.warn('[Push] Web Push no es compatible con este navegador.');
     return false;
   }
 
   try {
-    // 1. Obtener la clave VAPID del backend
+    const permission =
+      permissionOverride ?? (await Notification.requestPermission());
+
+    if (permission !== 'granted') {
+      console.info('[Push] El usuario no concedió permisos de notificación.');
+      return false;
+    }
+
     const publicKey = await getVapidPublicKey();
 
-    // Validar que la clave tenga formato correcto (base64url, ~87 caracteres para P-256)
     if (!publicKey || publicKey.length < 60) {
-      console.warn('[Push] La clave VAPID pública es inválida o está vacía.');
-      return false;
+      throw new Error('La clave pública VAPID está vacía o es inválida');
     }
 
     const convertedKey = urlBase64ToUint8Array(publicKey);
-
-    // 2. Esperar a que el Service Worker esté listo con timeout para prevenir bloqueos
     const registration = await Promise.race([
       navigator.serviceWorker.ready,
-      new Promise<null>((resolve) => setTimeout(() => resolve(null), 2500))
+      new Promise<null>((resolve) =>
+        window.setTimeout(() => resolve(null), 2500)
+      ),
     ]);
 
     if (!registration) {
-      console.info('[Push] Service worker no listo dentro del tiempo límite (ej. modo desarrollo o SW deshabilitado).');
+      console.info('[Push] El Service Worker aún no está listo.');
       return false;
     }
 
-    // 3. Verificar si ya existe una suscripción activa
     let subscription = await registration.pushManager.getSubscription();
 
     if (!subscription) {
-      // 4. Crear nueva suscripción
       try {
         subscription = await registration.pushManager.subscribe({
           userVisibleOnly: true,
           applicationServerKey: convertedKey,
         });
-      } catch (subscribeError: any) {
-        if (subscribeError.name === 'InvalidStateError') {
-          // Suscripción vieja con clave diferente — limpiar y reintentar
-          const oldSub = await registration.pushManager.getSubscription();
-          if (oldSub) await oldSub.unsubscribe();
+      } catch (subscribeError: unknown) {
+        const errorName =
+          subscribeError instanceof DOMException
+            ? subscribeError.name
+            : typeof subscribeError === 'object' &&
+                subscribeError !== null &&
+                'name' in subscribeError
+              ? String((subscribeError as { name?: unknown }).name)
+              : '';
+
+        if (errorName === 'InvalidStateError') {
+          const oldSubscription =
+            await registration.pushManager.getSubscription();
+
+          if (oldSubscription) {
+            await oldSubscription.unsubscribe();
+          }
+
           subscription = await registration.pushManager.subscribe({
             userVisibleOnly: true,
             applicationServerKey: convertedKey,
           });
-        } else if (subscribeError.name === 'AbortError') {
-          // El servicio push no está disponible (Brave bloquea FCM, red corporativa, etc.)
-          // No es un error crítico — la app funciona sin push, usa notificaciones in-app.
+        } else if (errorName === 'AbortError') {
           console.info(
-            '[Push] Notificaciones push nativas no disponibles en este navegador. ' +
-            'Las notificaciones in-app seguirán funcionando normalmente. ' +
-            '(Si usas Brave, habilita "Use Google services for push messaging" en brave://settings/privacy)'
+            '[Push] El navegador no tiene disponible el servicio Push. ' +
+              'Las notificaciones in-app seguirán funcionando.'
           );
           return false;
         } else {
@@ -106,10 +114,14 @@ export async function subscribeUserToPush(): Promise<boolean> {
       }
     }
 
-    // 5. Serializar y enviar al backend
-    const serialized = subscription!.toJSON();
-    if (!serialized.endpoint || !serialized.keys?.p256dh || !serialized.keys?.auth) {
-      throw new Error('La suscripción push retornó un formato incompleto');
+    const serialized = subscription.toJSON();
+
+    if (
+      !serialized.endpoint ||
+      !serialized.keys?.p256dh ||
+      !serialized.keys.auth
+    ) {
+      throw new Error('La suscripción Push retornó un formato incompleto');
     }
 
     const payload: PushSubscriptionPayload = {
@@ -120,25 +132,26 @@ export async function subscribeUserToPush(): Promise<boolean> {
       },
     };
 
-    // Registrar la suscripción en el backend (probar endpoints según el rol)
-    try {
-      await api.post('/api/motoristas/me/push-subscribe', payload);
-    } catch {
-      await api.post('/api/me/push-subscribe', payload);
-    }
-
+    await api.post('/api/motoristas/me/push-subscribe', payload);
     return true;
   } catch (error) {
-    console.warn('[Push] No se pudo activar push nativo. Las notificaciones in-app siguen activas.', error);
+    console.warn(
+      '[Push] No se pudo activar Push. Las notificaciones in-app siguen activas.',
+      error
+    );
     return false;
   }
 }
 
 /**
- * Desuscribir el dispositivo actual del servicio Web Push.
+ * Elimina la suscripción del navegador y del usuario motorista autenticado.
  */
 export async function unsubscribeUserFromPush(): Promise<void> {
-  if (!('serviceWorker' in navigator) || !('PushManager' in window)) {
+  if (
+    typeof navigator === 'undefined' ||
+    !('serviceWorker' in navigator) ||
+    !('PushManager' in window)
+  ) {
     return;
   }
 
@@ -146,20 +159,14 @@ export async function unsubscribeUserFromPush(): Promise<void> {
     const registration = await navigator.serviceWorker.ready;
     const subscription = await registration.pushManager.getSubscription();
 
-    if (!subscription) return;
-
-    // Notificar al backend que se eliminará la suscripción
-    try {
-      await api.delete('/api/motoristas/me/push-unsubscribe', {
-        data: { endpoint: subscription.endpoint },
-      });
-    } catch {
-      await api.delete('/api/me/push-unsubscribe', {
-        data: { endpoint: subscription.endpoint },
-      });
+    if (!subscription) {
+      return;
     }
 
-    // Desuscribir en el navegador
+    await api.delete('/api/motoristas/me/push-unsubscribe', {
+      data: { endpoint: subscription.endpoint },
+    });
+
     await subscription.unsubscribe();
   } catch (error) {
     console.warn('[Push] Error al desuscribir de Web Push:', error);

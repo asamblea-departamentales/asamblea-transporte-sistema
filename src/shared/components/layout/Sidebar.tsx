@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo } from "react";
 import { NavLink, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../../auth/AuthContext";
-import { useNotification } from "../../../shared/contexts/NotificationContext";
+import { resolveNotificationUrl, useNotification } from "../../../shared/contexts/NotificationContext";
+import type { AppNotification } from "../../../shared/contexts/NotificationContext";
 import { getDisponibilidad } from "../../../disponibilidad/disponibilidad.service";
 import { cn } from "../../../shared/lib/utils";
 import { GlobalLoading } from "../../../shared/components/GlobalLoading";
@@ -146,6 +147,11 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
     }
   };
 
+  const handleNotificationClick = async (notification: AppNotification) => {
+    await markAsRead(notification.id);
+    setShowNotifications(false);
+    navigate(resolveNotificationUrl(notification));
+  };
   const initial = typeof user?.name === "string" ? (user.name.trim()[0] || "M").toUpperCase() : "M";
 
   const navItems = useMemo((): NavItem[] => {
@@ -297,7 +303,7 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button onClick={markAllAsRead} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 transition-colors">
+              <button onClick={() => void markAllAsRead()} className="text-[11px] font-bold text-blue-600 hover:text-blue-800 hover:underline px-2 py-1 transition-colors">
                 Marcar leídas
               </button>
             )}
@@ -335,12 +341,12 @@ export default function Sidebar({ open, onClose, onOpen }: SidebarProps) {
             </div>
           ) : (
             notifications.map((notif) => (
-              <div key={notif.id} onClick={() => markAsRead(notif.id)} className={cn("p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden", notif.read ? "bg-white border-slate-100" : "bg-blue-50/50 border-blue-100 shadow-sm")}>
+              <div key={notif.id} onClick={() => void handleNotificationClick(notif)} className={cn("p-4 rounded-xl border transition-all cursor-pointer relative overflow-hidden", notif.read ? "bg-white border-slate-100" : "bg-blue-50/50 border-blue-100 shadow-sm")}>
                  {!notif.read && <div className="absolute top-0 left-0 bottom-0 w-1 bg-blue-500" />}
                  <div className="flex justify-between items-start gap-2 mb-1.5 pl-1">
                    <h4 className={cn("text-[13.5px] font-bold leading-tight", notif.read ? "text-slate-700" : "text-blue-900")}>{notif.title}</h4>
                    <span className="text-[10px] font-black tracking-wider text-slate-400 uppercase shrink-0 mt-0.5">
-                      {notif.date.toLocaleTimeString('es-SV', { hour: '2-digit', minute: '2-digit' })}
+                      {notif.date.toLocaleString('es-SV', { dateStyle: 'short', timeStyle: 'short' })}
                    </span>
                  </div>
                  <p className={cn("text-[13px] leading-relaxed pl-1", notif.read ? "text-slate-500" : "text-slate-600")}>{notif.body}</p>

@@ -1,64 +1,89 @@
 /// <reference lib="webworker" />
-declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any[] }
 
-// Ignorar error de ts sobre el ámbito
-import { precacheAndRoute } from 'workbox-precaching'
+declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any[] };
 
-// Precache de los recursos estáticos manejados por Vite PWA
-precacheAndRoute(self.__WB_MANIFEST)
+import { precacheAndRoute } from 'workbox-precaching';
 
-// Evento "push": cuando el servidor (Laravel) manda un Web Push
+precacheAndRoute(self.__WB_MANIFEST);
+
+function resolveTargetUrl(value: unknown): string {
+  const rawUrl =
+    typeof value === 'string' && value.trim().length > 0
+      ? value
+      : '/viajes';
+
+  return new URL(rawUrl, self.location.origin).href;
+}
+
 self.addEventListener('push', (event) => {
-  if (event.data) {
-    try {
-      const data = event.data.json()
-      // data esperamos que contenga title, body, url...
-      const title = data.title || 'Nueva Notificación'
-      const options = {
-        body: data.body || 'Tienes un nuevo mensaje sobre tu viaje.',
+  if (!event.data) {
+    return;
+  }
+
+  try {
+    const data = event.data.json() as {
+      title?: unknown;
+      body?: unknown;
+      url?: unknown;
+    };
+    const title =
+      typeof data.title === 'string' && data.title
+        ? data.title
+        : 'Nueva notificación';
+    const targetUrl = resolveTargetUrl(data.url);
+
+    event.waitUntil(
+      self.registration.showNotification(title, {
+        body:
+          typeof data.body === 'string' && data.body
+            ? data.body
+            : 'Tienes un nuevo mensaje sobre tu viaje.',
         icon: '/icon-192x192.png',
         badge: '/icon-192x192.png',
         data: {
-          url: data.url || '/'
-        }
-      }
-
-      event.waitUntil(self.registration.showNotification(title, options))
-    } catch (e) {
-      // Fallback si no es JSON
-      event.waitUntil(
-        self.registration.showNotification("Notificación Transporte", {
-          body: event.data.text(),
-        })
-      )
-    }
+          url: targetUrl,
+        },
+      })
+    );
+  } catch {
+    event.waitUntil(
+      self.registration.showNotification('Notificación Transporte', {
+        body: event.data.text(),
+        data: {
+          url: resolveTargetUrl('/viajes'),
+        },
+      })
+    );
   }
-})
+});
 
-// Evento "notificationclick": cuando el motorista toca la notificación desde su teléfono
 self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
+  event.notification.close();
 
-  const targetUrl = event.notification.data?.url || '/'
-  
+  const notificationData = event.notification.data as
+    | { url?: unknown }
+    | undefined;
+  const targetUrl = resolveTargetUrl(notificationData?.url);
+
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
-      // Si ya hay una pantalla de la PWA abierta, enfocarla
-      if (windowClients.length > 0) {
-        let client = windowClients[0]
-        for (let i = 0; i < windowClients.length; i++) {
-          if (windowClients[i].focused) {
-            client = windowClients[i]
+    self.clients
+      .matchAll({ type: 'window', includeUncontrolled: true })
+      .then(async (windowClients) => {
+        const client =
+          windowClients.find((windowClient) => windowClient.focused) ??
+          windowClients[0];
+
+        if (client) {
+          try {
+            await client.navigate(targetUrl);
+          } catch {
+            // La ventana puede no permitir navegación; aún se puede enfocar.
           }
+
+          return client.focus();
         }
-        if ('focus' in client) {
-          return client.focus()
-        }
-      }
-      // O abrir una nueva ventana con la url especificada
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(targetUrl)
-      }
-    })
-  )
-})
+
+        return self.clients.openWindow(targetUrl);
+      })
+  );
+});

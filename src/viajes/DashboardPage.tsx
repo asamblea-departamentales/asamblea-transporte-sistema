@@ -1,8 +1,7 @@
-import { useState, useEffect, useCallback, useMemo, useRef } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 
 import { getViajesMes } from "./viajes.service";
 import type { ViajeAsignado } from "./viajes.service";
-import { useNotification } from "../shared/contexts/NotificationContext";
 
 // ────────────────────────────────────────────────
 // Helpers y Constantes
@@ -51,9 +50,6 @@ export default function DashboardPage() {
   const [viajes, setViajes] = useState<ViajeAsignado[]>([]);
   const [loadingViajes, setLoadingViajes] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-  const { simulateNotification } = useNotification();
-  const prevViajesLength = useRef<number | null>(null);
 
   const cargarViajes = useCallback(async () => {
     try {
@@ -104,24 +100,6 @@ export default function DashboardPage() {
 
     return () => clearInterval(interval);
   }, [cargarViajes]);
-
-  // Lógica de Notificador In-App Integrada al Fetch
-  useEffect(() => {
-    if (loadingViajes) return; // Wait until initial load is completely done
-    
-    const countAsignadas = viajes.filter(v => ["ASIGNADA", "APROBADA", "PROGRAMADA"].includes(v.estado)).length;
-    
-    // Si la cantidad de asignadas ahora es mayor que la medición de hace unos instantes...
-    if (prevViajesLength.current !== null && countAsignadas > prevViajesLength.current) {
-        simulateNotification(
-           "🚗 ¡Nuevo Viaje Asignado!", 
-           "Revisa tu panel. La jefatura te ha despachado una nueva ruta."
-        );
-    }
-    
-    // Almacenamos el count actual para compararlo en el siguiente renderizado/fetch
-    prevViajesLength.current = countAsignadas;
-  }, [viajes, loadingViajes, simulateNotification]);
 
   const sortedViajes = useMemo(() => {
     return [...viajes].sort((a, b) => new Date(`${a.fecha}T${a.hora_salida}`).getTime() - new Date(`${b.fecha}T${b.hora_salida}`).getTime());

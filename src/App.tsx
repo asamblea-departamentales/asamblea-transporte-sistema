@@ -29,6 +29,7 @@ export default function App() {
             {/* Rutas con AppLayout navegable */}
             <Route element={<AppLayout />}>
               <Route path="/dashboard" element={<DashboardPage />} />
+              <Route path="/viajes" element={<Navigate to="/dashboard" replace />} />
               <Route path="/viajes/:id/activo" element={<ViajeActivoPage />} />
               <Route path="/historial" element={<HistorialViajesPage />} />
               <Route path="/incapacidad" element={<IncapacidadPage />} />
@@ -42,4 +43,3 @@ export default function App() {
     </ErrorBoundary>
   );
 }
-

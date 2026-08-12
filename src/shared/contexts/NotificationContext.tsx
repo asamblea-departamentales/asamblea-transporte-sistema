@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../auth/AuthContext';
-import { getEcho, disconnectEcho } from '../lib/echo';
+import { disconnectEcho, getEcho } from '../lib/echo';
 import {
   getNotificaciones,
   marcarNotificacionLeida,
@@ -18,69 +18,66 @@ export interface AppNotification {
   date: Date;
   read: boolean;
   tipo?: string;
+  modulo?: string;
+  url?: string;
   solicitud_id?: number;
   solicitud_codigo?: string;
-  ticket?: number;
+  ticket?: number | string | null;
 }
 
 interface NotificationContextProps {
   permission: NotificationPermission | 'default';
   requestPermission: () => Promise<void>;
-  simulateNotification: (title: string, body: string) => void;
   notifications: AppNotification[];
   refreshNotifications: () => Promise<void>;
   isLoading: boolean;
   notificationError: string | null;
   clearNotifications: () => void;
-  markAsRead: (id: string) => void;
-  markAllAsRead: () => void;
+  markAsRead: (id: string) => Promise<void>;
+  markAllAsRead: () => Promise<void>;
   unreadCount: number;
 }
 
 const NotificationContext = createContext<NotificationContextProps>({
   permission: 'default',
   requestPermission: async () => {},
-  simulateNotification: () => {},
   notifications: [],
   refreshNotifications: async () => {},
   isLoading: false,
   notificationError: null,
   clearNotifications: () => {},
-  markAsRead: () => {},
-  markAllAsRead: () => {},
+  markAsRead: async () => {},
+  markAllAsRead: async () => {},
   unreadCount: 0,
 });
 
 export const useNotification = () => useContext(NotificationContext);
 
-// Generador de sonido sintético (ding-ding) sin requerir archivos MP3
 const playChime = () => {
   try {
-    const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-    if (!AudioContext) return;
-    const ctx = new AudioContext();
-    
-    const playNote = (freq: number, startTime: number, duration: number) => {
-      const osc = ctx.createOscillator();
+    const AudioContextConstructor: typeof AudioContext | undefined = window.AudioContext || (window as Window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+    if (!AudioContextConstructor) return;
+
+    const ctx = new AudioContextConstructor();
+    const playNote = (frequency: number, startTime: number, duration: number) => {
+      const oscillator = ctx.createOscillator();
       const gain = ctx.createGain();
-      osc.connect(gain);
+
+      oscillator.connect(gain);
       gain.connect(ctx.destination);
-      osc.type = 'sine';
-      osc.frequency.value = freq;
-      
+      oscillator.type = 'sine';
+      oscillator.frequency.value = frequency;
       gain.gain.setValueAtTime(0, startTime);
       gain.gain.linearRampToValueAtTime(0.5, startTime + 0.05);
       gain.gain.exponentialRampToValueAtTime(0.01, startTime + duration);
-      
-      osc.start(startTime);
-      osc.stop(startTime + duration);
+      oscillator.start(startTime);
+      oscillator.stop(startTime + duration);
     };
 
-    // Dos notas rápidas tipo "Ding-Ding"
-    playNote(987.77, ctx.currentTime, 0.4);      
-    playNote(1318.51, ctx.currentTime + 0.15, 0.6); 
-  } catch (e) {
-    console.warn('Audio feedback failed or blocked by browser', e);
+    playNote(987.77, ctx.currentTime, 0.4);
+    playNote(1318.51, ctx.currentTime + 0.15, 0.6);
+  } catch (error) {
+    console.warn('Audio feedback failed or was blocked by the browser', error);
   }
 };
 
@@ -96,9 +93,11 @@ type NotificationInput = {
   read?: boolean;
   read_at?: string | null;
   tipo?: string;
+  modulo?: string;
+  url?: string;
   solicitud_id?: number;
   solicitud_codigo?: string;
-  ticket?: number;
+  ticket?: number | string | null;
 };
 
 const parseNotificationDate = (value?: Date | string): Date => {
@@ -106,25 +105,42 @@ const parseNotificationDate = (value?: Date | string): Date => {
   return Number.isNaN(date.getTime()) ? new Date() : date;
 };
 
-/**
- * Adapta tanto el registro database de Laravel como los eventos planos
- * usados por las notificaciones locales/realtime al modelo de la interfaz.
- */
 const normalizeNotification = (input: NotificationInput): AppNotification => {
   const payload = input.data ?? input;
+  const localKey = [
+    'local',
+    payload.tipo ?? input.tipo ?? payload.titulo ?? input.titulo ?? 'notification',
+    payload.solicitud_id ?? input.solicitud_id ?? input.created_at ?? 'event',
+  ].join('-');
 
   return {
-    id: String(input.id ?? Math.random().toString(36).substring(2, 9)),
-    title: payload.titulo || input.title || 'Nueva Notificacion',
+    id: String(input.id ?? localKey),
+    title: payload.titulo || input.title || 'Nueva notificación',
     body: payload.mensaje || input.body || '',
     date: parseNotificationDate(input.date ?? input.created_at),
     read: typeof input.read === 'boolean' ? input.read : Boolean(input.read_at),
     tipo: payload.tipo || input.tipo,
+    modulo: payload.modulo || input.modulo,
+    url: payload.url || input.url,
     solicitud_id: payload.solicitud_id ?? input.solicitud_id,
     solicitud_codigo: payload.solicitud_codigo ?? input.solicitud_codigo,
     ticket: payload.ticket ?? input.ticket,
   };
 };
+
+export function resolveNotificationUrl(notification: Pick<AppNotification, 'url' | 'solicitud_id'>): string {
+  const backendUrl = notification.url?.trim();
+
+  if (backendUrl && backendUrl !== '/viajes') {
+    return backendUrl;
+  }
+
+  if (notification.solicitud_id !== undefined && notification.solicitud_id !== null) {
+    return '/viajes/' + notification.solicitud_id + '/activo';
+  }
+
+  return '/dashboard';
+}
 
 export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [permission, setPermission] = useState<NotificationPermission | 'default'>('default');
@@ -133,113 +149,133 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
   const [notificationError, setNotificationError] = useState<string | null>(null);
   const { user } = useAuth();
   const navigate = useNavigate();
-  const knownIdsRef = React.useRef<Set<string>>(new Set());
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  const notificationsRef = useRef<AppNotification[]>([]);
 
-  const unreadCount = notifications.filter(n => !n.read).length;
+  const replaceNotifications = useCallback((next: AppNotification[]) => {
+    notificationsRef.current = next.slice(0, 20)
+    setNotifications(notificationsRef.current);
+  }, []);
 
-  const clearNotifications = () => setNotifications([]);
-  
-  const markAsRead = useCallback(async (id: string) => {
-    setNotifications(prev => prev.map(n => n.id === id ? { ...n, read: true } : n));
+  const unreadCount = notifications.filter((notification) => !notification.read).length;
+
+  const clearNotifications = useCallback(() => {
+    knownIdsRef.current.clear();
+    replaceNotifications([]);
+  }, [replaceNotifications]);
+
+  const markAsRead = useCallback(async (id: string): Promise<void> => {
+    const previous = notificationsRef.current;
+    const next = previous.map((notification) =>
+      notification.id === id ? { ...notification, read: true } : notification,
+    );
+
+    notificationsRef.current = next.slice(0, 20)
+    setNotifications(notificationsRef.current);
+
     try {
       await marcarNotificacionLeida(id);
-    } catch (e) {
-      console.warn('No se pudo marcar la notificación como leída en el backend:', e);
+    } catch (error) {
+      notificationsRef.current = previous;
+      setNotifications(previous);
+      toast.error('No se pudo marcar la notificación como leída.');
+      console.warn('No se pudo marcar la notificación como leída:', error);
     }
   }, []);
 
-  const markAllAsRead = useCallback(async () => {
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+  const markAllAsRead = useCallback(async (): Promise<void> => {
+    const previous = notificationsRef.current;
+    const next = previous.map((notification) => ({ ...notification, read: true }));
+
+    notificationsRef.current = next.slice(0, 20)
+    setNotifications(notificationsRef.current);
+
     try {
       await marcarTodasNotificacionesLeidas();
-    } catch (e) {
-      console.warn('No se pudo marcar todas las notificaciones como leídas en el backend:', e);
+    } catch (error) {
+      notificationsRef.current = previous;
+      setNotifications(previous);
+      toast.error('No se pudieron marcar todas las notificaciones como leídas.');
+      console.warn('No se pudieron marcar todas las notificaciones como leídas:', error);
     }
   }, []);
 
   useEffect(() => {
-    if ('Notification' in window) {
+    if (typeof Notification !== 'undefined') {
       setPermission(Notification.permission);
     }
   }, []);
 
-  const requestPermission = async () => {
-    if (!('Notification' in window)) {
+  const requestPermission = useCallback(async () => {
+    if (typeof Notification === 'undefined') {
       toast.error('Tu navegador no soporta notificaciones de escritorio.');
       return;
     }
 
     try {
-      const perm = await Notification.requestPermission();
-      setPermission(perm);
-      
-      if (perm === 'granted') {
+      const nextPermission = await Notification.requestPermission();
+      setPermission(nextPermission);
+
+      if (nextPermission === 'granted') {
         toast.success('¡Notificaciones activadas con éxito!');
-        // Activar la suscripción Web Push VAPID inmediatamente
-        subscribeUserToPush();
+        await subscribeUserToPush('granted');
       } else {
         toast.warning('Notificaciones bloqueadas o denegadas.');
       }
     } catch (error) {
-      console.error('Error al pedir permisos:', error);
+      console.error('Error al pedir permisos de notificación:', error);
     }
-  };
+  }, []);
 
   const handleIncomingNotification = useCallback((event: NotificationInput) => {
-    const newNotif = normalizeNotification({ ...event, read: false });
+    const newNotification = normalizeNotification({ ...event, read: false });
 
-    if (knownIdsRef.current.has(newNotif.id)) {
-      setNotifications(prev => prev.map(item => item.id === newNotif.id ? { ...item, ...newNotif } : item));
+    if (knownIdsRef.current.has(newNotification.id)) {
+      const updated = notificationsRef.current.map((item) =>
+        item.id === newNotification.id ? { ...item, ...newNotification } : item,
+      );
+      replaceNotifications(updated);
       return;
     }
 
-    knownIdsRef.current.add(newNotif.id);
-    setNotifications(prev => [newNotif, ...prev]);
-    // 1. Feedback Físico y Sonoro
+    knownIdsRef.current.add(newNotification.id);
+    replaceNotifications([newNotification, ...notificationsRef.current].slice(0, 20));
     playChime();
+
     if (navigator.vibrate) {
       navigator.vibrate([200, 100, 200]);
     }
 
-    // 2. Mostrar in-app (Toast Persistente)
-    toast(newNotif.title, {
-      description: newNotif.body,
+    toast(newNotification.title, {
+      description: newNotification.body,
       duration: 10000,
       action: {
-        label: 'Ver Detalle 🚗',
+        label: 'Ver detalle',
         onClick: () => {
-          markAsRead(newNotif.id);
-          navigate('/dashboard');
+          void markAsRead(newNotification.id);
+          navigate(resolveNotificationUrl(newNotification));
         },
       },
     });
 
-    // 3. Notificación de Sistema Operativo (con timeout de seguridad para Service Worker)
-    if (Notification.permission === 'granted') {
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
       if ('serviceWorker' in navigator) {
         Promise.race([
           navigator.serviceWorker.ready,
-          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500))
-        ]).then((reg) => {
-          if (reg) {
-            reg.showNotification(newNotif.title, {
-              body: newNotif.body,
+          new Promise<null>((resolve) => setTimeout(() => resolve(null), 1500)),
+        ]).then((registration) => {
+          if (registration) {
+            registration.showNotification(newNotification.title, {
+              body: newNotification.body,
               icon: '/icon-192x192.png',
               vibrate: [200, 100, 200],
-            } as any);
-          } else if (typeof Notification === 'function') {
-            try {
-              new Notification(newNotif.title, { body: newNotif.body, icon: '/icon-192x192.png' });
-            } catch {}
+              data: { url: resolveNotificationUrl(newNotification) },
+            } as NotificationOptions);
           }
         }).catch(() => {});
-      } else if (typeof Notification === 'function') {
-        try {
-          new Notification(newNotif.title, { body: newNotif.body, icon: '/icon-192x192.png' });
-        } catch {}
       }
     }
-  }, [markAsRead, navigate]);
+  }, [markAsRead, navigate, replaceNotifications]);
 
   const fetchLatestNotifications = useCallback(async (isPolling = false) => {
     if (!isPolling) {
@@ -247,96 +283,95 @@ export const NotificationProvider: React.FC<{ children: React.ReactNode }> = ({ 
     }
 
     try {
-      const res = await getNotificaciones(1, 20);
-      const rawItems = Array.isArray(res?.data) ? res.data : [];
-      const list: AppNotification[] = rawItems.map(normalizeNotification);
+      const response = await getNotificaciones(1, 20);
+      const rawItems = Array.isArray(response?.data) ? response.data : [];
+      const list = rawItems.map(normalizeNotification);
 
       if (isPolling) {
-        // Disparar alertas para notificaciones no leidas verdaderamente nuevas
-        list.forEach(item => {
+        list.forEach((item) => {
           if (!knownIdsRef.current.has(item.id) && !item.read) {
             handleIncomingNotification(item);
           }
         });
       }
 
-      list.forEach(item => knownIdsRef.current.add(item.id));
-      setNotifications(list);
+      list.forEach((item) => knownIdsRef.current.add(item.id));
+      replaceNotifications(list);
       setNotificationError(null);
-    } catch (err) {
+    } catch (error) {
       if (!isPolling) {
         setNotificationError('No se pudieron cargar las notificaciones. Intenta nuevamente.');
-        console.warn('No se pudo cargar el historial de notificaciones:', err);
+        console.warn('No se pudo cargar el historial de notificaciones:', error);
       }
     } finally {
       if (!isPolling) {
         setIsLoading(false);
       }
     }
-  }, [handleIncomingNotification]);
+  }, [handleIncomingNotification, replaceNotifications]);
 
   const refreshNotifications = useCallback(
     () => fetchLatestNotifications(false),
     [fetchLatestNotifications],
   );
 
-  // Cargar notificaciones REST, Polling recurrente cada 15s y Push VAPID
   useEffect(() => {
     if (!user) return;
-    const motoristaId = user?.motorista_id || (user as any)?.id;
 
     knownIdsRef.current.clear();
+    notificationsRef.current = [];
     setNotificationError(null);
+    void fetchLatestNotifications(false);
 
-    // 1. Obtener notificaciones iniciales
-    fetchLatestNotifications(false);
-
-    // 2. Polling periódico de notificaciones REST cada 15 segundos
-    const pollInterval = setInterval(() => {
-      fetchLatestNotifications(true);
+    const pollInterval = window.setInterval(() => {
+      void fetchLatestNotifications(true);
     }, 15000);
 
-    // 3. Intentar registrar suscripción Web Push VAPID si los permisos están dados
-    if (Notification.permission === 'granted') {
-      subscribeUserToPush();
+    if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+      void subscribeUserToPush('granted');
     }
 
-    // 4. Mantener Echo como canal secundario si está disponible
+    const motoristaId = user.motorista_id || user.id;
     if (motoristaId) {
-      const channelName = `motorista.${motoristaId}`;
+      const channelName = 'motorista.' + motoristaId;
+
       try {
         const echo = getEcho();
         echo?.private(channelName).listen('.notification.received', handleIncomingNotification);
-      } catch (err) {
-        console.warn('Echo desacoplado o no disponible:', err);
+      } catch (error) {
+        console.warn('Echo desacoplado o no disponible:', error);
       }
     }
 
     return () => {
-      clearInterval(pollInterval);
+      window.clearInterval(pollInterval);
+
       if (motoristaId) {
         try {
           const echo = getEcho();
-          echo?.leave(`motorista.${motoristaId}`);
+          echo?.leave('motorista.' + motoristaId);
           disconnectEcho();
-        } catch {}
+        } catch {
+          // Echo es opcional; la API continúa siendo la fuente principal.
+        }
       }
     };
-  }, [user, fetchLatestNotifications, handleIncomingNotification]);
-
-  const simulateNotification = (title: string, body: string) => {
-    handleIncomingNotification({ titulo: title, mensaje: body });
-  };
+  }, [fetchLatestNotifications, handleIncomingNotification, user]);
 
   return (
-    <NotificationContext.Provider value={{ 
-      permission, requestPermission, simulateNotification, 
-      notifications, refreshNotifications, isLoading, notificationError,
-      clearNotifications, markAsRead, markAllAsRead, unreadCount
+    <NotificationContext.Provider value={{
+      permission,
+      requestPermission,
+      notifications,
+      refreshNotifications,
+      isLoading,
+      notificationError,
+      clearNotifications,
+      markAsRead,
+      markAllAsRead,
+      unreadCount,
     }}>
       {children}
     </NotificationContext.Provider>
   );
 };
-
-

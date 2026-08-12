@@ -48,7 +48,7 @@ export async function reportarDisponibilidad(
 
   // 🔥 LOG PARA DEPURACIÓN: Verificador en consola de lo que se enviará
   console.log("📡 [FRONTEND] -> [BACKEND] ENVIANDO DISPONIBILIDAD:");
-  for (let [key, value] of formData.entries()) {
+  for (const [key, value] of formData.entries()) {
     if (value instanceof File) {
       console.log(`📁 Campo [${key}]: ARCHIVO ADJUNTO -> nombre: "${value.name}", tamaño: ${value.size} bytes, tipo: ${value.type}`);
     } else {
