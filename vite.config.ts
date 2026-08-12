@@ -8,14 +8,20 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      strategies: "injectManifest", srcDir: "src", filename: "service-worker.ts", registerType: "autoUpdate",
+      strategies: "injectManifest",
+      srcDir: "src",
+      filename: "service-worker.ts",
+      registerType: "autoUpdate",
       includeAssets: ["favicon.ico", "apple-touch-icon.png", "masked-icon.svg"],
       manifest: {
-        name: "Asamblea Legislativa de El Salvador", short_name: "Asamblea",
-        gcm_sender_id: "103953800507",
+        name: "Asamblea Legislativa de El Salvador",
+        short_name: "Asamblea",
         description: "Sistema institucional de la Asamblea Legislativa de El Salvador",
-        theme_color: "#1a1f36", background_color: "#f0f2f5", display: "standalone",
-        start_url: "/", orientation: "portrait",
+        theme_color: "#1a1f36",
+        background_color: "#f0f2f5",
+        display: "standalone",
+        start_url: "/",
+        orientation: "portrait",
         icons: [
           { src: "/icons/icon-192x192.png", sizes: "192x192", type: "image/png" },
           { src: "/icons/icon-512x512.png", sizes: "512x512", type: "image/png" },
@@ -27,14 +33,15 @@ export default defineConfig({
   ],
   resolve: { alias: { "@": path.resolve(__dirname, "./src") } },
   test: {
-    globals: true, environment: "jsdom", setupFiles: "./src/test/setup.ts",
+    globals: true,
+    environment: "jsdom",
+    setupFiles: "./src/test/setup.ts",
     coverage: {
-      provider: "v8", reporter: ["text", "html"],
+      provider: "v8",
+      reporter: ["text", "html"],
       include: [
         "src/lib/appError.ts", "src/lib/format.ts", "src/lib/geo.ts", "src/lib/storage.ts",
-        "src/lib/requestIdentity.ts",
-        "src/components/ui/FocusTrap.tsx",
-        "src/components/ui/VehicleDropdown.tsx",
+        "src/lib/requestIdentity.ts", "src/components/ui/FocusTrap.tsx", "src/components/ui/VehicleDropdown.tsx",
         "src/pages/transport/useTransportDraft.ts",
       ],
       thresholds: { lines: 70, functions: 70, branches: 60, statements: 70 },
@@ -51,7 +58,8 @@ export default defineConfig({
         },
       },
     },
-  },  server: {
+  },
+  server: {
     allowedHosts: [".trycloudflare.com", ".transporte.test"],
     proxy: {
       "/nominatim": { target: "https://nominatim.openstreetmap.org", changeOrigin: true, rewrite: (url) => url.replace(/^\/nominatim/, "") },

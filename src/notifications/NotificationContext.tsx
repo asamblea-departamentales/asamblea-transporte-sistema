@@ -1,304 +1,227 @@
-// src/notifications/NotificationContext.tsx
 import {
-  createContext, useContext, useState, useEffect,
-  useRef, useCallback, type ReactNode,
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
 } from "react";
-import { useNavigate } from "react-router-dom";
 import { reportError } from "../lib/observability";
-import { getRequestDetailPath } from "../lib/requestIdentity";
-import { useNotificationPolling } from "./useNotificationPolling";
 import { subscribeUserToPush } from "../services/push.service";
+import { useNotificationPolling } from "./useNotificationPolling";
+import {
+  fetchNotifications,
+  markAllNotificationsAsRead,
+  markNotificationAsRead,
+  type Notification,
+} from "./notifications.service";
 
-// ─── Tipos públicos ────────────────────────────────────────────────────────────
+export type { Notification, NotiModulo, NotiTipo } from "./notifications.service";
 
-export type NotiTipo = "aprobada" | "pre_aprobada" | "asignada" | "programada" | "rechazada" | "observada" | "en_revision" | "finalizada" | "cancelada" | "recordatorio" | "info";
-export type NotiModulo = "transporte" | "mantenimiento" | "combustible";
+const NOTIFICATION_HISTORY_KEY = "app_notifications_v2";
+const DISMISSED_NOTIFICATIONS_KEY = "app_dismissed_notifications_v1";
+const MAX_VISIBLE_NOTIFICATIONS = 20;
+const MAX_DISMISSED_NOTIFICATIONS = 200;
+const POLL_MS = 180_000;
 
-export interface Notification {
-  id: string;
-  reqId: number; // ID numérico para navegación
-  tipo: NotiTipo;
-  modulo: NotiModulo;
-  titulo: string;
-  mensaje: string;
-  codigo: string;
-  leida: boolean;
-  createdAt: string;
-};
-
-// ─── Internos ──────────────────────────────────────────────────────────────────
-
-type Snap = { id: number; estado: string; fecha_salida: string; codigo: string; modulo: NotiModulo };
-
-const NOTIF_KEY = "app_notifications_v1";
-const SNAP_KEY = "app_snap_v1";
-const POLL_MS = 180_000; // 3 minutos
-
-const load = <T,>(key: string, fallback: T): T => {
+function loadJson<T>(key: string, fallback: T): T {
+  if (typeof window === "undefined") return fallback;
   try {
-    const val = localStorage.getItem(key);
-    return val ? JSON.parse(val) : fallback;
+    const value = window.localStorage.getItem(key);
+    return value ? JSON.parse(value) as T : fallback;
   } catch {
     return fallback;
   }
-};
-
-function uid() { return `${Date.now()}-${Math.random().toString(36).slice(2, 6)}`; }
-
-const TIPO_TITULO: Record<NotiTipo, string> = {
-  aprobada:     "Solicitud aprobada",
-  pre_aprobada: "Solicitud pre-aprobada",
-  asignada:     "Solicitud asignada",
-  programada:   "Solicitud programada",
-  rechazada:    "Solicitud rechazada",
-  observada:    "Solicitud observada",
-  en_revision:  "Solicitud en revisión",
-  finalizada:   "Solicitud finalizada",
-  cancelada:    "Solicitud cancelada",
-  recordatorio: "Recordatorio de finalización",
-  info:         "Actualización",
-};
-
-const MODULO_LABEL: Record<NotiModulo, string> = {
-  transporte: "Transporte",
-  mantenimiento: "Mantenimiento",
-  combustible: "Combustible",
-};
-
-function buildNotif(snap: Snap, tipo: NotiTipo): Notification {
-  const mod = MODULO_LABEL[snap.modulo];
-  const mensajes: Record<NotiTipo, string> = {
-    aprobada:     `Tu solicitud de ${mod} ${snap.codigo} fue aprobada.`,
-    pre_aprobada: `Tu solicitud de ${mod} ${snap.codigo} fue pre-aprobada.`,
-    asignada:     `Tu solicitud de ${mod} ${snap.codigo} tiene un motorista/vehículo asignado.`,
-    programada:   `Tu solicitud de ${mod} ${snap.codigo} ha sido programada.`,
-    rechazada:    `Tu solicitud de ${mod} ${snap.codigo} fue rechazada.`,
-    observada:    `Tu solicitud de ${mod} ${snap.codigo} tiene observaciones del supervisor.`,
-    en_revision:  `Tu solicitud de ${mod} ${snap.codigo} está en revisión técnica.`,
-    finalizada:   `Tu solicitud de ${mod} ${snap.codigo} fue marcada como finalizada.`,
-    cancelada:    `Tu solicitud de ${mod} ${snap.codigo} fue cancelada.`,
-    recordatorio: `Han pasado más de 24 h desde la fecha de tu solicitud ${snap.codigo}. Recuerda marcarla como finalizada.`,
-    info:         `Tu solicitud de ${mod} ${snap.codigo} fue actualizada.`,
-  };
-  return {
-    id: uid(), reqId: snap.id, tipo, modulo: snap.modulo,
-    titulo: TIPO_TITULO[tipo], mensaje: mensajes[tipo],
-    codigo: snap.codigo, leida: false,
-    createdAt: new Date().toISOString(),
-  };
 }
 
-function estadoATipo(estado: string): NotiTipo | null {
-  const e = estado.toLowerCase();
-  if (e === "aprobada")     return "aprobada";
-  if (e === "pre_aprobada") return "pre_aprobada";
-  if (e === "asignada")     return "asignada";
-  if (e === "programada")   return "programada";
-  if (e === "rechazada")    return "rechazada";
-  if (e === "observada")    return "observada";
-  if (e === "en_revision")  return "en_revision";
-  if (e === "finalizada" || e === "completada") return "finalizada";
-  if (e === "cancelada")    return "cancelada";
-  return null;
-}
-
-function detectar(prev: Snap[], next: Snap[], remindersSent: Set<string>): Notification[] {
-  const prevMap = new Map(prev.map(s => [s.id, s]));
-  const out: Notification[] = [];
-
-  for (const snap of next) {
-    const old = prevMap.get(snap.id);
-
-    // Cambio de estado
-    if (old && old.estado !== snap.estado) {
-      const tipo = estadoATipo(snap.estado);
-      if (tipo) out.push(buildNotif(snap, tipo));
-    }
-
-    // Recordatorio 24 h
-    if (snap.estado.toLowerCase() === "aprobada" && snap.fecha_salida && !remindersSent.has(snap.codigo)) {
-      const horas = (Date.now() - new Date(snap.fecha_salida).getTime()) / 3_600_000;
-      if (horas >= 24) {
-        remindersSent.add(snap.codigo);
-        out.push(buildNotif(snap, "recordatorio"));
-      }
-    }
+function saveJson(key: string, value: unknown): void {
+  try {
+    window.localStorage.setItem(key, JSON.stringify(value));
+  } catch {
+    // Storage is optional; the API-backed state remains usable when unavailable.
   }
-  return out;
 }
 
-// ─── Contexto ──────────────────────────────────────────────────────────────────
+function loadHistory(): Notification[] {
+  const value = loadJson<unknown[]>(NOTIFICATION_HISTORY_KEY, []);
+  return Array.isArray(value)
+    ? value.filter((item): item is Notification => typeof item === "object" && item !== null && typeof (item as Notification).id === "string").slice(0, MAX_VISIBLE_NOTIFICATIONS)
+    : [];
+}
 
-type Ctx = {
+function loadDismissedIds(): string[] {
+  const value = loadJson<unknown[]>(DISMISSED_NOTIFICATIONS_KEY, []);
+  return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").slice(-MAX_DISMISSED_NOTIFICATIONS) : [];
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "No fue posible actualizar las notificaciones.";
+}
+
+type NotificationContextValue = {
   notifications: Notification[];
   unreadCount: number;
   toast: Notification | null;
-  markAsRead: (id: string) => void;
-  markAllRead: () => void;
-  deleteNotification: (id: string) => void;
-  deleteAllNotifications: () => void;
+  isLoading: boolean;
+  error: string | null;
+  refreshNotifications: () => Promise<void>;
+  markAsRead: (id: string) => Promise<void>;
+  markAllRead: () => Promise<void>;
+  dismissNotification: (id: string) => void;
+  dismissAllNotifications: () => void;
   clearToast: () => void;
-  spawnTestNotification: () => void;
   permission: NotificationPermission;
   requestPermission: () => Promise<void>;
 };
 
-const NotifCtx = createContext<Ctx>({
-  notifications: [], unreadCount: 0, toast: null,
-  markAsRead: () => { }, markAllRead: () => { }, deleteNotification: () => { }, deleteAllNotifications: () => { }, clearToast: () => { },
-  spawnTestNotification: () => { },
+const NotificationContext = createContext<NotificationContextValue>({
+  notifications: [],
+  unreadCount: 0,
+  toast: null,
+  isLoading: false,
+  error: null,
+  refreshNotifications: async () => undefined,
+  markAsRead: async () => undefined,
+  markAllRead: async () => undefined,
+  dismissNotification: () => undefined,
+  dismissAllNotifications: () => undefined,
+  clearToast: () => undefined,
   permission: "default",
-  requestPermission: async () => { },
+  requestPermission: async () => undefined,
 });
 
-export function useNotifications() { return useContext(NotifCtx); }
-
-// ─── Provider ──────────────────────────────────────────────────────────────────
+export function useNotifications(): NotificationContextValue {
+  return useContext(NotificationContext);
+}
 
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const navigate = useNavigate();
-  const [notifications, setNotifications] = useState<Notification[]>(() => load(NOTIF_KEY, []));
+  const [notifications, setNotifications] = useState<Notification[]>(loadHistory);
+  const [dismissedIds, setDismissedIds] = useState<string[]>(loadDismissedIds);
   const [toast, setToast] = useState<Notification | null>(null);
-  const snapRef = useRef<Snap[]>(load(SNAP_KEY, []));
-  const remindersRef = useRef<Set<string>>(new Set());
-  const isFirstPoll = useRef(true);
-
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [permission, setPermission] = useState<NotificationPermission>(
-    typeof window !== "undefined" ? Notification.permission : "default"
+    typeof window !== "undefined" && "Notification" in window ? Notification.permission : "default",
   );
 
-  const unreadCount = notifications.filter(n => !n.leida).length;
+  const notificationsRef = useRef(notifications);
+  const dismissedIdsRef = useRef(dismissedIds);
+  const hasSyncedRef = useRef(false);
 
   useEffect(() => {
-    localStorage.setItem(NOTIF_KEY, JSON.stringify(notifications.slice(0, 100)));
-    if (Notification.permission === "granted") {
-      subscribeUserToPush();
-    }
+    notificationsRef.current = notifications;
+    saveJson(NOTIFICATION_HISTORY_KEY, notifications.slice(0, MAX_VISIBLE_NOTIFICATIONS));
   }, [notifications]);
 
-  const requestPermission = async () => {
-    if (!("Notification" in window)) return;
-    const res = await Notification.requestPermission();
-    setPermission(res);
-    if (res === "granted") {
-      subscribeUserToPush();
-    }
-  };
+  useEffect(() => {
+    dismissedIdsRef.current = dismissedIds;
+    saveJson(DISMISSED_NOTIFICATIONS_KEY, dismissedIds.slice(-MAX_DISMISSED_NOTIFICATIONS));
+  }, [dismissedIds]);
 
-  const showNativeNotification = useCallback(async (n: Notification) => {
-    if (permission !== "granted") return;
+  useEffect(() => {
+    if (permission === "granted") void subscribeUserToPush();
+  }, [permission]);
 
-    const title = n.titulo;
-    const options: NotificationOptions = {
-      body: n.mensaje,
-      icon: "/icons/icon-192x192.png",
-      tag: n.id,
-      data: { url: getRequestDetailPath({ modulo: n.modulo, id: n.reqId, codigo: n.codigo }) }
-    };
-
-    // Intentar vía Service Worker (mejor para Móvil/PWA)
-    if ("serviceWorker" in navigator) {
-      const reg = await navigator.serviceWorker.ready;
-      if (reg) {
-        reg.showNotification(title, options);
-        return;
-      }
-    }
-
-    // Fallback a Notification API estándar
-    const nativeNotif = new Notification(title, options);
-    nativeNotif.onclick = () => {
-      window.focus();
-      navigate(options.data.url);
-    };
-  }, [permission, navigate]);
-
-  const push = useCallback((incoming: Notification[]) => {
-    if (!incoming.length) return;
-    const last = incoming[incoming.length - 1];
-    setToast(last);
-    setNotifications(prev => [...incoming.reverse(), ...prev]);
-    showNativeNotification(last);
-  }, [showNativeNotification]);
-
-  const poll = useCallback(async () => {
-    if (document.hidden || !navigator.onLine) return;
+  const refreshNotifications = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const [{ getAllRequests }, { getAllMantenimientos }, { getAllCombustibles }] = await Promise.all([
-        import("../services/requests.service"),
-        import("../services/mantenimiento.service"),
-        import("../services/combustible.service"),
-      ]);
-
-      const BIG = 20;
-      const [t, m, c] = await Promise.allSettled([
-        getAllRequests({ per_page: BIG, page: 1 }),
-        getAllMantenimientos({ per_page: BIG, page: 1 }),
-        getAllCombustibles({ per_page: BIG, page: 1 }),
-      ]);
-
-      if ([t, m, c].every((result) => result.status === "rejected")) {
-        throw new Error("No fue posible actualizar las notificaciones.");
-      }
-
-      const next: Snap[] = [];
-
-      if (t.status === "fulfilled") {
-        t.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "transporte" }));
-      }
-      if (m.status === "fulfilled") {
-        m.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "mantenimiento" }));
-      }
-      if (c.status === "fulfilled") {
-        c.value.data.forEach((s) => next.push({ id: Number(s.id), estado: s.estado, fecha_salida: s.fecha_salida ?? "", codigo: s.codigo, modulo: "combustible" }));
-      }
-
-      if (isFirstPoll.current) {
-        isFirstPoll.current = false;
-        snapRef.current = next;
-        localStorage.setItem(SNAP_KEY, JSON.stringify(next));
-        return;
-      }
-
-      const incoming = detectar(snapRef.current, next, remindersRef.current);
-      snapRef.current = next;
-      localStorage.setItem(SNAP_KEY, JSON.stringify(next));
-      push(incoming);
-    } catch (err) {
-      reportError(err, { feature: "notification-polling" });
-      throw err;
+      const received = await fetchNotifications();
+      const dismissed = new Set(dismissedIdsRef.current);
+      const visible = received.filter((notification) => !dismissed.has(notification.id));
+      const previousIds = new Set(notificationsRef.current.map((notification) => notification.id));
+      const newest = visible.find((notification) => !previousIds.has(notification.id));
+      notificationsRef.current = visible.slice(0, MAX_VISIBLE_NOTIFICATIONS);
+      setNotifications(notificationsRef.current);
+      if (hasSyncedRef.current && newest) setToast(newest);
+      hasSyncedRef.current = true;
+    } catch (requestError) {
+      setError(errorMessage(requestError));
+      reportError(requestError, { feature: "notifications-api" });
+      throw requestError;
+    } finally {
+      setIsLoading(false);
     }
-  }, [push]);
+  }, []);
 
-  useNotificationPolling({ poll, intervalMs: POLL_MS });
+  useNotificationPolling({ poll: refreshNotifications, intervalMs: POLL_MS });
 
-  const markAsRead = useCallback((id: string) => setNotifications(p => p.map(n => n.id === id ? { ...n, leida: true } : n)), []);
-  const markAllRead = useCallback(() => setNotifications(p => p.map(n => ({ ...n, leida: true }))), []);
-  const deleteNotification = useCallback((id: string) => setNotifications(p => p.filter(n => n.id !== id)), []);
-  const deleteAllNotifications = useCallback(() => setNotifications([]), []);
+  const markAsRead = useCallback(async (id: string) => {
+    const previous = notificationsRef.current;
+    const target = previous.find((notification) => notification.id === id);
+    if (!target || target.leida) return;
+    const optimistic = previous.map((notification) => notification.id === id ? { ...notification, leida: true } : notification);
+    notificationsRef.current = optimistic;
+    setNotifications(optimistic);
+    try {
+      await markNotificationAsRead(id);
+    } catch (requestError) {
+      notificationsRef.current = previous;
+      setNotifications(previous);
+      reportError(requestError, { feature: "notification-read", notificationId: id });
+    }
+  }, []);
+
+  const markAllRead = useCallback(async () => {
+    const previous = notificationsRef.current;
+    if (!previous.some((notification) => !notification.leida)) return;
+    const optimistic = previous.map((notification) => ({ ...notification, leida: true }));
+    notificationsRef.current = optimistic;
+    setNotifications(optimistic);
+    try {
+      await markAllNotificationsAsRead();
+    } catch (requestError) {
+      notificationsRef.current = previous;
+      setNotifications(previous);
+      reportError(requestError, { feature: "notifications-read-all" });
+    }
+  }, []);
+
+  const dismissNotification = useCallback((id: string) => {
+    if (!notificationsRef.current.some((notification) => notification.id === id)) return;
+    const nextDismissed = Array.from(new Set([...dismissedIdsRef.current, id])).slice(-MAX_DISMISSED_NOTIFICATIONS);
+    const nextNotifications = notificationsRef.current.filter((notification) => notification.id !== id);
+    dismissedIdsRef.current = nextDismissed;
+    notificationsRef.current = nextNotifications;
+    setDismissedIds(nextDismissed);
+    setNotifications(nextNotifications);
+  }, []);
+
+  const dismissAllNotifications = useCallback(() => {
+    const current = notificationsRef.current;
+    if (!current.length) return;
+    const nextDismissed = Array.from(new Set([...dismissedIdsRef.current, ...current.map((notification) => notification.id)])).slice(-MAX_DISMISSED_NOTIFICATIONS);
+    dismissedIdsRef.current = nextDismissed;
+    notificationsRef.current = [];
+    setDismissedIds(nextDismissed);
+    setNotifications([]);
+  }, []);
+
   const clearToast = useCallback(() => setToast(null), []);
 
-  const spawnTestNotification = useCallback(() => {
-    const test: Notification = {
-      id: uid(),
-      reqId: 123, // Dummy ID for testing
-      tipo: "info",
-      modulo: "transporte",
-      titulo: "Notificación de Prueba",
-      mensaje: "Esta es una prueba de notificación interactiva y nativa.",
-      codigo: "TEST-123",
-      leida: false,
-      createdAt: new Date().toISOString(),
-    };
-    push([test]);
-  }, [push]);
+  const requestPermission = useCallback(async () => {
+    if (typeof window === "undefined" || !("Notification" in window)) return;
+    setPermission(await Notification.requestPermission());
+  }, []);
 
   return (
-    <NotifCtx.Provider value={{ 
-      notifications, unreadCount, toast, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, clearToast, 
-      spawnTestNotification, permission, requestPermission 
+    <NotificationContext.Provider value={{
+      notifications,
+      unreadCount: notifications.filter((notification) => !notification.leida).length,
+      toast,
+      isLoading,
+      error,
+      refreshNotifications,
+      markAsRead,
+      markAllRead,
+      dismissNotification,
+      dismissAllNotifications,
+      clearToast,
+      permission,
+      requestPermission,
     }}>
       {children}
-    </NotifCtx.Provider>
+    </NotificationContext.Provider>
   );
 }

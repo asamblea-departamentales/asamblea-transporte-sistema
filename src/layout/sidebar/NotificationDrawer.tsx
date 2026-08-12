@@ -1,33 +1,69 @@
+import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type Notification } from "../../notifications/NotificationContext";
+import { getNotificationTargetPath } from "../../notifications/notification-routing";
 import { cn } from "../../lib/utils";
 import { Icons, timeAgo, notiCfg } from "./sidebar.constants";
-import { getRequestDetailPath } from "../../lib/requestIdentity";
 
-export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose: () => void }) {
-  const { notifications, unreadCount, markAsRead, markAllRead, deleteNotification, deleteAllNotifications, permission, requestPermission } = useNotifications();
-  const navigate  = useNavigate();
+export function NotificacionesDrawer({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const {
+    notifications,
+    unreadCount,
+    isLoading,
+    error,
+    refreshNotifications,
+    markAsRead,
+    markAllRead,
+    dismissNotification,
+    dismissAllNotifications,
+    permission,
+    requestPermission,
+  } = useNotifications();
+  const navigate = useNavigate();
   const recientes = notifications.slice(0, 20);
+
+  useEffect(() => {
+    if (open) void refreshNotifications().catch(() => undefined);
+  }, [open, refreshNotifications]);
+
+  const handleNotificationClick = async (notification: Notification) => {
+    await markAsRead(notification.id);
+    onClose();
+    navigate(getNotificationTargetPath({
+      modulo: notification.modulo,
+      solicitudId: notification.reqId,
+      url: notification.url,
+    }));
+  };
+
+  const handleDismissAll = () => {
+    if (window.confirm("¿Limpiar todas las notificaciones de este navegador?")) {
+      dismissAllNotifications();
+    }
+  };
 
   return (
     <>
-      <div 
-        onClick={onClose} 
+      <div
+        onClick={onClose}
         aria-hidden="true"
         className={cn(
           "fixed inset-0 z-[100] bg-slate-900/20 backdrop-blur-sm transition-opacity duration-300",
-          open ? "opacity-100" : "opacity-0 pointer-events-none"
-        )} 
+          open ? "opacity-100" : "pointer-events-none opacity-0",
+        )}
       />
-      <div 
+      <div
+        role="dialog"
+        aria-modal="true"
+        aria-label="Notificaciones"
         className={cn(
-          "fixed top-0 right-0 z-[101] h-screen w-full max-w-[380px] bg-white shadow-[-10px_0_40px_rgba(0,0,0,0.1)] flex flex-col transition-transform duration-300 ease-custom-cubic",
-          open ? "translate-x-0" : "translate-x-full"
+          "fixed right-0 top-0 z-[101] flex h-screen w-full max-w-[380px] flex-col bg-white shadow-[-10px_0_40px_rgba(0,0,0,0.1)] transition-transform duration-300 ease-custom-cubic",
+          open ? "translate-x-0" : "translate-x-full",
         )}
       >
-        <div className="px-6 py-5 flex items-center justify-between border-b border-slate-100 bg-white">
+        <div className="flex items-center justify-between border-b border-slate-100 bg-white px-6 py-5">
           <div className="flex items-center gap-3">
-            <span className="text-[16px] font-bold text-slate-800 tracking-wide">Notificaciones</span>
+            <span className="text-[16px] font-bold tracking-wide text-slate-800">Notificaciones</span>
             {unreadCount > 0 && (
               <span className="flex h-5 items-center justify-center rounded-full bg-blue-600 px-2.5 text-[10px] font-bold text-white shadow-sm">
                 {unreadCount} nuevas
@@ -36,78 +72,95 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose
           </div>
           <div className="flex items-center gap-2">
             {unreadCount > 0 && (
-              <button onClick={markAllRead} title="Marcar todo como leído" className="flex items-center justify-center w-8 h-8 rounded-full text-blue-600 hover:bg-blue-50 transition-colors">
+              <button onClick={() => void markAllRead()} title="Marcar todo como leído" className="flex h-8 w-8 items-center justify-center rounded-full text-blue-600 transition-colors hover:bg-blue-50">
                 <Icons.Check />
               </button>
             )}
             {notifications.length > 0 && (
-              <button onClick={deleteAllNotifications} title="Eliminar todas las notificaciones" className="flex items-center justify-center w-8 h-8 rounded-full text-red-600 hover:bg-red-50 transition-colors">
+              <button onClick={handleDismissAll} title="Limpiar todas las notificaciones" className="flex h-8 w-8 items-center justify-center rounded-full text-red-600 transition-colors hover:bg-red-50">
                 <Icons.Trash />
               </button>
             )}
-            <button onClick={onClose} title="Cerrar" className="flex items-center justify-center w-8 h-8 rounded-full text-slate-400 hover:bg-slate-100 hover:text-slate-600 transition-colors">
+            <button onClick={onClose} title="Cerrar" className="flex h-8 w-8 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-600">
               <Icons.X />
             </button>
           </div>
         </div>
 
         {permission === "default" && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl bg-blue-50 border border-blue-100 flex flex-col gap-3">
+          <div className="mx-4 mt-4 flex flex-col gap-3 rounded-2xl border border-blue-100 bg-blue-50 p-4">
             <div className="flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 flex-shrink-0">
+              <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-blue-100 text-blue-600">
                 <Icons.Bell />
               </div>
               <div className="flex-1">
-                <p className="text-[13px] font-bold text-blue-900 leading-tight">Activar Notificaciones</p>
-                <p className="text-[12px] text-blue-700 mt-0.5 leading-snug">Recibe alertas de tus solicitudes en tu dispositivo.</p>
+                <p className="text-[13px] font-bold leading-tight text-blue-900">Activar notificaciones</p>
+                <p className="mt-0.5 text-[12px] leading-snug text-blue-700">Recibe alertas de tus solicitudes en tu dispositivo.</p>
               </div>
             </div>
-            <button onClick={requestPermission} className="w-full py-2 bg-blue-600 text-white rounded-xl text-[12.5px] font-bold shadow-sm shadow-blue-200 active:scale-95 transition-all">
+            <button onClick={() => void requestPermission()} className="w-full rounded-xl bg-blue-600 py-2 text-[12.5px] font-bold text-white shadow-sm shadow-blue-200 transition-all active:scale-95">
               Habilitar ahora
             </button>
           </div>
         )}
 
-        <div className="overflow-y-auto flex-1 bg-white">
-          {recientes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center h-full gap-4 px-8 text-center h-[50vh]">
-              <div className="w-16 h-16 rounded-full bg-slate-50 flex items-center justify-center text-slate-300">
+        {error && (
+          <div className="mx-4 mt-4 rounded-xl border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-800" role="alert">
+            <p>No se pudieron actualizar. Se conserva el historial disponible.</p>
+            <button onClick={() => void refreshNotifications().catch(() => undefined)} className="mt-1 font-bold underline">
+              Reintentar
+            </button>
+          </div>
+        )}
+
+        <div className="flex-1 overflow-y-auto bg-white">
+          {isLoading && recientes.length === 0 ? (
+            <div className="flex h-[50vh] flex-col items-center justify-center gap-3 px-8 text-center" role="status" aria-live="polite">
+              <div className="h-7 w-7 animate-spin rounded-full border-2 border-blue-100 border-t-blue-600" />
+              <p className="text-sm font-semibold text-slate-600">Cargando notificaciones…</p>
+            </div>
+          ) : recientes.length === 0 ? (
+            <div className="flex h-[50vh] flex-col items-center justify-center gap-4 px-8 text-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-slate-50 text-slate-300">
                 <Icons.Bell />
               </div>
               <div>
                 <p className="text-[14px] font-semibold text-slate-700">No hay notificaciones</p>
-                <p className="text-[13px] text-slate-400 mt-1 leading-relaxed">Estás al día con tus solicitudes.</p>
+                <p className="mt-1 text-[13px] leading-relaxed text-slate-400">Estás al día con tus solicitudes.</p>
               </div>
             </div>
           ) : (
-            recientes.map((n: Notification) => {
-              const cfg = notiCfg[n.tipo as keyof typeof notiCfg] || notiCfg.info;
-              const isUnread = !n.leida;
+            recientes.map((notification) => {
+              const cfg = notiCfg[notification.tipo] ?? notiCfg.info;
+              const isUnread = !notification.leida;
               return (
-                <div key={n.id} 
-                  className={cn("relative w-full flex items-start gap-4 px-6 py-5 text-left transition-colors border-b border-slate-50 group hover:bg-slate-50/80 cursor-pointer", !isUnread && "opacity-60 hover:opacity-100")}
-                  onClick={(e) => {
-                    if ((e.target as HTMLElement).closest('.btn-delete')) return;
-                    if(isUnread) markAsRead(n.id);
-                    navigate(getRequestDetailPath({ modulo: n.modulo, id: n.reqId, codigo: n.codigo }));
-                    onClose();
+                <div
+                  key={notification.id}
+                  className={cn(
+                    "group relative flex w-full cursor-pointer items-start gap-4 border-b border-slate-50 px-6 py-5 text-left transition-colors hover:bg-slate-50/80",
+                    !isUnread && "opacity-60 hover:opacity-100",
+                  )}
+                  onClick={(event) => {
+                    if ((event.target as HTMLElement).closest(".btn-dismiss")) return;
+                    void handleNotificationClick(notification);
                   }}
                 >
-                  {isUnread && <span className="absolute left-2 top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />}
-                  <div className={cn("flex items-center justify-center w-10 h-10 rounded-full flex-shrink-0 mt-0.5", cfg.iconBg, cfg.dot.replace('bg-', 'text-'))}>
-                     <span className={cn("w-2 h-2 rounded-full block", cfg.dot)} />
+                  {isUnread && <span className="absolute left-2 top-1/2 h-1.5 w-1.5 -translate-y-1/2 rounded-full bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.6)]" />}
+                  <div className={cn("mt-0.5 flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full", cfg.iconBg, cfg.dot.replace("bg-", "text-"))}>
+                    <span className={cn("block h-2 w-2 rounded-full", cfg.dot)} />
                   </div>
-                  <div className="flex-1 min-w-0 pr-6">
-                    <span className={cn("block text-[14px] leading-tight tracking-wide mb-1.5 transition-colors", isUnread ? "text-slate-900 font-bold group-hover:text-blue-600" : "text-slate-600 font-semibold")}>
-                      {n.titulo}
+                  <div className="min-w-0 flex-1 pr-6">
+                    <span className={cn("mb-1.5 block text-[14px] leading-tight tracking-wide transition-colors", isUnread ? "font-bold text-slate-900 group-hover:text-blue-600" : "font-semibold text-slate-600")}>
+                      {notification.titulo}
                     </span>
-                    <p className="text-[13px] text-slate-500 leading-relaxed mb-2 line-clamp-3">{n.mensaje}</p>
-                    <span className="text-[11px] font-medium text-slate-400">{timeAgo(n.createdAt)}</span>
+                    <p className="mb-2 line-clamp-3 text-[13px] leading-relaxed text-slate-500">{notification.mensaje}</p>
+                    <span className="text-[11px] font-medium text-slate-400">{timeAgo(notification.createdAt)}</span>
                   </div>
-                  <button 
-                    onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }}
-                    title="Eliminar Notificación"
-                    className="btn-delete absolute right-4 top-1/2 -translate-y-1/2 flex items-center justify-center w-8 h-8 rounded-full text-slate-400 opacity-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500 transition-all translate-x-2 group-hover:translate-x-0"
+                  <button
+                    onClick={(event) => { event.stopPropagation(); dismissNotification(notification.id); }}
+                    title="Limpiar notificación"
+                    aria-label={`Limpiar ${notification.titulo}`}
+                    className="btn-dismiss absolute right-4 top-1/2 flex h-8 w-8 -translate-y-1/2 translate-x-2 items-center justify-center rounded-full text-slate-400 opacity-0 transition-all group-hover:translate-x-0 group-hover:opacity-100 hover:bg-red-50 hover:text-red-500"
                   >
                     <Icons.Trash />
                   </button>
@@ -117,8 +170,8 @@ export function NotificacionesDrawer({ open, onClose }: { open: boolean, onClose
           )}
         </div>
 
-        <div className="p-4 border-t border-slate-100 bg-slate-50 flex items-center justify-center mt-auto">
-          <button onClick={() => { onClose(); navigate("/notificaciones"); }} className="w-full text-[13px] font-bold text-slate-700 bg-white border border-slate-200 shadow-sm hover:shadow hover:text-blue-600 transition-all py-2.5 rounded-xl">
+        <div className="mt-auto flex items-center justify-center border-t border-slate-100 bg-slate-50 p-4">
+          <button onClick={() => { onClose(); navigate("/notificaciones"); }} className="w-full rounded-xl border border-slate-200 bg-white py-2.5 text-[13px] font-bold text-slate-700 shadow-sm transition-all hover:text-blue-600 hover:shadow">
             Ir al Centro de Notificaciones
           </button>
         </div>

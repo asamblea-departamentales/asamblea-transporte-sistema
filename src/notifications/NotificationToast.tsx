@@ -1,47 +1,24 @@
-// src/notifications/NotificationToast.tsx
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useNotifications, type NotiTipo } from "./NotificationContext";
-import { getRequestDetailPath } from "../lib/requestIdentity";
-
-// ─── Config visual por tipo ───────────────────────────────────────────────────
-// Adaptado al tema institucional light — no dark
+import { getNotificationTargetPath } from "./notification-routing";
 
 const toastCfg: Record<NotiTipo, { dot: string; bg: string; border: string; label: string }> = {
-  aprobada:     { dot: "bg-emerald-500", bg: "bg-emerald-50",  border: "border-emerald-200", label: "Aprobada"     },
-  pre_aprobada: { dot: "bg-violet-500",  bg: "bg-violet-50",   border: "border-violet-200",  label: "Pre-Ap."      },
-  asignada:     { dot: "bg-cyan-500",    bg: "bg-cyan-50",     border: "border-cyan-200",    label: "Asignada"     },
-  programada:   { dot: "bg-indigo-500",  bg: "bg-indigo-50",   border: "border-indigo-200",  label: "Prog."        },
-  rechazada:    { dot: "bg-red-500",     bg: "bg-red-50",      border: "border-red-200",     label: "Rechazada"    },
-  observada:    { dot: "bg-blue-500",    bg: "bg-blue-50",     border: "border-blue-200",    label: "Observada"    },
-  en_revision:  { dot: "bg-amber-400",   bg: "bg-amber-50",    border: "border-amber-200",   label: "Revisión"     },
-  finalizada:   { dot: "bg-slate-400",   bg: "bg-slate-50",    border: "border-slate-200",   label: "Finalizada"   },
-  cancelada:    { dot: "bg-slate-300",   bg: "bg-slate-50",    border: "border-slate-100",   label: "Cancelada"    },
-  recordatorio: { dot: "bg-amber-500",   bg: "bg-amber-50",    border: "border-amber-200",   label: "Aviso"        },
-  info:         { dot: "bg-blue-400",    bg: "bg-blue-50",     border: "border-blue-200",    label: "Info"         },
+  aprobada: { dot: "bg-emerald-500", bg: "bg-emerald-50", border: "border-emerald-200", label: "Aprobada" },
+  pre_aprobada: { dot: "bg-violet-500", bg: "bg-violet-50", border: "border-violet-200", label: "Pre-Ap." },
+  asignada: { dot: "bg-cyan-500", bg: "bg-cyan-50", border: "border-cyan-200", label: "Asignada" },
+  programada: { dot: "bg-indigo-500", bg: "bg-indigo-50", border: "border-indigo-200", label: "Prog." },
+  rechazada: { dot: "bg-red-500", bg: "bg-red-50", border: "border-red-200", label: "Rechazada" },
+  observada: { dot: "bg-blue-500", bg: "bg-blue-50", border: "border-blue-200", label: "Observada" },
+  en_revision: { dot: "bg-amber-400", bg: "bg-amber-50", border: "border-amber-200", label: "Revisión" },
+  finalizada: { dot: "bg-slate-400", bg: "bg-slate-50", border: "border-slate-200", label: "Finalizada" },
+  cancelada: { dot: "bg-slate-300", bg: "bg-slate-50", border: "border-slate-100", label: "Cancelada" },
+  recordatorio: { dot: "bg-amber-500", bg: "bg-amber-50", border: "border-amber-200", label: "Aviso" },
+  info: { dot: "bg-blue-400", bg: "bg-blue-50", border: "border-blue-200", label: "Info" },
 };
 
-// ─── Barra de progreso ────────────────────────────────────────────────────────
-
-function ProgressBar({ active, color }: { active: boolean; color: string }) {
-  return (
-    <div className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-b-xl">
-      <div
-        className={`h-full transition-all ease-linear ${color}`}
-        style={{
-          width: active ? "0%" : "100%",
-          transitionDuration: active ? "4700ms" : "0ms",
-          opacity: 0.6,
-        }}
-      />
-    </div>
-  );
-}
-
-// ─── Toast individual ─────────────────────────────────────────────────────────
-
 function ToastItem({ onDone }: { onDone: () => void }) {
-  const { toast } = useNotifications();
+  const { toast, markAsRead } = useNotifications();
   const navigate = useNavigate();
   const [visible, setVisible] = useState(false);
   const [progress, setProgress] = useState(false);
@@ -49,103 +26,54 @@ function ToastItem({ onDone }: { onDone: () => void }) {
 
   useEffect(() => {
     if (!toast) return;
-
-    // Entrada
-    const t1 = setTimeout(() => { setVisible(true); }, 30);
-    // Barra de progreso arranca un tick después de la entrada
-    const t2 = setTimeout(() => setProgress(true), 60);
-    // Salida
-    const t3 = setTimeout(() => {
+    const enter = setTimeout(() => setVisible(true), 30);
+    const progressTimer = setTimeout(() => setProgress(true), 60);
+    const exit = setTimeout(() => {
       setVisible(false);
       setProgress(false);
       timerRef.current = setTimeout(onDone, 350);
     }, 5000);
-
-    return () => { clearTimeout(t1); clearTimeout(t2); clearTimeout(t3); };
+    return () => { clearTimeout(enter); clearTimeout(progressTimer); clearTimeout(exit); };
   }, [toast, onDone]);
 
-  const handleClose = (e?: React.MouseEvent) => {
-    e?.stopPropagation(); // Evitar navegar al cerrar
+  if (!toast) return null;
+  const cfg = toastCfg[toast.tipo] ?? toastCfg.info;
+
+  const handleClose = (event?: React.MouseEvent) => {
+    event?.stopPropagation();
     setVisible(false);
     setProgress(false);
     timerRef.current = setTimeout(onDone, 350);
   };
 
-  const handleNavigate = () => {
-    if (!toast) return;
-    navigate(getRequestDetailPath({ modulo: toast.modulo, id: toast.reqId, codigo: toast.codigo }));
-    handleClose(); // Cerrar tras navegar
+  const handleNavigate = async () => {
+    await markAsRead(toast.id);
+    navigate(getNotificationTargetPath({ modulo: toast.modulo, solicitudId: toast.reqId, url: toast.url }));
+    handleClose();
   };
-
-  if (!toast) return null;
-  const cfg = toastCfg[toast.tipo];
 
   return (
     <div
       role="button"
       tabIndex={0}
-      aria-label={`Abrir solicitud ${toast.codigo}`}
-      onClick={handleNavigate}
-      onKeyDown={(event) => {
-        if (event.key === "Enter" || event.key === " ") {
-          event.preventDefault();
-          handleNavigate();
-        }
-      }}
-      className={`
-        relative flex items-start gap-3
-        w-80 rounded-xl border bg-white shadow-[0_8px_30px_rgba(15,37,72,0.12),0_2px_8px_rgba(15,37,72,0.06)]
-        px-4 py-3.5
-        transition-all duration-350 cursor-pointer hover:shadow-[0_12px_40px_rgba(15,37,72,0.18)] group/toast
-        ${visible ? "translate-y-0 opacity-100 scale-100" : "translate-y-4 opacity-0 scale-95"}
-        ${cfg.border}
-      `}
+      aria-label={`Abrir notificación ${toast.titulo}`}
+      onClick={() => void handleNavigate()}
+      onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); void handleNavigate(); } }}
+      className={`relative flex w-80 cursor-pointer items-start gap-3 rounded-xl border bg-white px-4 py-3.5 shadow-[0_8px_30px_rgba(15,37,72,0.12),0_2px_8px_rgba(15,37,72,0.06)] transition-all duration-350 hover:shadow-[0_12px_40px_rgba(15,37,72,0.18)] ${visible ? "translate-y-0 scale-100 opacity-100" : "translate-y-4 scale-95 opacity-0"} ${cfg.border}`}
     >
-      {/* Icono tipo */}
-      <div className={`mt-0.5 h-8 w-8 flex-shrink-0 flex items-center justify-center rounded-lg border ${cfg.bg} ${cfg.border}`}>
-        <span className={`h-2 w-2 rounded-full ${cfg.dot}`} />
+      <div className={`mt-0.5 flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg border ${cfg.bg} ${cfg.border}`}><span className={`h-2 w-2 rounded-full ${cfg.dot}`} /></div>
+      <div className="min-w-0 flex-1 pt-0.5">
+        <div className="mb-0.5 flex items-center gap-2"><p className="truncate text-[12px] font-bold text-slate-900">{toast.titulo}</p><span className={`flex-shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider ${cfg.bg} ${cfg.border}`}>{cfg.label}</span></div>
+        <p className="line-clamp-2 text-[11px] leading-relaxed text-slate-500">{toast.mensaje}</p>
       </div>
-
-      {/* Contenido */}
-      <div className="flex-1 min-w-0 pt-0.5">
-        <div className="flex items-center gap-2 mb-0.5">
-          <p className="text-[12px] font-bold text-slate-900 truncate">{toast.titulo}</p>
-          <span className={`flex-shrink-0 text-[9px] font-black uppercase tracking-wider px-1.5 py-0.5 rounded-full border ${cfg.bg} ${cfg.border}`}
-            style={{ color: "inherit" }}>
-            {cfg.label}
-          </span>
-        </div>
-        <p className="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">{toast.mensaje}</p>
-      </div>
-
-      {/* Cerrar */}
-      <button
-        onClick={handleClose}
-        aria-label="Cerrar notificación"
-        className="flex-shrink-0 mt-0.5 text-slate-300 hover:text-slate-500 transition-colors"
-      >
-        <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2.5}>
-          <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
-
-      {/* Barra progreso */}
-      <ProgressBar active={progress} color={cfg.dot} />
+      <button onClick={handleClose} aria-label="Cerrar notificación" className="mt-0.5 flex-shrink-0 text-slate-300 transition-colors hover:text-slate-500">×</button>
+      <div className="absolute bottom-0 left-0 right-0 h-[3px] overflow-hidden rounded-b-xl"><div className={`h-full transition-all ease-linear ${cfg.dot}`} style={{ width: progress ? "0%" : "100%", transitionDuration: progress ? "4700ms" : "0ms", opacity: 0.6 }} /></div>
     </div>
   );
 }
 
-// ─── Wrapper global ───────────────────────────────────────────────────────────
-
 export default function NotificationToast() {
   const { toast, clearToast } = useNotifications();
   if (!toast) return null;
-
-  return (
-    // En móvil: sobre el bottom nav (bottom-[76px])
-    // En desktop: esquina inferior derecha estándar
-    <div className="fixed bottom-[76px] right-4 z-[200] lg:bottom-6 lg:right-6">
-      <ToastItem onDone={clearToast} />
-    </div>
-  );
+  return <div className="fixed bottom-[76px] right-4 z-[200] lg:bottom-6 lg:right-6"><ToastItem onDone={clearToast} /></div>;
 }
