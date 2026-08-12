@@ -4,8 +4,12 @@ namespace App\Providers;
 
 use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Domain\Solicitudes\Listeners\NotificarCambioEstado;
+use App\Domain\Solicitudes\Listeners\NotificarJefaturaInApp;
 use App\Domain\Solicitudes\Listeners\NotificarMotoristaInApp;
+use App\Domain\Solicitudes\Listeners\NotificarSolicitanteInApp;
 use App\Domain\Solicitudes\Listeners\RegistrarHistorialEstado;
+use App\Models\SolicitudCombustible;
+use App\Observers\SolicitudCombustibleObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Event;
@@ -37,8 +41,18 @@ class AppServiceProvider extends ServiceProvider
             NotificarMotoristaInApp::class,
         );
 
-        \App\Models\SolicitudCombustible::observe(
-            \App\Observers\SolicitudCombustibleObserver::class,
+        Event::listen(
+            SolicitudEstadoCambiado::class,
+            NotificarSolicitanteInApp::class,
+        );
+
+        Event::listen(
+            SolicitudEstadoCambiado::class,
+            NotificarJefaturaInApp::class,
+        );
+
+        SolicitudCombustible::observe(
+            SolicitudCombustibleObserver::class,
         );
 
         RateLimiter::for('login', function (Request $request) {

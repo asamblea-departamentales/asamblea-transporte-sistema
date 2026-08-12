@@ -6,9 +6,10 @@ use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Events\SolicitudEstadoCambiado;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Log;
 
-class NotificarCambioEstado implements ShouldQueue
+class NotificarCambioEstado implements ShouldQueue, ShouldQueueAfterCommit
 {
     public function __construct(
         private SolicitudEmailDispatchService $emailService,

@@ -34,6 +34,8 @@ class ViajeReasignado extends Notification implements ShouldQueue
             'solicitud_id' => $this->solicitud->id,
             'solicitud_codigo' => $this->solicitud->codigo,
             'ticket' => $this->solicitud->ticket,
+            'modulo' => 'transporte',
+            'url' => '/viajes',
         ];
     }
 

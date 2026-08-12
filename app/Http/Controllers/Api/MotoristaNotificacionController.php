@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Motorista;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Notifications\DatabaseNotification;
@@ -18,9 +19,11 @@ class MotoristaNotificacionController extends Controller
             return response()->json(['message' => 'No se encontró motorista asociado.'], 404);
         }
 
+        $perPage = max(1, min($request->integer('per_page', 20), 20));
+
         $notificaciones = $motorista->notifications()
             ->orderBy('created_at', 'desc')
-            ->paginate($request->integer('per_page', 20));
+            ->paginate($perPage);
 
         return response()->json($notificaciones);
     }
@@ -29,7 +32,9 @@ class MotoristaNotificacionController extends Controller
     {
         $motorista = Auth::user()->motorista;
 
-        if (! $motorista || $notification->notifiable_id !== $motorista->id) {
+        if (! $motorista
+            || $notification->notifiable_id !== $motorista->id
+            || $notification->notifiable_type !== Motorista::class) {
             return response()->json(['message' => 'Notificación no encontrada.'], 404);
         }
 

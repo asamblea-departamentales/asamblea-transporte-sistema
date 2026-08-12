@@ -8,9 +8,10 @@ use App\Notifications\SolicitudCancelada;
 use App\Notifications\SolicitudRechazada;
 use App\Notifications\ViajeAsignado;
 use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Support\Facades\Log;
 
-class NotificarMotoristaInApp implements ShouldQueue
+class NotificarMotoristaInApp implements ShouldQueue, ShouldQueueAfterCommit
 {
     public function handle(SolicitudEstadoCambiado $event): void
     {

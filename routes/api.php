@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\MotoristaAuthController;
 use App\Http\Controllers\Api\MotoristaEstadoController;
 use App\Http\Controllers\Api\MotoristaNotificacionController;
 use App\Http\Controllers\Api\MotoristaViajeController;
+use App\Http\Controllers\Api\NotificacionController;
 use App\Http\Controllers\Api\PushSubscriptionController;
 use App\Http\Controllers\Api\SolicitudCombustibleController;
 use App\Http\Controllers\Api\SolicitudMantenimientoController;
@@ -39,6 +40,11 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/motoristas/me/push-public-key', [PushSubscriptionController::class, 'publicKey']);
     Route::post('/motoristas/me/push-subscribe', [PushSubscriptionController::class, 'store']);
     Route::delete('/motoristas/me/push-unsubscribe', [PushSubscriptionController::class, 'destroy']);
+
+    // Notificaciones in-app del usuario autenticado (jefatura/operativo)
+    Route::get('/me/notificaciones', [NotificacionController::class, 'index']);
+    Route::put('/me/notificaciones/{notification}/leer', [NotificacionController::class, 'marcarLeer']);
+    Route::put('/me/notificaciones/marcar-todas', [NotificacionController::class, 'marcarTodasLeer']);
 
     // Cambio de PIN inicial (motoristas)
     Route::post('/auth/motorista/cambiar-pin-inicial', [MotoristaAuthController::class, 'cambiarPinInicial']);
