@@ -1,67 +1,90 @@
 /// <reference lib="webworker" />
-import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching'
-import { clientsClaim } from 'workbox-core'
+import { precacheAndRoute, cleanupOutdatedCaches } from 'workbox-precaching';
+import { clientsClaim } from 'workbox-core';
 
-declare let self: ServiceWorkerGlobalScope & { __WB_MANIFEST: any[] }
+interface PushPayload {
+  title?: unknown;
+  titulo?: unknown;
+  body?: unknown;
+  mensaje?: unknown;
+  icon?: unknown;
+  badge?: unknown;
+  url?: unknown;
+  data?: {
+    url?: unknown;
+  } | null;
+}
 
-cleanupOutdatedCaches()
-precacheAndRoute(self.__WB_MANIFEST)
+declare let self: ServiceWorkerGlobalScope & {
+  __WB_MANIFEST: Array<string | { url: string; revision: string | null }>;
+};
 
-self.skipWaiting()
-clientsClaim()
+cleanupOutdatedCaches();
+precacheAndRoute(self.__WB_MANIFEST);
+self.skipWaiting();
+clientsClaim();
 
-// ─── MANEJADOR DE EVENTO PUSH VAPID ─────────────────────────────────────────────
+const textValue = (value: unknown): string | undefined =>
+  typeof value === 'string' && value.length > 0 ? value : undefined;
 
-self.addEventListener('push', (event) => {
-  let payload: any = {}
+const getPayload = (event: PushEvent): PushPayload => {
+  if (!event.data) return {};
 
   try {
-    payload = event.data ? event.data.json() : {}
+    const parsed: unknown = event.data.json();
+    return parsed && typeof parsed === 'object' ? parsed as PushPayload : {};
   } catch {
-    payload = { title: 'Notificación Aprobaciones', body: event.data ? event.data.text() : '' }
+    return {
+      title: 'Notificación Aprobaciones',
+      body: event.data.text()
+    };
   }
+};
 
-  const title = payload.title || payload.titulo || 'Sistema de Aprobaciones'
-  const options = {
-    body: payload.body || payload.mensaje || 'Tienes una nueva solicitud por revisar o actualizar.',
-    icon: payload.icon || '/logo.png',
-    badge: payload.badge || '/logo.png',
-    data: {
-      url: payload.data?.url || payload.url || '/'
-    }
+const notificationTarget = (payload: PushPayload): string => {
+  const value = textValue(payload.data?.url) ?? textValue(payload.url);
+  return value ?? '/notificaciones';
+};
+
+self.addEventListener('push', event => {
+  const payload = getPayload(event);
+  const title = textValue(payload.title) ?? textValue(payload.titulo) ?? 'Sistema de Aprobaciones';
+  const body = textValue(payload.body) ?? textValue(payload.mensaje) ??
+    'Tienes una nueva solicitud por revisar o actualizar.';
+  const target = new URL(notificationTarget(payload), self.location.origin).href;
+
+  event.waitUntil(self.registration.showNotification(title, {
+    body,
+    icon: textValue(payload.icon) ?? '/logo.png',
+    badge: textValue(payload.badge) ?? '/logo.png',
+    data: { url: target }
+  }));
+});
+
+self.addEventListener('notificationclick', event => {
+  event.notification.close();
+
+  let urlToOpen: string;
+  try {
+    urlToOpen = new URL(
+      textValue(event.notification.data?.url) ?? '/notificaciones',
+      self.location.origin
+    ).href;
+  } catch {
+    urlToOpen = new URL('/notificaciones', self.location.origin).href;
   }
-
-  event.waitUntil(self.registration.showNotification(title, options))
-})
-
-// ─── MANEJADOR DE CLIC EN NOTIFICACIONES ────────────────────────────────────────
-
-self.addEventListener('notificationclick', (event) => {
-  event.notification.close()
-
-  const relativeUrl = event.notification.data?.url || '/'
-  const urlToOpen = new URL(relativeUrl, self.location.origin).href
 
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientList) => {
-      for (const client of clientList) {
-        if (client.url === urlToOpen && 'focus' in client) {
-          return client.focus()
-        }
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(clientList => {
+      const exactClient = clientList.find(client => client.url === urlToOpen);
+      if (exactClient) return exactClient.focus();
+
+      const clientToUse = clientList.find(client => client.focused) ?? clientList[0];
+      if (clientToUse) {
+        return clientToUse.navigate(urlToOpen).then(client => client?.focus());
       }
-      if (clientList.length > 0) {
-        let clientToUse = clientList[0]
-        for (const c of clientList) {
-          if (c.focused) {
-            clientToUse = c
-            break
-          }
-        }
-        return clientToUse.navigate(urlToOpen).then(c => c?.focus())
-      }
-      if (self.clients.openWindow) {
-        return self.clients.openWindow(urlToOpen)
-      }
+
+      return self.clients.openWindow?.(urlToOpen);
     })
-  )
-})
+  );
+});

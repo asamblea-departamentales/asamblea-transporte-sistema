@@ -1,43 +1,54 @@
 import { axiosClient } from '../../../shared/api/axiosClient';
 import { LoginCredentials, LoginResponse, User } from '../types';
 
+type RecordValue = Record<string, unknown>;
+
+const isRecord = (value: unknown): value is RecordValue =>
+  typeof value === 'object' && value !== null && !Array.isArray(value);
+
+const stringValue = (value: unknown): string | undefined =>
+  typeof value === 'string' ? value : undefined;
+
 export const authApi = {
   login: async (credentials: LoginCredentials): Promise<LoginResponse> => {
-    const response = await axiosClient.post<any>('/auth/login', credentials);
-    const resData = response.data;
+    const response = await axiosClient.post<unknown>('/auth/login', credentials);
+    const resData = isRecord(response.data) ? response.data : {};
 
-    // Si la API devuelve status 200 pero indica un error en el cuerpo
-    if (resData && (resData.success === false || resData.status === 'error' || resData.error)) {
-      const msg = resData.message || resData.error || 'Credenciales inválidas.';
+    if (resData.success === false || resData.status === 'error' || resData.error) {
+      const msg = stringValue(resData.message) ?? stringValue(resData.error) ?? 'Credenciales invÃ¡lidas.';
       throw new Error(msg);
     }
 
-    // Extraer payload soportando tanto estructuras planas como anidadas { data: { user, token } }
-    const payload = resData?.data && typeof resData.data === 'object' ? resData.data : resData;
-    
-    const user = payload?.user || resData?.user || null;
-    const token = payload?.token || payload?.access_token || resData?.token || resData?.access_token || '';
+    const payload = isRecord(resData.data) ? resData.data : resData;
+    const user = payload.user ?? resData.user ?? null;
+    const token = stringValue(payload.token) ??
+      stringValue(payload.access_token) ??
+      stringValue(resData.token) ??
+      stringValue(resData.access_token) ??
+      '';
 
-    if (!user || !token) {
-      const msg = resData?.message || 'Credenciales inválidas o respuesta del servidor incompleta.';
-      throw new Error(msg);
+    if (!isRecord(user) || !token) {
+      throw new Error(stringValue(resData.message) ?? 'Credenciales invÃ¡lidas o respuesta incompleta.');
     }
 
     return {
-      message: resData?.message,
-      user,
-      token,
+      message: stringValue(resData.message),
+      user: user as unknown as User,
+      token
     };
   },
 
   getProfile: async (): Promise<User> => {
-    const response = await axiosClient.get<any>('/auth/me');
-    const resData = response.data;
-    const user = resData?.data?.user || resData?.data || resData?.user || resData;
-    if (!user || typeof user !== 'object') {
+    const response = await axiosClient.get<unknown>('/auth/me');
+    const resData = isRecord(response.data) ? response.data : {};
+    const nestedData = isRecord(resData.data) ? resData.data : null;
+    const user = nestedData?.user ?? nestedData ?? resData.user ?? resData;
+
+    if (!isRecord(user)) {
       throw new Error('No se pudo obtener el perfil del usuario');
     }
-    return user as User;
+
+    return user as unknown as User;
   },
 
   logout: async (): Promise<void> => {

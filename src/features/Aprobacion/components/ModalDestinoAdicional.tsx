@@ -6,8 +6,8 @@ import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 
-// Solución al problema de iconos por defecto de Leaflet
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// SoluciÃ³n al problema de iconos por defecto de Leaflet
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon-2x.png',
   iconUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/images/marker-icon.png',
@@ -27,7 +27,7 @@ function LocationMarker({ position, setPosition, setDestino }: { position: L.Lat
           setDestino(address);
         }
       } catch (error) {
-        console.error("Error al obtener la dirección:", error);
+        console.error("Error al obtener la direcciÃ³n:", error);
       }
     },
   });
@@ -62,8 +62,8 @@ export function ModalDestinoAdicional({ isOpen, onClose, solicitudId, onSuccess 
       setDestino('');
       setPosition(null);
       onSuccess();
-    } catch (error: any) {
-      toast.error(error.response?.data?.message || 'Error al añadir el destino');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error al añadir el destino');
     } finally {
       setIsSubmitting(false);
     }
@@ -80,8 +80,8 @@ export function ModalDestinoAdicional({ isOpen, onClose, solicitudId, onSuccess 
               <MapPin size={20} />
             </div>
             <div>
-              <h2 className="text-lg font-bold text-slate-800">Añadir Destino</h2>
-              <p className="text-sm text-slate-500">Modificar ruta en ejecución</p>
+              <h2 className="text-lg font-bold text-slate-800">AÃ±adir Destino</h2>
+              <p className="text-sm text-slate-500">Modificar ruta en ejecuciÃ³n</p>
             </div>
           </div>
           <button 
@@ -106,7 +106,7 @@ export function ModalDestinoAdicional({ isOpen, onClose, solicitudId, onSuccess 
 
           <div className="mb-6">
             <label className="block text-sm font-bold text-slate-700 mb-2">Punto en el Mapa (Opcional)</label>
-            <p className="text-xs text-slate-500 mb-2">Haz clic en el mapa para marcar la ubicación exacta del destino.</p>
+            <p className="text-xs text-slate-500 mb-2">Haz clic en el mapa para marcar la ubicaciÃ³n exacta del destino.</p>
             <div className="w-full h-[250px] rounded-xl overflow-hidden border border-slate-300 relative z-0">
               <MapContainer 
                 center={defaultCenter} 

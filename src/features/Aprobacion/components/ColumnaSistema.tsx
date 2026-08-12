@@ -52,7 +52,7 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
       <div className="space-y-4 flex-1">
         <ResourceCard 
           icon={<Car size={16} />} 
-          title="Vehículo Óptimo"
+          title="VehÃ­culo Ã“ptimo"
           name={data.vehiculo_sugerido.placa}
           subtitle={data.vehiculo_sugerido.modelo}
           fuel={data.vehiculo_sugerido.nivel_combustible}
@@ -60,13 +60,13 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
 
         <ResourceCard 
           icon={<User size={16} />} 
-          title="Motorista Óptimo"
+          title="Motorista Ã“ptimo"
           name={data.motorista_sugerido.nombre}
           hours={data.motorista_sugerido.horas_periodo_7d || data.horas_motorista_periodo}
         />
 
         <div className="bg-success/5 border border-success/20 p-4 rounded-lg mt-auto">
-          <p className="text-[11px] font-bold text-success uppercase tracking-wider mb-3">Razones de Selección</p>
+          <p className="text-[11px] font-bold text-success uppercase tracking-wider mb-3">Razones de SelecciÃ³n</p>
           <ul className="space-y-2">
             {data.bullets_tecnicos.map((bullet, idx) => (
               <li key={idx} className="flex items-start gap-2 text-sm text-slate-700">
@@ -81,7 +81,19 @@ export const ColumnaSistema: React.FC<ColumnaSistemaProps> = ({ data, isSelected
   );
 };
 
-const ResourceCard = ({ icon, title, name, subtitle, fuel, hours }: any) => (
+interface ResourceCardProps {
+  icon: React.ReactNode;
+  title: string;
+  name?: string | number;
+  subtitle?: string | number;
+  fuel?: {
+    valor?: number;
+    label?: string;
+  } | null;
+  hours?: number;
+}
+
+const ResourceCard = ({ icon, title, name, subtitle, fuel, hours }: ResourceCardProps) => (
   <div className="border border-slate-200 rounded-lg p-3 flex flex-col gap-3 bg-slate-50">
     <div className="flex gap-3">
       <div className="w-10 h-10 rounded text-slate-500 bg-white border border-slate-200 flex items-center justify-center shrink-0">

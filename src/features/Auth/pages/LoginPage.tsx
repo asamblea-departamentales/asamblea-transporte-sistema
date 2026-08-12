@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
-import { useAuth } from '../context/AuthContext';
+import { useAuth } from '../context/useAuth';
 
 const LoginPage: React.FC = () => {
   const navigate = useNavigate();
@@ -14,7 +15,7 @@ const LoginPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isShaking, setIsShaking] = useState(false);
 
-  // Redirigir automáticamente si ya está autenticado
+  // Redirigir automÃƒÂ¡ticamente si ya estÃƒÂ¡ autenticado
   React.useEffect(() => {
     if (isAuthenticated) {
       navigate('/', { replace: true });
@@ -32,18 +33,25 @@ const LoginPage: React.FC = () => {
     try {
       await login({ username, password });
       navigate('/', { replace: true });
-    } catch (err: any) {
+    } catch (err: unknown) {
       // Manejo de errores amigable
-      let errorMessage = err.response?.data?.message || err.message || 'Credenciales inválidas. Por favor intenta de nuevo.';
-      
-      if (err.response?.status === 422) {
-        errorMessage = err.response?.data?.message || 'Por favor, completa todos los campos correctamente.';
+      const responseMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
+      let errorMessage = typeof responseMessage === 'string'
+        ? responseMessage
+        : err instanceof Error
+          ? err.message
+          : 'Credenciales invÃ¡lidas. Por favor intenta de nuevo.';
+
+      if (axios.isAxiosError(err) && err.response?.status === 422) {
+        errorMessage = typeof responseMessage === 'string'
+          ? responseMessage
+          : 'Por favor, completa todos los campos correctamente.';
       }
       
       setError(errorMessage);
       setIsShaking(true);
       
-      // Remover la clase de animación después de 500ms
+      // Remover la clase de animaciÃƒÂ³n despuÃƒÂ©s de 500ms
       setTimeout(() => setIsShaking(false), 500);
     } finally {
       setIsLoading(false);
@@ -73,7 +81,7 @@ const LoginPage: React.FC = () => {
             Acceso Restringido
           </h1>
           <p className="text-center text-sm text-slate-500 mb-10">
-            Módulo exclusivo para Jefaturas y Administración
+            MÃƒÂ³dulo exclusivo para Jefaturas y AdministraciÃƒÂ³n
           </p>
 
           {/* Login Form */}
@@ -98,9 +106,9 @@ const LoginPage: React.FC = () => {
               </div>
             </div>
 
-            {/* Input Contraseña */}
+            {/* Input ContraseÃƒÂ±a */}
             <div className="space-y-1.5">
-              <label className="block text-sm font-medium text-slate-700">Contraseña</label>
+              <label className="block text-sm font-medium text-slate-700">ContraseÃƒÂ±a</label>
               <div className="relative">
                 <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                   <Lock className="h-5 w-5 text-gray-400" />
@@ -110,7 +118,7 @@ const LoginPage: React.FC = () => {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="block w-full pl-10 pr-10 py-3 border border-gray-200 rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-[15px] transition-all duration-200 text-slate-900 placeholder-gray-400 outline-none bg-white"
-                  placeholder="••••••••"
+                  placeholder="Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢Ã¢â‚¬Â¢"
                   autoComplete="current-password"
                   required
                 />
@@ -132,7 +140,7 @@ const LoginPage: React.FC = () => {
             {/* Error Message */}
             <div className={`transition-all duration-300 overflow-hidden ${error ? 'max-h-24 opacity-100' : 'max-h-0 opacity-0'}`}>
               <div className="bg-red-50 px-4 py-3 rounded-lg text-sm text-red-600 flex items-start space-x-2">
-                <span className="shrink-0 mt-0.5">⚠️</span>
+                <span className="shrink-0 mt-0.5" aria-hidden="true">!</span>
                 <span>{error}</span>
               </div>
             </div>
@@ -152,7 +160,7 @@ const LoginPage: React.FC = () => {
                   </svg>
                   <span>Verificando...</span>
                 </span>
-              ) : 'INICIAR SESIÓN'}
+              ) : 'INICIAR SESIÃƒâ€œN'}
             </button>
           </form>
         </div>
@@ -163,7 +171,7 @@ const LoginPage: React.FC = () => {
 
       {/* Footer */}
       <div className="pb-6 text-center text-xs text-slate-400 w-full">
-        © 2026 Asamblea Legislativa de El Salvador
+        Ã‚Â© 2026 Asamblea Legislativa de El Salvador
       </div>
     </div>
   );

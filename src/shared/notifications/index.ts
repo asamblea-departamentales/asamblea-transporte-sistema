@@ -3,12 +3,16 @@ import { NotificationContext, NotificationContextType } from './types';
 
 export type { NotificationItem, NotificationContextType } from './types';
 export { NotificationContext } from './types';
-export { getCacheKeys, clearUserCache, clearLegacyCache, isValidNotification, isStringRecord, generateId } from './cache';
+export {
+  getCacheKeys,
+  clearUserCache,
+  clearLegacyCache,
+  isValidNotification,
+  isStringRecord
+} from './cache';
+export { normalizeNotification, fetchNotifications } from './notification.service';
+export { formatNotificationDate, resolveNotificationPath } from './notification-routing';
 
-/**
- * Hook para consumir el contexto de notificaciones.
- * Debe usarse dentro de un NotificationProvider.
- */
 export const useNotifications = (): NotificationContextType => {
   const ctx = useContext(NotificationContext);
   if (!ctx) {

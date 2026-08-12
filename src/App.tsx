@@ -10,6 +10,7 @@ import { lazyWithRetry } from './shared/lib/lazyWithRetry';
 const LoginPage = lazyWithRetry(() => import('./features/Auth/pages/LoginPage'));
 const AprobacionDashboardPage = lazyWithRetry(() => import('./features/Aprobacion/pages/AprobacionDashboardPage'));
 const HistorialPage = lazyWithRetry(() => import('./features/Aprobacion/pages/HistorialPage'));
+const NotificationsPage = lazyWithRetry(() => import('./features/Aprobacion/pages/NotificationsPage'));
 const PreAprobadasPage = lazyWithRetry(() => import('./features/Aprobacion/pages/PreAprobadasPage'));
 const HistorialDetallePage = lazyWithRetry(() => import('./features/Aprobacion/pages/HistorialDetallePage'));
 const EnEjecucionPage = lazyWithRetry(() => import('./features/Aprobacion/pages/EnEjecucionPage'));
@@ -24,16 +25,15 @@ function App() {
         <EnvironmentBanner />
         <Suspense fallback={<FullPageLoader />}>
           <Routes>
-            {/* Rutas Públicas */}
             <Route path="/login" element={<LoginPage />} />
-            
-            {/* Rutas Protegidas */}
+
             <Route element={<ProtectedRoute />}>
               <Route path="/" element={<DashboardLayout />}>
                 <Route index element={<AprobacionDashboardPage />} />
                 <Route path="pre-aprobadas" element={<PreAprobadasPage />} />
                 <Route path="en-ejecucion" element={<EnEjecucionPage />} />
                 <Route path="historial" element={<HistorialPage />} />
+                <Route path="notificaciones" element={<NotificationsPage />} />
                 <Route path="historial/:codigo" element={<HistorialDetallePage />} />
                 <Route path="aprobaciones/:codigo" element={<AprobacionPage />} />
                 <Route path="aprobaciones" element={<AprobacionPage />} />

@@ -4,15 +4,15 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { MapPin, AlertCircle } from 'lucide-react';
 
-// Solución al problema de iconos por defecto de Leaflet con Vite/Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// SoluciÃ³n al problema de iconos por defecto de Leaflet con Vite/Webpack
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: '/assets/leaflet/marker-icon-2x.png',
   iconUrl: '/assets/leaflet/marker-icon.png',
   shadowUrl: '/assets/leaflet/marker-shadow.png',
 });
 
-// Componente para ajustar los límites del mapa (zoom) a los marcadores
+// Componente para ajustar los lÃ­mites del mapa (zoom) a los marcadores
 const MapBounds: React.FC<{ bounds: L.LatLngBoundsExpression }> = ({ bounds }) => {
   const map = useMap();
   useEffect(() => {
@@ -57,7 +57,7 @@ export const MapaViaje: React.FC<MapaViajeProps> = ({
     <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col h-full relative">
       {!hasCoordinates && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-[1000] bg-amber-50 border border-amber-200 shadow-md text-amber-800 px-4 py-2 rounded-full text-xs font-bold flex items-center gap-2">
-          <AlertCircle size={14} /> El sistema no registró coordenadas exactas para este viaje.
+          <AlertCircle size={14} /> El sistema no registrÃ³ coordenadas exactas para este viaje.
         </div>
       )}
       

@@ -36,7 +36,7 @@ export default function AprobacionMantenimientoPage() {
     );
   }
 
-  // Comprobar si ya está procesada
+  // Comprobar si ya estÃ¡ procesada
   const isProcesada = ['aprobada', 'rechazada', 'completada', 'en_ejecucion', 'programada'].includes(
     getEstadoString(data?.estado)
   );
@@ -52,7 +52,7 @@ export default function AprobacionMantenimientoPage() {
           <div>
             <h1 className="text-xl md:text-2xl font-bold text-slate-800 tracking-tight flex items-center gap-2">
               <Wrench className="text-primary" />
-               Aprobación de Mantenimiento <span className="text-slate-500 font-medium">#{data.codigo || codigo}</span>
+               AprobaciÃ³n de Mantenimiento <span className="text-slate-500 font-medium">#{data.codigo || codigo}</span>
             </h1>
             <p className="text-slate-500 mt-1 text-sm">Revisa los detalles del mantenimiento solicitado y autoriza el proceso.</p>
           </div>
@@ -64,7 +64,7 @@ export default function AprobacionMantenimientoPage() {
 
       {/* Detalle de Solicitud */}
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-6 md:p-8 mb-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-        <h3 className="text-lg font-bold text-slate-800 mb-6 border-b pb-2">Información del Mantenimiento</h3>
+        <h3 className="text-lg font-bold text-slate-800 mb-6 border-b pb-2">InformaciÃ³n del Mantenimiento</h3>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
           <div className="flex items-start gap-3">
@@ -73,7 +73,7 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Solicitante</p>
-              <p className="font-semibold text-slate-800">{typeof data.solicitante === 'object' ? (data.solicitante as any)?.name : data.solicitante || 'No especificado'}</p>
+              <p className="font-semibold text-slate-800">{typeof data.solicitante === 'object' ? (data.solicitante as { name?: string })?.name : data.solicitante || 'No especificado'}</p>
             </div>
           </div>
 
@@ -82,8 +82,8 @@ export default function AprobacionMantenimientoPage() {
               <Car size={18} className="text-slate-500" />
             </div>
             <div>
-              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Vehículo / Placa</p>
-              <p className="font-semibold text-slate-800">{typeof data.vehiculo === 'object' ? (data.vehiculo as any)?.marca || 'Vehículo' : data.vehiculo || 'Vehículo desconocido'} <span className="text-slate-500 font-normal">({data.placa || (data.vehiculo as any)?.placa || 'Sin placa'})</span></p>
+              <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">VehÃ­culo / Placa</p>
+              <p className="font-semibold text-slate-800">{typeof data.vehiculo === 'object' ? (data.vehiculo as { marca?: string; placa?: string })?.marca || 'VehÃ­culo' : data.vehiculo || 'VehÃ­culo desconocido'} <span className="text-slate-500 font-normal">({data.placa || (data.vehiculo as { marca?: string; placa?: string })?.placa || 'Sin placa'})</span></p>
               {data.kilometraje_actual && <p className="text-xs text-slate-500 mt-1">Kilometraje: {data.kilometraje_actual} km</p>}
             </div>
           </div>
@@ -110,18 +110,18 @@ export default function AprobacionMantenimientoPage() {
             </div>
             <div>
               <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-1">Tipo Mantenimiento</p>
-              <p className="font-semibold text-slate-800">{typeof data.tipo_mantenimiento === 'object' ? (data.tipo_mantenimiento as any)?.nombre : data.tipo_mantenimiento || 'General / Desconocido'}</p>
+              <p className="font-semibold text-slate-800">{typeof data.tipo_mantenimiento === 'object' ? (data.tipo_mantenimiento as { nombre?: string })?.nombre : data.tipo_mantenimiento || 'General / Desconocido'}</p>
             </div>
           </div>
         </div>
 
         <div className="bg-slate-50 p-4 rounded-xl border border-slate-100">
-          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Motivo / Descripción</p>
+          <p className="text-xs text-slate-400 font-bold uppercase tracking-wider mb-2">Motivo / DescripciÃ³n</p>
           <p className="text-sm text-slate-700 leading-relaxed">{data.motivo || 'Sin detalles proporcionados.'}</p>
         </div>
       </div>
 
-      {/* FINALIZACIÓN o ESTADO ACTUAL */}
+      {/* FINALIZACIÃ“N o ESTADO ACTUAL */}
       {isProcesada ? (
         <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-slate-200 p-8 text-center animate-in fade-in slide-in-from-bottom-4 duration-500 mb-12">
           <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center text-slate-400 mx-auto mb-4">
@@ -143,15 +143,15 @@ export default function AprobacionMantenimientoPage() {
               <CheckCircle size={24} />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-slate-800">Decisión de Jefatura</h2>
-              <p className="text-slate-500 text-sm">Autoriza o rechaza el envío a taller / mantenimiento.</p>
+              <h2 className="text-xl font-bold text-slate-800">DecisiÃ³n de Jefatura</h2>
+              <p className="text-slate-500 text-sm">Autoriza o rechaza el envÃ­o a taller / mantenimiento.</p>
             </div>
           </div>
 
           <div className="mb-8">
-            <label className="block text-sm font-bold text-slate-700 mb-4">Comentario / Observación</label>
+            <label className="block text-sm font-bold text-slate-700 mb-4">Comentario / ObservaciÃ³n</label>
             <textarea 
-              placeholder="Ingresa una justificación (Obligatorio para rechazar u observar)"
+              placeholder="Ingresa una justificaciÃ³n (Obligatorio para rechazar u observar)"
               className="w-full px-4 py-3 border border-slate-300 rounded-xl text-sm focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none min-h-[120px]"
               value={comentario}
               onChange={(e) => setComentario(e.target.value)}
@@ -173,7 +173,7 @@ export default function AprobacionMantenimientoPage() {
               disabled={isSubmitting || !comentario.trim()}
               className="w-full md:w-auto px-5 py-2.5 bg-slate-100 text-slate-700 font-bold rounded-lg hover:bg-slate-200 transition-colors disabled:opacity-60 disabled:cursor-not-allowed text-sm"
             >
-              Guardar Observación
+              Guardar ObservaciÃ³n
             </button>
 
             <button 

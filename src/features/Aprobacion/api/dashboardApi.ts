@@ -22,6 +22,8 @@ export interface RecentRequest {
   fechaEjecucion?: string;
   type: string;
   status: string;
+  solicitante?: string;
+  destino?: string;
 }
 
 export const dashboardApi = {

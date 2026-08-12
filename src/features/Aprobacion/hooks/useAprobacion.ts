@@ -1,33 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useCallback, useState } from 'react';
 import { ComparativaResponse, DecisionType } from '../types';
 import { solicitudApi } from '../api/solicitudApi';
 import { useAprobacionBase } from './useAprobacionBase';
 
 export function useAprobacion(codigo: string | undefined) {
   const [decision, setDecision] = useState<DecisionType>('ninguna');
+  const [comentarioOverride, setComentarioOverride] = useState<string | null>(null);
 
   const {
-    data, isLoading, error, comentario, setComentario,
-    isSubmitting, executeAction,
+    data, isLoading, error,
+    isSubmitting, executeAction
   } = useAprobacionBase<ComparativaResponse>({
     codigo,
-    fetchFn: (c) => solicitudApi.getComparativa(c),
+    fetchFn: c => solicitudApi.getComparativa(c)
   });
 
-  // Restaurar decisión y comentario previos si la solicitud ya fue procesada
-  useEffect(() => {
-    if (data?.solicitud?.decision_final) {
-      setDecision(data.solicitud.decision_final);
-    }
-    if (data?.solicitud?.comentario_jefe) {
-      setComentario(data.solicitud.comentario_jefe);
-    }
-  }, [data, setComentario]);
+  const decisionFromData = data?.solicitud?.decision_final;
+  const effectiveDecision = decision === 'ninguna' && decisionFromData
+    ? decisionFromData
+    : decision;
+  const comentario = comentarioOverride ?? data?.solicitud?.comentario_jefe ?? '';
+  const setComentario = useCallback((value: string) => {
+    setComentarioOverride(value);
+  }, []);
 
   const confirmarAprobacion = () => {
-    if (decision === 'ninguna') return;
+    if (effectiveDecision === 'ninguna') return;
     return executeAction(
-      () => solicitudApi.aprobarConDecision(codigo!, decision, comentario),
+      () => solicitudApi.aprobarConDecision(codigo!, effectiveDecision, comentario),
       'Solicitud procesada exitosamente'
     );
   };
@@ -54,7 +54,7 @@ export function useAprobacion(codigo: string | undefined) {
     data,
     isLoading,
     error,
-    decision,
+    decision: effectiveDecision,
     setDecision,
     comentario,
     setComentario,
@@ -62,6 +62,6 @@ export function useAprobacion(codigo: string | undefined) {
     handleDesbloquear,
     handleProgramar,
     handleRechazar,
-    isSubmitting,
+    isSubmitting
   };
 }

@@ -1,2 +1,2 @@
 /// <reference types="vite/client" />
-//conf
+/// <reference types="vite-plugin-pwa/client" />
