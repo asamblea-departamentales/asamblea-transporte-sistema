@@ -284,6 +284,7 @@ class SolicitudMantenimientoController extends BaseSolicitudController
     public function ordenTrabajo(Request $request, SolicitudMantenimiento $solicitud, ReporteOrdenTrabajoService $service)
     {
         $this->authorizeJefe();
+        $this->authorizeDocumento($solicitud, ['aprobada', 'en_ejecucion', 'completada']);
 
         $filters = $request->merge([
             'solicitud_id' => $solicitud->id,

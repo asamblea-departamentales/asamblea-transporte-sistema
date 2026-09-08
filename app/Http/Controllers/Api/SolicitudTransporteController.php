@@ -657,6 +657,7 @@ class SolicitudTransporteController extends BaseSolicitudController
     public function documentoOficial(Request $request, SolicitudTransporte $solicitud)
     {
         $this->authorizeJefe();
+        $this->authorizeDocumento($solicitud, ['aprobada', 'programada', 'en_ejecucion', 'completada']);
 
         $combustibleId = $request->integer('combustible_id') ?: null;
 
@@ -681,6 +682,7 @@ class SolicitudTransporteController extends BaseSolicitudController
     public function misionOficial(SolicitudTransporte $solicitud, ReporteMisionOficialService $service)
     {
         $this->authorizeJefe();
+        $this->authorizeDocumento($solicitud, ['aprobada', 'programada', 'en_ejecucion', 'completada']);
 
         $solicitud->load([
             'solicitante',

@@ -42,4 +42,13 @@ abstract class BaseSolicitudController extends Controller
             abort(Response::HTTP_FORBIDDEN, 'No tienes permiso para ver esta solicitud.');
         }
     }
+
+    protected function authorizeDocumento(Workflowable $solicitud, array $estadosPermitidos): void
+    {
+        $estado = $solicitud->getEstado()?->value;
+
+        if (! in_array($estado, $estadosPermitidos, true)) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'La solicitud no está en un estado que permita descargar el documento.');
+        }
+    }
 }

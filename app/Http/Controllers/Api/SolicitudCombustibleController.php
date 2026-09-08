@@ -335,6 +335,7 @@ class SolicitudCombustibleController extends BaseSolicitudController
     public function documentoOficial(SolicitudCombustible $solicitud)
     {
         $this->authorizeJefe();
+        $this->authorizeDocumento($solicitud, ['aprobada', 'asignada', 'completada']);
 
         $datos = app(ReporteSolicitudAutorizacionService::class)
             ->getDatosOficiales(0, $solicitud->id);

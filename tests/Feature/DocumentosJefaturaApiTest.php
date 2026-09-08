@@ -124,4 +124,130 @@ class DocumentosJefaturaApiTest extends TestCase
         $this->getJson('/api/solicitudes-transporte/SOL-NO-EXISTENTE/documento-oficial')
             ->assertNotFound();
     }
+
+    public function test_documento_oficial_transporte_rechazado_en_borrador(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudTransporte::factory()->borrador()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->getJson("/api/solicitudes-transporte/{$solicitud->codigo}/documento-oficial")
+            ->assertStatus(422)
+            ->assertJson(['message' => 'La solicitud no está en un estado que permita descargar el documento.']);
+    }
+
+    public function test_jefe_puede_descargar_documento_oficial_de_transporte_programada(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudTransporte::factory()->programada()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->assertPdf(
+            $this->getJson("/api/solicitudes-transporte/{$solicitud->codigo}/documento-oficial")
+        );
+    }
+
+    public function test_jefe_puede_descargar_documento_oficial_de_transporte_completada(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudTransporte::factory()->completada()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->assertPdf(
+            $this->getJson("/api/solicitudes-transporte/{$solicitud->codigo}/documento-oficial")
+        );
+    }
+
+    public function test_documento_oficial_combustible_permitido_en_asignada(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudCombustible::factory()->create(['estado' => 'asignada']);
+
+        Sanctum::actingAs($jefe);
+
+        $this->assertPdf(
+            $this->getJson("/api/solicitudes-combustible/{$solicitud->codigo}/documento-oficial")
+        );
+    }
+
+    public function test_documento_oficial_combustible_permitido_en_completada(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudCombustible::factory()->completada()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->assertPdf(
+            $this->getJson("/api/solicitudes-combustible/{$solicitud->codigo}/documento-oficial")
+        );
+    }
+
+    public function test_documento_oficial_combustible_rechazado_en_borrador(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudCombustible::factory()->borrador()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->getJson("/api/solicitudes-combustible/{$solicitud->codigo}/documento-oficial")
+            ->assertStatus(422);
+    }
+
+    public function test_orden_trabajo_mantenimiento_permitido_en_en_ejecucion(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudMantenimiento::factory()->create(['estado' => 'en_ejecucion']);
+
+        Sanctum::actingAs($jefe);
+
+        $this->assertPdf(
+            $this->getJson("/api/solicitudes-mantenimiento/{$solicitud->codigo}/orden-trabajo")
+        );
+    }
+
+    public function test_orden_trabajo_mantenimiento_rechazado_en_borrador(): void
+    {
+        $this->setUpRoles();
+
+        $jefe = User::factory()->create();
+        $jefe->assignRole('jefe');
+
+        $solicitud = SolicitudMantenimiento::factory()->borrador()->create();
+
+        Sanctum::actingAs($jefe);
+
+        $this->getJson("/api/solicitudes-mantenimiento/{$solicitud->codigo}/orden-trabajo")
+            ->assertStatus(422);
+    }
 }
