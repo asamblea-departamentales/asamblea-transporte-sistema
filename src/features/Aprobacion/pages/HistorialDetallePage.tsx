@@ -9,11 +9,21 @@ import { ModalReasignarViaje } from '../components/ModalReasignarViaje';
 import { HistorialDetalleHeader } from '../components/historial/HistorialDetalleHeader';
 import { DatosSolicitudCard } from '../components/historial/DatosSolicitudCard';
 import { AsignacionCard } from '../components/historial/AsignacionCard';
+import { DocumentosActions } from '../components/DocumentosActions';
+import type { DocumentoModulo } from '../types/documentos';
+import { normalizeEstado } from '@/shared/lib/normalizeEstado';
 
 export interface HistorialDataDetalle {
   raw?: any;
   comparativa?: any;
+  modulo?: DocumentoModulo;
 }
+
+const getModuloFromEndpoint = (endpoint: string): DocumentoModulo => {
+  if (endpoint.includes('/solicitudes-combustible/')) return 'combustible';
+  if (endpoint.includes('/solicitudes-mantenimiento/')) return 'mantenimiento';
+  return 'transporte';
+};
 
 export default function HistorialDetallePage() {
   const { codigo } = useParams();
@@ -57,6 +67,8 @@ export default function HistorialDetallePage() {
           : isMantenimiento 
             ? `/solicitudes-mantenimiento/${codigo}` 
             : `/solicitudes-transporte/${codigo}`;
+        let resolvedEndpoint = endpoint;
+        let detectedModulo = getModuloFromEndpoint(endpoint);
 
         // 1. Obtener los datos reales finales (estado, asignación real)
         try {
@@ -75,6 +87,8 @@ export default function HistorialDetallePage() {
               const altRes = await axiosClient.get(altEp);
               if (altRes.data) {
                 showData = altRes.data.data || altRes.data;
+                resolvedEndpoint = altEp;
+                detectedModulo = getModuloFromEndpoint(altEp);
                 break;
               }
             } catch {
@@ -84,9 +98,9 @@ export default function HistorialDetallePage() {
         }
 
         // 2. Obtener la comparativa (SOLO si es Transporte)
-        if (!isMantenimiento && !isCombustible) {
+        if (detectedModulo === 'transporte') {
           try {
-            const compRes = await axiosClient.get(`${endpoint}/comparativa`);
+            const compRes = await axiosClient.get(`${resolvedEndpoint}/comparativa`);
             compData = compRes.data;
           } catch {
             // Comparativa no disponible
@@ -98,7 +112,7 @@ export default function HistorialDetallePage() {
           return;
         }
 
-        setData({ raw: showData, comparativa: compData });
+        setData({ raw: showData, comparativa: compData, modulo: detectedModulo });
       } catch (err: unknown) {
         const responseMessage = axios.isAxiosError(err) ? err.response?.data?.message : undefined;
         setError(typeof responseMessage === 'string' ? responseMessage : 'Error inesperado al cargar.');
@@ -135,7 +149,7 @@ export default function HistorialDetallePage() {
   
   // Preferimos raw porque es la fuente de la verdad para solicitudes ya aprobadas
   const statusRaw = raw.estado || raw.status || comp.status || comp.estado || '';
-  const status = typeof statusRaw === 'string' ? statusRaw.toLowerCase() : (statusRaw.value || '').toLowerCase();
+  const status = normalizeEstado(statusRaw);
   
   const isAprobada = status.includes('aprobada') || status.includes('programada');
   const isRechazada = status.includes('rechazada');
@@ -155,14 +169,20 @@ export default function HistorialDetallePage() {
   const codeUpper = (raw.codigo || comp.codigo || codigo || '').toString().toUpperCase();
   const moduloStr = (raw.modulo || raw.tipo || raw.type || '').toString().toLowerCase();
 
-  const isCombustibleView = codeUpper.startsWith('CB-') || moduloStr === 'combustible';
-  const isMantenimientoView = 
-    codeUpper.startsWith('SM-') || 
-    codeUpper.startsWith('MAN-') || 
-    codeUpper.startsWith('MANT-') || 
-    codeUpper.startsWith('MT-') || 
-    moduloStr === 'mantenimiento';
-  const isTransporteView = !isCombustibleView && !isMantenimientoView;
+  const modulo: DocumentoModulo = data.modulo || (
+    moduloStr === 'combustible'
+      ? 'combustible'
+      : moduloStr === 'mantenimiento'
+        ? 'mantenimiento'
+        : codeUpper.startsWith('CB-')
+          ? 'combustible'
+          : codeUpper.startsWith('SM-') || codeUpper.startsWith('MAN-') || codeUpper.startsWith('MANT-') || codeUpper.startsWith('MT-')
+            ? 'mantenimiento'
+            : 'transporte'
+  );
+  const isCombustibleView = modulo === 'combustible';
+  const isMantenimientoView = modulo === 'mantenimiento';
+  const isTransporteView = modulo === 'transporte';
 
   // Reasignar solo permitido antes de la ejecución y SOLO para Transporte (nunca para Combustible o Mantenimiento)
   const canReasignar = isTransporteView && (status === 'pre_aprobada' || status === 'aprobada' || status === 'programada');
@@ -180,10 +200,10 @@ export default function HistorialDetallePage() {
   // Asignaciones finales de transporte
   const motoristaFinal = raw.motorista?.nombre || comp.motorista_nombre || data.comparativa?.operativo?.motorista?.nombre || data.comparativa?.operativo?.autor || 'Sin asignar';
   const vehiculoFinal = raw.vehiculo?.placa || comp.vehiculo_placa || data.comparativa?.operativo?.vehiculo?.placa || 'Sin asignar';
-  const vehiculoMarca = raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
+  const vehiculoMarca = raw.vehiculo?.vehMarca?.nombre || raw.vehiculo?.marca || comp.vehiculo_marca || data.comparativa?.operativo?.vehiculo?.marca || '';
   
   // Valores específicos de mantenimiento
-  const vehiculoMantenimientoMarca = typeof raw.vehiculo === 'object' ? (raw.vehiculo?.marca || raw.vehiculo?.nombre) : (raw.vehiculo || '');
+  const vehiculoMantenimientoMarca = typeof raw.vehiculo === 'object' ? (raw.vehiculo?.vehMarca?.nombre || raw.vehiculo?.marca || raw.vehiculo?.nombre) : (raw.vehiculo || '');
   const vehiculoMantenimientoPlaca = raw.placa || (typeof raw.vehiculo === 'object' ? raw.vehiculo?.placa : '') || comp.vehiculo_placa || '';
   const tipoMantenimientoNombre = typeof raw.tipo_mantenimiento === 'object' ? raw.tipo_mantenimiento?.nombre : (raw.tipo_mantenimiento || 'General');
   const kilometrajeVal = raw.kilometraje_actual || raw.kilometraje || null;
@@ -195,6 +215,9 @@ export default function HistorialDetallePage() {
   // Prioridad
   const prioridadRaw = raw.prioridad_grupo?.value || raw.prioridad_grupo || comp.prioridad_grupo || raw.prioridad?.value || raw.prioridad || comp.prioridad || 'N/A';
   const prioridad = typeof prioridadRaw === 'string' ? prioridadRaw.toLowerCase() : prioridadRaw;
+  const documentoCodigo = String(raw.codigo || comp.codigo || codigo || '');
+  const combustibleIdValue = Number(raw.combustible_id);
+  const combustibleId = Number.isInteger(combustibleIdValue) && combustibleIdValue > 0 ? combustibleIdValue : undefined;
   return (
     <div className="p-4 md:p-8 pb-20 md:pb-12 max-w-5xl mx-auto">
       {/* Header */}
@@ -247,6 +270,15 @@ export default function HistorialDetallePage() {
           onAddDestino={() => setShowDestinoModal(true)}
         />
       </div>
+
+      <DocumentosActions
+        codigo={documentoCodigo}
+        modulo={modulo}
+        estado={status}
+        vehiculoPlaca={raw.vehiculo?.placa}
+        motoristaNombre={raw.motorista?.nombre}
+        combustibleId={combustibleId}
+      />
 
       {/* Modal de Reasignación */}
       <ModalReasignarViaje
