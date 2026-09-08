@@ -51,10 +51,18 @@ export const DocumentosActions = ({
   const handleOpen = async (tipo: DocumentoTipo) => {
     if (!codigo || loadingTipo) return;
 
-    // Abrir la pestaña durante el click evita que el navegador bloquee el PDF después del await.
+    // Abrir una sola pestaña durante el click evita el bloqueo de la navegación asíncrona.
     const popup = typeof window !== 'undefined'
-      ? window.open('about:blank', '_blank', 'noopener,noreferrer')
+      ? window.open('about:blank', '_blank')
       : null;
+
+    if (!popup) {
+      toast.error('Permite las ventanas emergentes para abrir el PDF.');
+      return;
+    }
+
+    popup.document.title = 'Generando PDF...';
+    popup.document.body.innerHTML = '<p style="font-family: sans-serif; padding: 2rem;">Generando documento...</p>';
 
     setLoadingTipo(tipo);
     try {
@@ -66,14 +74,8 @@ export const DocumentosActions = ({
       });
       const objectUrl = URL.createObjectURL(blob);
 
-      if (popup && !popup.closed) {
+      if (!popup.closed) {
         popup.location.href = objectUrl;
-      } else {
-        const link = document.createElement('a');
-        link.href = objectUrl;
-        link.target = '_blank';
-        link.rel = 'noopener noreferrer';
-        link.click();
       }
 
       window.setTimeout(() => URL.revokeObjectURL(objectUrl), 60_000);
@@ -123,4 +125,3 @@ export const DocumentosActions = ({
     </section>
   );
 };
-
