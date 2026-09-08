@@ -57,7 +57,7 @@ export default function DetalleCombustible({ data, isOwner, onRefresh }: Props) 
             <DetailItem icon={<User className="h-4 w-4" />} label="Solicitante" value={str(data.solicitante?.name ?? data.solicitante)} />
             <DetailItem icon={<Building2 className="h-4 w-4" />} label="Unidad" value={str(data.unidad?.nombre ?? data.unidad)} />
             <DetailItem icon={<Calendar className="h-4 w-4" />} label="Fecha" value={data.fecha_solicitud ? new Date(data.fecha_solicitud).toLocaleDateString() : "Sin fecha"} />
-            <DetailItem icon={<Fuel className="h-4 w-4" />} label="Cantidad Solicitada" value={`${data.cantidad_combustible} Galones`} />
+            <DetailItem icon={<Fuel className="h-4 w-4" />} label="Efectivo" value={`${data.cantidad_combustible} Efectivo`} />
             {data.cantidad_vales != null && <DetailItem icon={<ClipboardList className="h-4 w-4" />} label="Cantidad de Vales" value={`${data.cantidad_vales} vales`} />}
             {data.correlativo_inicio != null && <DetailItem icon={<Hash className="h-4 w-4" />} label="Correlativos" value={`${data.correlativo_inicio} — ${data.correlativo_fin}`} />}
           </div>

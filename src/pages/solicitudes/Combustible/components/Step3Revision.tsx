@@ -35,9 +35,9 @@ export function Step3({ data, catalogos }: { data: FormData; catalogos: Catalogo
           <ReviewRow label="Destino"         value={data.destino_actividad} />
           <ReviewRow label="Fecha solicitud" value={data.fecha_solicitud} />
           <ReviewRow
-            label="Cantidad"
+            label="Efectivo"
             value={data.cantidad_combustible
-              ? `${parseInt(data.cantidad_combustible, 10)} carga(s)`
+              ? `${parseInt(data.cantidad_combustible, 10)} Efectivo`
               : ""}
           />
           {data.fecha_inicio_periodo && (

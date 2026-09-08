@@ -43,7 +43,7 @@ export function Step2({
           <FieldError msg={errors.fecha_solicitud} />
         </div>
         <div>
-          <Label required>Cantidad (cargas)</Label>
+          <Label required>Efectivo</Label>
           <input
             type="number"
             min="1"
