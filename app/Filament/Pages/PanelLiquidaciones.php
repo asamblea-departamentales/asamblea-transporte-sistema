@@ -2,6 +2,7 @@
 
 namespace App\Filament\Pages;
 
+use App\Domain\Solicitudes\Services\IncidenciaService;
 use App\Domain\Solicitudes\Services\Liquidaciones\LiquidacionUnifiedService;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
@@ -10,7 +11,9 @@ use App\Models\SolicitudCombustible;
 use App\Models\SolicitudMantenimiento;
 use App\Models\SolicitudTransporte;
 use App\Models\User;
+use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Livewire\Attributes\Url;
 
 class PanelLiquidaciones extends Page
@@ -95,7 +98,7 @@ class PanelLiquidaciones extends Page
     #[Url]
     public int $page = 1;
 
-    public function getData(): \Illuminate\Contracts\Pagination\LengthAwarePaginator
+    public function getData(): LengthAwarePaginator
     {
         return app(LiquidacionUnifiedService::class)->getAllPaginated(
             page: $this->page,
@@ -168,7 +171,7 @@ class PanelLiquidaciones extends Page
                 'codigo' => $record->codigo,
                 'monto_solicitado' => $record->valor_total,
                 'cantidad' => $record->cantidad_combustible,
-                'unidad' => 'gal',
+                'unidad' => 'carga',
                 'ticket' => $record->numero_vale_ticket ?? '—',
                 'comprobantes' => $record->comprobantes ?? [],
             ];
@@ -399,7 +402,7 @@ class PanelLiquidaciones extends Page
             'descripcion' => ['required', 'string', 'max:1000'],
         ]);
 
-        app(\App\Domain\Solicitudes\Services\IncidenciaService::class)
+        app(IncidenciaService::class)
             ->crear([
                 'entidad_tipo' => $this->incidencia_tipo,
                 'entidad_id' => $this->incidencia_id,
@@ -413,7 +416,7 @@ class PanelLiquidaciones extends Page
 
         $this->dispatch('$refresh');
 
-        \Filament\Notifications\Notification::make()
+        Notification::make()
             ->title('Incidencia registrada')
             ->success()
             ->send();

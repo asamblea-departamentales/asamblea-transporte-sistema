@@ -10,8 +10,8 @@
             </x-filament::section>
 
             <x-filament::section>
-                <div class="text-sm text-gray-500">Cargas</div>
-                <div class="text-2xl font-semibold">{{ number_format($kpi_galones, 2) }}</div>
+                <div class="text-sm text-gray-500">Monto solicitado</div>
+                <div class="text-2xl font-semibold">${{ number_format($kpi_galones, 2) }}</div>
             </x-filament::section>
 
             <x-filament::section>

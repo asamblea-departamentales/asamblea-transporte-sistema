@@ -13,8 +13,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
 use App\Domain\Solicitudes\Services\MapImageService;
 use App\Domain\Solicitudes\Services\Reportes\ReporteMisionOficialService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteSolicitudAutorizacionService;
 use App\Domain\Solicitudes\Services\SolicitudEmailDispatchService;
 use App\Domain\Solicitudes\Services\SolicitudTransporteService;
 use App\Http\Requests\StoreSolicitudTransporteRequest;
@@ -646,6 +648,75 @@ class SolicitudTransporteController extends BaseSolicitudController
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+    }
+
+    /**
+     * Documento oficial de solicitud y autorización (con firmas de firma
+     * "Jefe de Transporte" y "Diputada"). Disponible para jefatura.
+     */
+    public function documentoOficial(Request $request, SolicitudTransporte $solicitud)
+    {
+        $this->authorizeJefe();
+
+        $combustibleId = $request->integer('combustible_id') ?: null;
+
+        $datos = app(ReporteSolicitudAutorizacionService::class)
+            ->getDatosOficiales($solicitud->id, $combustibleId);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_transporte',
+            null,
+            ['codigo' => $datos['codigo'], 'tipo' => 'documento_autorizacion']
+        );
+
+        return Pdf::loadView('reports.solicitud_autorizacion_vehiculo_combustible', compact('datos'))
+            ->setPaper('letter', 'portrait')
+            ->stream("solicitud_autorizacion_{$datos['codigo']}.pdf");
+    }
+
+    /**
+     * Misión oficial individual para jefatura.
+     */
+    public function misionOficial(SolicitudTransporte $solicitud, ReporteMisionOficialService $service)
+    {
+        $this->authorizeJefe();
+
+        $solicitud->load([
+            'solicitante',
+            'autorizador',
+            'motorista',
+            'tipoVehiculo',
+            'vehiculo' => fn ($q) => $q->with([
+                'vehMarca:id,nombre',
+                'vehModelo:id,nombre',
+                'color:id,nombre',
+                'clasificacion:id,nombre',
+            ]),
+        ]);
+
+        $rows = collect([$solicitud]);
+        $filters = [];
+
+        $kpis = $service->getKpis($filters);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_transporte',
+            null,
+            ['cantidad_registros' => $rows->count(), 'tipo' => 'mision_oficial']
+        );
+
+        return Pdf::loadView('reports.reporte_mision_oficial_pdf', [
+            'rows' => $rows,
+            'filters' => $filters,
+            'kpis' => $kpis,
+            'service' => $service,
+            'rangeLabel' => 'Misión Individual',
+        ])
+            ->setPaper('a4', 'portrait')
+            ->setWarnings(false)
+            ->stream('mision_oficial.pdf');
     }
 
     public function programar(SolicitudTransporte $solicitud)

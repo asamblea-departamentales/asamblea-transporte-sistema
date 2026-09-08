@@ -138,10 +138,11 @@ class ReporteDistribucionCargasCombustible extends Page implements Forms\Contrac
                     ->label('Proveedor'),
 
                 Tables\Columns\TextColumn::make('cantidad_combustible')
-                    ->label('Galones'),
+                    ->label('Monto ($)')
+                    ->formatStateUsing(fn ($state) => '$'.number_format((float) $state, 2)),
 
                 Tables\Columns\TextColumn::make('valor_unitario')
-                    ->label('Precio Galón'),
+                    ->label('Precio'),
 
                 Tables\Columns\TextColumn::make('motorista.nombre')
                     ->label('Motorista'),

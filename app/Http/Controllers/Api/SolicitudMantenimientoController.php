@@ -11,11 +11,15 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\EstadoSolicitudEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteOrdenTrabajoService;
 use App\Domain\Solicitudes\Services\SolicitudMantenimientoService;
 use App\Http\Requests\StoreSolicitudMantenimientoRequest;
 use App\Models\SolicitudMantenimiento;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -272,5 +276,45 @@ class SolicitudMantenimientoController extends BaseSolicitudController
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
+    }
+
+    /**
+     * Orden de trabajo individual para jefatura.
+     */
+    public function ordenTrabajo(Request $request, SolicitudMantenimiento $solicitud, ReporteOrdenTrabajoService $service)
+    {
+        $this->authorizeJefe();
+
+        $filters = $request->merge([
+            'solicitud_id' => $solicitud->id,
+        ])->only([
+            'solicitud_id',
+        ]);
+
+        $rows = $service->buildQuery($filters)
+            ->orderBy('fecha_sugerida', 'asc')
+            ->get();
+
+        if ($rows->isEmpty()) {
+            abort(404, 'No se encontró una solicitud válida para generar la orden de trabajo.');
+        }
+
+        $kpis = $service->getKpis($filters);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_mantenimiento',
+            null,
+            ['cantidad_registros' => $rows->count(), 'tipo' => 'orden_trabajo']
+        );
+
+        return Pdf::loadView('reports.reporte_orden_trabajo_pdf', [
+            'rows' => $rows,
+            'filters' => $filters,
+            'kpis' => $kpis,
+            'service' => $service,
+            'rangeLabel' => "Orden de trabajo #{$solicitud->codigo}",
+        ])->setPaper('a4', 'portrait')
+            ->stream('orden_trabajo_mantenimiento.pdf');
     }
 }

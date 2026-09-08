@@ -239,8 +239,8 @@ class ReporteSolicitudesCombustible extends Page implements Forms\Contracts\HasF
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('cantidad_combustible')
-                    ->label('Galones')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' gal')
+                    ->label('Monto ($)')
+                    ->formatStateUsing(fn ($state) => '$'.number_format((float) $state, 2))
                     ->badge()
                     ->color('info'),
 

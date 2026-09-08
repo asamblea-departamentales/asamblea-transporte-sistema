@@ -45,7 +45,7 @@ class AsignacionCombustibleLoteExport implements FromCollection, ShouldAutoSize,
             'N° Serie',
             'N° Contrato',
             'Tipo Combustible',
-            'Galones',
+            'Monto solicitado',
             'Estado',
             'Asignado por',
             'Fecha Asignación',
@@ -83,7 +83,7 @@ class AsignacionCombustibleLoteExport implements FromCollection, ShouldAutoSize,
     {
         return [
             'E' => NumberFormat::FORMAT_NUMBER_COMMA_SEPARATED2, // Monto
-            'I' => NumberFormat::FORMAT_NUMBER_00,               // Galones
+            'I' => NumberFormat::FORMAT_NUMBER_00,               // Monto solicitado
         ];
     }
 

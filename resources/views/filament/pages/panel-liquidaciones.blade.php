@@ -1182,7 +1182,7 @@
                     <span class="liq-drawer-row-value">{{ $this->detalleItem['cantidad_vales'] ?? '—' }}</span>
                 </div>
                 <div class="liq-drawer-row">
-                    <span class="liq-drawer-row-label">Precio galón</span>
+                    <span class="liq-drawer-row-label">Precio</span>
                     <span class="liq-drawer-row-value">${{ number_format($this->detalleItem['valor_unitario'] ?? 1, 2) }}</span>
                 </div>
                 <div class="liq-drawer-row">

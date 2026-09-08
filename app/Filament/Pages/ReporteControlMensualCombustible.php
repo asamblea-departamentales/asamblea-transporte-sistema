@@ -9,6 +9,7 @@ use App\Models\Motorista;
 use App\Models\SerieCarga;
 use App\Models\SolicitudCombustible;
 use App\Models\Vehiculo;
+use Carbon\Carbon;
 use Filament\Actions\Action;
 use Filament\Forms;
 use Filament\Forms\Concerns\InteractsWithForms;
@@ -268,8 +269,8 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
                     ->sortable(),
 
                 Tables\Columns\TextColumn::make('cantidad_combustible')
-                    ->label('Galones')
-                    ->formatStateUsing(fn ($state) => number_format((float) $state, 2).' gal')
+                    ->label('Monto ($)')
+                    ->formatStateUsing(fn ($state) => '$'.number_format((float) $state, 2))
                     ->badge()
                     ->color('info'),
 
@@ -322,8 +323,8 @@ class ReporteControlMensualCombustible extends Page implements Forms\Contracts\H
 
     public function rangeLabel(): string
     {
-        $from = $this->date_from ? \Carbon\Carbon::parse($this->date_from)->format('d/m/Y') : 'Inicio';
-        $to = $this->date_to ? \Carbon\Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
+        $from = $this->date_from ? Carbon::parse($this->date_from)->format('d/m/Y') : 'Inicio';
+        $to = $this->date_to ? Carbon::parse($this->date_to)->format('d/m/Y') : 'Fin';
 
         return "Periodo: {$from} al {$to}";
     }

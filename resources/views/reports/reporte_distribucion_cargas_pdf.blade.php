@@ -198,8 +198,8 @@
             </td>
             <td>
                 <div class="kpi-box">
-                    <span class="kpi-label">Total cargas</span>
-                    <span class="kpi-value">{{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
+                    <span class="kpi-label">Total monto solicitado</span>
+                    <span class="kpi-value">${{ number_format((float) ($kpis['total_galones'] ?? 0), 2) }}</span>
                 </div>
             </td>
         </tr>
@@ -241,7 +241,7 @@
                 <th width="7%">Contrato / Ref.</th>
                 <th width="4%">Comp.</th>
                 <th width="5%">Cargas</th>
-                <th width="5%">P/Galón</th>
+                <th width="5%">Precio</th>
                 <th width="8%">Motorista</th>
                 <th width="6%">Estado</th>
             </tr>

@@ -320,11 +320,11 @@
                 <div class="firma-linea"></div>
 
                 <div class="firma-label">
-                    Jefe de Unidad
+                    Jefe de Transporte
                 </div>
 
                 <div class="firma-nombre">
-                    {{ $datos['solicitante'] }}
+                    &nbsp;
                 </div>
             </td>
 
@@ -332,11 +332,11 @@
                 <div class="firma-linea"></div>
 
                 <div class="firma-label">
-                    Autorizado Transporte
+                    Diputada
                 </div>
 
                 <div class="firma-nombre">
-                    Dirección de Transporte
+                    Elisa Marcela Rosales Ramirez
                 </div>
             </td>
 

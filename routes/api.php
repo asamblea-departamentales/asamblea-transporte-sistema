@@ -79,6 +79,10 @@ Route::middleware('auth:sanctum')->group(function () {
         // Historial unificado para Jefatura: Transporte + Mantenimiento + Combustible
         Route::get('dashboard/historial-jefatura', [DashboardController::class, 'historialJefatura']);
 
+        // Documentos PDF de jefatura para el frontend externo
+        Route::get('solicitudes-transporte/{solicitud:codigo}/documento-oficial', [SolicitudTransporteController::class, 'documentoOficial']);
+        Route::get('solicitudes-transporte/{solicitud:codigo}/mision-oficial', [SolicitudTransporteController::class, 'misionOficial']);
+
         // Pendientes de jefatura (PRE_APROBADAS): Transporte + Mantenimiento + Combustible
         Route::get('solicitudes/pendientes-jefatura', [DashboardController::class, 'pendientesJefatura']);
     });
@@ -105,6 +109,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('solicitudes-mantenimiento/{solicitud}/rechazar', [SolicitudMantenimientoController::class, 'rechazar']);
         Route::post('solicitudes-mantenimiento/{solicitud}/en-ejecucion', [SolicitudMantenimientoController::class, 'iniciarEjecucion']);
         Route::post('solicitudes-mantenimiento/{solicitud}/evaluar', [SolicitudMantenimientoController::class, 'evaluar']);
+
+        // Orden de trabajo PDF de jefatura para el frontend externo
+        Route::get('solicitudes-mantenimiento/{solicitud}/orden-trabajo', [SolicitudMantenimientoController::class, 'ordenTrabajo']);
     });
 
     // ── COMBUSTIBLE ─────────────────────────────────────────────────
@@ -127,6 +134,9 @@ Route::middleware('auth:sanctum')->group(function () {
         // Módulo de Aprobación
         Route::get('solicitudes-combustible/{solicitud:codigo}/comparativa', [SolicitudCombustibleController::class, 'comparativa']);
         Route::post('solicitudes-combustible/{solicitud:codigo}/aprobar-con-decision', [SolicitudCombustibleController::class, 'aprobarConDecision']);
+
+        // Documento oficial PDF de jefatura para el frontend externo
+        Route::get('solicitudes-combustible/{solicitud:codigo}/documento-oficial', [SolicitudCombustibleController::class, 'documentoOficial']);
     });
 
     Route::post('solicitudes-combustible/{solicitud:codigo}/asignar-carga', [SolicitudCombustibleController::class, 'asignarCarga'])

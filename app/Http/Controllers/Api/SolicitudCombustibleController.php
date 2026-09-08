@@ -11,10 +11,14 @@
 
 namespace App\Http\Controllers\Api;
 
+use App\Domain\Solicitudes\Enums\AccionBitacoraEnum;
 use App\Domain\Solicitudes\Enums\PrioridadSolicitudEnum;
+use App\Domain\Solicitudes\Services\AuditoriaService;
+use App\Domain\Solicitudes\Services\Reportes\ReporteSolicitudAutorizacionService;
 use App\Domain\Solicitudes\Services\SolicitudCombustibleService;
 use App\Http\Requests\StoreSolicitudCombustibleRequest;
 use App\Models\SolicitudCombustible;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
@@ -322,5 +326,28 @@ class SolicitudCombustibleController extends BaseSolicitudController
         } catch (\DomainException $e) {
             return response()->json(['message' => $e->getMessage()], Response::HTTP_UNPROCESSABLE_ENTITY);
         }
+    }
+
+    /**
+     * Documento oficial de solicitud y autorización de cargas de combustible
+     * (con firmas "Jefe de Transporte" y "Diputada"). Disponible para jefatura.
+     */
+    public function documentoOficial(SolicitudCombustible $solicitud)
+    {
+        $this->authorizeJefe();
+
+        $datos = app(ReporteSolicitudAutorizacionService::class)
+            ->getDatosOficiales(0, $solicitud->id);
+
+        app(AuditoriaService::class)->registrar(
+            AccionBitacoraEnum::EXPORTAR_PDF,
+            'solicitudes_combustible',
+            null,
+            ['codigo' => $datos['codigo'], 'tipo' => 'documento_autorizacion']
+        );
+
+        return Pdf::loadView('reports.solicitud_autorizacion_vehiculo_combustible', compact('datos'))
+            ->setPaper('letter', 'portrait')
+            ->stream("solicitud_autorizacion_{$datos['codigo']}.pdf");
     }
 }
