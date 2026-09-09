@@ -250,16 +250,7 @@
 
                 @if($datos['modo'] !== 'solo_transporte')
                 <tr>
-                    <td class="label">Valor:</td>
-                    <td class="valor">
-                        $ {{ number_format($datos['valor_unitario'], 2) }}
-                    </td>
-                </tr>
-                @endif
-
-                @if($datos['modo'] !== 'solo_transporte')
-                <tr>
-                    <td class="label">Total vales:</td>
+                    <td class="label">Total $:</td>
                     <td class="valor">
                         $ {{ number_format($datos['monto_combustible'], 2) }}
                     </td>
@@ -280,15 +271,6 @@
                         {{ $datos['placa'] }}
                     </td>
                 </tr>
-
-                @if($datos['modo'] !== 'solo_transporte')
-                <tr>
-                    <td class="label">Monto:</td>
-                    <td class="valor">
-                        $ {{ number_format($datos['monto_combustible'], 2) }}
-                    </td>
-                </tr>
-                @endif
 
             </table>
 
